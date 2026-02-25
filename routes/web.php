@@ -57,5 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
 
     Route::resource('users', UserController::class)->middleware('permission.type:user.edit')->only(['edit', 'update']);
+
+    Route::resource('user', UserController::class)->middleware('permission.type:user.delete')->only(['destroy']);
     // End of User Management Routes
 });

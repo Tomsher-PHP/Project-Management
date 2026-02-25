@@ -78,9 +78,21 @@ class UserController extends Controller
             ->with('success', 'User updated successfully.');
     }
 
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        
+        // Prevent deleting super admin
+        if ($user->user_type === 'super_admin') {
+            return back()->with('error', 'Super Admin cannot be deleted.');
+        }
+
+        $user->update([
+            'delete_status' => true,
+            'status' => false,
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'User deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

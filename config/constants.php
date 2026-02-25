@@ -107,5 +107,5 @@ return [
     ],
 
     //Default list data count per page
-    'per_page_count' => 5
+    'per_page_count' => 10
 ];

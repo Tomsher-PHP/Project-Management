@@ -96,7 +96,7 @@
                             </div>
                         </a>
                     </li>
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="calender.html">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
@@ -114,8 +114,8 @@
                                 </div>
                             </div>
                         </a>
-                    </li>
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                    </li> --}}
+                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="history.html">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
@@ -131,7 +131,7 @@
                                 </div>
                             </div>
                         </a>
-                    </li>
+                    </li> --}}
                 </ul>
             </div>
             <div class="item-wrapper mb-5">
@@ -139,7 +139,7 @@
                     Help
                 </h4>
                 <ul class="mt-2.5">
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="support-ticket.html">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
@@ -156,7 +156,7 @@
                                 </div>
                             </div>
                         </a>
-                    </li>
+                    </li> --}}
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="settings.html">
                             <div class="flex items-center justify-between">
@@ -178,66 +178,9 @@
             </div>
             <div class="item-wrapper mb-5">
                 <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
-                    Others
+                    
                 </h4>
                 <ul class="mt-2.5">
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="signin.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" fill="#1A202C" class="path-1" />
-                                            <circle cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">Signin</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="signup.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" fill="#1A202C" class="path-1" />
-                                            <circle cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">Signup</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="coming-soon.html">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="item-ico">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M18.4 17.2C19.8833 19.1777 18.4721 22 16 22L8 22C5.52786 22 4.11672 19.1777 5.6 17.2L8.15 13.8C8.95 12.7333 8.95 11.2667 8.15 10.2L5.6 6.8C4.11672 4.82229 5.52787 2 8 2L16 2C18.4721 2 19.8833 4.82229 18.4 6.8L15.85 10.2C15.05 11.2667 15.05 12.7333 15.85 13.8L18.4 17.2Z" fill="#1A202C" class="path-1" />
-                                        <path d="M12.7809 9.02391C12.3805 9.52432 11.6195 9.52432 11.2191 9.02391L9.29976 6.6247C8.77595 5.96993 9.24212 5 10.0806 5L13.9194 5C14.7579 5 15.2241 5.96993 14.7002 6.6247L12.7809 9.02391Z" fill="#22C55E" class="path-2" />
-                                    </svg>
-                                </span>
-                                <span class="item-text text-lg font-medium leading-none">Coming Soon</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="404.html">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="item-ico">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="10" cy="10" r="10" fill="#1A202C" class="path-1" />
-                                        <path d="M9 15C9 14.4477 9.44772 14 10 14C10.5523 14 11 14.4477 11 15C11 15.5523 10.5523 16 10 16C9.44772 16 9 15.5523 9 15Z" fill="#22C55E" class="path-2" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M10 12.75C9.58579 12.75 9.25 12.4142 9.25 12L9.25 5C9.25 4.58579 9.58579 4.25 10 4.25C10.4142 4.25 10.75 4.58579 10.75 5L10.75 12C10.75 12.4142 10.4142 12.75 10 12.75Z" fill="#22C55E" class="path-2" />
-                                    </svg>
-                                </span>
-                                <span class="item-text text-lg font-medium leading-none">404</span>
-                            </div>
-                        </a>
-                    </li>
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
