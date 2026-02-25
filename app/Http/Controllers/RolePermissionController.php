@@ -21,7 +21,7 @@ class RolePermissionController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 4);
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $roles = Role::with('permissions')->where('user_type', '!=', 'super_admin')->paginate($perPage)->withQueryString();
         return view('roles.index', compact('roles', 'perPage'));

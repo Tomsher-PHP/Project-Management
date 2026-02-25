@@ -105,4 +105,7 @@ return [
             'task.view',
         ],
     ],
+
+    //Default list data count per page
+    'per_page_count' => 5
 ];

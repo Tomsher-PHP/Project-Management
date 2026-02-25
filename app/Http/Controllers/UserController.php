@@ -24,7 +24,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 4);
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $users = User::with([
             'details',
