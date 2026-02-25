@@ -89,7 +89,7 @@ class UserService
 
             $user->details()->updateOrCreate([], $detailsData);
 
-            // Handle Profile Image Upload
+            // Handle Profile Image Upload or delete existing
             if (!empty($data['profile_image'])) {
                 $this->updateProfileImage($user, $data['profile_image']);
             } elseif (!empty($data['remove_profile_image'])) {

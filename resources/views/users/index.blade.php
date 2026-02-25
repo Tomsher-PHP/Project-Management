@@ -146,6 +146,7 @@
                                 @endforelse
                             </table>
                         </div>
+                        <x-pagination :paginator="$users" :per-page="$perPage" />
                     </div>
                 </div>
             </section>

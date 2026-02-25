@@ -12,6 +12,7 @@
                             <h3 class="border-b border-bgray-200 pb-5 text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
                                 Create New User
                             </h3>
+
                             <div class="mt-8">
                                 @include('users._form', ['user' => null])
                             </div>

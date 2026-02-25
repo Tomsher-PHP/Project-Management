@@ -110,6 +110,7 @@
                                 @endforelse
                             </table>
                         </div>
+                        <x-pagination :paginator="$roles" :per-page="$perPage" />
                     </div>
                 </div>
             </section>

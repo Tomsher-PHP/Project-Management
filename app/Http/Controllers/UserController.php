@@ -22,16 +22,18 @@ class UserController extends Controller
         view()->share('pageTitle', $this->pageTitle);
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 4);
+
         $users = User::with([
             'details',
             'details.department',
             'details.designation',
             'primaryAttachment'
-        ])->where('user_type', '!=', 'super_admin')->where('delete_status', false)->paginate(10);
+        ])->where('user_type', '!=', 'super_admin')->where('delete_status', false)->paginate($perPage)->withQueryString();
 
-        return view('users.index', compact('users'));
+        return view('users.index', compact('users', 'perPage'));
     }
 
     public function create()
@@ -78,7 +80,7 @@ class UserController extends Controller
 
     public function destroy(string $id)
     {
-        //
+        
     }
 
     public function toggleStatus(Request $request)

@@ -19,10 +19,12 @@ class RolePermissionController extends Controller
         view()->share('pageTitle', $this->pageTitle);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $roles = Role::with('permissions')->where('user_type', '!=', 'super_admin')->get();
-        return view('roles.index', compact('roles'));
+        $perPage = $request->input('per_page', 4);
+
+        $roles = Role::with('permissions')->where('user_type', '!=', 'super_admin')->paginate($perPage)->withQueryString();
+        return view('roles.index', compact('roles', 'perPage'));
     }
 
     public function create()

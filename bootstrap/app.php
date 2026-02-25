@@ -37,21 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // For AJAX / API
             if ($request->expectsJson()) {
-                Log::error('Application Error', [
-                    'route'   => optional($request->route())->getName(),
-                    'message' => $e->getMessage(),
-                ]);
-
                 return response()->json([
                     'success' => false,
                     'message' => 'Something went wrong.',
                 ], 500);
             }
-
-            // For normal web requests
-            return redirect()
-                ->back()
-                ->with('error', 'Something went wrong. Please try again.')
-                ->withInput();
+            return null;
         });
     })->create();

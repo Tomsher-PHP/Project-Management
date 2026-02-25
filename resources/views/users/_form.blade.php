@@ -36,14 +36,14 @@
             User Name
         </label>
 
-        <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
+        <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                       @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         <input type="hidden" name="user_id" value="{{ $user->id ?? '' }}">
 
         @error('name')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -55,12 +55,12 @@
             Email
         </label>
 
-        <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
+        <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                       @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()">
 
         @error('email')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -72,12 +72,12 @@
             Password
         </label>
 
-        <input type="password" id="password" name="password" value="{{ old('password', $user->password ?? '') }}" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
+        <input type="password" id="password" name="password" value="{{ old('password', $user->password ?? '') }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('password')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -89,7 +89,7 @@
             Role
         </label>
 
-        <select name="role" id="role" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm bg-white
+        <select name="role" id="role" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm bg-white
                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                        @error('role') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -103,7 +103,7 @@
         </select>
 
         @error('role')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -129,7 +129,7 @@
         </select>
 
         @error('department_id')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -155,7 +155,7 @@
         </select>
 
         @error('designation_id')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -183,7 +183,7 @@
         </div>
 
         @error('gender')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -200,7 +200,7 @@
                        @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('phone')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -217,7 +217,7 @@
                        @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('whatsapp')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -234,7 +234,7 @@
                        @error('contact_person') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('contact_person')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -251,7 +251,7 @@
                        @error('contact_person_number') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('contact_person_number')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -268,7 +268,7 @@
                        @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('joining_date')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -285,7 +285,7 @@
                        @error('dob') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('dob')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -302,7 +302,7 @@
                        @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
         @error('address')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -328,7 +328,7 @@
         </select>
 
         @error('reporter_id')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -353,7 +353,7 @@
         </select>
 
         @error('manager_id')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
@@ -370,7 +370,7 @@
                        @error('employee_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
         @error('employee_id')
-            <p class="mt-2 text-sm text-red-600">
+            <p class="mt-2 text-sm text-error-300">
                 {{ $message }}
             </p>
         @enderror
