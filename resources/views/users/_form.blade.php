@@ -4,22 +4,6 @@
         @method('PUT')
     @endif
 
-    {{-- Profile picture upload --}}
-    {{-- <div class="flex justify-center py-8">
-        <div class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300">
-            <div class="flex items-center justify-center text-sm text-gray-600">
-                <label for="profile-image" class="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 dark:bg-transparent">
-                    <span>
-                        <svg class="stroke-bgray-900 dark:stroke-bgray-50" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </span>
-                    <input id="profile-image" name="profile_image" type="file" class="sr-only" />
-                </label>
-            </div>
-        </div>
-    </div> --}}
-
     {{-- Profile Picture Upload Draggable --}}
     <div class="flex justify-center py-8">
         <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
@@ -39,6 +23,7 @@
                         <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                     <input id="profile-image" name="profile_image" type="file" class="hidden" accept="image/*" />
+                    <input type="hidden" name="remove_profile_image" id="remove_profile_image" value="0">
                 </label>
             </div>
 
@@ -380,7 +365,7 @@
             Employee ID
         </label>
 
-        <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm bg-white
+        <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm bg-white
                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                        @error('employee_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 

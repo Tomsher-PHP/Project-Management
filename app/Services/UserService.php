@@ -57,40 +57,64 @@ class UserService
     {
         return DB::transaction(function () use ($user, $data) {
 
-            // 1. Update user table
-            $updateUserData = [
-                'name'  => $data['name'],
-                'email' => $data['email'],
-            ];
+            // Resolve Role (if provided)
+            $role = !empty($data['role'])
+                ? Role::select('id', 'name', 'user_type')->find($data['role'])
+                : null;
 
-            if (!empty($data['password'])) {
-                $updateUserData['password'] = Hash::make($data['password']);
+            // Prepare & Update User Data
+            $userData = collect($data)
+                ->only(['name', 'email'])
+                ->when(!empty($data['password']), function ($collection) use ($data) {
+                    $collection['password'] = Hash::make($data['password']);
+                    return $collection;
+                })
+                ->toArray();
+
+            if ($role) {
+                $userData['user_type'] = $role->user_type;
             }
 
-            $user->update($updateUserData);
+            $user->update($userData);
 
-            // 2. Update details table
-            $user->details()->updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'department_id'        => $data['department'] ?? null,
-                    'designation_id'       => $data['designation'] ?? null,
-                    'reporter_id'          => $data['reporting_to'] ?? null,
-                    'manager_id'           => $data['manager'] ?? null,
-                    'employee_id'          => $data['employee_id'] ?? null,
-                    'gender'               => $data['gender'] ?? 'male',
-                    'phone'         => $data['phone'] ?? null,
-                    'whatsapp'      => $data['whatsapp'] ?? null,
-                    'contact_person'       => $data['contact_person_name'] ?? null,
-                    'contact_person_number' => $data['contact_person_number'] ?? null,
-                    'joining_date'         => $data['joining_date'] ?? null,
-                    'leaving_date'         => $data['leaving_date'] ?? null,
-                    'dob'                  => $data['dob'] ?? null,
-                    'address'              => $data['address'] ?? null,
-                ]
-            );
+            // Assign role to user
+            if ($role) {
+                $user->syncRoles($role->name);
+            }
 
-            return $user;
+            // Update or Create User Details (hasOne)
+            $detailsData = collect($data)
+                ->only((new UserDetail())->getFillable())
+                ->toArray();
+
+            $user->details()->updateOrCreate([], $detailsData);
+
+            // Handle Profile Image Upload
+            if (!empty($data['profile_image'])) {
+                $this->updateProfileImage($user, $data['profile_image']);
+            } elseif (!empty($data['remove_profile_image'])) {
+                // Delete existing attachments
+                $this->attachmentService->delete($user->attachments);
+            }
+
+            return $user->load(['details']);
         });
+    }
+
+    private function updateProfileImage(User $user, $image): void
+    {
+        // Delete existing attachments
+        $this->attachmentService->delete($user->attachments);
+
+        // Upload new image
+        $this->attachmentService->upload(
+            $image,
+            'user_profile',
+            $user,
+            auth()->id(),
+            'public',
+            'public',
+            true
+        );
     }
 }

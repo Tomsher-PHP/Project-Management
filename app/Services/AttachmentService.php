@@ -16,6 +16,40 @@ class AttachmentService
         //
     }
 
+    /**
+     * Upload a file and attach it to a model.
+     *
+     * @param \Illuminate\Http\UploadedFile|string $file
+     *        The uploaded file instance or file path to be stored.
+     *
+     * @param string $directory
+     *        The target directory where the file will be stored
+     *        (default: 'attachments').
+     *
+     * @param \Illuminate\Database\Eloquent\Model $attachable
+     *        The Eloquent model instance that the file will be attached to
+     *        (polymorphic relationship).
+     *
+     * @param int|null $uploadedBy
+     *        The ID of the user who uploaded the file.
+     *        Typically auth()->id(). Nullable.
+     *
+     * @param string $disk
+     *        The storage disk defined in config/filesystems.php
+     *        (default: 'public').
+     *
+     * @param string $visibility
+     *        The file visibility ('public' or 'private').
+     *        Determines file access level.
+     *
+     * @param bool $isPrimary
+     *        Indicates whether this file should be marked as the primary attachment
+     *        for the given model (default: false).
+     *
+     * @return \App\Models\Attachment|null
+     *        Returns the created Attachment model instance
+     *        or null on failure.
+     */
     public function upload($file, $directory = 'attachments', $attachable, $uploadedBy = null, $disk = 'public', $visibility = 'public', $isPrimary = false)
     {
         // 1. Generate Unique File Name
@@ -52,12 +86,27 @@ class AttachmentService
         ]);
     }
 
-    public function delete($attachment)
+    /**
+     * Delete an attachment record and its physical file from storage.
+     *
+     * @param \App\Models\Attachment $attachment
+     *        The Attachment model instance to be deleted.
+     *        This includes both the database record and the stored file.
+     *
+     * @return bool|null
+     *        Returns true on successful deletion,
+     *        false if deletion fails,
+     *        or null if the model delete method returns null.
+     */
+    public function delete($attachments)
     {
-        if (Storage::disk('public')->exists($attachment->file_path)) {
-            Storage::disk('public')->delete($attachment->file_path);
-        }
+        foreach ($attachments as $attachment) {
+            $disk = $attachment->disk ?? 'public';
+            if ($attachment->file_path && Storage::disk($disk)->exists($attachment->file_path)) {
+                Storage::disk($disk)->delete($attachment->file_path);
+            }
 
-        $attachment->delete();
+            return $attachment->delete();
+        }
     }
 }

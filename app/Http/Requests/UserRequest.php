@@ -84,6 +84,8 @@ class UserRequest extends FormRequest
                 'max:50',
                 Rule::unique('user_details', 'employee_id')->ignore($userId),
             ],
+
+            'remove_profile_image' => 'nullable'
         ];
     }
 }
