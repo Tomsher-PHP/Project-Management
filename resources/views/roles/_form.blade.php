@@ -1,79 +1,109 @@
-<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST" class="space-y-6">
+<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST" class="space-y-10">
+
     @csrf
     @if (isset($role))
         @method('PUT')
     @endif
 
-    {{-- Role Name --}}
+    {{-- ================= BASIC ROLE INFORMATION ================= --}}
     <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-            Role Name
-        </label>
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 
+                   dark:border-darkblack-400 dark:text-white">
+            Role Information
+        </h3>
 
-        <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm
-                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
-                      @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-        <input type="hidden" name="role_id" value="{{ $role->id ?? '' }}">
+            {{-- Role Name --}}
+            <div class="flex flex-col gap-2">
+                <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Role Name
+                </label>
 
-        @error('name')
-            <p class="mt-2 text-sm text-red-600">
-                {{ $message }}
-            </p>
-        @enderror
-    </div>
+                <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 p-4
+                              focus:border focus:border-success-300 focus:ring-0
+                              dark:bg-darkblack-500 dark:text-white
+                              @error('name') border border-red-500 @enderror">
 
-    {{-- User Type --}}
-    <div>
-        <label for="user_type" class="block text-sm font-medium text-gray-700 mb-2">
-            User Type
-        </label>
+                <input type="hidden" name="role_id" value="{{ $role->id ?? '' }}">
 
-        <select name="user_type" id="user_type" {{ isset($role) ? 'disabled' : '' }} required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm bg-white
-                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
-                       @error('user_type') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                @error('name')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-            <option value="">Select User Type</option>
 
-            @foreach ($userTypes as $key => $type)
-                <option value="{{ $key }}" {{ old('user_type', $role->user_type ?? '') == $key ? 'selected' : '' }}>
-                    {{ $type }}
-                </option>
-            @endforeach
-        </select>
+            {{-- User Type --}}
+            <div class="flex flex-col gap-2">
+                <label for="user_type" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    User Type
+                </label>
 
-        @error('user_type')
-            <p class="mt-2 text-sm text-red-600">
-                {{ $message }}
-            </p>
-        @enderror
+                <select name="user_type" id="user_type" {{ isset($role) ? 'disabled' : '' }} required class="w-full rounded-lg border border-gray-300 p-4
+                               focus:border focus:border-success-300 focus:ring-0
+                               dark:bg-darkblack-500 dark:text-white
+                               @error('user_type') border border-red-500 @enderror">
 
-        {{-- Hidden input if disabled --}}
-        @if (isset($role))
-            <input type="hidden" name="user_type" value="{{ $role->user_type }}">
-        @endif
-    </div>
+                    <option value="">Select User Type</option>
 
-    {{-- Permissions --}}
-    <div id="permission-container" class="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-        Select user type to load permissions.
-    </div>
+                    @foreach ($userTypes as $key => $type)
+                        <option value="{{ $key }}" {{ old('user_type', $role->user_type ?? '') == $key ? 'selected' : '' }}>
+                            {{ $type }}
+                        </option>
+                    @endforeach
+                </select>
 
-    {{-- Submit Button --}}
-    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-start">
-        <button type="submit" class="inline-flex items-center px-4 py-1.5
-               rounded-md bg-success-300
-               text-sm font-semibold text-white
-               hover:bg-success-400
-               transition duration-200">
+                @error('user_type')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
 
-            <span>
+                {{-- Hidden input if disabled --}}
                 @if (isset($role))
-                    Update Role
-                @else
-                    Create Role
+                    <input type="hidden" name="user_type" value="{{ $role->user_type }}">
                 @endif
-            </span>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    {{-- ================= PERMISSIONS ================= --}}
+    <div>
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 
+                   dark:border-darkblack-400 dark:text-white">
+            Permissions
+        </h3>
+
+        <div id="permission-container" class="rounded-lg border border-dashed border-gray-300 p-6 text-sm
+                    bg-white
+                    dark:bg-darkblack-500
+                    dark:border-darkblack-400
+                    dark:text-bgray-50">
+
+            Select user type to load permissions.
+        </div>
+    </div>
+
+
+
+    {{-- ================= SUBMIT ================= --}}
+    <div class="pt-6 border-t flex justify-end 
+                dark:border-darkblack-400">
+        <button type="submit" class="px-6 py-2.5 rounded-lg
+                       bg-success-300 text-white font-semibold
+                       hover:bg-success-400 transition">
+
+            @if (isset($role))
+                Update Role
+            @else
+                Create Role
+            @endif
         </button>
     </div>
+
 </form>
