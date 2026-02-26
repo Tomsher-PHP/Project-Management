@@ -16,10 +16,13 @@ class UserController extends Controller
 
     protected $pageTitle;
 
+    protected $subTitle;
+
     public function __construct()
     {
         $this->pageTitle = 'User Management';
-        view()->share('pageTitle', $this->pageTitle);
+        $this->subTitle = 'Keep your team organized and secure';
+        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
     public function index(Request $request)

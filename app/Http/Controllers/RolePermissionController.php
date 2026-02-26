@@ -13,10 +13,13 @@ class RolePermissionController extends Controller
 {
     protected $pageTitle;
 
+    protected $subTitle;
+
     public function __construct()
     {
-        $this->pageTitle = 'Role & Permissions';
-        view()->share('pageTitle', $this->pageTitle);
+        $this->pageTitle = 'Role Management';
+        $this->subTitle = 'Define user roles and system access';
+        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
     public function index(Request $request)
