@@ -81,15 +81,15 @@
                     </button> --}}
                 </div>
                 <div class="hidden h-[48px] w-[1px] bg-bgray-300 dark:bg-darkblack-400 xl:block"></div>
-                <!--                author-->
+                <!--author-->
                 <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">
                     <div class="h-[52px] w-[52px] overflow-hidden rounded-xl border border-bgray-300">
-                        <img class="object-cover" src="./assets/images/avatar/profile-52x52.png" alt="avater" />
+                        <img class="object-cover" src="{{ auth()->user()->profileImageUrl ?? "./assets/images/avatar/profile-52x52.png" }}" alt="avater" />
                     </div>
                     <div class="hidden 2xl:block">
                         <div class="flex items-center space-x-2.5">
                             <h3 class="text-base font-bold leading-[28px] text-bgray-900 dark:text-white">
-                                John Doe
+                                {{ auth()->user()->name }}
                             </h3>
                             <span>
                                 <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -98,7 +98,7 @@
                             </span>
                         </div>
                         <p class="text-sm font-medium leading-[20px] text-bgray-600 dark:text-bgray-50">
-                            Super Admin
+                            {{ auth()->user()->roleName }}
                         </p>
                     </div>
                 </div>
@@ -183,7 +183,29 @@
                                     </a>
                                 </li>
                                 <li class="w-full">
-                                    <a href="#">
+
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left">
+                                            <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-success-300 hover:bg-gray-100 transition">
+
+                                                <div class="w-[20px]">
+                                                    <span>
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M15 10L13.7071 11.2929C13.3166 11.6834 13.3166 12.3166 13.7071 12.7071L15 14M14 12L22 12M6 20C3.79086 20 2 18.2091 2 16V8C2 5.79086 3.79086 4 6 4M6 20C8.20914 20 10 18.2091 10 16V8C10 5.79086 8.20914 4 6 4M6 20H14C16.2091 20 18 18.2091 18 16M6 4H14C16.2091 4 18 5.79086 18 8" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+
+                                                <div class="flex-1">
+                                                    <span class="text-sm font-semibold">Log Out</span>
+                                                </div>
+
+                                            </div>
+                                        </button>
+                                    </form>
+
+                                    {{-- <a href="#">
                                         <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-success-300">
                                             <div class="w-[20px]">
                                                 <span>
@@ -196,7 +218,7 @@
                                                 <span class="text-sm font-semibold">Log Out</span>
                                             </div>
                                         </div>
-                                    </a>
+                                    </a> --}}
                                 </li>
                             </ul>
                         </div>
