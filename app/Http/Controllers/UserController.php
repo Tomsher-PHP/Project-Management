@@ -14,9 +14,7 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-
     protected $pageTitle;
-
     protected $subTitle;
 
     public function __construct()
