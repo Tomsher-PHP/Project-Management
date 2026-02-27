@@ -158,7 +158,7 @@
                         </a>
                     </li> --}}
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="settings.html">
+                        <a href="{{ route('settings.index') }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
                                     <span class="item-ico">
