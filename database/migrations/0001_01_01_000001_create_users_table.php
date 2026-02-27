@@ -21,7 +21,17 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+
+            $table->boolean('status')->default(true);
+            $table->boolean('delete_status')->default(false);
+            
+            $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
+            $table->unsignedBigInteger('updated_by')->nullable()->comment('user id')->index();
+            
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['status', 'delete_status'], 'users_status_delete_status_index');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
