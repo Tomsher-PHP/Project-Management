@@ -5,7 +5,7 @@
     @endif
 
     {{-- Profile Image --}}
-    <div class="flex justify-center border-b pb-8 dark:border-darkblack-400 dark:text-white">
+    <div class="flex justify-center border-b pb-8 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
         <!-- KEEPING YOUR IMAGE CODE SAME -->
         <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
 
@@ -33,7 +33,7 @@
 
     {{-- ================= BASIC INFORMATION ================= --}}
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Basic Information
         </h3>
 
@@ -44,7 +44,7 @@
                     Name
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 <input type="hidden" name="user_id" value="{{ $user->id ?? '' }}">
@@ -62,7 +62,7 @@
                     Email
                 </label>
 
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
                       @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()">
 
@@ -79,10 +79,58 @@
                     Password
                 </label>
 
-                <input type="password" id="password" name="password" value="{{ old('password', $user->password ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="password" id="password" name="password" value="{{ old('password', $user->password ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('password')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Date of Birth --}}
+            <div class="flex flex-col gap-2">
+                <label for="date_of_birth" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Date of Birth
+                </label>
+
+                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                       @error('dob') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+
+                @error('dob')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Phone --}}
+            <div class="flex flex-col gap-2">
+                <label for="phone" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Phone Number
+                </label>
+
+                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                       @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+
+                @error('phone')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- WhatsApp --}}
+            <div class="flex flex-col gap-2">
+                <label for="whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    WhatsApp Number
+                </label>
+
+                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                       @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+
+                @error('whatsapp')
                     <p class="mt-2 text-sm text-error-300">
                         {{ $message }}
                     </p>
@@ -117,59 +165,12 @@
                 @enderror
             </div>
 
-            {{-- Date of Birth --}}
-            <div class="flex flex-col gap-2">
-                <label for="date_of_birth" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Date of Birth
-                </label>
-
-                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
-                       @error('dob') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-
-                @error('dob')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-            {{-- Phone --}}
-            <div class="flex flex-col gap-2">
-                <label for="phone" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Phone Number
-                </label>
-
-                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
-                       @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-
-                @error('phone')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-            {{-- WhatsApp --}}
-            <div class="flex flex-col gap-2">
-                <label for="whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    WhatsApp Number
-                </label>
-
-                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
-                       @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
-
-                @error('whatsapp')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
         </div>
     </div>
 
     {{-- ================= ORGANIZATION DETAILS ================= --}}
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Organization Details
         </h3>
 
@@ -181,7 +182,7 @@
                     Role
                 </label>
 
-                <select name="role" id="role" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <select name="role" id="role" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('role') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Role</option>
@@ -206,7 +207,7 @@
                     Department
                 </label>
 
-                <select name="department_id" id="department" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <select name="department_id" id="department" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('department_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Department</option>
@@ -231,7 +232,7 @@
                     Designation
                 </label>
 
-                <select name="designation_id" id="designation" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <select name="designation_id" id="designation" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('designation_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Designation</option>
@@ -256,7 +257,7 @@
                     Reporting To
                 </label>
 
-                <select name="reporter_id" id="reporting_to" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <select name="reporter_id" id="reporting_to" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('reporter_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Reporting Manager</option>
@@ -280,7 +281,7 @@
                 <label for="manager" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Manager
                 </label>
-                <select name="manager_id" id="manager" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <select name="manager_id" id="manager" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('manager_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Manager</option>
@@ -305,7 +306,7 @@
                     Employee ID
                 </label>
 
-                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('employee_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('employee_id')
@@ -321,7 +322,7 @@
                     Date of Joining
                 </label>
 
-                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('joining_date')
@@ -336,7 +337,7 @@
 
     {{-- ================= EMERGENCY CONTACT ================= --}}
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Emergency Contact
         </h3>
 
@@ -348,7 +349,7 @@
                     Contact Person Name
                 </label>
 
-                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person')
@@ -364,7 +365,7 @@
                     Contact Person Number
                 </label>
 
-                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person_number') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person_number')
@@ -379,7 +380,7 @@
 
     {{-- ================= ADDRESS ================= --}}
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Address Information
         </h3>
 
@@ -390,7 +391,7 @@
                     Address
                 </label>
 
-                <textarea name="address" id="address" rows="3" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white
+                <textarea name="address" id="address" rows="3" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
                 @error('address')
@@ -402,8 +403,83 @@
         </div>
     </div>
 
+    {{-- ================= Shift Information ================= --}}
+    <div>
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
+            Shift Information
+        </h3>
+
+        <div id="shifts-wrapper">
+            @php
+                $oldShifts = old('shifts', [['start_time' => '09:00', 'end_time' => '18:00', 'break_duration' => '01:00']]);
+            @endphp
+
+            @foreach ($oldShifts as $index => $shift)
+                <div class="shift-item border p-4 rounded-lg mb-6 dark:border-darkblack-400">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+                        {{-- Start Time --}}
+                        <div class="flex flex-col gap-2">
+                            <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
+                            <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                        </div>
+
+                        {{-- End Time --}}
+                        <div class="flex flex-col gap-2">
+                            <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
+                            <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                        </div>
+
+                        {{-- Break --}}
+                        <div class="flex flex-col gap-2">
+                            <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break (HH:MM)</label>
+                            <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                        </div>
+
+                    </div>
+                </div>
+            @endforeach
+
+        </div>
+
+        <button type="button" onclick="addShift()" class="px-4 py-2 bg-success-300 text-white rounded">
+            + More Shift
+        </button>
+
+        {{-- Working Days --}}
+        <div class="mt-8">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">
+                Working Days
+            </h4>
+
+            <div class="flex flex-wrap items-center gap-6">
+                @php
+                    $days = [
+                        'sunday' => 'Sunday',
+                        'monday' => 'Monday',
+                        'tuesday' => 'Tuesday',
+                        'wednesday' => 'Wednesday',
+                        'thursday' => 'Thursday',
+                        'friday' => 'Friday',
+                        'saturday' => 'Saturday',
+                    ];
+                @endphp
+
+                @foreach ($days as $key => $label)
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="working_days[]" value="{{ $key }}" {{ in_array($key, old('working_days', [])) ? 'checked' : '' }} class="h-5 w-5 cursor-pointer rounded-full border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+
+                        <span class="text-sm text-gray-700 dark:text-bgray-50">
+                            {{ $label }}
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
     {{-- Submit Button --}}
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white">
+    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($user))
                 Update User
@@ -414,3 +490,35 @@
     </div>
 
 </form>
+
+<div style="display: none" id="add-shift-card">
+    <div class="shift-item border p-4 rounded-lg mb-6 dark:border-darkblack-400">
+
+        <!-- Remove Button -->
+        <button type="button" class="remove-shift absolute top-3 right-3 text-red-500 text-sm font-semibold">
+            ✕ Remove
+        </button>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            {{-- Start Time --}}
+            <div class="flex flex-col gap-2">
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
+                <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            {{-- End Time --}}
+            <div class="flex flex-col gap-2">
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
+                <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            {{-- Break --}}
+            <div class="flex flex-col gap-2">
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break (HH:MM)</label>
+                <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+        </div>
+    </div>
+</div>

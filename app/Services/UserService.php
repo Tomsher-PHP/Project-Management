@@ -46,7 +46,7 @@ class UserService
 
             // 4. Image upload can be handled here if needed
             if (!empty($data['profile_image'])) {
-                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, auth()->id(), 'public', 'public', true);
+                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, 'public', 'public', true);
             }
 
             return $user;
@@ -111,7 +111,6 @@ class UserService
             $image,
             'user_profile',
             $user,
-            auth()->id(),
             'public',
             'public',
             true

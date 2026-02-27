@@ -58,7 +58,7 @@ class UserRequest extends FormRequest
 
             // Personal Info
             'gender' => ['nullable', 'in:male,female,other'],
-            'phone' => ['nullable','string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userId),],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userId),],
             'whatsapp' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'whatsapp')->ignore($userId)],
 
             // Emergency Contact
@@ -85,7 +85,23 @@ class UserRequest extends FormRequest
                 Rule::unique('user_details', 'employee_id')->ignore($userId),
             ],
 
-            'remove_profile_image' => 'nullable'
+            'remove_profile_image' => 'nullable',
+
+            // Shift information
+            'start_time' => ['required', 'array'],
+            'start_time.*' => ['required', 'date_format:H:i'],
+
+            'end_time' => ['required', 'array'],
+            'end_time.*' => ['required', 'date_format:H:i'],
+
+            'break_duration' => ['required', 'array'],
+            'break_duration.*' => ['required', 'date_format:H:i'],
+
+            'working_days' => ['required', 'array', 'min:1'],
+            'working_days.*' => [
+                'required',
+                'in:sunday,monday,tuesday,wednesday,thursday,friday,saturday'
+            ],
         ];
     }
 }

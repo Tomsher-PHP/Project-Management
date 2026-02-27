@@ -2,7 +2,7 @@
     <div class="sidebar-header relative z-30 flex h-[108px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-[50px] dark:border-darkblack-400">
         <a href="index.html">
             <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
-            <img src="{{ asset(config('assets.icons.logo-white')) }}" class="hidden dark:block" alt="logo" />
+            <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
         </a>
         <button type="button" class="drawer-btn absolute right-0 top-auto" title="Ctrl+b">
             <span>

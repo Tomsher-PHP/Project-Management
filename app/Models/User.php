@@ -102,4 +102,14 @@ class User extends Authenticatable
     {
         return $this->roles->first()?->name;
     }
+
+    public function shifts()
+    {
+        return $this->hasMany(UserShift::class);
+    }
+
+    public function workingDays()
+    {
+        return $this->hasOne(UserWorkingDay::class);
+    }
 }

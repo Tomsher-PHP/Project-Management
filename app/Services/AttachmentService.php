@@ -50,7 +50,7 @@ class AttachmentService
      *        Returns the created Attachment model instance
      *        or null on failure.
      */
-    public function upload($file, $directory = 'attachments', $attachable, $uploadedBy = null, $disk = 'public', $visibility = 'public', $isPrimary = false)
+    public function upload($file, $directory = 'attachments', $attachable, $disk = 'public', $visibility = 'public', $isPrimary = false)
     {
         // 1. Generate Unique File Name
         $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
@@ -82,7 +82,6 @@ class AttachmentService
             'visibility'    => $visibility,
             'is_primary'    => $isPrimary ? 1 : 0,
             'status'        => 1,
-            'uploaded_by'   => $uploadedBy,
         ]);
     }
 

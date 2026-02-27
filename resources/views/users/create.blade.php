@@ -26,4 +26,5 @@
 @endsection
 @push('scripts')
     <script src="{{ asset(config('assets.js.image_draggable')) }}"></script>
+    <script src="{{ asset(config('assets.js.more_shift')) }}"></script>
 @endpush

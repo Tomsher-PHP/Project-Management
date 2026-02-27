@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Attachment extends Model
 {
@@ -18,8 +19,15 @@ class Attachment extends Model
         'visibility',
         'is_primary',
         'status',
-        'uploaded_by'
+        'added_by'
     ];
+
+    public static function booted()
+    {
+        static::creating(function ($shift) {
+            $shift->added_by = Auth::id() ?? null;
+        });
+    }
 
     public function link()
     {

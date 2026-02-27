@@ -6,6 +6,7 @@ use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\User;
+use App\Services\ShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -56,7 +57,7 @@ class UserController extends Controller
 
     public function store(UserRequest $request, UserService $service)
     {
-        $service->createUser($request->validated());
+        $user = $service->createUser($request->validated());
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -73,9 +74,11 @@ class UserController extends Controller
         return view('users.edit', compact('user', 'roles', 'departments', 'designations', 'managers'));
     }
 
-    public function update(UserRequest $request, User $user, UserService $service)
+    public function update(UserRequest $request, User $user, UserService $service, ShiftService $shiftService)
     {
         $service->updateUser($user, $request->validated());
+
+        $shiftService->updateShifts($user, $request->only(['start_time', 'end_time', 'break_duration', 'working_days']));
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');

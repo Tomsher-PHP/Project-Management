@@ -78,6 +78,7 @@
             arrows: false,
         });
 
+        //dashboard
         function totalEarn() {
             const ctx_bids = document.getElementById("totalEarn").getContext("2d");
             const bitsMonth = [

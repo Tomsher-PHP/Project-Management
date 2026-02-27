@@ -12,6 +12,9 @@
                             <h3 class="border-b border-bgray-200 pb-5 text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
                                 Edit User
                             </h3>
+                            {{-- @if($errors->all())
+                                @dd($errors->all())
+                            @endif --}}
                             <div class="mt-8">
                                 @include('users._form')
                             </div>
@@ -25,4 +28,5 @@
 @endsection
 @push('scripts')
     <script src="{{ asset(config('assets.js.image_draggable')) }}"></script>
+    <script src="{{ asset(config('assets.js.more_shift')) }}"></script>
 @endpush

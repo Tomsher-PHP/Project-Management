@@ -4,8 +4,8 @@ return [
     'icons' => [
         'favicon' => 'assets/images/logo/favicon.ico',
         'logo' => 'assets/images/logo/logo.png',
-        'logo-white' => 'assets/images/logo/logo.png',
-        'logo-short' => 'assets/images/logo/logo-short.png',
+        'logo_white' => 'assets/images/logo/logo.png',
+        'logo_short' => 'assets/images/logo/logo-short.png',
     ],
 
     'css' => [
@@ -24,9 +24,12 @@ return [
         'chart' => 'assets/js/chart.js',
 
         //profile page js
-        'pages-profile' => 'assets/js/pages/profile.init.js',
+        'pages_profile' => 'assets/js/pages/profile.init.js',
 
         //image-draggable
-        'image_draggable' => 'assets/js/image-draggable.js'
+        'image_draggable' => 'assets/js/image-draggable.js',
+
+        //More shift
+        'more_shift' => 'assets/js/add-shifts.js'
     ],
 ];
