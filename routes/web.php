@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,4 +63,16 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('user', UserController::class)->middleware('permission.type:user.delete')->only(['destroy']);
     // End of User Management Routes
+
+    // Settings Routes
+    Route::prefix('settings')->as('settings.')->group(function() {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+
+        Route::patch('/department/toggle-status', [DepartmentController::class, 'toggleStatus'])->name('department.toggleStatus');
+        Route::resource('department', DepartmentController::class);
+
+        Route::patch('/designation/toggle-status', [DesignationController::class, 'toggleStatus'])->name('designation.toggleStatus');
+        Route::resource('designation', DesignationController::class);
+    });
+    // End Settings Routes
 });

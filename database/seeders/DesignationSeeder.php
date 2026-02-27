@@ -14,20 +14,29 @@ class DesignationSeeder extends Seeder
     public function run(): void
     {
         $array = [
-            'Manager' => 'Oversees team operations and ensures project success.',
-            'Developer' => 'Writes and maintains code for applications.',
-            'Designer' => 'Creates visual concepts and designs for products.',
-            'Analyst' => 'Analyzes data to provide insights and recommendations.',
-            'Tester' => 'Tests software to identify bugs and ensure quality.',
-            'HR Specialist' => 'Manages recruitment, employee relations, and organizational development.',
-            'Finance Specialist' => 'Handles financial planning, budgeting, and accounting.',
-            'IT Support' => 'Provides technical support and manages IT infrastructure.',
+            'Manager',
+            'Project Head',
+            'Business Development Manager',
+            'Project Manager',
+            'Product Manager',
+            'Sales Manager',
+            'Sr Developer',
+            'Jr Developer',
+            'Sr Designer',
+            'Jr Designer',
+            'Quality Analyst',
+            'SEO Analyst',
+            'Finance Specialist',
+            'Sales Excecutive',
+            'IT Support',
         ];
         
-        foreach ($array as $name => $description) {
+        foreach ($array as $key => $name) {
             Designation::create([
                 'name' => $name,
-                'description' => $description,
+                'order' => $key + 1,
+                'default' => 1,
+                'status' => 1,
             ]);
         }
     }
