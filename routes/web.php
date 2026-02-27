@@ -69,10 +69,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
 
         Route::patch('/department/toggle-status', [DepartmentController::class, 'toggleStatus'])->name('department.toggleStatus');
-        Route::resource('department', DepartmentController::class);
+        Route::resource('departments', DepartmentController::class);
 
         Route::patch('/designation/toggle-status', [DesignationController::class, 'toggleStatus'])->name('designation.toggleStatus');
-        Route::resource('designation', DesignationController::class);
+        Route::resource('designations', DesignationController::class);
     });
     // End Settings Routes
 });

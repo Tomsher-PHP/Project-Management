@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Middleware\PermissionByType;
+use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,17 +27,24 @@ return Application::configure(basePath: dirname(__DIR__))
             Log::error('Application Error', [
                 'route'   => optional($request->route())->getName(),
                 'message' => $e->getMessage(),
-                // 'url'     => $request->fullUrl(),
-                // 'method'  => $request->method(),
-                // 'ip'      => $request->ip(),
             ]);
         });
 
         // Handle rendering globally (like global try-catch)
         $exceptions->render(function (Throwable $e, Request $request) {
 
+            // ✅ Let validation errors behave normally
+            if ($e instanceof ValidationException) {
+                return null;
+            }
+
             // For AJAX / API
             if ($request->expectsJson()) {
+                Log::error('Application Error', [
+                    'route'   => optional($request->route())->getName(),
+                    'message' => $e->getMessage(),
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Something went wrong.',

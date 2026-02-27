@@ -21,7 +21,7 @@
                 </div>
                 <div class="flex flex-col">
                     <div>
-                        <form id="departmentForm" action="{{ route('settings.department.store') }}" method="post" class="space-y-6">
+                        <form id="departmentForm" action="{{ route('settings.departments.store') }}" method="post" class="space-y-6">
                             @csrf
 
                             <input type="hidden" name="_method" id="formMethod" value="POST">
@@ -43,8 +43,8 @@
 
                             <!-- Submit Button -->
                             <div class="flex justify-end">
-                                <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-base font-medium text-white hover:bg-success-400">
-                                    Save Department
+                                <button type="submit" id="submitBtn" class="rounded-lg bg-success-300 px-6 py-3 text-base font-medium text-white hover:bg-success-400">
+                                    Create Department
                                 </button>
                             </div>
 

@@ -190,53 +190,6 @@
                 borderRadius: 5,
             },
         ];
-
-        //chart dark mode
-        let themeToggleSwitch = document.getElementById("theme-toggle");
-
-        //onclick
-
-        if (themeToggleSwitch) {
-            themeToggleSwitch.addEventListener("click", function() {
-                if (
-                    document.documentElement.classList[0] === "light" ||
-                    localStorage.theme === "light"
-                ) {
-                    revenueFlow.data.datasets = dataSetsLight;
-                    revenueFlow.options.scales.y.ticks.color = "black";
-                    revenueFlow.options.scales.x.ticks.color = "black";
-                    revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.update();
-                } else {
-                    revenueFlow.data.datasets = dataSetsLight;
-                    revenueFlow.options.scales.y.ticks.color = "black";
-                    revenueFlow.options.scales.x.ticks.color = "black";
-                    revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.update();
-                }
-            });
-        }
-
-        //initial load
-        if (
-            localStorage.theme === "light" ||
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
-            revenueFlow.data.datasets = dataSetsLight;
-            revenueFlow.options.scales.y.ticks.color = "black";
-            revenueFlow.options.scales.x.ticks.color = "black";
-            revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-            revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-        } else {
-            revenueFlow.data.datasets = dataSetsLight;
-            revenueFlow.options.scales.y.ticks.color = "black";
-            revenueFlow.options.scales.x.ticks.color = "black";
-            revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-            revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-        }
-        revenueFlow.update();
     </script>
 
     @stack('scripts')

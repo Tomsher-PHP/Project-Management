@@ -13,8 +13,8 @@ class DesignationController extends Controller
     protected $subTitle;
     public function __construct()
     {
-        $this->pageTitle = 'Settings';
-        $this->subTitle = 'Manage your company designations';
+        $this->pageTitle = 'Designations';
+        $this->subTitle = 'Create and organize job roles for structured workforce management.';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
@@ -22,14 +22,11 @@ class DesignationController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        Designation::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
+        $designations = Designation::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
 
-        // return view('settings.designation.index');
+        return view('settings.designations.index', compact('designations', 'perPage'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(DesignationRequest $request)
     {
         $designation = Designation::create($request->validated());

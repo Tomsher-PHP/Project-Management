@@ -13,8 +13,8 @@ class DepartmentController extends Controller
     protected $subTitle;
     public function __construct()
     {
-        $this->pageTitle = 'Settings';
-        $this->subTitle = 'Manage your company departments';
+        $this->pageTitle = 'Departments';
+        $this->subTitle = 'Organize your company into structured departments for better management and reporting';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
@@ -22,14 +22,11 @@ class DepartmentController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        Department::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
+        $departments = Department::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
 
-        // return view('settings.department.index');
+        return view('settings.departments.index', compact('departments', 'perPage'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(DepartmentRequest $request)
     {
         $department = Department::create($request->validated());

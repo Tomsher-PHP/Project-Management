@@ -17,13 +17,8 @@ class SettingsController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        $perPage = $request->input('per_page', config('constants.per_page_count'));
-
-        $departments = Department::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
-
-        $designations = [];
-        return view('settings.index', compact('departments', 'designations', 'perPage'));
+        return view('settings.index');
     }
 }
