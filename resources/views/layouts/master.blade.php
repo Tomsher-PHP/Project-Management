@@ -9,6 +9,9 @@
 
     <title>Tomsher Pmt | {{ $pageTitle ?? 'Dashboard' }}</title>
 
+    {{-- Vite Assets --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <link rel="icon" href="{{ asset(config('assets.icons.favicon')) }}" type="image/x-icon" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.slick')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.aos')) }}" />
