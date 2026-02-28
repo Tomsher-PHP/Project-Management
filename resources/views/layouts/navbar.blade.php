@@ -165,7 +165,7 @@
                         <div>
                             <ul>
                                 <li class="w-full">
-                                    <a href="settings.html">
+                                    <a href="#">
                                         <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 hover:dark:bg-darkblack-500">
                                             <div class="w-[20px]">
                                                 <span>
@@ -226,14 +226,14 @@
                         <div>
                             <ul>
                                 <li class="w-full">
-                                    <a href="settings.html">
+                                    <a href="{{ route('settings.index') }}">
                                         <div class="rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-50 dark:hover:bg-darkblack-500">
                                             <span class="text-sm font-semibold">Settings</span>
                                         </div>
                                     </a>
                                 </li>
                                 <li class="w-full">
-                                    <a href="users.html">
+                                    <a href="{{ route('users.index') }}">
                                         <div class="rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-50 dark:hover:bg-darkblack-500">
                                             <span class="text-sm font-semibold">Users</span>
                                         </div>
