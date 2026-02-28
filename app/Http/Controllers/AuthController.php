@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,23 +40,35 @@ class AuthController extends Controller
         return redirect('/dashboard');
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
         $credentials = $request->only('email', 'password');
+
+        // Attempt login
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()->withErrors([
+                'email' => 'Invalid credentials',
+            ])->onlyInput('email');
+        }
 
         //status should be true to allow login
         $credentials['status'] = true;
 
-        if (Auth::attempt($credentials)) {
-            return redirect()->route('dashboard');
-        }
+        // Prevent session fixation
+        $request->session()->regenerate();
 
-        return back()->with('error', 'Invalid credentials');
+        return redirect()->intended(route('dashboard'))
+            ->with('success', 'Welcome back!');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
-        return redirect()->route('login');
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->with('success', 'You have been logged out successfully.');
     }
 }

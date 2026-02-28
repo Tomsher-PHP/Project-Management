@@ -43,7 +43,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 300,               // smaller width
+            width: 400,               // smaller width
             padding: "0.75rem",       // reduce padding
             customClass: {
                 popup: 'small-alert',
@@ -62,7 +62,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 300,               // smaller width
+            width: 400,               // smaller width
             padding: "0.75rem",       // reduce padding
             customClass: {
                 popup: 'small-alert',
