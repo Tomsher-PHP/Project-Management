@@ -35,20 +35,7 @@
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
 
-                @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                {{-- Error Message --}}
-                @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+                <x-flash-alert />
 
                 @yield('page-content')
 
@@ -67,6 +54,8 @@
     <script src="{{ asset(config('assets.js.quill')) }}"></script>
     <script src="{{ asset(config('assets.js.main')) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
+    <script src="{{ asset(config('assets.js.delete_alert')) }}"></script>
+    
     <script>
         localStorage.theme = 'light';
         document.documentElement.classList.remove('dark');

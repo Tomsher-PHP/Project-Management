@@ -80,8 +80,7 @@ class UserController extends Controller
 
         $shiftService->updateShifts($user, $request->only(['start_time', 'end_time', 'break_duration', 'working_days']));
 
-        return redirect()->route('users.index')
-            ->with('success', 'User updated successfully.');
+        return redirect()->back()->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -103,7 +102,7 @@ class UserController extends Controller
 
     public function toggleStatus(Request $request)
     {
-        $user = User::findOrFail($request->userId);
+        $user = User::findOrFail($request->id);
         $user->status = !$user->status;
         $user->save();
 

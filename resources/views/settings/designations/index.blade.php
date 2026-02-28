@@ -74,16 +74,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-
-                                                <button type="button" data-id="{{ $designation->id }}" class="switch-btn relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                                                {{ $designation->status ? 'bg-green-600 active' : 'bg-gray-200' }}" role="switch" aria-checked="{{ $designation->status ? 'true' : 'false' }}" @unlesscanType('role.edit') disabled @endcanType>
-
-                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                                                    {{ $designation->status ? 'translate-x-5' : 'translate-x-0' }}">
-                                                    </span>
-
-                                                </button>
-
+                                                <x-status-toggle :model="$designation" route="settings.designation.toggleStatus" entity="designation" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -94,7 +85,7 @@
                                                     </svg>
                                                 </a>
 
-                                                <form action="{{ route('settings.designations.destroy', $designation->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this designation?')">
+                                                <form action="{{ route('settings.designations.destroy', $designation->id) }}" method="POST" class="delete-form">
                                                     @csrf
                                                     @method('DELETE')
 
@@ -145,72 +136,6 @@
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
-            });
-
-            $(document).on('click', '.switch-btn', function() {
-                let btn = $(this);
-
-                // Prevent multiple clicks while processing
-                if (btn.data('processing')) return;
-                btn.data('processing', true);
-
-                let id = btn.data('id');
-                let isActive = btn.attr('aria-checked') === 'true';
-                let actionText = isActive ? 'deactivate' : 'activate';
-
-                if (!confirm(`Are you sure you want to ${actionText} this designation?`)) {
-                    btn.data('processing', false);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/settings/designation/toggle-status',
-                    type: 'PATCH',
-                    data: {
-                        // _token: $('meta[name="csrf-token"]').attr('content'),
-                        id: id
-                    },
-                    success: function(response) {
-
-                        if (response.success) {
-
-                            let newStatus = response.status == 1;
-
-                            // Update switch UI
-                            btn.attr('aria-checked', newStatus);
-
-                            btn.toggleClass('bg-green-600', newStatus);
-                            btn.toggleClass('bg-gray-200', !newStatus);
-
-                            btn.find('span').toggleClass('translate-x-5', newStatus);
-                            btn.find('span').toggleClass('translate-x-0', !newStatus);
-
-                            // Update badge
-                            let badge = btn.closest('tr').find('.status-badge');
-
-                            if (newStatus) {
-                                badge.removeClass('bg-secondary')
-                                    .addClass('bg-success')
-                                    .text('Active');
-                            } else {
-                                badge.removeClass('bg-success')
-                                    .addClass('bg-secondary')
-                                    .text('Inactive');
-                            }
-
-                        } else {
-                            alert('Status update failed.');
-                        }
-
-                    },
-                    error: function() {
-                        alert('Something went wrong.');
-                    },
-                    complete: function() {
-                        btn.data('processing', false);
-                    }
-                });
-
             });
 
             const modal = document.getElementById('multi-step-modal');

@@ -60,7 +60,6 @@ class RolePermissionController extends Controller
         return view('roles.edit', compact('role', 'permissions', 'userTypes'));
     }
 
-
     public function update(RolePermissionRequest $request, $id)
     {
         $role = Role::findById($id);
@@ -73,12 +72,12 @@ class RolePermissionController extends Controller
             $role->syncPermissions($permissions);
         });
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
+        return redirect()->back()->with('success', 'Role updated successfully.');
     }
 
     public function toggleStatus(Request $request)
     {
-        $role = Role::findById($request->roleId);
+        $role = Role::findById($request->id);
         $role->status = !$role->status;
         $role->save();
 
