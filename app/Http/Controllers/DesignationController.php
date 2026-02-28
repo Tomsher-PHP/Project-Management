@@ -49,12 +49,19 @@ class DesignationController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Designation $designation)
     {
-        //
+        if ($designation->default) {
+            return redirect()
+                ->route('settings.designations.index')
+                ->with('error', 'Default designation cannot be deleted.');
+        }
+
+        $designation->delete();
+
+        return redirect()
+            ->route('settings.designations.index')
+            ->with('success', 'Department deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

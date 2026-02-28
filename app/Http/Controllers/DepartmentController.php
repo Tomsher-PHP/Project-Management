@@ -49,12 +49,19 @@ class DepartmentController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Department $department)
     {
-        //
+        if ($department->default) {
+            return redirect()
+                ->route('settings.departments.index')
+                ->with('error', 'Default department cannot be deleted.');
+        }
+
+        $department->delete();
+
+        return redirect()
+            ->route('settings.departments.index')
+            ->with('success', 'Department deleted successfully.');
     }
 
     public function toggleStatus(Request $request)
