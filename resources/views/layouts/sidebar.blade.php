@@ -158,7 +158,7 @@
                         </a>
                     </li> --}}
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="settings.html">
+                        <a href="{{ route('settings.index') }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
                                     <span class="item-ico">
@@ -169,7 +169,7 @@
                                             <path d="M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z" fill="#22C55E" class="path-2" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-lg font-medium leading-none">Setting</span>
+                                    <span class="item-text text-lg font-medium leading-none">Settings</span>
                                 </div>
                             </div>
                         </a>
