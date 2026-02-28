@@ -17,29 +17,58 @@ const Alert = {
 
     success(message, title = 'Success') {
         return Swal.fire({
+            position: "top-end",
             icon: 'success',
             title: title,
             text: message,
-            timer: 1000,
-            showConfirmButton: false
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,              // makes it small like a toast
+            width: 400,               // smaller width
+            padding: "0.75rem",       // reduce padding
+            customClass: {
+                popup: 'small-alert',
+                title: 'small-alert-title',
+                htmlContainer: 'small-alert-text'
+            }
         });
     },
 
     error(message, title = 'Error') {
         return Swal.fire({
-            icon: 'error',
+            position: "top-end",
+            icon: "error",
             title: title,
             text: message,
+            showConfirmButton: false,
             timer: 1500,
+            toast: true,              // makes it small like a toast
+            width: 300,               // smaller width
+            padding: "0.75rem",       // reduce padding
+            customClass: {
+                popup: 'small-alert',
+                title: 'small-alert-title',
+                htmlContainer: 'small-alert-text'
+            }
         });
     },
 
     info(message, title = 'Info') {
         return Swal.fire({
+            position: "top-end",
             icon: 'info',
             title: title,
             text: message,
+            showConfirmButton: false,
             timer: 1500,
+            toast: true,              // makes it small like a toast
+            width: 300,               // smaller width
+            padding: "0.75rem",       // reduce padding
+            customClass: {
+                popup: 'small-alert',
+                title: 'small-alert-title',
+                htmlContainer: 'small-alert-text'
+            }
         });
     }
 };
