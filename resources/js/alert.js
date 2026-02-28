@@ -11,7 +11,7 @@ const Alert = {
             confirmButtonText: options.confirmText || 'Yes',
             cancelButtonText: options.cancelText || 'Cancel',
             confirmButtonColor: options.confirmColor || '#22c55e',
-            cancelButtonColor: options.cancelColor || '#ef4444'
+            cancelButtonColor: options.cancelColor || '#ef4444',
         });
     },
 

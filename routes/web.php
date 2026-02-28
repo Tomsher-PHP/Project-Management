@@ -31,10 +31,6 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/dashboard11', function () {
-        return view('dashboard11');
-    })->name('dashboard11');
-
     Route::get('/profile', function () {
         return view('user-profile');
     })->name('profile');

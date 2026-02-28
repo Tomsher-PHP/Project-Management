@@ -201,7 +201,7 @@
 
                         if (response.status) {
 
-                            alert(response.message); // You can replace with toast
+                            Alert.success(response.message); // You can replace with toast
 
                             $('#multi-step-modal').addClass('hidden');
                             form[0].reset();
