@@ -15,8 +15,8 @@
                 </div>
                 <div>
                     <a href="signin.html" class="block mb-7">
-                        <img src="assets/images/logo/logo-color.svg" class="block dark:hidden" alt="" />
-                        <img src="assets/images/logo/logo-white.svg" class="hidden dark:block" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="hidden dark:block" alt="" />
                     </a>
                     <h3 class="text-2xl font-bold text-bgray-900 dark:text-white mb-3">
                         Reset your password
@@ -25,11 +25,11 @@
                         Enter the email address associated with your account and we'll
                         send you a link to reset your password.
                     </p>
-                    <form action="">
+                    <form action="{{ route('forgot.password') }}" method="POST" id="forgot-form">
                         <div class="mb-8">
-                            <input type="text" class="rounded-lg bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white p-4 border-0 focus:border focus:ring-0 focus:border-success-300 w-full placeholder:font-medium text-base h-14" placeholder="Email" />
+                            <input type="text" name="email" class="rounded-lg bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white p-4 border-0 focus:border focus:ring-0 focus:border-success-300 w-full placeholder:font-medium text-base h-14" placeholder="Email" />
                         </div>
-                        <a href="signin.html" class="block text-sm font-bold text-success-300 mb-8 underline">Return to login</a>
+                        <a href="{{ route('login') }}" class="block text-sm font-bold text-success-300 mb-8 underline">Return to login</a>
                         <button type="button" id="step-1-next" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-medium rounded-lg">
                             Continue
                         </button>
@@ -58,19 +58,22 @@
                         Enter verification code
                     </h3>
                     <p class="text-base font-medium text-bgray-600 dark:text-darkblack-300 mb-7">
-                        We have just sent a verification code to ajoy*****@mail.com
+                        We have just sent a verification code to <span id="masked-email">mail id</span>
                     </p>
-                    <form>
-                        <div class="flex space-x-6 mb-8">
-                            <input type="text" class="px-5 py-3 rounded-xl text-2xl border border-transparent focus:ring-0 focus:border focus:border-success-300 font-bold text-bgray-900 bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white w-14 h-14" placeholder="" />
-                            <input type="text" class="px-5 py-3 rounded-xl text-2xl border border-transparent focus:ring-0 focus:border focus:border-success-300 font-bold text-bgray-900 bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white w-14 h-14" placeholder="" />
-                            <input type="text" class="px-5 py-3 rounded-xl text-2xl border border-transparent focus:ring-0 focus:border focus:border-success-300 font-bold text-bgray-900 bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white w-14 h-14" placeholder="" />
-                            <input type="text" class="px-5 py-3 rounded-xl text-2xl border border-transparent focus:ring-0 focus:border focus:border-success-300 font-bold text-bgray-900 bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white w-14 h-14" placeholder="" />
-                            <input type="text" class="px-5 py-3 rounded-xl text-2xl border border-transparent focus:ring-0 focus:border focus:border-success-300 font-bold text-bgray-900 bg-[#F5F5F5] dark:bg-darkblack-500 dark:text-white w-14 h-14" placeholder="" />
+                    <form action="{{ route('verify.otp') }}" method="POST" id="otp-form">
+                        @csrf
+
+                        <input type="hidden" id="stored-email" name="email" value="">
+                        <input type="hidden" name="otp" id="final-otp">
+
+                        <div class="flex justify-center space-x-4 mb-8">
+                            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
+                            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
+                            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
+                            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
+                            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
                         </div>
-                        <button class="block text-sm font-bold text-success-300 mb-8">
-                            Send the code again
-                        </button>
+
                         <button type="button" id="step-2-next" class="flex w-full py-4 text-white bg-success-300 transition-all justify-center text-base font-medium rounded-lg">
                             Verify
                         </button>
@@ -103,10 +106,9 @@
                         Please enter a new password. Your new password must be different
                         from previous password.
                     </p>
-                    <form action="">
+                    <form action="{{ route('reset.password') }}" method="POST" id="reset-password-form">
                         <div class="mb-6 relative">
-                            <input type="text" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full 
-                focus:border focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:text-white dark:bg-darkblack-500 dark:border-0" placeholder="Password" />
+                            <input type="text" id="reset-new-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:text-white dark:bg-darkblack-500 dark:border-0" placeholder="Password" />
                             <button class="absolute top-4 right-4 bottom-4">
                                 <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M2 1L20 19" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -116,7 +118,7 @@
                             </button>
                         </div>
                         <div class="mb-8 relative">
-                            <input type="text" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:bg-darkblack-500 dark:border-0" placeholder="Confirm new Password" />
+                            <input type="text" id="reset-confirm-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:bg-darkblack-500 dark:border-0" placeholder="Confirm new Password" />
                             <button class="absolute top-4 right-4 bottom-4">
                                 <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M2 1L20 19" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -125,7 +127,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <button type="button" id="step-2-next" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-medium rounded-lg">
+                        <button type="button" id="step-3-next" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-medium rounded-lg">
                             Confirm Password
                         </button>
                     </form>
@@ -152,7 +154,7 @@
                         Commodo gravida eget ultricies sed in lacus. Commodo, tellus
                         duis eros pellentesque.
                     </p>
-                    <a href="#" id="step-4-cancel" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-semibold rounded-lg">
+                    <a href="{{ route('login') }}" id="step-4-cancel" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-semibold rounded-lg">
                         Back to Login
                     </a>
                 </div>

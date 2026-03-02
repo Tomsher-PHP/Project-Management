@@ -5,10 +5,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    
     <title>Sign In | {{ config('app.name', 'Project Management') }}</title>
 
     {{-- Vite Assets --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/reset-password.js'])
 
     <link rel="icon" href="{{ asset(config('assets.icons.favicon')) }}" type="image/x-icon" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.slick')) }}" />
@@ -35,6 +37,12 @@
     </script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
     <script src="{{ asset(config('assets.js.main')) }}"></script>
+
+    <script>
+        localStorage.theme = 'light';
+        document.documentElement.classList.remove('dark');
+    </script>
+
 </body>
 
 </html>

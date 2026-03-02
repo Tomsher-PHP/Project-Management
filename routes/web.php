@@ -22,6 +22,14 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
+// Reset password Routes
+Route::post('/forgot-password', [AuthController::class, 'sendOtp'])->name('forgot.password');
+
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
+
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset.password');
+// End of Reset password Routes
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
@@ -61,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
     // End of User Management Routes
 
     // Settings Routes
-    Route::prefix('settings')->as('settings.')->group(function() {
+    Route::prefix('settings')->as('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
 
         Route::patch('/department/toggle-status', [DepartmentController::class, 'toggleStatus'])->name('department.toggleStatus');
