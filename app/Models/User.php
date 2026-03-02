@@ -27,6 +27,9 @@ class User extends Authenticatable
         'password',
         'user_type',
 
+        'email_verified_at',
+        'remember_token',
+
         'password_otp',
         'password_otp_expires_at',
         

@@ -47,14 +47,15 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         $credentials = $request->only('email', 'password');
-
-        // Attempt login
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->with('error', 'Invalid credentials');
-        }
+        $remember = $request->boolean('remember');
 
         //status should be true to allow login
         $credentials['status'] = true;
+
+        // Attempt login
+        if (! Auth::attempt($credentials, $remember)) {
+            return back()->with('error', 'Invalid credentials');
+        }
 
         // Prevent session fixation
         $request->session()->regenerate();

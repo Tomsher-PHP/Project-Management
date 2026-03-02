@@ -1,6 +1,6 @@
 <aside class="sidebar-wrapper fixed top-0 z-30 block h-full w-[308px] bg-white dark:bg-darkblack-600 sm:hidden xl:block">
     <div class="sidebar-header relative z-30 flex h-[108px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-[50px] dark:border-darkblack-400">
-        <a href="index.html">
+        <a href="{{ route('dashboard') }}">
             <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
             <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
         </a>
