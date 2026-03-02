@@ -1,62 +1,66 @@
 import Alert from "./alert";
 
 // Submit email to get otp
-$('#step-1-next').on('click', function () {
+$('#step-1-next').on('click', function (e) {
+
+    e.preventDefault();
+
     let form = $('#forgot-form');
     let url = form.attr('action');
     let email = form.find('input[name="email"]').val();
 
-    $.ajax({
-        url: url,
-        type: 'POST',
-        data: {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            email: email
-        },
+    if (!email) {
+        Alert.errorModal('Email is required', 'Error', 'multi-step-modal');
+        return;
+    }
 
-        success: function (response) {
-            if (response.success) {
-                $('#stored-email').val(response.email);
-                $('#masked-email').text(response.email);
+    submitStepAjax({
+        formId: '#forgot-form',
+        data: { email: email },
 
-                Alert.success(response.message);
-            } else {
-                Alert.error(response.message);
-            }
+        onSuccess: function (response) {
+            $('#stored-email').val(response.email);
+            $('#masked-email').text(maskEmail(response.email));
+
+            Alert.successModal(response.message, 'Success', 'multi-step-modal');
+            goToStep(2);
         }
     });
 })
 
 // Submit otp to verify
-$('#step-2-next').on('click', function () {
+$('#step-2-next').on('click', function (e) {
+
+    e.preventDefault();
 
     let form = $('#otp-form');
     let url = form.attr('action');
     let storedEmail = $('#stored-email').val();
     let otp = $('#final-otp').val();
 
-    $.ajax({
-        url: url,
-        type: 'POST',
+    if (!otp) {
+        Alert.errorModal('OTP is required', 'Error', 'multi-step-modal');
+        return;
+    }
+
+    submitStepAjax({
+        formId: '#otp-form',
         data: {
-            _token: $('meta[name="csrf-token"]').attr('content'),
             email: storedEmail,
             otp: otp
         },
-        success: function (response) {
-            if (response.success) {
-                // move to step 3
 
-                Alert.success(response.message);
-            } else {
-                Alert.error(response.message);
-            }
+        onSuccess: function (response) {
+            Alert.successModal(response.message, 'Success', 'multi-step-modal');
+            goToStep(3);
         }
     });
 });
 
 // Submit reset new password
-$('#step-3-next').on('click', function () {
+$('#step-3-next').on('click', function (e) {
+
+    e.preventDefault();
 
     let form = $('#reset-password-form');
     let url = form.attr('action');
@@ -64,23 +68,22 @@ $('#step-3-next').on('click', function () {
     let password = $('#reset-new-password').val();
     let confirmPassword = $('#reset-confirm-password').val();
 
-    $.ajax({
-        url: url,
-        type: 'POST',
+    if (!password || !confirmPassword) {
+        Alert.errorModal('All fields are required', 'Error', 'multi-step-modal');
+        return;
+    }
+
+    submitStepAjax({
+        formId: '#reset-password-form',
         data: {
-            _token: $('meta[name="csrf-token"]').attr('content'),
             email: storedEmail,
             password: password,
             password_confirmation: confirmPassword
         },
-        success: function (response) {
-            if (response.success) {
-                // move to step 3
 
-                Alert.success(response.message);
-            } else {
-                Alert.error(response.message);
-            }
+        onSuccess: function (response) {
+            $('#multi-step-modal').addClass('hidden');
+            Alert.success(response.message, 'Success');
         }
     });
 });
@@ -114,10 +117,115 @@ $('.otp-input').on('paste', function (e) {
     }
 });
 
+$('#open-forgot-password').on('click', function () {
+    resetMultiStepModal();
+    $('#multi-step-modal').removeClass('hidden');
+});
+
+// Ajax function
+function submitStepAjax({ formId, data, onSuccess }) {
+
+    let form = $(formId);
+    let url = form.attr('action');
+    let btn = form.find('button[type="button"], button[type="submit"]');
+
+    btn.prop('disabled', true);
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content'),
+            ...data
+        },
+
+        success: function (response) {
+
+            if (response.success) {
+                if (typeof onSuccess === 'function') {
+                    onSuccess(response);
+                }
+            } else {
+                Alert.errorModal(response.message, 'Error', 'multi-step-modal');
+            }
+        },
+
+        error: function (error) {
+            Alert.errorModal(error.responseJSON.message, 'Error', 'multi-step-modal');
+        },
+
+        complete: function () {
+            btn.prop('disabled', false);
+        }
+    });
+}
+
+// Replace otp value for hidden
 function updateOtpValue() {
     let otp = '';
     $('.otp-input').each(function () {
         otp += $(this).val();
     });
     $('#final-otp').val(otp);
+}
+
+// open modal functionality
+function resetMultiStepModal() {
+
+    const modal = $('#multi-step-modal');
+
+    // 1️⃣ Reset all forms inside modal
+    modal.find('form').each(function () {
+        this.reset();
+    });
+
+    // 2️⃣ Clear hidden fields manually (important)
+    modal.find('input[type="hidden"]').val('');
+
+    // 3️⃣ Clear OTP inputs (if using separate boxes)
+    modal.find('.otp-input').val('');
+
+    // 4️⃣ Reset steps (show step-1 only)
+    modal.find('.step-content').addClass('hidden');
+    modal.find('.step-1').removeClass('hidden');
+
+    // 5️⃣ Remove validation errors (if any)
+    modal.find('.is-invalid').removeClass('is-invalid');
+    modal.find('.error-text').remove();
+
+    // 6️⃣ Optional: focus first input
+    setTimeout(() => {
+        modal.find('input[name=email]').focus();
+    }, 100);
+}
+
+// mask the email
+function maskEmail(email) {
+    let [name, domain] = email.split('@');
+
+    if (name.length <= 3) {
+        return name[0] + '****@' + domain;
+    }
+
+    let visiblePart = name.substring(0, 3);
+    return visiblePart + '****@' + domain;
+}
+
+// go to next form after success
+function goToStep(stepNumber) {
+
+    let modal = $('#multi-step-modal');
+
+    // Hide all steps
+    modal.find('.step-content').addClass('hidden');
+
+    // Show requested step
+    modal.find('.step-' + stepNumber).removeClass('hidden');
+
+    // Optional: focus first input of that step
+    setTimeout(function () {
+        modal.find('.step-' + stepNumber)
+            .find('input:visible:first')
+            .focus();
+    }, 100);
 }

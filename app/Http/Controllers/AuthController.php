@@ -50,9 +50,7 @@ class AuthController extends Controller
 
         // Attempt login
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors([
-                'email' => 'Invalid credentials',
-            ])->onlyInput('email');
+            return back()->with('error', 'Invalid credentials');
         }
 
         //status should be true to allow login

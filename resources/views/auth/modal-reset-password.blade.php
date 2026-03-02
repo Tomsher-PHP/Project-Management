@@ -23,7 +23,7 @@
                     </h3>
                     <p class="text-base font-medium text-bgray-600 dark:text-darkblack-300 mb-7">
                         Enter the email address associated with your account and we'll
-                        send you a link to reset your password.
+                        send you an otp.
                     </p>
                     <form action="{{ route('forgot.password') }}" method="POST" id="forgot-form">
                         <div class="mb-8">
@@ -51,8 +51,8 @@
                 </div>
                 <div>
                     <a href="signin.html" class="block mb-7">
-                        <img src="assets/images/logo/logo-color.svg" class="block dark:hidden" alt="" />
-                        <img src="assets/images/logo/logo-white.svg" class="hidden dark:block" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="hidden dark:block" alt="" />
                     </a>
                     <h3 class="text-2xl font-bold text-bgray-900 dark:text-white mb-3">
                         Enter verification code
@@ -96,8 +96,8 @@
                 </div>
                 <div>
                     <a href="signin.html" class="block mb-7">
-                        <img src="assets/images/logo/logo-color.svg" class="block dark:hidden" alt="" />
-                        <img src="assets/images/logo/logo-white.svg" class="hidden dark:block" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="hidden dark:block" alt="" />
                     </a>
                     <h3 class="text-2xl font-bold text-bgray-900 dark:text-white mb-3">
                         Create new password
@@ -135,7 +135,7 @@
             </div>
         </div>
         <!-- Step 4 -->
-        <div class="step-content step-4 hidden">
+        {{-- <div class="step-content step-4 hidden">
             <div class="relative  transform overflow-hidden rounded-lg bg-white dark:bg-darkblack-600 p-8 text-left transition-all">
                 <div class="absolute top-0 right-0 pt-5 pr-5">
                     <button type="button" id="step-4-cancel" class="rounded-md bg-white dark:bg-darkblack-500 focus:outline-none">
@@ -159,6 +159,6 @@
                     </a>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 </div>

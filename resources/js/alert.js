@@ -70,7 +70,48 @@ const Alert = {
                 htmlContainer: 'small-alert-text'
             }
         });
-    }
+    },
+
+    // success alert for modal
+    successModal(message, title = 'Success', modalId) {
+        return Swal.fire({
+            target: `#${modalId}`,
+            position: "top-end",
+            icon: 'success',
+            title: title,
+            text: message,
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,              // makes it small like a toast
+            width: 400,               // smaller width
+            padding: "0.75rem",       // reduce padding
+            customClass: {
+                popup: 'small-alert',
+                title: 'small-alert-title',
+                htmlContainer: 'small-alert-text'
+            }
+        });
+    },
+
+    errorModal(message, title = 'Error', modalId) {
+        return Swal.fire({
+            target: `#${modalId}`,
+            position: "top-end",
+            icon: "error",
+            title: title,
+            text: message,
+            showConfirmButton: false,
+            timer: 1500,
+            toast: true,              // makes it small like a toast
+            width: 400,               // smaller width
+            padding: "0.75rem",       // reduce padding
+            customClass: {
+                popup: 'small-alert',
+                title: 'small-alert-title',
+                htmlContainer: 'small-alert-text'
+            }
+        });
+    },
 };
 
 export default Alert;

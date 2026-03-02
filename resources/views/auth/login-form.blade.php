@@ -19,7 +19,7 @@
             <label for="remember" class="text-bgray-900 dark:text-white text-base font-semibold">Remember me</label>
         </div>
         <div>
-            <a href="#" data-target="#multi-step-modal" class="modal-open text-success-300 font-semibold text-base underline">Forgot Password?</a>
+            <a href="javascript:void(0)" id="open-forgot-password" data-target="#multi-step-modal" class="modal-open text-success-300 font-semibold text-base underline">Forgot Password?</a>
         </div>
     </div>
     <button type="submit" class="py-3.5 flex items-center justify-center text-white font-bold bg-success-300 hover:bg-success-400 transition-all rounded-lg w-full">

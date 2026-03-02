@@ -184,7 +184,7 @@ function ModalExist() {
 
     function setCurrentStep(step) {
       currentStep = step;
-      showStep(currentStep);
+      // showStep(currentStep);
     }
 
     function nextStep() {
