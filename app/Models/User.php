@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -32,7 +33,7 @@ class User extends Authenticatable
 
         'password_otp',
         'password_otp_expires_at',
-        
+
         'status',
         'delete_status',
     ];
@@ -59,7 +60,20 @@ class User extends Authenticatable
             'password' => 'hashed',
             'status' => 'boolean',
             'delete_status' => 'boolean',
+            'added_by' => 'integer',
+            'updated_by' => 'integer',
         ];
+    }
+
+    public static function booted()
+    {
+        static::creating(function ($model) {
+            $model->added_by = Auth::id() ?? null;
+        });
+
+        static::updating(function ($model) {
+            $model->updated_by = Auth::id() ?? null;
+        });
     }
 
     public function canByUserType(string $permission): bool

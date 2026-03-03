@@ -18,14 +18,23 @@ class UserShift extends Model
         'updated_by',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'added_by' => 'integer',
+            'updated_by' => 'integer',
+        ];
+    }
+
     public static function booted()
     {
-        static::creating(function ($shift) {
-            $shift->added_by = Auth::id() ?? null;
+        static::creating(function ($model) {
+            $model->added_by = Auth::id() ?? null;
         });
 
-        static::updating(function ($shift) {
-            $shift->updated_by = Auth::id() ?? null;
+        static::updating(function ($model) {
+            $model->updated_by = Auth::id() ?? null;
         });
     }
 }

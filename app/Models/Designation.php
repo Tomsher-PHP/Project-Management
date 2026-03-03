@@ -12,4 +12,14 @@ class Designation extends Model
         'default',
         'status'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'name' => 'string',
+            'order' => 'integer',
+            'default' => 'boolean',
+            'status' => 'boolean',
+        ];
+    }
 }
