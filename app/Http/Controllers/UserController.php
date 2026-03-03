@@ -90,6 +90,10 @@ class UserController extends Controller
             return back()->with('error', 'Super Admin cannot be deleted.');
         }
 
+        if (auth()->id() === $user->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
         $user->update([
             'delete_status' => true,
             'status' => false,

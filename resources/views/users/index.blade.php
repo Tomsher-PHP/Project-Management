@@ -126,25 +126,26 @@
                                                     </svg>
                                                 </a>
                                                 @endcanType
-                                                @canType('user.delete')
-                                                {{-- <form action="{{ route('user.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?')"> --}}
-                                                <form action="{{ route('user.destroy', $user->id) }}" method="POST" class="delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
+                                                @if (auth()->id() != $user->id)                                      
+                                                    @canType('user.delete')
+                                                    <form action="{{ route('user.destroy', $user->id) }}" method="POST" class="delete-form">
+                                                        @csrf
+                                                        @method('DELETE')
 
-                                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8
-                                                        rounded-lg bg-gray-100 dark:bg-darkblack-500
-                                                        hover:bg-red-200 dark:hover:bg-darkblack-400
-                                                        transition duration-200 group">
+                                                        <button type="submit" class="inline-flex items-center justify-center w-8 h-8
+                                                            rounded-lg bg-gray-100 dark:bg-darkblack-500
+                                                            hover:bg-red-200 dark:hover:bg-darkblack-400
+                                                            transition duration-200 group">
 
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600 group-hover:text-red-700 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd" d="M6 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6-1a1 1 0 00-2 0v6a1 1 0 002 0V7z" clip-rule="evenodd" />
-                                                            <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
-                                                        </svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600 group-hover:text-red-700 transition" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M6 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6-1a1 1 0 00-2 0v6a1 1 0 002 0V7z" clip-rule="evenodd" />
+                                                                <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                                            </svg>
 
-                                                    </button>
-                                                </form>
-                                                @endcanType
+                                                        </button>
+                                                    </form>
+                                                    @endcanType
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
