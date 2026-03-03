@@ -10,7 +10,7 @@
     <title>Sign In | {{ config('app.name', 'Project Management') }}</title>
 
     {{-- Vite Assets --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/reset-password.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <link rel="icon" href="{{ asset(config('assets.icons.favicon')) }}" type="image/x-icon" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.slick')) }}" />
