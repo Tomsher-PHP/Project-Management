@@ -96,6 +96,21 @@
                             </div>
                         </a>
                     </li>
+                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <a href="{{ route('teams.index') }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="item-ico">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" class="path-1" fill="#1A202C" />
+                                            <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
+                                        </svg>
+                                    </span>
+                                    <span class="item-text text-lg font-medium leading-none">Teams</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
                     {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="calender.html">
                             <div class="flex items-center justify-between">
@@ -178,7 +193,7 @@
             </div>
             <div class="item-wrapper mb-5">
                 <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
-                    
+
                 </h4>
                 <ul class="mt-2.5">
                     {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">

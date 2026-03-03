@@ -107,5 +107,12 @@ return [
     ],
 
     //Default list data count per page
-    'per_page_count' => 10
+    'per_page_count' => 10,
+
+    //Default team roles for team management
+    'team_roles' => [
+        'owner' => 'Owner',
+        'admin' => 'Admin',
+        'member' => 'Member',
+    ]
 ];

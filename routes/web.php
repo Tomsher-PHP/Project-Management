@@ -6,10 +6,11 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    //goto dashboard if authenticated, else show welcome page
+    // goto dashboard if authenticated, else show welcome page
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
@@ -19,14 +20,12 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+// Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+// Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
 // Reset password Routes
 Route::post('/forgot-password', [AuthController::class, 'sendOtp'])->name('forgot.password');
-
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
-
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('reset.password');
 // End of Reset password Routes
 
@@ -79,4 +78,17 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('designations', DesignationController::class);
     });
     // End Settings Routes
+
+    // Team management Routes
+    Route::patch('/teams/toggle-status', [TeamController::class, 'toggleStatus'])->name('teams.toggleStatus')->middleware('permission.type:user.edit');
+
+    Route::resource('teams', TeamController::class)->middleware('permission.type:team.view')->only(['index']);
+
+    Route::resource('teams', TeamController::class)->middleware('permission.type:team.create')->only(['create', 'store']);
+
+    Route::resource('teams', TeamController::class)->middleware('permission.type:team.edit')->only(['edit', 'update']);
+
+    Route::resource('team', TeamController::class)->middleware('permission.type:team.delete')->only(['destroy']);
+    // End Team management Routes
+
 });
