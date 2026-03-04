@@ -107,7 +107,6 @@
         </div>
 
         {{-- Add Member Section --}}
-        {{-- @dd($teamUsers->pluck('id')->toArray(), $users) --}}
         @php
             $teamUsersIds = $teamUsers->pluck('id')->toArray();
             $users = $users->whereNotIn('id', $teamUsersIds);

@@ -53,11 +53,6 @@ class TeamController extends Controller
             ->with('success', 'Team created successfully.');
     }
 
-    public function show(string $id)
-    {
-        //
-    }
-
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
@@ -74,25 +69,9 @@ class TeamController extends Controller
         return view('teams.edit', compact('team', 'teamUsers', 'users', 'teamRoles'));
     }
 
-    public function update(TeamRequest $request, Team $team)
+    public function update(TeamRequest $request, Team $team, TeamService $service)
     {
-        $team->update([
-            'name' => $request->name,
-        ]);
-
-        // Sync members
-        $syncData = [];
-
-        if ($request->members) {
-            foreach ($request->members as $member) {
-                $syncData[$member['user_id']] = [
-                    'team_role' => $member['team_role'],
-                    'joined_at' => now(),
-                ];
-            }
-        }
-
-        $team->users()->sync($syncData);
+        $service->updateTeam($team, $request->validated());
 
         return redirect()->back()->with('success', 'Team updated successfully.');
     }

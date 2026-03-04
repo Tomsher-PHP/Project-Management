@@ -33,6 +33,8 @@ class TeamRequest extends FormRequest
                 'mimes:jpg,jpeg,png',
                 'max:2048', // 2MB
             ],
+            
+            'remove_profile_image' => 'nullable',
 
             'members' => 'nullable|array',
             'members.*.user_id' => 'required|exists:users,id',

@@ -14,7 +14,7 @@
                             </h3>
 
                             <div class="mt-8">
-                                @include('teams._form', ['team' => null, 'teamUsers' => []])
+                                @include('teams._form', ['team' => null, 'teamUsers' => collect([])])
                             </div>
                         </div>
                     </div>

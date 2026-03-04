@@ -25,7 +25,6 @@ return new class extends Migration
             $table->boolean('status')->default(true);
 
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
-            $table->unsignedBigInteger('updated_by')->nullable()->comment('user id')->index();
 
             $table->timestamps();
             $table->softDeletes();
