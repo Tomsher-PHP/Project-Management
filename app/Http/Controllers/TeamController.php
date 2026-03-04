@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TeamRequest;
 use App\Models\Team;
 use App\Models\User;
+use App\Services\AttachmentService;
 use App\Services\TeamService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class TeamController extends Controller
 {
@@ -76,9 +78,17 @@ class TeamController extends Controller
         return redirect()->back()->with('success', 'Team updated successfully.');
     }
 
-    public function destroy(Team $team)
+    public function destroy(Team $team, AttachmentService $attachmentService)
     {
-        //
+        DB::transaction(function () use ($team, $attachmentService) {
+            $attachmentService->delete($team->attachments);
+            $team->users()->detach();
+            $team->forceDelete();
+        });
+
+        return redirect()
+            ->route('teams.index')
+            ->with('success', 'Team deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

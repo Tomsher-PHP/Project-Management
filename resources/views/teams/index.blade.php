@@ -54,7 +54,7 @@
                                     </td>
                                 </tr>
                                 @forelse ($teams as $key => $team)
-                                {{-- @dd($team, $team->leader->first()->name) --}}
+                                    {{-- @dd($team, $team->leader->first()->name) --}}
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
@@ -77,7 +77,7 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
                                                 <div class="mt-4 flex -space-x-2 overflow-hidden">
-                                                    @if($team->users->isNotEmpty())
+                                                    @if ($team->users->isNotEmpty())
                                                         @php
                                                             $members = $team->users;
                                                             $visibleMembers = $members->take(5);
@@ -108,32 +108,10 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @canType('team.edit')
-                                                <a href="{{ route('teams.edit', $team->id) }}" class="inline-flex items-center justify-center w-8 h-8
-                                                    rounded-lg bg-gray-100 dark:bg-darkblack-500
-                                                    hover:bg-gray-200 dark:hover:bg-darkblack-400
-                                                    transition duration-200 group">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
+                                                <x-edit-button :action="route('teams.edit', $team->id)" />
                                                 @endcanType
                                                 @canType('team.delete')
-                                                <form action="{{ route('team.destroy', $team->id) }}" method="POST" class="delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-
-                                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8
-                                                            rounded-lg bg-gray-100 dark:bg-darkblack-500
-                                                            hover:bg-red-200 dark:hover:bg-darkblack-400
-                                                            transition duration-200 group">
-
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600 group-hover:text-red-700 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd" d="M6 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6-1a1 1 0 00-2 0v6a1 1 0 002 0V7z" clip-rule="evenodd" />
-                                                            <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
-                                                        </svg>
-
-                                                    </button>
-                                                </form>
+                                                <x-delete-form :action="route('team.destroy', $team->id)" />
                                                 @endcanType
                                             </div>
                                         </td>
