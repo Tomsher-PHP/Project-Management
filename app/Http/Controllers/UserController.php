@@ -78,7 +78,7 @@ class UserController extends Controller
     {
         $service->updateUser($user, $request->validated());
 
-        $shiftService->updateShifts($user, $request->only(['start_time', 'end_time', 'break_duration', 'working_days']));
+        // $shiftService->updateShifts($user, $request->only(['start_time', 'end_time', 'break_duration', 'working_days']));
 
         return redirect()->back()->with('success', 'User updated successfully.');
     }

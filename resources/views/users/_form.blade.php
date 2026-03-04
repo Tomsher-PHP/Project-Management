@@ -4,48 +4,47 @@
         @method('PUT')
     @endif
 
-    {{-- Profile Image --}}
-    <div class="flex justify-center border-b pb-8 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
-        <!-- KEEPING YOUR IMAGE CODE SAME -->
-        <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
+    <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
 
-            <!-- Preview Image -->
-            <img id="preview" class="absolute inset-0 h-full w-full object-cover rounded-md {{ isset($user->profileImageUrl) ? '' : 'hidden' }}" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
+        {{-- Profile Image --}}
+        <div class="flex-shrink-0">
+            <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
+                <!-- Preview Image -->
+                <img id="preview" class="absolute inset-0 h-full w-full object-cover rounded-md {{ isset($user->profileImageUrl) ? '' : 'hidden' }}" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
 
-            <!-- Remove Button -->
-            <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 {{ isset($user->profileImageUrl) ? '' : 'hidden' }}">
-                ✕
-            </button>
+                <!-- Remove Button -->
+                <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 {{ isset($user->profileImageUrl) ? '' : 'hidden' }}">
+                    ✕
+                </button>
 
-            <!-- Upload Placeholder -->
-            <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ isset($user->profileImageUrl) ? 'hidden' : '' }}">
-                <label for="profile-image" class="cursor-pointer text-indigo-600">
-                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <input id="profile-image" name="profile_image" type="file" class="hidden" accept="image/*" />
-                    <input type="hidden" name="remove_profile_image" id="remove_profile_image" value="0">
-                </label>
+                <!-- Upload Placeholder -->
+                <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ isset($user->profileImageUrl) ? 'hidden' : '' }}">
+                    <label for="profile-image" class="cursor-pointer text-indigo-600">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <input id="profile-image" name="profile_image" type="file" class="hidden" accept="image/*" />
+                        <input type="hidden" name="remove_profile_image" id="remove_profile_image" value="0">
+                    </label>
+                </div>
             </div>
-
         </div>
-    </div>
 
-    {{-- ================= BASIC INFORMATION ================= --}}
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
-            Basic Information
-        </h3>
+        {{-- Basic Information Fields --}}
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+                Basic Information
+            </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {{-- User Name --}}
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Name
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                      @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                    @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 <input type="hidden" name="user_id" value="{{ $user->id ?? '' }}">
 
@@ -62,9 +61,9 @@
                     Email
                 </label>
 
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500
-                      @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()">
+                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                      @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()" @isset($user) disabled @endisset>
 
                 @error('email')
                     <p class="mt-2 text-sm text-error-300">
@@ -79,7 +78,8 @@
                     Password
                 </label>
 
-                <input type="password" id="password" name="password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('password')
@@ -95,7 +95,8 @@
                     Date of Birth
                 </label>
 
-                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('dob') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('dob')
@@ -111,7 +112,8 @@
                     Phone Number
                 </label>
 
-                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('phone')
@@ -127,7 +129,8 @@
                     WhatsApp Number
                 </label>
 
-                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('whatsapp')
@@ -164,8 +167,8 @@
                     </p>
                 @enderror
             </div>
-
         </div>
+
     </div>
 
     {{-- ================= ORGANIZATION DETAILS ================= --}}
@@ -404,7 +407,7 @@
     </div>
 
     {{-- ================= Shift Information ================= --}}
-    <div>
+    {{-- <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Shift Information
         </h3>
@@ -418,19 +421,16 @@
                 <div class="shift-item border p-4 rounded-lg mb-6 dark:border-darkblack-400">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-                        {{-- Start Time --}}
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
                             <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         </div>
 
-                        {{-- End Time --}}
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
                             <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         </div>
 
-                        {{-- Break --}}
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break (HH:MM)</label>
                             <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
@@ -446,7 +446,6 @@
             + More Shift
         </button>
 
-        {{-- Working Days --}}
         <div class="mt-8">
             <h4 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">
                 Working Days
@@ -476,7 +475,7 @@
                 @endforeach
             </div>
         </div>
-    </div>
+    </div> --}}
 
     {{-- Submit Button --}}
     <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
