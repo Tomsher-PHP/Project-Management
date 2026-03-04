@@ -61,18 +61,40 @@ class TeamController extends Controller
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
+        $teamUsers = $team->users()->get();
+
+        $teamUsersIds = $teamUsers->pluck('id')->toArray();
 
         // Get users for team members
-        $users = User::where('user_type', '!=', 'super_admin')->where('status', true)->get();
+        $users = User::where('user_type', '!=', 'super_admin')->whereNotIn('id', $teamUsersIds)->where('status', true)->get();
 
         $teamRoles = config('constants.team_roles');
 
-        return view('teams.edit', compact('team', 'users', 'teamRoles'));
+
+        return view('teams.edit', compact('team', 'teamUsers', 'users', 'teamRoles'));
     }
 
     public function update(TeamRequest $request, Team $team)
     {
-        //
+        $team->update([
+            'name' => $request->name,
+        ]);
+
+        // Sync members
+        $syncData = [];
+
+        if ($request->members) {
+            foreach ($request->members as $member) {
+                $syncData[$member['user_id']] = [
+                    'team_role' => $member['team_role'],
+                    'joined_at' => now(),
+                ];
+            }
+        }
+
+        $team->users()->sync($syncData);
+
+        return redirect()->back()->with('success', 'Team updated successfully.');
     }
 
     public function destroy(Team $team)

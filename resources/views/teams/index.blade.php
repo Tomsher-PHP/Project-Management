@@ -54,6 +54,7 @@
                                     </td>
                                 </tr>
                                 @forelse ($teams as $key => $team)
+                                {{-- @dd($team, $team->leader->first()->name) --}}
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
@@ -68,15 +69,35 @@
                                                         {{ $team->name }}
                                                     </h4>
                                                     <div class="flex flex-col">
-                                                        <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Owner: {{ 'owner name' }}</span>
-                                                        <span class="text-gray-500 dark:text-bgray-50">Admin: {{ 'admin name' }}</span>
+                                                        <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Owner: {{ $team->leader->first()->name ?? '' }}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $team->members ?? '--' }}</span>
+                                                <div class="mt-4 flex -space-x-2 overflow-hidden">
+                                                    @if($team->users->isNotEmpty())
+                                                        @php
+                                                            $members = $team->users;
+                                                            $visibleMembers = $members->take(5);
+                                                            $remainingCount = $members->count() - 5;
+                                                        @endphp
+
+                                                        @foreach ($visibleMembers as $member)
+                                                            <img class="inline-block h-8 w-8 rounded-full ring ring-white" src="{{ $member->profile_image_url }}" alt="{{ $member->name }}" title="{{ $member->name }}" />
+                                                        @endforeach
+
+                                                        @if ($remainingCount > 0)
+                                                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-semibold text-gray-500 ring ring-white">
+                                                                +{{ $remainingCount }}
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">--</span>
+                                                    @endif
+
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">

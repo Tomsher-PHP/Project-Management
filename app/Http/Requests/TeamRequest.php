@@ -33,6 +33,10 @@ class TeamRequest extends FormRequest
                 'mimes:jpg,jpeg,png',
                 'max:2048', // 2MB
             ],
+
+            'members' => 'nullable|array',
+            'members.*.user_id' => 'required|exists:users,id',
+            'members.*.team_role' => 'required|string|in:owner,admin,member'
         ];
     }
 }

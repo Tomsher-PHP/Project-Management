@@ -80,16 +80,38 @@
                 </thead>
 
                 <tbody id="members-table" class="divide-y dark:divide-darkblack-400">
-                    <tr id="empty-row">
-                        <td colspan="3" class="p-6 text-center text-gray-400">
-                            No team members added yet.
-                        </td>
-                    </tr>
+
+                    @forelse ($teamUsers as $teamUser)
+                        <tr class="border-t team-member-row">
+                            <td class="p-4 member-name">{{ $teamUser->name }}</td>
+                            <td class="p-4 member-role">{{ config('constants.team_roles')[$teamUser->pivot->team_role] }}</td>
+                            <td class="p-4 text-center">
+                                <button type="button" class="remove-member text-error-300 hover:underline">
+                                    Remove
+                                </button>
+
+                                <input type="hidden" class="input-user-id" name="members[{{ $teamUser->pivot->user_id }}][user_id]" value="{{ $teamUser->pivot->user_id }}">
+                                <input type="hidden" class="input-team-role" name="members[{{ $teamUser->pivot->user_id }}][team_role]" value="{{ $teamUser->pivot->team_role }}">
+                            </td>
+                        </tr>
+                    @empty
+                        <tr id="empty-row">
+                            <td colspan="3" class="p-6 text-center text-gray-400">
+                                No team members added yet.
+                            </td>
+                        </tr>
+                    @endforelse
+
                 </tbody>
             </table>
         </div>
 
         {{-- Add Member Section --}}
+        {{-- @dd($teamUsers->pluck('id')->toArray(), $users) --}}
+        @php
+            $teamUsersIds = $teamUsers->pluck('id')->toArray();
+            $users = $users->whereNotIn('id', $teamUsersIds);
+        @endphp
         <div class="mt-6 p-6 border rounded-lg dark:border-darkblack-400 bg-gray-50 dark:bg-darkblack-500">
 
             <div class="grid md:grid-cols-3 gap-6 items-end">

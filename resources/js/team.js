@@ -33,6 +33,9 @@ $(document).ready(function () {
 
         members.push(member);
 
+        // Remove selected option from dropdown
+        $('#team_member option[value="' + userId + '"]').remove();
+
         // Clone template
         let template = document.querySelector('#member-row-template');
         let clone = template.content.cloneNode(true);
@@ -59,8 +62,14 @@ $(document).ready(function () {
 
         let row = $(this).closest('tr');
         let id = row.data('id');
+        let name = row.find('.member-name').text();
 
         members = members.filter(member => member.user_id != id);
+
+        // Add back to dropdown
+        $('#team_member').append(
+            `<option value="${id}">${name}</option>`
+        );
 
         row.remove();
 

@@ -79,7 +79,7 @@
                     Password
                 </label>
 
-                <input type="password" id="password" name="password" value="{{ old('password', $user->password ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="password" id="password" name="password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('password')
