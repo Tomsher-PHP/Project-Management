@@ -22,6 +22,7 @@ $(document).on('click', '.status-toggle', function () {
 
         if (!result.isConfirmed) {
             btn.data('processing', false);
+            btn.toggleClass('active', isActive);            
             return;
         }
 
@@ -39,23 +40,11 @@ $(document).on('click', '.status-toggle', function () {
 
                     let newStatus = response.status == 1;
 
+                    console.log(newStatus);
+                    
                     // Update switch UI
                     btn.attr('aria-checked', newStatus);
-                    btn.toggleClass('bg-green-600', newStatus);
-                    btn.toggleClass('bg-gray-200', !newStatus);
-
-                    btn.find('span')
-                        .toggleClass('translate-x-5', newStatus)
-                        .toggleClass('translate-x-0', !newStatus);
-
-                    // Update badge if exists
-                    let badge = btn.closest('tr').find('.status-badge');
-
-                    if (badge.length) {
-                        badge.toggleClass('bg-success', newStatus)
-                            .toggleClass('bg-secondary', !newStatus)
-                            .text(newStatus ? 'Active' : 'Inactive');
-                    }
+                    btn.toggleClass('active', newStatus);
 
                     let capitalizedEntity = entity.charAt(0).toUpperCase() + entity.slice(1);
                     Alert.success(`${capitalizedEntity} ${actionText}d successfully.`);
