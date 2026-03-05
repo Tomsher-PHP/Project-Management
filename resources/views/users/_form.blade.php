@@ -185,8 +185,7 @@
                     Role
                 </label>
 
-                <select name="role" id="role" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('role') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <select name="role" id="role" class="select-subtypes w-full">
 
                     <option value="">Select Role</option>
 
@@ -210,8 +209,7 @@
                     Department
                 </label>
 
-                <select name="department_id" id="department" class="tom-select w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('department_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <select name="department_id" id="department" class="tom-select w-full">
 
                     <option value="">Select Department</option>
 
@@ -235,8 +233,7 @@
                     Designation
                 </label>
 
-                <select name="designation_id" id="designation" class="tom-select w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('designation_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <select name="designation_id" id="designation" class="tom-select w-full">
 
                     <option value="">Select Designation</option>
 
@@ -260,8 +257,7 @@
                     Reporting To
                 </label>
 
-                <select name="reporter_id" id="reporting_to" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('reporter_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <select name="reporter_id" id="reporting_to" class="select-subtypes w-full">
 
                     <option value="">Select Reporting Manager</option>
 
@@ -284,8 +280,7 @@
                 <label for="manager" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Manager
                 </label>
-                <select name="manager_id" id="manager" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('manager_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <select name="manager_id" id="manager" class="select-subtypes w-full">
 
                     <option value="">Select Manager</option>
 

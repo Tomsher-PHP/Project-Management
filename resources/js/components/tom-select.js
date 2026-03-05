@@ -1,6 +1,19 @@
 export function initTomSelect() {
 
     // Standard Select
+    document.querySelectorAll('.select-no-search').forEach(el => {
+
+        if (el.tomselect) return; // Prevent double init
+
+        new TomSelect(el, {
+            create: false,            // cannot create new options
+            persist: false,
+            hideDropdownArrow: false,
+            plugins: ['clear_button'],
+        });
+    });
+
+    // Standard Select
     document.querySelectorAll('.tom-select').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
@@ -8,6 +21,7 @@ export function initTomSelect() {
         new TomSelect(el, {
             create: false,
             persist: false,
+            hideDropdownArrow: false,
             sortField: { field: "text", direction: "asc" },
             plugins: ['dropdown_input', 'clear_button'],
         });

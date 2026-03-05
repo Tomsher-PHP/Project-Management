@@ -1,49 +1,16 @@
 $(document).ready(function () {
+    const members = [];
+    const teamSelect = document.getElementById('team_member').tomselect;
+    const roleSelect = document.getElementById('team_role').tomselect;
+    const membersTable = $('#members-table');
+    const emptyRow = membersTable.find('#empty-row');
+    const template = document.querySelector('#member-row-template');
 
-    let members = [];
+    const clearSelect = (ts) => ts?.clear();
+    const showError = (msg) => Alert.error(msg);
 
-    $('#add-member-btn').click(function () {
-
-        let select = $('#team_member');
-        let userId = select.val();
-        let userName = $('#team_member option:selected').text();
-        let teamRole = $('#team_role').val();
-        let teamRoleText = $('#team_role option:selected').text();
-
-        if (!userId || !teamRole) {
-            Alert.error('Please select both user and role.');
-            return;
-        }
-
-        // Prevent duplicate users
-        if (members.some(member => member.user_id == userId)) {
-            Alert.error('User already added.');
-            return;
-        }
-
-        // Prevent duplicate owner
-        if (teamRole === 'owner' && members.some(member => member.team_role === 'owner')) {
-            Alert.error('An owner already exists for this team.');
-            return;
-        }
-
-        let member = {
-            user_id: userId,
-            team_role: teamRole
-        };
-
-        members.push(member);
-
-        // Remove selected option from dropdown
-        let teamSelect = document.getElementById('team_member');
-        let tomSelect = teamSelect.tomselect;
-        tomSelect.removeOption(userId);
-
-        // Clone template
-        let template = document.querySelector('#member-row-template');
-        let clone = template.content.cloneNode(true);
-
-        // Fill values
+    const addMemberRow = (userId, userName, teamRole, teamRoleText) => {
+        const clone = template.content.cloneNode(true);
         clone.querySelector('.member-name').textContent = userName;
         clone.querySelector('.member-role').textContent = teamRoleText;
 
@@ -53,39 +20,51 @@ $(document).ready(function () {
         clone.querySelector('.input-team-role').name = `members[${userId}][team_role]`;
         clone.querySelector('.input-team-role').value = teamRole;
 
-        $('#members-table').find('#empty-row').hide();
-        $('#members-table').append(clone);
+        emptyRow.hide();
+        membersTable.append(clone);
+    };
 
-        $('#team_member').val('');
-        $('#team_role').val('');
+    $('#add-member-btn').click(() => {
+        const userId = teamSelect.getValue();
+        if (!userId) return showError('Please select a user.');
+
+        const option = teamSelect.options[userId]; // get original option
+        const userName = option.text;
+        const userType = option.subtype; // store subtype
+        const teamRole = roleSelect.getValue();
+        const teamRoleText = roleSelect.getItem(teamRole)?.textContent || '';
+
+        if (!teamRole) return showError('Please select a role.');
+        if (members.some(m => m.user_id == userId)) return showError('User already added.');
+        if (teamRole === 'owner' && members.some(m => m.team_role === 'owner')) return showError('An owner already exists.');
+
+        members.push({ user_id: userId, team_role: teamRole, subtype: userType });
+
+        // Remove option and clear selects
+        teamSelect.removeOption(userId);
+        clearSelect(teamSelect);
+        clearSelect(roleSelect);
+
+        addMemberRow(userId, userName, teamRole, teamRoleText);
     });
 
-    // Remove Member
     $(document).on('click', '.remove-member', function () {
+        const row = $(this).closest('tr');
+        const id = row.find('.input-user-id').val();
+        const name = row.find('.member-name').text();
+        const member = members.find(m => m.user_id == id);
 
-        let row = $(this).closest('tr');
-        let id = row.find('.input-user-id').val();
-        let name = row.find('.member-name').text();
+        // Remove from members array
+        const index = members.findIndex(m => m.user_id == id);
+        if (index > -1) members.splice(index, 1);
 
-        members = members.filter(member => member.user_id != id);
-
-        let teamSelect = document.getElementById('team_member');
-        let tomSelect = teamSelect.tomselect;
-
-        if (!tomSelect.options[id]) {
-            tomSelect.addOption({
-                value: id,
-                text: name
-            });
+        // Add option back with subtype
+        if (!teamSelect.options[id] && member) {
+            teamSelect.addOption({ value: id, text: name, subtype: member.subtype });
+            teamSelect.refreshOptions(false);
         }
-
-        tomSelect.refreshOptions(false);
 
         row.remove();
-
-        if ($('#members-table').find('.team-member-row').length === 0) {
-            $('#members-table').find('#empty-row').show();
-        }
+        if (!membersTable.find('.team-member-row').length) emptyRow.show();
     });
-
 });
