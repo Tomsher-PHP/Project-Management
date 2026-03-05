@@ -121,11 +121,11 @@
                         Team Member
                     </label>
 
-                    <select id="team_member" class="w-full rounded-lg border border-gray-300 p-3 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                    <select id="team_member" class="select-subtypes w-full rounded-lg border border-gray-300 p-3 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         <option value="">Select Member</option>
 
                         @foreach ($users as $user)
-                            <option value="{{ $user->id }}">
+                            <option value="{{ $user->id }}" data-subtype="{{ config('constants.user_types')[$user->user_type] }}">
                                 {{ $user->name }}
                             </option>
                         @endforeach

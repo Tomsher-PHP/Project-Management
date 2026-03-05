@@ -185,13 +185,13 @@
                     Role
                 </label>
 
-                <select name="role" id="role" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="role" id="role" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('role') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Role</option>
 
                     @foreach ($roles as $key => $role)
-                        <option value="{{ $role->id }}" {{ old('role', $user->role_id ?? '') == $role->id ? 'selected' : '' }}>
+                        <option value="{{ $role->id }}" {{ old('role', $user->role_id ?? '') == $role->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$role->user_type] }}">
                             {{ $role->name }}
                         </option>
                     @endforeach
@@ -210,7 +210,7 @@
                     Department
                 </label>
 
-                <select name="department_id" id="department" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="department_id" id="department" class="tom-select w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('department_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Department</option>
@@ -235,7 +235,7 @@
                     Designation
                 </label>
 
-                <select name="designation_id" id="designation" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="designation_id" id="designation" class="tom-select w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('designation_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Designation</option>
@@ -260,13 +260,13 @@
                     Reporting To
                 </label>
 
-                <select name="reporter_id" id="reporting_to" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="reporter_id" id="reporting_to" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('reporter_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Reporting Manager</option>
 
                     @foreach ($managers as $key => $reporter)
-                        <option value="{{ $reporter->id }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }}>
+                        <option value="{{ $reporter->id }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$reporter->user_type] }}">
                             {{ $reporter->name }}
                         </option>
                     @endforeach
@@ -284,13 +284,13 @@
                 <label for="manager" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Manager
                 </label>
-                <select name="manager_id" id="manager" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="manager_id" id="manager" class="select-subtypes w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('manager_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                     <option value="">Select Manager</option>
 
                     @foreach ($managers as $key => $manager)
-                        <option value="{{ $manager->id }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }}>
+                        <option value="{{ $manager->id }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$manager->user_type] }}">
                             {{ $manager->name }}
                         </option>
                     @endforeach

@@ -4,7 +4,8 @@ $(document).ready(function () {
 
     $('#add-member-btn').click(function () {
 
-        let userId = $('#team_member').val();
+        let select = $('#team_member');
+        let userId = select.val();
         let userName = $('#team_member option:selected').text();
         let teamRole = $('#team_role').val();
         let teamRoleText = $('#team_role option:selected').text();
@@ -34,7 +35,9 @@ $(document).ready(function () {
         members.push(member);
 
         // Remove selected option from dropdown
-        $('#team_member option[value="' + userId + '"]').remove();
+        let teamSelect = document.getElementById('team_member');
+        let tomSelect = teamSelect.tomselect;
+        tomSelect.removeOption(userId);
 
         // Clone template
         let template = document.querySelector('#member-row-template');
@@ -61,15 +64,22 @@ $(document).ready(function () {
     $(document).on('click', '.remove-member', function () {
 
         let row = $(this).closest('tr');
-        let id = row.data('id');
+        let id = row.find('.input-user-id').val();
         let name = row.find('.member-name').text();
 
         members = members.filter(member => member.user_id != id);
 
-        // Add back to dropdown
-        $('#team_member').append(
-            `<option value="${id}">${name}</option>`
-        );
+        let teamSelect = document.getElementById('team_member');
+        let tomSelect = teamSelect.tomselect;
+
+        if (!tomSelect.options[id]) {
+            tomSelect.addOption({
+                value: id,
+                text: name
+            });
+        }
+
+        tomSelect.refreshOptions(false);
 
         row.remove();
 
