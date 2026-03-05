@@ -95,9 +95,8 @@
                     Date of Birth
                 </label>
 
-                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
-                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('dob') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
 
                 @error('dob')
                     <p class="mt-2 text-sm text-error-300">
@@ -320,8 +319,8 @@
                     Date of Joining
                 </label>
 
-                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror"  data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
 
                 @error('joining_date')
                     <p class="mt-2 text-sm text-error-300">

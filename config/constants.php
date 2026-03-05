@@ -114,5 +114,8 @@ return [
         'owner' => 'Owner',
         'admin' => 'Admin',
         'member' => 'Member',
-    ]
+    ],
+
+    //Date format
+    'date_format' => 'Y-m-d'
 ];
