@@ -48,7 +48,7 @@
                     Team Name
                 </label>
 
-                <input type="text" name="name" id="team_name" value="{{ old('name', $team->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="name" id="team_name" value="{{ old('name', $team->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                 @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('name')

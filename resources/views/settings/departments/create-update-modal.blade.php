@@ -30,7 +30,9 @@
                                 <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">
                                     Name
                                 </label>
-                                <input type="text" name="name" class="h-10 w-full rounded-lg border border-bgray-300 px-4 py-3 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" />
+                                <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2
+                              focus:border focus:border-success-300 focus:ring-0
+                              dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
                             </div>
 
                             <!-- Order Field -->
@@ -38,7 +40,9 @@
                                 <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">
                                     Order
                                 </label>
-                                <input type="number" name="order" class="h-10 w-full rounded-lg border border-bgray-300 px-4 py-3 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" />
+                                <input type="number" name="order" class="w-full rounded-lg border border-gray-300 p-2
+                              focus:border focus:border-success-300 focus:ring-0
+                              dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
                             </div>
 
                             <!-- Submit Button -->

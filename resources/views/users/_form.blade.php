@@ -42,7 +42,7 @@
                     Name
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                     @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -61,7 +61,7 @@
                     Email
                 </label>
 
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()" @isset($user) disabled @endisset>
 
@@ -78,7 +78,7 @@
                     Password
                 </label>
 
-                <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -95,7 +95,7 @@
                     Date of Birth
                 </label>
 
-                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
 
                 @error('dob')
@@ -111,7 +111,7 @@
                     Phone Number
                 </label>
 
-                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -128,7 +128,7 @@
                     WhatsApp Number
                 </label>
 
-                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border-success-300 focus:ring-0
+                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -303,7 +303,7 @@
                     Employee ID
                 </label>
 
-                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('employee_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('employee_id')
@@ -319,7 +319,7 @@
                     Date of Joining
                 </label>
 
-                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror"  data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
 
                 @error('joining_date')
@@ -346,7 +346,7 @@
                     Contact Person Name
                 </label>
 
-                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person')
@@ -362,7 +362,7 @@
                     Contact Person Number
                 </label>
 
-                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person_number') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person_number')
@@ -388,7 +388,7 @@
                     Address
                 </label>
 
-                <textarea name="address" id="address" rows="3" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <textarea name="address" id="address" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
                 @error('address')
@@ -412,22 +412,22 @@
             @endphp
 
             @foreach ($oldShifts as $index => $shift)
-                <div class="shift-item border p-4 rounded-lg mb-6 dark:border-darkblack-400">
+                <div class="shift-item border p-2 rounded-lg mb-6 dark:border-darkblack-400">
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
-                            <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                            <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         </div>
 
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
-                            <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                            <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         </div>
 
                         <div class="flex flex-col gap-2">
                             <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break (HH:MM)</label>
-                            <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                            <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
                         </div>
 
                     </div>
@@ -485,7 +485,7 @@
 </form>
 
 <div style="display: none" id="add-shift-card">
-    <div class="shift-item border p-4 rounded-lg mb-6 dark:border-darkblack-400">
+    <div class="shift-item border p-2 rounded-lg mb-6 dark:border-darkblack-400">
 
         <!-- Remove Button -->
         <button type="button" class="remove-shift absolute top-3 right-3 text-red-500 text-sm font-semibold">
@@ -497,19 +497,19 @@
             {{-- Start Time --}}
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
-                <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <input type="time" name="start_time[]" value="{{ $shift['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
 
             {{-- End Time --}}
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
-                <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <input type="time" name="end_time[]" value="{{ $shift['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
 
             {{-- Break --}}
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break (HH:MM)</label>
-                <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-4 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <input type="time" step="60" name="break_duration[]" value="{{ $shift['break_duration'] ?? '' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
 
         </div>

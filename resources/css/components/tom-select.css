@@ -5,7 +5,7 @@
     border-width: 1px;
     border-color: #e5e7eb;
     border-radius: 0.5rem;
-    min-height: 3.5rem;
+    /* min-height: 3.5rem; */
     font-size: 1rem;
     line-height: 1.5rem;
     cursor: pointer;

@@ -20,7 +20,7 @@
                     Role Name
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 p-4
+                <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 p-2
                               focus:border focus:border-success-300 focus:ring-0
                               dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                               @error('name') border border-red-500 @enderror">
@@ -40,9 +40,7 @@
                     User Type
                 </label>
 
-                <select name="user_type" id="user_type" {{ isset($role) ? 'disabled' : '' }} required class="w-full rounded-lg border border-gray-300 p-4
-                               focus:border focus:border-success-300 focus:ring-0
-                               dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <select name="user_type" id="user_type" {{ isset($role) ? 'disabled' : '' }} required class="select-no-search w-full
                                @error('user_type') border border-red-500 @enderror">
 
                     <option value="">Select User Type</option>
