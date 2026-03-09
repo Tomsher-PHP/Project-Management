@@ -25,8 +25,7 @@ class ShiftRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255|unique:shifts,name,' . $shiftId,
-            'departments' => 'nullable|array',
-            'departments.*' => 'integer|exists:departments,id',
+            'color_code' => 'nullable|string',
             'start_time' => 'required|string',
             'end_time' => 'required|string',
             'break_duration' => 'required|integer|min:0',

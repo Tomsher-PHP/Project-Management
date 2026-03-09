@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ShiftRequest;
-use App\Models\Department;
 use App\Models\Shift;
 use App\Services\ShiftService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class ShiftController extends Controller
 {
@@ -35,10 +32,7 @@ class ShiftController extends Controller
     public function create()
     {
 
-        //Department and Designation can be added later if needed
-        $departments = Department::where('status', true)->get();
-
-        return view('settings.shifts.create', compact('departments'));
+        return view('settings.shifts.create');
     }
 
     public function store(ShiftRequest $request, ShiftService $service)

@@ -34,23 +34,13 @@
 
             {{-- User Type --}}
             <div class="flex flex-col gap-2">
-                <label for="user_type" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Departments
+                <label for="color_code" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Color
                 </label>
 
-                <select name="departments[]" id="user_type" {{ isset($role) ? 'disabled' : '' }} class="tom-select-multiple w-full
-                               @error('user_type') border border-red-500 @enderror">
+                <input type="color" name="color_code" id="color_code" value="{{ old('color_code', $shift['color_code'] ?? '#6b7280') }}" class="w-16 h-10 p-0 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-success-300">
 
-                    <option value="">Select departments</option>
-
-                    @foreach ($departments as $key => $department)
-                        <option value="{{ $key }}" {{ old('departments', $department->id ?? '') == $key ? 'selected' : '' }}>
-                            {{ $department->name }}
-                        </option>
-                    @endforeach
-                </select>
-
-                @error('departments')
+                @error('color_code')
                     <p class="mt-2 text-sm text-error-300">
                         {{ $message }}
                     </p>
@@ -71,11 +61,25 @@
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
                 <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift['start_time'] ?? '09:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+
+                @error('start_time')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+
             </div>
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
                 <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift['end_time'] ?? '18:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+
+                @error('end_time')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+
             </div>
 
             <div class="flex flex-col gap-2">
@@ -97,6 +101,12 @@
 
                 </select>
 
+                @error('break_duration')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+
             </div>
 
         </div>
@@ -114,28 +124,31 @@
                 @foreach ($days as $dayKey => $dayLabel)
                     @php
                         $daySlug = strtolower($dayLabel);
+                        $oldWeeks = old("weekend_days.$dayKey", []); // get old input
                     @endphp
 
                     <div class="flex items-center gap-6">
 
-                        {{-- Select All Day --}}
+                        {{-- Day label --}}
                         <label class="flex items-center gap-2 w-28 cursor-pointer">
                             <span class="font-medium text-gray-700 dark:text-bgray-50">
                                 {{ $dayLabel }}
                             </span>
                         </label>
+
+                        {{-- Select All Day --}}
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="day-toggle h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-day="{{ $daySlug }}">
+                            <input type="checkbox" class="day-toggle h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-day="{{ $daySlug }}" {{ $dayLabel === 'Sunday' && empty($oldWeeks) ? 'checked' : '' }}>
                             <span class="text-sm text-gray-600 dark:text-bgray-50">
                                 All
                             </span>
                         </label>
 
+                        {{-- Weeks --}}
                         <div class="flex gap-4">
                             @for ($week = 1; $week <= 5; $week++)
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" {{ in_array($week, old("weekend_days.$dayKey", [])) ? 'checked' : '' }} class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-
+                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" {{ in_array($week, $oldWeeks) || ($dayLabel === 'Sunday' && empty($oldWeeks)) ? 'checked' : '' }}>
                                     <span class="text-sm text-gray-600 dark:text-bgray-50">
                                         W{{ $week }}
                                     </span>
@@ -146,6 +159,13 @@
                     </div>
                 @endforeach
             </div>
+
+            @error('weekend_days')
+                <p class="mt-2 text-sm text-error-300">
+                    {{ $message }}
+                </p>
+            @enderror
+
         </div>
 
     </div>

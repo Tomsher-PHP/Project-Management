@@ -12,6 +12,7 @@ class Shift extends Model
         'time_from',
         'time_to',
         'break_duration',
+        'color_code',
         'is_default',
         'status',
     ];
@@ -31,11 +32,6 @@ class Shift extends Model
     public function weekends()
     {
         return $this->hasMany(ShiftWeekend::class);
-    }
-
-    public function departments()
-    {
-        return $this->belongsToMany(Department::class, 'shift_departments');
     }
 
     public function assignments()

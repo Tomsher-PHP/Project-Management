@@ -65,7 +65,10 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
-                                                <div class="flex-1">
+                                                <div class="flex items-center gap-3 flex-1">
+                                                    <!-- Color circle -->
+                                                    <span class="w-5 h-5 rounded-sm border border-gray-300 dark:border-darkblack-400" style="background-color: {{ $shift->color_code }};"></span>
+
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                         {{ $shift->name }}
                                                     </h4>

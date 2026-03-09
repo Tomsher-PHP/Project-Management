@@ -34,9 +34,6 @@ class ShiftService
                 'status' => $data['status'] ?? 1,
             ]);
 
-            // Attach departments
-            $shift->departments()->sync($data['departments'] ?? []);
-
             // Store weekends
             if (!empty($data['weekend_days']) && is_array($data['weekend_days'])) {
                 $weekends = [];

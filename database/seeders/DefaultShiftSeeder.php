@@ -20,7 +20,7 @@ class DefaultShiftSeeder extends Seeder
                 'name' => 'General Shift',
                 'time_from' => '09:00:00',
                 'time_to' => '18:00:00',
-                'break_duration' => '01:00', // 1 hour
+                'break_duration' => 60, // 1 hour
                 'color_code' => '#6b7280',
                 'status' => true,
             ]
