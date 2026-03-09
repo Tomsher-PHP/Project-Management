@@ -21,16 +21,35 @@ class ShiftRequest extends FormRequest
      */
     public function rules(): array
     {
-        $shiftId = $this->route('shift');
+        $shift = $this->route('shift');
+        $hasAssignments = $shift && $shift->assignments()->exists();
 
-        return [
-            'name' => 'required|string|max:255|unique:shifts,name,' . $shiftId,
+        $rules = [
+            'name' => 'required|string|max:255|unique:shifts,name,' . $shift?->id,
             'color_code' => 'nullable|string',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string',
-            'break_duration' => 'required|integer|min:0',
-            'weekend_days' => 'nullable|array',
-            'weekend_days.*' => 'array',
         ];
+
+        if ($this->isMethod('post')) {
+            $rules += [
+                'start_time' => 'required|string',
+                'end_time' => 'required|string',
+                'break_duration' => 'required|integer|min:0',
+                'weekend_days' => 'nullable|array',
+                'weekend_days.*' => 'array',
+            ];
+        }
+
+        // Update validation when no assignments exist
+        if ($this->isMethod('put') && !$hasAssignments) {
+            $rules += [
+                'start_time' => 'required|string',
+                'end_time' => 'required|string',
+                'break_duration' => 'required|integer|min:0',
+                'weekend_days' => 'nullable|array',
+                'weekend_days.*' => 'array',
+            ];
+        }
+
+        return $rules;
     }
 }

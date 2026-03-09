@@ -39,6 +39,11 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Work duration</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Shift time</span>
                                         </div>
                                     </td>
@@ -77,17 +82,22 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->time_from_formatted . ' - ' . $shift->time_to_formatted }}</span>
+                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->duration }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->break_duration_formatted ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->time_from_formatted . ' - ' . $shift->time_to_formatted }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <x-status-toggle :model="$shift" route="users.toggleStatus" entity="shift" />
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->break_duration_formatted ?? '--' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                            <div class="flex w-full items-center">
+                                                <x-status-toggle :model="$shift" route="settings.shift.toggleStatus" entity="shift" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">

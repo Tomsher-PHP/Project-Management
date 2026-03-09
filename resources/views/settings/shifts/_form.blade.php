@@ -4,7 +4,7 @@
         @method('PUT')
     @endif
 
-    {{-- ================= BASIC ROLE INFORMATION ================= --}}
+    {{-- ================= BASIC INFORMATION ================= --}}
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Shift Information
@@ -18,12 +18,10 @@
                     Shift Name
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2
+                <input type="text" id="name" name="name" value="{{ old('name', $shift->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2
                               focus:border focus:border-success-300 focus:ring-0
                               dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                               @error('name') border border-red-500 @enderror">
-
-                <input type="hidden" name="role_id" value="{{ $role->id ?? '' }}">
 
                 @error('name')
                     <p class="mt-2 text-sm text-error-300">
@@ -38,7 +36,7 @@
                     Color
                 </label>
 
-                <input type="color" name="color_code" id="color_code" value="{{ old('color_code', $shift['color_code'] ?? '#6b7280') }}" class="w-16 h-10 p-0 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-success-300">
+                <input type="color" name="color_code" id="color_code" value="{{ old('color_code', $shift->color_code ?? '#6b7280') }}" class="w-16 h-10 p-0 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-success-300">
 
                 @error('color_code')
                     <p class="mt-2 text-sm text-error-300">
@@ -60,7 +58,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
-                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift['start_time'] ?? '09:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
 
                 @error('start_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -72,7 +70,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
-                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift['end_time'] ?? '18:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
 
                 @error('end_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -87,14 +85,14 @@
                     Break Duration
                 </label>
 
-                <select name="break_duration" class="select-no-search w-full @error('user_type') border border-red-500 @enderror">
-
-                    @php
-                        $breaks = [0, 15, 30, 45, 60, 90, 120];
-                    @endphp
+                @php
+                    $breaks = [0, 15, 30, 45, 60, 90, 120];
+                    $shiftBreakMin = $shift?->break_duration ? $shift->break_duration / 60 : 60;
+                @endphp
+                <select name="break_duration" class="select-no-search w-full @error('user_type') border border-red-500 @enderror" {{ $editable }}>
 
                     @foreach ($breaks as $minutes)
-                        <option value="{{ $minutes }}" {{ old('break_duration', $shift['break_duration'] ?? 60) == $minutes ? 'selected' : '' }}>
+                        <option value="{{ $minutes }}" {{ old('break_duration', $shiftBreakMin ?? 60) == $minutes ? 'selected' : '' }}>
                             {{ $minutes }} minutes
                         </option>
                     @endforeach
@@ -118,13 +116,34 @@
 
             @php
                 $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+                // Prepare existing weekends for edit form
+                $existingWeekends = [];
+                if (isset($shift) && $shift->weekends) {
+                    foreach ($shift->weekends as $weekend) {
+                        $existingWeekends[$weekend->weekday][] = $weekend->week_number;
+                    }
+                }
             @endphp
 
             <div class="space-y-4">
                 @foreach ($days as $dayKey => $dayLabel)
                     @php
                         $daySlug = strtolower($dayLabel);
-                        $oldWeeks = old("weekend_days.$dayKey", []); // get old input
+
+                        // Check for old input first
+                        $oldWeeks = old("weekend_days.$dayKey");
+
+                        // If no old input:
+                        if ($oldWeeks === null) {
+                            if (isset($shift)) {
+                                // Edit page → use existing saved weekends
+                                $oldWeeks = $existingWeekends[$dayKey] ?? [];
+                            } else {
+                                // Create page → default Sunday all weeks
+                                $oldWeeks = $dayLabel === 'Sunday' ? [1, 2, 3, 4, 5] : [];
+                            }
+                        }
                     @endphp
 
                     <div class="flex items-center gap-6">
@@ -138,7 +157,7 @@
 
                         {{-- Select All Day --}}
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="day-toggle h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-day="{{ $daySlug }}" {{ $dayLabel === 'Sunday' && empty($oldWeeks) ? 'checked' : '' }}>
+                            <input type="checkbox" class="day-toggle h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-day="{{ $daySlug }}" {{ count($oldWeeks) === 5 ? 'checked' : '' }} {{ $editable }}>
                             <span class="text-sm text-gray-600 dark:text-bgray-50">
                                 All
                             </span>
@@ -148,7 +167,7 @@
                         <div class="flex gap-4">
                             @for ($week = 1; $week <= 5; $week++)
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" {{ in_array($week, $oldWeeks) || ($dayLabel === 'Sunday' && empty($oldWeeks)) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" {{ in_array($week, $oldWeeks) ? 'checked' : '' }} {{ $editable }}>
                                     <span class="text-sm text-gray-600 dark:text-bgray-50">
                                         W{{ $week }}
                                     </span>
@@ -159,6 +178,12 @@
                     </div>
                 @endforeach
             </div>
+
+            @error('weekend_days')
+                <p class="mt-2 text-sm text-error-300">
+                    {{ $message }}
+                </p>
+            @enderror
 
             @error('weekend_days')
                 <p class="mt-2 text-sm text-error-300">

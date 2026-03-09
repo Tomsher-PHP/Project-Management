@@ -29,9 +29,6 @@ return [
         //image-draggable
         'image_draggable' => 'assets/js/image-draggable.js',
 
-        //More shift
-        'more_shift' => 'assets/js/add-shifts.js',
-
         //delete confirmation alert
         'delete_alert' => 'assets/js/delete-alert.js',
     ],

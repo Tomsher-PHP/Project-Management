@@ -14,7 +14,7 @@
                             </h3>
 
                             <div class="mt-8">
-                                @include('settings.shifts._form', ['shift' => null])
+                                @include('settings.shifts._form', ['shift' => null, 'editable' => null])
                             </div>
                         </div>
                     </div>
@@ -24,6 +24,3 @@
         <!-- write your code here-->
     </main>
 @endsection
-@push('scripts')
-    <script src="{{ asset(config('assets.js.more_shift')) }}"></script>
-@endpush

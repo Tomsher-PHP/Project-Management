@@ -6,6 +6,8 @@ use App\Http\Requests\ShiftRequest;
 use App\Models\Shift;
 use App\Services\ShiftService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ShiftController extends Controller
 {
@@ -42,23 +44,42 @@ class ShiftController extends Controller
         return redirect()->route('settings.shifts.index')->with('success', 'Shift created successfully.');
     }
 
-    public function show(string $id)
+    public function edit(int $id)
     {
-        //
+        $shift = Shift::findOrFail($id);
+
+        $editable = $shift->assignments->isNotEmpty() ? 'disabled' : '';
+
+        return view('settings.shifts.edit', compact('shift', 'editable'));
     }
 
-    public function edit(string $id)
+    public function update(ShiftRequest $request, Shift $shift, ShiftService $service)
     {
-        //
+        $service->updateShifts($shift, $request->validated());
+
+        return redirect()->route('settings.shifts.index')->with('success', 'Shift updated successfully.');
     }
 
-    public function update(Request $request, string $id)
+    public function destroy(Shift $shift)
     {
-        //
+        DB::transaction(function () use ($shift) {
+            $shift->weekends()->delete();
+            $shift->delete();
+        });
+
+        return redirect()->back()->with('success', 'Shift deleted successfully.');
     }
 
-    public function destroy(string $id)
+    public function toggleStatus(Request $request)
     {
-        //
+        $shift = Shift::findOrFail($request->id);
+        $shift->status = !$shift->status;
+        $shift->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $shift->status,
+            'message' => 'Status updated successfully'
+        ], Response::HTTP_OK);
     }
 }
