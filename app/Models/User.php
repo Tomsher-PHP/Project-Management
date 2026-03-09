@@ -124,13 +124,19 @@ class User extends Authenticatable
         return $this->roles->first()?->name;
     }
 
-    public function shifts()
+    //shift relations
+    public function shiftAssignments()
     {
-        return $this->hasMany(UserShift::class);
+        return $this->hasMany(UserShiftAssignment::class);
     }
 
-    public function workingDays()
+    public function activeShift()
     {
-        return $this->hasOne(UserWorkingDay::class);
+        return $this->hasOne(UserShiftAssignment::class)
+            ->whereDate('date_from', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('date_to')
+                    ->orWhereDate('date_to', '>=', now());
+            });
     }
 }

@@ -9,6 +9,7 @@ import "tom-select/dist/css/tom-select.css";
 import { initTomSelect } from './components/tom-select';
 
 import { initDatepicker } from './components/datepicker';
+import { initTimepicker } from './components/timepicker';
 
 window.Swal = Swal;
 window.Alert = Alert;
@@ -18,4 +19,5 @@ window.TomSelect = TomSelect;
 document.addEventListener('DOMContentLoaded', function () {
     initTomSelect();
     initDatepicker();
+    initTimepicker();
 });

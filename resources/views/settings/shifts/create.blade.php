@@ -10,11 +10,11 @@
                     <div class="flex grid-cols-12 flex-col-reverse gap-12 xl:grid 2xl:flex-row">
                         <div class="col-span-12 w-full">
                             <h3 class="border-b border-bgray-200 pb-5 text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
-                                Create New User
+                                Create New Shift
                             </h3>
 
                             <div class="mt-8">
-                                @include('users._form', ['user' => null])
+                                @include('settings.shifts._form', ['shift' => null])
                             </div>
                         </div>
                     </div>
@@ -25,5 +25,5 @@
     </main>
 @endsection
 @push('scripts')
-    <script src="{{ asset(config('assets.js.image_draggable')) }}"></script>
+    <script src="{{ asset(config('assets.js.more_shift')) }}"></script>
 @endpush

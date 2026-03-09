@@ -24,15 +24,15 @@ class RolePermissionSeeder extends Seeder
         Role::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $permissions = config('constants.permission_types');
+        $permissions = config('system_permissions');
         $userTypes = array_keys(config('constants.user_types'));
 
         foreach ($userTypes as $userType) {
-            if (in_array($userType, ['normal_user', 'tester'])) {
-                $permissions = array_filter($permissions, function ($permission) {
-                    return str_contains($permission, 'task') || str_contains($permission, 'project');
-                });
-            }
+            // if (in_array($userType, ['normal_user'])) {
+            //     $permissions = array_filter($permissions, function ($permission) {
+            //         return str_contains($permission, 'task') || str_contains($permission, 'project');
+            //     });
+            // }
 
             foreach ($permissions as $permission) {
                 Permission::firstOrCreate([
@@ -48,7 +48,7 @@ class RolePermissionSeeder extends Seeder
         Role::create(['name' => 'Admin', 'user_type' => 'admin']);
         Role::create(['name' => 'Manager', 'user_type' => 'manager']);
         Role::create(['name' => 'Team Leader', 'user_type' => 'team_leader']);
-        Role::create(['name' => 'Staff', 'user_type' => 'normal_user']);
+        Role::create(['name' => 'Developer', 'user_type' => 'normal_user']);
 
         // Assign Permissions to Roles
         $superAdmin->givePermissionTo(Permission::where('user_type', 'super_admin')->get());

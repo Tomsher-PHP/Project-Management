@@ -4,8 +4,8 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
-        @canType('team.create')
-        <a href="{{ route('teams.create') }}" class="inline-flex items-center px-4 py-1.5
+        @canType('shift.create')
+        <a href="{{ route('settings.shifts.create') }}" class="inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400
@@ -14,7 +14,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
 
-            <span>New Team</span>
+            <span>New Shift</span>
         </a>
         @endcanType
 
@@ -39,7 +39,12 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Members</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Shift time</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Break time</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -53,79 +58,58 @@
                                         </div>
                                     </td>
                                 </tr>
-                                @forelse ($teams as $key => $team)
-                                    {{-- @dd($team, $team->leader->first()->name) --}}
+                                @forelse ($shifts as $key => $shift)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
-                                                <div class="h-[64px] w-[64px]">
-                                                    <img class="h-full w-full rounded-lg object-cover" src="{{ $team->team_avatar_url }}" alt="" />
-                                                </div>
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $team->name }}
+                                                        {{ $shift->name }}
                                                     </h4>
-                                                    <div class="flex flex-col">
-                                                        <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Owner: {{ $team->leader->first()->name ?? '' }}</span>
-                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <div class="mt-4 flex -space-x-2 overflow-hidden">
-                                                    @if ($team->users->isNotEmpty())
-                                                        @php
-                                                            $members = $team->users;
-                                                            $visibleMembers = $members->take(5);
-                                                            $remainingCount = $members->count() - 5;
-                                                        @endphp
-
-                                                        @foreach ($visibleMembers as $member)
-                                                            <img class="inline-block h-8 w-8 rounded-full ring ring-white" src="{{ $member->profile_image_url }}" alt="{{ $member->name }}" title="{{ $member->name }}" />
-                                                        @endforeach
-
-                                                        @if ($remainingCount > 0)
-                                                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-semibold text-gray-500 ring ring-white">
-                                                                +{{ $remainingCount }}
-                                                            </div>
-                                                        @endif
-                                                    @else
-                                                        <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">--</span>
-                                                    @endif
-
-                                                </div>
+                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->time_from_formatted . ' - ' . $shift->time_to_formatted }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <x-status-toggle :model="$team" route="teams.toggleStatus" entity="team" />
+                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $shift->break_duration_formatted ?? '--' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                            <div class="flex w-full items-center">
+                                                <x-status-toggle :model="$shift" route="users.toggleStatus" entity="shift" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                @canType('team.edit')
-                                                <x-edit-button :action="route('teams.edit', $team->id)" />
+                                                @canType('shift.edit')
+                                                <x-edit-button :action="route('settings.shifts.edit', $shift->id)" />
                                                 @endcanType
-                                                @canType('team.delete')
-                                                <x-delete-form :action="route('teams.destroy', $team->id)" />
-                                                @endcanType
+                                                @if (!$shift->is_default)
+                                                    @canType('shift.delete')
+                                                    <x-delete-form :action="route('settings.shifts.destroy', $shift->id)" />
+                                                    @endcanType
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No teams found.
+                                            No shifts found.
                                         </td>
                                     </tr>
                                 @endforelse
                             </table>
                         </div>
-                        <x-pagination :paginator="$teams" :per-page="$perPage" />
+                        <x-pagination :paginator="$shifts" :per-page="$perPage" />
                     </div>
                 </div>
             </section>

@@ -11,6 +11,7 @@ class DesignationController extends Controller
 {
     protected $pageTitle;
     protected $subTitle;
+    
     public function __construct()
     {
         $this->pageTitle = 'Designations';

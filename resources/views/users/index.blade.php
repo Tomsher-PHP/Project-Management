@@ -121,7 +121,7 @@
                                                 @endcanType
                                                 @if (auth()->id() != $user->id)                                      
                                                     @canType('user.delete')
-                                                    <x-delete-form :action="route('user.destroy', $user->id)" />
+                                                    <x-delete-form :action="route('users.destroy', $user->id)" />
                                                     @endcanType
                                                 @endif
                                             </div>

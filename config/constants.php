@@ -8,51 +8,55 @@ return [
         'manager' => 'Manager',
         'team_leader' => 'Team Leader',
         'normal_user' => 'Normal User',
-        'tester' => 'Tester',
-        // 'guest' => 'Guest',
     ],
 
     // Permission Types constant
-    'permission_types' => [
-        // Project Module
-        'project.view',
-        'project.create',
-        'project.edit',
-        'project.delete',
+    // 'permission_types' => [
+    //     // Project Module
+    //     'project.view',
+    //     'project.create',
+    //     'project.edit',
+    //     'project.delete',
 
-        // Task Module
-        'task.view',
-        'task.create',
-        'task.edit',
-        'task.delete',
+    //     // Task Module
+    //     'task.view',
+    //     'task.create',
+    //     'task.edit',
+    //     'task.delete',
 
-        // User Module
-        'user.view',
-        'user.create',
-        'user.edit',
-        'user.delete',
+    //     // User Module
+    //     'user.view',
+    //     'user.create',
+    //     'user.edit',
+    //     'user.delete',
 
-        //team Module
-        'team.view',
-        'team.create',
-        'team.edit',
-        'team.delete',
+    //     //team Module
+    //     'team.view',
+    //     'team.create',
+    //     'team.edit',
+    //     'team.delete',
 
-        // Settings Module
-        'settings.view',
-        'settings.create',
-        'settings.edit',
+    //     // Settings Module
+    //     'settings.view',
+    //     'settings.create',
+    //     'settings.edit',
 
-        // Reports Module
-        'reports.view',
-        'reports.download',
+    //     // Reports Module
+    //     'reports.view',
+    //     'reports.download',
 
-        // Role Management Module
-        'role.view',
-        'role.create',
-        'role.edit',
-        'role.delete',
-    ],
+    //     // Role Management Module
+    //     'role.view',
+    //     'role.create',
+    //     'role.edit',
+    //     'role.delete',
+
+    //     // Shift Management Module
+    //     'shift.view',
+    //     'shift.create',
+    //     'shift.edit',
+    //     'shift.delete',
+    // ],
 
     // User Type Permissions constant
     'user_type_permissions' => [

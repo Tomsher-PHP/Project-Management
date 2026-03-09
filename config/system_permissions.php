@@ -1,0 +1,60 @@
+<?php
+
+return [
+    // Project Module
+    'project.view',
+    'project.create',
+    'project.edit',
+    'project.delete',
+
+    // Task Module
+    'task.view',
+    'task.create',
+    'task.edit',
+    'task.delete',
+
+    // User Module
+    'user.view',
+    'user.create',
+    'user.edit',
+    'user.delete',
+
+    //team Module
+    'team.view',
+    'team.create',
+    'team.edit',
+    'team.delete',
+
+    // Settings Module
+    'settings.view',
+    'settings.create',
+    'settings.edit',
+
+    // Reports Module
+    'reports.view',
+    'reports.download',
+
+    // Role Management Module
+    'role.view',
+    'role.create',
+    'role.edit',
+    'role.delete',
+
+    // Shift Management Module
+    'shift.view',
+    'shift.create',
+    'shift.edit',
+    'shift.delete',
+
+    // Department Module
+    'department.view',
+    'department.create',
+    'department.edit',
+    'department.delete',
+
+    // Designation Module
+    'designation.view',
+    'designation.create',
+    'designation.edit',
+    'designation.delete',
+];

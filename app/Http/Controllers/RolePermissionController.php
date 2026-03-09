@@ -12,7 +12,6 @@ use Spatie\Permission\Models\Role;
 class RolePermissionController extends Controller
 {
     protected $pageTitle;
-
     protected $subTitle;
 
     public function __construct()
@@ -100,23 +99,23 @@ class RolePermissionController extends Controller
             }
         }
 
-        $allowed = config("constants.user_type_permissions.$userType", []);
+        // $allowed = config("constants.user_type_permissions.$userType", []);
 
-        $permissions = Permission::where(function ($query) use ($allowed) {
-            foreach ($allowed as $permission) {
+        // $permissions = Permission::where(function ($query) use ($allowed) {
+        //     foreach ($allowed as $permission) {
 
-                if ($permission === '*') {
-                    return;
-                }
+        //         if ($permission === '*') {
+        //             return;
+        //         }
 
-                if (str_contains($permission, '*')) {
-                    $query->orWhere('name', 'like', str_replace('*', '%', $permission));
-                } else {
-                    $query->orWhere('name', $permission);
-                }
-            }
-        })
-            ->where('user_type', $userType)
+        //         if (str_contains($permission, '*')) {
+        //             $query->orWhere('name', 'like', str_replace('*', '%', $permission));
+        //         } else {
+        //             $query->orWhere('name', $permission);
+        //         }
+        //     }
+        // })
+        $permissions = Permission::where('user_type', $userType)
             ->get()
             ->groupBy(function ($permission) {
                 return explode('.', $permission->name)[0];
