@@ -78,6 +78,11 @@ class User extends Authenticatable
 
     public function canByUserType(string $permission): bool
     {
+        // Super admin can access everything
+        if ($this->user_type === 'super_admin') {
+            return true;
+        }
+
         return $this->getAllPermissions()
             ->where('name', $permission)
             ->where('user_type', $this->user_type)

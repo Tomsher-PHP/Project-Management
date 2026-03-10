@@ -16,6 +16,10 @@ class PermissionByType
     public function handle(Request $request, Closure $next, $permission = null): Response
     {
         $user = auth()->user();
+
+        if($user->user_type == "super_admin") {
+            return $next($request);
+        }
         
         if (!$user || !$user->canByUserType($permission)) {
             abort(403, 'Unauthorized action.');

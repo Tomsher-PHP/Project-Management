@@ -57,4 +57,10 @@ return [
     'designation.create',
     'designation.edit',
     'designation.delete',
+
+    // Schedule Shift
+    'schedule_shift.view',
+    'schedule_shift.create',
+    'schedule_shift.edit',
+    'schedule_shift.delete',
 ];
