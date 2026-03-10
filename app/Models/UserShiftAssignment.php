@@ -26,4 +26,19 @@ class UserShiftAssignment extends Model
             'shift_id' => 'integer',
         ];
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    public function weekends()
+    {
+        return $this->hasMany(UserShiftWeekend::class);
+    }
 }

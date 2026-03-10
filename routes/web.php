@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
@@ -91,4 +92,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('teams', TeamController::class)->middleware('permission.type:team.delete')->only(['destroy']);
     // End Team management Routes
 
+    // Schedule shift Routes
+    Route::get('schedule-shift', [ScheduleShiftController::class, 'index'])->middleware('permission.type:schedule_shift.view')->name('schedule.shift.index');
+    Route::get('create-schedule-shift', [ScheduleShiftController::class, 'create'])->middleware('permission.type:schedule_shift.create')->name('schedule.shift.create');
+    Route::post('create-schedule-shift', [ScheduleShiftController::class, 'store'])->middleware('permission.type:schedule_shift.create')->name('schedule.shift.store');
+    // End Schedule shift Routes
 });

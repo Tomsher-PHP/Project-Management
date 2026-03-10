@@ -151,11 +151,12 @@
             </div>
             <div class="item-wrapper mb-5">
                 <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
-                    Help
+                    Configurations
                 </h4>
                 <ul class="mt-2.5">
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="support-ticket.html">
+
+                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <a href="{{ route('schedule.shift.index') }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
                                     <span class="item-ico">
@@ -167,11 +168,12 @@
                                             <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-lg font-medium leading-none">Support</span>
+                                    <span class="item-text text-lg font-medium leading-none">Schedule Shift</span>
                                 </div>
                             </div>
                         </a>
-                    </li> --}}
+                    </li>
+
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <a href="{{ route('settings.index') }}">
                             <div class="flex items-center justify-between">
@@ -189,6 +191,7 @@
                             </div>
                         </a>
                     </li>
+
                 </ul>
             </div>
             <div class="item-wrapper mb-5">

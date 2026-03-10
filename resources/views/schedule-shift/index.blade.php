@@ -4,8 +4,8 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
-        @canType('shift.create')
-        <a href="{{ route('settings.shifts.create') }}" class="inline-flex items-center px-4 py-1.5
+        @canType('schedule_shift.create')
+        <a href="{{ route('schedule.shift.create') }}" class="inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400
@@ -33,7 +33,7 @@
                                 Previous
                             </a>
 
-                            <h2 class="text-lg font-semibold">
+                            <h2 class="text-lg font-semibold dark:text-bgray-50">
                                 {{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}
                             </h2>
 
@@ -59,32 +59,56 @@
 
                                 <tbody>
                                     @foreach ($users as $user)
-                                        <tr class="border-t">
-                                            <td class="px-4 py-2 font-medium">
-                                                {{ $user->name }}
+                                        <tr class="border-t border-gray-200 dark:border-darkblack-400 hover:bg-gray-50 dark:hover:bg-darkblack-500">
+                                            <!-- Checkbox column -->
+                                            <td class="px-4 py-2 text-center">
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="user-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+
+                                                    <span class="text-sm font-semibold text-gray-600 dark:text-bgray-50">
+                                                        {{ $user->name }}
+                                                    </span>
+                                                </label>
                                             </td>
 
+                                            <!-- Shifts for each day -->
                                             @foreach ($weekDates as $date)
                                                 @php
-                                                    $shift = $assignments[$user->id][$date->toDateString()] ?? null;
+                                                    $shift = $calendar[$user->id][$date->toDateString()] ?? null;
+                                                    $isPast = $date->isBefore(\Carbon\Carbon::today());
                                                 @endphp
 
                                                 <td class="px-2 py-2 text-center">
-                                                    <select class="shift-select w-full border rounded" data-user="{{ $user->id }}" data-date="{{ $date->toDateString() }}">
-                                                        <option value="">--</option>
-
-                                                        @foreach ($shifts as $shiftOption)
-                                                            <option value="{{ $shiftOption->id }}" @selected($shift?->shift_id == $shiftOption->id)>
-                                                                {{ $shiftOption->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    @if ($isPast)
+                                                        @if ($shift)
+                                                            @php
+                                                                $bg = $shift->color_code;
+                                                                $text = (hexdec(substr($bg, 1, 2)) * 299 + hexdec(substr($bg, 3, 2)) * 587 + hexdec(substr($bg, 5, 2)) * 114) / 1000 > 125 ? '#000' : '#fff';
+                                                            @endphp
+                                                            <div class="flex flex-col items-center justify-center rounded px-2 py-1 text-sm font-medium" style="background-color: {{ $bg }}; color: {{ $text }};">
+                                                                <span>{{ $shift->shift_name }}</span>
+                                                                <span>{{ \Carbon\Carbon::parse($shift->time_from)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->time_to)->format('H:i') }}</span>
+                                                            </div>
+                                                        @else
+                                                            <span class="text-sm text-gray-400">--</span>
+                                                        @endif
+                                                    @else
+                                                        <select class="shift-select w-full border rounded bg-white dark:bg-darkblack-600 border-gray-300 dark:border-darkblack-400 text-gray-700 dark:text-gray-200" data-user="{{ $user->id }}" data-date="{{ $date->toDateString() }}">
+                                                            <option value="">--</option>
+                                                            @foreach ($shifts as $shiftOption)
+                                                                <option value="{{ $shiftOption->id }}" {{ $shift?->shift_id == $shiftOption->id ? 'selected' : '' }}>
+                                                                    {{ $shiftOption->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    @endif
                                                 </td>
                                             @endforeach
 
                                         </tr>
                                     @endforeach
                                 </tbody>
+
                             </table>
                         </div>
                     </div>

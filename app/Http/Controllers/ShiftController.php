@@ -26,7 +26,7 @@ class ShiftController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $shifts = Shift::paginate($perPage)->withQueryString();
+        $shifts = Shift::orderBy('is_default', 'desc')->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
 
         return view('settings.shifts.index', compact('shifts', 'perPage'));
     }
