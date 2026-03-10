@@ -30,7 +30,7 @@
                 @enderror
             </div>
 
-            {{-- User Type --}}
+            {{-- Color --}}
             <div class="flex flex-col gap-2">
                 <label for="color_code" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Color
@@ -82,22 +82,14 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Break Duration
+                    Break Duration (Minutes)
                 </label>
 
                 @php
-                    $breaks = [0, 15, 30, 45, 60, 90, 120];
-                    $shiftBreakMin = $shift?->break_duration ? $shift->break_duration / 60 : 60;
+                    $shiftBreakMin = ($shift?->break_duration ?? 3600) / 60;
                 @endphp
-                <select name="break_duration" class="select-no-search w-full @error('user_type') border border-red-500 @enderror" {{ $editable }}>
 
-                    @foreach ($breaks as $minutes)
-                        <option value="{{ $minutes }}" {{ old('break_duration', $shiftBreakMin ?? 60) == $minutes ? 'selected' : '' }}>
-                            {{ $minutes }} minutes
-                        </option>
-                    @endforeach
-
-                </select>
+                <input type="text" name="break_duration" value="{{ old('break_duration', $shiftBreakMin ?? '60') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
 
                 @error('break_duration')
                     <p class="mt-2 text-sm text-error-300">
