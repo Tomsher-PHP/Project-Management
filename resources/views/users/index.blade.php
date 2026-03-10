@@ -68,10 +68,13 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @php
+                                    $startNumber = ($users->currentPage() - 1) * $users->perPage();
+                                @endphp
                                 @forelse ($users as $key => $user)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
@@ -119,7 +122,7 @@
                                                 @canType('user.edit')
                                                 <x-edit-button :action="route('users.edit', $user->id)" />
                                                 @endcanType
-                                                @if (auth()->id() != $user->id)                                      
+                                                @if (auth()->id() != $user->id)
                                                     @canType('user.delete')
                                                     <x-delete-form :action="route('users.destroy', $user->id)" />
                                                     @endcanType

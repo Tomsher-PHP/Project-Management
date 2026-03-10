@@ -63,10 +63,13 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @php
+                                    $startNumber = ($shifts->currentPage() - 1) * $shifts->perPage();
+                                @endphp
                                 @forelse ($shifts as $key => $shift)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
