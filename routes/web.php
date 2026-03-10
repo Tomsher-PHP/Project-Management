@@ -73,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('designations', DesignationController::class);
 
         // Shift Routes
+        Route::get('/shifts/{shift}/check-assignment', [ShiftController::class, 'checkAssignment'])->name('shifts.checkAssignment');
         Route::patch('/shifts/toggle-status', [ShiftController::class, 'toggleStatus'])->name('shift.toggleStatus')->middleware('permission.type:shift.edit');
         Route::resource('shifts', ShiftController::class)->middleware('permission.type:shift.view')->only(['index']);
         Route::resource('shifts', ShiftController::class)->middleware('permission.type:shift.create')->only(['create', 'store']);

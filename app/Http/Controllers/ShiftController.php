@@ -82,4 +82,12 @@ class ShiftController extends Controller
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }
+
+    public function checkAssignment(Shift $shift)
+    {
+        return response()->json([
+            'allocated' => $shift->assignments()->exists(),
+            'message' => "This shift is allocated to users. Do you still want to delete it?"
+        ]);
+    }
 }

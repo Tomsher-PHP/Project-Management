@@ -107,7 +107,7 @@
                                                 @endcanType
                                                 @if (!$shift->is_default)
                                                     @canType('shift.delete')
-                                                    <x-delete-form :action="route('settings.shifts.destroy', $shift->id)" />
+                                                    <x-delete-form :action="route('settings.shifts.destroy', $shift->id)" :id="$shift->id" :check-route="route('settings.shifts.checkAssignment', $shift->id)" />
                                                     @endcanType
                                                 @endif
                                             </div>

@@ -1,4 +1,4 @@
-<form action="{{ $action }}" method="POST" class="delete-form">
+<form action="{{ $action }}" method="POST" class="delete-form" data-id="{{ $id ?? '' }}" data-route="{{ $checkRoute ?? '' }}">
     @csrf
     @method('DELETE')
 
