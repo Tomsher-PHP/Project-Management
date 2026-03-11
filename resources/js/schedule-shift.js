@@ -18,37 +18,43 @@ const loadWeek = (date) => {
 export function initScheduleShift(startOfWeek) {
     currentWeek = startOfWeek;
 
-    // Event delegation for toggle edit mode
-    document.body.addEventListener("click", function (e) {
-        const btn = e.target.closest(".edit-shift");
-        if (!btn) return;
-        const td = btn.closest("td");
-        const view = td.querySelector(".shift-view");
-        const edit = td.querySelector(".shift-edit");
-        if (!view || !edit) return;
-        view.classList.toggle("hidden");
-        edit.classList.toggle("hidden");
-    });
+    // Attach global listeners only once
+    if (!window.scheduleShiftGlobalListeners) {
+        // Event delegation for toggle edit mode
+        document.body.addEventListener("click", function (e) {
+            const btn = e.target.closest(".edit-shift");
+            if (!btn) return;
+            const td = btn.closest("td");
+            const view = td.querySelector(".shift-view");
+            const edit = td.querySelector(".shift-edit");
+            if (!view || !edit) return;
+            view.classList.toggle("hidden");
+            edit.classList.toggle("hidden");
+        });
 
-    // Event delegation for shift select
-    document.body.addEventListener("change", function (e) {
-        if (!e.target.classList.contains("shift-select")) return;
-        const select = e.target;
-        const userId = select.dataset.user;
-        const date = select.dataset.date;
-        const shiftId = select.value;
-        fetch("/shift/update", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ user_id: userId, date: date, shift_id: shiftId })
-        }).then(res => res.json()).then(data => location.reload());
-    });
+        // Event delegation for shift select
+        document.body.addEventListener("change", function (e) {
+            if (!e.target.classList.contains("shift-select")) return;
+            const select = e.target;
+            const userId = select.dataset.user;
+            const date = select.dataset.date;
+            const shiftId = select.value;
+            fetch("/schedule-shift/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ user_id: userId, date: date, shift_id: shiftId })
+            }).then(res => res.json()).then(data => location.reload());
+        });
 
-    // Only attach next/prev listeners **once**
-    if (!window.scheduleShiftListenersAttached) {
+        window.scheduleShiftGlobalListeners = true;
+    }
+
+    // Attach navigation listeners once
+    if (!window.scheduleShiftNavListeners) {
+
         document.getElementById("nextWeek").addEventListener("click", () => {
             let next = new Date(currentWeek);
             next.setDate(next.getDate() + 7);
@@ -62,20 +68,21 @@ export function initScheduleShift(startOfWeek) {
         });
 
         document.getElementById("weekPickerBtn").addEventListener("click", () => {
-            document.querySelector(".weekPicker")._flatpickr.open();
+            const picker = document.querySelector(".weekPicker")?._flatpickr;
+            if (picker) picker.open();
         });
 
-        window.scheduleShiftListenersAttached = true;
+        window.scheduleShiftNavListeners = true;
     }
-
-    // Initialize week picker once
-    initWeekPicker(".weekPicker", loadWeek);
 }
 
-// Auto-init
 document.addEventListener("DOMContentLoaded", () => {
+
     const input = document.querySelector(".weekPicker");
-    if (input) {
-        initScheduleShift(input.value);
-    }
+
+    if (!input) return;
+
+    initWeekPicker(".weekPicker", loadWeek);
+    initScheduleShift(input.value);
+
 });

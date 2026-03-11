@@ -44,10 +44,11 @@ export function initTomSelect() {
 
         if (el.tomselect) return;
 
-        new TomSelect(el, {
+        const sort = el.dataset.sort != "0";
+
+        const config = {
             create: false,
             persist: false,
-            sortField: { field: "text", direction: "asc" },
             plugins: ['dropdown_input', 'clear_button'],
             render: {
                 option: function (data, escape) {
@@ -67,6 +68,14 @@ export function initTomSelect() {
                     `;
                 }
             }
-        });
+        };
+
+
+        // Apply sorting only if enabled
+        if (sort) {
+            config.sortField = { field: "text", direction: "asc" };
+        }
+
+        new TomSelect(el, config);
     });
 }

@@ -84,7 +84,7 @@ class ScheduleShiftService
             ->orderBy('name')
             ->get();
 
-        $shifts = Shift::whereStatus(1)->get();
+        $shifts = Shift::whereStatus(1)->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 
         return [$users, $shifts];
     }
@@ -118,5 +118,91 @@ class ScheduleShiftService
                         ->orWhereNull('date_to');
                 });
         })->get();
+    }
+
+    public function updateUserShift(int $userId, string $date, ?int $shiftId): void
+    {
+        $date = Carbon::parse($date);
+
+        DB::transaction(function () use ($userId, $date, $shiftId) {
+
+            $existing = UserShiftAssignment::where('user_id', $userId)
+                ->whereDate('date_from', '<=', $date)
+                ->whereDate('date_to', '>=', $date)
+                ->first();
+
+            if (!$existing) {
+                $this->createSingleDayShift($userId, $date, $shiftId);
+                return;
+            }
+
+            $oldFrom = Carbon::parse($existing->date_from);
+            $oldTo = Carbon::parse($existing->date_to);
+
+            $existingData = $existing->toArray();
+
+            $existing->delete();
+
+            // BEFORE RANGE
+            if ($oldFrom->lt($date)) {
+                $this->createRangeShift(
+                    $userId,
+                    $existingData,
+                    $oldFrom,
+                    $date->copy()->subDay()
+                );
+            }
+
+            // NEW DAY SHIFT
+            $this->createSingleDayShift($userId, $date, $shiftId);
+
+            // AFTER RANGE
+            if ($oldTo->gt($date)) {
+                $this->createRangeShift(
+                    $userId,
+                    $existingData,
+                    $date->copy()->addDay(),
+                    $oldTo
+                );
+            }
+        });
+    }
+
+    private function createSingleDayShift(int $userId, Carbon $date, ?int $shiftId): void
+    {
+        $shift = Shift::find($shiftId);
+
+        $assignment = UserShiftAssignment::create([
+            'user_id' => $userId,
+            'shift_id' => $shift?->id,
+            'shift_name' => $shift?->name ?? '',
+            'time_from' => $shift?->time_from ?? '00:00:00',
+            'time_to' => $shift?->time_to ?? '00:00:00',
+            'break_duration' => $shift?->break_duration ?? 0,
+            'color_code' => $shift?->color_code ?? '#6b7280',
+            'date_from' => $date,
+            'date_to' => $date,
+        ]);
+
+        $this->storeWeekends($assignment, $shift);
+    }
+
+    private function createRangeShift(int $userId, array $existingData, Carbon $from, Carbon $to): void
+    {
+        $shift = Shift::find($existingData['shift_id']);
+
+        $assignment = UserShiftAssignment::create([
+            'user_id' => $userId,
+            'shift_id' => $existingData['shift_id'],
+            'shift_name' => $existingData['shift_name'],
+            'time_from' => $existingData['time_from'],
+            'time_to' => $existingData['time_to'],
+            'break_duration' => $existingData['break_duration'],
+            'color_code' => $existingData['color_code'],
+            'date_from' => $from,
+            'date_to' => $to,
+        ]);
+
+        $this->storeWeekends($assignment, $shift);
     }
 }

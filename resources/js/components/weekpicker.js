@@ -6,6 +6,9 @@ export function initWeekPicker(selector = ".weekPicker", onWeekChange) {
     const input = document.querySelector(selector);
     if (!input) return;
 
+    // Prevent multiple initialization
+    if (input._flatpickr) return;
+
     flatpickr(input, {
         dateFormat: "Y-m-d",
         allowInput: true,

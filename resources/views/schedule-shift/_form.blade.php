@@ -31,7 +31,7 @@
                 Shift
             </label>
 
-            <select name="shift_id" id="shift_id" class="select-subtypes w-full">
+            <select name="shift_id" id="shift_id" class="select-subtypes w-full" data-sort="0">
 
                 <option value="">Select Shift</option>
 

@@ -77,7 +77,6 @@ class ScheduleShiftController extends Controller
 
     public function store(ScheduleShiftRequest $request, ScheduleShiftService $scheduleShiftService)
     {
-
         $scheduleShiftService->schedule($request->validated());
 
         return redirect()
@@ -85,19 +84,23 @@ class ScheduleShiftController extends Controller
             ->with('success', 'Shift scheduled successfully.');
     }
 
-    public function updateShift(Request $request)
+    public function updateSchedule(Request $request, ScheduleShiftService $scheduleShiftService)
     {
-        dd('Update shift', $request->all());
-        UserShiftAssignment::updateOrCreate(
-            [
-                'user_id' => $request->user_id,
-                'shift_date' => $request->date,
-            ],
-            [
-                'shift_id' => $request->shift_id,
-            ]
+        $request->validate([
+            'user_id' => ['required', 'integer'],
+            'date' => ['required', 'date'],
+            'shift_id' => ['nullable', 'integer']
+        ]);
+
+        $scheduleShiftService->updateUserShift(
+            $request->user_id,
+            $request->date,
+            $request->shift_id
         );
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Shift scheduled successfully.'
+        ]);
     }
 }

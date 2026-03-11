@@ -19,12 +19,12 @@
     {{-- EDIT MODE --}}
     @unless ($isPast)
         <div class="shift-edit hidden mt-1">
-            <select class="shift-select w-full border rounded" data-user="{{ $user->id }}" data-date="{{ $dateStr }}">
+            <select class="select-subtypes shift-select w-full border rounded" data-user="{{ $user->id }}" data-date="{{ $dateStr }}" data-sort="0">
 
                 <option value="">--</option>
 
                 @foreach ($shifts as $shiftOption)
-                    <option value="{{ $shiftOption->id }}" @selected($shift?->shift_id == $shiftOption->id)>
+                    <option value="{{ $shiftOption->id }}" @selected($shift?->shift_id == $shiftOption->id) data-subtype="{{ $shiftOption->time_from_formatted . ' - ' . $shiftOption->time_to_formatted }}">
                         {{ $shiftOption->name }}
                     </option>
                 @endforeach

@@ -96,6 +96,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('schedule-shift', [ScheduleShiftController::class, 'index'])->middleware('permission.type:schedule_shift.view')->name('schedule.shift.index');
     Route::get('create-schedule-shift', [ScheduleShiftController::class, 'create'])->middleware('permission.type:schedule_shift.create')->name('schedule.shift.create');
     Route::post('create-schedule-shift', [ScheduleShiftController::class, 'store'])->middleware('permission.type:schedule_shift.create')->name('schedule.shift.store');
-    Route::post('/shift/update', [ScheduleShiftController::class, 'updateShift'])->middleware('permission.type:schedule_shift.edit')->name('schedule.shift.update');
+    Route::post('/schedule-shift/update', [ScheduleShiftController::class, 'updateSchedule'])->middleware('permission.type:schedule_shift.edit')->name('schedule.shift.update');
     // End Schedule shift Routes
 });
