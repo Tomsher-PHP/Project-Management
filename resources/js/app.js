@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import Alert from './alert';
 import './status-toggle';
 import './reset-password';
+import './schedule-shift';
 
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";

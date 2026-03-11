@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserShiftAssignment;
 use App\Services\ScheduleShiftService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -24,55 +25,22 @@ class ScheduleShiftController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    public function index(Request $request)
+    public function index(Request $request, ScheduleShiftService $scheduleService)
     {
-        $startOfWeek = Carbon::parse($request->week ?? now())->startOfWeek(Carbon::SUNDAY);
-        $endOfWeek = $startOfWeek->copy()->endOfWeek(Carbon::SATURDAY);
+        // Get start/end of week
+        [$startOfWeek, $endOfWeek] = $scheduleService->getWeekRange($request->week);
 
-        $weekDates = collect();
+        // Generate week dates
+        $weekDates = $scheduleService->getWeekDates($startOfWeek);
 
-        for ($i = 0; $i < 7; $i++) {
-            $weekDates->push($startOfWeek->copy()->addDays($i));
-        }
+        // Get users and shifts
+        [$users, $shifts] = $scheduleService->getUsersAndShifts();
 
-        $users = User::where('user_type', '!=', 'super_admin')->whereStatus(1)->orderBy('name')->get();
-        $shifts = Shift::whereStatus(1)->get();
+        // Get assignments and build calendar
+        $assignments = $scheduleService->getAssignments($startOfWeek, $endOfWeek);
+        $calendar = $scheduleService->buildCalendar($users, $assignments, $startOfWeek, $endOfWeek);
 
-        $assignments = UserShiftAssignment::where(function ($query) use ($startOfWeek, $endOfWeek) {
-
-            $query->where('date_from', '<=', $endOfWeek)
-                ->where(function ($q) use ($startOfWeek) {
-                    $q->where('date_to', '>=', $startOfWeek)
-                        ->orWhereNull('date_to');
-                });
-        })->get();
-
-        $calendar = [];
-
-        foreach ($assignments as $assignment) {
-
-            $start = Carbon::parse($assignment->date_from);
-            $end = $assignment->date_to ? Carbon::parse($assignment->date_to) : $endOfWeek;
-
-            // Clamp range to current week
-            if ($start->lt($startOfWeek)) {
-                $start = $startOfWeek->copy();
-            }
-
-            if ($end->gt($endOfWeek)) {
-                $end = $endOfWeek->copy();
-            }
-
-            $current = $start->copy();
-
-
-            while ($current <= $end) {
-                $calendar[$assignment->user_id][$current->toDateString()] = $assignment;
-                $current->addDay();
-            }
-        }
-
-        // ⭐ IMPORTANT PART
+        // Handle AJAX request for week navigation
         if ($request->ajax()) {
             $tableHtml = view('schedule-shift.partials.schedule-table', compact(
                 'users',
@@ -84,9 +52,10 @@ class ScheduleShiftController extends Controller
             return response()->json([
                 'html' => $tableHtml,
                 'weekRange' => $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M Y'),
-            ]);
+            ], Response::HTTP_OK);
         }
 
+        // Normal page load
         return view('schedule-shift.index', compact(
             'users',
             'shifts',

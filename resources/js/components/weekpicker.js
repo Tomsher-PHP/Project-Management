@@ -1,7 +1,7 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
-export function initWeekPicker(selector = ".weekPicker") {
+export function initWeekPicker(selector = ".weekPicker", onWeekChange) {
 
     const input = document.querySelector(selector);
     if (!input) return;
@@ -21,8 +21,10 @@ export function initWeekPicker(selector = ".weekPicker") {
             // Format in local YYYY-MM-DD (avoid timezone shift)
             const startDateStr = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
 
-            // Call your AJAX loader
-            loadWeek(startDateStr);
+            // Call the callback passed from schedule-shift.js
+            if (typeof onWeekChange === "function") {
+                onWeekChange(startDateStr);
+            }
         }
     });
 }
