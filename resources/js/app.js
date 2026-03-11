@@ -10,6 +10,7 @@ import { initTomSelect } from './components/tom-select';
 
 import { initDatepicker } from './components/datepicker';
 import { initTimepicker } from './components/timepicker';
+import { initWeekPicker } from './components/weekpicker';
 
 window.Swal = Swal;
 window.Alert = Alert;
@@ -20,4 +21,5 @@ document.addEventListener('DOMContentLoaded', function () {
     initTomSelect();
     initDatepicker();
     initTimepicker();
+    initWeekPicker();
 });

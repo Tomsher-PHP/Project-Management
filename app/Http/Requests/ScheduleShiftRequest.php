@@ -25,7 +25,7 @@ class ScheduleShiftRequest extends FormRequest
             'users' => ['required', 'array'],
             'users.*' => ['exists:users,id'],
             'shift_id' => ['required', 'exists:shifts,id'],
-            'date_from' => ['required', 'date'],
+            'date_from' => ['required', 'date', 'after_or_equal:today'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'reason' => ['nullable', 'string'],
         ];

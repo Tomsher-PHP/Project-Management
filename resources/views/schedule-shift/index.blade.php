@@ -28,89 +28,42 @@
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
                     <div class="flex flex-col space-y-5">
 
-                        <div class="flex items-center justify-between mb-4">
-                            <a href="?week={{ $previousWeek }}" class="px-3 py-1 bg-gray-200 rounded">
+                        {{-- Header: Prev | Calendar Icon | Week Range | Next --}}
+                        <div class="flex items-center justify-between mb-4 gap-4">
+
+                            {{-- Previous button --}}
+                            <button id="prevWeek" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition text-sm font-medium">
                                 Previous
-                            </a>
+                            </button>
 
-                            <h2 class="text-lg font-semibold dark:text-bgray-50">
+                            {{-- Calendar icon button --}}
+                            <div class="relative">
+                                <button type="button" id="weekPickerBtn" class="flex items-center justify-center w-10 h-10 border rounded bg-white dark:bg-darkblack-600 hover:bg-gray-50 dark:hover:bg-darkblack-500 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+
+                                {{-- Hidden input for Flatpickr --}}
+                                <input type="text" class="weekPicker absolute top-0 left-0 opacity-0 w-0 h-0 pointer-events-none" value="{{ $startOfWeek->toDateString() }}">
+                            </div>
+
+                            {{-- Week range label --}}
+                            <span id="week-date-range" class="text-lg font-semibold text-center dark:text-bgray-50">
                                 {{ $startOfWeek->format('d M') }} - {{ $endOfWeek->format('d M Y') }}
-                            </h2>
+                            </span>
 
-                            <a href="?week={{ $nextWeek }}" class="px-3 py-1 bg-gray-200 rounded">
+                            {{-- Next button --}}
+                            <button id="nextWeek" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition text-sm font-medium">
                                 Next
-                            </a>
+                            </button>
+
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full border border-gray-200 text-sm">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="px-4 py-2 text-left">Users</th>
-
-                                        @foreach ($weekDates as $date)
-                                            <th class="px-4 py-2 text-center">
-                                                {{ $date->format('D') }} <br>
-                                                {{ $date->format('d M') }}
-                                            </th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    @foreach ($users as $user)
-                                        <tr class="border-t border-gray-200 dark:border-darkblack-400 hover:bg-gray-50 dark:hover:bg-darkblack-500">
-                                            <!-- Checkbox column -->
-                                            <td class="px-4 py-2 text-center">
-                                                <label class="flex items-center gap-2 cursor-pointer">
-                                                    <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="user-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-
-                                                    <span class="text-sm font-semibold text-gray-600 dark:text-bgray-50">
-                                                        {{ $user->name }}
-                                                    </span>
-                                                </label>
-                                            </td>
-
-                                            <!-- Shifts for each day -->
-                                            @foreach ($weekDates as $date)
-                                                @php
-                                                    $shift = $calendar[$user->id][$date->toDateString()] ?? null;
-                                                    $isPast = $date->isBefore(\Carbon\Carbon::today());
-                                                @endphp
-
-                                                <td class="px-2 py-2 text-center">
-                                                    @if ($isPast)
-                                                        @if ($shift)
-                                                            @php
-                                                                $bg = $shift->color_code;
-                                                                $text = (hexdec(substr($bg, 1, 2)) * 299 + hexdec(substr($bg, 3, 2)) * 587 + hexdec(substr($bg, 5, 2)) * 114) / 1000 > 125 ? '#000' : '#fff';
-                                                            @endphp
-                                                            <div class="flex flex-col items-center justify-center rounded px-2 py-1 text-sm font-medium" style="background-color: {{ $bg }}; color: {{ $text }};">
-                                                                <span>{{ $shift->shift_name }}</span>
-                                                                <span>{{ \Carbon\Carbon::parse($shift->time_from)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->time_to)->format('H:i') }}</span>
-                                                            </div>
-                                                        @else
-                                                            <span class="text-sm text-gray-400">--</span>
-                                                        @endif
-                                                    @else
-                                                        <select class="shift-select w-full border rounded bg-white dark:bg-darkblack-600 border-gray-300 dark:border-darkblack-400 text-gray-700 dark:text-gray-200" data-user="{{ $user->id }}" data-date="{{ $date->toDateString() }}">
-                                                            <option value="">--</option>
-                                                            @foreach ($shifts as $shiftOption)
-                                                                <option value="{{ $shiftOption->id }}" {{ $shift?->shift_id == $shiftOption->id ? 'selected' : '' }}>
-                                                                    {{ $shiftOption->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    @endif
-                                                </td>
-                                            @endforeach
-
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-
-                            </table>
+                        <div id="schedule-table">
+                            @include('schedule-shift.partials.schedule-table')
                         </div>
+
                     </div>
                 </div>
             </section>
@@ -122,19 +75,89 @@
 
 @push('scripts')
     <script>
-        $(document).on('change', '.shift-select', function() {
+        let currentWeek = "{{ $startOfWeek->toDateString() }}";
 
-            let user = $(this).data('user');
-            let date = $(this).data('date');
-            let shift = $(this).val();
+        document.addEventListener("click", function(e) {
 
-            $.post('/shift-assignments', {
-                user_id: user,
-                date: date,
-                shift_id: shift,
-                _token: $('meta[name="csrf-token"]').attr('content')
+            const btn = e.target.closest(".edit-shift");
+            if (!btn) return;
+
+            const td = btn.closest("td");
+
+            const view = td.querySelector(".shift-view");
+            const edit = td.querySelector(".shift-edit");
+
+            if (!view || !edit) return;
+
+            view.classList.toggle("hidden");
+            edit.classList.toggle("hidden");
+
+        });
+
+        document.querySelectorAll(".shift-select").forEach(select => {
+
+            select.addEventListener("change", function() {
+
+                const userId = this.dataset.user;
+                const date = this.dataset.date;
+                const shiftId = this.value;
+
+                fetch("/shift/update", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            date: date,
+                            shift_id: shiftId
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        location.reload();
+                    });
+
             });
 
+        });
+
+        function loadWeek(date) {
+            fetch(`/schedule-shift?week=${date}`, {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                .then(res => res.json()) // <-- parse as JSON
+                .then(data => {
+                    // Replace table
+                    document.querySelector("#schedule-table").innerHTML = data.html;
+
+                    // Update week range label
+                    document.getElementById("week-date-range").innerText = data.weekRange;
+
+                    // Update currentWeek for next/prev calculations
+                    currentWeek = date;
+                });
+        }
+
+        document.getElementById("nextWeek").addEventListener("click", function() {
+            let next = new Date(currentWeek);
+            next.setDate(next.getDate() + 7);
+
+            loadWeek(next.toISOString().split('T')[0]);
+        });
+
+        document.getElementById("prevWeek").addEventListener("click", function() {
+            let prev = new Date(currentWeek);
+            prev.setDate(prev.getDate() - 7);
+
+            loadWeek(prev.toISOString().split('T')[0]);
+        });
+
+        document.getElementById("weekPickerBtn").addEventListener("click", function() {
+            document.querySelector(".weekPicker")._flatpickr.open();
         });
     </script>
 @endpush

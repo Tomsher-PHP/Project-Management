@@ -52,11 +52,19 @@ export function initTomSelect() {
             render: {
                 option: function (data, escape) {
                     return `
-                <div>
-                    <div class="font-medium">${escape(data.text)}</div>
-                    <div class="text-xs text-gray-400">${escape(data.subtype || '')}</div>
-                </div>
-            `;
+                        <div>
+                            <div class="font-medium">${escape(data.text)}</div>
+                            <div class="text-sm text-gray-600">${escape(data.subtype || '')}</div>
+                        </div>
+                    `;
+                },
+                item: function (data, escape) {
+                    return `
+                        <div>
+                            <span class="font-medium">${escape(data.text)}</span>
+                            <span class="text-sm text-gray-600 ml-2">${escape(data.subtype || '')}</span>
+                        </div>
+                    `;
                 }
             }
         });
