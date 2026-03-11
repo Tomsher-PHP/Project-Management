@@ -13,7 +13,7 @@
             <select name="users[]" multiple id="user-select" class="tom-select-multiple w-full">
                 <option value="">Select Users</option>
                 @foreach ($users as $user)
-                    <option value="{{ $user->id }}">
+                    <option value="{{ $user->id }}" {{ in_array($user->id, old('users', [])) ? 'selected' : '' }}>
                         {{ $user->name }}
                     </option>
                 @endforeach
@@ -36,7 +36,7 @@
                 <option value="">Select Shift</option>
 
                 @foreach ($shifts as $shift)
-                    <option value="{{ $shift->id }}" data-subtype="{{ $shift->time_from_formatted . ' - ' . $shift->time_to_formatted }}">
+                    <option value="{{ $shift->id }}" data-subtype="{{ $shift->time_from_formatted . ' - ' . $shift->time_to_formatted }}" {{ old('shift_id') == $shift->id ? 'selected' : '' }}>
                         {{ $shift->name }}
                     </option>
                 @endforeach
@@ -56,7 +56,7 @@
                 Date From
             </label>
 
-            <input type="date" name="date_from" id="date_from" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <input type="date" name="date_from" value="{{ old('date_from') }}" id="date_from" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
             @error('date_from')
                 <p class="mt-2 text-sm text-error-300">
@@ -71,7 +71,7 @@
                 Date To
             </label>
 
-            <input type="date" name="date_to" id="date_to" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <input type="date" name="date_to" value="{{ old('date_to') }}" id="date_to" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
             @error('date_to')
                 <p class="mt-2 text-sm text-error-300">
@@ -86,7 +86,7 @@
                 Reason
             </label>
 
-            <textarea name="reason" id="reason" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400"></textarea>
+            <textarea name="reason" id="reason" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">{{ old('reason') }}</textarea>
 
             @error('reason')
                 <p class="mt-2 text-sm text-error-300">

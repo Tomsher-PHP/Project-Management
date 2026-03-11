@@ -18,9 +18,6 @@
         </a>
         @endcanType
 
-        @php
-            $previousWeek = $nextWeek = 0;
-        @endphp
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
             <section class="mb-6 2xl:mb-0 2xl:flex-1">

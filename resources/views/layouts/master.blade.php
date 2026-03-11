@@ -20,6 +20,9 @@
 </head>
 
 <body>
+    <!-- Page Loader -->
+    <x-page-loader />
+
     <!-- layout start -->
     <div class="layout-wrapper active w-full">
         <div class="relative flex w-full">
@@ -55,7 +58,7 @@
     <script src="{{ asset(config('assets.js.main')) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
     <script src="{{ asset(config('assets.js.delete_alert')) }}"></script>
-    
+
     <script>
         localStorage.theme = 'light';
         document.documentElement.classList.remove('dark');

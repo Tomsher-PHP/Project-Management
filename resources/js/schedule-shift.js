@@ -1,9 +1,12 @@
 import { initWeekPicker } from './components/weekpicker';
+import { Loader } from './helpers/loader';
 
 let currentWeek = null;
 
 // Load week via AJAX
 const loadWeek = (date) => {
+    Loader.show();
+
     fetch(`/schedule-shift?week=${date}`, { headers: { "X-Requested-With": "XMLHttpRequest" } })
         .then(res => res.json())
         .then(data => {
@@ -11,6 +14,12 @@ const loadWeek = (date) => {
             document.querySelector("#schedule-table").innerHTML = data.html;
             document.getElementById("week-date-range").innerText = data.weekRange;
             currentWeek = date;
+        })
+        .catch(err => {
+            console.error("Failed to load schedule:", err);
+        })
+        .finally(() => {
+            Loader.hide();
         });
 }
 
@@ -45,7 +54,7 @@ export function initScheduleShift(startOfWeek) {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({ user_id: userId, date: date, shift_id: shiftId })
+                body: JSON.stringify({ users: [userId], date_from: date, date_to: date, shift_id: shiftId })
             }).then(res => res.json()).then(data => location.reload());
         });
 
@@ -86,3 +95,13 @@ document.addEventListener("DOMContentLoaded", () => {
     initScheduleShift(input.value);
 
 });
+
+function showLoader() {
+    const loader = document.getElementById("page-loader");
+    if (loader) loader.classList.remove("hidden");
+}
+
+function hideLoader() {
+    const loader = document.getElementById("page-loader");
+    if (loader) loader.classList.add("hidden");
+}

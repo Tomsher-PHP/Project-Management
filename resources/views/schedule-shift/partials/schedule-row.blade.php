@@ -2,7 +2,7 @@
     <!-- Checkbox column -->
     <td class="px-4 py-2 text-center">
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="user-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            {{-- <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" class="user-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600"> --}}
 
             <span class="text-sm font-semibold text-gray-600 dark:text-bgray-50">
                 {{ $user->name }}

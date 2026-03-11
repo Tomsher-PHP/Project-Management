@@ -11,36 +11,133 @@ use Illuminate\Support\Facades\DB;
 class ScheduleShiftService
 {
 
+    // Create schedule
     public function schedule(array $data): void
     {
-        $shift = Shift::with('weekends')->findOrFail($data['shift_id']);
-
-        DB::transaction(function () use ($data, $shift) {
+        DB::transaction(function () use ($data) {
 
             foreach ($data['users'] as $userId) {
 
-                $assignment = UserShiftAssignment::create([
-                    'user_id' => $userId,
-
-                    // snapshot fields
-                    'shift_id' => $shift->id,
-                    'shift_name' => $shift->name,
-                    'time_from' => $shift->time_from,
-                    'time_to' => $shift->time_to,
-                    'break_duration' => $shift->break_duration,
-                    'color_code' => $shift->color_code,
-
-                    // schedule
-                    'date_from' => $data['date_from'],
-                    'date_to' => $data['date_to'],
-                    'reason' => $data['reason'] ?? null,
-                ]);
-
-                $this->storeWeekends($assignment, $shift);
+                $this->applyShiftRange(
+                    $userId,
+                    Carbon::parse($data['date_from']),
+                    Carbon::parse($data['date_to']),
+                    $data['shift_id'],
+                    $data['reason'] ?? null
+                );
             }
         });
     }
 
+    // Update schedule individual
+    public function updateUserShift(int $userId, string $from, string $to, ?int $shiftId): void
+    {
+        $dateFrom = Carbon::parse($from);
+        $dateTo = Carbon::parse($to);
+
+        DB::transaction(function () use ($userId, $dateFrom, $dateTo, $shiftId) {
+
+            $this->applyShiftRange($userId, $dateFrom, $dateTo, $shiftId);
+        });
+    }
+
+    private function applyShiftRange(int $userId, Carbon $newFrom, Carbon $newTo, ?int $shiftId, ?string $reason = null): void
+    {
+        $shift = Shift::with('weekends')->find($shiftId);
+
+        $existingAssignments = UserShiftAssignment::where('user_id', $userId)
+            ->where(function ($q) use ($newFrom, $newTo) {
+                $q->whereBetween('date_from', [$newFrom, $newTo])
+                    ->orWhereBetween('date_to', [$newFrom, $newTo])
+                    ->orWhere(function ($q2) use ($newFrom, $newTo) {
+                        $q2->where('date_from', '<=', $newFrom)
+                            ->where('date_to', '>=', $newTo);
+                    });
+            })
+            ->get();
+
+        foreach ($existingAssignments as $existing) {
+
+            $oldFrom = Carbon::parse($existing->date_from);
+            $oldTo = Carbon::parse($existing->date_to);
+
+            $existingData = $existing->toArray();
+
+            $existing->delete();
+
+            // BEFORE
+            if ($oldFrom->lt($newFrom)) {
+                $this->createAssignment(
+                    $userId,
+                    $existingData,
+                    $oldFrom,
+                    $newFrom->copy()->subDay()
+                );
+            }
+
+            // AFTER
+            if ($oldTo->gt($newTo)) {
+                $this->createAssignment(
+                    $userId,
+                    $existingData,
+                    $newTo->copy()->addDay(),
+                    $oldTo
+                );
+            }
+        }
+
+        $this->createAssignment(
+            $userId,
+            $shift,
+            $newFrom,
+            $newTo,
+            $reason
+        );
+    }
+
+    private function createAssignment(int $userId, $shiftData, Carbon $from, Carbon $to, ?string $reason = null): void
+    {
+        if ($from->gt($to)) {
+            return;
+        }
+
+        if ($shiftData instanceof Shift) {
+
+            $assignment = UserShiftAssignment::create([
+                'user_id' => $userId,
+                'shift_id' => $shiftData->id,
+                'shift_name' => $shiftData->name,
+                'time_from' => $shiftData->time_from,
+                'time_to' => $shiftData->time_to,
+                'break_duration' => $shiftData->break_duration,
+                'color_code' => $shiftData->color_code,
+                'date_from' => $from,
+                'date_to' => $to,
+                'reason' => $reason,
+            ]);
+
+            $this->storeWeekends($assignment, $shiftData);
+        } else {
+
+            $shift = Shift::find($shiftData['shift_id']);
+
+            $assignment = UserShiftAssignment::create([
+                'user_id' => $userId,
+                'shift_id' => $shiftData['shift_id'],
+                'shift_name' => $shiftData['shift_name'],
+                'time_from' => $shiftData['time_from'],
+                'time_to' => $shiftData['time_to'],
+                'break_duration' => $shiftData['break_duration'],
+                'color_code' => $shiftData['color_code'],
+                'date_from' => $from,
+                'date_to' => $to,
+            ]);
+
+            $this->storeWeekends($assignment, $shift);
+        }
+    }
+
+    // Store week end data of corresponding assigned shift
     private function storeWeekends(UserShiftAssignment $assignment, $shift): void
     {
         if ($shift->weekends->isEmpty()) {
@@ -56,6 +153,9 @@ class ScheduleShiftService
 
         $assignment->weekends()->createMany($rows);
     }
+
+    /** Get functions */
+
 
     // Get start and end of the week
     public function getWeekRange(?string $week = null): array
@@ -118,91 +218,5 @@ class ScheduleShiftService
                         ->orWhereNull('date_to');
                 });
         })->get();
-    }
-
-    public function updateUserShift(int $userId, string $date, ?int $shiftId): void
-    {
-        $date = Carbon::parse($date);
-
-        DB::transaction(function () use ($userId, $date, $shiftId) {
-
-            $existing = UserShiftAssignment::where('user_id', $userId)
-                ->whereDate('date_from', '<=', $date)
-                ->whereDate('date_to', '>=', $date)
-                ->first();
-
-            if (!$existing) {
-                $this->createSingleDayShift($userId, $date, $shiftId);
-                return;
-            }
-
-            $oldFrom = Carbon::parse($existing->date_from);
-            $oldTo = Carbon::parse($existing->date_to);
-
-            $existingData = $existing->toArray();
-
-            $existing->delete();
-
-            // BEFORE RANGE
-            if ($oldFrom->lt($date)) {
-                $this->createRangeShift(
-                    $userId,
-                    $existingData,
-                    $oldFrom,
-                    $date->copy()->subDay()
-                );
-            }
-
-            // NEW DAY SHIFT
-            $this->createSingleDayShift($userId, $date, $shiftId);
-
-            // AFTER RANGE
-            if ($oldTo->gt($date)) {
-                $this->createRangeShift(
-                    $userId,
-                    $existingData,
-                    $date->copy()->addDay(),
-                    $oldTo
-                );
-            }
-        });
-    }
-
-    private function createSingleDayShift(int $userId, Carbon $date, ?int $shiftId): void
-    {
-        $shift = Shift::find($shiftId);
-
-        $assignment = UserShiftAssignment::create([
-            'user_id' => $userId,
-            'shift_id' => $shift?->id,
-            'shift_name' => $shift?->name ?? '',
-            'time_from' => $shift?->time_from ?? '00:00:00',
-            'time_to' => $shift?->time_to ?? '00:00:00',
-            'break_duration' => $shift?->break_duration ?? 0,
-            'color_code' => $shift?->color_code ?? '#6b7280',
-            'date_from' => $date,
-            'date_to' => $date,
-        ]);
-
-        $this->storeWeekends($assignment, $shift);
-    }
-
-    private function createRangeShift(int $userId, array $existingData, Carbon $from, Carbon $to): void
-    {
-        $shift = Shift::find($existingData['shift_id']);
-
-        $assignment = UserShiftAssignment::create([
-            'user_id' => $userId,
-            'shift_id' => $existingData['shift_id'],
-            'shift_name' => $existingData['shift_name'],
-            'time_from' => $existingData['time_from'],
-            'time_to' => $existingData['time_to'],
-            'break_duration' => $existingData['break_duration'],
-            'color_code' => $existingData['color_code'],
-            'date_from' => $from,
-            'date_to' => $to,
-        ]);
-
-        $this->storeWeekends($assignment, $shift);
     }
 }

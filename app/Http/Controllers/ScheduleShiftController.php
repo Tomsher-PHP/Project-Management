@@ -84,17 +84,13 @@ class ScheduleShiftController extends Controller
             ->with('success', 'Shift scheduled successfully.');
     }
 
-    public function updateSchedule(Request $request, ScheduleShiftService $scheduleShiftService)
+    public function updateSchedule(ScheduleShiftRequest $request, ScheduleShiftService $scheduleShiftService)
     {
-        $request->validate([
-            'user_id' => ['required', 'integer'],
-            'date' => ['required', 'date'],
-            'shift_id' => ['nullable', 'integer']
-        ]);
 
         $scheduleShiftService->updateUserShift(
-            $request->user_id,
-            $request->date,
+            $request->users[0],
+            $request->date_from,
+            $request->date_to,
             $request->shift_id
         );
 
