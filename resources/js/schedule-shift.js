@@ -97,4 +97,34 @@ document.addEventListener("DOMContentLoaded", () => {
     initWeekPicker(".weekPicker", loadWeek);
     initScheduleShift(input.value);
 
+    const btn = document.getElementById('schedule-shift-btn');
+    if (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const selectedUsers = [...document.querySelectorAll('.user-checkbox:checked')]
+                .map(cb => cb.value);
+
+            sessionStorage.setItem('preSelectedUsers', JSON.stringify(selectedUsers));
+            window.location.href = this.href;
+        });
+    }
+
 });
+
+if (!window.userRowToggleListener) {
+
+    $(document).on("click", ".label-user-name", function () {
+        const row = $(this).closest("tr");
+        const checkbox = row.find(".user-checkbox");
+
+        checkbox.prop("checked", !checkbox.prop("checked"));
+    });
+
+    $(document).on("click", "#select-all-users", function () {
+        const checked = $(this).is(":checked");
+        $(".user-checkbox").prop("checked", checked);
+    });
+
+    window.userRowToggleListener = true;
+}

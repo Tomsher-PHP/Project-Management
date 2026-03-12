@@ -32,16 +32,40 @@
 
             {{-- Color --}}
             <div class="flex flex-col gap-2">
-                <label for="color_code" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Color
                 </label>
 
-                <input type="color" name="color_code" id="color_code" value="{{ old('color_code', $shift->color_code ?? '#6b7280') }}" class="w-16 h-10 p-0 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-success-300">
+                @php
+                    $colors = config('constants.soft_colors');
+                    $selectedColor = old('color_code', $shift->color_code ?? '');
+                @endphp
+
+                <div class="flex flex-wrap gap-3 pt-1">
+                    @foreach ($colors as $color)
+                        <label class="relative cursor-pointer group">
+
+                            <input type="radio" name="color_code" value="{{ $color }}" class="peer absolute opacity-0 w-0 h-0" @checked($selectedColor === $color)>
+
+                            <span class="block w-10 h-10 rounded-md border border-gray-300
+                           transition transform group-hover:scale-110
+                           peer-checked:ring-2
+                           peer-checked:ring-success-400
+                           peer-checked:border-success-400" style="background-color: {{ $color }}">
+                            </span>
+
+                            <span class="absolute inset-0 flex items-center justify-center
+                           text-white text-xl pointer-events-none
+                           opacity-0 peer-checked:opacity-100" style="color: black">
+                                ✓
+                            </span>
+
+                        </label>
+                    @endforeach
+                </div>
 
                 @error('color_code')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
+                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 

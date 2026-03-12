@@ -5,7 +5,7 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
         @canType('schedule_shift.create')
-        <a href="{{ route('schedule.shift.create') }}" class="inline-flex items-center px-4 py-1.5
+        <a href="{{ route('schedule.shift.create') }}" id="schedule-shift-btn" class="inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400

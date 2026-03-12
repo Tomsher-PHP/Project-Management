@@ -10,54 +10,6 @@ return [
         'normal_user' => 'Normal User',
     ],
 
-    // Permission Types constant
-    // 'permission_types' => [
-    //     // Project Module
-    //     'project.view',
-    //     'project.create',
-    //     'project.edit',
-    //     'project.delete',
-
-    //     // Task Module
-    //     'task.view',
-    //     'task.create',
-    //     'task.edit',
-    //     'task.delete',
-
-    //     // User Module
-    //     'user.view',
-    //     'user.create',
-    //     'user.edit',
-    //     'user.delete',
-
-    //     //team Module
-    //     'team.view',
-    //     'team.create',
-    //     'team.edit',
-    //     'team.delete',
-
-    //     // Settings Module
-    //     'settings.view',
-    //     'settings.create',
-    //     'settings.edit',
-
-    //     // Reports Module
-    //     'reports.view',
-    //     'reports.download',
-
-    //     // Role Management Module
-    //     'role.view',
-    //     'role.create',
-    //     'role.edit',
-    //     'role.delete',
-
-    //     // Shift Management Module
-    //     'shift.view',
-    //     'shift.create',
-    //     'shift.edit',
-    //     'shift.delete',
-    // ],
-
     // User Type Permissions constant
     'user_type_permissions' => [
 
@@ -110,16 +62,28 @@ return [
         ],
     ],
 
-    //Default list data count per page
+    // Default list data count per page
     'per_page_count' => 10,
 
-    //Default team roles for team management
+    // Default team roles for team management
     'team_roles' => [
         'owner' => 'Owner',
         'admin' => 'Admin',
         'member' => 'Member',
     ],
 
-    //Date format
-    'date_format' => 'Y-m-d'
+    // Date format
+    'date_format' => 'Y-m-d',
+
+    // Constant color code
+    'soft_colors' => [
+        '#f3f4f6',
+        '#fee2e2',
+        '#fde68a',
+        '#d1fae5',
+        '#dbeafe',
+        '#e9d5ff',
+        '#fbcfe8',
+        '#cffafe',
+    ],
 ];

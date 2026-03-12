@@ -21,7 +21,7 @@ class DefaultShiftSeeder extends Seeder
                 'time_from' => '09:00:00',
                 'time_to' => '18:00:00',
                 'break_duration' => 60, // 1 hour
-                'color_code' => '#6b7280',
+                'color_code' => '#f3f4f6',
                 'status' => true,
             ]
         );

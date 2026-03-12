@@ -19,7 +19,7 @@ return new class extends Migration
             $table->time('time_to');
 
             $table->unsignedInteger('break_duration')->default(0)->comment('in seconds');
-            $table->string('color_code')->default('#6b7280')->nullable();
+            $table->string('color_code')->default('#f3f4f6')->nullable();
 
             $table->boolean('is_default')->default(false)->comment('System default'); // only ONE shift should be default (handle in logic)
             $table->boolean('status')->default(true);

@@ -35,7 +35,6 @@ export function initTomSelect() {
         new TomSelect(el, {
             plugins: ['remove_button', 'dropdown_input', 'clear_button'],
             maxItems: null,
-            // dropdownParent: document.body
         });
     });
 

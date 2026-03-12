@@ -79,3 +79,19 @@ document.getElementById("continue-schedule").addEventListener("click", function 
 //make global accessible
 window.openPreviewModal = openPreviewModal;
 window.closePreviewModal = closePreviewModal;
+
+document.addEventListener('DOMContentLoaded', function () {
+    const selectedUsers = JSON.parse(sessionStorage.getItem('preSelectedUsers') || '[]');
+
+    const select = document.getElementById('user-select');
+
+    // Make sure TomSelect is initialized first
+    if (select.tomselect) {
+        selectedUsers.forEach(val => {
+            select.tomselect.addItem(val);
+        });
+    }
+
+    // optionally clear sessionStorage
+    sessionStorage.removeItem('preSelectedUsers');
+});
