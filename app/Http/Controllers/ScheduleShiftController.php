@@ -98,4 +98,32 @@ class ScheduleShiftController extends Controller
             'message' => 'Shift scheduled successfully.'
         ]);
     }
+
+    public function preview(ScheduleShiftRequest $request)
+    {
+        $data = $request->validated();
+
+        $dateFrom = Carbon::parse($data['date_from']);
+        $dateTo = $data['date_to'] ? Carbon::parse($data['date_to']) : null;
+
+        $assignments = UserShiftAssignment::with(['shift', 'user'])
+            ->whereIn('user_id', $data['users'])
+            ->where(function ($q) use ($dateFrom, $dateTo) {
+
+                if ($dateTo) {
+                    $q->where('date_from', '<=', $dateTo);
+                }
+
+                $q->where(function ($q2) use ($dateFrom) {
+                    $q2->where('date_to', '>=', $dateFrom)
+                        ->orWhereNull('date_to');
+                });
+            })
+            ->get()
+            ->groupBy('user_id');
+
+        return response()->json([
+            'html' => view('schedule-shift.partials._preview', compact('assignments'))->render()
+        ]);
+    }
 }
