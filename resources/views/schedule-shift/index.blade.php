@@ -65,6 +65,10 @@
                 </div>
             </section>
         </div>
+
+        {{-- Modal for changing shift --}}
+        @include('schedule-shift.partials.modal-change-shift')
+
         <!-- write your code here-->
     </main>
     <!-- Page ends -->
@@ -72,4 +76,7 @@
 
 @push('scripts')
     @vite('resources/js/schedule-shift.js')
+    <script>
+        let currentWeek = "{{ $startOfWeek->toDateString() }}";
+    </script>
 @endpush

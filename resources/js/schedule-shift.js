@@ -2,8 +2,6 @@ import { initTomSelect } from './components/tom-select';
 import { initWeekPicker } from './components/weekpicker';
 import { Loader } from './helpers/loader';
 
-let currentWeek = null;
-
 // Load week via AJAX
 const loadWeek = (date) => {
     Loader.show();
@@ -19,7 +17,7 @@ const loadWeek = (date) => {
             initTomSelect();
         })
         .catch(err => {
-            console.error("Failed to load schedule:", err);
+            console.error("Failed to load schedule:");
         })
         .finally(() => {
             Loader.hide();
@@ -28,41 +26,7 @@ const loadWeek = (date) => {
 
 // Initialize schedule shift events
 export function initScheduleShift(startOfWeek) {
-    currentWeek = startOfWeek;
-
-    // Attach global listeners only once
-    if (!window.scheduleShiftGlobalListeners) {
-        // Event delegation for toggle edit mode
-        document.body.addEventListener("click", function (e) {
-            const btn = e.target.closest(".edit-shift");
-            if (!btn) return;
-            const td = btn.closest("td");
-            const view = td.querySelector(".shift-view");
-            const edit = td.querySelector(".shift-edit");
-            if (!view || !edit) return;
-            view.classList.toggle("hidden");
-            edit.classList.toggle("hidden");
-        });
-
-        // Event delegation for shift select
-        document.body.addEventListener("change", function (e) {
-            if (!e.target.classList.contains("shift-select")) return;
-            const select = e.target;
-            const userId = select.dataset.user;
-            const date = select.dataset.date;
-            const shiftId = select.value;
-            fetch("/schedule-shift/update", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ users: [userId], date_from: date, date_to: date, shift_id: shiftId })
-            }).then(res => res.json()).then(data => location.reload());
-        });
-
-        window.scheduleShiftGlobalListeners = true;
-    }
+    currentWeek = startOfWeek ? new Date(startOfWeek) : new Date();
 
     // Attach navigation listeners once
     if (!window.scheduleShiftNavListeners) {
@@ -97,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initWeekPicker(".weekPicker", loadWeek);
     initScheduleShift(input.value);
 
+    // Get selected users and redirect to schedule shift create page
     const btn = document.getElementById('schedule-shift-btn');
     if (btn) {
         btn.addEventListener('click', function (e) {
@@ -110,21 +75,73 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    if (!window.userRowToggleListener) {
+
+        // Toggle checkbox when user name is clicked
+        $(document).on("click", ".label-user-name", function () {
+            const row = $(this).closest("tr");
+            const checkbox = row.find(".user-checkbox");
+
+            checkbox.prop("checked", !checkbox.prop("checked"));
+        });
+
+        // Select all users checkbox
+        $(document).on("click", "#select-all-users", function () {
+            const checked = $(this).is(":checked");
+            $(".user-checkbox").prop("checked", checked);
+        });
+
+        window.userRowToggleListener = true;
+    }
+
+    // SHIFT EDIT MODAL EVENTS
+
+    const modal = document.getElementById("shiftModal");
+    const modalSelect = document.getElementById("modalShiftSelect");
+    let currentUserId = null;
+    let currentDate = null;
+
+    // Event delegation with jQuery
+    $(document).on("click", ".open-shift-modal", function () {
+        currentUserId = $(this).data("user");
+        currentDate = $(this).data("date");
+
+        // Pre-select current shift if available
+        const currentShift = $(this).closest("td").find(".shift-view div span").first().text() || "";
+        const option = $("#modalShiftSelect option").filter(function () {
+            return $(this).text() === currentShift;
+        }).val() || "";
+
+        $("#modalShiftSelect").val(option);
+
+        $("#shiftModal").removeClass("hidden").addClass("flex");
+    });
+
+    // Cancel modal
+    $(document).on("click", "#modalCancel", function () {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    });
+
+    // Save modal
+    $(document).on("click", "#modalSave", function () {
+        const shiftId = modalSelect.value;
+        if (!shiftId) return;
+
+        fetch("/schedule-shift/update", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ users: [currentUserId], date_from: currentDate, date_to: currentDate, shift_id: shiftId })
+        })
+            .then(res => res.json())
+            .then(() => {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+                loadWeek(currentWeek); // reload current week so table stays updated
+            });
+    });
+
 });
-
-if (!window.userRowToggleListener) {
-
-    $(document).on("click", ".label-user-name", function () {
-        const row = $(this).closest("tr");
-        const checkbox = row.find(".user-checkbox");
-
-        checkbox.prop("checked", !checkbox.prop("checked"));
-    });
-
-    $(document).on("click", "#select-all-users", function () {
-        const checked = $(this).is(":checked");
-        $(".user-checkbox").prop("checked", checked);
-    });
-
-    window.userRowToggleListener = true;
-}
