@@ -15,13 +15,15 @@ class ScheduleShiftService
     public function schedule(array $data): void
     {
         DB::transaction(function () use ($data) {
+            $dateFrom = Carbon::parse($data['date_from']);
+            $dateTo = $data['date_to'] ? Carbon::parse($data['date_to']) : null;
 
             foreach ($data['users'] as $userId) {
 
                 $this->applyShiftRange(
                     $userId,
-                    Carbon::parse($data['date_from']),
-                    Carbon::parse($data['date_to']),
+                    $dateFrom,
+                    $dateTo,
                     $data['shift_id'],
                     $data['reason'] ?? null
                 );
@@ -41,25 +43,27 @@ class ScheduleShiftService
         });
     }
 
-    private function applyShiftRange(int $userId, Carbon $newFrom, Carbon $newTo, ?int $shiftId, ?string $reason = null): void
+    private function applyShiftRange(int $userId, Carbon $newFrom, ?Carbon $newTo, ?int $shiftId, ?string $reason = null): void
     {
         $shift = Shift::with('weekends')->find($shiftId);
 
         $existingAssignments = UserShiftAssignment::where('user_id', $userId)
             ->where(function ($q) use ($newFrom, $newTo) {
-                $q->whereBetween('date_from', [$newFrom, $newTo])
-                    ->orWhereBetween('date_to', [$newFrom, $newTo])
-                    ->orWhere(function ($q2) use ($newFrom, $newTo) {
-                        $q2->where('date_from', '<=', $newFrom)
-                            ->where('date_to', '>=', $newTo);
-                    });
+                if ($newTo !== null) {
+                    $q->where('date_from', '<=', $newTo);
+                }
+
+                $q->where(function ($q2) use ($newFrom) {
+                    $q2->where('date_to', '>=', $newFrom)
+                        ->orWhereNull('date_to');
+                });
             })
             ->get();
 
         foreach ($existingAssignments as $existing) {
 
             $oldFrom = Carbon::parse($existing->date_from);
-            $oldTo = Carbon::parse($existing->date_to);
+            $oldTo = $existing->date_to ? Carbon::parse($existing->date_to) : null;
 
             $existingData = $existing->toArray();
 
@@ -76,7 +80,7 @@ class ScheduleShiftService
             }
 
             // AFTER
-            if ($oldTo->gt($newTo)) {
+            if ($newTo !== null && ($oldTo === null || $oldTo->gt($newTo))) {
                 $this->createAssignment(
                     $userId,
                     $existingData,
@@ -95,9 +99,9 @@ class ScheduleShiftService
         );
     }
 
-    private function createAssignment(int $userId, $shiftData, Carbon $from, Carbon $to, ?string $reason = null): void
+    private function createAssignment(int $userId, $shiftData, Carbon $from, ?Carbon $to, ?string $reason = null): void
     {
-        if ($from->gt($to)) {
+        if ($to !== null && $from->gt($to)) {
             return;
         }
 

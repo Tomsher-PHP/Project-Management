@@ -1,3 +1,4 @@
+import { initTomSelect } from './components/tom-select';
 import { initWeekPicker } from './components/weekpicker';
 import { Loader } from './helpers/loader';
 
@@ -14,6 +15,8 @@ const loadWeek = (date) => {
             document.querySelector("#schedule-table").innerHTML = data.html;
             document.getElementById("week-date-range").innerText = data.weekRange;
             currentWeek = date;
+
+            initTomSelect();
         })
         .catch(err => {
             console.error("Failed to load schedule:", err);
@@ -95,13 +98,3 @@ document.addEventListener("DOMContentLoaded", () => {
     initScheduleShift(input.value);
 
 });
-
-function showLoader() {
-    const loader = document.getElementById("page-loader");
-    if (loader) loader.classList.remove("hidden");
-}
-
-function hideLoader() {
-    const loader = document.getElementById("page-loader");
-    if (loader) loader.classList.add("hidden");
-}

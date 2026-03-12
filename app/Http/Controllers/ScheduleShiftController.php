@@ -86,7 +86,6 @@ class ScheduleShiftController extends Controller
 
     public function updateSchedule(ScheduleShiftRequest $request, ScheduleShiftService $scheduleShiftService)
     {
-
         $scheduleShiftService->updateUserShift(
             $request->users[0],
             $request->date_from,
