@@ -33,7 +33,11 @@ class UserController extends Controller
             'details.department',
             'details.designation',
             'primaryAttachment'
-        ])->where('user_type', '!=', 'super_admin')->where('delete_status', false)->paginate($perPage)->withQueryString();
+        ])
+            ->where('is_super_admin', false)
+            ->where('delete_status', false)
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('users.index', compact('users', 'perPage'));
     }
@@ -41,14 +45,14 @@ class UserController extends Controller
     public function create()
     {
         //get roles
-        $roles = Role::where('user_type', '!=', 'super_admin')->where('status', true)->get();
+        $roles = Role::where('status', true)->get();
 
         //Department and Designation can be added later if needed
         $departments = Department::where('status', true)->get();
         $designations = Designation::where('status', true)->get();
 
         // Get reporter and managers
-        $managers = User::whereNotIn('user_type', ['super_admin', 'normal_user', 'tester'])->where('status', true)->get();
+        $managers = User::where('status', true)->get();
 
         return view('users.create', compact('roles', 'departments', 'designations', 'managers'));
     }
@@ -64,10 +68,10 @@ class UserController extends Controller
     public function edit(int $id)
     {
         $user = User::findOrFail($id);
-        $roles = Role::where('user_type', '!=', 'super_admin')->where('status', true)->get();
+        $roles = Role::where('status', true)->get();
         $departments = Department::where('status', true)->get();
         $designations = Designation::where('status', true)->get();
-        $managers = User::whereNotIn('user_type', ['super_admin', 'normal_user', 'tester'])->where('status', true)->get();
+        $managers = User::where('status', true)->get();
 
         return view('users.edit', compact('user', 'roles', 'departments', 'designations', 'managers'));
     }
@@ -82,7 +86,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Prevent deleting super admin
-        if ($user->user_type === 'super_admin') {
+        if ($user->is_super_admin) {
             return back()->with('error', 'Super Admin cannot be deleted.');
         }
 

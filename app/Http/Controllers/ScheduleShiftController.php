@@ -69,7 +69,7 @@ class ScheduleShiftController extends Controller
 
     public function create()
     {
-        $users = User::where('user_type', '!=', 'super_admin')->whereStatus(1)->orderBy('name')->get();
+        $users = User::where('is_super_admin', false)->whereStatus(1)->orderBy('name')->get();
         $shifts = Shift::whereStatus(1)->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 
         return view('schedule-shift.create', compact('users', 'shifts'));

@@ -125,7 +125,7 @@
                         <option value="">Select Member</option>
 
                         @foreach ($users as $user)
-                            <option value="{{ $user->id }}" data-subtype="{{ config('constants.user_types')[$user->user_type] }}">
+                            <option value="{{ $user->id }}">
                                 {{ $user->name }}
                             </option>
                         @endforeach

@@ -189,7 +189,7 @@
                     <option value="">Select Role</option>
 
                     @foreach ($roles as $key => $role)
-                        <option value="{{ $role->id }}" {{ old('role', $user->role_id ?? '') == $role->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$role->user_type] }}">
+                        <option value="{{ $role->id }}" {{ old('role', $user->role_id ?? '') == $role->id ? 'selected' : '' }}>
                             {{ $role->name }}
                         </option>
                     @endforeach
@@ -261,7 +261,7 @@
                     <option value="">Select Reporting Manager</option>
 
                     @foreach ($managers as $key => $reporter)
-                        <option value="{{ $reporter->id }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$reporter->user_type] }}">
+                        <option value="{{ $reporter->id }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }}>
                             {{ $reporter->name }}
                         </option>
                     @endforeach
@@ -284,7 +284,7 @@
                     <option value="">Select Manager</option>
 
                     @foreach ($managers as $key => $manager)
-                        <option value="{{ $manager->id }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }} data-subtype="{{ config('constants.user_types')[$manager->user_type] }}">
+                        <option value="{{ $manager->id }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }}>
                             {{ $manager->name }}
                         </option>
                     @endforeach
@@ -320,7 +320,7 @@
                 </label>
 
                 <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror"  data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
+                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
 
                 @error('joining_date')
                     <p class="mt-2 text-sm text-error-300">

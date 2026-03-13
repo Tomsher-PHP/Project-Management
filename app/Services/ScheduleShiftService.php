@@ -183,7 +183,7 @@ class ScheduleShiftService
     // Fetch users and shifts
     public function getUsersAndShifts(): array
     {
-        $users = User::where('user_type', '!=', 'super_admin')
+        $users = User::where('is_super_admin', false)
             ->whereStatus(1)
             ->orderBy('name')
             ->get();

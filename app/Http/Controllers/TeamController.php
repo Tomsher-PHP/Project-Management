@@ -40,7 +40,7 @@ class TeamController extends Controller
     public function create()
     {
         // Get users for team members
-        $users = User::where('user_type', '!=', 'super_admin')->where('status', true)->get();
+        $users = User::where('is_super_admin', false)->where('status', true)->get();
 
         $teamRoles = config('constants.team_roles');
 
@@ -63,7 +63,7 @@ class TeamController extends Controller
         $teamUsersIds = $teamUsers->pluck('id')->toArray();
 
         // Get users for team members
-        $users = User::where('user_type', '!=', 'super_admin')->whereNotIn('id', $teamUsersIds)->where('status', true)->get();
+        $users = User::where('is_super_admin', false)->whereNotIn('id', $teamUsersIds)->where('status', true)->get();
 
         $teamRoles = config('constants.team_roles');
 

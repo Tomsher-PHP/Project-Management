@@ -2,13 +2,13 @@
 
 return [
     // User Types constant
-    'user_types' => [
-        'super_admin' => 'Super Admin',
-        'admin' => 'Admin',
-        'manager' => 'Manager',
-        'team_leader' => 'Team Leader',
-        'normal_user' => 'Normal User',
-    ],
+    // 'user_types' => [
+    //     'super_admin' => 'Super Admin',
+    //     'admin' => 'Admin',
+    //     'manager' => 'Manager',
+    //     'team_leader' => 'Team Leader',
+    //     'normal_user' => 'Normal User',
+    // ],
 
     // User Type Permissions constant
     'user_type_permissions' => [

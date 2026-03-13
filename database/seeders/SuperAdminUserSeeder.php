@@ -33,7 +33,7 @@ class SuperAdminUserSeeder extends Seeder
         ]);
 
         // Assign role
-        $superAdmin->assignRole('admin');
+        $superAdmin->assignRole('Admin');
 
         // Create User Details
         $superAdmin->details()->create([

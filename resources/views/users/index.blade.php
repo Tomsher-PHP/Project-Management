@@ -39,11 +39,6 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User Type</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Department</span>
                                         </div>
                                     </td>
@@ -90,11 +85,6 @@
                                                         <span class="text-gray-500 dark:text-bgray-50">Email: {{ $user->email }}</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ config('constants.user_types')[$user->user_type] ?? 'Unknown' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">

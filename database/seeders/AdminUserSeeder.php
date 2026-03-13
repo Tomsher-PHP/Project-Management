@@ -29,7 +29,7 @@ class AdminUserSeeder extends Seeder
         ]);
 
         // Assign role to admin user
-        $adminUser->assignRole('admin');
+        $adminUser->assignRole('Admin');
 
         // Create Admin Details
         $adminUser->details()->create([

@@ -14,17 +14,12 @@ class SetPermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = config('system_permissions');
-        $userTypes = array_keys(config('constants.user_types'));
 
-        foreach ($userTypes as $userType) {
-
-            foreach ($permissions as $permission) {
-                Permission::firstOrCreate([
-                    'name' => $permission,
-                    'guard_name' => 'web',
-                    'user_type' => $userType,
-                ]);
-            }
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
         }
     }
 }
