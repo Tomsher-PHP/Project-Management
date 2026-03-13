@@ -4,19 +4,19 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
-        @canType('role.create')
-        <a href="{{ route('roles.create') }}" class="inline-flex items-center px-4 py-1.5
+        @can('role.create')
+            <a href="{{ route('roles.create') }}" class="inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400
                transition duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
 
-            <span>New Role</span>
-        </a>
-        @endcanType
+                <span>New Role</span>
+            </a>
+        @endcan
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
@@ -35,11 +35,6 @@
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                                 Role name
                                             </span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User Type</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -64,13 +59,8 @@
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center space-x-2.5">
                                                 <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                    {{ $role->name }}
+                                                    {{ ucfirst(str_replace('_', ' ', $role->name)) }}
                                                 </p>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ config('constants.user_types')[$role->user_type] ?? 'Unknown' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -80,9 +70,9 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                @canType('role.edit')
-                                                <x-edit-button :action="route('roles.edit', $role->id)" />
-                                                @endcanType
+                                                @can('role.edit')
+                                                    <x-edit-button :action="route('roles.edit', $role->id)" />
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

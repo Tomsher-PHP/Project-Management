@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Blade::if('canType', function ($permission) {
-            return auth()->check() && auth()->user()->canByUserType($permission);
-        });
+        // Blade::if('canType', function ($permission) {
+        //     return auth()->check() && auth()->user()->canByUserType($permission);
+        // });
     }
 }

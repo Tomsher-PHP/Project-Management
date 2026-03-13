@@ -4,19 +4,19 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
-        @canType('team.create')
-        <a href="{{ route('teams.create') }}" class="inline-flex items-center px-4 py-1.5
+        @can('team.create')
+            <a href="{{ route('teams.create') }}" class="inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400
                transition duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
 
-            <span>New Team</span>
-        </a>
-        @endcanType
+                <span>New Team</span>
+            </a>
+        @endcan
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
@@ -109,12 +109,12 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                @canType('team.edit')
-                                                <x-edit-button :action="route('teams.edit', $team->id)" />
-                                                @endcanType
-                                                @canType('team.delete')
-                                                <x-delete-form :action="route('teams.destroy', $team->id)" />
-                                                @endcanType
+                                                @can('team.edit')
+                                                    <x-edit-button :action="route('teams.edit', $team->id)" />
+                                                @endcan
+                                                @can('team.delete')
+                                                    <x-delete-form :action="route('teams.destroy', $team->id)" />
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>

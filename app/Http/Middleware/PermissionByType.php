@@ -17,11 +17,11 @@ class PermissionByType
     {
         $user = auth()->user();
 
-        if($user->user_type == "super_admin") {
-            return $next($request);
-        }
-        
-        if (!$user || !$user->canByUserType($permission)) {
+        // if ($user->is_super_admin) {
+        //     return $next($request);
+        // }
+
+        if (!$user || !$user->can($permission)) {
             abort(403, 'Unauthorized action.');
         }
 

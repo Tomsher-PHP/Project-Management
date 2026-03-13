@@ -29,6 +29,7 @@ class DummyDataSeeder extends Seeder
             RolePermissionSeeder::class,
             DepartmentSeeder::class,
             DesignationSeeder::class,
+            SuperAdminUserSeeder::class,
             AdminUserSeeder::class,
         ]);
     }

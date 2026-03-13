@@ -34,36 +34,6 @@
                 @enderror
             </div>
 
-            {{-- User Type --}}
-            <div class="flex flex-col gap-2">
-                <label for="user_type" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    User Type
-                </label>
-
-                <select name="user_type" id="user_type" {{ isset($role) ? 'disabled' : '' }} required class="select-no-search w-full
-                               @error('user_type') border border-red-500 @enderror">
-
-                    <option value="">Select User Type</option>
-
-                    @foreach ($userTypes as $key => $type)
-                        <option value="{{ $key }}" {{ old('user_type', $role->user_type ?? '') == $key ? 'selected' : '' }}>
-                            {{ $type }}
-                        </option>
-                    @endforeach
-                </select>
-
-                @error('user_type')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-
-                {{-- Hidden input if disabled --}}
-                @if (isset($role))
-                    <input type="hidden" name="user_type" value="{{ $role->user_type }}">
-                @endif
-            </div>
-
         </div>
     </div>
 
@@ -80,7 +50,7 @@
                     dark:border-darkblack-400
                     dark:text-bgray-50">
 
-            Select user type to load permissions.
+            @include('roles.permissions')
         </div>
     </div>
 

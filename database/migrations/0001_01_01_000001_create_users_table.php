@@ -17,17 +17,17 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->enum('user_type', $userTypes)->default('normal_user')->index();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->boolean('is_super_admin')->default(false);
 
             $table->boolean('status')->default(true);
             $table->boolean('delete_status')->default(false);
-            
+
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
             $table->unsignedBigInteger('updated_by')->nullable()->comment('user id')->index();
-            
+
             $table->timestamps();
             $table->softDeletes();
 
