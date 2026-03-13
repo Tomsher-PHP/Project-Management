@@ -106,10 +106,9 @@ class ScheduleShiftController extends Controller
         $dateFrom = Carbon::parse($data['date_from']);
         $dateTo = $data['date_to'] ? Carbon::parse($data['date_to']) : null;
 
-        $assignments = UserShiftAssignment::with(['shift', 'user'])
+        $assignments = UserShiftAssignment::query() //with(['shift', 'user'])
             ->whereIn('user_id', $data['users'])
             ->where(function ($q) use ($dateFrom, $dateTo) {
-
                 if ($dateTo) {
                     $q->where('date_from', '<=', $dateTo);
                 }
@@ -119,8 +118,11 @@ class ScheduleShiftController extends Controller
                         ->orWhereNull('date_to');
                 });
             })
+            ->orderBy('user_id')
+            ->orderBy('date_from')
             ->get()
             ->groupBy('user_id');
+
 
         return response()->json([
             'html' => view('schedule-shift.partials._preview', compact('assignments'))->render()

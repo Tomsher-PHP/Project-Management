@@ -20,7 +20,7 @@
             $dateStr = $date->toDateString();
             $shift = $calendar[$user->id][$dateStr] ?? null;
 
-            $isPast = $date->isBefore(today());
+            $isPast = $date->isBefore(today()->addDays(1));
             $bg = $shift->color_code ?? '#e5e7eb';
             $text = '#000';
 

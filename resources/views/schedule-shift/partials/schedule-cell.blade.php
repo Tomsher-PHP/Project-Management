@@ -18,7 +18,7 @@
 
         {{-- Edit icon (hidden by default, visible on hover) --}}
         @unless ($isPast)
-            <button class="edit-shift open-shift-modal absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-blue-600 transition rounded-full p-1 bg-white dark:bg-darkblack-600 shadow-sm" data-user="{{ $user->id }}" data-date="{{ $dateStr }}">
+            <button class="open-shift-modal absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-blue-600 transition rounded-full p-1 bg-white dark:bg-darkblack-600 shadow-sm" data-user="{{ $user->id }}" data-username="{{ $user->name }}" data-date="{{ $dateStr }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                 </svg>

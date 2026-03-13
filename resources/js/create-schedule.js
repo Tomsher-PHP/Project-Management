@@ -24,7 +24,7 @@ function previewSchedule() {
     const dateFrom = document.getElementById("date_from").value;
     const dateTo = document.getElementById("date_to").value;
 
-    if (!users.length || !dateFrom) {
+    if (!users.length || !shiftId || !dateFrom) {
         return Promise.resolve(false);
     }
 

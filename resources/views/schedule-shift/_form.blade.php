@@ -55,7 +55,7 @@
                 Date From
             </label>
 
-            <input type="date" name="date_from" value="{{ old('date_from') }}" id="date_from" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <input type="date" name="date_from" value="{{ old('date_from') }}" id="date_from" data-format="{{ config('constants.date_format') }}" data-min-date="{{ now()->addDay()->format('Y-m-d') }}" placeholder="YYYY-MM-DD" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
             @error('date_from')
                 <p class="mt-2 text-sm text-error-300">
@@ -70,7 +70,7 @@
                 Date To
             </label>
 
-            <input type="date" name="date_to" value="{{ old('date_to') }}" id="date_to" data-format="{{ config('constants.date_format') }}" data-min-date="today" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <input type="date" name="date_to" value="{{ old('date_to') }}" id="date_to" data-format="{{ config('constants.date_format') }}" data-min-date="{{ now()->addDay()->format('Y-m-d') }}" placeholder="YYYY-MM-DD" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
             @error('date_to')
                 <p class="mt-2 text-sm text-error-300">

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 
 class ScheduleShiftRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class ScheduleShiftRequest extends FormRequest
             'users' => ['required', 'array'],
             'users.*' => ['exists:users,id'],
             'shift_id' => ['required', 'exists:shifts,id'],
-            'date_from' => ['required', 'date', 'after_or_equal:today'],
+            'date_from' => ['required', 'date', 'after_or_equal:' . Carbon::tomorrow()->format('Y-m-d')],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'reason' => ['nullable', 'string'],
         ];

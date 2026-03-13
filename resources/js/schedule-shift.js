@@ -1,28 +1,43 @@
-import { initTomSelect } from './components/tom-select';
+import { autoTomSelect } from './components/tom-select';
 import { initWeekPicker } from './components/weekpicker';
 import { Loader } from './helpers/loader';
 
 // Load week via AJAX
-const loadWeek = (date) => {
+const loadWeek = async (date) => {
+    if (!date) return;
+
+    // If date is a Date object
+    if (date instanceof Date) {
+        date = date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    }
+
+    // If string already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        date;
+    }
+
     Loader.show();
 
-    fetch(`/schedule-shift?week=${date}`, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(res => res.json())
-        .then(data => {
-            // Update table and week label
-            document.querySelector("#schedule-table").innerHTML = data.html;
-            document.getElementById("week-date-range").innerText = data.weekRange;
-            currentWeek = date;
-
-            initTomSelect();
-        })
-        .catch(err => {
-            console.error("Failed to load schedule:");
-        })
-        .finally(() => {
-            Loader.hide();
+    try {
+        const res = await fetch(`/schedule-shift?week=${date}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
         });
-}
+
+        if (!res.ok) throw new Error("Network error");
+
+        const data = await res.json();
+
+        document.querySelector("#schedule-table").innerHTML = data.html;
+        document.getElementById("week-date-range").innerText = data.weekRange;
+
+        currentWeek = date;
+
+    } catch (err) {
+        console.error("Failed to load schedule:", err);
+    } finally {
+        Loader.hide();
+    }
+};
 
 // Initialize schedule shift events
 export function initScheduleShift(startOfWeek) {
@@ -95,53 +110,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // SHIFT EDIT MODAL EVENTS
+    if (!window.shiftModalListener) {
+        const modal = document.getElementById("shiftModal");
+        const modalSelect = document.getElementById("modalShiftSelect");
 
-    const modal = document.getElementById("shiftModal");
-    const modalSelect = document.getElementById("modalShiftSelect");
-    let currentUserId = null;
-    let currentDate = null;
+        let currentUserId = null;
+        let currentDate = null;
+        let currentUserName = null;
+        let formattedDate = null;
 
-    // Event delegation with jQuery
-    $(document).on("click", ".open-shift-modal", function () {
-        currentUserId = $(this).data("user");
-        currentDate = $(this).data("date");
+        // Event delegation with jQuery
+        $(document).on("click", ".open-shift-modal", function () {
+            currentUserId = $(this).data("user");
+            currentDate = $(this).data("date");
+            currentUserName = $(this).data("username");
+            formattedDate = formatDate(currentDate);
 
-        // Pre-select current shift if available
-        const currentShift = $(this).closest("td").find(".shift-view div span").first().text() || "";
-        const option = $("#modalShiftSelect option").filter(function () {
-            return $(this).text() === currentShift;
-        }).val() || "";
+            // Display existing details
+            $("#modalUserName").text(currentUserName);
+            $("#modalDate").text(formattedDate);
 
-        $("#modalShiftSelect").val(option);
+            // Detect current shift in cell
+            const currentShift = $(this)
+                .closest("td")
+                .find(".shift-view div span")
+                .first()
+                .text()
+                .trim();
 
-        $("#shiftModal").removeClass("hidden").addClass("flex");
-    });
+            const option = $("#modalShiftSelect option").filter(function () {
+                return $(this).text().trim() === currentShift;
+            }).val() || "";
 
-    // Cancel modal
-    $(document).on("click", "#modalCancel", function () {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-    });
+            autoTomSelect("modalShiftSelect", option);
 
-    // Save modal
-    $(document).on("click", "#modalSave", function () {
-        const shiftId = modalSelect.value;
-        if (!shiftId) return;
+            $("#shiftModal").removeClass("hidden").addClass("flex");
+        });
 
-        fetch("/schedule-shift/update", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ users: [currentUserId], date_from: currentDate, date_to: currentDate, shift_id: shiftId })
-        })
-            .then(res => res.json())
-            .then(() => {
-                modal.classList.add("hidden");
-                modal.classList.remove("flex");
-                loadWeek(currentWeek); // reload current week so table stays updated
-            });
-    });
+        // Cancel modal
+        $(document).on("click", "#modalCancel", function () {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        });
+
+        // Save modal
+        $(document).on("click", "#modalSave", function () {
+            const shiftId = modalSelect.value;
+            if (!shiftId) return;
+
+            const dateObj = new Date(currentDate);
+            const formattedDate = dateObj.toISOString().split("T")[0];
+
+            fetch("/schedule-shift/update", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ users: [currentUserId], date_from: formattedDate, date_to: formattedDate, shift_id: shiftId })
+            })
+                .then(res => res.json())
+                .then(() => {
+                    modal.classList.add("hidden");
+                    modal.classList.remove("flex");
+
+                    loadWeek(currentWeek);
+                });
+        });
+
+        window.shiftModalListener = true;
+    }
+
+    const formatDate = (date) => {
+        const dateObj = new Date(date);
+
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+
+        return `${day}/${month}/${year}`;
+    };
 
 });

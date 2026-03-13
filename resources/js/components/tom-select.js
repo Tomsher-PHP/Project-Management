@@ -77,4 +77,18 @@ export function initTomSelect() {
 
         new TomSelect(el, config);
     });
+
 }
+
+//make auto select for dropdown input
+export const autoTomSelect = (el, value) => {
+    const select = document.getElementById(el);
+
+    if (!select || !select.tomselect) return;
+
+    if (value) {
+        select.tomselect.setValue(value);
+    } else {
+        select.tomselect.clear();
+    }
+};
