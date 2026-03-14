@@ -69,4 +69,10 @@ return [
     'technology.create',
     'technology.edit',
     'technology.delete',
+
+    // project category
+    'project_category.view',
+    'project_category.create',
+    'project_category.edit',
+    'project_category.delete',
 ];

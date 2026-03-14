@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
@@ -96,6 +97,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.edit')->only(['update']);
         Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.delete')->only(['destroy']);
         // End Technology Routes
+
+        // Project Category Routes
+        Route::patch('/project-categories/toggle-status', [ProjectCategoryController::class, 'toggleStatus'])->middleware('permission.type:project_category.edit')->name('project_category.toggleStatus');
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.view')->only(['index']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.create')->only(['store']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.edit')->only(['update']);
+        Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.delete')->only(['destroy']);
+        // End Project Category Routes
     });
     // End Settings Routes
 
