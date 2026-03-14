@@ -63,4 +63,10 @@ return [
     'schedule_shift.create',
     'schedule_shift.edit',
     'schedule_shift.delete',
+
+    // technology
+    'technology.view',
+    'technology.create',
+    'technology.edit',
+    'technology.delete',
 ];

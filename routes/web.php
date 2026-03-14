@@ -9,6 +9,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TechnologyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -66,12 +67,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
 
         // Department Routes
-        Route::patch('/department/toggle-status', [DepartmentController::class, 'toggleStatus'])->name('department.toggleStatus');
-        Route::resource('departments', DepartmentController::class);
+        Route::patch('/departments/toggle-status', [DepartmentController::class, 'toggleStatus'])->middleware('permission.type:department.edit')->name('department.toggleStatus');
+        Route::resource('departments', DepartmentController::class)->middleware('permission.type:department.view')->only(['index']);
+        Route::resource('departments', DepartmentController::class)->middleware('permission.type:department.create')->only(['store']);
+        Route::resource('departments', DepartmentController::class)->middleware('permission.type:department.edit')->only(['update']);
+        Route::resource('departments', DepartmentController::class)->middleware('permission.type:department.delete')->only(['destroy']);
 
         // Designation Routes
-        Route::patch('/designation/toggle-status', [DesignationController::class, 'toggleStatus'])->name('designation.toggleStatus');
-        Route::resource('designations', DesignationController::class);
+        Route::patch('/designations/toggle-status', [DesignationController::class, 'toggleStatus'])->middleware('permission.type:designation.edit')->name('designation.toggleStatus');
+        Route::resource('designations', DesignationController::class)->middleware('permission.type:designation.view')->only(['index']);
+        Route::resource('designations', DesignationController::class)->middleware('permission.type:designation.create')->only(['store']);
+        Route::resource('designations', DesignationController::class)->middleware('permission.type:designation.edit')->only(['update']);
+        Route::resource('designations', DesignationController::class)->middleware('permission.type:designation.delete')->only(['destroy']);
 
         // Shift Routes
         Route::get('/shifts/{shift}/check-assignment', [ShiftController::class, 'checkAssignment'])->name('shifts.checkAssignment');
@@ -81,6 +88,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('shifts', ShiftController::class)->middleware('permission.type:shift.edit')->only(['edit', 'update']);
         Route::resource('shifts', ShiftController::class)->middleware('permission.type:shift.delete')->only(['destroy']);
         // End Shift Routes
+
+        // Technology Routes
+        Route::patch('/technologies/toggle-status', [TechnologyController::class, 'toggleStatus'])->middleware('permission.type:technology.edit')->name('technology.toggleStatus');
+        Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.view')->only(['index']);
+        Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.create')->only(['store']);
+        Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.edit')->only(['update']);
+        Route::resource('technologies', TechnologyController::class)->middleware('permission.type:technology.delete')->only(['destroy']);
+        // End Technology Routes
     });
     // End Settings Routes
 
