@@ -5,7 +5,7 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
         @can('technology.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm">
+            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Technology" data-url="{{ route('settings.technologies.store') }}" data-method="POST">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
@@ -91,7 +91,7 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @can('technology.edit')
-                                                    <a href="javascript:void(0)" class="edit-technology modal-open inline-flex items-center justify-center w-8 h-8rounded-lg bg-gray-100 dark:bg-darkblack-500hover:bg-gray-200 dark:hover:bg-darkblack-400transition duration-200 group" data-id="{{ $technology->id }}" data-name="{{ $technology->name }}" data-order="{{ $technology->order }}">
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.technologies.update', $technology->id) }}" data-name="{{ $technology->name }}" data-order="{{ $technology->order }}" data-method="PUT" data-module="Technology">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
@@ -124,128 +124,21 @@
     <!-- Page ends -->
 
     {{-- Modal content start --}}
-    @include('settings.technologies.create-update-modal')
+    <x-form-modal modalId="multi-step-modal" module="Project Category" formId="projectCategoryForm" action="{{ route('settings.project-categories.store') }}" button="Create Project Category">
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name</label>
+            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Order</label>
+            <input type="number" name="order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+    </x-form-modal>
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-
-            // Setup CSRF for Ajax
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            const modal = document.getElementById('multi-step-modal');
-            const form = document.getElementById('technologyForm');
-            const title = document.getElementById('modalTitle');
-            const methodInput = document.getElementById('formMethod');
-            const submitBtn = document.getElementById('submitBtn');
-
-            const nameInput = form.querySelector('input[name="name"]');
-            const orderInput = form.querySelector('input[name="order"]');
-
-            // OPEN EDIT
-            document.querySelectorAll('.edit-technology').forEach(button => {
-                button.addEventListener('click', function() {
-
-                    const id = this.dataset.id;
-                    const name = this.dataset.name;
-                    const order = this.dataset.order;
-
-                    // Change title and button text
-                    title.innerText = 'Edit Technology';
-                    submitBtn.innerText = 'Update Technology';
-
-                    // Fill inputs
-                    nameInput.value = name;
-                    orderInput.value = order;
-
-                    // Change form action
-                    form.action = `/settings/technologies/${id}`;
-
-                    // Change method to PUT
-                    methodInput.value = 'PUT';
-
-                    // Show modal
-                    modal.classList.remove('hidden');
-
-                    clearFormErrors();
-                });
-            });
-
-            // RESET WHEN CLOSING
-            document.getElementById('step-1-cancel').addEventListener('click', function() {
-                resetModal()
-            });
-
-            // Store and update
-            $('#technologyForm').on('submit', function(e) {
-                e.preventDefault();
-
-                let form = $(this);
-                let url = form.attr('action');
-                let method = $('#formMethod').val();
-                let formData = form.serialize();
-
-                $('.error-text').remove();
-                $('input').removeClass('border-red-500');
-
-                $.ajax({
-                    url: url,
-                    type: method === 'PUT' ? 'POST' : 'POST',
-                    data: formData,
-                    success: function(response) {
-
-                        if (response.status) {
-
-                            Alert.success(response.message); // You can replace with toast
-
-                            $('#multi-step-modal').addClass('hidden');
-                            form[0].reset();
-
-                            location.reload(); // reload table (simple way)
-                        }
-                    },
-                    error: function(xhr) {
-                        // Remove old errors ONLY inside this form
-                        clearFormErrors();
-
-                        if (xhr.status === 422) {
-
-                            let errors = xhr.responseJSON.errors;
-
-                            $.each(errors, function(key, value) {
-
-                                let input = $('[name="' + key + '"]');
-                                input.addClass('border-red-500');
-
-                                input.after(
-                                    '<span class="mt-2 text-sm text-error-300 error-text">' + value[0] + '</span>'
-                                );
-                            });
-                        }
-                    }
-                });
-            });
-
-            function resetModal() {
-                form.reset();
-                title.innerText = 'Add Technology';
-                submitBtn.innerText = 'Create Technology';
-                form.action = "{{ route('settings.technologies.store') }}";
-                methodInput.value = 'POST';
-                modal.classList.add('hidden');
-            }
-
-            function clearFormErrors() {
-                let form = $('#technologyForm');
-                form.find('.error-text').remove();
-                form.find('input').removeClass('border-red-500');
-            }
-
-        });
-    </script>
+    <script src="{{ asset('assets/js/ajax-form-modal.js') }}"></script>
 @endpush
