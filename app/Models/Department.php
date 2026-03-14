@@ -22,4 +22,9 @@ class Department extends Model
             'status' => 'boolean',
         ];
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
 }

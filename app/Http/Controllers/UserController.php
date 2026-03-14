@@ -48,11 +48,11 @@ class UserController extends Controller
         $roles = Role::where('status', true)->get();
 
         //Department and Designation can be added later if needed
-        $departments = Department::where('status', true)->get();
-        $designations = Designation::where('status', true)->get();
+        $departments = Department::active()->orderBy('order', 'asc')->get();
+        $designations = Designation::active()->orderBy('order', 'asc')->get();
 
         // Get reporter and managers
-        $managers = User::where('status', true)->get();
+        $managers = User::active()->get();
 
         return view('users.create', compact('roles', 'departments', 'designations', 'managers'));
     }
@@ -69,9 +69,9 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $roles = Role::where('status', true)->get();
-        $departments = Department::where('status', true)->get();
-        $designations = Designation::where('status', true)->get();
-        $managers = User::where('status', true)->get();
+        $departments = Department::active()->orderBy('order', 'asc')->get();
+        $designations = Designation::active()->orderBy('order', 'asc')->get();
+        $managers = User::active()->get();
 
         return view('users.edit', compact('user', 'roles', 'departments', 'designations', 'managers'));
     }

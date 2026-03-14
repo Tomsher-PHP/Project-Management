@@ -100,7 +100,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <x-status-toggle :model="$shift" route="settings.shift.toggleStatus" entity="shift" />
+                                                <x-status-toggle :model="$shift" route="settings.shift.toggleStatus" entity="shift" permission="shift.edit" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -118,7 +118,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
+                                        <td colspan="6" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
                                             No shifts found.
                                         </td>
                                     </tr>
