@@ -23,6 +23,9 @@ class DummyDataSeeder extends Seeder
         //truncate departments and designations if needed
         DB::table('departments')->truncate();
         DB::table('designations')->truncate();
+        DB::table('technologies')->truncate();
+        DB::table('project_categories')->truncate();
+        DB::table('industries')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->call([
@@ -31,6 +34,9 @@ class DummyDataSeeder extends Seeder
             DesignationSeeder::class,
             SuperAdminUserSeeder::class,
             AdminUserSeeder::class,
+            TechnologySeeder::class,
+            ProjectCategorySeeder::class,
+            IndustrySeeder::class,
         ]);
     }
 }

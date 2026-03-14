@@ -18,13 +18,20 @@ export function initTomSelect() {
 
         if (el.tomselect) return; // Prevent double init
 
-        new TomSelect(el, {
+        const sort = el.dataset.sort != "0";
+
+        const config = {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            sortField: { field: "text", direction: "asc" },
             plugins: ['dropdown_input', 'clear_button'],
-        });
+        };
+
+        if (sort) {
+            config.sortField = { field: "text", direction: "asc" };
+        }
+
+        new TomSelect(el, config);
     });
 
     // Multiple select

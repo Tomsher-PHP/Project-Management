@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -105,6 +106,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.edit')->only(['update']);
         Route::resource('project-categories', ProjectCategoryController::class)->middleware('permission.type:project_category.delete')->only(['destroy']);
         // End Project Category Routes
+
+        // Industry Routes
+        Route::patch('/industries/toggle-status', [IndustryController::class, 'toggleStatus'])->middleware('permission.type:industry.edit')->name('industry.toggleStatus');
+        Route::resource('industries', IndustryController::class)->middleware('permission.type:industry.view')->only(['index']);
+        Route::resource('industries', IndustryController::class)->middleware('permission.type:industry.create')->only(['store']);
+        Route::resource('industries', IndustryController::class)->middleware('permission.type:industry.edit')->only(['update']);
+        Route::resource('industries', IndustryController::class)->middleware('permission.type:industry.delete')->only(['destroy']);
+        // End Industry Routes
     });
     // End Settings Routes
 

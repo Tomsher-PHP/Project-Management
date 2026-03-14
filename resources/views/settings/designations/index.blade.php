@@ -126,8 +126,6 @@
     <!-- Page ends -->
 
     {{-- Modal content start --}}
-    {{-- @include('settings.designations.create-update-modal') --}}
-    {{-- Modal content start --}}
     <x-form-modal modalId="multi-step-modal" module="Designation" formId="designationForm" action="{{ route('settings.designations.store') }}" button="Create Designation">
 
         <div>

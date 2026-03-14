@@ -32,6 +32,7 @@ $(document).ready(function () {
 
     // OPEN EDIT
     $('.edit-record').on('click', function () {
+
         let modalId = $(this).data('modal');
         let modal = $('#' + modalId);
 
@@ -42,8 +43,19 @@ $(document).ready(function () {
         modal.find('.form-method').val(method);
 
         $.each($(this).data(), function (key, value) {
-            if (modal.find('[name="' + key + '"]').length) {
-                modal.find('[name="' + key + '"]').val(value);
+
+            let field = modal.find('[name="' + key + '"]');
+
+            if (field.length) {
+
+                // If it's a select with TomSelect
+                if (field.hasClass('tom-select') && field[0].tomselect) {
+
+                    field[0].tomselect.setValue(value);
+                } else {
+                    field.val(value);
+                }
+
             }
         });
 

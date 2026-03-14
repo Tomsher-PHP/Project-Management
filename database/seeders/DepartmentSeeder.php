@@ -23,14 +23,14 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($array as $key => $name) {
-            Department::firstOrCreate([
+            Department::firstOrCreate(
                 ['name' => $name],
                 [
                     'order' => $key + 1,
                     'default' => 1,
                     'status' => 1,
                 ]
-            ]);
+            );
         }
     }
 }

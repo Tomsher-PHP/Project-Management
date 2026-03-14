@@ -122,8 +122,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No roles found.
+                                        <td colspan="7" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
+                                            No users found.
                                         </td>
                                     </tr>
                                 @endforelse

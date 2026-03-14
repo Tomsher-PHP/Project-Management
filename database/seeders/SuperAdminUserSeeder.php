@@ -33,13 +33,11 @@ class SuperAdminUserSeeder extends Seeder
         ]);
 
         // Assign role
-        $superAdmin->assignRole('Admin');
+        $superAdmin->assignRole('Owner');
 
         // Create User Details
         $superAdmin->details()->create([
-            'employee_id'     => 'EMP-001',
-            'department_id'   => 1, // make sure department exists
-            'designation_id'  => 1, // make sure designation exists
+            'employee_id'     => 'OWN-001',
             'gender'          => 'male',
             'joining_date'    => now(),
         ]);
