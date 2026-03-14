@@ -75,4 +75,10 @@ return [
     'project_category.create',
     'project_category.edit',
     'project_category.delete',
+
+    // industry
+    'industry.view',
+    'industry.create',
+    'industry.edit',
+    'industry.delete',
 ];
