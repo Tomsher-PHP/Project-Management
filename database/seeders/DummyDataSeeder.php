@@ -34,6 +34,7 @@ class DummyDataSeeder extends Seeder
             DesignationSeeder::class,
             SuperAdminUserSeeder::class,
             AdminUserSeeder::class,
+            DummyUserSeeder::class,
             TechnologySeeder::class,
             ProjectCategorySeeder::class,
             IndustrySeeder::class,

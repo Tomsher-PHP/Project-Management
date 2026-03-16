@@ -6,9 +6,6 @@ trait Filterable
 {
     public function scopeFilter($query, $filters)
     {
-        if ($filters) {
-            // dd($filters);
-        }
 
         if (isset($filters['search']) && !empty($filters['search'])) {
             $condition = $filters['search_condition'] ?? 'contains';
@@ -37,25 +34,37 @@ trait Filterable
             $query->where('status', $filters['status']);
         }
 
-        if (isset($filters['parent_id']) && $filters['parent_id'] !== '') {
-            $query->whereIn('parent_id', (array)$filters['parent_id']);
+        if (isset($filters['role_id']) && !empty($filters['role_id'])) {
+            $roles = (array) $filters['role_id'];
+
+            $query->whereHas('roles', function ($q) use ($roles) {
+                $q->whereIn('roles.id', $roles);
+            });
         }
 
         // --- 3. Handle Dynamic / Module-Specific Filters ---
         $dynamicFilters = $filters;
-        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status']);
+        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page']);
 
         foreach ($dynamicFilters as $field => $value) {
             if ($value === null || $value === '') {
                 continue;
             }
 
-            // Handle multi-select arrays
+            // Multi select
             if (is_array($value)) {
                 $query->whereIn($field, $value);
-            } else {
-                $query->where($field, $value);
+                continue;
             }
+
+            // Numeric fields (IDs, status etc.)
+            if (is_numeric($value)) {
+                $query->where($field, $value);
+                continue;
+            }
+
+            // Text search
+            $query->where($field, 'like', "%{$value}%");
         }
 
         return $query;

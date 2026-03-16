@@ -40,7 +40,9 @@ class UserController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('users.index', compact('users', 'perPage'));
+        $roles = Role::get();
+
+        return view('users.index', compact('users', 'perPage', 'roles'));
     }
 
     public function create()

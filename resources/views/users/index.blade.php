@@ -139,6 +139,8 @@
     <!-- Filter drawer -->
     <x-filters.drawer>
         <x-filters.input-search name="search" label="Name" />
+        <x-filters.input name="email" label="Email" />
+        <x-filters.multi-select name="role_id" label="Role" :options="$roles" />
         <x-filters.select name="status" label="Status" :options="[
             1 => 'Active',
             0 => 'Inactive',
