@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
+    use Filterable;
+
     protected $fillable = [
         'name',
         'time_from',
