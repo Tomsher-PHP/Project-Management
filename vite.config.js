@@ -9,6 +9,8 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/team.js',
+                'resources/js/schedule-shift.js',
+                'resources/js/create-schedule.js',
             ],
             refresh: true,
         }),

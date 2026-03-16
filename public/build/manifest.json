@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-DhVKmxrC.css",
+    "file": "assets/app-D3n-qPYG.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,12 +9,30 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BIIK9N4e.js",
+    "file": "assets/app-ii1Ur_cE.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "imports": [
+      "resources/js/schedule-shift.js"
+    ],
     "css": [
-      "assets/app-Bm86ptNt.css"
+      "assets/app-39c7LKqe.css"
+    ]
+  },
+  "resources/js/create-schedule.js": {
+    "file": "assets/create-schedule-B1-a-NAp.js",
+    "name": "create-schedule",
+    "src": "resources/js/create-schedule.js",
+    "isEntry": true
+  },
+  "resources/js/schedule-shift.js": {
+    "file": "assets/schedule-shift-LfKnwvnh.js",
+    "name": "schedule-shift",
+    "src": "resources/js/schedule-shift.js",
+    "isEntry": true,
+    "css": [
+      "assets/schedule-shift-CksuuEqD.css"
     ]
   },
   "resources/js/team.js": {
