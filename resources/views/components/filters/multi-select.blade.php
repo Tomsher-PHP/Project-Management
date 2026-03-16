@@ -4,9 +4,10 @@
     </label>
 
     <select name="{{ $name }}[]" class="tom-select-multiple w-full" multiple data-sort="0">
-        @foreach ($options as $value => $text)
-            <option value="{{ $value }}" {{ in_array((string) $value, request($name, [])) ? 'selected' : '' }}>
-                {{ $text }}
+        <option value="">Select {{ $label }}</option>
+        @foreach ($options as $value)
+            <option value="{{ $value->id }}" {{ in_array((string) $value->id, request($name, [])) ? 'selected' : '' }}>
+                {{ $value->name }}
             </option>
         @endforeach
     </select>

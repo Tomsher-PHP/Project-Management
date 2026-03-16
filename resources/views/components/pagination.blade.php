@@ -1,6 +1,6 @@
 @props(['paginator', 'perPage'])
 
-<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6 @if($paginator->total() < 5) hidden @endif">
+<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6 @if ($paginator->total() < 5) hidden @endif">
 
     {{-- Per Page Selector --}}
     <div class="flex items-center gap-3">
@@ -12,7 +12,13 @@
             {{-- Preserve other query parameters --}}
             @foreach (request()->query() as $key => $value)
                 @if ($key !== 'per_page' && $key !== 'page')
-                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @if (is_array($value))
+                        @foreach ($value as $v)
+                            <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
                 @endif
             @endforeach
 

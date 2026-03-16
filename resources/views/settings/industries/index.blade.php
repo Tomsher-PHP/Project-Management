@@ -120,7 +120,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <x-table-no-data :col-span="5" message="No industries found." />
+                                    <x-table-no-data :col-span="6" message="No industries found." />
                                 @endforelse
                             </table>
                         </div>

@@ -30,6 +30,10 @@ trait Filterable
             }
         }
 
+        if (isset($filters['parent_id']) && $filters['parent_id'] !== '') {
+            $query->whereIn('parent_id', (array)$filters['parent_id']);
+        }
+
         if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', $filters['status']);
         }
