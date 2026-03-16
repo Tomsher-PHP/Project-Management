@@ -23,8 +23,8 @@ class IndustryController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $industries = Industry::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
-        $parentIndustries = Industry::active()->where('parent_id', null)->orderBy('order', 'asc')->get();
+        $industries = Industry::filter($request->all())->orderBy('order', 'asc')->paginate($perPage)->withQueryString();
+        $parentIndustries = Industry::where('parent_id', null)->orderBy('order', 'asc')->get();
 
         return view('settings.industries.index', compact('industries', 'perPage', 'parentIndustries'));
     }
