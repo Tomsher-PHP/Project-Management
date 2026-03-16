@@ -17,9 +17,11 @@
         </thead>
 
         <tbody>
-            @foreach ($users as $user)
+            @forelse ($users as $user)
                 @include('schedule-shift.partials.schedule-row')
-            @endforeach
+            @empty
+                <x-table-no-data :col-span="9" message="No users found." />
+            @endforelse
         </tbody>
 
     </table>

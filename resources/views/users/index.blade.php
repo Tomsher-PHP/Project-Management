@@ -121,11 +121,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No users found.
-                                        </td>
-                                    </tr>
+                                    <x-table-no-data col-span="7" message="No users found." />
                                 @endforelse
                             </table>
                         </div>

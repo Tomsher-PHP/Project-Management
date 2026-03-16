@@ -118,11 +118,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No industries found.
-                                        </td>
-                                    </tr>
+                                    <x-table-no-data :col-span="5" message="No industries found." />
                                 @endforelse
                             </table>
                         </div>

@@ -117,11 +117,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No shifts found.
-                                        </td>
-                                    </tr>
+                                    <x-table-no-data :col-span="6" message="No shifts found." />
                                 @endforelse
                             </table>
                         </div>
