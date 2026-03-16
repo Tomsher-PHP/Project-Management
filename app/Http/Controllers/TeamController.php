@@ -29,10 +29,11 @@ class TeamController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $teams = Team::with([
-            'users',
-            'primaryAttachment'
-        ])->paginate($perPage)->withQueryString();
+        $teams = Team::filter($request->all())
+            ->with([
+                'users',
+                'primaryAttachment'
+            ])->paginate($perPage)->withQueryString();
 
         return view('teams.index', compact('teams', 'perPage'));
     }

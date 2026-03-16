@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -9,8 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 class Team extends Model
 {
-    use SoftDeletes;
-    
+    use SoftDeletes, Filterable;
+
     protected $fillable = [
         "name",
         "status",
