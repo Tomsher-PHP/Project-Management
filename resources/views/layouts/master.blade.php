@@ -48,6 +48,7 @@
 
     <!-- layout end -->
     <!--scripts -->
+    <script src="{{ asset(config('assets.js.filter_drawer')) }}"></script>
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>
     <script src="{{ asset(config('assets.js.slick')) }}"></script>

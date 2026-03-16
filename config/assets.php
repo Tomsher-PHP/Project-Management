@@ -31,5 +31,8 @@ return [
 
         //delete confirmation alert
         'delete_alert' => 'assets/js/delete-alert.js',
+
+        //filter drawer
+        'filter_drawer' => 'assets/js/filterDrawer.js',
     ],
 ];
