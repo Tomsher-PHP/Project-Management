@@ -18,6 +18,8 @@
             </a>
         @endcan
 
+        <x-filters.button />
+
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
             <section class="mb-6 2xl:mb-0 2xl:flex-1">
@@ -133,4 +135,14 @@
         <!-- write your code here-->
     </main>
     <!-- Page ends -->
+
+    <!-- Filter drawer -->
+    <x-filters.drawer>
+        <x-filters.input-search name="search" label="Name" />
+        <x-filters.select name="status" label="Status" :options="[
+            1 => 'Active',
+            0 => 'Inactive',
+        ]" />
+    </x-filters.drawer>
+    <!-- Filter drawer end -->
 @endsection

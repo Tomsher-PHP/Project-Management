@@ -28,12 +28,13 @@ class UserController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $users = User::with([
-            'details',
-            'details.department',
-            'details.designation',
-            'primaryAttachment'
-        ])
+        $users = User::filter($request->all())
+            ->with([
+                'details',
+                'details.department',
+                'details.designation',
+                'primaryAttachment'
+            ])
             ->where('is_super_admin', false)
             ->where('delete_status', false)
             ->paginate($perPage)

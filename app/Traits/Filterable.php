@@ -6,8 +6,11 @@ trait Filterable
 {
     public function scopeFilter($query, $filters)
     {
+        if ($filters) {
+            // dd($filters);
+        }
 
-        if (!empty($filters['search'])) {
+        if (isset($filters['search']) && !empty($filters['search'])) {
             $condition = $filters['search_condition'] ?? 'contains';
 
             //switch case
@@ -30,12 +33,29 @@ trait Filterable
             }
         }
 
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            $query->where('status', $filters['status']);
+        }
+
         if (isset($filters['parent_id']) && $filters['parent_id'] !== '') {
             $query->whereIn('parent_id', (array)$filters['parent_id']);
         }
 
-        if (isset($filters['status']) && $filters['status'] !== '') {
-            $query->where('status', $filters['status']);
+        // --- 3. Handle Dynamic / Module-Specific Filters ---
+        $dynamicFilters = $filters;
+        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status']);
+
+        foreach ($dynamicFilters as $field => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            // Handle multi-select arrays
+            if (is_array($value)) {
+                $query->whereIn($field, $value);
+            } else {
+                $query->where($field, $value);
+            }
         }
 
         return $query;
