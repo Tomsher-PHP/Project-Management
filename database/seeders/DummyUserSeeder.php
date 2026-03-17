@@ -13,16 +13,18 @@ class DummyUserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(30)->create()->each(function ($user) {
+        $roles = ['Team Member', 'Manager', 'Team Leader'];
+
+        User::factory(30)->create()->each(function ($user) use ($roles) {
 
             // assign role
-            $user->assignRole('Team Member');
+            $user->assignRole($roles[array_rand($roles)]);
 
             // create user details
             $user->details()->create([
                 'employee_id' => 'EMP-' . rand(100, 999),
-                'department_id' => rand(1, 5),
-                'designation_id' => rand(1, 5),
+                'department_id' => null,
+                'designation_id' => null,
                 'gender' => fake()->randomElement(['male', 'female']),
                 'joining_date' => fake()->dateTimeBetween('-2 years'),
             ]);

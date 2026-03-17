@@ -19,11 +19,11 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             SuperAdminUserSeeder::class,
             DefaultShiftSeeder::class,
-            DepartmentSeeder::class,
-            DesignationSeeder::class,
-            TechnologySeeder::class,
-            ProjectCategorySeeder::class,
-            IndustrySeeder::class,
+            // DepartmentSeeder::class,
+            // DesignationSeeder::class,
+            // TechnologySeeder::class,
+            // ProjectCategorySeeder::class,
+            // IndustrySeeder::class,
         ]);
     }
 }
