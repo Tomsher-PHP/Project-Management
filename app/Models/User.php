@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Traits\Filterable;
+use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,7 +17,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes, Filterable;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, Filterable, Sortable;
 
     /**
      * The attributes that are mass assignable.
@@ -36,6 +37,12 @@ class User extends Authenticatable
 
         'status',
         'delete_status',
+    ];
+
+    protected $sortable = [
+        'name',
+        'email',
+        'created_at',
     ];
 
     /**
