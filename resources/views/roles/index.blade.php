@@ -34,9 +34,7 @@
                                     </td>
                                     <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Role name
-                                            </span>
+                                            <x-sorting.sortable-column column="name" label="Role Name" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">

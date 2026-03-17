@@ -41,8 +41,6 @@ class User extends Authenticatable
 
     protected $sortable = [
         'name',
-        'email',
-        'created_at',
     ];
 
     /**
