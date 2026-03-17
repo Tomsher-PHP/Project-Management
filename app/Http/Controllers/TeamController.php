@@ -35,13 +35,16 @@ class TeamController extends Controller
                 'primaryAttachment'
             ])->paginate($perPage)->withQueryString();
 
-        return view('teams.index', compact('teams', 'perPage'));
+        // Get users for filter
+        $users = User::where('is_super_admin', false)->select('id', 'name')->get();
+
+        return view('teams.index', compact('teams', 'perPage', 'users'));
     }
 
     public function create()
     {
         // Get users for team members
-        $users = User::where('is_super_admin', false)->where('status', true)->get();
+        $users = User::active()->where('is_super_admin', false)->get();
 
         $teamRoles = config('constants.team_roles');
 
@@ -64,7 +67,7 @@ class TeamController extends Controller
         $teamUsersIds = $teamUsers->pluck('id')->toArray();
 
         // Get users for team members
-        $users = User::where('is_super_admin', false)->whereNotIn('id', $teamUsersIds)->where('status', true)->get();
+        $users = User::active()->where('is_super_admin', false)->whereNotIn('id', $teamUsersIds)->get();
 
         $teamRoles = config('constants.team_roles');
 

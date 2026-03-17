@@ -137,6 +137,7 @@
     <!-- Filter drawer -->
     <x-filters.drawer>
         <x-filters.input-search name="search" label="Team Name" />
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" />
         <x-filters.select name="status" label="Status" :options="[
             1 => 'Active',
             0 => 'Inactive',

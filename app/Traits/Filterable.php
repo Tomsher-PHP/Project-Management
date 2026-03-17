@@ -58,9 +58,17 @@ trait Filterable
             });
         }
 
+        if (isset($filters['user_id']) && !empty($filters['user_id'])) {
+            $users = (array) $filters['user_id'];
+
+            $query->whereHas('users', function ($q) use ($users) {
+                $q->whereIn('users.id', $users);
+            });
+        }
+
         // --- 3. Handle Dynamic / Module-Specific Filters ---
         $dynamicFilters = $filters;
-        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page'], $dynamicFilters['department_id'], $dynamicFilters['designation_id']);
+        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page'], $dynamicFilters['department_id'], $dynamicFilters['designation_id'], $dynamicFilters['user_id']);
 
         foreach ($dynamicFilters as $field => $value) {
             if ($value === null || $value === '') {
