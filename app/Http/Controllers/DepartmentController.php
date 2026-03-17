@@ -23,7 +23,7 @@ class DepartmentController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $departments = Department::filter($request->all())->sort($request->all())->orderBy('order', 'asc')->paginate($perPage)->withQueryString();
+        $departments = Department::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
 
         return view('settings.departments.index', compact('departments', 'perPage'));
     }

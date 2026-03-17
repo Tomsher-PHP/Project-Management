@@ -16,7 +16,7 @@ trait Sortable
 
         // Allowed columns (define in model)
         if (!$sortBy || !in_array($sortBy, $this->sortable ?? [])) {
-            return $query;
+            return $query->latest();
         }
 
         return $query->orderBy($sortBy, $sortDir);
