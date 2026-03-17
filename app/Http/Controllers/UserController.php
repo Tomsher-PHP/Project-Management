@@ -41,8 +41,10 @@ class UserController extends Controller
             ->withQueryString();
 
         $roles = Role::get();
+        $departments = Department::orderBy('order', 'asc')->get();
+        $designations = Designation::orderBy('order', 'asc')->get();
 
-        return view('users.index', compact('users', 'perPage', 'roles'));
+        return view('users.index', compact('users', 'perPage', 'roles', 'departments', 'designations'));
     }
 
     public function create()

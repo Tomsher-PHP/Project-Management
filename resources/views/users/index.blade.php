@@ -141,6 +141,8 @@
         <x-filters.input-search name="search" label="Name" />
         <x-filters.input name="email" label="Email" />
         <x-filters.multi-select name="role_id" label="Role" :options="$roles" />
+        <x-filters.multi-select name="department_id" label="Departments" :options="$departments" />
+        <x-filters.multi-select name="designation_id" label="Designations" :options="$designations" />
         <x-filters.select name="status" label="Status" :options="[
             1 => 'Active',
             0 => 'Inactive',

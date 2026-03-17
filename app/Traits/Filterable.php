@@ -42,9 +42,25 @@ trait Filterable
             });
         }
 
+        if (isset($filters['department_id']) && !empty($filters['department_id'])) {
+            $departments = (array) $filters['department_id'];
+
+            $query->whereHas('details', function ($q) use ($departments) {
+                $q->whereIn('department_id', $departments);
+            });
+        }
+
+        if (isset($filters['designation_id']) && !empty($filters['designation_id'])) {
+            $designations = (array) $filters['designation_id'];
+
+            $query->whereHas('details', function ($q) use ($designations) {
+                $q->whereIn('designation_id', $designations);
+            });
+        }
+
         // --- 3. Handle Dynamic / Module-Specific Filters ---
         $dynamicFilters = $filters;
-        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page']);
+        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page'], $dynamicFilters['department_id'], $dynamicFilters['designation_id']);
 
         foreach ($dynamicFilters as $field => $value) {
             if ($value === null || $value === '') {
