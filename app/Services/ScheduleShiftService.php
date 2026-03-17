@@ -121,6 +121,13 @@ class ScheduleShiftService
             ]);
 
             $this->storeWeekends($assignment, $shiftData);
+
+            // Notify user
+            app(NotificationService::class)->send(
+                $userId,
+                'Shift Assigned',
+                "You have been assigned to shift '{$shiftData->name}' from {$from->format('Y-m-d')} to " . ($to ? $to->format('Y-m-d') : 'N/A')
+            );
         } else {
 
             $shift = Shift::find($shiftData['shift_id']);
@@ -138,6 +145,13 @@ class ScheduleShiftService
             ]);
 
             $this->storeWeekends($assignment, $shift);
+
+            // Notify user
+            app(NotificationService::class)->send(
+                $userId,
+                'Shift Assigned',
+                "You have been assigned to shift '{$shiftData['shift_name']}' from {$from->format('Y-m-d')} to " . ($to ? $to->format('Y-m-d') : 'N/A')
+            );
         }
     }
 

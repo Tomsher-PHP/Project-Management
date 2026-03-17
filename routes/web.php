@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -132,4 +133,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/schedule-shift/update', [ScheduleShiftController::class, 'updateSchedule'])->middleware('permission.type:schedule_shift.edit')->name('schedule.shift.update');
     Route::post('/schedule-shift/preview', [ScheduleShiftController::class, 'preview'])->name('schedule.shift.preview');
     // End Schedule shift Routes
+
+    // Notification Routes
+    Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    // End Notification Routes
 });
