@@ -17,19 +17,19 @@
 
                     <!-- Header -->
                     <tr>
-                        <td style="background:#434b57; padding:20px; text-align:center;">
+                        <td style="background:#949596; padding:20px; text-align:center;">
                             <h1 style="color:#ffffff; margin:0; font-size:20px; letter-spacing:0.5px;">
                                 {{ config('app.name') }}
                             </h1>
                         </td>
-                        <td style="background:#434b57; padding:20px; text-align:center;">
+                        <td style="background:#949596; padding:20px; text-align:center;">
                             <img src="{{ url(config('assets.icons.logo')) }}" alt="Logo" height="40">
                         </td>
                     </tr>
 
                     <!-- Body -->
                     <tr>
-                        <td style="padding:30px; color:#333333;">
+                        <td style="padding:30px; color:#333333;" colspan="2">
 
                             <h2 style="margin-top:0; font-size:18px; color:#111827;">
                                 {{ $title }}
@@ -63,7 +63,7 @@
 
                     <!-- Footer -->
                     <tr>
-                        <td style="background:#f9fafb; padding:20px; text-align:center; font-size:12px; color:#9ca3af;">
+                        <td style="background:#f9fafb; padding:20px; text-align:center; font-size:12px; color:#9ca3af;" colspan="2">
                             © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.<br>
                             This is an automated message, please do not reply.
                         </td>

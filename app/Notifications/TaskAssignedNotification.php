@@ -20,7 +20,6 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
      */
     public function __construct(string $title, string $message, ?string $url = null)
     {
-        // dd('notification', $title, $message, $url);
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;

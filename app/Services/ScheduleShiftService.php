@@ -28,6 +28,15 @@ class ScheduleShiftService
                     $data['reason'] ?? null
                 );
             }
+
+            // AFTER ALL ASSIGNMENTS → SEND BULK NOTIFICATION
+            $shift = Shift::find($data['shift_id']);
+
+            app(NotificationService::class)->sendToMany(
+                $data['users'],
+                'Shift Assigned',
+                "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--')
+            );
         });
     }
 
@@ -40,6 +49,15 @@ class ScheduleShiftService
         DB::transaction(function () use ($userId, $dateFrom, $dateTo, $shiftId) {
 
             $this->applyShiftRange($userId, $dateFrom, $dateTo, $shiftId);
+
+            // Notify user
+            $shift = Shift::find($shiftId);
+
+            app(NotificationService::class)->send(
+                $userId,
+                'Shift Assigned',
+                "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--')
+            );
         });
     }
 
@@ -121,13 +139,6 @@ class ScheduleShiftService
             ]);
 
             $this->storeWeekends($assignment, $shiftData);
-
-            // Notify user
-            app(NotificationService::class)->send(
-                $userId,
-                'Shift Assigned',
-                "You have been assigned to shift '{$shiftData->name}' from {$from->format('Y-m-d')} to " . ($to ? $to->format('Y-m-d') : 'N/A')
-            );
         } else {
 
             $shift = Shift::find($shiftData['shift_id']);
@@ -145,13 +156,6 @@ class ScheduleShiftService
             ]);
 
             $this->storeWeekends($assignment, $shift);
-
-            // Notify user
-            app(NotificationService::class)->send(
-                $userId,
-                'Shift Assigned',
-                "You have been assigned to shift '{$shiftData['shift_name']}' from {$from->format('Y-m-d')} to " . ($to ? $to->format('Y-m-d') : 'N/A')
-            );
         }
     }
 

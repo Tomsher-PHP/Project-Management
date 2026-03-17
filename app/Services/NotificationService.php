@@ -4,17 +4,10 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class NotificationService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
     // Single user
     public function send(int $userId, string $title, string $message, ?string $url = null): void
     {
@@ -34,10 +27,12 @@ class NotificationService
     // Multiple users
     public function sendToMany(array $userIds, string $title, string $message, ?string $url = null): void
     {
-        $users = User::whereIn('id', $userIds)->get();
-
-        foreach ($users as $user) {
-            $user->notify(new TaskAssignedNotification($title, $message, $url));
-        }
+        User::whereIn('id', $userIds)
+            ->chunk(50, function ($users) use ($title, $message, $url) {
+                Notification::send(
+                    $users,
+                    new TaskAssignedNotification($title, $message, $url)
+                );
+            });
     }
 }
