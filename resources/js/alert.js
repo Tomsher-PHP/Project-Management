@@ -12,6 +12,10 @@ const Alert = {
             cancelButtonText: options.cancelText || 'Cancel',
             confirmButtonColor: options.confirmColor || '#22c55e',
             cancelButtonColor: options.cancelColor || '#ef4444',
+            customClass: {
+                confirmButton: 'bg-success-300 hover:bg-success-400 text-white',
+                cancelButton: 'bg-error-50 hover:bg-error-100 text-error-200 hover:text-white'
+            }
         });
     },
 
