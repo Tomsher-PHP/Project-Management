@@ -6,8 +6,8 @@ trait Sortable
 {
     public function scopeSort($query, $request)
     {
-        $sortBy = $request->get('sort_by');
-        $sortDir = $request->get('sort_dir', 'asc');
+        $sortBy = isset($request['sort_by']) ? $request['sort_by'] : null;
+        $sortDir = isset($request['sort_dir']) ? $request['sort_dir'] : 'asc';
 
         // Allow only asc/desc
         if (!in_array($sortDir, ['asc', 'desc'])) {

@@ -30,6 +30,7 @@ class TeamController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $teams = Team::filter($request->all())
+            ->sort($request->all())
             ->with([
                 'users',
                 'primaryAttachment'

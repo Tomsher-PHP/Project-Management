@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -10,7 +11,11 @@ use Illuminate\Support\Facades\Storage;
 
 class Team extends Model
 {
-    use SoftDeletes, Filterable;
+    use SoftDeletes, Filterable, Sortable;
+
+    protected $sortable = [
+        'name'
+    ];
 
     protected $fillable = [
         "name",
