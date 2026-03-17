@@ -26,7 +26,11 @@ class RolePermissionController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $roles = ModelsRole::filter($request->all())->sort($request)->paginate($perPage)->withQueryString();
+        $roles = ModelsRole::filter($request->all())
+            ->sort($request->all())
+            ->paginate($perPage)
+            ->withQueryString();
+
         return view('roles.index', compact('roles', 'perPage'));
     }
 

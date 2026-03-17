@@ -29,7 +29,7 @@ class UserController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $users = User::filter($request->all())
-            ->sort($request)
+            ->sort($request->all())
             ->with([
                 'details',
                 'details.department',
