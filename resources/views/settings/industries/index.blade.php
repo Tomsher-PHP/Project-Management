@@ -90,7 +90,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:text-bgray-50">{{ $industry->order }}</span>
+                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $industry->order }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">

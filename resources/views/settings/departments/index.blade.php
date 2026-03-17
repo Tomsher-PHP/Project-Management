@@ -79,7 +79,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
+                                            <div class="flex w-full items-center text-center">
                                                 <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $department->order }}</span>
                                             </div>
                                         </td>
