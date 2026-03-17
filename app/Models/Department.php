@@ -5,16 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Filterable;
+use App\Traits\Sortable;
 
 class Department extends Model
 {
-    use SoftDeletes, Filterable;
+    use SoftDeletes, Filterable, Sortable;
 
     protected $fillable = [
         'name',
         'order',
         'default',
         'status'
+    ];
+
+    protected $sortable = [
+        'name',
+        'order',
     ];
 
     protected function casts(): array

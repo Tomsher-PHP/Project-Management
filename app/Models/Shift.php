@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\Sortable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
-    use Filterable;
+    use Filterable, Sortable;
 
     protected $fillable = [
         'name',
@@ -19,6 +20,10 @@ class Shift extends Model
         'color_code',
         'is_default',
         'status',
+    ];
+
+    protected $sortable = [
+        'name',
     ];
 
     protected function casts(): array
