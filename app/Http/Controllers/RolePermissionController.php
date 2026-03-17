@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RolePermissionRequest;
+use App\Models\Role as ModelsRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class RolePermissionController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $roles = Role::paginate($perPage)->withQueryString();
+        $roles = ModelsRole::filter($request->all())->paginate($perPage)->withQueryString();
         return view('roles.index', compact('roles', 'perPage'));
     }
 

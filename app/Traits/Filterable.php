@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Facades\Schema;
+
 trait Filterable
 {
     public function scopeFilter($query, $filters)
@@ -28,10 +30,6 @@ trait Filterable
                     $query->where('name', 'not like', '%' . $filters['search'] . '%');
                     break;
             }
-        }
-
-        if (isset($filters['status']) && $filters['status'] !== '') {
-            $query->where('status', $filters['status']);
         }
 
         if (isset($filters['role_id']) && !empty($filters['role_id'])) {
@@ -68,9 +66,14 @@ trait Filterable
 
         // --- 3. Handle Dynamic / Module-Specific Filters ---
         $dynamicFilters = $filters;
-        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['status'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page'], $dynamicFilters['department_id'], $dynamicFilters['designation_id'], $dynamicFilters['user_id']);
+        unset($dynamicFilters['search'], $dynamicFilters['search_condition'], $dynamicFilters['role_id'], $dynamicFilters['per_page'], $dynamicFilters['page'], $dynamicFilters['department_id'], $dynamicFilters['designation_id'], $dynamicFilters['user_id']);
 
         foreach ($dynamicFilters as $field => $value) {
+
+            if (!Schema::hasColumn($query->getModel()->getTable(), $field)) {
+                continue; // skip invalid columns
+            }
+
             if ($value === null || $value === '') {
                 continue;
             }
