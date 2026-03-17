@@ -106,7 +106,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <x-status-toggle :model="$team" route="teams.toggleStatus" entity="team" />
+                                                <x-status-toggle :model="$team" route="teams.toggleStatus" entity="team" permission="team.edit" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
