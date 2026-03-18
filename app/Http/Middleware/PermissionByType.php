@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Exceptions\UnauthorizedActionException;
 
 class PermissionByType
 {
@@ -22,7 +23,11 @@ class PermissionByType
         }
 
         if (!$user || !$user->can($permission)) {
-            abort(403, 'Unauthorized action.');
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'You are not allowed to access this page.'], 403);
+            }
+
+            throw new UnauthorizedActionException();
         }
 
         return $next($request);
