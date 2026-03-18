@@ -85,6 +85,36 @@ export function initTomSelect() {
         new TomSelect(el, config);
     });
 
+    // Lazy load tom select
+    document.querySelectorAll('.tom-select-lazy').forEach(el => {
+        if (el.tomselect) return; // Prevent double init
+
+        const sort = el.dataset.sort != "0";
+        const route = el.dataset.route;
+
+        const config = {
+            create: false,
+            persist: false,
+            hideDropdownArrow: false,
+            plugins: ['dropdown_input', 'clear_button'],
+            sortField: sort ? { field: "text", direction: "asc" } : null,
+
+            // Lazy load items via AJAX
+            load: function (query, callback) {
+                if (!query.length) return callback();
+
+                fetch(`${route}?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(json => {
+                        // Expect JSON array [{id: 1, name: 'Afghanistan'}, ...]
+                        callback(json.map(c => ({ value: c.id, text: c.name })));
+                    })
+                    .catch(() => callback());
+            }
+        };
+
+        new TomSelect(el, config);
+    });
 }
 
 //make auto select for dropdown input

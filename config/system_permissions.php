@@ -81,4 +81,10 @@ return [
     'industry.create',
     'industry.edit',
     'industry.delete',
+
+    // customer
+    'customer.view',
+    'customer.create',
+    'customer.edit',
+    'customer.delete',
 ];

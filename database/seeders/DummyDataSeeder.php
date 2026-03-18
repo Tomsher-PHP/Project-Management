@@ -15,29 +15,29 @@ class DummyDataSeeder extends Seeder
     {
         //truncate tables
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('model_has_permissions')->truncate();
-        DB::table('model_has_roles')->truncate();
-        DB::table('role_has_permissions')->truncate();
-        DB::table('users')->truncate();
-        DB::table('user_details')->truncate();
-        //truncate departments and designations if needed
+        // DB::table('model_has_permissions')->truncate();
+        // DB::table('model_has_roles')->truncate();
+        // DB::table('role_has_permissions')->truncate();
+        // DB::table('users')->truncate();
+        // DB::table('user_details')->truncate();
+
         DB::table('departments')->truncate();
         DB::table('designations')->truncate();
         DB::table('technologies')->truncate();
         DB::table('project_categories')->truncate();
         DB::table('industries')->truncate();
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->call([
-            RolePermissionSeeder::class,
             DepartmentSeeder::class,
             DesignationSeeder::class,
-            SuperAdminUserSeeder::class,
-            AdminUserSeeder::class,
-            DummyUserSeeder::class,
             TechnologySeeder::class,
             ProjectCategorySeeder::class,
             IndustrySeeder::class,
+
+            AdminUserSeeder::class,
+            DummyUserSeeder::class,
         ]);
     }
 }

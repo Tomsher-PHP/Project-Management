@@ -86,4 +86,15 @@ return [
         '#fbcfe8',
         '#cffafe',
     ],
+
+    // Emirates list
+    'emirates' => [
+        'abu_dhabi' => 'Abu Dhabi',
+        'ajman' => 'Ajman',
+        'dubai' => 'Dubai',
+        'fujairah' => 'Fujairah',
+        'ras_al_khaimah' => 'Ras Al Khaimah',
+        'sharjah' => 'Sharjah',
+        'umm_al_quwain' => 'Umm Al Quwain',
+    ],
 ];

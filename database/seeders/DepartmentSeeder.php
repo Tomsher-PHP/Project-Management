@@ -27,7 +27,6 @@ class DepartmentSeeder extends Seeder
                 ['name' => $name],
                 [
                     'order' => $key + 1,
-                    'default' => 1,
                     'status' => 1,
                 ]
             );

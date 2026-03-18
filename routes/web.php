@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommonController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
@@ -137,4 +139,16 @@ Route::middleware(['auth'])->group(function () {
     // Notification Routes
     Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
     // End Notification Routes
+
+    // Customer Routes
+    Route::patch('/customers/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus')->middleware('permission.type:customer.edit');
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index']);
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);
+    // End Customer Routes
+
+    // Common Routes
+    Route::get('/countries/search', [CommonController::class, 'search'])->name('countries.search');
+    // End Common Routes
 });

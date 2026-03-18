@@ -6,7 +6,7 @@
 
     <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
 
-        {{-- Profile Image --}}
+        <!-- Profile Image -->
         <div class="flex-shrink-0">
             <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
                 <!-- Preview Image -->
@@ -30,13 +30,13 @@
             </div>
         </div>
 
-        {{-- Basic Information Fields --}}
+        <!-- Basic Information Fields -->
         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
                 Basic Information
             </h3>
 
-            {{-- User Name --}}
+            <!-- User Name -->
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Name
@@ -55,7 +55,7 @@
                 @enderror
             </div>
 
-            {{-- Email --}}
+            <!-- Email -->
             <div class="flex flex-col gap-2">
                 <label for="email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Email
@@ -72,7 +72,7 @@
                 @enderror
             </div>
 
-            {{-- Password --}}
+            <!-- Password -->
             <div class="flex flex-col gap-2">
                 <label for="password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Password
@@ -89,7 +89,7 @@
                 @enderror
             </div>
 
-            {{-- Date of Birth --}}
+            <!-- Date of Birth -->
             <div class="flex flex-col gap-2">
                 <label for="date_of_birth" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Date of Birth
@@ -105,7 +105,7 @@
                 @enderror
             </div>
 
-            {{-- Phone --}}
+            <!-- Phone -->
             <div class="flex flex-col gap-2">
                 <label for="phone" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Phone Number
@@ -122,7 +122,7 @@
                 @enderror
             </div>
 
-            {{-- WhatsApp --}}
+            <!-- WhatsApp -->
             <div class="flex flex-col gap-2">
                 <label for="whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     WhatsApp Number
@@ -139,7 +139,7 @@
                 @enderror
             </div>
 
-            {{-- Gender --}}
+            <!-- Gender -->
             <div class="flex flex-col gap-2">
                 <label for="gender" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Gender
@@ -170,7 +170,7 @@
 
     </div>
 
-    {{-- ================= ORGANIZATION DETAILS ================= --}}
+    <!-- ================= ORGANIZATION DETAILS ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Organization Details
@@ -178,7 +178,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {{-- Role --}}
+            <!-- Role -->
             <div class="flex flex-col gap-2">
                 <label for="role" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Role
@@ -202,7 +202,7 @@
                 @enderror
             </div>
 
-            {{-- Department --}}
+            <!-- Department -->
             <div class="flex flex-col gap-2">
                 <label for="department" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Department
@@ -226,7 +226,7 @@
                 @enderror
             </div>
 
-            {{-- Designation --}}
+            <!-- Designation -->
             <div class="flex flex-col gap-2">
                 <label for="designation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Designation
@@ -250,7 +250,7 @@
                 @enderror
             </div>
 
-            {{-- Reporting To --}}
+            <!-- Reporting To -->
             <div class="flex flex-col gap-2">
                 <label for="reporting_to" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Reporting To
@@ -274,7 +274,7 @@
                 @enderror
             </div>
 
-            {{-- Manager --}}
+            <!-- Manager -->
             <div class="flex flex-col gap-2">
                 <label for="manager" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Manager
@@ -297,7 +297,7 @@
                 @enderror
             </div>
 
-            {{-- Employee ID --}}
+            <!-- Employee ID -->
             <div class="flex flex-col gap-2">
                 <label for="employee_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Employee ID
@@ -313,7 +313,7 @@
                 @enderror
             </div>
 
-            {{-- Date of Joining --}}
+            <!-- Date of Joining -->
             <div class="flex flex-col gap-2">
                 <label for="date_of_joining" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Date of Joining
@@ -332,7 +332,7 @@
         </div>
     </div>
 
-    {{-- ================= EMERGENCY CONTACT ================= --}}
+    <!-- ================= EMERGENCY CONTACT ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Emergency Contact
@@ -340,7 +340,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {{-- Contact Person Name --}}
+            <!-- Contact Person Name -->
             <div class="flex flex-col gap-2">
                 <label for="contact_person_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Contact Person Name
@@ -356,7 +356,7 @@
                 @enderror
             </div>
 
-            {{-- Contact Person Number --}}
+            <!-- Contact Person Number -->
             <div class="flex flex-col gap-2">
                 <label for="contact_person_number" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Contact Person Number
@@ -375,14 +375,14 @@
         </div>
     </div>
 
-    {{-- ================= ADDRESS ================= --}}
+    <!-- ================= ADDRESS ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Address Information
         </h3>
 
         <div class="grid grid-cols-1 gap-6">
-            {{-- Address --}}
+            <!-- Address -->
             <div class="flex flex-col gap-2">
                 <label for="address" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Address
@@ -400,7 +400,7 @@
         </div>
     </div>
 
-    {{-- Submit Button --}}
+    <!-- Submit Button -->
     <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($user))
