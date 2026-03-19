@@ -24,6 +24,8 @@ class Team extends Model
         "updated_by"
     ];
 
+    protected $searchable = ['name'];
+
     protected function casts(): array
     {
         return [

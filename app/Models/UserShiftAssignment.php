@@ -21,6 +21,8 @@ class UserShiftAssignment extends Model
         'reason',
     ];
 
+    protected $searchable = ['shift_name', 'date_from', 'date_to'];
+
     protected function casts(): array
     {
         return [

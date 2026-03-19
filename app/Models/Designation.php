@@ -23,6 +23,8 @@ class Designation extends Model
         'order',
     ];
 
+    protected $searchable = ['name'];
+
     protected function casts(): array
     {
         return [
@@ -32,6 +34,7 @@ class Designation extends Model
             'status' => 'boolean',
         ];
     }
+
 
     public function scopeActive($query)
     {

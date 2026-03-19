@@ -14,4 +14,13 @@ class Role extends SpatieRole
     protected $sortable = [
         'name',
     ];
+
+    protected $searchable = ['name'];
+
+    protected function casts(): array
+    {
+        return [
+            'name' => 'string',
+        ];
+    }
 }

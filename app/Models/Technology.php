@@ -23,6 +23,8 @@ class Technology extends Model
         'order',
     ];
 
+    protected $searchable = ['name'];
+
     protected $casts = [
         'name' => 'string',
         'order' => 'integer',

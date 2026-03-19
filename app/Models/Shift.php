@@ -26,6 +26,8 @@ class Shift extends Model
         'name',
     ];
 
+    protected $searchable = ['name'];
+
     protected function casts(): array
     {
         return [

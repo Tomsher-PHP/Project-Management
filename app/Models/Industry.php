@@ -24,6 +24,8 @@ class Industry extends Model
         'order',
     ];
 
+    protected $searchable = ['name'];
+
     protected function casts(): array
     {
         return [
@@ -34,6 +36,7 @@ class Industry extends Model
             'status' => 'boolean',
         ];
     }
+
 
     public function parent()
     {

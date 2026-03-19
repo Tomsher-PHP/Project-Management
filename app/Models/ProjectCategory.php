@@ -23,6 +23,8 @@ class ProjectCategory extends Model
         'order',
     ];
 
+    protected $searchable = ['name'];
+
     protected function casts(): array
     {
         return [

@@ -43,6 +43,8 @@ class User extends Authenticatable
         'name',
     ];
 
+    protected $searchable = ['name', 'email'];
+
     /**
      * The attributes that should be hidden for serialization.
      *
