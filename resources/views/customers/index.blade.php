@@ -44,11 +44,6 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Website</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Country</span>
                                         </div>
                                     </td>
@@ -80,7 +75,7 @@
                                             <div class="flex items-center gap-5">
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $customer->name }}
+                                                        {{ $customer->company_name }}
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Customer Code: {{ $customer->customer_code }}</span>
@@ -91,17 +86,27 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $customer->industry->name ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $customer->industry->name ?? '--' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                            <div class="flex flex-col w-full">
+
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                    {{ $customer->country->name ?? '--' }}
+                                                </span>
+
+                                                @if (!empty($customer->emirate))
+                                                    <span class="text-sm text-gray-500 dark:text-bgray-300 px-4">
+                                                        {{ ucfirst($customer->emirate) }}
+                                                    </span>
+                                                @endif
+
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $customer->website ?? '--' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $customer->country->name ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $customer->sales_person ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -114,11 +119,9 @@
                                                 @can('customer.edit')
                                                     <x-edit-button :action="route('customers.edit', $customer->id)" />
                                                 @endcan
-                                                @if (auth()->id() != $customer->id)
-                                                    @can('customer.delete')
-                                                        <x-delete-form :action="route('customers.destroy', $customer->id)" />
-                                                    @endcan
-                                                @endif
+                                                @can('customer.delete')
+                                                    <x-delete-form :action="route('customers.destroy', $customer->id)" />
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -138,7 +141,7 @@
 
     <!-- Filter drawer -->
     <x-filters.drawer>
-        <x-filters.input-search name="search" label="Name" />
+        <x-filters.input-search name="company_name" label="Name" />
         <x-filters.input name="company_email" label="Company Email" />
         <x-filters.multi-select name="industry_id" label="Industry" :options="$industries" />
         <x-filters.select name="status" label="Status" :options="[

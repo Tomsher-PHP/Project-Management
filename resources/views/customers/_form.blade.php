@@ -29,7 +29,7 @@
             <!-- Company Email -->
             <div class="flex flex-col gap-2">
                 <label for="company_email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Email</label>
-                <input type="email" id="company_email" name="company_email" value="{{ old('company_email', $customer->company_email ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('company_email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                <input type="email" id="company_email" name="company_email" value="{{ old('company_email', $customer->company_email ?? '') }}" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('company_email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
                 @error('company_email')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
@@ -77,9 +77,13 @@
             <div class="flex flex-col gap-2">
                 <label for="registered_country_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Registered Country</label>
                 <select name="registered_country_id" id="registered_country_id" class="tom-select-lazy w-full @error('registered_country_id') border-b-alertsErrorBase @enderror" data-placeholder="Start typing to search..." data-sort="0" data-route="{{ route('countries.search') }}">
-                    <option value="{{ old('registered_country_id', $customer->registered_country_id ?? '') }}" selected hidden>
-                        {{ old('registered_country_name', $customer->registered_country_name ?? 'Select Country') }}
-                    </option>
+
+                    @if (old('registered_country_id', $customer->registered_country_id ?? false))
+                        <option value="{{ old('registered_country_id', $customer->registered_country_id ?? '') }}" selected>
+                            {{ old('registered_country_name', $customer->country->name ?? '') }}
+                        </option>
+                    @endif
+
                 </select>
                 @error('registered_country_id')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
@@ -144,13 +148,16 @@
 
     <!-- ================= PRIMARY CONTACT ================= -->
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Primary Contact Information</h3>
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Contact Information</h3>
+        <!-- para for primary contact -->
+        <p class="text-base font-medium text-bgray-600 dark:text-bgray-50">Primary point of contact information for this customer.</p>
+        <div class="h-4"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Contact Name -->
             <div class="flex flex-col gap-2">
                 <label for="contact_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name</label>
-                <input type="text" id="contact_name" name="contact_name" value="{{ old('contact_name', $customer->contact_name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_name')
+                <input type="text" id="contact_name" name="primary_name" value="{{ old('primary_name', $customer->primaryContact->name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_name')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -158,8 +165,8 @@
             <!-- Contact Email -->
             <div class="flex flex-col gap-2">
                 <label for="contact_email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Email</label>
-                <input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email', $customer->contact_email ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_email')
+                <input type="email" id="contact_email" name="primary_email" value="{{ old('primary_email', $customer->primaryContact->email ?? '') }}" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_email')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -167,8 +174,8 @@
             <!-- Designation -->
             <div class="flex flex-col gap-2">
                 <label for="contact_designation" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Designation</label>
-                <input type="text" id="contact_designation" name="contact_designation" value="{{ old('contact_designation', $customer->contact_designation ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_designation') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_designation')
+                <input type="text" id="contact_designation" name="primary_designation" value="{{ old('primary_designation', $customer->primaryContact->designation ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('primary_designation') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_designation')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -176,8 +183,8 @@
             <!-- Mobile -->
             <div class="flex flex-col gap-2">
                 <label for="contact_mobile" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Mobile Number</label>
-                <input type="text" id="contact_mobile" name="contact_mobile" value="{{ old('contact_mobile', $customer->contact_mobile ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_mobile') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_mobile')
+                <input type="text" id="contact_mobile" name="primary_mobile" value="{{ old('primary_mobile', $customer->primaryContact->mobile ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('primary_mobile') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_mobile')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -185,8 +192,8 @@
             <!-- Landline -->
             <div class="flex flex-col gap-2">
                 <label for="contact_landline" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Landline</label>
-                <input type="text" id="contact_landline" name="contact_landline" value="{{ old('contact_landline', $customer->contact_landline ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_landline') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_landline')
+                <input type="text" id="contact_landline" name="primary_landline" value="{{ old('primary_landline', $customer->primaryContact->landline ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('primary_landline') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_landline')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -194,12 +201,23 @@
             <!-- WhatsApp -->
             <div class="flex flex-col gap-2">
                 <label for="contact_whatsapp" class="text-base font-medium text-bgray-600 dark:text-bgray-50">WhatsApp Number</label>
-                <input type="text" id="contact_whatsapp" name="contact_whatsapp" value="{{ old('contact_whatsapp', $customer->contact_whatsapp ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('contact_whatsapp') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('contact_whatsapp')
+                <input type="text" id="contact_whatsapp" name="primary_whatsapp" value="{{ old('primary_whatsapp', $customer->primaryContact->whatsapp ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('primary_whatsapp') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('primary_whatsapp')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
         </div>
+
+        <div class="pt-6 border-t flex justify-left dark:border-darkblack-400 dark:text-white">
+            <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
+                + Extra Contacts
+            </button>
+        </div>
+
+    </div>
+
+    <div id="extraContactsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        @include('customers._contact-template-card', ['customer' => $customer])
     </div>
 
     <!-- ================= SUBMIT BUTTON ================= -->

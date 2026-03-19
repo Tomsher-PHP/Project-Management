@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Industry;
 use App\Services\CustomerServices;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class CustomerController extends Controller
 {
@@ -48,31 +49,49 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request, CustomerServices $service)
     {
-        dd($request->all());
-        $service->createUser($request->validated());
+        $service->create($request->validated());
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer created successfully.');
     }
 
-    public function edit(string $id)
+    public function edit(Customer $customer)
     {
-        $customer = Customer::findOrFail($id);
-        return view('customers.edit', compact('customer'));
+        $industries = Industry::active()->orderBy('order', 'asc')->get();
+        $emirates = config('constants.emirates');
+
+        // Generate customer code
+        $customerCode = $customer->customer_code;
+
+        return view('customers.edit', compact('customer', 'industries', 'emirates', 'customerCode'));
     }
 
     public function update(CustomerRequest $request, Customer $customer, CustomerServices $service)
     {
-        $service->updateUser($customer, $request->validated());
+        $service->update($customer, $request->validated());
 
         return redirect()->back()->with('success', 'Customer updated successfully.');
     }
 
     public function destroy(Customer $customer)
     {
+        $customer->contacts()->delete();
         $customer->delete();
 
         return redirect()->route('customers.index')
             ->with('success', 'Customer deleted successfully.');
+    }
+
+    public function toggleStatus(Request $request)
+    {
+        $customer = Customer::findOrFail($request->id);
+        $customer->status = !$customer->status;
+        $customer->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $customer->status,
+            'message' => 'Status updated successfully'
+        ], Response::HTTP_OK);
     }
 }

@@ -23,4 +23,49 @@
         </div>
         <!-- write your code here-->
     </main>
+
+    <!-- Modal content start -->
+    <x-add-form-modal modalId="multi-step-modal" module="Contact" formId="customerContactForm" action="#" button="Add">
+
+        <div class="grid grid-cols-2 gap-4">
+
+            <!-- Name -->
+            <div class="flex flex-col">
+                <input type="text" name="name" placeholder="Name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            <!-- Email -->
+            <div class="flex flex-col">
+                <input type="email" name="email" placeholder="Email" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            <!-- Designation -->
+            <div class="flex flex-col">
+                <input type="text" name="designation" placeholder="Designation" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            <!-- Mobile -->
+            <div class="flex flex-col">
+                <input type="text" name="mobile" placeholder="Mobile Number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            <!-- Landline -->
+            <div class="flex flex-col">
+                <input type="text" name="landline" placeholder="Landline" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="flex flex-col">
+                <input type="text" name="whatsapp" placeholder="WhatsApp Number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            </div>
+
+        </div>
+
+    </x-add-form-modal>
+
+    @include('customers._contact-template-card')
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/customer-contact.js') }}"></script>
+@endpush

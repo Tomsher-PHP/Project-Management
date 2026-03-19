@@ -38,6 +38,8 @@ class Customer extends Model
         'company_name',
     ];
 
+    protected $searchable = ['company_name', 'company_email'];
+
     public static function booted()
     {
         static::creating(function ($model) {
@@ -73,10 +75,10 @@ class Customer extends Model
         return $this->belongsTo(Industry::class);
     }
 
-    // public function country()
-    // {
-    //     return $this->belongsTo(Country::class, 'registered_country_id');
-    // }
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'registered_country_id');
+    }
 
     public function contacts()
     {
@@ -87,6 +89,12 @@ class Customer extends Model
     {
         return $this->hasOne(CustomerContact::class)->where('is_primary', true);
     }
+
+    public function extraContacts()
+    {
+        return $this->hasMany(CustomerContact::class)->where('is_primary', false);
+    }
+
 
     public function scopeActive($query)
     {
