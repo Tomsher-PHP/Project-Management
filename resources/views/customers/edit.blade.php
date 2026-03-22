@@ -15,6 +15,9 @@
                             <div class="mt-8">
                                 @include('customers._form')
                             </div>
+                            {{-- @if ($errors->any())
+                                @dd($errors->all());
+                            @endif --}}
                         </div>
                     </div>
                 </div>

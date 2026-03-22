@@ -81,7 +81,6 @@ class CustomerServices
         // Additional Contacts
         if (!empty($data['contacts'])) {
             foreach ($data['contacts'] as $contact) {
-
                 $record = $customer->contacts()->updateOrCreate(
                     ['id' => $contact['id'] ?? null], // important for edit
                     [

@@ -1,12 +1,16 @@
 let contactIndex = 0;
+let editingIndex = null;
+let editingCard = null;
 
 $(document).ready(function () {
 
+    const modal = $('#multi-step-modal');
+    const form = modal.find('form');
+    contactIndex = $('#extraContactsContainer .contact-item').length;
+
     // OPEN CREATE
     $('.modal-open').on('click', function () {
-
-        let modalId = $(this).data('target');
-        let modal = $(modalId);
+        editingIndex = null;
 
         let module = $(this).data('module');
 
@@ -17,6 +21,24 @@ $(document).ready(function () {
         modal.removeClass('hidden');
 
         clearForms(modal.find('.modal-form'));
+    });
+
+    // --- Edit Contact ---
+    $(document).on('click', '.edit-contact', function () {
+        editingCard = $(this).closest('.contact-item');
+        editingIndex = editingCard.index();
+
+        // Load data into modal
+        form.find('[name="name"]').val(editingCard.find('.contact-name-input').val());
+        form.find('[name="email"]').val(editingCard.find('.contact-email-input').val());
+        form.find('[name="designation"]').val(editingCard.find('.contact-designation-input').val());
+        form.find('[name="mobile"]').val(editingCard.find('.contact-mobile-input').val());
+        form.find('[name="landline"]').val(editingCard.find('.contact-landline-input').val());
+        form.find('[name="whatsapp"]').val(editingCard.find('.contact-whatsapp-input').val());
+
+        modal.find('.modal-title').text('Edit Contact');
+        modal.find('#addDataBtn').text('Update');
+        modal.removeClass('hidden');
     });
 
     // CLOSE MODAL
@@ -52,11 +74,31 @@ $(document).ready(function () {
             return;
         }
 
-        const template = createContactTemplate(data, contactIndex);
+        // EDIT MODE
+        if (editingCard) {
 
-        $('#extraContactsContainer').append(template);
+            editingCard.find('.contact-name').text(data.name);
+            editingCard.find('.contact-email').text(data.email ?? '--');
+            editingCard.find('.contact-designation').text(data.designation ?? '--');
+            editingCard.find('.contact-mobile').text(data.mobile ?? '--');
+            editingCard.find('.contact-landline').text(data.landline ?? '--');
+            editingCard.find('.contact-whatsapp').text(data.whatsapp ?? '--');
 
-        contactIndex++;
+            // Update hidden inputs
+            Object.entries(data).forEach(([key, value]) => {
+                editingCard.find(`.contact-${key}-input`).val(value);
+            });
+
+        } else {
+            // CREATE MODE
+            const template = createContactTemplate(data, contactIndex);
+            $('#extraContactsContainer').append(template);
+            contactIndex++;
+        }
+
+        // Reset state
+        editingCard = null;
+        editingIndex = null;
 
         clearForms(form);
         modal.addClass('hidden').removeClass('flex');
@@ -64,7 +106,8 @@ $(document).ready(function () {
 
     // REMOVE CONTACT
     $(document).on('click', '.remove-contact', function () {
-        $(this).closest('.border').remove();
+        const card = $(this).closest('.contact-item');
+        card.remove();
     });
 
     // Get form data
@@ -81,7 +124,6 @@ $(document).ready(function () {
 
     // Create template
     const createContactTemplate = (data, index) => {
-
         const template = $($('#contact-template').html());
 
         template.find('.contact-name').text(data.name);

@@ -48,6 +48,7 @@ class CustomerRequest extends FormRequest
 
             // Additional Contacts
             'contacts' => 'nullable|array',
+            'contacts.*.id' => 'nullable|exists:customer_contacts,id',
             'contacts.*.name' => 'required|string|max:255',
             'contacts.*.email' => 'nullable|email|max:150',
             'contacts.*.landline' => 'nullable|string|max:255',
