@@ -1,6 +1,12 @@
 $(function () {
   //search
   $(document).on("keydown", (e) => {
+
+    // ✅ Allow typing inside inputs / textarea
+    if ($(e.target).is('input, textarea, select') || e.target.isContentEditable) {
+      return;
+    }
+
     switch (e.key) {
       case "k":
       case "Control":
@@ -24,6 +30,11 @@ $(function () {
   });
   //drawer key access
   $(document).on("keydown", (e) => {
+    // ✅ Allow typing inside inputs / textarea
+    if ($(e.target).is('input, textarea, select') || e.target.isContentEditable) {
+      return;
+    }
+
     switch (e.key) {
       case "b":
       case "Control":
@@ -104,9 +115,8 @@ accordionHeader.forEach((header) => {
     let accordionMaxHeight = accordionContent.style.maxHeight;
 
     if (accordionMaxHeight == "0px" || accordionMaxHeight.length == 0) {
-      accordionContent.style.maxHeight = `${
-        accordionContent.scrollHeight + 32
-      }px`;
+      accordionContent.style.maxHeight = `${accordionContent.scrollHeight + 32
+        }px`;
       header.querySelector(".fas").classList.remove("fa-plus");
       header.querySelector(".fas").classList.add("fa-minus");
       header.querySelector(".title").classList.add("font-bold");
@@ -282,28 +292,28 @@ navSubmenu();
 
 
 
-  // Check the initial theme preference and apply the appropriate class
-  if (localStorage.theme === 'dark' || (window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+// Check the initial theme preference and apply the appropriate class
+if (localStorage.theme === 'dark' || (window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
+
+// Toggle the theme when the button is clicked
+var themeToggle = document.getElementById('theme-toggle');
+themeToggle.addEventListener('click', function () {
+  // Check the current theme and toggle it
+  if (localStorage.theme === 'dark') {
+    localStorage.theme = 'light';
+  } else {
+    localStorage.theme = 'dark';
+  }
+
+  // Apply the new theme
+  if (localStorage.theme === 'dark') {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
   }
-
-  // Toggle the theme when the button is clicked
-  var themeToggle = document.getElementById('theme-toggle');
-  themeToggle.addEventListener('click', function() {
-    // Check the current theme and toggle it
-    if (localStorage.theme === 'dark') {
-      localStorage.theme = 'light';
-    } else {
-      localStorage.theme = 'dark';
-    }
-
-    // Apply the new theme
-    if (localStorage.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  });
+});
 
