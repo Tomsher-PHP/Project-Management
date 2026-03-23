@@ -45,7 +45,7 @@
         <div class="lg:col-span-3">
             <div class="flex flex-col gap-2">
                 <label for="team_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Team Name
+                    Team Name <x-red-star />
                 </label>
 
                 <input type="text" name="name" id="team_name" value="{{ old('name', $team->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400

@@ -6,7 +6,7 @@
         <!-- Users -->
         <div class="flex flex-col gap-2">
             <label for="user-select" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                Select Users
+                Select Users <x-red-star />
             </label>
 
             <select name="users[]" multiple id="user-select" class="tom-select-multiple w-full">
@@ -27,7 +27,7 @@
         <!-- Shift -->
         <div class="flex flex-col gap-2">
             <label for="shift_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                Shift
+                Shift <x-red-star />
             </label>
 
             <select name="shift_id" id="shift_id" class="select-subtypes w-full" data-sort="0">
@@ -52,7 +52,7 @@
         <!-- Date From -->
         <div class="flex flex-col gap-2">
             <label for="date_from" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                Date From
+                Date From <x-red-star />
             </label>
 
             <input type="date" name="date_from" value="{{ old('date_from') }}" id="date_from" data-format="{{ config('constants.date_format') }}" data-min-date="{{ now()->addDay()->format('Y-m-d') }}" placeholder="YYYY-MM-DD" class="datepicker w-full rounded-lg border border-gray-300 p-2 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">

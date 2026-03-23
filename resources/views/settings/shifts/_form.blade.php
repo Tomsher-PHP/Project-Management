@@ -15,7 +15,7 @@
             {{-- Shift Name --}}
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Shift Name
+                    Shift Name <x-red-star />
                 </label>
 
                 <input type="text" id="name" name="name" value="{{ old('name', $shift->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2
@@ -81,7 +81,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
             <div class="flex flex-col gap-2">
-                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time</label>
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time <x-red-star /></label>
                 <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
 
                 @error('start_time')
@@ -93,7 +93,7 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time</label>
+                <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time <x-red-star /></label>
                 <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
 
                 @error('end_time')
@@ -106,7 +106,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Break Duration (Minutes)
+                    Break Duration (Minutes) <x-red-star />
                 </label>
 
                 @php

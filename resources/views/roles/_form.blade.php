@@ -17,7 +17,7 @@
             {{-- Role Name --}}
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Role Name
+                    Role Name <x-red-star />
                 </label>
 
                 <input type="text" id="name" name="name" value="{{ old('name', $role->name ?? '') }}" required class="w-full rounded-lg border border-gray-300 p-2

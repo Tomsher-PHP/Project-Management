@@ -39,7 +39,7 @@
             <!-- User Name -->
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Name
+                    Name <x-red-star />
                 </label>
 
                 <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
@@ -58,7 +58,9 @@
             <!-- Email -->
             <div class="flex flex-col gap-2">
                 <label for="email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Email
+                    Email @if (!isset($user))
+                        <x-red-star />
+                    @endif
                 </label>
 
                 <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
@@ -75,7 +77,9 @@
             <!-- Password -->
             <div class="flex flex-col gap-2">
                 <label for="password" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Password
+                    Password @if (!isset($user))
+                        <x-red-star />
+                    @endif
                 </label>
 
                 <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
@@ -181,7 +185,7 @@
             <!-- Role -->
             <div class="flex flex-col gap-2">
                 <label for="role" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Role
+                    Role <x-red-star />
                 </label>
 
                 <select name="role" id="role" class="select-subtypes w-full">
