@@ -19,7 +19,7 @@
 
             <!-- Company Name -->
             <div class="flex flex-col gap-2">
-                <label for="company_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Name</label>
+                <label for="company_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Name <x-red-star /></label>
                 <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $customer->company_name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('company_name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
                 @error('company_name')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
@@ -60,7 +60,7 @@
 
             <!-- Sales Person -->
             <div class="flex flex-col gap-2">
-                <label for="sales_person" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sales Person</label>
+                <label for="sales_person" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sales Person <x-red-star /></label>
                 <input type="text" id="sales_person" name="sales_person" value="{{ old('sales_person', $customer->sales_person ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('sales_person') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
                 @error('sales_person')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
@@ -155,7 +155,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Contact Name -->
             <div class="flex flex-col gap-2">
-                <label for="contact_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name</label>
+                <label for="contact_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Contact Name <x-red-star /></label>
                 <input type="text" id="contact_name" name="primary_name" value="{{ old('primary_name', $customer->primaryContact->name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
                 @error('primary_name')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>

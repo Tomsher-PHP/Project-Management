@@ -26,7 +26,8 @@ $(document).ready(function () {
     // --- Edit Contact ---
     $(document).on('click', '.edit-contact', function () {
         editingCard = $(this).closest('.contact-item');
-        editingIndex = editingCard.index();
+        // editingIndex = editingCard.index();
+        editingIndex = $(this).data('index');
 
         // Load data into modal
         form.find('[name="name"]').val(editingCard.find('.contact-name-input').val());
@@ -75,7 +76,7 @@ $(document).ready(function () {
         }
 
         // EDIT MODE
-        if (editingCard) {
+        if (editingCard !== null) {
 
             editingCard.find('.contact-name').text(data.name);
             editingCard.find('.contact-email').text(data.email ?? '--');
@@ -108,6 +109,25 @@ $(document).ready(function () {
     $(document).on('click', '.remove-contact', function () {
         const card = $(this).closest('.contact-item');
         card.remove();
+
+        // Reindex all cards
+        $('#extraContactsContainer .contact-item').each(function (i) {
+
+            // Update edit button index
+            $(this).find('.edit-contact').attr('data-index', i);
+
+            // Update input names
+            $(this).find('input').each(function () {
+                let name = $(this).attr('name');
+                if (name) {
+                    let newName = name.replace(/contacts\[\d+\]/, `contacts[${i}]`);
+                    $(this).attr('name', newName);
+                }
+            });
+        });
+
+        // Reset global index
+        contactIndex = $('#extraContactsContainer .contact-item').length;
     });
 
     // Get form data
@@ -125,6 +145,8 @@ $(document).ready(function () {
     // Create template
     const createContactTemplate = (data, index) => {
         const template = $($('#contact-template').html());
+
+        template.find('.edit-contact').attr('data-index', index);
 
         template.find('.contact-name').text(data.name);
         template.find('.contact-email').text(data.email ?? '--');

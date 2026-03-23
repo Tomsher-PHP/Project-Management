@@ -15,9 +15,6 @@
                             <div class="mt-8">
                                 @include('customers._form')
                             </div>
-                            {{-- @if ($errors->any())
-                                @dd($errors->all());
-                            @endif --}}
                         </div>
                     </div>
                 </div>
@@ -64,8 +61,6 @@
         </div>
 
     </x-add-form-modal>
-
-    @include('customers._contact-template-card', ['customer' => null])
 @endsection
 @push('scripts')
     <script src="{{ asset('assets/js/customer-contact.js') }}"></script>

@@ -62,8 +62,6 @@
         </div>
 
     </x-add-form-modal>
-
-    @include('customers._contact-template-card')
 @endsection
 
 @push('scripts')
