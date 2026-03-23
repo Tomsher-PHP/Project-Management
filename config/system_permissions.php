@@ -87,4 +87,10 @@ return [
     'customer.create',
     'customer.edit',
     'customer.delete',
+
+    // project status
+    'project_status.view',
+    'project_status.create',
+    'project_status.edit',
+    'project_status.delete',
 ];
