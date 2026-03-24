@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->string('customer_code')->unique();
-            $table->string('company_name');
-            $table->string('company_email', 150)->nullable();
+            $table->string('name');
+            $table->string('email', 150)->nullable();
 
             $table->foreignId('industry_id')->nullable()->constrained()->nullOnDelete();
             $table->string('website')->nullable();

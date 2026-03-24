@@ -27,8 +27,8 @@ class CustomerRequest extends FormRequest
 
         return [
             // Customer
-            'company_name' => 'required|string|max:255',
-            'company_email' => ['nullable', 'email', 'max:150', Rule::unique('customers', 'company_email')->ignore($customerId)],
+            'name' => 'required|string|max:255',
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('customers', 'email')->ignore($customerId)],
             'industry_id' => 'nullable|exists:industries,id',
             'website' => 'nullable|url|max:255',
             'registered_country_id' => 'nullable|exists:countries,id',
@@ -82,8 +82,8 @@ class CustomerRequest extends FormRequest
     {
         return [
             // Customer
-            'company_name.required' => 'Company name is required.',
-            'company_email.email' => 'Please enter a valid email address.',
+            'name.required' => 'Company name is required.',
+            'email.email' => 'Please enter a valid email address.',
             'industry_id.exists' => 'Selected industry is invalid.',
             'registered_country_id.exists' => 'Selected country is invalid.',
             'website.url' => 'Please enter a valid website URL.',
