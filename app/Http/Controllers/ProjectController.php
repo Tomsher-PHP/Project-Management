@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Customer;
 use App\Models\Project;
+use App\Models\ProjectCategory;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
@@ -41,13 +42,6 @@ class ProjectController extends Controller
         return view('projects.index', compact('projects', 'perPage', 'customers', 'statuses', 'priorities', 'types'));
     }
 
-    public function create()
-    {
-        $users = User::active()->get();
-
-        return view('projects.create', compact('users', 'customers', 'statuses', 'technologies'));
-    }
-
     public function store(ProjectRequest $request, ProjectServices $service)
     {
         $project = $service->create($request->validated());
@@ -55,15 +49,20 @@ class ProjectController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Project created successfully.',
-            'project' => $project,
+            'redirect_url' => route('projects.edit', $project->id),
         ], Response::HTTP_OK);
     }
 
     public function edit(Project $project)
     {
-        $users = User::active()->get();
+        $users = User::active()->where('is_super_admin', 0)->get();
+        $customers = Customer::active()->get();
+        $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
+        $priorities = config('constants.project_priorities');
+        $projectStages = config('constants.project_stages');
+        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
 
-        return view('projects.edit', compact('project', 'users'));
+        return view('projects.detail-page', compact('project', 'users', 'customers', 'statuses', 'priorities', 'projectStages', 'projectCategories'));
     }
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)

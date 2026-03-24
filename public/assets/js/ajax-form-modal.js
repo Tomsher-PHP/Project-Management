@@ -94,7 +94,13 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.status) {
                     Alert.success(response.message);
-                    location.reload();
+
+                    // Redirect to route if provided
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        location.reload();
+                    }
                 }
             },
             error: function (xhr) {

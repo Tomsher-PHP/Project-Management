@@ -84,15 +84,16 @@
 
                                                 <!-- Content -->
                                                 <div class="flex-1">
-                                                    <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $project->name }}
-                                                    </h4>
+                                                    <a href="{{ route('projects.edit', $project->id) }}">
+                                                        <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
+                                                            {{ $project->name }}
+                                                        </h4>
+                                                        <p class="text-sm text-bgray-500">
+                                                            Code: {{ $project->project_code ?? '--' }}
+                                                        </p>
+                                                    </a>
 
                                                     <div class="flex flex-col">
-                                                        <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">
-                                                            Project Code: {{ $project->project_code }}
-                                                        </span>
-
                                                         <span class="text-gray-500 dark:text-bgray-50">
                                                             Customer: {{ $project->customer->name ?? '--' }}
                                                         </span>
@@ -119,14 +120,14 @@
                                             <div class="flex flex-col w-full">
 
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                    {{ $project->start_date->format('d M Y') ?? '--' }}
+                                                    {{ $project->start_date->format(config('constants.date_format')) ?? '--' }}
                                                 </span>
 
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->internal_end_date->format('d M Y') ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->internal_end_date->format(config('constants.date_format')) ?? '--' }}</span>
                                             </div>
                                         </td>
                                         {{-- <td class="px-6 py-5 xl:w-[165px] xl:px-0">

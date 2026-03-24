@@ -186,6 +186,14 @@
                 borderRadius: 5,
             },
         ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.location.pathname.includes('/projects')) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('projectTab_')) localStorage.removeItem(key);
+                });
+            }
+        });
     </script>
 
     @stack('scripts')
