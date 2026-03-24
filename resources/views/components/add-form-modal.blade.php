@@ -23,7 +23,7 @@
                     {{ $slot }}
 
                     <div class="flex justify-end">
-                        <button type="button" id="addDataBtn" class="rounded-lg bg-success-300 px-6 py-3 text-white">
+                        <button type="button" id="addDataBtn" class="rounded-lg bg-success-300 px-6 py-3 text-white hover:bg-success-400">
                             {{ $button }}
                         </button>
                     </div>

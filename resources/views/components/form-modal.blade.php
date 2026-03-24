@@ -23,7 +23,7 @@
                     {{ $slot }}
 
                     <div class="flex justify-end">
-                        <button type="submit" id="submitBtn" class="submit-btn rounded-lg bg-success-300 px-6 py-3 text-white">
+                        <button type="submit" id="submitBtn" class="submit-btn rounded-lg bg-success-300 px-6 py-3 text-white hover:bg-success-400">
                             {{ $button }}
                         </button>
                     </div>

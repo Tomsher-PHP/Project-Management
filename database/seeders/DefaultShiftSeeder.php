@@ -6,6 +6,7 @@ use App\Models\Shift;
 use App\Models\ShiftWeekend;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DefaultShiftSeeder extends Seeder
 {
@@ -14,6 +15,11 @@ class DefaultShiftSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        ShiftWeekend::truncate();
+        Shift::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $shift = Shift::firstOrCreate(
             ['is_default' => true],
             [

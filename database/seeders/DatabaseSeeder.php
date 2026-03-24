@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             SuperAdminUserSeeder::class,
             DefaultShiftSeeder::class,
+            ProjectStatusSeeder::class,
             // DepartmentSeeder::class,
             // DesignationSeeder::class,
             // TechnologySeeder::class,

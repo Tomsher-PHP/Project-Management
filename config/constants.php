@@ -97,4 +97,63 @@ return [
         'sharjah' => 'Sharjah',
         'umm_al_quwain' => 'Umm Al Quwain',
     ],
+
+    // Project Roles constant
+    'project_roles' => [
+        'team_leader' => 'Team Leader',
+        'coordinator' => 'Coordinator',
+        'member' => 'Member',
+    ],
+
+    // Project Priority constant
+    'project_priorities' => [
+        'urgent' => [
+            'label' => 'Urgent',
+            'color' => 'red',
+            'bg_class' => 'bg-error-300',
+            'text_class' => 'text-error-300',
+        ],
+        'high' => [
+            'label' => 'High',
+            'color' => 'orange',
+            'bg_class' => 'bg-orange',
+            'text_class' => 'text-warning-300',
+        ],
+        'medium' => [
+            'label' => 'Medium',
+            'color' => 'yellow',
+            'bg_class' => 'bg-primary',
+            'text_class' => 'text-blue-500',
+        ],
+        'low' => [
+            'label' => 'Low',
+            'color' => 'green',
+            'bg_class' => 'bg-success-400',
+            'text_class' => 'text-success-400',
+        ],
+    ],
+
+    // Project Type constant
+    'project_types' => [
+        'agile' => 'Agile',
+        'simple' => 'Simple',
+    ],
+
+    // Project Status constant
+    'project_statuses' => [
+        'pending' => 'Pending',
+        'in_progress' => 'In Progress',
+        'completed' => 'Completed',
+        'on_hold' => 'On Hold',
+        'cancelled' => 'Cancelled',
+    ],
+
+    // Project Stage constant
+    'project_stages' => [
+        'planning' => 'Planning',
+        'development' => 'Development',
+        'testing' => 'Testing',
+        'deployment' => 'Deployment',
+        'maintenance' => 'Maintenance',
+    ],
 ];
