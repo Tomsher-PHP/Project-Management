@@ -14,8 +14,8 @@ class Customer extends Model
 
     protected $fillable = [
         'customer_code',
-        'company_name',
-        'company_email',
+        'name',
+        'email',
         'industry_id',
         'website',
         'registered_country_id',
@@ -35,10 +35,10 @@ class Customer extends Model
     ];
 
     protected $sortable = [
-        'company_name',
+        'name',
     ];
 
-    protected $searchable = ['company_name', 'company_email'];
+    protected $searchable = ['name', 'email'];
 
     public static function booted()
     {

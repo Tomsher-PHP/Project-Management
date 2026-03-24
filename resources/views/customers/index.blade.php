@@ -34,7 +34,7 @@
                                     </td>
                                     <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <x-sorting.sortable-column column="company_name" label="Company Name" />
+                                            <x-sorting.sortable-column column="name" label="Company Name" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -75,11 +75,11 @@
                                             <div class="flex items-center gap-5">
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $customer->company_name }}
+                                                        {{ $customer->name }}
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Customer Code: {{ $customer->customer_code }}</span>
-                                                        <span class="text-gray-500 dark:text-bgray-50">Email: {{ $customer->company_email }}</span>
+                                                        <span class="text-gray-500 dark:text-bgray-50">Email: {{ $customer->email }}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -141,8 +141,8 @@
 
     <!-- Filter drawer -->
     <x-filters.drawer>
-        <x-filters.input-search name="company_name" label="Name" />
-        <x-filters.input name="company_email" label="Company Email" />
+        <x-filters.input-search name="name" label="Name" />
+        <x-filters.input name="email" label="Company Email" />
         <x-filters.multi-select name="industry_id" label="Industry" :options="$industries" />
         <x-filters.select name="status" label="Status" :options="[
             1 => 'Active',

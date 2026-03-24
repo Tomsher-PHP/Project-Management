@@ -4,6 +4,7 @@ import Alert from './alert';
 import './status-toggle';
 import './reset-password';
 import './schedule-shift';
+import Alpine from 'alpinejs';
 
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
@@ -16,6 +17,8 @@ import { initWeekPicker } from './components/weekpicker';
 window.Swal = Swal;
 window.Alert = Alert;
 window.TomSelect = TomSelect;
+window.Alpine = Alpine
+Alpine.start();
 
 // Initialize all selects with the class 'tom-select' on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function () {

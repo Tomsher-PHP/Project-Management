@@ -15,8 +15,8 @@ class CustomerServices
             // 1. Create Customer
             $customer = Customer::create([
                 'customer_code' => Customer::generateCustomerCode(),
-                'company_name' => $data['company_name'],
-                'company_email' => $data['company_email'] ?? null,
+                'name' => $data['name'],
+                'email' => $data['email'] ?? null,
                 'industry_id' => $data['industry_id'] ?? null,
                 'website' => $data['website'] ?? null,
                 'registered_country_id' => $data['registered_country_id'] ?? null,
@@ -40,8 +40,8 @@ class CustomerServices
 
             // 1. Update Customer
             $customer->update([
-                'company_name' => $data['company_name'],
-                'company_email' => $data['company_email'] ?? null,
+                'name' => $data['name'],
+                'email' => $data['email'] ?? null,
                 'industry_id' => $data['industry_id'] ?? null,
                 'website' => $data['website'] ?? null,
                 'registered_country_id' => $data['registered_country_id'] ?? null,

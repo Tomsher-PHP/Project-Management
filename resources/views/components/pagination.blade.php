@@ -22,7 +22,7 @@
                 @endif
             @endforeach
 
-            <select name="per_page" onchange="this.form.submit()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+            <select name="per_page" onchange="this.form.submit()" class="appearance-none rounded-lg border border-gray-300 px-3 pr-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-darkblack-500 dark:text-white w-full">
 
                 @foreach ([5, 10, 15, 25, 50] as $size)
                     <option value="{{ $size }}" {{ $perPage == $size ? 'selected' : '' }}>

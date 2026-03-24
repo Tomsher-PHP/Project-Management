@@ -8,6 +8,7 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -160,4 +161,11 @@ Route::middleware(['auth'])->group(function () {
     // Common Routes
     Route::get('/countries/search', [CommonController::class, 'search'])->name('countries.search');
     // End Common Routes
+
+    // Project Routes
+    Route::resource('projects', ProjectController::class)->middleware('permission.type:project.view')->only(['index']);
+    Route::resource('projects', ProjectController::class)->middleware('permission.type:project.create')->only(['create', 'store']);
+    Route::resource('projects', ProjectController::class)->middleware('permission.type:project.edit')->only(['edit', 'update']);
+    Route::resource('projects', ProjectController::class)->middleware('permission.type:project.delete')->only(['destroy']);
+    // End Project Routes
 });

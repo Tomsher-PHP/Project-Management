@@ -19,18 +19,18 @@
 
             <!-- Company Name -->
             <div class="flex flex-col gap-2">
-                <label for="company_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Name <x-red-star /></label>
-                <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $customer->company_name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('company_name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('company_name')
+                <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Name <x-red-star /></label>
+                <input type="text" id="name" name="name" value="{{ old('name', $customer->name ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('name') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('name')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Company Email -->
             <div class="flex flex-col gap-2">
-                <label for="company_email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Email</label>
-                <input type="email" id="company_email" name="company_email" value="{{ old('company_email', $customer->company_email ?? '') }}" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('company_email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
-                @error('company_email')
+                <label for="email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Email</label>
+                <input type="email" id="email" name="email" value="{{ old('email', $customer->email ?? '') }}" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('email') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" />
+                @error('email')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
