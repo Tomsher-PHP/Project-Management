@@ -3,7 +3,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const button = document.getElementById('update-project');
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    let dirty = false;
+
+    function setDirty() {
+        dirty = true;
+        button.disabled = false;
+        button.textContent = 'Update Project';
+    }
+
+    // Vanilla inputs/selects/textareas
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('input', setDirty);
+        el.addEventListener('change', setDirty);
+    });
+
+    // Listen for Alpine dispatch events
+    form.addEventListener('form-dirty', setDirty);
+
     button.addEventListener('click', function () {
+        console.log(dirty);
+
+        if (!dirty) return;
+
         const projectId = this.dataset.projectId;
         const formData = new FormData(form);
 
@@ -26,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (data.success) {
 
-                    // Show success message (Alpine Toast or simple alert)
                     Alert.success(data.message);
 
                     // Remove all previous error messages
@@ -34,7 +54,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // update project header
                     document.getElementById('project-header').innerHTML = data.project_header;
+
+                    dirty = false;
+                    button.disabled = true;
+                    button.textContent = 'Updated';
                 } else if (data.errors) {
+                    button.disabled = false;
+                    button.textContent = 'Update Project';
+
                     // Clear previous errors
                     form.querySelectorAll('p.text-error-300').forEach(p => p.remove());
 
