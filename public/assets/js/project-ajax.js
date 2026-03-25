@@ -21,8 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('form-dirty', setDirty);
 
     button.addEventListener('click', function () {
-        console.log(dirty);
-
         if (!dirty) return;
 
         const projectId = this.dataset.projectId;
