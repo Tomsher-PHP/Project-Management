@@ -114,31 +114,27 @@
 
                         <!-- ================= NOTES ================= -->
                         <div x-show="activeTab === 'notes'" x-transition>
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes</h3>
+                            <div class="w-full border-b border-bgray-200 dark:border-darkblack-400 pb-6">
+                                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes</h3>
 
-                            <div class="custom-quill mb-6 mt-4">
-                                <div class="h-60 min-h-[240px] rounded-b-lg bg-white dark:bg-darkblack-500" id="project-note"></div>
+                                <div class="custom-quill mb-6 mt-4">
+                                    <div class="h-60 min-h-[240px] rounded-b-lg bg-white dark:bg-darkblack-500" id="project-note"></div>
+                                </div>
+
+                                <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400">
+                                    Save Notes
+                                </button>
                             </div>
 
-                            <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold">
-                                Save Notes
-                            </button>
-
                             <!-- Files -->
-                            <div class="mt-6">
-                                <h4 class="font-semibold mb-3">Files</h4>
-
-                                <div class="border border-dashed border-bgray-300 rounded-lg p-6 text-center text-bgray-400">
-                                    Upload Files
-                                </div>
+                            <div class="w-full pt-6">
+                                @include('projects.partials.files')
                             </div>
                         </div>
 
                         <!-- ================= SETTINGS ================= -->
                         <div x-show="activeTab === 'settings'" x-transition>
-
                             @include('projects.partials.settings-form')
-
                         </div>
 
                     </div>

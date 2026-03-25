@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectRequest;
+use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
+use App\Services\AttachmentService;
 use App\Services\ProjectServices;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -92,6 +95,32 @@ class ProjectController extends Controller
             'success' => true,
             'message' => 'Notes updated successfully.',
             'project' => $project,
+        ], Response::HTTP_OK);
+    }
+
+    public function uploadFile(ProjectFileRequest $request, Project $project, ProjectServices $service)
+    {
+        $attachment = $service->uploadFile($project, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'file' => [
+                "id" => $attachment->id ?? '',
+                "original_name" => $attachment->original_name ?? '',
+                "file_path" => $attachment->file_path ?? '',
+                "file_size" => $attachment->file_size ?? ''
+            ]
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteFile(Project $project, $fileId, AttachmentService $attachmentService)
+    {
+        $attachment = $project->attachments()->where('id', $fileId)->get();
+        $attachmentService->delete($attachment);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File deleted successfully.',
         ], Response::HTTP_OK);
     }
 

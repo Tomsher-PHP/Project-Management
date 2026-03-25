@@ -9,14 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectServices
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    protected $attachmentService;
 
+    public function __construct(AttachmentService $attachmentService)
+    {
+        $this->attachmentService = $attachmentService;
+    }
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
@@ -104,6 +102,18 @@ class ProjectServices
             }
 
             return $project->fresh(); // return updated model
+        });
+    }
+
+    public function uploadFile(Project $project, array $data)
+    {
+        return DB::transaction(function () use ($project, $data) {
+            // 4. Image upload can be handled here if needed
+            if (!empty($data['project_file'])) {
+                $directory = 'project_files/' . $project->project_code;
+                $attachment = $this->attachmentService->upload($data['project_file'], $directory, $project, 'public', 'public', true);
+            }
+            return $attachment;
         });
     }
 }

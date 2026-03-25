@@ -163,11 +163,14 @@ Route::middleware(['auth'])->group(function () {
     // End Common Routes
 
     // Project Routes
+    Route::post('projects/{project}/update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
+    Route::post('projects/{project}/files', [ProjectController::class, 'uploadFile'])->middleware('permission.type:project.add_files')->name('projects.uploadFile');
+    Route::delete('projects/{project}/files/{fileId}', [ProjectController::class, 'deleteFile'])->middleware('permission.type:project.remove_files')->name('projects.deleteFile');
+
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.view')->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.create')->only(['create', 'store']);
     Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware('permission.type:project.view')->name('projects.edit');
     Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware('permission.type:project.edit')->name('projects.update');
-    Route::post('projects/{project}/update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.delete')->only(['destroy']);
     // End Project Routes
 });
