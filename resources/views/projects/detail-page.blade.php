@@ -11,7 +11,10 @@
             <section class="mb-6 2xl:mb-0 2xl:flex-1" x-data="{ activeTab: localStorage.getItem('projectTab_{{ $project->id }}') || 'tasks' }">
 
                 <!-- PROJECT HEADER -->
-                <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
+                <div id="project-header">
+                    @include('projects.partials.header')
+                </div>
+                {{-- <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
 
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
@@ -22,7 +25,7 @@
                                 <div class="h-10 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
 
                                 <div>
-                                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white">
+                                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
                                         {{ $project->name }}
                                     </h2>
                                     <p class="text-sm text-bgray-500">
@@ -73,7 +76,7 @@
                         </div>
 
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
 
@@ -186,7 +189,7 @@
                         <!-- ================= SETTINGS ================= -->
                         <div x-show="activeTab === 'settings'" x-transition>
 
-                            @include('projects.settings-form')
+                            @include('projects.partials.settings-form')
 
                         </div>
 
@@ -240,6 +243,7 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/js/project-ajax.js') }}"></script>
     {{-- <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>

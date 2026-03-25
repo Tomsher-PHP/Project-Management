@@ -67,9 +67,19 @@ class ProjectController extends Controller
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)
     {
-        $service->update($project, $request->validated());
+        $project = $service->update($project, $request->validated());
 
-        return redirect()->back()->with('success', 'Project updated successfully.');
+        $priority = config('constants.project_priorities')[$project->priority] ?? null;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project updated successfully.',
+            'project' => $project,
+            'project_header' => view('projects.partials.header', [
+                'project' => $project,
+                'priority' => $priority
+            ])->render(),
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Project $project)
