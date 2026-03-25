@@ -31,7 +31,7 @@
                                              dark:text-bgray-50
                                              dark:group-hover:text-success-300
                                              transition">
-                                    {{ ucfirst(explode('.', $permission->name)[1]) }}
+                                    {{ ucfirst(str_replace('_', ' ', explode('.', $permission->name)[1])) }}
                                 </span>
 
                             </label>

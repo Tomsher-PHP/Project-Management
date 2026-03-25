@@ -6,6 +6,12 @@ return [
     'project.create',
     'project.edit',
     'project.delete',
+    'project.add_team',
+    'project.remove_team',
+    'project.update_notes',
+    'project.add_files',
+    'project.remove_files',
+    'project.status_change',
 
     // Task Module
     'task.view',

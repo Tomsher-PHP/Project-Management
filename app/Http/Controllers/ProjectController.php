@@ -82,6 +82,19 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function updateNotes(Request $request, Project $project)
+    {
+        $project->update([
+            'notes' => $request->notes,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notes updated successfully.',
+            'project' => $project,
+        ], Response::HTTP_OK);
+    }
+
     public function destroy(Project $project)
     {
         $project->delete();

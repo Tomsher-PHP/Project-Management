@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('project-settings-form');
     const button = document.getElementById('update-project');
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const projectId = window.ProjectApp.id;
 
     let dirty = false;
 
@@ -20,10 +21,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Listen for Alpine dispatch events
     form.addEventListener('form-dirty', setDirty);
 
+    // update project settings
     button.addEventListener('click', function () {
         if (!dirty) return;
 
-        const projectId = this.dataset.projectId;
         const formData = new FormData(form);
 
         // Optional: disable button while processing
@@ -79,6 +80,64 @@ document.addEventListener('DOMContentLoaded', function () {
                 button.disabled = false;
                 button.textContent = 'Update Project';
                 console.error(err);
+                Alert.error('Something went wrong. Please try again.');
+            });
+    });
+
+    // save notes
+    const saveBtn = document.getElementById('saveNotes');
+
+    // Initialize Quill
+    const projectNote = new Quill('#project-note', {
+        theme: 'snow',
+        readOnly: !window.ProjectApp.canEdit,
+        placeholder: 'Write notes...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'header': [1, 2, 3, false] }],
+                ['link'] // no image
+            ]
+        }
+    });
+
+    if (window.ProjectApp.notes) {
+        projectNote.clipboard.dangerouslyPasteHTML(window.ProjectApp.notes);
+    }
+
+    saveBtn.addEventListener('click', () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const notes = projectNote.root.innerHTML;
+
+        fetch(`/projects/${projectId}/update-notes`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notes })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    dirty = false;
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saved';
+                    Alert.success(data.message);
+                } else {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Notes';
+                    Alert.error(data.message || 'Something went wrong.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Notes';
                 Alert.error('Something went wrong. Please try again.');
             });
     });

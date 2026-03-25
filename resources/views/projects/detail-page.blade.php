@@ -14,69 +14,6 @@
                 <div id="project-header">
                     @include('projects.partials.header')
                 </div>
-                {{-- <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
-
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
-                        <!-- LEFT: Project Info -->
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <!-- Priority Indicator -->
-                                <div class="h-10 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
-
-                                <div>
-                                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
-                                        {{ $project->name }}
-                                    </h2>
-                                    <p class="text-sm text-bgray-500">
-                                        Code: {{ $project->project_code ?? '--' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Meta Info -->
-                            <div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-bgray-600 dark:text-bgray-300">
-
-                                <span>
-                                    <strong>Customer:</strong> {{ $project->customer->name ?? '--' }}
-                                </span>
-
-                                <span>
-                                    <strong>Project Type:</strong> {{ strtoupper($project->project_type ?? '--') }}
-                                </span>
-
-                                <span>
-                                    <strong>Start:</strong> {{ optional($project->start_date)->format(config('constants.date_format')) ?? '--' }}
-                                </span>
-
-                                <span>
-                                    <strong>Internal End:</strong> {{ optional($project->internal_end_date)->format(config('constants.date_format')) ?? '--' }}
-                                </span>
-
-                                <span>
-                                    <strong>Customer End:</strong> {{ optional($project->client_end_date)->format(config('constants.date_format')) ?? '--' }}
-                                </span>
-
-                            </div>
-                        </div>
-
-                        <!-- RIGHT: Status + Priority -->
-                        <div class="flex items-center gap-3">
-
-                            <!-- Status -->
-                            <span class="px-4 py-1.5 rounded-full text-sm font-semibold {{ $project->status ? 'bg-success-50 text-success-500' : 'bg-gray-100 text-gray-500' }}">
-                                {{ $project->projectStatus->name ?? 'No Status' }}
-                            </span>
-
-                            <!-- Project Priority -->
-                            <span class="px-4 py-1.5 rounded-full text-sm font-semibold {{ $priority['bg_class'] ?? 'bg-gray-100 text-gray-500' }} {{ $priority['bg_text'] ?? 'text-gray-500' }}">
-                                {{ $priority['label'] ?? '--' }}
-                            </span>
-
-                        </div>
-
-                    </div>
-                </div> --}}
 
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
 
@@ -85,6 +22,10 @@
                         <div class="flex space-x-6">
                             <button @click="activeTab = 'tasks'; localStorage.setItem('projectTab_{{ $project->id }}', 'tasks')" :class="activeTab === 'tasks' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
                                 Tasks
+                            </button>
+
+                            <button @click="activeTab = 'team'; localStorage.setItem('projectTab_{{ $project->id }}', 'team')" :class="activeTab === 'team' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                                Team
                             </button>
 
                             <button @click="activeTab = 'overview'; localStorage.setItem('projectTab_{{ $project->id }}', 'overview')" :class="activeTab === 'overview' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
@@ -138,6 +79,11 @@
                             </div>
                         </div>
 
+                        <!-- ================= TEAM ================= -->
+                        <div x-show="activeTab === 'team'" x-transition>
+                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Team</h3>
+                        </div>
+
                         <!-- ================= OVERVIEW ================= -->
                         <div x-show="activeTab === 'overview'" x-transition>
                             <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Overview</h3>
@@ -168,17 +114,19 @@
 
                         <!-- ================= NOTES ================= -->
                         <div x-show="activeTab === 'notes'" x-transition>
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Notes</h3>
+                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes</h3>
 
-                            <textarea class="w-full rounded-lg border border-bgray-300 p-3 dark:bg-darkblack-500 dark:text-white" rows="4" placeholder="Write notes..."></textarea>
+                            <div class="custom-quill mb-6 mt-4">
+                                <div class="h-60 min-h-[240px] rounded-b-lg bg-white dark:bg-darkblack-500" id="project-note"></div>
+                            </div>
 
-                            <button class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold">
+                            <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold">
                                 Save Notes
                             </button>
 
-                            <!-- Attachments -->
+                            <!-- Files -->
                             <div class="mt-6">
-                                <h4 class="font-semibold mb-3">Attachments</h4>
+                                <h4 class="font-semibold mb-3">Files</h4>
 
                                 <div class="border border-dashed border-bgray-300 rounded-lg p-6 text-center text-bgray-400">
                                     Upload Files
@@ -243,25 +191,12 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/project-ajax.js') }}"></script>
-    {{-- <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            ClassicEditor.create(document.querySelector('#project-editor')).catch(console.error);
-
-            // Task status pie chart
-            const ctx = document.getElementById('task-status-chart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['New', 'In Progress', 'Completed'],
-                    datasets: [{
-                        data: [{{ $project->tasks_new }}, {{ $project->tasks_in_progress }}, {{ $project->tasks_completed }}],
-                        backgroundColor: ['#3B82F6', '#FBBF24', '#10B981'],
-                    }]
-                }
-            });
-        });
-    </script> --}}
+        window.ProjectApp = {
+            id: {{ $project->id }},
+            notes: {!! json_encode($project->notes ?? '') !!},
+            canEdit: @json(auth()->user()->can('project.update_notes')),
+        };
+    </script>
+    <script src="{{ asset('assets/js/project-ajax.js') }}"></script>
 @endpush
