@@ -6,7 +6,7 @@ export function initTomSelect() {
         if (el.tomselect) return; // Prevent double init
 
         new TomSelect(el, {
-            create: false,            // cannot create new options
+            create: false,
             persist: false,
             hideDropdownArrow: false,
             plugins: ['clear_button'],
@@ -93,6 +93,8 @@ export function initTomSelect() {
 
         new TomSelect(el, config);
     });
+
+    document.dispatchEvent(new Event('tomselect:ready'));
 }
 
 //make auto select for dropdown input

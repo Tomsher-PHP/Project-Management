@@ -11,27 +11,39 @@ class ProjectMemberController extends Controller
 {
     public function addMember(ProjectMemberRequest $request, Project $project)
     {
-        // Prevent duplicate
-        if ($project->members()->where('user_id', $request->user_id)->exists()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'User already added.'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        $userIds = $request->user_id;
+        $role = $request->project_role;
+
+        $members = [];
+        $html = '';
+
+        foreach ($userIds as $userId) {
+
+            $member = $project->members()->create([
+                'user_id' => $userId,
+                'project_role' => $role,
+            ]);
+
+            $member->load('user');
+
+            $members[] = $member;
+
+            // Append rendered card
+            $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
         }
 
-        $member = $project->members()->create([
-            'user_id' => $request->user_id,
-            'project_role' => $request->project_role,
-        ]);
-        $member->load('user');
-
-        $memberCardHtml = view('projects.partials.member-card', compact('project', 'member'))->render();
+        if (empty($members)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'All selected users are already added.'
+            ], 422);
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Member added successfully.',
-            'member_card' => $memberCardHtml,
-        ], Response::HTTP_OK);
+            'message' => 'Members added successfully.',
+            'member_cards' => $html,
+        ]);
     }
 
     public function removeMember($projectId, $userId)

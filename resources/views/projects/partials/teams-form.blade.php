@@ -2,20 +2,6 @@
 
     <div class="grid md:grid-cols-3 gap-6 items-end">
 
-        <!-- User -->
-        <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                Users
-            </label>
-
-            <select name="user_id" id="team_member" class="tom-select w-full">
-                <option value="">Select User</option>
-                @foreach ($users as $user)
-                    <option value="{{ $user->id }}" data-subtype="{{ $user->email }}">{{ $user->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
         <!-- Role -->
         <div class="flex flex-col gap-2">
             <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
@@ -25,7 +11,21 @@
             <select name="project_role" id="project_role" class="tom-select-no-search w-full">
                 <option value="">Select Role</option>
                 @foreach ($projectRoles as $key => $role)
-                    <option value="{{ $key }}">{{ $role }}</option>
+                    <option value="{{ $key }}" @if ($key === 'member') selected @endif>{{ $role }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- User -->
+        <div class="flex flex-col gap-2">
+            <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
+                Users
+            </label>
+
+            <select name="user_id[]" id="user_id" class="tom-select-multiple w-full">
+                <option value="">Select User</option>
+                @foreach ($users as $user)
+                    <option value="{{ $user->id }}">{{ $user->name }}</option>
                 @endforeach
             </select>
         </div>

@@ -35,7 +35,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             showSuccess(res.message);
             document.getElementById('empty-row')?.remove();
-            membersContainer.insertAdjacentHTML('beforeend', res.member_card);
+            membersContainer.insertAdjacentHTML('beforeend', res.member_cards);
+
+            // Reset User Select (MULTIPLE)
+            const userSelect = document.getElementById('user_id')?.tomselect;
+            userSelect?.clear();
+
+            // Reset Role to "member"
+            const roleSelect = document.getElementById('project_role')?.tomselect;
+            roleSelect?.setValue('member');
 
         } catch (error) {
             showError(error.message);
@@ -122,4 +130,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+});
+
+// TomSelect role change handler
+document.addEventListener('tomselect:ready', () => {
+
+    const roleSelect = document.getElementById('project_role');
+    const userSelect = document.getElementById('user_id').tomselect;
+
+    function handleRoleChange(role) {
+        if (!userSelect) return;
+
+        if (role === 'team_leader' || role === 'coordinator') {
+            userSelect.setMaxItems(1);
+
+            const values = userSelect.getValue();
+            if (Array.isArray(values) && values.length > 1) {
+                userSelect.setValue([values[0]]);
+            }
+
+        } else {
+            userSelect.setMaxItems(null);
+        }
+    }
+
+    roleSelect.addEventListener('change', (e) => {
+        handleRoleChange(e.target.value);
+    });
+
+    // Initial state
+    handleRoleChange(roleSelect.value);
 });

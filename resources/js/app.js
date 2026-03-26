@@ -8,7 +8,7 @@ import Alpine from 'alpinejs';
 
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
-import { initTomSelect } from './components/tom-select';
+import { initTomSelect, autoTomSelect } from './components/tom-select';
 
 import { initDatepicker } from './components/datepicker';
 import { initTimepicker } from './components/timepicker';
@@ -18,6 +18,7 @@ window.Swal = Swal;
 window.Alert = Alert;
 window.TomSelect = TomSelect;
 window.Alpine = Alpine
+window.autoTomSelect = autoTomSelect;
 Alpine.start();
 
 // Initialize all selects with the class 'tom-select' on DOMContentLoaded
