@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectMemberRequest;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,12 +46,14 @@ class ProjectMemberController extends Controller
                     continue;
                 }
             } else {
-                $member = $project->members()->create([
-                    'user_id' => $userId,
+                // Attach new user to project
+                $project->members()->attach($userId, [
                     'project_role' => $role,
+                    'is_active' => true,
                 ]);
             }
 
+            $member = $project->members()->where('user_id', $userId)->first();
             $members->push($member);
 
             $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
@@ -92,6 +95,26 @@ class ProjectMemberController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Member removed successfully.'
+        ]);
+    }
+
+    public function toggleStatus(Project $project, $userId)
+    {
+        $member = $project->allMembers()->where('user_id', $userId)->whereNull('removed_at')->firstOrFail();
+
+        $member->pivot->update([
+            'is_active' => !$member->pivot->is_active,
+        ]);
+
+        // Render the updated member card
+        $cardHtml = view('projects.partials.member-card', compact('project', 'member'))->render();
+
+        return response()->json([
+            'status' => true,
+            'message' => $member->pivot->is_active ? 'Member enabled.' : 'Member disabled.',
+            'is_active' => $member->pivot->is_active,
+            'member_card' => $cardHtml,
+            'user_id' => $userId,
         ]);
     }
 }

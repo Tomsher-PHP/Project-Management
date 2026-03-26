@@ -1,4 +1,6 @@
-<div class="relative rounded-lg bg-gray-100 p-5 dark:bg-darkblack-500 team-member-card @if ($member->pivot->project_role === 'team_leader') border border-success-300 @endif">
+<div class="relative rounded-lg p-5 team-member-card transition-shadow
+    @if ($member->pivot->is_active) bg-gray-100 dark:bg-darkblack-500 border-t border-success-300 @else bg-gray-50 dark:bg-darkblack-600 opacity-70 @endif
+    @if ($member->pivot->project_role === 'team_leader') border border-success-300 @endif">
 
     <!-- User Info -->
     <div>
@@ -30,12 +32,31 @@
         </span>
     </div>
 
-    <!-- Bottom Right Action -->
+    <!-- Bottom Right Actions -->
     @can('project.remove_team', $project)
-        <div class="flex justify-end mt-4">
-            <button type="button" class="remove-member flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition" data-id="{{ $member->id }}">
-                <span class="text-sm text-red-500">Remove</span>
+        <div class="flex justify-end mt-4 gap-2">
+
+            <!-- Enable/Disable Button -->
+            <button type="button" class="toggle-member flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-full transition 
+                       {{ $member->pivot->is_active ? 'bg-gray-200 text-gray-700 hover:text-bgray-900' : 'bg-success-50 hover:text-success-300' }}" data-id="{{ $member->id }}" data-active="{{ $member->pivot->is_active ? 1 : 0 }}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    @if ($member->pivot->is_active)
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    @else
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    @endif
+                </svg>
+                {{ $member->pivot->is_active ? 'Disable' : 'Enable' }}
             </button>
+
+            <!-- Remove Button -->
+            <button type="button" class="remove-member flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-full bg-error-50 hover:text-error-300 transition shadow-sm" data-id="{{ $member->id }}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Remove
+            </button>
+
         </div>
     @endcan
 

@@ -104,7 +104,7 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_members')
             ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
-            ->wherePivot('is_active', true);
+            ->whereNull('removed_at');
     }
 
     // All members, including removed

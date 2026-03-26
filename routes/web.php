@@ -171,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_team')->name('projects.addMember');
         Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
+        Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
     });
 
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.view')->only(['index']);
