@@ -13,6 +13,8 @@ return [
         'aos' => 'assets/css/aos.css',
         'output' => 'assets/css/output.css',
         'style' => 'assets/css/style.css',
+        'quill_core' => 'assets/css/quill.core.css',
+        'quill_snow' => 'assets/css/quill.snow.css',
     ],
 
     'js' => [

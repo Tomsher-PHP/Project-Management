@@ -21,17 +21,32 @@ class ProjectRequest extends FormRequest
      */
     public function rules(): array
     {
-        $projectId = $this->route('project')?->id;
+        // $projectId = $this->route('project')?->id;
 
         $rules = [
             'name' => 'required|string|max:255',
             'customer_id' => 'nullable|exists:customers,id',
-            'project_type' => 'required|in:agile,linear',
             'priority' => 'required|in:urgent,high,medium,low',
             'project_status' => 'required|exists:project_statuses,id',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
         ];
+
+        if ($this->isMethod('POST')) {
+            $rules['project_type'] = 'required|in:agile,linear';
+        }
+
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $rules += [
+                'internal_end_date' => 'nullable|date|after_or_equal:start_date',
+                'client_end_date' => 'nullable|date|after_or_equal:internal_end_date',
+                'estimated_time_hrs' => 'nullable|integer',
+                'domain' => 'nullable|string',
+                'sales_person_id' => 'nullable|exists:users,id',
+                'project_stage' => 'nullable|string',
+                'project_category_id' => 'nullable|exists:project_categories,id',
+                'default_billable' => 'nullable|boolean',
+            ];
+        }
 
         return $rules;
     }

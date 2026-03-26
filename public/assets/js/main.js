@@ -61,7 +61,7 @@ function QuillIsExists() {
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline"], // toggled buttons
     [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
+    ["link"],
   ];
   if (editorOne) {
     var editor = new Quill("#editor", {

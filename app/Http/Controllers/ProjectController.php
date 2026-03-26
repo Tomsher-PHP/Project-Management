@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectRequest;
+use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
+use App\Services\AttachmentService;
 use App\Services\ProjectServices;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -67,9 +70,57 @@ class ProjectController extends Controller
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)
     {
-        $service->update($project, $request->validated());
+        $project = $service->update($project, $request->validated());
 
-        return redirect()->back()->with('success', 'Project updated successfully.');
+        $priority = config('constants.project_priorities')[$project->priority] ?? null;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project updated successfully.',
+            'project' => $project,
+            'project_header' => view('projects.partials.header', [
+                'project' => $project,
+                'priority' => $priority
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function updateNotes(Request $request, Project $project)
+    {
+        $project->update([
+            'notes' => $request->notes,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notes updated successfully.',
+            'project' => $project,
+        ], Response::HTTP_OK);
+    }
+
+    public function uploadFile(ProjectFileRequest $request, Project $project, ProjectServices $service)
+    {
+        $attachment = $service->uploadFile($project, $request->validated());
+
+        // Render Blade partial as HTML string
+        $html = view('projects.partials.file-item', ['file' => $attachment])->render();
+
+        return response()->json([
+            'success' => true,
+            'file' => $attachment,
+            'html' => $html
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteFile(Project $project, $fileId, AttachmentService $attachmentService)
+    {
+        $attachment = $project->attachments()->where('id', $fileId)->get();
+        $attachmentService->delete($attachment);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File deleted successfully.',
+        ], Response::HTTP_OK);
     }
 
     public function destroy(Project $project)
