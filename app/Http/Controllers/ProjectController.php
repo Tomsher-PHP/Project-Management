@@ -102,14 +102,13 @@ class ProjectController extends Controller
     {
         $attachment = $service->uploadFile($project, $request->validated());
 
+        // Render Blade partial as HTML string
+        $html = view('projects.partials.file-item', ['file' => $attachment])->render();
+
         return response()->json([
             'success' => true,
-            'file' => [
-                "id" => $attachment->id ?? '',
-                "original_name" => $attachment->original_name ?? '',
-                "file_path" => $attachment->file_path ?? '',
-                "file_size" => $attachment->file_size ?? ''
-            ]
+            'file' => $attachment,
+            'html' => $html
         ], Response::HTTP_OK);
     }
 
