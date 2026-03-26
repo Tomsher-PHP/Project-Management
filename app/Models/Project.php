@@ -99,9 +99,19 @@ class Project extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    // Only active members (default)
     public function members()
     {
-        return $this->hasMany(ProjectMember::class);
+        return $this->belongsToMany(User::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
+            ->wherePivot('is_active', true);
+    }
+
+    // All members, including removed
+    public function allMembers()
+    {
+        return $this->belongsToMany(User::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
     }
 
     public function technologies()

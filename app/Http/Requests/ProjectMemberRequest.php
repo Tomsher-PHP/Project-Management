@@ -24,7 +24,8 @@ class ProjectMemberRequest extends FormRequest
                 'required',
                 'exists:users,id',
                 Rule::unique('project_members', 'user_id')
-                    ->where('project_id', $this->project->id),
+                    ->where('project_id', $this->project->id)
+                    ->whereNull('removed_at'),
             ],
 
             'project_role' => [

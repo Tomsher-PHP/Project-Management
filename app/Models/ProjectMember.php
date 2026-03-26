@@ -10,6 +10,14 @@ class ProjectMember extends Model
         'project_id',
         'user_id',
         'project_role',
+        'is_active',
+        'removed_at',
+        'removed_by'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'removed_at' => 'datetime',
     ];
 
     public function project()

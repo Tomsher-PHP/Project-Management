@@ -6,37 +6,61 @@ use App\Http\Requests\ProjectMemberRequest;
 use App\Models\Project;
 use App\Models\ProjectMember;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectMemberController extends Controller
 {
     public function addMember(ProjectMemberRequest $request, Project $project)
     {
-        $userIds = $request->user_id;
+        $userIds = $request->user_id; // array
         $role = $request->project_role;
 
-        $members = [];
+        $existingMembers = $project->allMembers()
+            ->whereIn('users.id', $userIds)
+            ->get()
+            ->keyBy('id');
+
+        $members = collect();
         $html = '';
 
         foreach ($userIds as $userId) {
+            $existing = $existingMembers->get($userId);
 
-            $member = $project->members()->create([
-                'user_id' => $userId,
-                'project_role' => $role,
-            ]);
+            if ($existing) {
+                if ($existing->pivot->removed_at) {
+                    $project->allMembers()->updateExistingPivot($userId, [
+                        'project_role' => $role,
+                        'is_active' => true,
+                        'removed_at' => null,
+                        'removed_by' => null,
+                    ]);
 
-            $member->load('user');
+                    $existing->pivot->project_role = $role;
+                    $existing->pivot->is_active = true;
+                    $existing->pivot->removed_at = null;
+                    $existing->pivot->removed_by = null;
 
-            $members[] = $member;
+                    $member = $existing;
+                } else {
+                    continue;
+                }
+            } else {
+                $member = $project->members()->create([
+                    'user_id' => $userId,
+                    'project_role' => $role,
+                ]);
+            }
 
-            // Append rendered card
+            $members->push($member);
+
             $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
         }
 
-        if (empty($members)) {
+        if ($members->isEmpty()) {
             return response()->json([
                 'status' => false,
-                'message' => 'All selected users are already added.'
-            ], 422);
+                'message' => 'All selected users are already active members.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         return response()->json([
@@ -59,7 +83,11 @@ class ProjectMemberController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $member->delete();
+        $member->update([
+            'is_active' => false,
+            'removed_at' => now(),
+            'removed_by' => Auth::id(),
+        ]);
 
         return response()->json([
             'status' => true,

@@ -159,4 +159,19 @@ class User extends Authenticatable
         }
         return '';
     }
+
+    // Projects where user is active
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
+            ->wherePivot('is_active', true);
+    }
+
+    // All projects including removed
+    public function allProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
+    }
 }
