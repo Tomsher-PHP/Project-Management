@@ -121,7 +121,7 @@
                         Team Member
                     </label>
 
-                    <select id="team_member" class="select-subtypes w-full">
+                    <select id="team_member" class="tom-select w-full">
                         <option value="">Select Member</option>
 
                         @foreach ($users as $user)
@@ -138,7 +138,7 @@
                         Team Role
                     </label>
 
-                    <select id="team_role" class="select-no-search w-full">
+                    <select id="team_role" class="tom-select-no-search w-full">
                         <option value="">Select Role</option>
 
                         @foreach ($teamRoles as $key => $role)

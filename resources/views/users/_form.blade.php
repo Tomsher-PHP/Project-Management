@@ -188,7 +188,7 @@
                     Role <x-red-star />
                 </label>
 
-                <select name="role" id="role" class="select-subtypes w-full">
+                <select name="role" id="role" class="tom-select w-full">
 
                     <option value="">Select Role</option>
 
@@ -260,7 +260,7 @@
                     Reporting To
                 </label>
 
-                <select name="reporter_id" id="reporting_to" class="select-subtypes w-full">
+                <select name="reporter_id" id="reporting_to" class="tom-select w-full">
 
                     <option value="">Select Reporting Manager</option>
 
@@ -283,7 +283,7 @@
                 <label for="manager" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Manager
                 </label>
-                <select name="manager_id" id="manager" class="select-subtypes w-full">
+                <select name="manager_id" id="manager" class="tom-select w-full">
 
                     <option value="">Select Manager</option>
 

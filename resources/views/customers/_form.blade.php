@@ -94,7 +94,7 @@
             <div class="flex flex-col gap-2">
                 <label for="emirate" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Emirate</label>
 
-                <select name="emirate" id="emirate" class="select-no-search w-full @error('emirate') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" data-sort="1">
+                <select name="emirate" id="emirate" class="tom-select-no-search w-full @error('emirate') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" data-sort="1">
                     <option value="">Select Emirate</option>
                     @foreach ($emirates as $id => $emirate)
                         <option value="{{ $id }}" {{ old('emirate', $customer->emirate ?? '') == $id ? 'selected' : '' }}>

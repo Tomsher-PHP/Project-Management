@@ -43,7 +43,7 @@
                 <label for="priority" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Priority
                 </label>
-                <select name="priority" id="priority" class="select-no-search w-full" x-on:change="markDirty()">
+                <select name="priority" id="priority" class="tom-select-no-search w-full" x-on:change="markDirty()">
                     <option value="">Select Priority</option>
                     @foreach ($priorities as $key => $priority)
                         <option value="{{ $key }}" {{ old('priority', $project->priority ?? '') == $key ? 'selected' : '' }}>
@@ -61,7 +61,7 @@
                 <label for="project_status" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Project Status <x-red-star />
                 </label>
-                <select name="project_status" id="project_status" class="select-no-search w-full" x-on:change="markDirty()">
+                <select name="project_status" id="project_status" class="tom-select-no-search w-full" x-on:change="markDirty()">
                     <option value="">Select Status</option>
                     @foreach ($statuses as $status)
                         <option value="{{ $status->id }}" {{ old('project_status', $project->status_id ?? '') == $status->id ? 'selected' : '' }}>
@@ -173,7 +173,7 @@
                 <label for="project_stage" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Project Stage
                 </label>
-                <select name="project_stage" id="project_stage" class="select-no-search w-full" x-on:change="markDirty()">
+                <select name="project_stage" id="project_stage" class="tom-select-no-search w-full" x-on:change="markDirty()">
                     <option value="">Select Project Stage</option>
                     @foreach ($projectStages as $key => $stage)
                         <option value="{{ $key }}" {{ old('project_stage', $project->project_stage ?? '') == $key ? 'selected' : '' }}>

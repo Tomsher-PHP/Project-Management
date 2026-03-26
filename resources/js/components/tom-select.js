@@ -1,7 +1,7 @@
 export function initTomSelect() {
 
     // Standard Select
-    document.querySelectorAll('.select-no-search').forEach(el => {
+    document.querySelectorAll('.tom-select-no-search').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
 
@@ -25,37 +25,6 @@ export function initTomSelect() {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'clear_button'],
-        };
-
-        if (sort) {
-            config.sortField = { field: "text", direction: "asc" };
-        }
-
-        new TomSelect(el, config);
-    });
-
-    // Multiple select
-    document.querySelectorAll('.tom-select-multiple').forEach(el => {
-
-        if (el.tomselect) return; // Prevent double init
-
-        new TomSelect(el, {
-            plugins: ['remove_button', 'dropdown_input', 'clear_button'],
-            maxItems: null,
-        });
-    });
-
-    // Subtype Select
-    document.querySelectorAll('.select-subtypes').forEach(el => {
-
-        if (el.tomselect) return;
-
-        const sort = el.dataset.sort != "0";
-
-        const config = {
-            create: false,
-            persist: false,
-            plugins: ['dropdown_input', 'clear_button'],
             render: {
                 option: function (data, escape) {
                     return `
@@ -76,13 +45,22 @@ export function initTomSelect() {
             }
         };
 
-
-        // Apply sorting only if enabled
         if (sort) {
             config.sortField = { field: "text", direction: "asc" };
         }
 
         new TomSelect(el, config);
+    });
+
+    // Multiple select
+    document.querySelectorAll('.tom-select-multiple').forEach(el => {
+
+        if (el.tomselect) return; // Prevent double init
+
+        new TomSelect(el, {
+            plugins: ['remove_button', 'dropdown_input', 'clear_button'],
+            maxItems: null,
+        });
     });
 
     // Lazy load tom select

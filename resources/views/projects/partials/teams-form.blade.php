@@ -8,10 +8,10 @@
                 Users
             </label>
 
-            <select name="user_id" id="team_member" class="select-subtypes w-full">
+            <select name="user_id" id="team_member" class="tom-select w-full">
                 <option value="">Select User</option>
                 @foreach ($users as $user)
-                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <option value="{{ $user->id }}" data-subtype="{{ $user->email }}">{{ $user->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -22,7 +22,7 @@
                 Project Role
             </label>
 
-            <select name="project_role" id="project_role" class="select-no-search w-full">
+            <select name="project_role" id="project_role" class="tom-select-no-search w-full">
                 <option value="">Select Role</option>
                 @foreach ($projectRoles as $key => $role)
                     <option value="{{ $key }}">{{ $role }}</option>
