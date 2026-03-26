@@ -25,7 +25,7 @@ class ProjectMemberController extends Controller
         ]);
         $member->load('user');
 
-        $memberCardHtml = view('projects.partials.member-card', compact('member'))->render();
+        $memberCardHtml = view('projects.partials.member-card', compact('project', 'member'))->render();
 
         return response()->json([
             'status' => true,
@@ -36,9 +36,18 @@ class ProjectMemberController extends Controller
 
     public function removeMember($projectId, $userId)
     {
-        ProjectMember::where('project_id', $projectId)
+        $member = ProjectMember::where('project_id', $projectId)
             ->where('user_id', $userId)
-            ->delete();
+            ->first();
+
+        if (!$member) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Member not found.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $member->delete();
 
         return response()->json([
             'status' => true,

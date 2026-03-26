@@ -5,11 +5,11 @@
         <!-- User -->
         <div class="flex flex-col gap-2">
             <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                Team Member
+                Users
             </label>
 
             <select name="user_id" id="team_member" class="select-subtypes w-full">
-                <option value="">Select Member</option>
+                <option value="">Select User</option>
                 @foreach ($users as $user)
                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                 @endforeach

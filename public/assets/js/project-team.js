@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const button = document.getElementById('add-member-btn');
 
     const membersContainer = document.getElementById('members-container');
-    const emptyRow = document.getElementById('empty-row');
 
     let loading = false;
 
@@ -30,17 +29,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData
             });
-
             const res = await response.json();
-
             if (!response.ok) {
                 throw new Error(res.message || 'Something went wrong');
             }
-
             showSuccess(res.message);
-
             document.getElementById('empty-row')?.remove();
-
             membersContainer.insertAdjacentHTML('beforeend', res.member_card);
 
         } catch (error) {
@@ -53,10 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {
     /* -------------------------- REMOVE MEMBER -------------------------- */
 
     document.addEventListener('click', async function (e) {
-        // Only handle clicks on remove buttons
-        if (!e.target.classList.contains('remove-member')) return;
+        const btn = e.target.closest('.remove-member');
+        if (!btn) return; // exit if not clicking a remove button
 
-        const btn = e.target;
         const userId = btn.dataset.id;
 
         // Confirm with user
@@ -94,19 +87,18 @@ document.addEventListener('DOMContentLoaded', function () {
             card?.remove();
 
             // Add back to dropdown (if using TomSelect)
-            const name = card?.querySelector('.member-name')?.textContent || '';
-            if (teamSelect) {
-                teamSelect.addOption({
-                    value: userId,
-                    text: name
-                });
-                teamSelect.refreshOptions(false);
-            }
+            // const name = card?.querySelector('.member-name')?.textContent || '';
+            // if (teamSelect) {
+            //     teamSelect.addOption({
+            //         value: userId,
+            //         text: name
+            //     });
+            //     teamSelect.refreshOptions(false);
+            // }
 
-            // Show empty state if no members left
-            if (!document.querySelector('.team-member-card')) {
-                const emptyRow = document.getElementById('empty-row');
-                if (emptyRow) emptyRow.style.display = '';
+            // Check if no cards remain
+            if (membersContainer && !membersContainer.querySelector('.team-member-card')) {
+                emptyRow();
             }
 
         } catch (error) {
@@ -115,5 +107,19 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Remove';
         }
     });
+
+    // Show empty row when no members are added
+    const emptyRow = () => {
+        let emptyRow = document.getElementById('empty-row');
+        if (!emptyRow) {
+            emptyRow = document.createElement('div');
+            emptyRow.id = 'empty-row';
+            emptyRow.className = 'col-span-full text-center text-gray-400 py-10';
+            emptyRow.textContent = 'No members added yet.';
+            membersContainer.appendChild(emptyRow);
+        } else {
+            emptyRow.style.display = '';
+        }
+    }
 
 });

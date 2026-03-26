@@ -83,14 +83,16 @@
                         <div x-show="activeTab === 'team'" x-transition>
                             <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Team</h3>
 
-                            @include('projects.partials.teams-form')
+                            @can('project.add_team', $project)
+                                @include('projects.partials.teams-form')
+                            @endcan
 
                             <div id="members-container" class="grid grid-cols-1 gap-5 pb-10 sm:grid-cols-2 2xl:grid-cols-3 2xl:gap-8 mt-5">
                                 @forelse ($project->members as $member)
                                     @include('projects.partials.member-card')
                                 @empty
                                     <div id="empty-row" class="col-span-full text-center text-gray-400 py-10">
-                                        No project members added yet.
+                                        No members added yet.
                                     </div>
                                 @endforelse
                             </div>

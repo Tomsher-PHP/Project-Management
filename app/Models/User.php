@@ -151,4 +151,12 @@ class User extends Authenticatable
                     ->orWhereDate('date_to', '>=', now());
             });
     }
+
+    public function getDesignationNameAttribute()
+    {
+        if ($this->details?->designation) {
+            return $this->details->designation->name;
+        }
+        return '';
+    }
 }

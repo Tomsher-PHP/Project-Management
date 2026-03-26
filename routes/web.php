@@ -169,8 +169,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('files', [ProjectController::class, 'uploadFile'])->middleware('permission.type:project.add_files')->name('projects.uploadFile');
         Route::delete('files/{fileId}', [ProjectController::class, 'deleteFile'])->middleware('permission.type:project.remove_files')->name('projects.deleteFile');
 
-        Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_members')->name('projects.addMember');
-        Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_members')->name('projects.removeMember');
+        Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_team')->name('projects.addMember');
+        Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
     });
 
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.view')->only(['index']);

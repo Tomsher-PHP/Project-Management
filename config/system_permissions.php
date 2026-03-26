@@ -12,8 +12,6 @@ return [
     'project.add_files',
     'project.remove_files',
     'project.status_change',
-    'project.add_members',
-    'project.remove_members',
 
     // Task Module
     'task.view',
