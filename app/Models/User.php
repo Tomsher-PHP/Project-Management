@@ -118,7 +118,7 @@ class User extends Authenticatable
             return Storage::disk($this->primaryAttachment->disk)->url($this->primaryAttachment->file_path);
         }
 
-        return asset('assets/images/avatar/default-avatar.jpeg');
+        return asset(config('assets.images.default_avatar'));
     }
 
     public function scopeActive($query)

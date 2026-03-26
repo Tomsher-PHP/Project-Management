@@ -9,6 +9,7 @@ use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -163,9 +164,14 @@ Route::middleware(['auth'])->group(function () {
     // End Common Routes
 
     // Project Routes
-    Route::post('projects/{project}/update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
-    Route::post('projects/{project}/files', [ProjectController::class, 'uploadFile'])->middleware('permission.type:project.add_files')->name('projects.uploadFile');
-    Route::delete('projects/{project}/files/{fileId}', [ProjectController::class, 'deleteFile'])->middleware('permission.type:project.remove_files')->name('projects.deleteFile');
+    Route::prefix('projects/{project}')->group(function () {
+        Route::post('update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
+        Route::post('files', [ProjectController::class, 'uploadFile'])->middleware('permission.type:project.add_files')->name('projects.uploadFile');
+        Route::delete('files/{fileId}', [ProjectController::class, 'deleteFile'])->middleware('permission.type:project.remove_files')->name('projects.deleteFile');
+
+        Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_members')->name('projects.addMember');
+        Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_members')->name('projects.removeMember');
+    });
 
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.view')->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware('permission.type:project.create')->only(['create', 'store']);

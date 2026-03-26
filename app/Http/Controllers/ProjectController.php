@@ -64,8 +64,9 @@ class ProjectController extends Controller
         $priorities = config('constants.project_priorities');
         $projectStages = config('constants.project_stages');
         $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
+        $projectRoles = config('constants.project_roles');
 
-        return view('projects.detail-page', compact('project', 'users', 'customers', 'statuses', 'priorities', 'projectStages', 'projectCategories'));
+        return view('projects.detail-page', compact('project', 'users', 'customers', 'statuses', 'priorities', 'projectStages', 'projectCategories', 'projectRoles'));
     }
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)
