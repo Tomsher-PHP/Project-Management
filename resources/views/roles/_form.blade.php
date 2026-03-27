@@ -5,7 +5,7 @@
         @method('PUT')
     @endif
 
-    {{-- ================= BASIC ROLE INFORMATION ================= --}}
+    <!-- ================= BASIC ROLE INFORMATION ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 
                    dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
@@ -37,7 +37,7 @@
         </div>
     </div>
 
-    {{-- ================= PERMISSIONS ================= --}}
+    <!-- ================= PERMISSIONS ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 
                    dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    {{-- ================= SUBMIT ================= --}}
+    <!-- ================= SUBMIT ================= -->
     <div class="pt-6 border-t flex justify-end 
                 dark:border-darkblack-400">
         <button type="submit" class="px-6 py-2.5 rounded-lg
