@@ -8,6 +8,10 @@ return [
         'logo_short' => 'assets/images/logo/logo-short.png',
     ],
 
+    'images' => [
+        'default_avatar' => 'assets/images/avatar/default-avatar.jpeg',
+    ],
+
     'css' => [
         'slick' => 'assets/css/slick.css',
         'aos' => 'assets/css/aos.css',

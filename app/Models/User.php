@@ -118,7 +118,7 @@ class User extends Authenticatable
             return Storage::disk($this->primaryAttachment->disk)->url($this->primaryAttachment->file_path);
         }
 
-        return asset('assets/images/avatar/default-avatar.jpeg');
+        return asset(config('assets.images.default_avatar'));
     }
 
     public function scopeActive($query)
@@ -150,5 +150,28 @@ class User extends Authenticatable
                 $q->whereNull('date_to')
                     ->orWhereDate('date_to', '>=', now());
             });
+    }
+
+    public function getDesignationNameAttribute()
+    {
+        if ($this->details?->designation) {
+            return $this->details->designation->name;
+        }
+        return '';
+    }
+
+    // Projects where user is active
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
+            ->wherePivot('is_active', true);
+    }
+
+    // All projects including removed
+    public function allProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
     }
 }

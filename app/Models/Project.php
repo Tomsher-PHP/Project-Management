@@ -27,6 +27,7 @@ class Project extends Model
         'estimated_time_seconds',
         'domain',
         'notes',
+        'project_category_id',
         'default_billable',
         'status',
         'sales_person_id',
@@ -99,11 +100,6 @@ class Project extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function members()
-    {
-        return $this->hasMany(ProjectMember::class);
-    }
-
     public function technologies()
     {
         return $this->belongsToMany(Technology::class, 'project_technology');
@@ -161,5 +157,41 @@ class Project extends Model
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');
+    }
+
+    /*----------------Members relationship----------------*/
+
+    // Only active members (default)
+    public function members()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at');
+    }
+
+    // All members, including removed
+    public function membersAll()
+    {
+        return $this->belongsToMany(User::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
+    }
+
+    public function activeMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', true);
+    }
+
+    public function inactiveMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', false);
+    }
+
+    public function removedMembers()
+    {
+        return $this->membersAll()
+            ->whereNotNull('removed_at');
     }
 }

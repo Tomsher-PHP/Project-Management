@@ -10,7 +10,7 @@
             <div><strong>Date:</strong> <span id="modalDate"></span></div>
         </div>
 
-        <select id="modalShiftSelect" class="select-subtypes w-full border rounded p-2 mb-4">
+        <select id="modalShiftSelect" class="tom-select w-full border rounded p-2 mb-4">
             <option value="">Select Shift</option>
             @foreach ($shifts as $shiftOption)
                 <option value="{{ $shiftOption->id }}" data-subtype="{{ $shiftOption->time_from_formatted . ' - ' . $shiftOption->time_to_formatted }}">

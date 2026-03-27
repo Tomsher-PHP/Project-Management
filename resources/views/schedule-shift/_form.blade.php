@@ -30,7 +30,7 @@
                 Shift <x-red-star />
             </label>
 
-            <select name="shift_id" id="shift_id" class="select-subtypes w-full" data-sort="0">
+            <select name="shift_id" id="shift_id" class="tom-select w-full" data-sort="0">
 
                 <option value="">Select Shift</option>
 

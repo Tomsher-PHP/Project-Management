@@ -212,7 +212,7 @@
         <!-- Project Type -->
         <div>
             <label for="project_type" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Type <x-red-star /></label>
-            <select name="project_type" id="project_type" class="select-no-search w-full">
+            <select name="project_type" id="project_type" class="tom-select-no-search w-full">
                 <option value="agile">Agile</option>
                 <option value="linear">Linear</option>
             </select>
@@ -226,7 +226,7 @@
         <!-- Project Priority -->
         <div>
             <label for="priority" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Priority <x-red-star /></label>
-            <select name="priority" id="priority" class="select-no-search w-full">
+            <select name="priority" id="priority" class="tom-select-no-search w-full">
                 @foreach ($priorities as $key => $priority)
                     <option value="{{ $key }}">{{ $priority['label'] }}</option>
                 @endforeach
@@ -241,7 +241,7 @@
         <!-- Project Status -->
         <div>
             <label for="project_status" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Status <x-red-star /></label>
-            <select name="project_status" id="project_status" class="select-no-search w-full">
+            <select name="project_status" id="project_status" class="tom-select-no-search w-full">
                 @foreach ($statuses as $status)
                     <option value="{{ $status->id }}">{{ $status->name }}</option>
                 @endforeach

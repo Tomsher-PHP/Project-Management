@@ -68,7 +68,13 @@ return [
     // Default team roles for team management
     'team_roles' => [
         'owner' => 'Owner',
-        'admin' => 'Admin',
+        'member' => 'Member',
+    ],
+
+    // Default project roles for project management
+    'project_roles' => [
+        'team_leader' => 'Team Leader',
+        'coordinator' => 'Coordinator',
         'member' => 'Member',
     ],
 
