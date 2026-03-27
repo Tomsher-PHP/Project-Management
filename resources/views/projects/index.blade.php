@@ -210,8 +210,9 @@
         <div>
             <label for="project_type" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Type <x-red-star /></label>
             <select name="project_type" id="project_type" class="tom-select-no-search w-full">
-                <option value="agile">Agile</option>
-                <option value="linear">Linear</option>
+                @foreach ($types as $key => $type)
+                    <option value="{{ $key }}">{{ $type }}</option>
+                @endforeach
             </select>
             @error('project_type')
                 <p class="mt-2 text-sm text-error-300">

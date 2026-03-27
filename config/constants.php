@@ -146,7 +146,7 @@ return [
     // Project Type constant
     'project_types' => [
         'agile' => 'Agile',
-        'simple' => 'Simple',
+        'linear' => 'Linear',
     ],
 
     // Project Status constant
