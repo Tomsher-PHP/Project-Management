@@ -273,22 +273,8 @@
     @endif
 
 </form>
-
-<script>
-    function projectForm() {
-        return {
-            dirty: false,
-            // Blade variable now works because we are inside a template
-            billable: {{ old('default_billable', $project->default_billable ?? 0) ? 'true' : 'false' }},
-
-            markDirty() {
-                this.dirty = true;
-            },
-
-            toggleBillable() {
-                this.billable = !this.billable;
-                this.markDirty();
-            }
-        }
-    }
-</script>
+@push('scripts')
+    <script>
+        window.canEdit = @json($editPermission);
+    </script>
+@endpush
