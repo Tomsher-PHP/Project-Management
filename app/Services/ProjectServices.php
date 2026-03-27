@@ -113,12 +113,23 @@ class ProjectServices
     public function uploadFile(Project $project, array $data)
     {
         return DB::transaction(function () use ($project, $data) {
-            // 4. Image upload can be handled here if needed
-            if (!empty($data['project_file'])) {
+            $attachments = [];
+            if (!empty($data['project_files'])) {
                 $directory = 'project_files/' . $project->project_code;
-                $attachment = $this->attachmentService->upload($data['project_file'], $directory, $project, 'public', 'public', true);
+
+                foreach ($data['project_files'] as $file) {
+                    $attachments[] = $this->attachmentService->upload(
+                        $file,
+                        $directory,
+                        $project,
+                        'public',
+                        'public',
+                        true
+                    );
+                }
             }
-            return $attachment;
+
+            return $attachments;
         });
     }
 }

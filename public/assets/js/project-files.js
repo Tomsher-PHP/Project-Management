@@ -9,13 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     fileUploadBox.addEventListener('click', () => fileInput.click());
 
-    fileUploadBox.addEventListener('dragover', e => {
-        e.preventDefault();
-        fileUploadBox.classList.add('border-success-300');
-    });
-
-    fileUploadBox.addEventListener('dragleave', () => {
-        fileUploadBox.classList.remove('border-success-300');
+    fileInput.addEventListener('change', () => {
+        handleFiles(fileInput.files);
     });
 
     fileUploadBox.addEventListener('drop', e => {
@@ -23,20 +18,21 @@ document.addEventListener('DOMContentLoaded', function () {
         handleFiles(e.dataTransfer.files);
     });
 
-    fileInput.addEventListener('change', () => {
-        handleFiles(fileInput.files);
-    });
-
     function handleFiles(files) {
-        [...files].forEach(file => {
-            uploadFile(file);
-            // renderPreview(file);
-        });
+        if (!files) return;
+
+        const fileArray = Array.from(files);
+        if (!fileArray.length) return;
+
+        uploadFiles(fileArray);
     }
 
-    function uploadFile(file) {
+    function uploadFiles(files) {
         let formData = new FormData();
-        formData.append('project_file', file);
+
+        [...files].forEach(file => {
+            formData.append('project_files[]', file);
+        });
 
         fetch(`/projects/${projectId}/files`, {
             method: 'POST',
@@ -49,13 +45,17 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => {
                 if (res.success) {
                     const list = document.getElementById('file-list');
-                    list.insertAdjacentHTML('beforeend', res.html); // append rendered HTML
-                    Alert.success(`Uploaded ${res.file.original_name}`);
+
+                    res.html.forEach(html => {
+                        list.insertAdjacentHTML('beforeend', html);
+                    });
+
+                    Alert.success(res.message);
                 }
             })
             .catch(err => {
                 console.error(err);
-                Alert.error(`Failed to upload ${file.name}`);
+                Alert.error('Failed to upload files');
             });
     }
 

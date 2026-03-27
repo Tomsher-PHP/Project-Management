@@ -114,14 +114,16 @@ class ProjectController extends Controller
 
     public function uploadFile(ProjectFileRequest $request, Project $project, ProjectServices $service)
     {
-        $attachment = $service->uploadFile($project, $request->validated());
+        $attachments = $service->uploadFile($project, $request->validated());
 
-        // Render Blade partial as HTML string
-        $html = view('projects.partials.file-item', ['file' => $attachment])->render();
+        $html = [];
+        foreach ($attachments as $file) {
+            $html[] = view('projects.partials.file-item', ['file' => $file])->render();
+        }
 
         return response()->json([
             'success' => true,
-            'file' => $attachment,
+            'message' => 'Files uploaded successfully',
             'html' => $html
         ], Response::HTTP_OK);
     }
