@@ -75,6 +75,20 @@ class Project extends Model
         return 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
 
+    public function scopeAccessibleBy($query, $user)
+    {
+        if ($user->is_super_admin) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('added_by', $user->id)
+                ->orWhereHas('members', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+        });
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -161,18 +175,19 @@ class Project extends Model
 
     /*----------------Members relationship----------------*/
 
-    // Only active members (default)
-    public function members()
-    {
-        return $this->membersAll()
-            ->whereNull('removed_at');
-    }
 
     // All members, including removed
     public function membersAll()
     {
         return $this->belongsToMany(User::class, 'project_members')
             ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
+    }
+
+    // Only active members (default)
+    public function members()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at');
     }
 
     public function activeMembers()

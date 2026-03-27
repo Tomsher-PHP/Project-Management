@@ -22,7 +22,8 @@ class ProjectFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_file' => 'required|file|mimes:pdf,xls,xlsx,doc,docx,jpg,jpeg,png|max:5120'
+            'project_files' => ['required', 'array'],
+            'project_files.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,jpg,jpeg,png', 'max:5120'], // 5MB
         ];
     }
 
