@@ -135,9 +135,11 @@
                                     <div class="h-60 min-h-[240px] rounded-b-lg bg-white dark:bg-darkblack-500" id="project-note"></div>
                                 </div>
 
-                                <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400">
-                                    Save Notes
-                                </button>
+                                @can('project.update_notes', $project)
+                                    <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400">
+                                        Save Notes
+                                    </button>
+                                @endcan
                             </div>
 
                             <!-- Files -->
@@ -210,4 +212,6 @@
     </script>
     <script src="{{ asset('assets/js/project-ajax.js') }}"></script>
     <script src="{{ asset('assets/js/project-team.js') }}"></script>
+    <script src="{{ asset('assets/js/project-notes.js') }}"></script>
+    <script src="{{ asset('assets/js/project-files.js') }}"></script>
 @endpush

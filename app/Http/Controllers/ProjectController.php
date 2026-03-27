@@ -61,12 +61,24 @@ class ProjectController extends Controller
         $users = User::active()->where('is_super_admin', 0)->get();
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
+        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
+        $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
+
         $priorities = config('constants.project_priorities');
         $projectStages = config('constants.project_stages');
-        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
         $projectRoles = config('constants.project_roles');
 
-        return view('projects.detail-page', compact('project', 'users', 'customers', 'statuses', 'priorities', 'projectStages', 'projectCategories', 'projectRoles'));
+        return view('projects.detail-page', compact(
+            'project',
+            'users',
+            'customers',
+            'statuses',
+            'priorities',
+            'projectStages',
+            'projectCategories',
+            'projectRoles',
+            'projectTechnologies'
+        ));
     }
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)

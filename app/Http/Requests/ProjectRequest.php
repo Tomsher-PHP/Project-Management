@@ -45,6 +45,8 @@ class ProjectRequest extends FormRequest
                 'project_stage' => 'nullable|string',
                 'project_category_id' => 'nullable|exists:project_categories,id',
                 'default_billable' => 'nullable|boolean',
+                'project_technology_ids' => 'nullable|array',
+                'project_technology_ids.*' => 'nullable|exists:technologies,id',
             ];
         }
 

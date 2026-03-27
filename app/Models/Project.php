@@ -27,6 +27,7 @@ class Project extends Model
         'estimated_time_seconds',
         'domain',
         'notes',
+        'project_category_id',
         'default_billable',
         'status',
         'sales_person_id',

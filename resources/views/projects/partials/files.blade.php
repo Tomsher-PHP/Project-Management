@@ -2,7 +2,7 @@
 
 <!-- Upload Box -->
 @can('project.add_files')
-    <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 text-center cursor-pointer hover:border-success-300 transition">
+    <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 mt-4 text-center cursor-pointer hover:border-success-300 transition">
 
         <p class="text-bgray-500">Drag & drop files here or click to upload</p>
         <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png">

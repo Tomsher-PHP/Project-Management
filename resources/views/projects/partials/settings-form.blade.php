@@ -1,6 +1,17 @@
+@php
+    //get project edit permission
+    $editPermission = auth()->user()->can('project.edit');
+@endphp
 <form id="project-settings-form" action="{{ route('projects.update', $project->id) }}" method="POST" class="space-y-10" x-data="projectForm()">
     @csrf
     @method('PUT')
+
+    @if (!$editPermission)
+        <div class="mb-4 text-sm text-gray-500">
+            You have view-only access to this project.
+        </div>
+        <fieldset disabled class="opacity-70 cursor-not-allowed">
+    @endif
 
     <!-- ================= PROJECT INFORMATION ================= -->
     <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
@@ -73,6 +84,25 @@
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
+
+            <!-- Project Stage -->
+            <div class="flex flex-col gap-2">
+                <label for="project_stage" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Project Stage
+                </label>
+                <select name="project_stage" id="project_stage" class="tom-select-no-search w-full" x-on:change="markDirty()">
+                    <option value="">Select Project Stage</option>
+                    @foreach ($projectStages as $key => $stage)
+                        <option value="{{ $key }}" {{ old('project_stage', $project->project_stage ?? '') == $key ? 'selected' : '' }}>
+                            {{ $stage }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('project_stage')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
         </div>
     </div>
 
@@ -138,18 +168,6 @@
                 Other Information
             </h3>
 
-            <!-- Domain -->
-            <div class="flex flex-col gap-2">
-                <label for="domain" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Domain
-                </label>
-                <input type="text" name="domain" id="domain" value="{{ old('domain', $project->domain ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('domain') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" x-on:input="markDirty()">
-
-                @error('domain')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
             <!-- Sales Person -->
             <div class="flex flex-col gap-2">
                 <label for="sales_person_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
@@ -168,24 +186,6 @@
                 @enderror
             </div>
 
-            <!-- Project Stage -->
-            <div class="flex flex-col gap-2">
-                <label for="project_stage" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Project Stage
-                </label>
-                <select name="project_stage" id="project_stage" class="tom-select-no-search w-full" x-on:change="markDirty()">
-                    <option value="">Select Project Stage</option>
-                    @foreach ($projectStages as $key => $stage)
-                        <option value="{{ $key }}" {{ old('project_stage', $project->project_stage ?? '') == $key ? 'selected' : '' }}>
-                            {{ $stage }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('project_stage')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
             <!-- Project Category -->
             <div class="flex flex-col gap-2">
                 <label for="project_category_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
@@ -200,6 +200,36 @@
                     @endforeach
                 </select>
                 @error('project_category_id')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Project Technology -->
+            <div class="flex flex-col gap-2">
+                <label for="project_technology_ids" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Project Technology
+                </label>
+                <select name="project_technology_ids[]" id="project_technology_ids" multiple class="tom-select-multiple w-full" x-on:change="markDirty()">
+                    <option value="">Select Project Technology</option>
+                    @foreach ($projectTechnologies as $technology)
+                        <option value="{{ $technology->id }}" {{ in_array($technology->id, old('project_technology_ids', $project->technologies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
+                            {{ $technology->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('project_technology_ids')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Domain -->
+            <div class="flex flex-col gap-2">
+                <label for="domain" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Domain
+                </label>
+                <input type="text" name="domain" id="domain" value="{{ old('domain', $project->domain ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('domain') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" x-on:input="markDirty()">
+
+                @error('domain')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
@@ -230,11 +260,17 @@
         </div>
     </div>
 
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
-        <button type="button" id="update-project" data-project-id="{{ $project->id }}" class="px-6 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400" :disabled="!dirty">
-            Update Project
-        </button>
-    </div>
+    @if (!$editPermission)
+        </fieldset>
+    @endif
+
+    @if ($editPermission)
+        <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
+            <button type="button" id="update-project" data-project-id="{{ $project->id }}" class="px-6 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400" :disabled="!dirty">
+                Update Project
+            </button>
+        </div>
+    @endif
 
 </form>
 

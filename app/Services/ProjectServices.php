@@ -101,6 +101,11 @@ class ProjectServices
                 ]);
             }
 
+            // Attach project technologies
+            if (isset($data['project_technology_ids'])) {
+                $project->technologies()->sync($data['project_technology_ids']);
+            }
+
             return $project->fresh(); // return updated model
         });
     }
