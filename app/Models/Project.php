@@ -99,21 +99,6 @@ class Project extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    // Only active members (default)
-    public function members()
-    {
-        return $this->belongsToMany(User::class, 'project_members')
-            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
-            ->whereNull('removed_at');
-    }
-
-    // All members, including removed
-    public function allMembers()
-    {
-        return $this->belongsToMany(User::class, 'project_members')
-            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
-    }
-
     public function technologies()
     {
         return $this->belongsToMany(Technology::class, 'project_technology');
@@ -171,5 +156,41 @@ class Project extends Model
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');
+    }
+
+    /*----------------Members relationship----------------*/
+
+    // Only active members (default)
+    public function members()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at');
+    }
+
+    // All members, including removed
+    public function membersAll()
+    {
+        return $this->belongsToMany(User::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
+    }
+
+    public function activeMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', true);
+    }
+
+    public function inactiveMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', false);
+    }
+
+    public function removedMembers()
+    {
+        return $this->membersAll()
+            ->whereNotNull('removed_at');
     }
 }

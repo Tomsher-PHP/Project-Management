@@ -8,69 +8,75 @@ use App\Models\ProjectMember;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProjectMemberController extends Controller
 {
     public function addMember(ProjectMemberRequest $request, Project $project)
     {
-        $userIds = $request->user_id; // array
-        $role = $request->project_role;
+        return DB::transaction(function () use ($request, $project) {
+            $userIds = (array) $request->user_id;
+            $role = $request->project_role;
 
-        $existingMembers = $project->allMembers()
-            ->whereIn('users.id', $userIds)
-            ->get()
-            ->keyBy('id');
+            $existingMembers = $project->membersAll()
+                ->whereIn('users.id', $userIds)
+                ->get()
+                ->keyBy('id');
 
-        $members = collect();
-        $html = '';
+            $newlyAddedIds = [];
 
-        foreach ($userIds as $userId) {
-            $existing = $existingMembers->get($userId);
+            foreach ($userIds as $userId) {
+                $existing = $existingMembers->get($userId);
 
-            if ($existing) {
-                if ($existing->pivot->removed_at) {
-                    $project->allMembers()->updateExistingPivot($userId, [
-                        'project_role' => $role,
-                        'is_active' => true,
-                        'removed_at' => null,
-                        'removed_by' => null,
+                if ($existing) {
+                    if ($existing->pivot->removed_at) {
+                        // If the member was removed before, re-add them
+                        $project->membersAll()->updateExistingPivot($userId, [
+                            'project_role' => $role,
+                            'is_active' => true,
+                            'removed_at' => null,
+                            'removed_by' => null,
+                        ]);
+
+                        $newlyAddedIds[] = $userId;
+                    }
+                } else {
+                    // Attach new user to project
+                    $project->membersAll()->syncWithoutDetaching([
+                        $userId => [
+                            'project_role' => $role,
+                            'is_active' => true,
+                        ]
                     ]);
 
-                    $existing->pivot->project_role = $role;
-                    $existing->pivot->is_active = true;
-                    $existing->pivot->removed_at = null;
-                    $existing->pivot->removed_by = null;
-
-                    $member = $existing;
-                } else {
-                    continue;
+                    $newlyAddedIds[] = $userId;
                 }
-            } else {
-                // Attach new user to project
-                $project->members()->attach($userId, [
-                    'project_role' => $role,
-                    'is_active' => true,
-                ]);
             }
 
-            $member = $project->members()->where('user_id', $userId)->first();
-            $members->push($member);
+            if (empty($newlyAddedIds)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'All selected users are already active members.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
-            $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
-        }
+            // Fetch all members
+            $members = $project->membersAll()
+                ->whereIn('users.id', $newlyAddedIds)
+                ->get();
 
-        if ($members->isEmpty()) {
+            $html = '';
+
+            foreach ($members as $member) {
+                $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
+            }
+
             return response()->json([
-                'status' => false,
-                'message' => 'All selected users are already active members.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Members added successfully.',
-            'member_cards' => $html,
-        ]);
+                'status' => true,
+                'message' => 'Members added successfully.',
+                'member_cards' => $html,
+            ]);
+        });
     }
 
     public function removeMember($projectId, $userId)
@@ -100,7 +106,7 @@ class ProjectMemberController extends Controller
 
     public function toggleStatus(Project $project, $userId)
     {
-        $member = $project->allMembers()->where('user_id', $userId)->whereNull('removed_at')->firstOrFail();
+        $member = $project->membersAll()->where('user_id', $userId)->whereNull('removed_at')->firstOrFail();
 
         $member->pivot->update([
             'is_active' => !$member->pivot->is_active,
