@@ -1,16 +1,16 @@
 @php
     //get project edit permission
-    $editPermission = auth()->user()->can('project.edit');
+    $canEdit = auth()->user()->can('project.edit');
 @endphp
 <form id="project-settings-form" action="{{ route('projects.update', $project->id) }}" method="POST" class="space-y-10" x-data="projectForm()">
     @csrf
     @method('PUT')
 
-    @if (!$editPermission)
+    @if (!$canEdit)
         <div class="mb-4 text-sm text-gray-500">
             You have view-only access to this project.
         </div>
-        <fieldset disabled class="opacity-70 cursor-not-allowed">
+        <fieldset disabled class="opacity-60 cursor-not-allowed">
     @endif
 
     <!-- ================= PROJECT INFORMATION ================= -->
@@ -260,11 +260,11 @@
         </div>
     </div>
 
-    @if (!$editPermission)
+    @if (!$canEdit)
         </fieldset>
     @endif
 
-    @if ($editPermission)
+    @if ($canEdit)
         <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
             <button type="button" id="update-project" data-project-id="{{ $project->id }}" class="px-6 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400" :disabled="!dirty">
                 Update Project
@@ -275,6 +275,31 @@
 </form>
 @push('scripts')
     <script>
-        window.canEdit = @json($editPermission);
+        // Make disable all select if user not have permission
+        const canEdit = {{ $canEdit ? 'true' : 'false' }};
+        if (!canEdit) {
+            document.querySelectorAll('#project-settings-form select').forEach(el => {
+                el.disabled = true;
+            });
+            document.querySelectorAll('#project-settings-form input').forEach(el => {
+                el.disabled = true;
+            });
+        }
+
+        function projectForm() {
+            return {
+                dirty: false,
+                billable: {{ old('default_billable', $project->default_billable ?? 0) ? 'true' : 'false' }},
+
+                markDirty() {
+                    this.dirty = true;
+                },
+
+                toggleBillable() {
+                    this.billable = !this.billable;
+                    this.markDirty();
+                }
+            }
+        }
     </script>
 @endpush

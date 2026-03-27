@@ -1,7 +1,5 @@
 export function initTomSelect() {
 
-    const canEdit = window.canEdit !== false;
-
     // Standard Select
     document.querySelectorAll('.tom-select-no-search').forEach(el => {
 
@@ -12,12 +10,6 @@ export function initTomSelect() {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['clear_button'],
-            onInitialize: function () {
-                if (!canEdit) {
-                    this.disable();
-                    this.wrapper.classList.add('opacity-90', 'pointer-events-none');
-                }
-            },
         });
     });
 
@@ -33,12 +25,6 @@ export function initTomSelect() {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'clear_button'],
-            onInitialize: function () {
-                if (!canEdit) {
-                    this.disable();
-                    this.wrapper.classList.add('opacity-90', 'pointer-events-none');
-                }
-            },
             render: {
                 option: function (data, escape) {
                     return `
@@ -74,12 +60,6 @@ export function initTomSelect() {
         new TomSelect(el, {
             plugins: ['remove_button', 'dropdown_input', 'clear_button'],
             maxItems: null,
-            onInitialize: function () {
-                if (!canEdit) {
-                    this.disable();
-                    this.wrapper.classList.add('opacity-90', 'pointer-events-none');
-                }
-            },
         });
     });
 
