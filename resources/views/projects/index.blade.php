@@ -57,11 +57,11 @@
                                             <x-sorting.sortable-column column="internal_end_date" label="End Date" />
                                         </div>
                                     </td>
-                                    {{-- <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
                                         </div>
-                                    </td> --}}
+                                    </td>
                                 </tr>
                                 @php
                                     $startNumber = ($projects->currentPage() - 1) * $projects->perPage();
@@ -130,16 +130,13 @@
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->internal_end_date->format(config('constants.date_format')) ?? '--' }}</span>
                                             </div>
                                         </td>
-                                        {{-- <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                @can('project.edit')
-                                                    <x-edit-button :action="route('projects.edit', $project->id)" />
-                                                @endcan
                                                 @can('project.delete')
                                                     <x-delete-form :action="route('projects.destroy', $project->id)" />
                                                 @endcan
                                             </div>
-                                        </td> --}}
+                                        </td>
                                     </tr>
                                 @empty
                                     <x-table-no-data col-span="7" message="No projects found." />
