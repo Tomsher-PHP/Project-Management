@@ -32,7 +32,8 @@ class ProjectController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $projects = Project::filter($request->all())
+        $projects = Project::accessibleBy(auth()->user())
+            ->filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)
             ->withQueryString();
