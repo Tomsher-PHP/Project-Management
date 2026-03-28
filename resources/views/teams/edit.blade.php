@@ -25,6 +25,6 @@
     </main>
 @endsection
 @push('scripts')
-    <script src="{{ asset(config('assets.js.image_draggable')) }}"></script>
-    @vite('resources/js/team.js')
+    @vite('resources/js/image-draggable.js')
+    @vite('resources/js/modules/team.js')
 @endpush

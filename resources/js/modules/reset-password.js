@@ -1,4 +1,4 @@
-import Alert from "./alert";
+import Alert from "../alert";
 
 // Submit email to get otp
 $('#step-1-next').on('click', function (e) {

@@ -9,8 +9,7 @@
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
                     <div class="flex grid-cols-12 flex-col-reverse gap-12 xl:grid 2xl:flex-row">
                         <div class="col-span-12 w-full">
-                            <h3
-                                class="border-b border-bgray-200 pb-5 text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
+                            <h3 class="border-b border-bgray-200 pb-5 text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
                                 Schedule Shift
                             </h3>
 
@@ -19,11 +18,9 @@
                             </div>
 
                             <!-- preview modal for existing schedule -->
-                            <div id="preview-modal"
-                                class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+                            <div id="preview-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
 
-                                <div
-                                    class="bg-white dark:bg-darkblack-600 rounded-lg w-[600px] max-h-[80vh] overflow-y-auto p-6">
+                                <div class="bg-white dark:bg-darkblack-600 rounded-lg w-[600px] max-h-[80vh] overflow-y-auto p-6">
 
                                     <h3 class="text-lg font-semibold mb-4">
                                         Existing Schedule Found
@@ -33,13 +30,11 @@
 
                                     <div class="flex justify-end gap-3 mt-6">
 
-                                        <button type="button" onclick="closePreviewModal()"
-                                            class="px-4 py-2 rounded bg-gray-200">
+                                        <button type="button" onclick="closePreviewModal()" class="px-4 py-2 rounded bg-gray-200">
                                             Cancel
                                         </button>
 
-                                        <button type="button" id="continue-schedule"
-                                            class="px-4 py-2 rounded bg-success-400 text-white">
+                                        <button type="button" id="continue-schedule" class="px-4 py-2 rounded bg-success-400 text-white">
                                             Continue
                                         </button>
 
@@ -58,5 +53,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/create-schedule.js')
+    @vite('resources/js/modules/create-schedule.js')
 @endpush

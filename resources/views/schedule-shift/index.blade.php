@@ -75,7 +75,7 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/schedule-shift.js')
+    @vite('resources/js/modules/schedule-shift.js')
     <script>
         let currentWeek = "{{ $startOfWeek->toDateString() }}";
     </script>

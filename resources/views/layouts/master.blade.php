@@ -49,10 +49,9 @@
             </div>
         </div>
     </div>
-
     <!-- layout end -->
+
     <!--scripts -->
-    <script src="{{ asset(config('assets.js.filter_drawer')) }}"></script>
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>
     <script src="{{ asset(config('assets.js.slick')) }}"></script>
@@ -62,7 +61,6 @@
     <script src="{{ asset(config('assets.js.quill')) }}"></script>
     <script src="{{ asset(config('assets.js.main')) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
-    <script src="{{ asset(config('assets.js.delete_alert')) }}"></script>
 
     <script>
         localStorage.theme = 'light';

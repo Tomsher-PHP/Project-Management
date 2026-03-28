@@ -2,7 +2,7 @@
     @csrf
     @method('DELETE')
 
-    <button type="submit" {{ $attributes->merge([
+    <button type="button" {{ $attributes->merge([
         'class' => 'inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-darkblack-500 hover:bg-red-200 dark:hover:bg-darkblack-400 transition duration-200 group',
     ]) }}>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600 group-hover:text-red-700 transition" viewBox="0 0 20 20" fill="currentColor">

@@ -1,12 +1,15 @@
-import './bootstrap';
 import Swal from 'sweetalert2';
 import Alert from './alert';
-import './status-toggle';
-import './reset-password';
-import './modules/ajax-form-modal';
 import Alpine from 'alpinejs';
-
 import TomSelect from "tom-select";
+
+import './bootstrap';
+import './status-toggle';
+import './modules/reset-password';
+import './modules/ajax-form-modal';
+import './delete-alert';
+import './components/filterDrawer';
+
 import "tom-select/dist/css/tom-select.css";
 import { initTomSelect, autoTomSelect } from './components/tom-select';
 

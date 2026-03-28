@@ -31,14 +31,5 @@ return [
 
         //profile page js
         'pages_profile' => 'assets/js/pages/profile.init.js',
-
-        //image-draggable
-        'image_draggable' => 'assets/js/image-draggable.js',
-
-        //delete confirmation alert
-        'delete_alert' => 'assets/js/delete-alert.js',
-
-        //filter drawer
-        'filter_drawer' => 'assets/js/filterDrawer.js',
     ],
 ];

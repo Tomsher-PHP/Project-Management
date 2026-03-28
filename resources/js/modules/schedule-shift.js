@@ -1,6 +1,6 @@
-import { autoTomSelect } from './components/tom-select';
-import { initWeekPicker } from './components/weekpicker';
-import { Loader } from './helpers/loader';
+import { autoTomSelect } from '../components/tom-select';
+import { initWeekPicker } from '../components/weekpicker';
+import { Loader } from '../helpers/loader';
 
 // Load week via AJAX
 const loadWeek = async (date) => {

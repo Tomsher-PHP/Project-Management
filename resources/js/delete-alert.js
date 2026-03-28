@@ -1,4 +1,4 @@
-$(document).on('submit', '.delete-form', function (e) {
+$(document).on('click', '.delete-form', function (e) {
 
     e.preventDefault();
 
