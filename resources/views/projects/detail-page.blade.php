@@ -210,8 +210,5 @@
             canEdit: @json(auth()->user()->can('project.update_notes')),
         };
     </script>
-    <script src="{{ asset('assets/js/project-ajax.js') }}"></script>
-    <script src="{{ asset('assets/js/project-team.js') }}"></script>
-    <script src="{{ asset('assets/js/project-notes.js') }}"></script>
-    <script src="{{ asset('assets/js/project-files.js') }}"></script>
+    @vite('resources/js/modules/projects/project-detail.js')
 @endpush

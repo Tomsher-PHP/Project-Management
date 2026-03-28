@@ -11,17 +11,16 @@ import './delete-alert';
 import './components/filterDrawer';
 
 import "tom-select/dist/css/tom-select.css";
-import { initTomSelect, autoTomSelect } from './components/tom-select';
 
+import { initTomSelect } from './components/tom-select';
 import { initDatepicker } from './components/datepicker';
 import { initTimepicker } from './components/timepicker';
 import { initWeekPicker } from './components/weekpicker';
 
 window.Swal = Swal;
 window.Alert = Alert;
-window.TomSelect = TomSelect;
 window.Alpine = Alpine
-window.autoTomSelect = autoTomSelect;
+window.TomSelect = TomSelect;
 Alpine.start();
 
 // Initialize all selects with the class 'tom-select' on DOMContentLoaded

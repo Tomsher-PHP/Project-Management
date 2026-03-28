@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/modules/create-schedule.js',
                 'resources/js/modules/customer-contact.js',
                 'resources/js/image-draggable.js',
+                'resources/js/modules/projects/project-detail.js',
             ],
             refresh: true,
         }),
