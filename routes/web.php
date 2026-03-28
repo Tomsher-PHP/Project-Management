@@ -181,3 +181,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.delete', 'can:delete,project'])->only(['destroy']);
     // End Project Routes
 });
+
+Route::get('api-test', function () {
+    dd('test for api');
+})->name('api-test');
