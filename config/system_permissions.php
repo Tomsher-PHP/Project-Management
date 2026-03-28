@@ -2,6 +2,7 @@
 
 return [
     // Project Module
+    'project.view_all_projects',
     'project.view',
     'project.create',
     'project.edit',

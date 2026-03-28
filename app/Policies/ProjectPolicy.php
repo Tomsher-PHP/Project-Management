@@ -21,8 +21,8 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        // Superadmin bypass
-        if ($user->is_super_admin) {
+        // Superadmin or view all projects permission
+        if ($user->is_super_admin || $user->can('project.view_all_projects')) {
             return true;
         }
 

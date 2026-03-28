@@ -7,14 +7,10 @@
 
     <!-- ================= BASIC ROLE INFORMATION ================= -->
     <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 
-                   dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
-            Role Information
-        </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {{-- Role Name --}}
+            <!-- Role Name -->
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Role Name <x-red-star />

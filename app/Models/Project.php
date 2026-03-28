@@ -77,10 +77,12 @@ class Project extends Model
 
     public function scopeAccessibleBy($query, $user)
     {
-        if ($user->is_super_admin) {
+        // Superadmin or view all projects permission
+        if ($user->is_super_admin || $user->can('project.view_all_projects')) {
             return $query;
         }
 
+        // Creator or member
         return $query->where(function ($q) use ($user) {
             $q->where('added_by', $user->id)
                 ->orWhereHas('members', function ($q) use ($user) {
