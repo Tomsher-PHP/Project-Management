@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/team.js',
                 'resources/js/schedule-shift.js',
                 'resources/js/create-schedule.js',
+                'resources/js/modules/customer-contact.js',
             ],
             refresh: true,
         }),

@@ -7,7 +7,7 @@ $(document).ready(function () {
     });
 
     // OPEN CREATE
-    $('.modal-open').on('click', function () {
+    $(document).on('click', '.modal-open', function () {
 
         let modalId = $(this).data('target');
         let modal = $(modalId);
@@ -31,7 +31,7 @@ $(document).ready(function () {
     });
 
     // OPEN EDIT
-    $('.edit-record').on('click', function () {
+    $(document).on('click', '.edit-record', function () {
 
         let modalId = $(this).data('modal');
         let modal = $('#' + modalId);
@@ -69,7 +69,7 @@ $(document).ready(function () {
     });
 
     // CLOSE MODAL
-    $('.modal-close').on('click', function () {
+    $(document).on('click', '.modal-close', function () {
         let modal = $(this).closest('.modal-form');
 
         modal.addClass('hidden');
@@ -77,13 +77,13 @@ $(document).ready(function () {
     });
 
     // SUBMIT FORM
-    $('.ajax-form').on('submit', function (e) {
+    $(document).on('submit', '.ajax-form', function (e) {
 
         e.preventDefault();
 
         let form = $(this);
         let url = form.attr('action');
-        let formData = form.serialize();
+        let formData = new FormData(this);
 
         form.find('.error-text').remove();
 
@@ -91,6 +91,8 @@ $(document).ready(function () {
             url: url,
             type: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
             success: function (response) {
                 if (response.status) {
                     Alert.success(response.message);

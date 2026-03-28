@@ -65,5 +65,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/customer-contact.js') }}"></script>
+    @vite('resources/js/modules/customer-contact.js')
 @endpush

@@ -266,7 +266,3 @@
 
     </x-form-modal>
 @endsection
-
-@push('scripts')
-    <script src="{{ asset('assets/js/ajax-form-modal.js') }}"></script>
-@endpush

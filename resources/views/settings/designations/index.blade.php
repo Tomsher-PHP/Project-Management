@@ -146,7 +146,3 @@
     </x-filters.drawer>
     <!-- Filter drawer end -->
 @endsection
-
-@push('scripts')
-    <script src="{{ asset('assets/js/ajax-form-modal.js') }}"></script>
-@endpush
