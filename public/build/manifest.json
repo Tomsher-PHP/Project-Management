@@ -11,7 +11,7 @@
     "src": "_weekpicker-CksuuEqD.css"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Ct6WlEVk.css",
+    "file": "assets/app-B2Llhxb-.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -20,7 +20,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-C9Iw1U4D.js",
+    "file": "assets/app-DaRzJtha.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -28,7 +28,7 @@
       "_weekpicker-BrIt0Lrh.js"
     ],
     "css": [
-      "assets/app-39c7LKqe.css"
+      "assets/app-CqGrDw4D.css"
     ]
   },
   "resources/js/image-draggable.js": {
@@ -50,7 +50,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BYAcTdhQ.js",
+    "file": "assets/project-detail-C7WfaSR_.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true
