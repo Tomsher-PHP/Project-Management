@@ -1,6 +1,17 @@
 {
+  "_weekpicker-BrIt0Lrh.js": {
+    "file": "assets/weekpicker-BrIt0Lrh.js",
+    "name": "weekpicker",
+    "css": [
+      "assets/weekpicker-CksuuEqD.css"
+    ]
+  },
+  "_weekpicker-CksuuEqD.css": {
+    "file": "assets/weekpicker-CksuuEqD.css",
+    "src": "_weekpicker-CksuuEqD.css"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-C5bY43SJ.css",
+    "file": "assets/app-Ct6WlEVk.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -9,36 +20,54 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BvCVY6q4.js",
+    "file": "assets/app-C9Iw1U4D.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "resources/js/schedule-shift.js"
+      "_weekpicker-BrIt0Lrh.js"
     ],
     "css": [
       "assets/app-39c7LKqe.css"
     ]
   },
-  "resources/js/create-schedule.js": {
-    "file": "assets/create-schedule-B1-a-NAp.js",
-    "name": "create-schedule",
-    "src": "resources/js/create-schedule.js",
+  "resources/js/image-draggable.js": {
+    "file": "assets/image-draggable-Bl5g2tu1.js",
+    "name": "image-draggable",
+    "src": "resources/js/image-draggable.js",
     "isEntry": true
   },
-  "resources/js/schedule-shift.js": {
-    "file": "assets/schedule-shift-CNjFi-NX.js",
+  "resources/js/modules/create-schedule.js": {
+    "file": "assets/create-schedule-B1-a-NAp.js",
+    "name": "create-schedule",
+    "src": "resources/js/modules/create-schedule.js",
+    "isEntry": true
+  },
+  "resources/js/modules/customer-contact.js": {
+    "file": "assets/customer-contact-BwU15WCS.js",
+    "name": "customer-contact",
+    "src": "resources/js/modules/customer-contact.js",
+    "isEntry": true
+  },
+  "resources/js/modules/projects/project-detail.js": {
+    "file": "assets/project-detail-BYAcTdhQ.js",
+    "name": "project-detail",
+    "src": "resources/js/modules/projects/project-detail.js",
+    "isEntry": true
+  },
+  "resources/js/modules/schedule-shift.js": {
+    "file": "assets/schedule-shift-CWo1RRRy.js",
     "name": "schedule-shift",
-    "src": "resources/js/schedule-shift.js",
+    "src": "resources/js/modules/schedule-shift.js",
     "isEntry": true,
-    "css": [
-      "assets/schedule-shift-CksuuEqD.css"
+    "imports": [
+      "_weekpicker-BrIt0Lrh.js"
     ]
   },
-  "resources/js/team.js": {
+  "resources/js/modules/team.js": {
     "file": "assets/team-DP6ggxb2.js",
     "name": "team",
-    "src": "resources/js/team.js",
+    "src": "resources/js/modules/team.js",
     "isEntry": true
   }
 }
