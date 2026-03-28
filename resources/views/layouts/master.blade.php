@@ -17,8 +17,6 @@
     <link rel="stylesheet" href="{{ asset(config('assets.css.aos')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.output')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.style')) }}" />
-    <link rel="stylesheet" href="{{ asset(config('assets.css.quill_core')) }}" />
-    <link rel="stylesheet" href="{{ asset(config('assets.css.quill_snow')) }}" />
 
     @stack('styles')
 </head>
@@ -58,7 +56,6 @@
     <script>
         AOS.init();
     </script>
-    <script src="{{ asset(config('assets.js.quill')) }}"></script>
     <script src="{{ asset(config('assets.js.main')) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 

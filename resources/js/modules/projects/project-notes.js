@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    dirty = false;
                     saveBtn.disabled = true;
                     saveBtn.textContent = 'Saved';
                     Alert.success(data.message);

@@ -2,6 +2,7 @@ import Swal from 'sweetalert2';
 import Alert from './alert';
 import Alpine from 'alpinejs';
 import TomSelect from "tom-select";
+import Quill from 'quill';
 
 import './bootstrap';
 import './status-toggle';
@@ -11,6 +12,8 @@ import './delete-alert';
 import './components/filterDrawer';
 
 import "tom-select/dist/css/tom-select.css";
+import 'quill/dist/quill.core.css';
+import 'quill/dist/quill.snow.css';
 
 import { initTomSelect } from './components/tom-select';
 import { initDatepicker } from './components/datepicker';
@@ -21,6 +24,7 @@ window.Swal = Swal;
 window.Alert = Alert;
 window.Alpine = Alpine
 window.TomSelect = TomSelect;
+window.Quill = Quill;
 Alpine.start();
 
 // Initialize all selects with the class 'tom-select' on DOMContentLoaded
