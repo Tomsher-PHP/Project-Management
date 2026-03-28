@@ -24,6 +24,21 @@ class UserDetail extends Model
         'address',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'department_id' => 'integer',
+            'designation_id' => 'integer',
+            'reporter_id' => 'integer',
+            'manager_id' => 'integer',
+            'employee_id' => 'integer',
+            'joining_date' => 'datetime',
+            'leaving_date' => 'datetime',
+            'dob' => 'datetime',
+        ];
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

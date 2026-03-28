@@ -9,14 +9,22 @@
 
     <title>Tomsher Pmt | {{ $pageTitle ?? 'Dashboard' }}</title>
 
+    {{-- Vite Assets --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <link rel="icon" href="{{ asset(config('assets.icons.favicon')) }}" type="image/x-icon" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.slick')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.aos')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.output')) }}" />
     <link rel="stylesheet" href="{{ asset(config('assets.css.style')) }}" />
+
+    @stack('styles')
 </head>
 
 <body>
+    <!-- Page Loader -->
+    <x-page-loader />
+
     <!-- layout start -->
     <div class="layout-wrapper active w-full">
         <div class="relative flex w-full">
@@ -32,28 +40,15 @@
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
 
-                @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                {{-- Error Message --}}
-                @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
+                <x-flash-alert />
 
                 @yield('page-content')
 
             </div>
         </div>
     </div>
-
     <!-- layout end -->
+
     <!--scripts -->
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>
@@ -61,9 +56,9 @@
     <script>
         AOS.init();
     </script>
-    <script src="{{ asset(config('assets.js.quill')) }}"></script>
     <script src="{{ asset(config('assets.js.main')) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
+
     <script>
         localStorage.theme = 'light';
         document.documentElement.classList.remove('dark');
@@ -190,6 +185,14 @@
                 borderRadius: 5,
             },
         ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.location.pathname.includes('/projects')) {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('projectTab_')) localStorage.removeItem(key);
+                });
+            }
+        });
     </script>
 
     @stack('scripts')

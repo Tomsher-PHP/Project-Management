@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Shift;
+use App\Models\ShiftDepartment;
+use App\Models\ShiftWeekend;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ShiftService
@@ -15,72 +19,82 @@ class ShiftService
         //
     }
 
-    public function createShifts(User $user, array $data): void
+    public function createShift(array $data): Shift
     {
-        DB::transaction(function () use ($user, $data) {
+        return DB::transaction(function () use ($data) {
 
-            foreach ($data['start_time'] as $index => $startTime) {
+            // Create shift
+            $shift = Shift::create([
+                'name' => $data['name'],
+                'time_from' => Carbon::createFromFormat('g:i A', $data['start_time'])->format('H:i:s'),
+                'time_to' => Carbon::createFromFormat('g:i A', $data['end_time'])->format('H:i:s'),
+                'break_duration' => $data['break_duration'],
+                'color_code' => $data['color_code'] ?? '#6b7280',
+            ]);
 
-                $user->shifts()->create(
-                    $this->prepareShiftData($data, $index, $user->id)
-                );
+            // Store weekends
+            if (!empty($data['weekend_days']) && is_array($data['weekend_days'])) {
+                $weekends = [];
+
+                foreach ($data['weekend_days'] as $weekday => $weeks) {
+                    foreach ($weeks as $weekNumber) {
+                        $weekends[] = new ShiftWeekend([
+                            'weekday' => $weekday,
+                            'week_number' => $weekNumber,
+                        ]);
+                    }
+                }
+
+                $shift->weekends()->saveMany($weekends);
             }
+
+            return $shift;
         });
     }
 
-    public function updateShifts(User $user, array $data): void
+    public function updateShifts(Shift $shift, array $data): Shift
     {
-        DB::transaction(function () use ($user, $data) {
+        return DB::transaction(function () use ($shift, $data) {
 
-            // Delete old shifts (clean + safe)
-            $user->shifts()->delete();
-            $user->workingDays()->delete();
+            $hasAssignments = $shift->assignments()->exists();
 
-            foreach ($data['start_time'] as $index => $startTime) {
+            // Always editable
+            $updateData = [
+                'name' => $data['name'],
+                'color_code' => $data['color_code'] ?? '#6b7280',
+            ];
 
-                $user->shifts()->create(
-                    $this->prepareShiftData($data, $index, $user->id)
-                );
+            // Only editable if no assignments
+            if (!$hasAssignments) {
+
+                $updateData['time_from'] = Carbon::createFromFormat('g:i A', $data['start_time'])->format('H:i:s');
+                $updateData['time_to'] = Carbon::createFromFormat('g:i A', $data['end_time'])->format('H:i:s');
+                $updateData['break_duration'] = $data['break_duration'];
+
+                // Remove old weekends
+                $shift->weekends()->delete();
+
+                // Store new weekends
+                if (!empty($data['weekend_days']) && is_array($data['weekend_days'])) {
+
+                    $weekends = [];
+
+                    foreach ($data['weekend_days'] as $weekday => $weeks) {
+                        foreach ($weeks as $weekNumber) {
+                            $weekends[] = new ShiftWeekend([
+                                'weekday' => $weekday,
+                                'week_number' => $weekNumber,
+                            ]);
+                        }
+                    }
+
+                    $shift->weekends()->saveMany($weekends);
+                }
             }
 
-            // Convert working_days → boolean columns
-            $days = $this->mapWorkingDays($data['working_days']);
-            $user->workingDays()->create($days);
+            $shift->update($updateData);
+
+            return $shift;
         });
-    }
-
-    private function prepareShiftData(array $data, int $index, int $userId): array
-    {
-        // Convert break_duration (HH:MM) → seconds
-        [$hour, $minute] = explode(':', $data['break_duration'][$index]);
-        $breakSeconds = ($hour * 3600) + ($minute * 60);
-
-        return [
-            'user_id'        => $userId,
-            'start_time'     => $data['start_time'][$index],
-            'end_time'       => $data['end_time'][$index],
-            'break_duration' => $breakSeconds,
-        ];
-    }
-
-    private function mapWorkingDays(array $selectedDays): array
-    {
-        $allDays = [
-            'sunday',
-            'monday',
-            'tuesday',
-            'wednesday',
-            'thursday',
-            'friday',
-            'saturday'
-        ];
-
-        $mapped = [];
-
-        foreach ($allDays as $day) {
-            $mapped[$day] = in_array($day, $selectedDays) ? 1 : 0;
-        }
-
-        return $mapped;
     }
 }

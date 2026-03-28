@@ -4,13 +4,17 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
-        <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+        @can('designation.create')
+            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Designation" data-url="{{ route('settings.designations.store') }}" data-method="POST">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
 
-            <span>New Designations</span>
-        </a>
+                <span>New Designation</span>
+            </a>
+        @endcan
+
+        <x-filters.button />
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
@@ -27,14 +31,12 @@
                                     </td>
                                     <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Name
-                                            </span>
+                                            <x-sorting.sortable-column column="name" label="Name" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Order</span>
+                                            <x-sorting.sortable-column column="order" label="Order" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -48,10 +50,13 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @php
+                                    $startNumber = ($designations->currentPage() - 1) * $designations->perPage();
+                                @endphp
                                 @forelse ($designations as $key => $designation)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center space-x-2.5">
@@ -59,6 +64,12 @@
                                                     <span>
                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" fill="#F6A723" stroke="#F6A723" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                        </svg>
+                                                    </span>
+                                                @else
+                                                    <span>
+                                                        <svg class="fill-bgray-400" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" stroke-linecap="round" stroke-linejoin="round"></path>
                                                         </svg>
                                                     </span>
                                                 @endif
@@ -74,52 +85,30 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-
-                                                <button type="button" data-id="{{ $designation->id }}" class="switch-btn relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                                                {{ $designation->status ? 'bg-green-600 active' : 'bg-gray-200' }}" role="switch" aria-checked="{{ $designation->status ? 'true' : 'false' }}" @unlesscanType('role.edit') disabled @endcanType>
-
-                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                                                    {{ $designation->status ? 'translate-x-5' : 'translate-x-0' }}">
-                                                    </span>
-
-                                                </button>
-
+                                                <x-status-toggle :model="$designation" route="settings.designation.toggleStatus" entity="designation" permission="designation.edit" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                <a href="javascript:void(0)" class="edit-designation modal-open inline-flex items-center justify-center w-8 h-8rounded-lg bg-gray-100 dark:bg-darkblack-500hover:bg-gray-200 dark:hover:bg-darkblack-400transition duration-200 group" data-id="{{ $designation->id }}" data-name="{{ $designation->name }}" data-order="{{ $designation->order }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
-
-                                                <form action="{{ route('settings.designations.destroy', $designation->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this designation?')">
-                                                    @csrf
-                                                    @method('DELETE')
-
-                                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8
-                                                        rounded-lg bg-gray-100 dark:bg-darkblack-500
-                                                        hover:bg-red-200 dark:hover:bg-darkblack-400
-                                                        transition duration-200 group">
-
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-600 group-hover:text-red-700 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd" d="M6 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6-1a1 1 0 00-2 0v6a1 1 0 002 0V7z" clip-rule="evenodd" />
-                                                            <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                                @can('designation.edit')
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.designations.update', $designation->id) }}" data-name="{{ $designation->name }}" data-order="{{ $designation->order }}" data-method="PUT" data-module="Designation">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
+                                                    </a>
+                                                @endcan
 
-                                                    </button>
-                                                </form>
+                                                @can('designation.delete')
+                                                    @if (!$designation->default)
+                                                        <x-delete-form :action="route('settings.designations.destroy', $designation->id)" />
+                                                    @endif
+                                                @endcan
 
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No designations found.
-                                        </td>
-                                    </tr>
+                                    <x-table-no-data :col-span="5" message="No designations found." />
                                 @endforelse
                             </table>
                         </div>
@@ -132,195 +121,28 @@
     </main>
     <!-- Page ends -->
 
-    {{-- Modal content start --}}
-    @include('settings.designations.create-update-modal')
+    <!-- Modal content start -->
+    <x-form-modal modalId="multi-step-modal" module="Designation" formId="designationForm" action="{{ route('settings.designations.store') }}" button="Create Designation">
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Order <x-red-star /></label>
+            <input type="number" name="order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+    </x-form-modal>
+
+    <!-- Filter drawer -->
+    <x-filters.drawer>
+        <x-filters.input-search name="search" label="Designation Name" />
+        <x-filters.select name="status" label="Status" :options="[
+            1 => 'Active',
+            0 => 'Inactive',
+        ]" />
+    </x-filters.drawer>
+    <!-- Filter drawer end -->
 @endsection
-
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-
-            // Setup CSRF for Ajax
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            $(document).on('click', '.switch-btn', function() {
-                let btn = $(this);
-
-                // Prevent multiple clicks while processing
-                if (btn.data('processing')) return;
-                btn.data('processing', true);
-
-                let id = btn.data('id');
-                let isActive = btn.attr('aria-checked') === 'true';
-                let actionText = isActive ? 'deactivate' : 'activate';
-
-                if (!confirm(`Are you sure you want to ${actionText} this designation?`)) {
-                    btn.data('processing', false);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/settings/designation/toggle-status',
-                    type: 'PATCH',
-                    data: {
-                        // _token: $('meta[name="csrf-token"]').attr('content'),
-                        id: id
-                    },
-                    success: function(response) {
-
-                        if (response.success) {
-
-                            let newStatus = response.status == 1;
-
-                            // Update switch UI
-                            btn.attr('aria-checked', newStatus);
-
-                            btn.toggleClass('bg-green-600', newStatus);
-                            btn.toggleClass('bg-gray-200', !newStatus);
-
-                            btn.find('span').toggleClass('translate-x-5', newStatus);
-                            btn.find('span').toggleClass('translate-x-0', !newStatus);
-
-                            // Update badge
-                            let badge = btn.closest('tr').find('.status-badge');
-
-                            if (newStatus) {
-                                badge.removeClass('bg-secondary')
-                                    .addClass('bg-success')
-                                    .text('Active');
-                            } else {
-                                badge.removeClass('bg-success')
-                                    .addClass('bg-secondary')
-                                    .text('Inactive');
-                            }
-
-                        } else {
-                            alert('Status update failed.');
-                        }
-
-                    },
-                    error: function() {
-                        alert('Something went wrong.');
-                    },
-                    complete: function() {
-                        btn.data('processing', false);
-                    }
-                });
-
-            });
-
-            const modal = document.getElementById('multi-step-modal');
-            const form = document.getElementById('designationForm');
-            const title = document.getElementById('modalTitle');
-            const methodInput = document.getElementById('formMethod');
-            const submitBtn = document.getElementById('submitBtn');
-
-            const nameInput = form.querySelector('input[name="name"]');
-            const orderInput = form.querySelector('input[name="order"]');
-
-            // OPEN EDIT
-            document.querySelectorAll('.edit-designation').forEach(button => {
-                button.addEventListener('click', function() {
-
-                    const id = this.dataset.id;
-                    const name = this.dataset.name;
-                    const order = this.dataset.order;
-
-                    // Change title and button text
-                    title.innerText = 'Edit designation';
-                    submitBtn.innerText = 'Update designation';
-
-                    // Fill inputs
-                    nameInput.value = name;
-                    orderInput.value = order;
-
-                    // Change form action
-                    form.action = `/settings/designations/${id}`;
-
-                    // Change method to PUT
-                    methodInput.value = 'PUT';
-
-                    // Show modal
-                    modal.classList.remove('hidden');
-
-                    clearFormErrors();
-                });
-            });
-
-            // RESET WHEN CLOSING
-            document.getElementById('step-1-cancel').addEventListener('click', function() {
-                resetModal()
-            });
-
-            // Store and update
-            $('#designationForm').on('submit', function(e) {
-                e.preventDefault();
-
-                let form = $(this);
-                let url = form.attr('action');
-                let method = $('#formMethod').val();
-                let formData = form.serialize();
-
-                $('.error-text').remove();
-                $('input').removeClass('border-red-500');
-
-                $.ajax({
-                    url: url,
-                    type: method === 'PUT' ? 'POST' : 'POST',
-                    data: formData,
-                    success: function(response) {
-
-                        if (response.status) {
-
-                            alert(response.message); // You can replace with toast
-
-                            $('#multi-step-modal').addClass('hidden');
-                            form[0].reset();
-
-                            location.reload(); // reload table (simple way)
-                        }
-                    },
-                    error: function(xhr) {
-                        // Remove old errors ONLY inside this form
-                        clearFormErrors();
-
-                        if (xhr.status === 422) {
-
-                            let errors = xhr.responseJSON.errors;
-
-                            $.each(errors, function(key, value) {
-
-                                let input = $('[name="' + key + '"]');
-                                input.addClass('border-red-500');
-
-                                input.after(
-                                    '<span class="mt-2 text-sm text-error-300 error-text">' + value[0] + '</span>'
-                                );
-                            });
-                        }
-                    }
-                });
-            });
-
-            function resetModal() {
-                form.reset();
-                title.innerText = 'Add designation';
-                submitBtn.innerText = 'Create designation';
-                form.action = "{{ route('settings.designations.store') }}";
-                methodInput.value = 'POST';
-                modal.classList.add('hidden');
-            }
-
-            function clearFormErrors() {
-                let form = $('#designationForm');
-                form.find('.error-text').remove();
-                form.find('input').removeClass('border-red-500');
-            }
-
-        });
-    </script>
-@endpush

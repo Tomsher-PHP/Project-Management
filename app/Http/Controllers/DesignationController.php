@@ -11,6 +11,7 @@ class DesignationController extends Controller
 {
     protected $pageTitle;
     protected $subTitle;
+
     public function __construct()
     {
         $this->pageTitle = 'Designations';
@@ -22,7 +23,7 @@ class DesignationController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $designations = Designation::orderBy('order', 'asc')->paginate($perPage)->withQueryString();
+        $designations = Designation::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
 
         return view('settings.designations.index', compact('designations', 'perPage'));
     }

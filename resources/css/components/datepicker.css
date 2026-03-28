@@ -1,0 +1,100 @@
+.flatpickr-input {
+    background-color: white;
+    color: #111827;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    padding: 1rem 1.25rem;
+    /* min-height: 3.5rem; */
+    font-size: 1rem;
+    line-height: 1.5rem;
+    width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* Focus state */
+.flatpickr-input:focus {
+    border-color: #10b981;
+    /* Tailwind green-500 */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+/* Error state (optional, for forms with errors) */
+.flatpickr-input.error {
+    border-color: #ef4444 !important;
+}
+
+/* ===== Flatpickr dropdown calendar ===== */
+.flatpickr-calendar {
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    background-color: white;
+    color: #111827;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+/* Flatpickr days */
+.flatpickr-day {
+    cursor: pointer;
+}
+
+/* Selected day */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background-color: #3b82f6;
+    /* Tailwind blue-500 */
+    color: white;
+}
+
+/* Hover day */
+.flatpickr-day:hover {
+    background-color: #dbeafe;
+    /* blue-100 */
+}
+
+/* ===== Dark mode ===== */
+.dark .flatpickr-input {
+    background-color: #1f1f1f;
+    /* dark input bg */
+    color: #f9fafb;
+    /* light text */
+    border-color: #374151;
+    /* dark border */
+}
+
+.dark .flatpickr-input:focus {
+    border-color: #10b981;
+    /* Tailwind green */
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.dark .flatpickr-calendar {
+    background-color: #1f1f1f;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+.dark .flatpickr-day {
+    color: #f9fafb;
+}
+
+.dark .flatpickr-day.selected,
+.dark .flatpickr-day.startRange,
+.dark .flatpickr-day.endRange {
+    background-color: #3b82f6;
+    /* Tailwind blue-500 */
+    color: white;
+}
+
+.dark .flatpickr-day:hover {
+    background-color: #2563eb;
+    /* blue-600 */
+}
+
+.dark .flatpickr-weekday {
+    color: #f9fafb;
+}

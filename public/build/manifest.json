@@ -1,0 +1,73 @@
+{
+  "_weekpicker-BrIt0Lrh.js": {
+    "file": "assets/weekpicker-BrIt0Lrh.js",
+    "name": "weekpicker",
+    "css": [
+      "assets/weekpicker-CksuuEqD.css"
+    ]
+  },
+  "_weekpicker-CksuuEqD.css": {
+    "file": "assets/weekpicker-CksuuEqD.css",
+    "src": "_weekpicker-CksuuEqD.css"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-B2Llhxb-.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-DaRzJtha.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_weekpicker-BrIt0Lrh.js"
+    ],
+    "css": [
+      "assets/app-CqGrDw4D.css"
+    ]
+  },
+  "resources/js/image-draggable.js": {
+    "file": "assets/image-draggable-Bl5g2tu1.js",
+    "name": "image-draggable",
+    "src": "resources/js/image-draggable.js",
+    "isEntry": true
+  },
+  "resources/js/modules/create-schedule.js": {
+    "file": "assets/create-schedule-B1-a-NAp.js",
+    "name": "create-schedule",
+    "src": "resources/js/modules/create-schedule.js",
+    "isEntry": true
+  },
+  "resources/js/modules/customer-contact.js": {
+    "file": "assets/customer-contact-BwU15WCS.js",
+    "name": "customer-contact",
+    "src": "resources/js/modules/customer-contact.js",
+    "isEntry": true
+  },
+  "resources/js/modules/projects/project-detail.js": {
+    "file": "assets/project-detail-C7WfaSR_.js",
+    "name": "project-detail",
+    "src": "resources/js/modules/projects/project-detail.js",
+    "isEntry": true
+  },
+  "resources/js/modules/schedule-shift.js": {
+    "file": "assets/schedule-shift-CWo1RRRy.js",
+    "name": "schedule-shift",
+    "src": "resources/js/modules/schedule-shift.js",
+    "isEntry": true,
+    "imports": [
+      "_weekpicker-BrIt0Lrh.js"
+    ]
+  },
+  "resources/js/modules/team.js": {
+    "file": "assets/team-DP6ggxb2.js",
+    "name": "team",
+    "src": "resources/js/modules/team.js",
+    "isEntry": true
+  }
+}

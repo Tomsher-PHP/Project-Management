@@ -24,7 +24,7 @@
         <!-- write your code here-->
     </main>
 @endsection
+
 @push('scripts')
-    <script src="{{ asset(config('assets.js.image_draggable')) }}"></script>
-    <script src="{{ asset(config('assets.js.more_shift')) }}"></script>
+    @vite('resources/js/image-draggable.js')
 @endpush

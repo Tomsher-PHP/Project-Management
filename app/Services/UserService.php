@@ -24,14 +24,13 @@ class UserService
 
             // Get user type from role
             $role = isset($data['role'])
-                ? Role::select('id', 'name', 'user_type')->find($data['role'])
+                ? Role::select('id', 'name')->find($data['role'])
                 : null;
 
             // 1. Handle password
             $user = User::create([
                 ...collect($data)->only(['name', 'email'])->toArray(),
                 'password'  => Hash::make($data['password']),
-                'user_type' => $role?->user_type,
             ]);
 
             // Assign role to user
@@ -59,7 +58,7 @@ class UserService
 
             // Resolve Role (if provided)
             $role = !empty($data['role'])
-                ? Role::select('id', 'name', 'user_type')->find($data['role'])
+                ? Role::select('id', 'name')->find($data['role'])
                 : null;
 
             // Prepare & Update User Data
@@ -70,10 +69,6 @@ class UserService
                     return $collection;
                 })
                 ->toArray();
-
-            if ($role) {
-                $userData['user_type'] = $role->user_type;
-            }
 
             $user->update($userData);
 

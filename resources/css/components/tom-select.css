@@ -1,0 +1,112 @@
+/* Main control */
+.ts-wrapper .ts-control {
+    padding-right: 3rem;
+    padding-left: 1.25rem;
+    border-width: 1px;
+    border-color: #e5e7eb;
+    border-radius: 0.5rem;
+    /* min-height: 3.5rem; */
+    font-size: 1rem;
+    line-height: 1.5rem;
+    cursor: pointer;
+}
+
+/* Focus state */
+.ts-wrapper.focus .ts-control {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Error state */
+.ts-wrapper.error .ts-control {
+    border-color: #ef4444 !important;
+}
+
+/* Dropdown */
+.ts-dropdown {
+    border-radius: 0.5rem;
+    border-width: 1px;
+}
+
+.ts-wrapper .ts-control::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid #9ca3af;
+    border-bottom: 2px solid #9ca3af;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+}
+
+/* position clear button */
+.ts-wrapper .clear-button {
+    position: absolute;
+    top: 50%;
+    left: 90%;
+    /* right: 1rem; */
+    /* right corner */
+    transform: translateY(-50%);
+    z-index: 2;
+    pointer-events: auto;
+    /* only the button clickable */
+}
+
+/* Options in dropdown */
+.ts-dropdown .ts-option {
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.ts-wrapper .ts-control::after {
+    pointer-events: none;
+    /* very important! */
+}
+
+/* ===== Dark mode additions ===== */
+.dark .ts-wrapper .ts-control {
+    background-color: #1f1f1f;
+    /* dark input background */
+    color: #f9fafb;
+    /* light text */
+    border-color: #374151;
+    /* dark border */
+}
+
+.dark .ts-wrapper.focus .ts-control {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.dark .ts-wrapper.error .ts-control {
+    border-color: #ef4444 !important;
+}
+
+.dark .ts-dropdown {
+    background-color: #1f1f1f;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+.dark .ts-dropdown .ts-option {
+    color: #f9fafb;
+}
+
+.dark .ts-dropdown .ts-option div div:last-child {
+    color: #9ca3af;
+    /* subtype text in dark mode */
+}
+
+.dark .ts-wrapper .ts-control::after {
+    border-right-color: #d1d5db;
+    /* arrow color */
+    border-bottom-color: #d1d5db;
+}
+
+/* Dark mode: focused input text color */
+.dark .ts-wrapper.focus .ts-control {
+    color: #f9fafb;
+    background-color: #1f1f1f;
+}

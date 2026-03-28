@@ -30,14 +30,15 @@ class DesignationSeeder extends Seeder
             'Sales Excecutive',
             'IT Support',
         ];
-        
+
         foreach ($array as $key => $name) {
-            Designation::create([
-                'name' => $name,
-                'order' => $key + 1,
-                'default' => 1,
-                'status' => 1,
-            ]);
+            Designation::firstOrCreate(
+                ['name' => $name],
+                [
+                    'order' => $key + 1,
+                    'status' => 1,
+                ]
+            );
         }
     }
 }

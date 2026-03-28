@@ -8,6 +8,10 @@ return [
         'logo_short' => 'assets/images/logo/logo-short.png',
     ],
 
+    'images' => [
+        'default_avatar' => 'assets/images/avatar/default-avatar.jpeg',
+    ],
+
     'css' => [
         'slick' => 'assets/css/slick.css',
         'aos' => 'assets/css/aos.css',
@@ -19,17 +23,10 @@ return [
         'jquery' => 'assets/js/jquery-3.6.0.min.js',
         'aos' => 'assets/js/aos.js',
         'slick' => 'assets/js/slick.min.js',
-        'quill' => 'assets/js/quill.min.js',
         'main' => 'assets/js/main.js',
         'chart' => 'assets/js/chart.js',
 
         //profile page js
         'pages_profile' => 'assets/js/pages/profile.init.js',
-
-        //image-draggable
-        'image_draggable' => 'assets/js/image-draggable.js',
-
-        //More shift
-        'more_shift' => 'assets/js/add-shifts.js'
     ],
 ];

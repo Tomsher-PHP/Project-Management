@@ -22,10 +22,21 @@ class Attachment extends Model
         'added_by'
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'link_id' => 'integer',
+            'link_type' => 'string',
+            'is_primary' => 'boolean',
+            'status' => 'boolean',
+            'added_by' => 'integer',
+        ];
+    }
+
     public static function booted()
     {
-        static::creating(function ($shift) {
-            $shift->added_by = Auth::id() ?? null;
+        static::creating(function ($model) {
+            $model->added_by = Auth::id() ?? null;
         });
     }
 

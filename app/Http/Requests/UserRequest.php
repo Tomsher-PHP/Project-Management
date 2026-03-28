@@ -25,16 +25,18 @@ class UserRequest extends FormRequest
         $userId = $this->route('user') ?? null;
         // works if route model binding: users.update/{user}
 
+        $email = !$userId ? [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->ignore($userId),
+        ] : [];
+
         return [
             // Basic Info
             'name' => ['required', 'string', 'max:255'],
 
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
+            'email' => $email,
 
             // Password
             'password' => [
@@ -86,22 +88,6 @@ class UserRequest extends FormRequest
             ],
 
             'remove_profile_image' => 'nullable',
-
-            // Shift information
-            'start_time' => ['required', 'array'],
-            'start_time.*' => ['required', 'date_format:H:i'],
-
-            'end_time' => ['required', 'array'],
-            'end_time.*' => ['required', 'date_format:H:i'],
-
-            'break_duration' => ['required', 'array'],
-            'break_duration.*' => ['required', 'date_format:H:i'],
-
-            'working_days' => ['required', 'array', 'min:1'],
-            'working_days.*' => [
-                'required',
-                'in:sunday,monday,tuesday,wednesday,thursday,friday,saturday'
-            ],
         ];
     }
 }

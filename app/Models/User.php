@@ -3,18 +3,21 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Traits\Filterable;
+use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, Filterable, Sortable;
 
     /**
      * The attributes that are mass assignable.
@@ -25,10 +28,22 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_type',
+
+        'email_verified_at',
+        'remember_token',
+
+        'password_otp',
+        'password_otp_expires_at',
+
         'status',
-        'delete_status'
+        'delete_status',
     ];
+
+    protected $sortable = [
+        'name',
+    ];
+
+    protected $searchable = ['name', 'email'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -52,16 +67,34 @@ class User extends Authenticatable
             'password' => 'hashed',
             'status' => 'boolean',
             'delete_status' => 'boolean',
+            'added_by' => 'integer',
+            'updated_by' => 'integer',
         ];
     }
 
-    public function canByUserType(string $permission): bool
+    public static function booted()
     {
-        return $this->getAllPermissions()
-            ->where('name', $permission)
-            ->where('user_type', $this->user_type)
-            ->isNotEmpty();
+        static::creating(function ($model) {
+            $model->added_by = Auth::id() ?? null;
+        });
+
+        static::updating(function ($model) {
+            $model->updated_by = Auth::id() ?? null;
+        });
     }
+
+    // public function canByUserType(string $permission): bool
+    // {
+    //     // Super admin can access everything
+    //     if ($this->is_super_admin) {
+    //         return true;
+    //     }
+
+    //     return $this->getAllPermissions()
+    //         ->where('name', $permission)
+    //         ->where('user_type', $this->user_type)
+    //         ->isNotEmpty();
+    // }
 
     public function details()
     {
@@ -85,7 +118,7 @@ class User extends Authenticatable
             return Storage::disk($this->primaryAttachment->disk)->url($this->primaryAttachment->file_path);
         }
 
-        return asset('assets/images/avatar/default-avatar.jpeg');
+        return asset(config('assets.images.default_avatar'));
     }
 
     public function scopeActive($query)
@@ -103,13 +136,42 @@ class User extends Authenticatable
         return $this->roles->first()?->name;
     }
 
-    public function shifts()
+    //shift relations
+    public function shiftAssignments()
     {
-        return $this->hasMany(UserShift::class);
+        return $this->hasMany(UserShiftAssignment::class);
     }
 
-    public function workingDays()
+    public function activeShift()
     {
-        return $this->hasOne(UserWorkingDay::class);
+        return $this->hasOne(UserShiftAssignment::class)
+            ->whereDate('date_from', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('date_to')
+                    ->orWhereDate('date_to', '>=', now());
+            });
+    }
+
+    public function getDesignationNameAttribute()
+    {
+        if ($this->details?->designation) {
+            return $this->details->designation->name;
+        }
+        return '';
+    }
+
+    // Projects where user is active
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by'])
+            ->wherePivot('is_active', true);
+    }
+
+    // All projects including removed
+    public function allProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
     }
 }

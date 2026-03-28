@@ -2,57 +2,13 @@
 
 return [
     // User Types constant
-    'user_types' => [
-        'super_admin' => 'Super Admin',
-        'admin' => 'Admin',
-        'manager' => 'Manager',
-        'team_leader' => 'Team Leader',
-        'normal_user' => 'Normal User',
-        'tester' => 'Tester',
-        // 'guest' => 'Guest',
-    ],
-
-    // Permission Types constant
-    'permission_types' => [
-        // Project Module
-        'project.view',
-        'project.create',
-        'project.edit',
-        'project.delete',
-
-        // Task Module
-        'task.view',
-        'task.create',
-        'task.edit',
-        'task.delete',
-
-        // User Module
-        'user.view',
-        'user.create',
-        'user.edit',
-        'user.delete',
-
-        //team Module
-        'team.view',
-        'team.create',
-        'team.edit',
-        'team.delete',
-
-        // Settings Module
-        'settings.view',
-        'settings.create',
-        'settings.edit',
-
-        // Reports Module
-        'reports.view',
-        'reports.download',
-
-        // Role Management Module
-        'role.view',
-        'role.create',
-        'role.edit',
-        'role.delete',
-    ],
+    // 'user_types' => [
+    //     'super_admin' => 'Super Admin',
+    //     'admin' => 'Admin',
+    //     'manager' => 'Manager',
+    //     'team_leader' => 'Team Leader',
+    //     'normal_user' => 'Normal User',
+    // ],
 
     // User Type Permissions constant
     'user_type_permissions' => [
@@ -106,6 +62,108 @@ return [
         ],
     ],
 
-    //Default list data count per page
-    'per_page_count' => 10
+    // Default list data count per page
+    'per_page_count' => 10,
+
+    // Default team roles for team management
+    'team_roles' => [
+        'owner' => 'Owner',
+        'member' => 'Member',
+    ],
+
+    // Default project roles for project management
+    'project_roles' => [
+        'team_leader' => 'Team Leader',
+        'coordinator' => 'Coordinator',
+        'member' => 'Member',
+    ],
+
+    // Date format
+    'date_format' => 'Y-m-d',
+
+    // Constant color code
+    'soft_colors' => [
+        '#f3f4f6',
+        '#fee2e2',
+        '#fde68a',
+        '#d1fae5',
+        '#dbeafe',
+        '#e9d5ff',
+        '#fbcfe8',
+        '#cffafe',
+    ],
+
+    // Emirates list
+    'emirates' => [
+        'abu_dhabi' => 'Abu Dhabi',
+        'ajman' => 'Ajman',
+        'dubai' => 'Dubai',
+        'fujairah' => 'Fujairah',
+        'ras_al_khaimah' => 'Ras Al Khaimah',
+        'sharjah' => 'Sharjah',
+        'umm_al_quwain' => 'Umm Al Quwain',
+    ],
+
+    // Project Roles constant
+    'project_roles' => [
+        'team_leader' => 'Team Leader',
+        'coordinator' => 'Coordinator',
+        'member' => 'Member',
+    ],
+
+    // Project Priority constant
+    'project_priorities' => [
+        'urgent' => [
+            'label' => 'Urgent',
+            'color' => 'red',
+            'bg_class' => 'bg-error-300',
+            'bg_text' => 'text-white',
+            'text_class' => 'text-error-300',
+        ],
+        'high' => [
+            'label' => 'High',
+            'color' => 'orange',
+            'bg_class' => 'bg-orange',
+            'bg_text' => 'text-white',
+            'text_class' => 'text-warning-300',
+        ],
+        'medium' => [
+            'label' => 'Medium',
+            'color' => 'yellow',
+            'bg_class' => 'bg-primary',
+            'bg_text' => 'text-white',
+            'text_class' => 'text-blue-500',
+        ],
+        'low' => [
+            'label' => 'Low',
+            'color' => 'green',
+            'bg_class' => 'bg-success-400',
+            'bg_text' => 'text-white',
+            'text_class' => 'text-success-400',
+        ],
+    ],
+
+    // Project Type constant
+    'project_types' => [
+        'agile' => 'Agile',
+        'linear' => 'Linear',
+    ],
+
+    // Project Status constant
+    'project_statuses' => [
+        'pending' => 'Pending',
+        'in_progress' => 'In Progress',
+        'completed' => 'Completed',
+        'on_hold' => 'On Hold',
+        'cancelled' => 'Cancelled',
+    ],
+
+    // Project Stage constant
+    'project_stages' => [
+        'planning' => 'Planning',
+        'development' => 'Development',
+        'testing' => 'Testing',
+        'deployment' => 'Deployment',
+        'maintenance' => 'Maintenance',
+    ],
 ];
