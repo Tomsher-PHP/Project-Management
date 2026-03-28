@@ -53,7 +53,7 @@ class Customer extends Model
 
     public static function generateCustomerCode()
     {
-        $lastCustomer = self::orderBy('id', 'desc')->first();
+        $lastCustomer = self::withTrashed()->orderBy('id', 'desc')->first();
         $lastCustomerCode = $lastCustomer ? $lastCustomer->customer_code : 'CUS00000';
         $lastNumber = (int) substr($lastCustomerCode, 3);
         $newNumber = $lastNumber + 1;

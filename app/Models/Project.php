@@ -68,7 +68,7 @@ class Project extends Model
 
     public static function generateProjectCode()
     {
-        $lastProject = self::orderBy('id', 'desc')->first();
+        $lastProject = self::withTrashed()->orderBy('id', 'desc')->first();
         $lastProjectCode = $lastProject ? $lastProject->project_code : 'PRJ00000';
         $lastNumber = (int) substr($lastProjectCode, 3);
         $newNumber = $lastNumber + 1;
