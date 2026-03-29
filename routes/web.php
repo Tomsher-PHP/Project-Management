@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -128,6 +129,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.edit')->only(['update']);
         Route::resource('project-statuses', ProjectStatusController::class)->middleware('permission.type:project_status.delete')->only(['destroy']);
         // End Project Status Routes
+
+        // Project Stage Routes
+        Route::patch('/project-stages/toggle-status', [ProjectStageController::class, 'toggleStatus'])->middleware('permission.type:project_stage.edit')->name('project_stage.toggleStatus');
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.view')->only(['index']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.create')->only(['store']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.edit')->only(['update']);
+        Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.delete')->only(['destroy']);
+        // End Project Stage Routes
     });
     // End Settings Routes
 

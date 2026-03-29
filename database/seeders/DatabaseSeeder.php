@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminUserSeeder::class,
             DefaultShiftSeeder::class,
             ProjectStatusSeeder::class,
+            ProjectStageSeeder::class,
             // DepartmentSeeder::class,
             // DesignationSeeder::class,
             // TechnologySeeder::class,

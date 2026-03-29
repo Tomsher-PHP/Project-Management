@@ -102,4 +102,10 @@ return [
     'project_status.create',
     'project_status.edit',
     'project_status.delete',
+
+    // project stage
+    'project_stage.view',
+    'project_stage.create',
+    'project_stage.edit',
+    'project_stage.delete',
 ];
