@@ -13,6 +13,7 @@ return [
     'project.add_files',
     'project.remove_files',
     'project.status_change',
+    'project.customer_end_date',
 
     // Task Module
     'task.view',

@@ -26,7 +26,7 @@ return new class extends Migration
 
             // Dates
             $table->date('start_date')->nullable();
-            $table->date('internal_end_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->date('client_end_date')->nullable();
 
             // Estimation

@@ -54,7 +54,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <x-sorting.sortable-column column="internal_end_date" label="End Date" />
+                                            <x-sorting.sortable-column column="end_date" label="End Date" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -127,7 +127,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->internal_end_date->format(config('constants.date_format')) ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date->format(config('constants.date_format')) ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -182,7 +182,7 @@
         <!-- Project Name -->
         <div>
             <label for="name" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Name <x-red-star /></label>
-            <input type="text" name="name" id="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <input type="text" name="name" id="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" placeholder="Enter project name">
             @error('name')
                 <p class="mt-2 text-sm text-error-300">
                     {{ $message }}
@@ -192,7 +192,7 @@
 
         <!-- Customer -->
         <div>
-            <label for="customer_id" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Customer</label>
+            <label for="customer_id" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Customer <x-red-star /></label>
             <select name="customer_id" id="customer_id" class="tom-select w-full">
                 <option value="">Select Customer</option>
                 @foreach ($customers as $customer)

@@ -35,12 +35,12 @@ class ProjectServices
             $project = Project::create([
                 'project_code' => Project::generateProjectCode(),
                 'name' => $data['name'],
-                'customer_id' => $data['customer_id'] ?? null,
+                'customer_id' => $data['customer_id'],
                 'project_type' => $data['project_type'],
                 'priority' => $data['priority'],
                 'status_id' => $data['status_id'],
                 'start_date' => $startDate,
-                'internal_end_date' => $data['end_date'],
+                'end_date' => $data['end_date'],
             ]);
 
             // Insert status history
@@ -83,7 +83,7 @@ class ProjectServices
                 'priority' => $data['priority'],
                 'status_id' => $data['status_id'],
                 'start_date' => $data['start_date'] ?? null,
-                'internal_end_date' => $data['internal_end_date'] ?? null,
+                'end_date' => $data['end_date'] ?? null,
                 'client_end_date' => $data['client_end_date'] ?? null,
                 'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,

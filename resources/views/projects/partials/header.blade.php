@@ -30,16 +30,18 @@
                 </span>
 
                 <span>
-                    <strong>Start:</strong> {{ optional($project->start_date)->format(config('constants.date_format')) ?? '--' }}
+                    <strong>Start Date:</strong> {{ optional($project->start_date)->format(config('constants.date_format')) ?? '--' }}
                 </span>
 
                 <span>
-                    <strong>Internal End:</strong> {{ optional($project->internal_end_date)->format(config('constants.date_format')) ?? '--' }}
+                    <strong>End Date:</strong> {{ optional($project->end_date)->format(config('constants.date_format')) ?? '--' }}
                 </span>
 
-                <span>
-                    <strong>Customer End:</strong> {{ optional($project->client_end_date)->format(config('constants.date_format')) ?? '--' }}
-                </span>
+                @can('project.customer_end_date')
+                    <span>
+                        <strong>Customer End Date:</strong> {{ optional($project->client_end_date)->format(config('constants.date_format')) ?? '--' }}
+                    </span>
+                @endcan
 
             </div>
         </div>

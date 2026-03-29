@@ -34,7 +34,7 @@
             <!-- Customer -->
             <div class="flex flex-col gap-2">
                 <label for="customer_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Customer
+                    Customer <x-red-star />
                 </label>
                 <select name="customer_id" id="customer_id" class="tom-select w-full @error('customer_id') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" x-on:change="markDirty()">
                     <option value="">Select Customer</option>
@@ -126,25 +126,27 @@
 
             <!-- Internal End Date -->
             <div class="flex flex-col gap-2">
-                <label for="internal_end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Internal End Date
+                <label for="end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    End Date
                 </label>
-                <input type="date" name="internal_end_date" id="internal_end_date" value="{{ old('internal_end_date', $project->internal_end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
-                @error('internal_end_date')
+                <input type="date" name="end_date" id="end_date" value="{{ old('end_date', $project->end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
+                @error('end_date')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Client End Date -->
-            <div class="flex flex-col gap-2">
-                <label for="client_end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Client End Date
-                </label>
-                <input type="date" name="client_end_date" id="client_end_date" value="{{ old('client_end_date', $project->client_end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
-                @error('client_end_date')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
+            <!-- Customer End Date -->
+            @can('project.customer_end_date')
+                <div class="flex flex-col gap-2">
+                    <label for="customer_end_date" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                        Customer End Date
+                    </label>
+                    <input type="date" name="customer_end_date" id="customer_end_date" value="{{ old('customer_end_date', $project->customer_end_date?->format('Y-m-d') ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" x-on:input="markDirty()">
+                    @error('customer_end_date')
+                        <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endcan
 
             <!-- Estimated Time -->
             <div class="flex flex-col gap-2">

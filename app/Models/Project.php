@@ -22,7 +22,7 @@ class Project extends Model
         'status_id',
         'project_stage',
         'start_date',
-        'internal_end_date',
+        'end_date',
         'client_end_date',
         'estimated_time_seconds',
         'domain',
@@ -37,7 +37,7 @@ class Project extends Model
 
     protected $casts = [
         'start_date' => 'date',
-        'internal_end_date' => 'date',
+        'end_date' => 'date',
         'client_end_date' => 'date',
         'estimated_time_seconds' => 'integer',
         'default_billable' => 'boolean',
@@ -49,7 +49,7 @@ class Project extends Model
     protected $sortable = [
         'name',
         'start_date',
-        'internal_end_date',
+        'end_date',
         'client_end_date',
     ];
 

@@ -21,11 +21,9 @@ class ProjectRequest extends FormRequest
      */
     public function rules(): array
     {
-        // $projectId = $this->route('project')?->id;
-
         $rules = [
             'name' => 'required|string|max:255',
-            'customer_id' => 'nullable|exists:customers,id',
+            'customer_id' => 'required|exists:customers,id',
             'priority' => 'required|in:urgent,high,medium,low',
             'project_status' => 'required|exists:project_statuses,id',
             'start_date' => 'nullable|date',
@@ -37,8 +35,8 @@ class ProjectRequest extends FormRequest
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $rules += [
-                'internal_end_date' => 'nullable|date|after_or_equal:start_date',
-                'client_end_date' => 'nullable|date|after_or_equal:internal_end_date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'client_end_date' => 'nullable|date|after_or_equal:end_date',
                 'estimated_time_hrs' => 'nullable|integer',
                 'domain' => 'nullable|string',
                 'sales_person_id' => 'nullable|exists:users,id',
