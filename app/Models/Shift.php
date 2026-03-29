@@ -52,12 +52,12 @@ class Shift extends Model
 
     public function getTimeFromFormattedAttribute()
     {
-        return $this->time_from->format('h:i A');
+        return $this->time_from->format(config('constants.time_format'));
     }
 
     public function getTimeToFormattedAttribute()
     {
-        return $this->time_to->format('h:i A');
+        return $this->time_to->format(config('constants.time_format'));
     }
 
     public function getBreakDurationFormattedAttribute()

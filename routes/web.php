@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
@@ -137,6 +138,11 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.edit')->only(['update']);
         Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.delete')->only(['destroy']);
         // End Project Stage Routes
+
+        // Configuration Routes
+        Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
+        Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
+        // End Configuration Routes
     });
     // End Settings Routes
 

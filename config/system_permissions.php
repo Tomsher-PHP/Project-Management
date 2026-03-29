@@ -108,4 +108,8 @@ return [
     'project_stage.create',
     'project_stage.edit',
     'project_stage.delete',
+
+    // configuration
+    'configuration.view',
+    'configuration.edit',
 ];

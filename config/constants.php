@@ -81,6 +81,9 @@ return [
     // Date format
     'date_format' => 'Y-m-d',
 
+    // Time format    
+    'time_format' => 'H:i',
+
     // Constant color code
     'soft_colors' => [
         '#f3f4f6',
@@ -165,5 +168,23 @@ return [
         'testing' => 'Testing',
         'deployment' => 'Deployment',
         'maintenance' => 'Maintenance',
+    ],
+
+    // Date Format constant
+    'date_formats' => [
+        'Y-m-d',
+        'Y/m/d',
+        'Y.m.d',
+        'd-m-Y',
+        'd/m/Y',
+        'd.m.Y',
+        'Y-M-d',
+        'd-M-Y',
+    ],
+
+    // Time Format constant
+    'time_formats' => [
+        'H:i',
+        'h:i A',
     ],
 ];

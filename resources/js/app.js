@@ -8,6 +8,7 @@ import './bootstrap';
 import './status-toggle';
 import './modules/reset-password';
 import './modules/ajax-form-modal';
+import './modules/config';
 import './delete-alert';
 import './components/filterDrawer';
 
