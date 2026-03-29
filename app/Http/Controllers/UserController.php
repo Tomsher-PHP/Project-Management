@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -27,7 +28,8 @@ class UserController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $users = User::filter($request->all())
+        $users = User::accessibleBy(auth()->user())
+            ->filter($request->all())
             ->sort($request->all())
             ->with([
                 'details',
@@ -70,9 +72,8 @@ class UserController extends Controller
             ->with('success', 'User created successfully.');
     }
 
-    public function edit(int $id)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($id);
         $roles = Role::where('status', true)->get();
         $departments = Department::active()->orderBy('order', 'asc')->get();
         $designations = Designation::active()->orderBy('order', 'asc')->get();

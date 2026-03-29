@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\TeamService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,6 @@ class TeamController extends Controller
 {
 
     protected $pageTitle;
-
     protected $subTitle;
 
     public function __construct()
@@ -37,7 +37,7 @@ class TeamController extends Controller
             ])->paginate($perPage)->withQueryString();
 
         // Get users for filter
-        $users = User::where('is_super_admin', false)->select('id', 'name')->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
 
         return view('teams.index', compact('teams', 'perPage', 'users'));
     }
@@ -45,7 +45,7 @@ class TeamController extends Controller
     public function create()
     {
         // Get users for team members
-        $users = User::active()->where('is_super_admin', false)->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
 
         $teamRoles = config('constants.team_roles');
 
@@ -68,7 +68,7 @@ class TeamController extends Controller
         $teamUsersIds = $teamUsers->pluck('id')->toArray();
 
         // Get users for team members
-        $users = User::active()->where('is_super_admin', false)->whereNotIn('id', $teamUsersIds)->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), $teamUsersIds);
 
         $teamRoles = config('constants.team_roles');
 

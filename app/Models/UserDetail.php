@@ -53,4 +53,14 @@ class UserDetail extends Model
     {
         return $this->belongsTo(Designation::class, 'designation_id', 'id');
     }
+
+    public function reporter()
+    {
+        return $this->belongsTo(User::class, 'reporter_id', 'id');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id', 'id');
+    }
 }

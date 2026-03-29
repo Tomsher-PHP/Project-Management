@@ -7,6 +7,7 @@ use App\Models\Shift;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
 use App\Services\ScheduleShiftService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -69,7 +70,7 @@ class ScheduleShiftController extends Controller
 
     public function create()
     {
-        $users = User::where('is_super_admin', false)->whereStatus(1)->orderBy('name')->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
         $shifts = Shift::whereStatus(1)->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 
         return view('schedule-shift.create', compact('users', 'shifts'));

@@ -13,6 +13,7 @@ use App\Models\Technology;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\ProjectServices;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -59,7 +60,7 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $users = User::active()->where('is_super_admin', 0)->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
         $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();

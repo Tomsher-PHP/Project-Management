@@ -18,9 +18,9 @@ class PermissionByType
     {
         $user = auth()->user();
 
-        if ($user->is_super_admin) {
-            return $next($request);
-        }
+        // if ($user->is_super_admin) {
+        //     return $next($request);
+        // }
 
         if (!$user || !$user->can($permission)) {
             if ($request->wantsJson()) {

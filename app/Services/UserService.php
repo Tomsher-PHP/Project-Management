@@ -111,4 +111,16 @@ class UserService
             true
         );
     }
+
+    // Get the list of accessable users for the authenticated user
+    public function getAccessibleUsers(User $authUser, array $excludeIds = [])
+    {
+        return User::accessibleBy($authUser)
+            ->where('status', true)
+            ->when(!empty($excludeIds), function ($q) use ($excludeIds) {
+                $q->whereNotIn('id', $excludeIds);
+            })
+            ->orderBy('name')
+            ->get();
+    }
 }

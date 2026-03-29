@@ -66,8 +66,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
-    Route::resource('users', UserController::class)->middleware('permission.type:user.edit')->only(['edit', 'update']);
-    Route::resource('users', UserController::class)->middleware('permission.type:user.delete')->only(['destroy']);
+    Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
+    Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
     // End of User Management Routes
 
     // Settings Routes

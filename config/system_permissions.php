@@ -21,6 +21,7 @@ return [
     'task.delete',
 
     // User Module
+    'user.view_all_users',
     'user.view',
     'user.create',
     'user.edit',

@@ -201,10 +201,7 @@ class ScheduleShiftService
     // Fetch users and shifts
     public function getUsersAndShifts(): array
     {
-        $users = User::where('is_super_admin', false)
-            ->whereStatus(1)
-            ->orderBy('name')
-            ->get();
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
 
         $shifts = Shift::whereStatus(1)->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 

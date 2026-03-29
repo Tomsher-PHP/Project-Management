@@ -83,18 +83,22 @@ class User extends Authenticatable
         });
     }
 
-    // public function canByUserType(string $permission): bool
-    // {
-    //     // Super admin can access everything
-    //     if ($this->is_super_admin) {
-    //         return true;
-    //     }
+    public function scopeAccessibleBy($query, $user)
+    {
+        // Superadmin or view all userss permission
+        if ($user->is_super_admin || $user->can('user.view_all_users')) {
+            return $query;
+        }
 
-    //     return $this->getAllPermissions()
-    //         ->where('name', $permission)
-    //         ->where('user_type', $this->user_type)
-    //         ->isNotEmpty();
-    // }
+        // Creator, reporter or manager
+        return $query->where(function ($q) use ($user) {
+            $q->where('added_by', $user->id)
+                ->orWhereHas('details', function ($q2) use ($user) {
+                    $q2->where('reporter_id', $user->id)
+                        ->orWhere('manager_id', $user->id);
+                });
+        });
+    }
 
     public function details()
     {
