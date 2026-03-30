@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class UserShiftAssignment extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'user_id',
         'shift_id',

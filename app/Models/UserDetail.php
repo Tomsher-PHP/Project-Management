@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class UserDetail extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'user_id',
         'department_id',

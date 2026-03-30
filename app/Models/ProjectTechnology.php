@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectTechnology extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'project_id',
         'technology_id',

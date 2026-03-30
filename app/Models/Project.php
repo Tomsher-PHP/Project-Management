@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, Filterable, Sortable;
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
     protected $fillable = [
         'project_code',

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ShiftWeekend extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'shift_id',
         'weekday',

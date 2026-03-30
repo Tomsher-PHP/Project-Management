@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class Configuration extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'company_name',
         'company_email',

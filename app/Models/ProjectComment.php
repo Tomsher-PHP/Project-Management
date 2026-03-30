@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectComment extends Model
 {
+    use LogsModelActivity;
+
     protected $fillable = [
         'project_id',
         'user_id',

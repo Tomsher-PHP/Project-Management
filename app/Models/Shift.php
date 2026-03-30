@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
-    use Filterable, Sortable;
+    use Filterable, Sortable, LogsModelActivity;
 
     protected $fillable = [
         'name',
