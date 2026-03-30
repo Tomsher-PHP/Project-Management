@@ -87,18 +87,18 @@
 
             <!-- Project Stage -->
             <div class="flex flex-col gap-2">
-                <label for="project_stage" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                <label for="project_stage_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Project Stage
                 </label>
-                <select name="project_stage" id="project_stage" class="tom-select-no-search w-full" x-on:change="markDirty()">
+                <select name="project_stage_id" id="project_stage_id" class="tom-select-no-search w-full" x-on:change="markDirty()">
                     <option value="">Select Project Stage</option>
-                    @foreach ($projectStages as $key => $stage)
-                        <option value="{{ $key }}" {{ old('project_stage', $project->project_stage ?? '') == $key ? 'selected' : '' }}>
-                            {{ $stage }}
+                    @foreach ($projectStages as $stage)
+                        <option value="{{ $stage->id }}" {{ old('project_stage_id', $project->project_stage_id ?? '') == $stage->id ? 'selected' : '' }}>
+                            {{ $stage->name }}
                         </option>
                     @endforeach
                 </select>
-                @error('project_stage')
+                @error('project_stage_id')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>

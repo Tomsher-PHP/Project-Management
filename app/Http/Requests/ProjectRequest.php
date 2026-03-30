@@ -36,11 +36,11 @@ class ProjectRequest extends FormRequest
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $rules += [
                 'end_date' => 'nullable|date|after_or_equal:start_date',
-                'client_end_date' => 'nullable|date|after_or_equal:end_date',
+                'customer_end_date' => 'nullable|date|after_or_equal:end_date',
                 'estimated_time_hrs' => 'nullable|integer',
                 'domain' => 'nullable|string',
                 'sales_person_id' => 'nullable|exists:users,id',
-                'project_stage' => 'nullable|string',
+                'project_stage_id' => 'nullable|exists:project_stages,id',
                 'project_category_id' => 'nullable|exists:project_categories,id',
                 'default_billable' => 'nullable|boolean',
                 'project_technology_ids' => 'nullable|array',

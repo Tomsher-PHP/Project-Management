@@ -86,11 +86,11 @@ class ProjectServices
                 'status_id' => $data['status_id'],
                 'start_date' => $data['start_date'] ?? null,
                 'end_date' => $data['end_date'] ?? null,
-                'client_end_date' => $data['client_end_date'] ?? null,
+                'customer_end_date' => $data['customer_end_date'] ?? null,
                 'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
-                'project_stage' => $data['project_stage'] ?? null,
+                'project_stage_id' => $data['project_stage_id'] ?? null,
                 'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ]);

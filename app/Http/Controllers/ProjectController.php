@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
+use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
@@ -71,9 +72,9 @@ class ProjectController extends Controller
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
         $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
         $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
+        $projectStages = ProjectStage::active()->orderBy('order', 'asc')->get();
 
         $priorities = config('constants.project_priorities');
-        $projectStages = config('constants.project_stages');
         $projectRoles = config('constants.project_roles');
 
         return view('projects.detail-page', compact(

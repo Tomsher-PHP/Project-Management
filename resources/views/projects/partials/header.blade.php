@@ -1,3 +1,6 @@
+@php
+    $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
+@endphp
 <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -37,9 +40,9 @@
                     <strong>End Date:</strong> {{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}
                 </span>
 
-                @can('project.customer_end_date')
+                @if($canCustomerEndDate)
                     <span>
-                        <strong>Customer End Date:</strong> {{ optional($project->client_end_date)->format($globalDateFormat) ?? '--' }}
+                        <strong>Customer End Date:</strong> {{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}
                     </span>
                 @endcan
 

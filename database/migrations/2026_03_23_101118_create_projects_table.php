@@ -17,17 +17,17 @@ return new class extends Migration
             // Basic Info
             $table->string('project_code', 50)->unique();
             $table->string('name');
-            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
 
             $table->enum('project_type', ['agile', 'linear']);
             $table->string('priority')->nullable();
             $table->foreignId('status_id')->constrained('project_statuses');
-            $table->string('project_stage')->nullable();
+            $table->foreignId('project_stage_id')->nullable()->constrained('project_stages')->nullOnDelete();
 
             // Dates
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->date('client_end_date')->nullable();
+            $table->date('customer_end_date')->nullable();
 
             // Estimation
             $table->bigInteger('estimated_time_seconds')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             // Extra
             $table->string('domain')->nullable();
             $table->longText('notes')->nullable();
-            $table->foreignId('project_category_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('project_category_id')->nullable()->constrained('project_categories')->nullOnDelete();
 
             // Billing
             $table->boolean('default_billable')->default(false);

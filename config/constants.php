@@ -161,15 +161,6 @@ return [
         'cancelled' => 'Cancelled',
     ],
 
-    // Project Stage constant
-    'project_stages' => [
-        'planning' => 'Planning',
-        'development' => 'Development',
-        'testing' => 'Testing',
-        'deployment' => 'Deployment',
-        'maintenance' => 'Maintenance',
-    ],
-
     // Date Format constant
     'date_formats' => [
         'Y-m-d',

@@ -20,10 +20,10 @@ class Project extends Model
         'project_type',
         'priority',
         'status_id',
-        'project_stage',
+        'project_stage_id',
         'start_date',
         'end_date',
-        'client_end_date',
+        'customer_end_date',
         'estimated_time_seconds',
         'domain',
         'notes',
@@ -38,7 +38,7 @@ class Project extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'client_end_date' => 'date',
+        'customer_end_date' => 'date',
         'estimated_time_seconds' => 'integer',
         'default_billable' => 'boolean',
         'added_by' => 'integer',
@@ -50,7 +50,7 @@ class Project extends Model
         'name',
         'start_date',
         'end_date',
-        'client_end_date',
+        'customer_end_date',
     ];
 
     protected $searchable = ['name', 'project_code'];
@@ -99,6 +99,11 @@ class Project extends Model
     public function projectStatus()
     {
         return $this->belongsTo(ProjectStatus::class, 'status_id');
+    }
+
+    public function projectStage()
+    {
+        return $this->belongsTo(ProjectStage::class);
     }
 
     public function salesPerson()
