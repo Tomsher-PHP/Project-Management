@@ -4,19 +4,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const fileInput = document.getElementById('file-input');
     const fileUploadBox = document.getElementById('file-upload-box');
 
-    // Important: file upload box is not present in all pages
-    if (!fileUploadBox) return;
+    if (fileUploadBox && fileInput) {
+        fileUploadBox.addEventListener('click', () => fileInput.click());
 
-    fileUploadBox.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
 
-    fileInput.addEventListener('change', () => {
-        handleFiles(fileInput.files);
-    });
-
-    fileUploadBox.addEventListener('drop', e => {
-        e.preventDefault();
-        handleFiles(e.dataTransfer.files);
-    });
+        fileUploadBox.addEventListener('drop', e => {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+        });
+    }
 
     function handleFiles(files) {
         if (!files) return;
@@ -46,6 +45,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (res.success) {
                     const list = document.getElementById('file-list');
 
+                    document.getElementById('file-empty-state')?.remove();
+
                     res.html.forEach(html => {
                         list.insertAdjacentHTML('beforeend', html);
                     });
@@ -59,15 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // function renderPreview(file) {
-    //     const list = document.getElementById('file-list');
-    //     if (!list) return;
-
-    //     const item = document.createElement('div');
-    //     item.className = 'file-item p-2 border rounded mb-2';
-    //     item.textContent = file.name;
-    //     list.appendChild(item);
-    // }
 
     // Delete file
     document.addEventListener('click', async function (e) {
@@ -95,7 +87,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
-                        e.target.closest('.file-item').remove();
+                        e.target.closest('.file-item')?.remove();
+                        ensureEmptyState();
                         Alert.success('File deleted successfully');
                     }
                 })
@@ -104,5 +97,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         }
     });
+
+    function ensureEmptyState() {
+        const list = document.getElementById('file-list');
+
+        if (!list || list.children.length) {
+            return;
+        }
+
+        if (!document.getElementById('file-empty-state')) {
+            const emptyState = document.createElement('p');
+            emptyState.id = 'file-empty-state';
+            emptyState.className = 'text-gray-400 text-sm';
+            emptyState.textContent = 'No scope files uploaded yet.';
+            list.appendChild(emptyState);
+        }
+    }
 
 });

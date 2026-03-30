@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectFileRequest;
+use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
 use App\Models\Customer;
 use App\Models\Project;
+use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
@@ -62,6 +64,11 @@ class ProjectController extends Controller
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
+        $project->load([
+            'scopeFiles',
+            'projectNotes.attachments',
+            'projectNotes.addedBy',
+        ]);
 
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
@@ -102,16 +109,46 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateNotes(Request $request, Project $project)
+    public function storeNote(ProjectNoteRequest $request, Project $project, ProjectServices $service)
     {
-        $project->update([
-            'notes' => $request->notes,
-        ]);
+        $note = $service->createNote($project, $request->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Notes updated successfully.',
-            'project' => $project,
+            'message' => 'Note added successfully.',
+            'html' => view('projects.partials.project-note-card', [
+                'note' => $note,
+                'canRemove' => auth()->user()->can('project.remove_notes_files'),
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteNote(Project $project, ProjectNote $note, AttachmentService $attachmentService)
+    {
+        abort_unless($note->project_id === $project->id, Response::HTTP_NOT_FOUND);
+
+        $attachmentService->delete($note->attachments);
+        $note->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note deleted successfully.',
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteNoteAttachment(Project $project, ProjectNote $note, Attachment $attachment, AttachmentService $attachmentService)
+    {
+        abort_unless($note->project_id === $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless(
+            $attachment->link_type === ProjectNote::class && (int) $attachment->link_id === (int) $note->id,
+            Response::HTTP_NOT_FOUND
+        );
+
+        $attachmentService->delete(collect([$attachment]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File removed successfully.',
         ], Response::HTTP_OK);
     }
 

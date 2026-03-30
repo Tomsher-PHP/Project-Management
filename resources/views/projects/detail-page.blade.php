@@ -141,24 +141,7 @@
 
                         <!-- ================= NOTES ================= -->
                         <div x-show="activeTab === 'notes'" x-transition>
-                            <div class="w-full border-b border-bgray-200 dark:border-darkblack-400 pb-6">
-                                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes</h3>
-
-                                <div class="custom-quill mb-6 mt-4">
-                                    <div class="h-60 min-h-[240px] rounded-b-lg bg-white dark:bg-darkblack-500" id="project-note"></div>
-                                </div>
-
-                                @can('project.update_notes', $project)
-                                    <button type="button" id="saveNotes" class="mt-3 px-5 py-2 bg-success-300 text-white rounded-lg font-semibold hover:bg-success-400">
-                                        Save Notes
-                                    </button>
-                                @endcan
-                            </div>
-
-                            <!-- Files -->
-                            <div class="w-full pt-6">
-                                {{-- @include('projects.partials.files') --}}
-                            </div>
+                            @include('projects.partials.attachments')
                         </div>
 
                         <!-- ================= SETTINGS ================= -->
@@ -219,8 +202,8 @@
     <script>
         window.ProjectApp = {
             id: {{ $project->id }},
-            notes: {!! json_encode($project->notes ?? '') !!},
-            canEdit: @json(auth()->user()->can('project.update_notes')),
+            canCreateNotesFiles: @json(auth()->user()->can('project.add_notes_files')),
+            canRemoveNotesFiles: @json(auth()->user()->can('project.remove_notes_files')),
         };
     </script>
     @vite('resources/js/modules/projects/project-detail.js')

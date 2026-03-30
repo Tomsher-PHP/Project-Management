@@ -180,7 +180,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
-        Route::post('update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
+        Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
+        Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
+        Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
         
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');

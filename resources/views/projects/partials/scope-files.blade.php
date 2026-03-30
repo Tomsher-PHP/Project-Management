@@ -15,6 +15,6 @@
     @forelse ($project->scopeFiles as $file)
         @include('projects.partials.file-item', ['file' => $file])
     @empty
-        <p class="text-gray-400 text-sm">No scope files uploaded yet.</p>
+        <p id="file-empty-state" class="text-gray-400 text-sm">No scope files uploaded yet.</p>
     @endforelse
 </div>

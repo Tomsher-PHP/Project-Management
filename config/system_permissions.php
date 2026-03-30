@@ -40,8 +40,8 @@ return [
     'project.add_scope',
     'project.remove_scope',
 
-    'project.add_attachments',
-    'project.remove_attachments',
+    'project.add_notes_files',
+    'project.remove_notes_files',
 
     'project.status_change',
     'project.customer_end_date',

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Project;
+use App\Models\ProjectNote;
 use App\Models\ProjectStatusHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -132,6 +133,34 @@ class ProjectServices
             }
 
             return $attachments;
+        });
+    }
+
+    public function createNote(Project $project, array $data): ProjectNote
+    {
+        return DB::transaction(function () use ($project, $data) {
+            $note = $project->projectNotes()->create([
+                'description' => $data['description'],
+                'status' => true,
+            ]);
+
+            if (!empty($data['attachments'])) {
+                $directory = 'project_files/' . $project->project_code. '/notes';
+
+                foreach ($data['attachments'] as $file) {
+                    $this->attachmentService->upload(
+                        $file,
+                        $directory,
+                        $note,
+                        'public',
+                        'public',
+                        false,
+                        'project_note'
+                    );
+                }
+            }
+
+            return $note->load(['attachments', 'addedBy']);
         });
     }
 }

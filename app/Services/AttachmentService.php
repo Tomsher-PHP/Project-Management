@@ -103,13 +103,17 @@ class AttachmentService
      */
     public function delete($attachments)
     {
+        $deleted = true;
+
         foreach ($attachments as $attachment) {
             $disk = $attachment->disk ?? 'public';
             if ($attachment->file_path && Storage::disk($disk)->exists($attachment->file_path)) {
                 Storage::disk($disk)->delete($attachment->file_path);
             }
 
-            return $attachment->delete();
+            $deleted = $attachment->delete() && $deleted;
         }
+
+        return $deleted;
     }
 }
