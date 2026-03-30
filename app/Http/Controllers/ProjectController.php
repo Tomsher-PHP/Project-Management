@@ -64,7 +64,7 @@ class ProjectController extends Controller
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $project->load(['scopeFiles']);
+        $project->load(['scopeFiles.addedBy']);
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
 
         $customers = Customer::active()->get();
@@ -170,6 +170,7 @@ class ProjectController extends Controller
 
         $html = [];
         foreach ($attachments as $file) {
+            $file->load('addedBy');
             $html[] = view('projects.partials.file-item', ['file' => $file])->render();
         }
 

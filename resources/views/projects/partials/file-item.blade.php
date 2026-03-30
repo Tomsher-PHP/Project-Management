@@ -30,6 +30,15 @@
         {{ number_format($file->file_size / 1024, 1) }} KB
     </span>
 
+    <div class="mt-1 text-center">
+        <p class="truncate text-xs text-bgray-500 dark:text-bgray-300">
+            {{ $file->addedBy?->name ?? 'Unknown User' }}
+        </p>
+        <p class="text-[11px] text-bgray-400 dark:text-bgray-300">
+            {{ $file->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
+        </p>
+    </div>
+
     <!-- Actions -->
     <div class="flex gap-2 mt-1">
         <!-- Download -->

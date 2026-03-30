@@ -46,4 +46,9 @@ class Attachment extends Model
     {
         return $this->morphTo(__FUNCTION__, 'link_type', 'link_id');
     }
+
+    public function addedBy()
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
 }
