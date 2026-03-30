@@ -60,7 +60,9 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
+        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
+
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
         $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();

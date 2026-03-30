@@ -1,6 +1,10 @@
 @extends('layouts.master')
 
 @section('page-content')
+    @php
+        $canEdit = auth()->user()->can('configuration.edit');
+    @endphp
+
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
@@ -10,6 +14,13 @@
                     <form action="{{ route('settings.configurations.update') }}" method="POST" class="space-y-10" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        @if (!$canEdit)
+                            <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                                You have view-only access to this configuration.
+                            </div>
+                            <fieldset disabled class="opacity-60 cursor-not-allowed">
+                        @endif
 
                         <!-- Basic Information Fields -->
                         <div class="flex flex-col xl:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start xl:items-center">
@@ -166,12 +177,18 @@
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
-                            <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
-                                Save Configuration
-                            </button>
-                        </div>
+                        @if (!$canEdit)
+                            </fieldset>
+                        @endif
+
+                        @if ($canEdit)
+                            <!-- Submit Button -->
+                            <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
+                                <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
+                                    Save Configuration
+                                </button>
+                            </div>
+                        @endif
                     </form>
                 </div>
             </section>

@@ -113,10 +113,40 @@ class UserService
     }
 
     // Get the list of accessable users for the authenticated user
-    public function getAccessibleUsers(User $authUser, array $excludeIds = [])
+    public function getAccessibleUsers(User $authUser, array $excludeIds = [], array $includeIds = [])
     {
-        return User::accessibleBy($authUser)
-            ->where('status', true)
+        $excludeIds = collect($excludeIds)
+            ->flatten()
+            ->filter(fn($id) => filled($id))
+            ->unique()
+            ->values()
+            ->all();
+
+        $includeIds = collect($includeIds)
+            ->flatten()
+            ->filter(fn($id) => filled($id))
+            ->unique()
+            ->values()
+            ->all();
+
+        $accessibleIds = User::accessibleBy($authUser)->select('id');
+
+        return User::query()
+            ->select('id', 'name', 'email', 'status')
+            ->where(function ($q) use ($accessibleIds, $includeIds) {
+                $q->whereIn('id', $accessibleIds);
+
+                if (!empty($includeIds)) {
+                    $q->orWhereIn('id', $includeIds);
+                }
+            })
+            ->where(function ($q) use ($includeIds) {
+                $q->where('status', true);
+
+                if (!empty($includeIds)) {
+                    $q->orWhereIn('id', $includeIds);
+                }
+            })
             ->when(!empty($excludeIds), function ($q) use ($excludeIds) {
                 $q->whereNotIn('id', $excludeIds);
             })

@@ -59,7 +59,7 @@ class UserController extends Controller
         $designations = Designation::active()->orderBy('order', 'asc')->get();
 
         // Get reporter and managers
-        $managers = User::active()->get();
+        $managers = app(UserService::class)->getAccessibleUsers(auth()->user());
 
         return view('users.create', compact('roles', 'departments', 'designations', 'managers'));
     }
@@ -77,7 +77,12 @@ class UserController extends Controller
         $roles = Role::where('status', true)->get();
         $departments = Department::active()->orderBy('order', 'asc')->get();
         $designations = Designation::active()->orderBy('order', 'asc')->get();
-        $managers = User::active()->get();
+        $managerIds = collect([
+            $user->details?->reporter_id,
+            $user->details?->manager_id,
+        ])->filter()->unique()->values()->all();
+
+        $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $managerIds);
 
         return view('users.edit', compact('user', 'roles', 'departments', 'designations', 'managers'));
     }
