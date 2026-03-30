@@ -112,6 +112,14 @@ class ProjectServices
         });
     }
 
+    public function getTimelines(Project $project): array
+    {
+        return [
+            'projectTimeline' => $this->buildTimeline($project->start_date, $project->end_date),
+            'customerTimeline' => $this->buildTimeline($project->start_date, $project->customer_end_date),
+        ];
+    }
+
     public function uploadFile(Project $project, array $data, $category = null)
     {
         return DB::transaction(function () use ($project, $data, $category) {
@@ -162,5 +170,66 @@ class ProjectServices
 
             return $note->load(['attachments', 'addedBy']);
         });
+    }
+
+    private function buildTimeline($startDate, $targetDate): array
+    {
+        $dateFormat = config('constants.date_format');
+        $today = now(config('constants.timezone'))->startOfDay();
+
+        if (! $startDate || ! $targetDate) {
+            return [
+                'percentage' => 0,
+                'bar_class' => 'bg-gray-300',
+                'text_class' => 'text-bgray-500 dark:text-bgray-300',
+                'start_label' => $startDate?->format($dateFormat) ?? '--',
+                'end_label' => $targetDate?->format($dateFormat) ?? '--',
+            ];
+        }
+
+        $start = $startDate->copy()->startOfDay();
+        $target = $targetDate->copy()->startOfDay();
+
+        if ($target->lessThanOrEqualTo($start)) {
+            return [
+                'percentage' => 100,
+                'bar_class' => 'bg-red-500',
+                'text_class' => 'text-red-500',
+                'start_label' => $start->format($dateFormat),
+                'end_label' => $target->format($dateFormat),
+            ];
+        }
+
+        $totalDays = max($start->diffInDays($target), 1);
+
+        if ($today->lessThan($start)) {
+            $percentage = 0;
+        } elseif ($today->greaterThanOrEqualTo($target)) {
+            $percentage = 100;
+        } else {
+            $percentage = (int) round(($start->diffInDays($today) / $totalDays) * 100);
+        }
+
+        if ($percentage <= 25) {
+            $barClass = 'bg-success-300';
+            $textClass = 'text-success-400';
+        } elseif ($percentage <= 50) {
+            $barClass = 'bg-yellow-400';
+            $textClass = 'text-yellow-500';
+        } elseif ($percentage <= 75) {
+            $barClass = 'bg-orange-400';
+            $textClass = 'text-orange-500';
+        } else {
+            $barClass = 'bg-red-500';
+            $textClass = 'text-red-500';
+        }
+
+        return [
+            'percentage' => $percentage,
+            'bar_class' => $barClass,
+            'text_class' => $textClass,
+            'start_label' => $start->format($dateFormat),
+            'end_label' => $target->format($dateFormat),
+        ];
     }
 }

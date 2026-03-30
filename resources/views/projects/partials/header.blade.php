@@ -1,5 +1,19 @@
 @php
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
+    $projectTimeline = $projectTimeline ?? [
+        'percentage' => 0,
+        'bar_class' => 'bg-gray-300',
+        'text_class' => 'text-bgray-500 dark:text-bgray-300',
+        'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
+        'end_label' => $project->end_date?->format($globalDateFormat) ?? '--',
+    ];
+    $customerTimeline = $customerTimeline ?? [
+        'percentage' => 0,
+        'bar_class' => 'bg-gray-300',
+        'text_class' => 'text-bgray-500 dark:text-bgray-300',
+        'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
+        'end_label' => $project->customer_end_date?->format($globalDateFormat) ?? '--',
+    ];
 @endphp
 <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
 
@@ -46,6 +60,52 @@
                     </span>
                 @endcan
 
+            </div>
+
+            <div class="mt-5 grid gap-4 xl:grid-cols-2">
+                <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
+                    <div class="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
+                            <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                                {{ $projectTimeline['start_label'] }} to {{ $projectTimeline['end_label'] }}
+                            </p>
+                        </div>
+                        <span class="text-sm font-bold {{ $projectTimeline['text_class'] }}">
+                            {{ $projectTimeline['percentage'] }}%
+                        </span>
+                    </div>
+
+                    <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                        <div
+                            class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}"
+                            style="width: {{ $projectTimeline['percentage'] }}%;"
+                        ></div>
+                    </div>
+                </div>
+
+                @if ($canCustomerEndDate)
+                    <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
+                        <div class="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
+                                <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                                    {{ $customerTimeline['start_label'] }} to {{ $customerTimeline['end_label'] }}
+                                </p>
+                            </div>
+                            <span class="text-sm font-bold {{ $customerTimeline['text_class'] }}">
+                                {{ $customerTimeline['percentage'] }}%
+                            </span>
+                        </div>
+
+                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                            <div
+                                class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}"
+                                style="width: {{ $customerTimeline['percentage'] }}%;"
+                            ></div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 

@@ -12,7 +12,10 @@
 
                 <!-- PROJECT HEADER -->
                 <div id="project-header">
-                    @include('projects.partials.header')
+                    @include('projects.partials.header', [
+                        'projectTimeline' => $timelines['projectTimeline'],
+                        'customerTimeline' => $timelines['customerTimeline'],
+                    ])
                 </div>
 
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">

@@ -29,12 +29,14 @@
                         <div class="table-content w-full overflow-x-auto">
                             <table class="w-full">
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    {{-- <td class="">
-                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">#</span>
-                                    </td> --}}
                                     <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
                                             <x-sorting.sortable-column column="name" label="Name" />
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Customer</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -71,15 +73,12 @@
                                         $priority = config('constants.project_priorities')[$project->priority] ?? null;
                                     @endphp
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                        {{-- <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
-                                        </td> --}}
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-stretch">
 
                                                 <!-- 🎨 Priority Vertical Line -->
                                                 @if (isset($priority))
-                                                    <div class="w-1 rounded-sm mr-4 {{ $priority['bg_class'] }}"></div>
+                                                    <div class="w-1 rounded-sm mr-4 {{ $priority['bg_class'] }}" title="{{ 'Priority: ' . ($priority['label'] ?? '--') }}"></div>
                                                 @endif
 
                                                 <!-- Content -->
@@ -94,16 +93,36 @@
                                                     </a>
 
                                                     <div class="flex flex-col">
-                                                        <span class="text-gray-500 dark:text-bgray-50">
-                                                            Customer: {{ $project->customer->name ?? '--' }}
-                                                        </span>
-
                                                         <span class="dark:text-bgray-50 {{ $priority['text_class'] ?? '' }}">
                                                             Priority: {{ $priority['label'] ?? '--' }}
                                                         </span>
                                                     </div>
+
+                                                    <div class="mt-3 max-w-xs">
+                                                        <div class="mb-1 flex items-center justify-between gap-3">
+                                                            <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                                Timeline
+                                                            </span>
+                                                            <span class="text-xs font-semibold {{ $project->project_timeline['text_class'] }}">
+                                                                {{ $project->project_timeline['percentage'] }}%
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                                                            <div class="h-full rounded-full {{ $project->project_timeline['bar_class'] }}" style="width: {{ $project->project_timeline['percentage'] }}%;"></div>
+                                                        </div>
+
+                                                        <p class="mt-1 text-[11px] text-bgray-400 dark:text-bgray-300">
+                                                            {{ $project->project_timeline['start_label'] }} to {{ $project->project_timeline['end_label'] }}
+                                                        </p>
+                                                    </div>
                                                 </div>
 
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                            <div class="flex w-full items-center">
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->customer->name ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -120,14 +139,14 @@
                                             <div class="flex flex-col w-full">
 
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                    {{ $project->start_date->format($globalDateFormat) ?? '--' }}
+                                                    {{ $project->start_date?->format($globalDateFormat) ?? '--' }}
                                                 </span>
 
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date->format($globalDateFormat) ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date?->format($globalDateFormat) ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">

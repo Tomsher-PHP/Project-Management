@@ -32,7 +32,7 @@ class ProjectController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    public function index(Request $request)
+    public function index(Request $request, ProjectServices $service)
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
@@ -41,6 +41,12 @@ class ProjectController extends Controller
             ->sort($request->all())
             ->paginate($perPage)
             ->withQueryString();
+
+        $projects->getCollection()->transform(function ($project) use ($service) {
+            $project->project_timeline = $service->getTimelines($project)['projectTimeline'];
+
+            return $project;
+        });
 
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
@@ -61,12 +67,13 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(Project $project)
+    public function edit(Project $project, ProjectServices $service)
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load(['scopeFiles.addedBy']);
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
+        $timelines = $service->getTimelines($project);
 
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
@@ -80,6 +87,7 @@ class ProjectController extends Controller
         return view('projects.detail-page', compact(
             'project',
             'projectNotes',
+            'timelines',
             'users',
             'customers',
             'statuses',
@@ -96,6 +104,7 @@ class ProjectController extends Controller
         $project = $service->update($project, $request->validated());
 
         $priority = config('constants.project_priorities')[$project->priority] ?? null;
+        $timelines = $service->getTimelines($project);
 
         return response()->json([
             'success' => true,
@@ -103,7 +112,9 @@ class ProjectController extends Controller
             'project' => $project,
             'project_header' => view('projects.partials.header', [
                 'project' => $project,
-                'priority' => $priority
+                'priority' => $priority,
+                'projectTimeline' => $timelines['projectTimeline'],
+                'customerTimeline' => $timelines['customerTimeline'],
             ])->render(),
         ], Response::HTTP_OK);
     }
