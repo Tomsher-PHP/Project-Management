@@ -48,6 +48,7 @@ class Project extends Model
 
     protected $sortable = [
         'name',
+        'customer.name',
         'start_date',
         'end_date',
         'customer_end_date',

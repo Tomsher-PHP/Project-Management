@@ -36,7 +36,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Customer</span>
+                                            <x-sorting.sortable-column column="customer.name" label="Customer" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
