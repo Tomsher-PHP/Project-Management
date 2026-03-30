@@ -64,11 +64,8 @@ class ProjectController extends Controller
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $project->load([
-            'scopeFiles',
-            'projectNotes.attachments',
-            'projectNotes.addedBy',
-        ]);
+        $project->load(['scopeFiles']);
+        $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
 
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
@@ -81,6 +78,7 @@ class ProjectController extends Controller
 
         return view('projects.detail-page', compact(
             'project',
+            'projectNotes',
             'users',
             'customers',
             'statuses',
@@ -111,32 +109,40 @@ class ProjectController extends Controller
 
     public function storeNote(ProjectNoteRequest $request, Project $project, ProjectServices $service)
     {
-        $note = $service->createNote($project, $request->validated());
+        $service->createNote($project, $request->validated());
+        $projectNotes = $this->getPaginatedProjectNotes($project, 1);
 
         return response()->json([
             'success' => true,
             'message' => 'Note added successfully.',
-            'html' => view('projects.partials.project-note-card', [
-                'note' => $note,
+            'html' => view('projects.partials.project-notes-list', [
+                'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
             ])->render(),
+            'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
     }
 
-    public function deleteNote(Project $project, ProjectNote $note, AttachmentService $attachmentService)
+    public function deleteNote(Request $request, Project $project, ProjectNote $note, AttachmentService $attachmentService)
     {
         abort_unless($note->project_id === $project->id, Response::HTTP_NOT_FOUND);
 
         $attachmentService->delete($note->attachments);
         $note->delete();
+        $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
         return response()->json([
             'success' => true,
             'message' => 'Note deleted successfully.',
+            'html' => view('projects.partials.project-notes-list', [
+                'projectNotes' => $projectNotes,
+                'canRemove' => auth()->user()->can('project.remove_notes_files'),
+            ])->render(),
+            'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
     }
 
-    public function deleteNoteAttachment(Project $project, ProjectNote $note, Attachment $attachment, AttachmentService $attachmentService)
+    public function deleteNoteAttachment(Request $request, Project $project, ProjectNote $note, Attachment $attachment, AttachmentService $attachmentService)
     {
         abort_unless($note->project_id === $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(
@@ -145,10 +151,16 @@ class ProjectController extends Controller
         );
 
         $attachmentService->delete(collect([$attachment]));
+        $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
         return response()->json([
             'success' => true,
             'message' => 'File removed successfully.',
+            'html' => view('projects.partials.project-notes-list', [
+                'projectNotes' => $projectNotes,
+                'canRemove' => auth()->user()->can('project.remove_notes_files'),
+            ])->render(),
+            'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
     }
 
@@ -199,5 +211,19 @@ class ProjectController extends Controller
             'status' => $project->status,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
+    }
+
+    private function getPaginatedProjectNotes(Project $project, int $page)
+    {
+        $perPage = 3;
+        $total = $project->projectNotes()->count();
+        $lastPage = max((int) ceil($total / $perPage), 1);
+        $page = min(max($page, 1), $lastPage);
+
+        return $project->projectNotes()
+            ->with(['attachments', 'addedBy'])
+            ->paginate($perPage, ['*'], 'notes_page', $page)
+            ->withPath(route('projects.edit', $project))
+            ->withQueryString();
     }
 }

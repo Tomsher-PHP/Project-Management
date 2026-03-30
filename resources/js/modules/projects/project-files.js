@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveBtn = document.getElementById('saveProjectNote');
     const attachmentsInput = document.getElementById('note-attachments-input');
     const selectedFilesList = document.getElementById('selected-note-files');
-    const notesList = document.getElementById('project-notes-list');
-    const notesCount = document.getElementById('project-notes-count');
     let pendingFiles = [];
 
     if (!projectId) {
@@ -55,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const formData = new FormData();
             formData.append('description', description);
+            formData.append('notes_page', '1');
 
             if (canCreateNotesFiles) {
                 pendingFiles.forEach(file => {
@@ -77,9 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(data.message || 'Failed to save note.');
             }
 
-            document.getElementById('project-notes-empty-state')?.remove();
-            notesList?.insertAdjacentHTML('afterbegin', data.html);
-            updateNotesCount();
+            replaceNotesHistory(data.html, data.current_page);
             projectNoteEditor.setContents([]);
             pendingFiles = [];
 
@@ -130,15 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     }
 
-    function updateNotesCount() {
-        if (!notesList || !notesCount) {
-            return;
-        }
-
-        const noteCards = notesList.querySelectorAll('article').length;
-        notesCount.textContent = `${noteCards} Notes`;
-    }
-
     async function deleteNote(button) {
         const noteId = button.dataset.noteId;
 
@@ -155,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
         button.disabled = true;
 
         try {
-            const response = await fetch(`/projects/${projectId}/notes/${noteId}`, {
+            const response = await fetch(`/projects/${projectId}/notes/${noteId}?notes_page=${getCurrentNotesPage()}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': token,
@@ -169,9 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(data.message || 'Failed to delete note.');
             }
 
-            button.closest('article')?.remove();
-            updateNotesCount();
-            ensureEmptyNotesState();
+            replaceNotesHistory(data.html, data.current_page);
             Alert.success(data.message);
         } catch (error) {
             console.error(error);
@@ -197,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
         button.disabled = true;
 
         try {
-            const response = await fetch(`/projects/${projectId}/notes/${noteId}/attachments/${attachmentId}`, {
+            const response = await fetch(`/projects/${projectId}/notes/${noteId}/attachments/${attachmentId}?notes_page=${getCurrentNotesPage()}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': token,
@@ -211,10 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(data.message || 'Failed to remove file.');
             }
 
-            const noteCard = button.closest('article');
-            button.closest('[data-note-attachment-id]')?.remove();
-            updateAttachmentCount(noteCard);
-            ensureAttachmentSectionState(noteCard);
+            replaceNotesHistory(data.html, data.current_page);
             Alert.success(data.message);
         } catch (error) {
             console.error(error);
@@ -223,48 +206,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function updateAttachmentCount(noteCard) {
-        if (!noteCard) {
+    function replaceNotesHistory(html, currentPage) {
+        const notesHistory = document.getElementById('project-notes-history');
+
+        if (!notesHistory) {
             return;
         }
 
-        const fileCount = noteCard.querySelectorAll('.note-attachments-section a').length;
-        const countBadge = noteCard.querySelector('.note-attachments-count');
-
-        if (countBadge) {
-            countBadge.textContent = `${fileCount} File${fileCount === 1 ? '' : 's'}`;
-        }
+        notesHistory.outerHTML = html;
+        updateNotesPageInUrl(currentPage);
     }
 
-    function ensureAttachmentSectionState(noteCard) {
-        if (!noteCard) {
-            return;
-        }
-
-        const attachmentsSection = noteCard.querySelector('.note-attachments-section');
-
-        if (!attachmentsSection) {
-            return;
-        }
-
-        const remainingFiles = attachmentsSection.querySelectorAll('a').length;
-
-        if (!remainingFiles) {
-            attachmentsSection.remove();
-        }
+    function getCurrentNotesPage() {
+        const params = new URLSearchParams(window.location.search);
+        return Number(params.get('notes_page') || 1);
     }
 
-    function ensureEmptyNotesState() {
-        if (!notesList || notesList.querySelector('article')) {
+    function updateNotesPageInUrl(currentPage) {
+        if (!currentPage) {
             return;
         }
 
-        if (!document.getElementById('project-notes-empty-state')) {
-            const emptyState = document.createElement('div');
-            emptyState.id = 'project-notes-empty-state';
-            emptyState.className = 'rounded-xl border border-dashed border-bgray-300 px-6 py-10 text-center text-sm text-gray-400 dark:border-darkblack-400';
-            emptyState.textContent = 'No project notes and files added yet.';
-            notesList.appendChild(emptyState);
-        }
+        const url = new URL(window.location.href);
+        url.searchParams.set('notes_page', String(currentPage));
+        window.history.replaceState({}, '', url);
     }
 });
