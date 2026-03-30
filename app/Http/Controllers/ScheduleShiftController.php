@@ -50,9 +50,14 @@ class ScheduleShiftController extends Controller
                 'weekDates'
             ))->render();
 
+            $timezone = config('constants.timezone');
+            $dateFormat = config('constants.date_format');
+
             return response()->json([
                 'html' => $tableHtml,
-                'weekRange' => $startOfWeek->format('d M') . ' - ' . $endOfWeek->format('d M Y'),
+                'weekRange' => $startOfWeek->copy()->timezone($timezone)->format($dateFormat)
+                    . ' - ' .
+                    $endOfWeek->copy()->timezone($timezone)->format($dateFormat),
             ], Response::HTTP_OK);
         }
 

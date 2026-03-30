@@ -5,7 +5,7 @@
                 {{ $note->addedBy?->name ?? 'Unknown User' }}
             </h4>
             <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                {{ $note->created_at?->format('d M Y, h:i A') }}
+                {{ $note->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
             </p>
         </div>
 

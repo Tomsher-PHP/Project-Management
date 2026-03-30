@@ -49,7 +49,7 @@
                 <div>
                     <label for="start_date" class="block text-sm font-medium">Start Date</label>
                     <input type="date" name="start_date" id="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
 
                     @error('start_date')
                         <p class="mt-2 text-sm text-error-300">

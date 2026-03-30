@@ -51,12 +51,20 @@ class UserShiftAssignment extends Model
 
     public function getTimeFromFormattedAttribute()
     {
-        return $this->time_from->format(config('constants.time_format'));
+        return $this->time_from
+            ? $this->time_from
+                ->timezone(config('constants.timezone'))
+                ->format(config('constants.time_format'))
+            : null;
     }
 
     public function getTimeToFormattedAttribute()
     {
-        return $this->time_to->format(config('constants.time_format'));
+        return $this->time_to
+            ? $this->time_to
+                ->timezone(config('constants.timezone'))
+                ->format(config('constants.time_format'))
+            : null;
     }
 
     public function getBreakDurationFormattedAttribute()

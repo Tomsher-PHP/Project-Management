@@ -120,14 +120,14 @@
                                             <div class="flex flex-col w-full">
 
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                    {{ $project->start_date->format(config('constants.date_format')) ?? '--' }}
+                                                    {{ $project->start_date->format($globalDateFormat) ?? '--' }}
                                                 </span>
 
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date->format(config('constants.date_format')) ?? '--' }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->end_date->format($globalDateFormat) ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -255,7 +255,7 @@
         <div>
             <label for="start_date" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Start Date</label>
             <input type="date" name="start_date" id="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" value="{{ old('start_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" data-format="{{ config('constants.date_format') }}" placeholder="Select a date">
+                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" value="{{ old('start_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
 
             @error('start_date')
                 <p class="mt-2 text-sm text-error-300">
