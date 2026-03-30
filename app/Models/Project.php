@@ -131,6 +131,11 @@ class Project extends Model
         return $this->hasMany(ProjectComment::class)->orderBy('created_at', 'desc');
     }
 
+    public function projectNotes()
+    {
+        return $this->hasMany(ProjectNote::class)->orderBy('created_at', 'desc');
+    }
+
     public function latestStatusHistory()
     {
         return $this->hasOne(ProjectStatusHistory::class)->latestOfMany();
@@ -170,9 +175,16 @@ class Project extends Model
         });
     }
 
+    /*----------------Attachments----------------*/
+
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');
+    }
+
+    public function scopeFiles()
+    {
+        return $this->attachments()->where('category', 'scope_files');
     }
 
     /*----------------Members relationship----------------*/

@@ -38,7 +38,7 @@
         </a>
 
         <!-- Delete -->
-        @can('project.remove_files')
+        @can('project.remove_scope')
             <button type="button" class="text-xs text-red-500 delete-file" data-id="{{ $file->id }}">
                 Delete
             </button>

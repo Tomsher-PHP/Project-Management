@@ -10,6 +10,7 @@ class Attachment extends Model
     protected $fillable = [
         'link_id',
         'link_type',
+        'category',
         'file_name',
         'file_path',
         'file_type',
@@ -27,6 +28,7 @@ class Attachment extends Model
         return [
             'link_id' => 'integer',
             'link_type' => 'string',
+            'category' => 'string',
             'is_primary' => 'boolean',
             'status' => 'boolean',
             'added_by' => 'integer',

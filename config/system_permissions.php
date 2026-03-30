@@ -1,25 +1,11 @@
 <?php
 
 return [
-    // Project Module
-    'project.view_all_projects',
-    'project.view',
-    'project.create',
-    'project.edit',
-    'project.delete',
-    'project.add_team',
-    'project.remove_team',
-    'project.update_notes',
-    'project.add_files',
-    'project.remove_files',
-    'project.status_change',
-    'project.customer_end_date',
-
-    // Task Module
-    'task.view',
-    'task.create',
-    'task.edit',
-    'task.delete',
+    // Role Management Module
+    'role.view',
+    'role.create',
+    'role.edit',
+    'role.delete',
 
     // User Module
     'user.view_all_users',
@@ -29,31 +15,55 @@ return [
     'user.delete',
 
     //team Module
+    'team.view_all_teams',
     'team.view',
     'team.create',
     'team.edit',
     'team.delete',
 
-    // Settings Module
-    'settings.view',
-    'settings.create',
-    'settings.edit',
+    // customer
+    'customer.view',
+    'customer.create',
+    'customer.edit',
+    'customer.delete',
 
-    // Reports Module
-    'reports.view',
-    'reports.download',
+    // Project Module
+    'project.view_all_projects',
+    'project.view',
+    'project.create',
+    'project.edit',
+    'project.delete',
 
-    // Role Management Module
-    'role.view',
-    'role.create',
-    'role.edit',
-    'role.delete',
+    'project.add_team',
+    'project.remove_team',
+
+    'project.add_scope',
+    'project.remove_scope',
+
+    'project.add_attachments',
+    'project.remove_attachments',
+
+    'project.status_change',
+    'project.customer_end_date',
+
+    // Task Module
+    'user.view_all_tasks',
+    'task.view',
+    'task.create',
+    'task.edit',
+    'task.delete',
 
     // Shift Management Module
     'shift.view',
     'shift.create',
     'shift.edit',
     'shift.delete',
+
+    // Schedule Shift
+    'schedule_shift.view',
+    'schedule_shift.create',
+    'schedule_shift.edit',
+    'schedule_shift.delete',
 
     // Department Module
     'department.view',
@@ -66,12 +76,6 @@ return [
     'designation.create',
     'designation.edit',
     'designation.delete',
-
-    // Schedule Shift
-    'schedule_shift.view',
-    'schedule_shift.create',
-    'schedule_shift.edit',
-    'schedule_shift.delete',
 
     // technology
     'technology.view',
@@ -91,12 +95,6 @@ return [
     'industry.edit',
     'industry.delete',
 
-    // customer
-    'customer.view',
-    'customer.create',
-    'customer.edit',
-    'customer.delete',
-
     // project status
     'project_status.view',
     'project_status.create',
@@ -112,4 +110,8 @@ return [
     // configuration
     'configuration.view',
     'configuration.edit',
+
+    // Reports Module
+    'reports.view',
+    'reports.download',
 ];

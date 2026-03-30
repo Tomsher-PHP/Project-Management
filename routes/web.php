@@ -181,9 +181,12 @@ Route::middleware(['auth'])->group(function () {
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::post('update-notes', [ProjectController::class, 'updateNotes'])->middleware('permission.type:project.update_notes')->name('projects.updateNotes');
-        Route::post('files', [ProjectController::class, 'uploadFile'])->middleware('permission.type:project.add_files')->name('projects.uploadFile');
-        Route::delete('files/{fileId}', [ProjectController::class, 'deleteFile'])->middleware('permission.type:project.remove_files')->name('projects.deleteFile');
+        
+        // Scope file routes
+        Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');
+        Route::delete('scope-files/{fileId}', [ProjectController::class, 'deleteScopeFile'])->middleware('permission.type:project.remove_scope')->name('projects.deleteScopeFile');
 
+        // Team management within project
         Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_team')->name('projects.addMember');
         Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
         Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');

@@ -27,12 +27,6 @@ class RolePermissionSeeder extends Seeder
         $permissions = config('system_permissions');
 
         foreach ($permissions as $permission) {
-            // if (in_array($userType, ['normal_user'])) {
-            //     $permissions = array_filter($permissions, function ($permission) {
-            //         return str_contains($permission, 'task') || str_contains($permission, 'project');
-            //     });
-            // }
-
             Permission::firstOrCreate([
                 'name' => $permission,
                 'guard_name' => 'web',

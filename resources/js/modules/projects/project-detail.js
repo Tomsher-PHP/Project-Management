@@ -1,4 +1,4 @@
 import './project-ajax';
 import './project-team';
 import './project-notes';
-import './project-files';
+import './project-scope-files';

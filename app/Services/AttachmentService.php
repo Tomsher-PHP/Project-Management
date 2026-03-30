@@ -46,11 +46,14 @@ class AttachmentService
      *        Indicates whether this file should be marked as the primary attachment
      *        for the given model (default: false).
      *
+     * @param string|null $category
+     *        Optional category used to group or scope the attachment.
+     *
      * @return \App\Models\Attachment|null
      *        Returns the created Attachment model instance
      *        or null on failure.
      */
-    public function upload($file, $directory = 'attachments', $attachable, $disk = 'public', $visibility = 'public', $isPrimary = false)
+    public function upload($file, $directory = 'attachments', $attachable, $disk = 'public', $visibility = 'public', $isPrimary = false, $category = null)
     {
         // 1. Generate Unique File Name
         $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
@@ -71,6 +74,7 @@ class AttachmentService
         return Attachment::create([
             'link_id'       => $attachable->id,
             'link_type'     => get_class($attachable),
+            'category'      => $category,
 
             'file_name'     => $fileName,
             'original_name' => $file->getClientOriginalName(),

@@ -115,9 +115,9 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function uploadFile(ProjectFileRequest $request, Project $project, ProjectServices $service)
+    public function uploadScopeFile(ProjectFileRequest $request, Project $project, ProjectServices $service)
     {
-        $attachments = $service->uploadFile($project, $request->validated());
+        $attachments = $service->uploadFile($project, $request->validated(), 'scope_files');
 
         $html = [];
         foreach ($attachments as $file) {
@@ -131,7 +131,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function deleteFile(Project $project, $fileId, AttachmentService $attachmentService)
+    public function deleteScopeFile(Project $project, $fileId, AttachmentService $attachmentService)
     {
         $attachment = $project->attachments()->where('id', $fileId)->get();
         $attachmentService->delete($attachment);

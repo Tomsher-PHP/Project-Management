@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('project_files[]', file);
         });
 
-        fetch(`/projects/${projectId}/files`, {
+        fetch(`/projects/${projectId}/scope-files`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': token
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!result.isConfirmed) return;
 
             // Send delete request
-            fetch(`/projects/${projectId}/files/${id}`, {
+            fetch(`/projects/${projectId}/scope-files/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content

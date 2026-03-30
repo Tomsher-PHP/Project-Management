@@ -8,7 +8,7 @@
         @endphp
 
         <div class="2xl:flex 2xl:space-x-[30px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1" x-data="{ activeTab: localStorage.getItem('projectTab_{{ $project->id }}') || 'tasks' }">
+            <section class="mb-6 2xl:mb-0 2xl:flex-1" x-data="{ activeTab: localStorage.getItem('projectTab_{{ $project->id }}') || 'overview' }">
 
                 <!-- PROJECT HEADER -->
                 <div id="project-header">
@@ -20,6 +20,10 @@
                     <!-- Tabs Header -->
                     <div class="border-b border-bgray-300 dark:border-darkblack-400 mb-6">
                         <div class="flex space-x-6">
+                            <button @click="activeTab = 'overview'; localStorage.setItem('projectTab_{{ $project->id }}', 'overview')" :class="activeTab === 'overview' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                                Overview
+                            </button>
+
                             <button @click="activeTab = 'tasks'; localStorage.setItem('projectTab_{{ $project->id }}', 'tasks')" :class="activeTab === 'tasks' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
                                 Tasks
                             </button>
@@ -28,8 +32,9 @@
                                 Team
                             </button>
 
-                            <button @click="activeTab = 'overview'; localStorage.setItem('projectTab_{{ $project->id }}', 'overview')" :class="activeTab === 'overview' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
-                                Overview
+
+                            <button @click="activeTab = 'scope'; localStorage.setItem('projectTab_{{ $project->id }}', 'scope')" :class="activeTab === 'scope' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                                Scope
                             </button>
 
                             <button @click="activeTab = 'notes'; localStorage.setItem('projectTab_{{ $project->id }}', 'notes')" :class="activeTab === 'notes' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
@@ -44,6 +49,34 @@
 
                     <!-- TAB CONTENT -->
                     <div>
+
+                        <!-- ================= OVERVIEW ================= -->
+                        <div x-show="activeTab === 'overview'" x-transition>
+                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Overview</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Stats Card -->
+                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
+                                    <p class="text-sm text-bgray-500">New Tasks</p>
+                                    <h2 class="text-2xl font-bold text-success-400">12</h2>
+                                </div>
+
+                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
+                                    <p class="text-sm text-bgray-500">In Progress</p>
+                                    <h2 class="text-2xl font-bold text-warning-400">5</h2>
+                                </div>
+
+                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
+                                    <p class="text-sm text-bgray-500">Completed</p>
+                                    <h2 class="text-2xl font-bold text-blue-400">20</h2>
+                                </div>
+                            </div>
+
+                            <!-- Chart placeholder -->
+                            <div class="mt-6 h-[250px] flex items-center justify-center border border-dashed border-bgray-300 rounded-lg text-bgray-400">
+                                Pie Chart (Tasks Stats)
+                            </div>
+                        </div>
 
                         <!-- ================= TASKS ================= -->
                         <div x-show="activeTab === 'tasks'" x-transition>
@@ -98,31 +131,11 @@
                             </div>
                         </div>
 
-                        <!-- ================= OVERVIEW ================= -->
-                        <div x-show="activeTab === 'overview'" x-transition>
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Overview</h3>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <!-- Stats Card -->
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">New Tasks</p>
-                                    <h2 class="text-2xl font-bold text-success-400">12</h2>
-                                </div>
-
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">In Progress</p>
-                                    <h2 class="text-2xl font-bold text-warning-400">5</h2>
-                                </div>
-
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">Completed</p>
-                                    <h2 class="text-2xl font-bold text-blue-400">20</h2>
-                                </div>
-                            </div>
-
-                            <!-- Chart placeholder -->
-                            <div class="mt-6 h-[250px] flex items-center justify-center border border-dashed border-bgray-300 rounded-lg text-bgray-400">
-                                Pie Chart (Tasks Stats)
+                        <!-- ================= SCOPE ================= -->
+                        <div x-show="activeTab === 'scope'" x-transition>
+                            <!-- Files -->
+                            <div class="w-full pt-6">
+                                @include('projects.partials.scope-files')
                             </div>
                         </div>
 
@@ -144,7 +157,7 @@
 
                             <!-- Files -->
                             <div class="w-full pt-6">
-                                @include('projects.partials.files')
+                                {{-- @include('projects.partials.files') --}}
                             </div>
                         </div>
 

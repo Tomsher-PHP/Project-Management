@@ -15,6 +15,7 @@ class ProjectServices
     {
         $this->attachmentService = $attachmentService;
     }
+
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
@@ -110,9 +111,9 @@ class ProjectServices
         });
     }
 
-    public function uploadFile(Project $project, array $data)
+    public function uploadFile(Project $project, array $data, $category = null)
     {
-        return DB::transaction(function () use ($project, $data) {
+        return DB::transaction(function () use ($project, $data, $category) {
             $attachments = [];
             if (!empty($data['project_files'])) {
                 $directory = 'project_files/' . $project->project_code;
@@ -124,7 +125,8 @@ class ProjectServices
                         $project,
                         'public',
                         'public',
-                        true
+                        true,
+                        $category
                     );
                 }
             }
