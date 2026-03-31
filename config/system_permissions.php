@@ -114,4 +114,8 @@ return [
     // Reports Module
     'reports.view',
     'reports.download',
+
+    // Activity Log
+    'activity_log.view',
+    'activity_log.delete',
 ];

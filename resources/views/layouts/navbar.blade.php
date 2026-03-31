@@ -12,7 +12,7 @@
                 </svg>
             </span>
         </button>
-        <!--              page-title-->
+        <!--page-title-->
         <div>
             <h3 class="text-xl font-bold text-bgray-900 dark:text-bgray-50 lg:text-3xl lg:leading-[36.4px]">
                 {{ $pageTitle ?? 'Dashboard' }}
@@ -109,7 +109,7 @@
                             </span>
                         </div>
                         <p class="text-sm font-medium leading-[20px] text-bgray-600 dark:text-bgray-50">
-                            {{ auth()->user()->roleName }}
+                            {{ auth()->user()->is_super_admin ? 'Super Admin' : auth()->user()->roleName }}
                         </p>
                     </div>
                 </div>

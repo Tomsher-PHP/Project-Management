@@ -34,7 +34,6 @@ return new class extends Migration
 
             // Extra
             $table->string('domain')->nullable();
-            $table->longText('notes')->nullable();
             $table->foreignId('project_category_id')->nullable()->constrained('project_categories')->nullOnDelete();
 
             // Billing

@@ -27,7 +27,6 @@ class Project extends Model
         'customer_end_date',
         'estimated_time_seconds',
         'domain',
-        'notes',
         'project_category_id',
         'default_billable',
         'status',

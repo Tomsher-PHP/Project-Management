@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/modules/schedule-shift.js',
                 'resources/js/modules/create-schedule.js',
                 'resources/js/modules/customer-contact.js',
+                'resources/js/modules/activity-logs.js',
                 'resources/js/image-draggable.js',
                 'resources/js/modules/projects/project-detail.js',
             ],

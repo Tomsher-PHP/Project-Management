@@ -73,6 +73,11 @@ class ProjectController extends Controller
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load(['scopeFiles.addedBy']);
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
+        $projectActivities = $project->activities()
+            ->with('causer')
+            ->latest()
+            ->limit(10)
+            ->get();
         $timelines = $service->getTimelines($project);
 
         $customers = Customer::active()->get();
@@ -86,6 +91,7 @@ class ProjectController extends Controller
 
         return view('projects.detail-page', compact(
             'project',
+            'projectActivities',
             'projectNotes',
             'timelines',
             'users',
