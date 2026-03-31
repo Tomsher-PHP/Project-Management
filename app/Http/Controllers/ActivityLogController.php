@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use ReflectionMethod;
 use Spatie\Activitylog\Models\Activity;
+use Throwable;
 
 class ActivityLogController extends Controller
 {
@@ -175,23 +179,24 @@ class ActivityLogController extends Controller
 
     private function buildActivityDetails(Activity $activity): array
     {
-        $ignoredFields = ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
+        $ignoredFields = ['created_at', 'updated_at', 'deleted_at'];
         $event = $activity->event ?? 'updated';
         $attributes = collect($activity->changes->get('attributes', []))->except($ignoredFields);
         $oldValues = collect($activity->changes->get('old', []))->except($ignoredFields);
+        $subjectModel = $this->resolveActivitySubjectModel($activity);
 
         $rows = collect();
 
         if ($event === 'created') {
             $rows = $attributes->map(fn ($value, $field) => [
                 'field' => Str::headline($field),
-                'new' => $value,
+                'new' => $this->transformActivityValue($subjectModel, $field, $value),
             ])->values();
         } elseif ($event === 'updated') {
             $rows = $attributes->map(fn ($value, $field) => [
                 'field' => Str::headline($field),
-                'old' => $oldValues->get($field),
-                'new' => $value,
+                'old' => $this->transformActivityValue($subjectModel, $field, $oldValues->get($field)),
+                'new' => $this->transformActivityValue($subjectModel, $field, $value),
             ])->values();
         }
 
@@ -203,9 +208,7 @@ class ActivityLogController extends Controller
             'subject_type' => $activity->subject_type ? Str::headline(class_basename($activity->subject_type)) : '--',
             'description' => Str::headline(str_replace('.', ' ', $activity->description)),
             'causer' => $activity->causer?->name ?? 'System',
-            'logged_at' => $activity->created_at?->timezone(config('constants.timezone'))->format(
-                config('constants.date_format') . ' ' . config('constants.time_format')
-            ) ?? '--',
+            'logged_at' => $activity->created_at,
             'rows' => $rows,
         ];
     }
@@ -222,5 +225,160 @@ class ActivityLogController extends Controller
             ?? $subject?->customer_code
             ?? $subject?->employee_id
             ?? ($activity->subject_id ? '#' . $activity->subject_id : '--');
+    }
+
+    private function resolveActivitySubjectModel(Activity $activity): ?Model
+    {
+        if ($activity->subject instanceof Model) {
+            return $activity->subject;
+        }
+
+        if (! $activity->subject_type || ! class_exists($activity->subject_type)) {
+            return null;
+        }
+
+        $instance = app($activity->subject_type);
+
+        return $instance instanceof Model ? $instance : null;
+    }
+
+    private function transformActivityValue(?Model $subjectModel, string $field, mixed $value): array
+    {
+        if ($value === null) {
+            return [
+                'value' => null,
+                'type' => null,
+            ];
+        }
+
+        if ($subjectModel) {
+            $resolvedRelationValue = $this->resolveRelationValue($subjectModel, $field, $value);
+
+            if ($resolvedRelationValue !== null) {
+                return [
+                    'value' => $resolvedRelationValue,
+                    'type' => 'text',
+                ];
+            }
+
+            $castType = $this->detectFieldType($subjectModel, $field);
+
+            if ($castType !== null) {
+                return [
+                    'value' => $value,
+                    'type' => $castType,
+                ];
+            }
+        }
+
+        return [
+            'value' => $value,
+            'type' => 'text',
+        ];
+    }
+
+    private function resolveRelationValue(Model $subjectModel, string $field, mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $relation = $this->resolveRelationForField($subjectModel, $field);
+
+        if (! $relation || ! method_exists($relation, 'getRelated')) {
+            return null;
+        }
+
+        $relatedModel = $relation->getRelated()->newQuery()->find($value);
+
+        if (! $relatedModel instanceof Model) {
+            return null;
+        }
+
+        return $this->resolveModelDisplayValue($relatedModel);
+    }
+
+    private function resolveRelationForField(Model $subjectModel, string $field): ?Relation
+    {
+        $candidateMethods = $this->buildRelationCandidates($subjectModel, $field);
+
+        foreach ($candidateMethods as $method) {
+            $relation = $this->getRelationInstance($subjectModel, $method);
+
+            if ($relation && method_exists($relation, 'getForeignKeyName') && $relation->getForeignKeyName() === $field) {
+                return $relation;
+            }
+        }
+
+        return null;
+    }
+
+    private function buildRelationCandidates(Model $subjectModel, string $field): \Illuminate\Support\Collection
+    {
+        $baseField = Str::endsWith($field, '_id')
+            ? Str::beforeLast($field, '_id')
+            : $field;
+
+        $modelPrefix = Str::snake(class_basename($subjectModel));
+
+        return collect([
+            Str::camel($field),
+            Str::camel($baseField),
+            Str::camel($modelPrefix . '_' . $baseField),
+        ])->filter()->unique()->values();
+    }
+
+    private function getRelationInstance(Model $subjectModel, string $method): ?Relation
+    {
+        try {
+            $reflection = new ReflectionMethod($subjectModel, $method);
+
+            if ($reflection->getNumberOfRequiredParameters() > 0 || $reflection->isStatic()) {
+                return null;
+            }
+
+            $relation = $subjectModel->{$method}();
+
+            return $relation instanceof Relation ? $relation : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function detectFieldType(Model $subjectModel, string $field): ?string
+    {
+        $casts = $subjectModel->getCasts();
+        $castType = $casts[$field] ?? null;
+
+        if ($castType && in_array($castType, ['date', 'immutable_date'], true)) {
+            return 'date';
+        }
+
+        if ($castType && in_array($castType, ['datetime', 'immutable_datetime'], true)) {
+            return 'datetime';
+        }
+
+        if (Str::endsWith($field, '_date')) {
+            return 'date';
+        }
+
+        if (Str::endsWith($field, '_at')) {
+            return 'datetime';
+        }
+
+        return null;
+    }
+
+    private function resolveModelDisplayValue(Model $model): string
+    {
+        return $model->name
+            ?? $model->title
+            ?? $model->original_name
+            ?? $model->file_name
+            ?? $model->project_code
+            ?? $model->customer_code
+            ?? $model->employee_id
+            ?? $model->email
+            ?? ('#' . $model->getKey());
     }
 }

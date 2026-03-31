@@ -1,9 +1,14 @@
 @props([
     'value' => null,
+    'type' => null,
 ])
 
 @if (blank($value) && $value !== false && $value !== 0)
     <span class="text-bgray-400 dark:text-bgray-500">--</span>
+@elseif ($type === 'date')
+    <span>{{ \Carbon\Carbon::parse($value)->timezone($globalTimezone)->format($globalDateFormat) }}</span>
+@elseif ($type === 'datetime')
+    <span>{{ \Carbon\Carbon::parse($value)->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}</span>
 @elseif (is_bool($value))
     <span>{{ $value ? 'Yes' : 'No' }}</span>
 @elseif (is_array($value) || $value instanceof \Illuminate\Support\Collection || is_object($value))

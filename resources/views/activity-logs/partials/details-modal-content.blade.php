@@ -8,7 +8,8 @@
                 {{ $details['module'] }} - {{ $details['subject'] }}
             </h3>
             <p class="mt-1.5 text-sm text-bgray-500 dark:text-bgray-300">
-                {{ $details['causer'] }} | {{ $details['logged_at'] }}
+                {{ $details['causer'] }} |
+                {{ $details['logged_at']?->timezone($globalTimezone)?->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}
             </p>
         </div>
 
@@ -20,7 +21,7 @@
     </div>
 </div>
 
-<div class="overflow-y-auto px-5 py-4">
+<div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
     <div class="mb-4 grid gap-3 rounded-xl bg-bgray-50 p-3 sm:grid-cols-2 dark:bg-darkblack-500">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Subject Type</p>
@@ -39,20 +40,20 @@
 
                 @if ($details['event'] === 'created')
                     <div class="rounded-lg bg-bgray-50 px-3 py-2.5 text-sm font-medium text-bgray-900 dark:bg-darkblack-500 dark:text-white">
-                        <x-activity-log.value :value="$row['new']" />
+                        <x-activity-log.value :value="$row['new']['value']" :type="$row['new']['type']" />
                     </div>
                 @else
                     <div class="grid gap-2.5 md:grid-cols-2">
                         <div class="rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2.5 dark:border-darkblack-400 dark:bg-darkblack-500">
                             <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Old Value</p>
                             <div class="text-sm font-medium text-bgray-900 dark:text-white">
-                                <x-activity-log.value :value="$row['old']" />
+                                <x-activity-log.value :value="$row['old']['value']" :type="$row['old']['type']" />
                             </div>
                         </div>
                         <div class="rounded-lg border border-success-200 bg-success-50 px-3 py-2.5 dark:border-success-900/30 dark:bg-success-900/10">
                             <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-success-400">New Value</p>
                             <div class="text-sm font-medium text-bgray-900 dark:text-white">
-                                <x-activity-log.value :value="$row['new']" />
+                                <x-activity-log.value :value="$row['new']['value']" :type="$row['new']['type']" />
                             </div>
                         </div>
                     </div>
