@@ -159,74 +159,15 @@
 
             <!-- Project comment section -->
             <section class="flex w-full flex-col gap-6 2xl:w-[400px]">
-                <div class="flex w-full flex-col rounded-lg bg-white dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <div class="flex justify-between border-b border-bgray-300 px-[26px] py-6 dark:border-darkblack-400">
-                        <h1 class="text-2xl font-semibold text-bgray-900 dark:text-white">
-                            Activity Log
-                        </h1>
-                    </div>
-                    <div class="w-full px-5 py-6 lg:px-[35px] lg:py-[30px]">
-                        <div class="flex flex-col space-y-4">
-                            @forelse ($projectActivities as $activity)
-                                @php
-                                    $event = $activity->event ?? 'updated';
-                                    $changedValues = collect($activity->changes->get('attributes', []))
-                                        ->except(['added_by', 'updated_by']);
-                                    $changedAttributes = $changedValues->keys()->take(3);
-                                    $remainingChanges = max($changedValues->count() - $changedAttributes->count(), 0);
-                                    $eventClasses = match ($event) {
-                                        'created' => 'bg-success-50 text-success-400',
-                                        'deleted' => 'bg-red-50 text-red-500',
-                                        'restored' => 'bg-warning-50 text-warning-500',
-                                        default => 'bg-blue-50 text-blue-500',
-                                    };
-                                @endphp
+                @can('activity_log.view')
+                    <x-activity-log.section
+                        title="Activity Log"
+                        :activities="$projectActivities"
+                        empty-message="No activity logged for this project yet."
+                        :view-all-url="route('activity.log', ['subject_type' => 'project', 'subject_id' => $project->id])"
+                    />
+                @endcan
 
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <div class="mb-2 flex items-start justify-between gap-3">
-                                        <div>
-                                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                                                {{ $activity->causer?->name ?? 'System' }}
-                                            </p>
-                                            <p class="text-xs text-bgray-500 dark:text-bgray-300">
-                                                {{ $activity->created_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}
-                                            </p>
-                                        </div>
-                                        <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $eventClasses }}">
-                                            {{ \Illuminate\Support\Str::headline($event) }}
-                                        </span>
-                                    </div>
-
-                                    @if ($changedAttributes->isNotEmpty())
-                                        <p class="text-sm text-bgray-700 dark:text-bgray-200">
-                                            Changed:
-                                            {{ $changedAttributes->map(fn ($attribute) => \Illuminate\Support\Str::headline($attribute))->implode(', ') }}
-                                            @if ($remainingChanges > 0)
-                                                +{{ $remainingChanges }} more
-                                            @endif
-                                        </p>
-                                    @else
-                                        <p class="text-sm text-bgray-700 dark:text-bgray-200">
-                                            {{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description)) }}
-                                        </p>
-                                    @endif
-
-                                    <x-activity-log.view-button
-                                        :activity="$activity"
-                                        label="View Details"
-                                        class="mt-4 w-full justify-center"
-                                    />
-                                </div>
-                            @empty
-                                <div class="rounded-lg border border-dashed border-bgray-300 px-4 py-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
-                                    No activity logged for this project yet.
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-
-                <x-activity-log.details-modal />
 
                 <div class="flex w-full flex-col justify-between rounded-lg bg-white dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="flex justify-between border-b border-bgray-300 px-[26px] py-6 dark:border-darkblack-400">

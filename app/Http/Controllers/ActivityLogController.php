@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -45,7 +46,15 @@ class ActivityLogController extends Controller
                     ->whereIn('causer_id', (array) $request->input('causer_id'));
             })
             ->when($request->filled('date_from'), fn (Builder $query) => $query->whereDate('created_at', '>=', $request->input('date_from')))
-            ->when($request->filled('date_to'), fn (Builder $query) => $query->whereDate('created_at', '<=', $request->input('date_to')));
+            ->when($request->filled('date_to'), fn (Builder $query) => $query->whereDate('created_at', '<=', $request->input('date_to')))
+            ->when($request->filled('subject_type'), function (Builder $query) use ($request) {
+                $subjectType = $this->resolveSubjectTypeFilter($request->input('subject_type'));
+
+                if ($subjectType) {
+                    $query->where('subject_type', $subjectType);
+                }
+            })
+            ->when($request->filled('subject_id'), fn (Builder $query) => $query->where('subject_id', $request->input('subject_id')));
 
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
@@ -111,6 +120,14 @@ class ActivityLogController extends Controller
                 $this->applyLikeCondition($causerQuery, 'name', $search, $condition);
             });
         });
+    }
+
+    private function resolveSubjectTypeFilter(?string $subjectType): ?string
+    {
+        return match ($subjectType) {
+            'project' => Project::class,
+            default => $subjectType,
+        };
     }
 
     private function applyLikeCondition(
