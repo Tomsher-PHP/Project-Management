@@ -84,7 +84,7 @@
                                 @forelse ($activities as $activity)
                                     @php
                                         $subject = $activity->subject;
-                                        $subjectLabel = $subject?->name ?? ($subject?->title ?? ($subject?->project_code ?? ($subject?->customer_code ?? ($subject?->employee_id ?? ($activity->subject_id ? '#' . $activity->subject_id : '--')))));
+                                        $subjectLabel = $subject?->name ?? ($subject?->title ?? ($subject?->original_name ?? ($subject?->file_name ?? ($subject?->project_code ?? ($subject?->customer_code ?? ($subject?->employee_id ?? ($activity->subject_id ? '#' . $activity->subject_id : '--')))))));
                                         $subjectType = $activity->subject_type ? \Illuminate\Support\Str::headline(class_basename($activity->subject_type)) : '--';
                                         $changedFields = collect($activity->changes->get('attributes', []))
                                             ->except(['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'])

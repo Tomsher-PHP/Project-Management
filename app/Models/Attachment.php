@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class Attachment extends Model
 {
@@ -53,5 +54,32 @@ class Attachment extends Model
     public function addedBy()
     {
         return $this->belongsTo(User::class, 'added_by');
+    }
+
+    protected function getActivityLogName(): string
+    {
+        $module = $this->resolveActivityModuleName();
+        $category = $this->resolveActivityCategoryName();
+
+        return $category !== null
+            ? "{$module}_{$category}"
+            : "{$module}_attachments";
+    }
+
+    protected function resolveActivityModuleName(): string
+    {
+        return match ($this->link_type) {
+            ProjectNote::class => 'project',
+            default => Str::snake(class_basename($this->link_type ?: static::class)),
+        };
+    }
+
+    protected function resolveActivityCategoryName(): ?string
+    {
+        return match ($this->category) {
+            'project_note' => 'note_attachments',
+            null, '' => null,
+            default => Str::snake($this->category),
+        };
     }
 }
