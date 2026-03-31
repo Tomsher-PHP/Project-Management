@@ -2,28 +2,30 @@
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]" data-activity-log-page>
-        <x-filters.button />
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <x-filters.button />
 
-        @can('activity_log.delete')
-            <div class="flex flex-wrap items-center gap-4 mb-6">
-                <button
-                    type="button"
-                    id="bulk-delete-btn"
-                    data-bulk-delete-url="{{ route('activity.log.bulkDelete') }}"
-                    class="relative z-10 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-red-600 hover:border-red-600 disabled:cursor-not-allowed disabled:border-red-100 disabled:bg-red-200 disabled:text-red-50 disabled:shadow-none"
-                    disabled
-                >
-                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Bulk Delete
-                </button>
+            @can('activity_log.delete')
+                <div class="flex flex-wrap items-center justify-end gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <span id="selected-count" class="inline-flex h-11 items-center rounded-lg bg-bgray-100 px-4 text-sm font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                        0 selected
+                    </span>
 
-                <span id="selected-count" class="text-sm text-gray-600 dark:text-gray-400">
-                    0 selected
-                </span>
-            </div>
-        @endcan
+                    <button
+                        type="button"
+                        id="bulk-delete-btn"
+                        data-bulk-delete-url="{{ route('activity.log.bulkDelete') }}"
+                        class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-5 text-sm font-semibold leading-none text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 disabled:shadow-none dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                        disabled
+                    >
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Bulk Delete</span>
+                    </button>
+                </div>
+            @endcan
+        </div>
 
         <div class="2xl:flex 2xl:space-x-[48px]">
             <section class="mb-6 2xl:mb-0 2xl:flex-1">
