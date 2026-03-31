@@ -33,21 +33,23 @@ class ConfigurationController extends Controller
     public function update(ConfigurationRequest $request, AttachmentService $attachmentService)
     {
         $config = $this->getConfiguration();
-        $config->update($request->only([
-            'company_name',
-            'company_email',
-            'company_phone',
-            'company_address',
-            'timezone',
-            'date_format',
-            'time_format',
-        ]));
+        activity()->withoutLogs(function () use ($config, $request, $attachmentService) {
+            $config->update($request->only([
+                'company_name',
+                'company_email',
+                'company_phone',
+                'company_address',
+                'timezone',
+                'date_format',
+                'time_format',
+            ]));
 
-        if ($request->hasFile('logo')) {
-            $this->replaceLogo($config, $request->file('logo'), $attachmentService);
-        } elseif ($request->boolean('remove_logo')) {
-            $this->deleteLogo($config, $attachmentService);
-        }
+            if ($request->hasFile('logo')) {
+                $this->replaceLogo($config, $request->file('logo'), $attachmentService);
+            } elseif ($request->boolean('remove_logo')) {
+                $this->deleteLogo($config, $attachmentService);
+            }
+        });
 
         return redirect()->back()->with('success', 'Configuration updated successfully!');
     }
@@ -72,6 +74,6 @@ class ConfigurationController extends Controller
 
     private function getConfiguration(): Configuration
     {
-        return Configuration::firstOrCreate([]);
+        return activity()->withoutLogs(fn () => Configuration::firstOrCreate([]));
     }
 }

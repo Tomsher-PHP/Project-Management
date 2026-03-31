@@ -30,7 +30,7 @@ class DesignationController extends Controller
 
     public function store(DesignationRequest $request)
     {
-        $designation = Designation::create($request->validated());
+        $designation = activity()->withoutLogs(fn () => Designation::create($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -41,7 +41,7 @@ class DesignationController extends Controller
 
     public function update(DesignationRequest $request, Designation $designation)
     {
-        $designation->update($request->validated());
+        activity()->withoutLogs(fn () => $designation->update($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -58,7 +58,7 @@ class DesignationController extends Controller
                 ->with('error', 'Default designation cannot be deleted.');
         }
 
-        $designation->delete();
+        activity()->withoutLogs(fn () => $designation->delete());
 
         return redirect()
             ->route('settings.designations.index')
@@ -69,7 +69,7 @@ class DesignationController extends Controller
     {
         $designation = Designation::findOrFail($request->id);
         $designation->status = !$designation->status;
-        $designation->save();
+        activity()->withoutLogs(fn () => $designation->save());
 
         return response()->json([
             'success' => true,

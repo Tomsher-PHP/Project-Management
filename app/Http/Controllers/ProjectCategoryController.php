@@ -30,7 +30,7 @@ class ProjectCategoryController extends Controller
 
     public function store(ProjectCategoryRequest $request)
     {
-        $projectCategory = ProjectCategory::create($request->validated());
+        $projectCategory = activity()->withoutLogs(fn () => ProjectCategory::create($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -41,7 +41,7 @@ class ProjectCategoryController extends Controller
 
     public function update(ProjectCategoryRequest $request, ProjectCategory $projectCategory)
     {
-        $projectCategory->update($request->validated());
+        activity()->withoutLogs(fn () => $projectCategory->update($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -58,7 +58,7 @@ class ProjectCategoryController extends Controller
                 ->with('error', 'Default project category cannot be deleted.');
         }
 
-        $projectCategory->delete();
+        activity()->withoutLogs(fn () => $projectCategory->delete());
 
         return redirect()
             ->route('settings.project-categories.index')
@@ -69,7 +69,7 @@ class ProjectCategoryController extends Controller
     {
         $projectCategory = ProjectCategory::findOrFail($request->id);
         $projectCategory->status = !$projectCategory->status;
-        $projectCategory->save();
+        activity()->withoutLogs(fn () => $projectCategory->save());
 
         return response()->json([
             'success' => true,

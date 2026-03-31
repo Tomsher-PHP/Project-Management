@@ -30,7 +30,7 @@ class ProjectStageController extends Controller
 
     public function store(ProjectStageRequest $request)
     {
-        $projectStage = ProjectStage::create($request->validated());
+        $projectStage = activity()->withoutLogs(fn () => ProjectStage::create($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -41,7 +41,7 @@ class ProjectStageController extends Controller
 
     public function update(ProjectStageRequest $request, ProjectStage $projectStage)
     {
-        $projectStage->update($request->validated());
+        activity()->withoutLogs(fn () => $projectStage->update($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -58,7 +58,7 @@ class ProjectStageController extends Controller
                 ->with('error', 'Default project stage cannot be deleted.');
         }
 
-        $projectStage->delete();
+        activity()->withoutLogs(fn () => $projectStage->delete());
 
         return redirect()
             ->route('settings.project-stages.index')
@@ -69,7 +69,7 @@ class ProjectStageController extends Controller
     {
         $projectStage = ProjectStage::findOrFail($request->id);
         $projectStage->status = !$projectStage->status;
-        $projectStage->save();
+        activity()->withoutLogs(fn () => $projectStage->save());
 
         return response()->json([
             'success' => true,

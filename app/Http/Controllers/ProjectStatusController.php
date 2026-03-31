@@ -30,7 +30,7 @@ class ProjectStatusController extends Controller
 
     public function store(ProjectStatusRequest $request)
     {
-        $projectStatus = ProjectStatus::create($request->validated());
+        $projectStatus = activity()->withoutLogs(fn () => ProjectStatus::create($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -41,7 +41,7 @@ class ProjectStatusController extends Controller
 
     public function update(ProjectStatusRequest $request, ProjectStatus $projectStatus)
     {
-        $projectStatus->update($request->validated());
+        activity()->withoutLogs(fn () => $projectStatus->update($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -58,7 +58,7 @@ class ProjectStatusController extends Controller
                 ->with('error', 'Default project status cannot be deleted.');
         }
 
-        $projectStatus->delete();
+        activity()->withoutLogs(fn () => $projectStatus->delete());
 
         return redirect()
             ->route('settings.project-statuses.index')
@@ -69,7 +69,7 @@ class ProjectStatusController extends Controller
     {
         $projectStatus = ProjectStatus::findOrFail($request->id);
         $projectStatus->status = !$projectStatus->status;
-        $projectStatus->save();
+        activity()->withoutLogs(fn () => $projectStatus->save());
 
         return response()->json([
             'success' => true,

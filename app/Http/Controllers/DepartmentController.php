@@ -30,7 +30,7 @@ class DepartmentController extends Controller
 
     public function store(DepartmentRequest $request)
     {
-        $department = Department::create($request->validated());
+        $department = activity()->withoutLogs(fn () => Department::create($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -41,7 +41,7 @@ class DepartmentController extends Controller
 
     public function update(DepartmentRequest $request, Department $department)
     {
-        $department->update($request->validated());
+        activity()->withoutLogs(fn () => $department->update($request->validated()));
 
         return response()->json([
             'status' => true,
@@ -58,7 +58,7 @@ class DepartmentController extends Controller
                 ->with('error', 'Default department cannot be deleted.');
         }
 
-        $department->delete();
+        activity()->withoutLogs(fn () => $department->delete());
 
         return redirect()
             ->route('settings.departments.index')
@@ -69,7 +69,7 @@ class DepartmentController extends Controller
     {
         $department = Department::findOrFail($request->id);
         $department->status = !$department->status;
-        $department->save();
+        activity()->withoutLogs(fn () => $department->save());
 
         return response()->json([
             'success' => true,
