@@ -16,9 +16,11 @@
         data-activity-log-view
         data-activity-log-url="{{ route('activity.log.details', $activity) }}"
         {{ $attributes->merge([
-            'class' => 'inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 transition duration-200 hover:border-blue-500 hover:bg-blue-500 hover:text-white dark:border-blue-900/40 dark:bg-darkblack-500 dark:text-blue-400 dark:hover:border-blue-500 dark:hover:bg-blue-500 dark:hover:text-white',
+            'class' => 'inline-flex h-8 items-center justify-center rounded-lg border bg-success-50 px-2.5 text-xs font-semibold text-success-400 shadow-sm transition duration-200 hover:bg-success-300 hover:text-white focus:outline-none dark:border-success-300 dark:bg-darkblack-500 dark:text-success-300',
         ]) }}
     >
-        {{ $label }}
+        <span class="text-current transition-colors duration-200">
+            {{ $label }}
+        </span>
     </button>
 @endif

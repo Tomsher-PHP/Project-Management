@@ -76,7 +76,7 @@ class ProjectController extends Controller
         $projectActivities = $project->activities()
             ->with('causer')
             ->latest()
-            ->limit(5)
+            ->limit(3)
             ->get();
         $timelines = $service->getTimelines($project);
 

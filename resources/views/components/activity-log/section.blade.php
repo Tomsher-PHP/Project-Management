@@ -23,20 +23,30 @@
             @forelse ($activities as $activity)
                 @php
                     $event = $activity->event ?? 'updated';
-                    $changedValues = collect($activity->changes->get('attributes', []))
-                        ->except(['added_by', 'updated_by']);
-                    $changedAttributes = $changedValues->keys()->take(3);
-                    $remainingChanges = max($changedValues->count() - $changedAttributes->count(), 0);
+                    $visibleChanges = collect($activity->changes->get('attributes', []))
+                        ->except(['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by']);
+                    $canViewDetails = in_array($event, ['created', 'updated'], true) && $visibleChanges->isNotEmpty();
                     $eventClasses = match ($event) {
                         'created' => 'bg-success-50 text-success-400',
                         'deleted' => 'bg-red-50 text-red-500',
                         'restored' => 'bg-warning-50 text-warning-500',
                         default => 'bg-blue-50 text-blue-500',
                     };
+                    $summary = match ($event) {
+                        'created' => $canViewDetails
+                            ? 'A new record was created. Open the details to review the added values.'
+                            : 'A new record was created.',
+                        'updated' => $canViewDetails
+                            ? 'This record was updated. Open the details to review the changed values.'
+                            : 'This record was updated.',
+                        'deleted' => 'This record was deleted.',
+                        'restored' => 'This record was restored.',
+                        default => \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description)),
+                    };
                 @endphp
 
                 <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                    <div class="mb-2 flex items-start justify-between gap-3">
+                    <div class="mb-3 flex items-start justify-between gap-3">
                         <div>
                             <p class="text-sm font-semibold text-bgray-900 dark:text-white">
                                 {{ $activity->causer?->name ?? 'System' }}
@@ -45,30 +55,21 @@
                                 {{ $activity->created_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}
                             </p>
                         </div>
-                        <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $eventClasses }}">
-                            {{ \Illuminate\Support\Str::headline($event) }}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $eventClasses }}">
+                                {{ \Illuminate\Support\Str::headline($event) }}
+                            </span>
+
+                            <x-activity-log.view-button
+                                :activity="$activity"
+                                label="View Details"
+                            />
+                        </div>
                     </div>
 
-                    @if ($changedAttributes->isNotEmpty())
-                        <p class="text-sm text-bgray-700 dark:text-bgray-200">
-                            Changed:
-                            {{ $changedAttributes->map(fn ($attribute) => \Illuminate\Support\Str::headline($attribute))->implode(', ') }}
-                            @if ($remainingChanges > 0)
-                                +{{ $remainingChanges }} more
-                            @endif
-                        </p>
-                    @else
-                        <p class="text-sm text-bgray-700 dark:text-bgray-200">
-                            {{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description)) }}
-                        </p>
-                    @endif
-
-                    <x-activity-log.view-button
-                        :activity="$activity"
-                        label="View Details"
-                        class="mt-4 w-full justify-center"
-                    />
+                    <p class="text-sm text-bgray-700 dark:text-bgray-200">
+                        {{ $summary }}
+                    </p>
                 </div>
             @empty
                 <div class="rounded-lg border border-dashed border-bgray-300 px-4 py-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
