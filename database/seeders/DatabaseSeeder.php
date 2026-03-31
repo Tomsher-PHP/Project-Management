@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             DefaultShiftSeeder::class,
             ProjectStatusSeeder::class,
             ProjectStageSeeder::class,
+            AgileModuleSeeder::class,
+            AgileSprintSeeder::class,
             // DepartmentSeeder::class,
             // DesignationSeeder::class,
             // TechnologySeeder::class,

@@ -118,4 +118,16 @@ return [
     // Activity Log
     'activity_log.view',
     'activity_log.delete',
+
+    // Agile Module
+    'agile_module.view',
+    'agile_module.create',
+    'agile_module.edit',
+    'agile_module.delete',
+
+    // Agile Sprint
+    'agile_sprint.view',
+    'agile_sprint.create',
+    'agile_sprint.edit',
+    'agile_sprint.delete',
 ];

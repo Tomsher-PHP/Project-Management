@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AgileModuleController;
+use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
@@ -144,6 +146,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
         Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
         // End Configuration Routes
+
+        // Agile module Routes
+        Route::patch('/agile-modules/toggle-status', [AgileModuleController::class, 'toggleStatus'])->middleware('permission.type:agile_module.edit')->name('agile_module.toggleStatus');
+        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.view')->only(['index']);
+        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.create')->only(['store']);
+        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.edit')->only(['update']);
+        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.delete')->only(['destroy']);
+        // End Agile module Routes
+
+        // Agile sprint Routes
+        Route::patch('/agile-sprints/toggle-status', [AgileSprintController::class, 'toggleStatus'])->middleware('permission.type:agile_sprint.edit')->name('agile_sprint.toggleStatus');
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.view')->only(['index']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.create')->only(['store']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.edit')->only(['update']);
+        Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.delete')->only(['destroy']);
+        // End Agile sprint Routes
     });
     // End Settings Routes
 
