@@ -63,10 +63,6 @@ class AgileSprintController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if ($data['default']) {
-            AgileSprint::whereKeyNot($agileSprint->id)->update(['default' => false]);
-        }
-
         $agileSprint->update($data);
 
         return response()->json([
@@ -107,7 +103,6 @@ class AgileSprintController extends Controller
     private function prepareData(AgileSprintRequest $request): array
     {
         $data = $request->validated();
-        $data['default'] = (bool) ($data['default'] ?? false);
 
         return $data;
     }

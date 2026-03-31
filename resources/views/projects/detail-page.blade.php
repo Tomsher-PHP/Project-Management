@@ -27,6 +27,12 @@
                                 Overview
                             </button>
 
+                            @if ($project->is_agile)
+                                <button @click="activeTab = 'modules'; localStorage.setItem('projectTab_{{ $project->id }}', 'modules')" :class="activeTab === 'modules' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                                    Modules
+                                </button>
+                            @endif
+
                             <button @click="activeTab = 'tasks'; localStorage.setItem('projectTab_{{ $project->id }}', 'tasks')" :class="activeTab === 'tasks' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
                                 Tasks
                             </button>
@@ -81,10 +87,21 @@
                             </div>
                         </div>
 
+                        @if ($project->is_agile)
+                            <div x-show="activeTab === 'modules'" x-transition>
+                                @include('projects.partials.modules')
+                            </div>
+                        @endif
+
                         <!-- ================= TASKS ================= -->
                         <div x-show="activeTab === 'tasks'" x-transition>
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Project Tasks</h3>
+                                @if ($project->is_agile)
+                                    <span class="inline-flex items-center rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                        Tasks will be managed under modules and sprints for agile projects.
+                                    </span>
+                                @endif
                                 <button class="px-4 py-2 bg-success-300 text-white rounded-lg text-sm font-semibold hover:bg-success-400">
                                     + Add Task
                                 </button>

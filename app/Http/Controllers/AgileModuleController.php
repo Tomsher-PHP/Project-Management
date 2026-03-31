@@ -63,10 +63,6 @@ class AgileModuleController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if ($data['default']) {
-            AgileModule::whereKeyNot($agileModule->id)->update(['default' => false]);
-        }
-
         $agileModule->update($data);
 
         return response()->json([
@@ -107,7 +103,6 @@ class AgileModuleController extends Controller
     private function prepareData(AgileModuleRequest $request): array
     {
         $data = $request->validated();
-        $data['default'] = (bool) ($data['default'] ?? false);
 
         return $data;
     }

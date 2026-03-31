@@ -6,8 +6,11 @@ use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
+use App\Models\AgileModule;
+use App\Models\AgileSprint;
 use App\Models\Customer;
 use App\Models\Project;
+use App\Models\ProjectModule;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectStage;
@@ -73,6 +76,7 @@ class ProjectController extends Controller
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load(['scopeFiles.addedBy']);
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
+        $projectModules = $project->projectModules()->with(['addedBy', 'updatedBy'])->get();
         $projectActivities = $project->activities()
             ->with('causer')
             ->latest()
@@ -85,12 +89,15 @@ class ProjectController extends Controller
         $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
         $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
         $projectStages = ProjectStage::active()->orderBy('order', 'asc')->get();
+        $agileModules = AgileModule::active()->orderBy('order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->orderBy('order', 'asc')->get();
 
         $priorities = config('constants.project_priorities');
         $projectRoles = config('constants.project_roles');
 
         return view('projects.detail-page', compact(
             'project',
+            'projectModules',
             'projectActivities',
             'projectNotes',
             'timelines',
@@ -101,7 +108,9 @@ class ProjectController extends Controller
             'projectStages',
             'projectCategories',
             'projectRoles',
-            'projectTechnologies'
+            'projectTechnologies',
+            'agileModules',
+            'agileSprints'
         ));
     }
 

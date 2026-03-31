@@ -142,6 +142,11 @@ class Project extends Model
         return $this->hasMany(ProjectNote::class)->orderBy('created_at', 'desc');
     }
 
+    public function projectModules()
+    {
+        return $this->hasMany(ProjectModule::class)->orderBy('order');
+    }
+
     public function latestStatusHistory()
     {
         return $this->hasOne(ProjectStatusHistory::class)->latestOfMany();

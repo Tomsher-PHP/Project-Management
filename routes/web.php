@@ -14,6 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\ProjectModuleController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\RolePermissionController;
@@ -202,7 +203,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
-        
+
+        Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.store');
+        Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.update');
+        Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.destroy');
+
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');
         Route::delete('scope-files/{fileId}', [ProjectController::class, 'deleteScopeFile'])->middleware('permission.type:project.remove_scope')->name('projects.deleteScopeFile');
