@@ -204,6 +204,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
+    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
     Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
     Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
 });

@@ -210,6 +210,12 @@
                                             {{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description)) }}
                                         </p>
                                     @endif
+
+                                    <x-activity-log.view-button
+                                        :activity="$activity"
+                                        label="View Details"
+                                        class="mt-4 w-full justify-center"
+                                    />
                                 </div>
                             @empty
                                 <div class="rounded-lg border border-dashed border-bgray-300 px-4 py-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
@@ -219,6 +225,8 @@
                         </div>
                     </div>
                 </div>
+
+                <x-activity-log.details-modal />
 
                 <div class="flex w-full flex-col justify-between rounded-lg bg-white dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="flex justify-between border-b border-bgray-300 px-[26px] py-6 dark:border-darkblack-400">

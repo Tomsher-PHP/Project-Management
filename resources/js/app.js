@@ -9,6 +9,7 @@ import './status-toggle';
 import './modules/reset-password';
 import './modules/ajax-form-modal';
 import './modules/config';
+import './modules/activity-log-details';
 import './delete-alert';
 import './components/filterDrawer';
 

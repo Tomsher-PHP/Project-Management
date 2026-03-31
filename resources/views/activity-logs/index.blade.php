@@ -173,6 +173,8 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center space-x-2">
+                                                <x-activity-log.view-button :activity="$activity" />
+
                                                 @can('activity_log.delete')
                                                     <x-delete-form
                                                         :action="route('activity.log.destroy', $activity->id)"
@@ -211,6 +213,8 @@
             <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
     </x-filters.drawer>
+
+    <x-activity-log.details-modal />
 @endsection
 
 @push('scripts')

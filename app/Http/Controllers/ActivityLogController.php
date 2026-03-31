@@ -137,6 +137,27 @@ class ActivityLogController extends Controller
         ]);
     }
 
+    public function details(Activity $activity): JsonResponse
+    {
+        $activity->loadMissing(['causer', 'subject']);
+
+        $details = $this->buildActivityDetails($activity);
+
+        if (! $details['can_view']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No detailed view is available for this activity.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'html' => view('activity-logs.partials.details-modal-content', [
+                'details' => $details,
+            ])->render(),
+        ]);
+    }
+
     public function bulkDelete(Request $request): JsonResponse
     {
         $request->validate([
@@ -150,5 +171,56 @@ class ActivityLogController extends Controller
             'success' => true,
             'message' => 'Selected activity logs deleted successfully.',
         ]);
+    }
+
+    private function buildActivityDetails(Activity $activity): array
+    {
+        $ignoredFields = ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
+        $event = $activity->event ?? 'updated';
+        $attributes = collect($activity->changes->get('attributes', []))->except($ignoredFields);
+        $oldValues = collect($activity->changes->get('old', []))->except($ignoredFields);
+
+        $rows = collect();
+
+        if ($event === 'created') {
+            $rows = $attributes->map(fn ($value, $field) => [
+                'field' => Str::headline($field),
+                'new' => $value,
+            ])->values();
+        } elseif ($event === 'updated') {
+            $rows = $attributes->map(fn ($value, $field) => [
+                'field' => Str::headline($field),
+                'old' => $oldValues->get($field),
+                'new' => $value,
+            ])->values();
+        }
+
+        return [
+            'can_view' => in_array($event, ['created', 'updated'], true) && $rows->isNotEmpty(),
+            'event' => $event,
+            'module' => Str::headline($activity->log_name ?? 'activity'),
+            'subject' => $this->resolveSubjectLabel($activity),
+            'subject_type' => $activity->subject_type ? Str::headline(class_basename($activity->subject_type)) : '--',
+            'description' => Str::headline(str_replace('.', ' ', $activity->description)),
+            'causer' => $activity->causer?->name ?? 'System',
+            'logged_at' => $activity->created_at?->timezone(config('constants.timezone'))->format(
+                config('constants.date_format') . ' ' . config('constants.time_format')
+            ) ?? '--',
+            'rows' => $rows,
+        ];
+    }
+
+    private function resolveSubjectLabel(Activity $activity): string
+    {
+        $subject = $activity->subject;
+
+        return $subject?->name
+            ?? $subject?->title
+            ?? $subject?->original_name
+            ?? $subject?->file_name
+            ?? $subject?->project_code
+            ?? $subject?->customer_code
+            ?? $subject?->employee_id
+            ?? ($activity->subject_id ? '#' . $activity->subject_id : '--');
     }
 }
