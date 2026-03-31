@@ -2,19 +2,18 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         // truncate existing data
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('role_has_permissions')->truncate();
@@ -26,10 +25,11 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = config('system_permissions');
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
+        foreach ($permissions as $index => $permission) {
+            Permission::create([
                 'name' => $permission,
                 'guard_name' => 'web',
+                'sort_order' => $index + 1,
             ]);
         }
 
@@ -42,5 +42,7 @@ class RolePermissionSeeder extends Seeder
 
         // Assign Permissions to Roles
         $owner->givePermissionTo(Permission::all());
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

@@ -46,6 +46,18 @@ return [
     'project.status_change',
     'project.customer_end_date',
 
+    // project-module
+    'project_module.view',
+    'project_module.create',
+    'project_module.edit',
+    'project_module.delete',
+
+    // project sprint
+    'project_sprint.view',
+    'project_sprint.create',
+    'project_sprint.edit',
+    'project_sprint.delete',
+
     // Task Module
     'user.view_all_tasks',
     'task.view',

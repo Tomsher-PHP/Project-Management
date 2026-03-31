@@ -36,10 +36,8 @@ class RolePermissionController extends Controller
 
     public function create()
     {
-        $permissions = Permission::get()
-            ->groupBy(function ($permission) {
-                return explode('.', $permission->name)[0];
-            });
+        $permissions = $this->getGroupedPermissions();
+
         return view('roles.create', compact('permissions'));
     }
 
@@ -60,11 +58,20 @@ class RolePermissionController extends Controller
     {
         $role = Role::findById($id);
 
-        $permissions = Permission::get()
+        $permissions = $this->getGroupedPermissions();
+
+        return view('roles.edit', compact('role', 'permissions'));
+    }
+
+    private function getGroupedPermissions()
+    {
+        return Permission::query()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
             ->groupBy(function ($permission) {
                 return explode('.', $permission->name)[0];
             });
-        return view('roles.edit', compact('role', 'permissions'));
     }
 
     public function update(RolePermissionRequest $request, $id)
