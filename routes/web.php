@@ -200,6 +200,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
+        Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
@@ -208,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('modules/reorder', [ProjectModuleController::class, 'reorder'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.reorder');
         Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.update');
         Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project_module.delete', 'can:update,project'])->name('projects.modules.destroy');
+        Route::post('modules/{projectModule}/restore', [ProjectModuleController::class, 'restore'])->middleware(['permission.type:project_module.restore', 'can:update,project'])->name('projects.modules.restore');
 
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');

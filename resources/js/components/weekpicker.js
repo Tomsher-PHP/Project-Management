@@ -1,9 +1,9 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
-export function initWeekPicker(selector = ".weekPicker", onWeekChange) {
+export function initWeekPicker(selector = ".weekPicker", onWeekChange, root = document) {
 
-    const input = document.querySelector(selector);
+    const input = root.querySelector(selector);
     if (!input) return;
 
     // Prevent multiple initialization

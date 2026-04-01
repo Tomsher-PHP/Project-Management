@@ -1,10 +1,14 @@
-document.addEventListener('DOMContentLoaded', function () {
+const projectScopeFilesState = {
+    listenersBound: false,
+};
+
+const initializeProjectScopeFiles = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const projectId = window.ProjectApp.id;
-    const fileInput = document.getElementById('file-input');
-    const fileUploadBox = document.getElementById('file-upload-box');
+    const fileInput = root.querySelector ? root.querySelector('#file-input') : document.getElementById('file-input');
+    const fileUploadBox = root.querySelector ? root.querySelector('#file-upload-box') : document.getElementById('file-upload-box');
 
-    if (fileUploadBox && fileInput) {
+    if (fileUploadBox && fileInput && fileUploadBox.dataset.projectScopeInitialized !== 'true') {
         fileUploadBox.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', () => {
@@ -15,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             handleFiles(e.dataTransfer.files);
         });
+
+        fileUploadBox.dataset.projectScopeInitialized = 'true';
     }
 
     function handleFiles(files) {
@@ -60,43 +66,42 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    if (!projectScopeFilesState.listenersBound) {
+        document.addEventListener('click', async function (e) {
+            if (e.target.classList.contains('delete-file')) {
 
-    // Delete file
-    document.addEventListener('click', async function (e) {
-        if (e.target.classList.contains('delete-file')) {
+                const id = e.target.dataset.id;
 
-            const id = e.target.dataset.id;
+                const result = await Alert.confirm({
+                    title: 'Delete File',
+                    text: 'Are you sure you want to delete this file?',
+                    type: 'error'
+                });
 
-            // Wait for user confirmation
-            const result = await Alert.confirm({
-                title: 'Delete File',
-                text: 'Are you sure you want to delete this file?',
-                type: 'error'
-            });
+                if (!result.isConfirmed) return;
 
-            // Only proceed if confirmed
-            if (!result.isConfirmed) return;
-
-            // Send delete request
-            fetch(`/projects/${projectId}/scope-files/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.success) {
-                        e.target.closest('.file-item')?.remove();
-                        ensureEmptyState();
-                        Alert.success('File deleted successfully');
+                fetch(`/projects/${projectId}/scope-files/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .catch(() => {
-                    Alert.error('Failed to delete file');
-                });
-        }
-    });
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            e.target.closest('.file-item')?.remove();
+                            ensureEmptyState();
+                            Alert.success('File deleted successfully');
+                        }
+                    })
+                    .catch(() => {
+                        Alert.error('Failed to delete file');
+                    });
+            }
+        });
+
+        projectScopeFilesState.listenersBound = true;
+    }
 
     function ensureEmptyState() {
         const list = document.getElementById('file-list');
@@ -113,5 +118,16 @@ document.addEventListener('DOMContentLoaded', function () {
             list.appendChild(emptyState);
         }
     }
+};
 
+document.addEventListener('DOMContentLoaded', function () {
+    initializeProjectScopeFiles();
+});
+
+document.addEventListener('project-tab:loaded', function (event) {
+    if (event.detail?.tab !== 'scope') {
+        return;
+    }
+
+    initializeProjectScopeFiles(event.detail.panel);
 });

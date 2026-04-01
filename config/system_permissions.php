@@ -1,145 +1,126 @@
 <?php
 
 return [
-    // Role Management Module
-    'role.view',
-    'role.create',
-    'role.edit',
-    'role.delete',
+    ['name' => 'role.view', 'sort_order' => 1],
+    ['name' => 'role.create', 'sort_order' => 2],
+    ['name' => 'role.edit', 'sort_order' => 3],
+    ['name' => 'role.delete', 'sort_order' => 4],
 
-    // User Module
-    'user.view_all_users',
-    'user.view',
-    'user.create',
-    'user.edit',
-    'user.delete',
+    ['name' => 'user.view_all_users', 'sort_order' => 5],
+    ['name' => 'user.view', 'sort_order' => 6],
+    ['name' => 'user.create', 'sort_order' => 7],
+    ['name' => 'user.edit', 'sort_order' => 8],
+    ['name' => 'user.delete', 'sort_order' => 9],
+    ['name' => 'user.restore', 'sort_order' => 10],
 
-    //team Module
-    'team.view_all_teams',
-    'team.view',
-    'team.create',
-    'team.edit',
-    'team.delete',
+    ['name' => 'team.view_all_teams', 'sort_order' => 11],
+    ['name' => 'team.view', 'sort_order' => 12],
+    ['name' => 'team.create', 'sort_order' => 13],
+    ['name' => 'team.edit', 'sort_order' => 14],
+    ['name' => 'team.delete', 'sort_order' => 15],
+    ['name' => 'team.restore', 'sort_order' => 16],
 
-    // customer
-    'customer.view',
-    'customer.create',
-    'customer.edit',
-    'customer.delete',
+    ['name' => 'customer.view', 'sort_order' => 17],
+    ['name' => 'customer.create', 'sort_order' => 18],
+    ['name' => 'customer.edit', 'sort_order' => 19],
+    ['name' => 'customer.delete', 'sort_order' => 20],
+    ['name' => 'customer.restore', 'sort_order' => 21],
 
-    // Project Module
-    'project.view_all_projects',
-    'project.view',
-    'project.create',
-    'project.edit',
-    'project.delete',
+    ['name' => 'project.view_all_projects', 'sort_order' => 22],
+    ['name' => 'project.view', 'sort_order' => 23],
+    ['name' => 'project.create', 'sort_order' => 24],
+    ['name' => 'project.edit', 'sort_order' => 25],
+    ['name' => 'project.delete', 'sort_order' => 26],
+    ['name' => 'project.restore', 'sort_order' => 27],
+    ['name' => 'project.add_team', 'sort_order' => 28],
+    ['name' => 'project.remove_team', 'sort_order' => 29],
+    ['name' => 'project.add_scope', 'sort_order' => 30],
+    ['name' => 'project.remove_scope', 'sort_order' => 31],
+    ['name' => 'project.add_notes_files', 'sort_order' => 32],
+    ['name' => 'project.remove_notes_files', 'sort_order' => 33],
+    ['name' => 'project.status_change', 'sort_order' => 34],
+    ['name' => 'project.customer_end_date', 'sort_order' => 35],
 
-    'project.add_team',
-    'project.remove_team',
+    ['name' => 'project_module.view', 'sort_order' => 36],
+    ['name' => 'project_module.create', 'sort_order' => 37],
+    ['name' => 'project_module.edit', 'sort_order' => 38],
+    ['name' => 'project_module.delete', 'sort_order' => 39],
+    ['name' => 'project_module.restore', 'sort_order' => 40],
 
-    'project.add_scope',
-    'project.remove_scope',
+    ['name' => 'project_sprint.view', 'sort_order' => 41],
+    ['name' => 'project_sprint.create', 'sort_order' => 42],
+    ['name' => 'project_sprint.edit', 'sort_order' => 43],
+    ['name' => 'project_sprint.delete', 'sort_order' => 44],
+    ['name' => 'project_sprint.restore', 'sort_order' => 45],
 
-    'project.add_notes_files',
-    'project.remove_notes_files',
+    ['name' => 'task.view_all_tasks', 'sort_order' => 46],
+    ['name' => 'task.view', 'sort_order' => 47],
+    ['name' => 'task.create', 'sort_order' => 48],
+    ['name' => 'task.edit', 'sort_order' => 49],
+    ['name' => 'task.delete', 'sort_order' => 50],
+    ['name' => 'task.restore', 'sort_order' => 51],
 
-    'project.status_change',
-    'project.customer_end_date',
+    ['name' => 'shift.view', 'sort_order' => 52],
+    ['name' => 'shift.create', 'sort_order' => 53],
+    ['name' => 'shift.edit', 'sort_order' => 54],
+    ['name' => 'shift.delete', 'sort_order' => 55],
 
-    // project-module
-    'project_module.view',
-    'project_module.create',
-    'project_module.edit',
-    'project_module.delete',
+    ['name' => 'schedule_shift.view', 'sort_order' => 56],
+    ['name' => 'schedule_shift.create', 'sort_order' => 57],
+    ['name' => 'schedule_shift.edit', 'sort_order' => 58],
+    ['name' => 'schedule_shift.delete', 'sort_order' => 59],
 
-    // project sprint
-    'project_sprint.view',
-    'project_sprint.create',
-    'project_sprint.edit',
-    'project_sprint.delete',
+    ['name' => 'department.view', 'sort_order' => 60],
+    ['name' => 'department.create', 'sort_order' => 61],
+    ['name' => 'department.edit', 'sort_order' => 62],
+    ['name' => 'department.delete', 'sort_order' => 63],
 
-    // Task Module
-    'user.view_all_tasks',
-    'task.view',
-    'task.create',
-    'task.edit',
-    'task.delete',
+    ['name' => 'designation.view', 'sort_order' => 64],
+    ['name' => 'designation.create', 'sort_order' => 65],
+    ['name' => 'designation.edit', 'sort_order' => 66],
+    ['name' => 'designation.delete', 'sort_order' => 67],
 
-    // Shift Management Module
-    'shift.view',
-    'shift.create',
-    'shift.edit',
-    'shift.delete',
+    ['name' => 'technology.view', 'sort_order' => 68],
+    ['name' => 'technology.create', 'sort_order' => 69],
+    ['name' => 'technology.edit', 'sort_order' => 70],
+    ['name' => 'technology.delete', 'sort_order' => 71],
 
-    // Schedule Shift
-    'schedule_shift.view',
-    'schedule_shift.create',
-    'schedule_shift.edit',
-    'schedule_shift.delete',
+    ['name' => 'project_category.view', 'sort_order' => 72],
+    ['name' => 'project_category.create', 'sort_order' => 73],
+    ['name' => 'project_category.edit', 'sort_order' => 74],
+    ['name' => 'project_category.delete', 'sort_order' => 75],
 
-    // Department Module
-    'department.view',
-    'department.create',
-    'department.edit',
-    'department.delete',
+    ['name' => 'industry.view', 'sort_order' => 76],
+    ['name' => 'industry.create', 'sort_order' => 77],
+    ['name' => 'industry.edit', 'sort_order' => 78],
+    ['name' => 'industry.delete', 'sort_order' => 79],
 
-    // Designation Module
-    'designation.view',
-    'designation.create',
-    'designation.edit',
-    'designation.delete',
+    ['name' => 'project_status.view', 'sort_order' => 80],
+    ['name' => 'project_status.create', 'sort_order' => 81],
+    ['name' => 'project_status.edit', 'sort_order' => 82],
+    ['name' => 'project_status.delete', 'sort_order' => 83],
 
-    // technology
-    'technology.view',
-    'technology.create',
-    'technology.edit',
-    'technology.delete',
+    ['name' => 'project_stage.view', 'sort_order' => 84],
+    ['name' => 'project_stage.create', 'sort_order' => 85],
+    ['name' => 'project_stage.edit', 'sort_order' => 86],
+    ['name' => 'project_stage.delete', 'sort_order' => 87],
 
-    // project category
-    'project_category.view',
-    'project_category.create',
-    'project_category.edit',
-    'project_category.delete',
+    ['name' => 'configuration.view', 'sort_order' => 88],
+    ['name' => 'configuration.edit', 'sort_order' => 89],
 
-    // industry
-    'industry.view',
-    'industry.create',
-    'industry.edit',
-    'industry.delete',
+    ['name' => 'reports.view', 'sort_order' => 90],
+    ['name' => 'reports.download', 'sort_order' => 91],
 
-    // project status
-    'project_status.view',
-    'project_status.create',
-    'project_status.edit',
-    'project_status.delete',
+    ['name' => 'activity_log.view', 'sort_order' => 92],
+    ['name' => 'activity_log.delete', 'sort_order' => 93],
 
-    // project stage
-    'project_stage.view',
-    'project_stage.create',
-    'project_stage.edit',
-    'project_stage.delete',
+    ['name' => 'agile_module.view', 'sort_order' => 94],
+    ['name' => 'agile_module.create', 'sort_order' => 95],
+    ['name' => 'agile_module.edit', 'sort_order' => 96],
+    ['name' => 'agile_module.delete', 'sort_order' => 97],
 
-    // configuration
-    'configuration.view',
-    'configuration.edit',
-
-    // Reports Module
-    'reports.view',
-    'reports.download',
-
-    // Activity Log
-    'activity_log.view',
-    'activity_log.delete',
-
-    // Agile Module
-    'agile_module.view',
-    'agile_module.create',
-    'agile_module.edit',
-    'agile_module.delete',
-
-    // Agile Sprint
-    'agile_sprint.view',
-    'agile_sprint.create',
-    'agile_sprint.edit',
-    'agile_sprint.delete',
+    ['name' => 'agile_sprint.view', 'sort_order' => 98],
+    ['name' => 'agile_sprint.create', 'sort_order' => 99],
+    ['name' => 'agile_sprint.edit', 'sort_order' => 100],
+    ['name' => 'agile_sprint.delete', 'sort_order' => 101],
 ];

@@ -1,8 +1,8 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
-export function initTimepicker(selector = ".timepicker", config = {}) {
-    document.querySelectorAll(selector).forEach(el => {
+export function initTimepicker(selector = ".timepicker", config = {}, root = document) {
+    root.querySelectorAll(selector).forEach(el => {
         if (el._flatpickr) return;
 
         const is24 = el.dataset.mode === "24";

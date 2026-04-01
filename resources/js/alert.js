@@ -4,6 +4,7 @@ const Alert = {
 
     confirm(options) {
         return Swal.fire({
+            target: options.target || document.body,
             title: options.title || 'Are you sure?',
             text: options.text || 'This action cannot be undone.',
             icon: options.icon || 'warning',
@@ -45,7 +46,7 @@ const Alert = {
             title: title,
             text: message,
             showConfirmButton: false,
-            timer: 1500,
+            timer: 3000,
             toast: true,              // makes it small like a toast
             width: 400,               // smaller width
             padding: "0.75rem",       // reduce padding

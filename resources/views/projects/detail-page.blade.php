@@ -1,14 +1,20 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]" x-data="{ activeTab: localStorage.getItem('projectTab_{{ $project->id }}') || 'tasks' }">
+    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
 
         @php
             $priority = config('constants.project_priorities')[$project->priority] ?? null;
         @endphp
 
         <div class="2xl:flex 2xl:space-x-[30px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1" x-data="{ activeTab: localStorage.getItem('projectTab_{{ $project->id }}') || 'overview' }">
+            <section
+                class="mb-6 2xl:mb-0 2xl:flex-1"
+                data-project-tabs
+                data-project-id="{{ $project->id }}"
+                data-default-tab="overview"
+                data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}"
+            >
 
                 <!-- PROJECT HEADER -->
                 <div id="project-header">
@@ -23,152 +29,82 @@
                     <!-- Tabs Header -->
                     <div class="border-b border-bgray-300 dark:border-darkblack-400 mb-6">
                         <div class="flex space-x-6">
-                            <button @click="activeTab = 'overview'; localStorage.setItem('projectTab_{{ $project->id }}', 'overview')" :class="activeTab === 'overview' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="overview"
+                                class="border-b-2 border-success-300 pb-3 font-semibold text-success-300 transition"
+                            >
                                 Overview
                             </button>
 
                             @if ($project->is_agile)
-                                <button @click="activeTab = 'modules'; localStorage.setItem('projectTab_{{ $project->id }}', 'modules')" :class="activeTab === 'modules' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                                <button
+                                    type="button"
+                                    data-project-tab-trigger="modules"
+                                    class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                                >
                                     Modules
                                 </button>
                             @endif
 
-                            <button @click="activeTab = 'tasks'; localStorage.setItem('projectTab_{{ $project->id }}', 'tasks')" :class="activeTab === 'tasks' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="tasks"
+                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                            >
                                 Tasks
                             </button>
 
-                            <button @click="activeTab = 'team'; localStorage.setItem('projectTab_{{ $project->id }}', 'team')" :class="activeTab === 'team' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="team"
+                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                            >
                                 Team
                             </button>
 
 
-                            <button @click="activeTab = 'scope'; localStorage.setItem('projectTab_{{ $project->id }}', 'scope')" :class="activeTab === 'scope' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="scope"
+                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                            >
                                 Scope
                             </button>
 
-                            <button @click="activeTab = 'notes'; localStorage.setItem('projectTab_{{ $project->id }}', 'notes')" :class="activeTab === 'notes' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="notes"
+                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                            >
                                 Notes & Files
                             </button>
 
-                            <button @click="activeTab = 'settings'; localStorage.setItem('projectTab_{{ $project->id }}', 'settings')" :class="activeTab === 'settings' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
+                            <button
+                                type="button"
+                                data-project-tab-trigger="settings"
+                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
+                            >
                                 Settings
                             </button>
                         </div>
                     </div>
 
                     <!-- TAB CONTENT -->
-                    <div>
-
-                        <!-- ================= OVERVIEW ================= -->
-                        <div x-show="activeTab === 'overview'" x-transition>
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Overview</h3>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <!-- Stats Card -->
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">New Tasks</p>
-                                    <h2 class="text-2xl font-bold text-success-400">12</h2>
-                                </div>
-
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">In Progress</p>
-                                    <h2 class="text-2xl font-bold text-warning-400">5</h2>
-                                </div>
-
-                                <div class="rounded-lg border border-bgray-200 p-4 dark:border-darkblack-400">
-                                    <p class="text-sm text-bgray-500">Completed</p>
-                                    <h2 class="text-2xl font-bold text-blue-400">20</h2>
-                                </div>
-                            </div>
-
-                            <!-- Chart placeholder -->
-                            <div class="mt-6 h-[250px] flex items-center justify-center border border-dashed border-bgray-300 rounded-lg text-bgray-400">
-                                Pie Chart (Tasks Stats)
-                            </div>
+                    <div data-project-tab-panels>
+                        <div data-project-tab-panel="overview" data-loaded="true">
+                            @include('projects.partials.tabs.overview')
                         </div>
 
                         @if ($project->is_agile)
-                            <div x-show="activeTab === 'modules'" x-transition>
-                                @include('projects.partials.module.modules')
-                            </div>
+                            <div class="hidden" data-project-tab-panel="modules" data-loaded="false"></div>
                         @endif
 
-                        <!-- ================= TASKS ================= -->
-                        <div x-show="activeTab === 'tasks'" x-transition>
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Project Tasks</h3>
-                                @if ($project->is_agile)
-                                    <span class="inline-flex items-center rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-400 dark:bg-darkblack-500 dark:text-success-300">
-                                        Tasks will be managed under modules and sprints for agile projects.
-                                    </span>
-                                @endif
-                                <button class="px-4 py-2 bg-success-300 text-white rounded-lg text-sm font-semibold hover:bg-success-400">
-                                    + Add Task
-                                </button>
-                            </div>
-
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead>
-                                        <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                            <th class="py-3 text-left text-sm font-semibold text-bgray-600">Task</th>
-                                            <th class="py-3 text-left text-sm font-semibold text-bgray-600">Assigned To</th>
-                                            <th class="py-3 text-left text-sm font-semibold text-bgray-600">Due Date</th>
-                                            <th class="py-3 text-left text-sm font-semibold text-bgray-600">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Loop tasks -->
-                                        <tr class="border-b border-bgray-200">
-                                            <td class="py-4 font-medium text-bgray-900 dark:text-white">Sample static task</td>
-                                            <td class="py-4 text-bgray-600">John</td>
-                                            <td class="py-4 text-bgray-600">25 Mar 2026</td>
-                                            <td class="py-4">
-                                                <span class="px-3 py-1 text-xs rounded bg-warning-50 text-warning-500">Pending</span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- ================= PROJECT TEAM ================= -->
-                        <div x-show="activeTab === 'team'" x-transition>
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Project Team</h3>
-
-                            @can('project.add_team', $project)
-                                @include('projects.partials.teams-form')
-                            @endcan
-
-                            <div id="members-container" class="grid grid-cols-1 gap-5 pb-10 sm:grid-cols-2 2xl:grid-cols-3 2xl:gap-8 mt-5">
-                                @forelse ($project->members as $member)
-                                    @include('projects.partials.member-card')
-                                @empty
-                                    <div id="empty-row" class="col-span-full text-center text-gray-400 py-10">
-                                        No members added yet.
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        <!-- ================= SCOPE ================= -->
-                        <div x-show="activeTab === 'scope'" x-transition>
-                            <!-- Files -->
-                            <div class="w-full pt-6">
-                                @include('projects.partials.scope-files')
-                            </div>
-                        </div>
-
-                        <!-- ================= NOTES ================= -->
-                        <div x-show="activeTab === 'notes'" x-transition>
-                            @include('projects.partials.attachments')
-                        </div>
-
-                        <!-- ================= SETTINGS ================= -->
-                        <div x-show="activeTab === 'settings'" x-transition>
-                            @include('projects.partials.settings-form')
-                        </div>
-
+                        <div class="hidden" data-project-tab-panel="tasks" data-loaded="false"></div>
+                        <div class="hidden" data-project-tab-panel="team" data-loaded="false"></div>
+                        <div class="hidden" data-project-tab-panel="scope" data-loaded="false"></div>
+                        <div class="hidden" data-project-tab-panel="notes" data-loaded="false"></div>
+                        <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
                     </div>
                 </div>
             </section>
@@ -236,6 +172,7 @@
             id: {{ $project->id }},
             canCreateNotesFiles: @json(auth()->user()->can('project.add_notes_files')),
             canRemoveNotesFiles: @json(auth()->user()->can('project.remove_notes_files')),
+            tabsUrlTemplate: @json(route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__'])),
         };
     </script>
     @vite('resources/js/modules/projects/project-detail.js')

@@ -2,8 +2,8 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css"; // base styles
 
-export function initDatepicker(selector = ".datepicker", config = {}) {
-    document.querySelectorAll(selector).forEach(el => {
+export function initDatepicker(selector = ".datepicker", config = {}, root = document) {
+    root.querySelectorAll(selector).forEach(el => {
         // Prevent double init
         if (el._flatpickr) return;
 

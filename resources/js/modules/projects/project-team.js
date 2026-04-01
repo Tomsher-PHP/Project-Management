@@ -1,18 +1,16 @@
-document.addEventListener('DOMContentLoaded', function () {
-
+const initializeProjectTeam = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const projectId = window.ProjectApp.id;
 
-    const form = document.getElementById('project-team-form');
-    const addButton = document.getElementById('add-member-btn');
-    const membersContainer = document.getElementById('members-container');
+    const form = root.querySelector ? root.querySelector('#project-team-form') : document.getElementById('project-team-form');
+    const addButton = root.querySelector ? root.querySelector('#add-member-btn') : document.getElementById('add-member-btn');
+    const membersContainer = root.querySelector ? root.querySelector('#members-container') : document.getElementById('members-container');
 
     let loading = false;
     const showError = (msg) => Alert.error(msg);
     const showSuccess = (msg) => Alert.success(msg);
 
-    /* -------------------------- ADD MEMBER -------------------------- */
-    if (form && addButton) {
+    if (form && addButton && form.dataset.projectTeamInitialized !== 'true') {
         addButton.addEventListener('click', async function () {
             if (loading) return;
 
@@ -49,10 +47,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 loading = false;
             }
         });
+
+        form.dataset.projectTeamInitialized = 'true';
     }
 
-    /* -------------------------- REMOVE MEMBER -------------------------- */
-    if (membersContainer) {
+    if (membersContainer && document.body.dataset.projectTeamListenersBound !== 'true') {
         document.addEventListener('click', async function (e) {
             const btn = e.target.closest('.remove-member');
             if (!btn) return; // exit if not clicking a remove button
@@ -103,10 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.textContent = 'Remove';
             }
         });
-    }
 
-    /* -------------------------- TOGGLE MEMBER -------------------------- */
-    if (membersContainer) {
         document.addEventListener('click', async function (e) {
             if (!e.target.classList.contains('toggle-member')) return;
 
@@ -155,6 +151,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.disabled = false;
             }
         });
+
+        document.body.dataset.projectTeamListenersBound = 'true';
     }
 
     // Show empty row when no members are added
@@ -171,6 +169,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    initializeProjectTeam();
+});
+
+document.addEventListener('project-tab:loaded', function (event) {
+    if (event.detail?.tab !== 'team') {
+        return;
+    }
+
+    initializeProjectTeam(event.detail.panel);
 });
 
 // TomSelect role change handler

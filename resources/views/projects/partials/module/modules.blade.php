@@ -4,7 +4,7 @@
     <x-form-modal modalId="project-module-modal" module="Project Module" formId="projectModuleForm" :action="route('projects.modules.store', $project)" button="Create Project Module">
         <div>
             <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Module Library</label>
-            <select name="library_module_id" id="library_module_id" class="project-module-library-select tom-select w-full" data-placeholder="Select a library module">
+            <select name="library_module_id" id="library_module_id" class="project-module-library-select tom-select w-full" data-placeholder="Select a library module" data-sort="0">
                 <option value="">Select a library module</option>
                 @foreach ($agileModules as $libraryModule)
                     <option value="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color }}" data-description="{{ $libraryModule->description }}">

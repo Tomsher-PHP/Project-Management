@@ -1,7 +1,7 @@
-export function initTomSelect() {
+export function initTomSelect(root = document) {
 
     // Standard Select
-    document.querySelectorAll('.tom-select-no-search').forEach(el => {
+    root.querySelectorAll('select.tom-select-no-search, input.tom-select-no-search').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
 
@@ -14,7 +14,7 @@ export function initTomSelect() {
     });
 
     // Standard Select
-    document.querySelectorAll('.tom-select').forEach(el => {
+    root.querySelectorAll('select.tom-select, input.tom-select').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
 
@@ -53,7 +53,7 @@ export function initTomSelect() {
     });
 
     // Multiple select
-    document.querySelectorAll('.tom-select-multiple').forEach(el => {
+    root.querySelectorAll('select.tom-select-multiple, input.tom-select-multiple').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
 
@@ -64,7 +64,7 @@ export function initTomSelect() {
     });
 
     // Lazy load tom select
-    document.querySelectorAll('.tom-select-lazy').forEach(el => {
+    root.querySelectorAll('select.tom-select-lazy, input.tom-select-lazy').forEach(el => {
         if (el.tomselect) return; // Prevent double init
 
         const sort = el.dataset.sort != "0";

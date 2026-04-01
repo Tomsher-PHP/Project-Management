@@ -68,19 +68,124 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     const reorderToggleButton = section.querySelector('[data-project-module-reorder-toggle]');
     const reorderToggleLabel = section.querySelector('[data-project-module-reorder-toggle-label]');
     const reorderSaveButton = section.querySelector('[data-project-module-reorder-save]');
+    const restoreModal = section.querySelector('[data-project-module-restore-modal]');
+    const restoreOpenButton = section.querySelector('[data-project-module-restore-open]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     let draggedModuleCard = null;
     let dragHandleCard = null;
     let reorderModeEnabled = false;
     let originalModuleOrder = [];
 
+    const getModuleCards = () => Array.from(moduleList.querySelectorAll('[data-project-module-card]'));
+    const getModuleIds = () => getModuleCards().map((card) => Number(card.dataset.moduleId));
+
+    const replaceRenderedSection = (response) => {
+        if (!response.html || !response.render_target) {
+            return false;
+        }
+
+        const currentTarget = document.querySelector(response.render_target);
+
+        if (!currentTarget) {
+            return false;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = response.html.trim();
+        const newRoot = wrapper.firstElementChild;
+
+        if (!newRoot) {
+            return false;
+        }
+
+        currentTarget.replaceWith(newRoot);
+
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(newRoot);
+        }
+
+        document.dispatchEvent(new CustomEvent('ajax-form:rendered', {
+            detail: { root: newRoot, selector: response.render_target },
+        }));
+
+        return true;
+    };
+
+    const openRestoreModal = () => {
+        if (restoreModal) {
+            restoreModal.classList.remove('hidden');
+        }
+    };
+
+    const closeRestoreModal = () => {
+        if (restoreModal) {
+            restoreModal.classList.add('hidden');
+        }
+    };
+
+    if (restoreOpenButton && restoreModal) {
+        restoreOpenButton.addEventListener('click', openRestoreModal);
+
+        restoreModal.querySelectorAll('[data-project-module-restore-close]').forEach((button) => {
+            button.addEventListener('click', closeRestoreModal);
+        });
+
+        restoreModal.addEventListener('click', async function (event) {
+            const restoreButton = event.target.closest('[data-project-module-restore-action]');
+
+            if (!restoreButton) {
+                return;
+            }
+
+            const moduleName = restoreButton.dataset.moduleName || 'this module';
+            const restoreUrl = restoreButton.dataset.restoreUrl;
+
+            const result = await Alert.confirm({
+                target: restoreModal,
+                title: 'Restore Module',
+                text: `Restore ${moduleName}?`,
+                confirmText: 'Yes, restore',
+                cancelText: 'Cancel',
+            });
+
+            if (!result.isConfirmed || !restoreUrl) {
+                return;
+            }
+
+            restoreButton.disabled = true;
+
+            try {
+                const response = await fetch(restoreUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.status) {
+                    throw new Error(payload.message || 'Unable to restore this module.');
+                }
+
+                closeRestoreModal();
+                Alert.success(payload.message || 'Project module restored successfully.');
+
+                if (!replaceRenderedSection(payload)) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                restoreButton.disabled = false;
+                Alert.error(error.message || 'Unable to restore this module.');
+            }
+        });
+    }
+
     if (!moduleList || !moduleList.dataset.reorderUrl || !csrfToken || !reorderToggleButton || !reorderSaveButton || !reorderToggleLabel) {
         section.dataset.projectModuleSectionInitialized = 'true';
         return;
     }
-
-    const getModuleCards = () => Array.from(moduleList.querySelectorAll('[data-project-module-card]'));
-    const getModuleIds = () => getModuleCards().map((card) => Number(card.dataset.moduleId));
 
     const applyModuleOrder = (moduleIds) => {
         const cardsById = new Map(getModuleCards().map((card) => [Number(card.dataset.moduleId), card]));
@@ -271,6 +376,15 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
 document.addEventListener('DOMContentLoaded', function () {
     initializeProjectModuleModal();
     initializeProjectModuleSection();
+});
+
+document.addEventListener('project-tab:loaded', function (event) {
+    if (event.detail?.tab !== 'modules') {
+        return;
+    }
+
+    initializeProjectModuleModal();
+    initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-module-section]'));
 });
 
 document.addEventListener('ajax-form:rendered', function (event) {

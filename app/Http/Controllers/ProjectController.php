@@ -72,11 +72,6 @@ class ProjectController extends Controller
 
     public function edit(Project $project, ProjectServices $service)
     {
-        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $project->load(['scopeFiles.addedBy']);
-        $projectNotes = $this->getPaginatedProjectNotes($project, (int) request('notes_page', 1));
-        $projectModules = $project->projectModules()->with(['addedBy', 'updatedBy'])->get();
         $projectActivities = $project->activities()
             ->with('causer')
             ->latest()
@@ -84,34 +79,19 @@ class ProjectController extends Controller
             ->get();
         $timelines = $service->getTimelines($project);
 
-        $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
-        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
-        $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
-        $projectStages = ProjectStage::active()->orderBy('order', 'asc')->get();
-        $agileModules = AgileModule::active()->orderBy('order', 'asc')->get();
-        $agileSprints = AgileSprint::active()->orderBy('order', 'asc')->get();
+        return view('projects.detail-page', compact('project', 'projectActivities', 'timelines'));
+    }
 
-        $priorities = config('constants.project_priorities');
-        $projectRoles = config('constants.project_roles');
+    public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
+    {
+        $allowedTabs = ['modules', 'tasks', 'team', 'scope', 'notes', 'settings'];
+        abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
-        return view('projects.detail-page', compact(
-            'project',
-            'projectModules',
-            'projectActivities',
-            'projectNotes',
-            'timelines',
-            'users',
-            'customers',
-            'statuses',
-            'priorities',
-            'projectStages',
-            'projectCategories',
-            'projectRoles',
-            'projectTechnologies',
-            'agileModules',
-            'agileSprints'
-        ));
+        return response()->json([
+            'status' => true,
+            'tab' => $tab,
+            'html' => $this->renderTab($project, $tab, $service, $request),
+        ], Response::HTTP_OK);
     }
 
     public function update(ProjectRequest $request, Project $project, ProjectServices $service)
@@ -253,5 +233,91 @@ class ProjectController extends Controller
             ->paginate($perPage, ['*'], 'notes_page', $page)
             ->withPath(route('projects.edit', $project))
             ->withQueryString();
+    }
+
+    private function renderTab(Project $project, string $tab, ProjectServices $service, Request $request): string
+    {
+        return match ($tab) {
+            'modules' => $this->renderModulesTab($project),
+            'tasks' => view('projects.partials.tabs.tasks', compact('project'))->render(),
+            'team' => $this->renderTeamTab($project),
+            'scope' => $this->renderScopeTab($project),
+            'notes' => $this->renderNotesTab($project, $request),
+            'settings' => $this->renderSettingsTab($project),
+            default => abort(Response::HTTP_NOT_FOUND),
+        };
+    }
+
+    private function renderModulesTab(Project $project): string
+    {
+        $projectModules = $project->projectModules()
+            ->with(['addedBy', 'updatedBy'])
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get();
+
+        $agileModules = AgileModule::active()->orderBy('order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->orderBy('order', 'asc')->get();
+        $trashedProjectModules = ProjectModule::onlyTrashed()
+            ->where('project_id', $project->id)
+            ->orderByDesc('deleted_at')
+            ->get();
+
+        return view('projects.partials.tabs.modules', compact(
+            'project',
+            'projectModules',
+            'agileModules',
+            'agileSprints',
+            'trashedProjectModules'
+        ))->render();
+    }
+
+    private function renderTeamTab(Project $project): string
+    {
+        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
+        $projectRoles = config('constants.project_roles');
+        $project->load('members');
+
+        return view('projects.partials.tabs.team', compact('project', 'users', 'projectRoles'))->render();
+    }
+
+    private function renderScopeTab(Project $project): string
+    {
+        $project->load(['scopeFiles.addedBy']);
+
+        return view('projects.partials.tabs.scope', compact('project'))->render();
+    }
+
+    private function renderNotesTab(Project $project, Request $request): string
+    {
+        $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
+
+        return view('projects.partials.tabs.notes', compact('project', 'projectNotes'))->render();
+    }
+
+    private function renderSettingsTab(Project $project): string
+    {
+        $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
+        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
+        $project->load('technologies');
+
+        $customers = Customer::active()->get();
+        $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
+        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
+        $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
+        $projectStages = ProjectStage::active()->orderBy('order', 'asc')->get();
+        $priorities = config('constants.project_priorities');
+
+        return view('projects.partials.tabs.settings', compact(
+            'project',
+            'users',
+            'customers',
+            'statuses',
+            'projectCategories',
+            'projectTechnologies',
+            'projectStages',
+            'priorities'
+        ))->render();
     }
 }

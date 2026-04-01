@@ -4,21 +4,13 @@
         $canEditProjectModules = auth()->user()->can('project_module.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.modules.reorder', $project) : null;
         $taskPreviewPalette = ['Setup workspace', 'Define acceptance criteria', 'Create UI draft', 'Review with team', 'QA pass'];
+        $trashedCount = $trashedProjectModules->count();
     @endphp
 
     <div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <div class="border-b border-bgray-200 bg-bgray-50/70 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
             <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="inline-flex items-center rounded-full bg-success-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-success-400 dark:bg-darkblack-500 dark:text-success-300">
-                            Builder Layout
-                        </span>
-                        <span class="inline-flex items-center rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-500 dark:bg-darkblack-500 dark:text-warning-500">
-                            Design Preview
-                        </span>
-                    </div>
-
                     <h4 class="mt-2 text-lg font-bold text-bgray-900 dark:text-white">Module -> Sprint -> Task Planner</h4>
                     <p class="mt-1 max-w-3xl text-sm text-bgray-600 dark:text-bgray-300">
                         Compact builder view focused on module items with nested sprint and task previews.
@@ -40,6 +32,21 @@
                             <span class="text-bgray-500 dark:text-bgray-300">Sprint Library</span>
                             <span class="font-semibold text-bgray-900 dark:text-white">{{ $librarySprintCount }}</span>
                         </span>
+
+                        @can('project_module.restore')
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                                data-project-module-restore-open
+                                @disabled($trashedCount === 0)
+                            >
+                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                <span>Restore</span>
+                                <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $trashedCount }}</span>
+                            </button>
+                        @endcan
 
                         @can('project_module.create')
                             <a href="javascript:void(0)" data-target="#project-module-modal" data-module="Project Module" data-url="{{ route('projects.modules.store', $project) }}" data-method="POST" class="modal-open inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-module-context="project-module">
@@ -212,4 +219,67 @@
             @endforelse
         </div>
     </div>
+
+    @can('project_module.restore')
+        <div class="modal fixed inset-0 z-50 hidden overflow-y-auto" id="project-module-restore-modal" data-project-module-restore-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-module-restore-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-3xl">
+                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                        <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Restore Project Module</h3>
+                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Restore a deleted module back into this project. It will be placed at the end of the module order.</p>
+                            </div>
+
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-restore-close>
+                                ✕
+                            </button>
+                        </div>
+
+                        <div class="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-7">
+                            @if ($trashedProjectModules->isEmpty())
+                                <div class="rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-10 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
+                                    <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">No deleted modules available to restore.</p>
+                                </div>
+                            @else
+                                <div class="space-y-4">
+                                    @foreach ($trashedProjectModules as $trashedModule)
+                                        <div class="flex flex-col gap-4 rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/70 sm:flex-row sm:items-center sm:justify-between">
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $trashedModule->color ?: '#E5E7EB' }}"></span>
+                                                    <h5 class="text-base font-semibold text-bgray-900 dark:text-white">{{ $trashedModule->name }}</h5>
+                                                </div>
+                                                <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                                                    Deleted {{ $trashedModule->deleted_at?->diffForHumans() ?? 'recently' }}.
+                                                    @if ($trashedModule->description)
+                                                        {{ \Illuminate\Support\Str::limit($trashedModule->description, 100) }}
+                                                    @endif
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400"
+                                                data-project-module-restore-action
+                                                data-restore-url="{{ route('projects.modules.restore', [$project, $trashedModule->id]) }}"
+                                                data-module-name="{{ $trashedModule->name }}"
+                                            >
+                                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M9 3a1 1 0 00-1 1v2.586L6.707 5.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 10-1.414-1.414L10 6.586V4a1 1 0 00-1-1zm-5 9a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                                </svg>
+                                                <span>Restore</span>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 </div>

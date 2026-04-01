@@ -25,11 +25,11 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = config('system_permissions');
 
-        foreach ($permissions as $index => $permission) {
+        foreach ($permissions as $permission) {
             Permission::create([
-                'name' => $permission,
+                'name' => $permission['name'],
                 'guard_name' => 'web',
-                'sort_order' => $index + 1,
+                'sort_order' => $permission['sort_order'],
             ]);
         }
 

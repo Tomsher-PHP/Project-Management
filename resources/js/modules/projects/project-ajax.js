@@ -1,16 +1,40 @@
-document.addEventListener('DOMContentLoaded', function () {
+window.projectForm = function () {
+    return {
+        dirty: false,
+        markDirty() {
+            this.dirty = true;
+        },
+    };
+};
+
+const initializeProjectSettings = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const projectId = window.ProjectApp.id;
 
-    const form = document.getElementById('project-settings-form');
-    const button = document.getElementById('update-project');
+    const form = root.querySelector ? root.querySelector('#project-settings-form') : document.getElementById('project-settings-form');
+    const button = root.querySelector ? root.querySelector('#update-project') : document.getElementById('update-project');
 
     let dirty = false;
 
-    // IMPORTANT GUARD
-    if (!button || !form) return;
+    if (!button || !form || form.dataset.projectSettingsInitialized === 'true') {
+        return;
+    }
 
-    /* -------------------------- update project settings -------------------------- */
+    const canEdit = form.dataset.canEdit === 'true';
+
+    if (!canEdit) {
+        form.querySelectorAll('select').forEach(el => {
+            el.disabled = true;
+            el.tomselect?.disable();
+        });
+        form.querySelectorAll('input').forEach(el => {
+            el.disabled = true;
+        });
+        form.querySelectorAll('textarea').forEach(el => {
+            el.disabled = true;
+        });
+    }
+
     function setDirty() {
         dirty = true;
         button.disabled = false;
@@ -23,10 +47,8 @@ document.addEventListener('DOMContentLoaded', function () {
         el.addEventListener('change', setDirty);
     });
 
-    // Listen for Alpine dispatch events
     form.addEventListener('form-dirty', setDirty);
 
-    // update project settings
     button.addEventListener('click', function () {
         if (!dirty) return;
 
@@ -53,10 +75,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Alert.success(data.message);
 
-                    // Remove all previous error messages
                     form.querySelectorAll('.error-text').forEach(el => el.remove());
 
-                    // update project header
                     document.getElementById('project-header').innerHTML = data.project_header;
 
                     dirty = false;
@@ -66,10 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     button.disabled = false;
                     button.textContent = 'Update Project';
 
-                    // Clear previous errors
                     form.querySelectorAll('p.text-error-300').forEach(p => p.remove());
 
-                    // Show validation errors
                     Object.keys(data.errors).forEach(key => {
                         const input = form.querySelector(`[name="${key}"]`);
                         if (input) {
@@ -88,4 +106,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 Alert.error('Something went wrong. Please try again.');
             });
     });
+
+    form.dataset.projectSettingsInitialized = 'true';
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    initializeProjectSettings();
+});
+
+document.addEventListener('project-tab:loaded', function (event) {
+    if (event.detail?.tab !== 'settings') {
+        return;
+    }
+
+    initializeProjectSettings(event.detail.panel);
 });

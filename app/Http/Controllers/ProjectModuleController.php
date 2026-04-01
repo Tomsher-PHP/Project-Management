@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectModule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -121,6 +122,37 @@ class ProjectModuleController extends Controller
         ]);
     }
 
+    public function restore(Request $request, Project $project, int $projectModule): JsonResponse
+    {
+        $this->ensureAgileProject($project);
+
+        $trashedModule = ProjectModule::onlyTrashed()
+            ->where('project_id', $project->id)
+            ->findOrFail($projectModule);
+
+        $restoredName = $this->resolveRestoredName($project, $trashedModule->name, $trashedModule->id);
+
+        DB::transaction(function () use ($project, $trashedModule, $restoredName) {
+            $trashedModule->name = $restoredName;
+            $trashedModule->order = $this->nextOrder($project);
+            $trashedModule->updated_by = Auth::id();
+            $trashedModule->restore();
+            $trashedModule->saveQuietly();
+        });
+
+        $message = $restoredName === $trashedModule->getOriginal('name')
+            ? 'Project module restored successfully.'
+            : "Project module restored as \"{$restoredName}\" because the previous name already exists.";
+
+        return response()->json([
+            'status' => true,
+            'message' => $message,
+            'html' => $this->renderSection($project),
+            'render_target' => '[data-project-module-section]',
+            'render_mode' => 'replace_outer',
+        ]);
+    }
+
     private function prepareData(ProjectModuleRequest $request, array $overrides = []): array
     {
         $data = $request->validated();
@@ -167,6 +199,10 @@ class ProjectModuleController extends Controller
             'project' => $project,
             'projectModules' => $project->projectModules,
             'agileSprints' => AgileSprint::active()->orderBy('order', 'asc')->get(),
+            'trashedProjectModules' => ProjectModule::onlyTrashed()
+                ->where('project_id', $project->id)
+                ->orderByDesc('deleted_at')
+                ->get(),
         ])->render();
     }
 
@@ -184,5 +220,24 @@ class ProjectModuleController extends Controller
         }
 
         return $query->exists();
+    }
+
+    private function resolveRestoredName(Project $project, string $originalName, int $restoringModuleId): string
+    {
+        $candidate = $originalName;
+        $suffix = 1;
+
+        while ($project->projectModules()
+            ->where('name', $candidate)
+            ->whereKeyNot($restoringModuleId)
+            ->exists()) {
+            $candidate = $suffix === 1
+                ? "{$originalName} (Restored)"
+                : "{$originalName} (Restored {$suffix})";
+
+            $suffix++;
+        }
+
+        return $candidate;
     }
 }

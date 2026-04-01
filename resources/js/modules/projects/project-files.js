@@ -1,19 +1,25 @@
-document.addEventListener('DOMContentLoaded', function () {
+const projectFilesState = {
+    editor: null,
+    listenersBound: false,
+};
+
+const initializeProjectFiles = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const projectId = window.ProjectApp?.id;
     const canCreateNotesFiles = Boolean(window.ProjectApp?.canCreateNotesFiles);
     const canRemoveNotesFiles = Boolean(window.ProjectApp?.canRemoveNotesFiles);
-    const saveBtn = document.getElementById('saveProjectNote');
-    const attachmentsInput = document.getElementById('note-attachments-input');
-    const selectedFilesList = document.getElementById('selected-note-files');
+    const saveBtn = root.querySelector ? root.querySelector('#saveProjectNote') : document.getElementById('saveProjectNote');
+    const attachmentsInput = root.querySelector ? root.querySelector('#note-attachments-input') : document.getElementById('note-attachments-input');
+    const selectedFilesList = root.querySelector ? root.querySelector('#selected-note-files') : document.getElementById('selected-note-files');
     let pendingFiles = [];
 
     if (!projectId) {
         return;
     }
 
-    const projectNoteEditor = document.getElementById('project-note')
-        ? new Quill('#project-note', {
+    const editorElement = root.querySelector ? root.querySelector('#project-note') : document.getElementById('project-note');
+    const projectNoteEditor = editorElement && editorElement.dataset.quillInitialized !== 'true'
+        ? new Quill(editorElement, {
             theme: 'snow',
             readOnly: !canCreateNotesFiles,
             placeholder: canCreateNotesFiles ? 'Write a project note...' : 'No note editor available.',
@@ -26,7 +32,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 ] : false
             }
         })
-        : null;
+        : projectFilesState.editor;
+
+    if (editorElement && editorElement.dataset.quillInitialized !== 'true' && projectNoteEditor) {
+        editorElement.dataset.quillInitialized = 'true';
+        projectFilesState.editor = projectNoteEditor;
+    }
 
     if (attachmentsInput) {
         attachmentsInput.addEventListener('change', () => {
@@ -36,6 +47,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (!saveBtn || !projectNoteEditor) {
+        if (!projectFilesState.listenersBound && canRemoveNotesFiles) {
+            bindProjectFileDeleteListeners(token, projectId);
+        }
+
+        return;
+    }
+
+    if (saveBtn.dataset.projectFilesInitialized === 'true') {
+        if (!projectFilesState.listenersBound && canRemoveNotesFiles) {
+            bindProjectFileDeleteListeners(token, projectId);
+        }
+
         return;
     }
 
@@ -95,19 +118,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    if (canRemoveNotesFiles) {
-        document.addEventListener('click', async function (event) {
-            const deleteNoteButton = event.target.closest('.delete-project-note');
-            const deleteFileButton = event.target.closest('.delete-project-note-file');
+    saveBtn.dataset.projectFilesInitialized = 'true';
 
-            if (deleteNoteButton) {
-                await deleteNote(deleteNoteButton);
-            }
-
-            if (deleteFileButton) {
-                await deleteNoteFile(deleteFileButton);
-            }
-        });
+    if (!projectFilesState.listenersBound && canRemoveNotesFiles) {
+        bindProjectFileDeleteListeners(token, projectId);
     }
 
     function renderSelectedFiles() {
@@ -125,6 +139,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 ${file.name}
             </div>
         `).join('');
+    }
+
+    function replaceNotesHistory(html, currentPage) {
+        const notesHistory = document.getElementById('project-notes-history');
+
+        if (!notesHistory) {
+            return;
+        }
+
+        notesHistory.outerHTML = html;
+        updateNotesPageInUrl(currentPage);
+    }
+
+    function getCurrentNotesPage() {
+        const params = new URLSearchParams(window.location.search);
+        return Number(params.get('notes_page') || 1);
+    }
+
+    function updateNotesPageInUrl(currentPage) {
+        if (!currentPage) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('notes_page', String(currentPage));
+        window.history.replaceState({}, '', url);
     }
 
     async function deleteNote(button) {
@@ -206,29 +246,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function replaceNotesHistory(html, currentPage) {
-        const notesHistory = document.getElementById('project-notes-history');
+    function bindProjectFileDeleteListeners(listenerToken, listenerProjectId) {
+        document.addEventListener('click', async function (event) {
+            const deleteNoteButton = event.target.closest('.delete-project-note');
+            const deleteFileButton = event.target.closest('.delete-project-note-file');
 
-        if (!notesHistory) {
-            return;
-        }
+            if (deleteNoteButton) {
+                await deleteNote(deleteNoteButton);
+            }
 
-        notesHistory.outerHTML = html;
-        updateNotesPageInUrl(currentPage);
+            if (deleteFileButton) {
+                await deleteNoteFile(deleteFileButton);
+            }
+        });
+        projectFilesState.listenersBound = true;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    initializeProjectFiles();
+});
+
+document.addEventListener('project-tab:loaded', function (event) {
+    if (event.detail?.tab !== 'notes') {
+        return;
     }
 
-    function getCurrentNotesPage() {
-        const params = new URLSearchParams(window.location.search);
-        return Number(params.get('notes_page') || 1);
-    }
-
-    function updateNotesPageInUrl(currentPage) {
-        if (!currentPage) {
-            return;
-        }
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('notes_page', String(currentPage));
-        window.history.replaceState({}, '', url);
-    }
+    initializeProjectFiles(event.detail.panel);
 });
