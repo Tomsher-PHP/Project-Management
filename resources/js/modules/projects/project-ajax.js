@@ -1,3 +1,5 @@
+import Alert from '../../alert';
+
 window.projectForm = function () {
     return {
         dirty: false,

@@ -199,15 +199,71 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
         });
     };
 
+    const hexToRgba = (hex, alpha) => {
+        if (!hex || typeof hex !== 'string') {
+            return null;
+        }
+
+        let normalizedHex = hex.replace('#', '').trim();
+
+        if (normalizedHex.length === 3) {
+            normalizedHex = normalizedHex.split('').map((character) => character + character).join('');
+        }
+
+        if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+            return null;
+        }
+
+        const red = Number.parseInt(normalizedHex.slice(0, 2), 16);
+        const green = Number.parseInt(normalizedHex.slice(2, 4), 16);
+        const blue = Number.parseInt(normalizedHex.slice(4, 6), 16);
+
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    };
+
     const setReorderMode = (enabled) => {
         reorderModeEnabled = enabled;
         reorderSaveButton.disabled = !enabled;
         reorderToggleLabel.textContent = enabled ? 'Cancel' : 'Change Order';
+        reorderToggleButton.classList.toggle('border-success-300', enabled);
+        reorderToggleButton.classList.toggle('bg-success-50', enabled);
+        reorderToggleButton.classList.toggle('text-success-500', enabled);
+        reorderToggleButton.classList.toggle('dark:border-success-900/30', enabled);
+        reorderToggleButton.classList.toggle('dark:bg-darkblack-500', enabled);
+        reorderToggleButton.classList.toggle('dark:text-success-300', enabled);
+        moduleList.classList.toggle('rounded-2xl', enabled);
+        moduleList.classList.toggle('border', enabled);
+        moduleList.classList.toggle('border-dashed', enabled);
+        moduleList.classList.toggle('border-success-200', enabled);
+        moduleList.classList.toggle('bg-success-50/40', enabled);
+        moduleList.classList.toggle('p-3', enabled);
+        moduleList.classList.toggle('dark:border-success-900/30', enabled);
+        moduleList.classList.toggle('dark:bg-darkblack-500/40', enabled);
 
         getModuleCards().forEach((card) => {
+            const moduleColor = card.dataset.moduleColor || '#22C55E';
+            const reorderBackground = hexToRgba(moduleColor, 0.08) || 'rgba(34, 197, 94, 0.08)';
+            const reorderShadow = hexToRgba(moduleColor, 0.18) || 'rgba(34, 197, 94, 0.18)';
+            const header = card.querySelector('[data-project-module-card-header]');
+            const handle = card.querySelector('[data-project-module-drag-handle]');
+
             card.classList.toggle('ring-2', enabled);
             card.classList.toggle('ring-success-200', enabled);
             card.classList.toggle('dark:ring-success-900/30', enabled);
+            card.style.backgroundColor = enabled ? reorderBackground : '';
+            card.style.boxShadow = enabled ? `0 10px 30px -18px ${reorderShadow}` : '';
+
+            if (header) {
+                header.style.backgroundColor = enabled ? 'rgba(255, 255, 255, 0.94)' : '';
+            }
+
+            if (handle) {
+                handle.classList.toggle('text-success-500', enabled);
+                handle.classList.toggle('dark:text-success-300', enabled);
+                handle.style.backgroundColor = enabled ? 'rgba(255, 255, 255, 0.98)' : '';
+                handle.style.borderColor = enabled ? moduleColor : '';
+                handle.style.boxShadow = enabled ? `0 0 0 3px ${reorderShadow}` : '';
+            }
         });
     };
 
@@ -255,6 +311,14 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
         if (draggedModuleCard) {
             draggedModuleCard.classList.remove('opacity-60', 'scale-[0.99]');
             draggedModuleCard.setAttribute('draggable', 'false');
+
+            if (reorderModeEnabled) {
+                const moduleColor = draggedModuleCard.dataset.moduleColor || '#22C55E';
+                const reorderShadow = hexToRgba(moduleColor, 0.18) || 'rgba(34, 197, 94, 0.18)';
+                draggedModuleCard.style.boxShadow = `0 10px 30px -18px ${reorderShadow}`;
+            } else {
+                draggedModuleCard.style.boxShadow = '';
+            }
         }
 
         if (dragHandleCard) {
@@ -310,6 +374,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
 
         draggedModuleCard = card;
         card.classList.add('opacity-60', 'scale-[0.99]');
+        card.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
 
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'move';

@@ -8,19 +8,13 @@
         @endphp
 
         <div class="2xl:flex 2xl:space-x-[30px]">
-            <section
-                class="mb-6 2xl:mb-0 2xl:flex-1"
-                data-project-tabs
-                data-project-id="{{ $project->id }}"
-                data-default-tab="overview"
-                data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}"
-            >
+            <section class="mb-6 2xl:mb-0 2xl:flex-1" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}">
 
                 <!-- PROJECT HEADER -->
                 <div id="project-header">
                     @include('projects.partials.header', [
-                        'projectTimeline' => $timelines['projectTimeline'],
-                        'customerTimeline' => $timelines['customerTimeline'],
+                        'projectTimeline' => $projectTimeline,
+                        'customerTimeline' => $customerTimeline,
                     ])
                 </div>
 
@@ -29,62 +23,33 @@
                     <!-- Tabs Header -->
                     <div class="border-b border-bgray-300 dark:border-darkblack-400 mb-6">
                         <div class="flex space-x-6">
-                            <button
-                                type="button"
-                                data-project-tab-trigger="overview"
-                                class="border-b-2 border-success-300 pb-3 font-semibold text-success-300 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-success-300 pb-3 font-semibold text-success-300 transition">
                                 Overview
                             </button>
 
                             @if ($project->is_agile)
-                                <button
-                                    type="button"
-                                    data-project-tab-trigger="modules"
-                                    class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                                >
+                                <button type="button" data-project-tab-trigger="modules" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                     Modules
                                 </button>
                             @endif
 
-                            <button
-                                type="button"
-                                data-project-tab-trigger="tasks"
-                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="tasks" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                 Tasks
                             </button>
 
-                            <button
-                                type="button"
-                                data-project-tab-trigger="team"
-                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="team" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                 Team
                             </button>
 
-
-                            <button
-                                type="button"
-                                data-project-tab-trigger="scope"
-                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="scope" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                 Scope
                             </button>
 
-                            <button
-                                type="button"
-                                data-project-tab-trigger="notes"
-                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="notes" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                 Notes & Files
                             </button>
 
-                            <button
-                                type="button"
-                                data-project-tab-trigger="settings"
-                                class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition"
-                            >
+                            <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-3 font-semibold text-bgray-500 transition">
                                 Settings
                             </button>
                         </div>
@@ -113,12 +78,7 @@
             <!-- Project comment section -->
             <section class="flex w-full flex-col gap-6 2xl:w-[400px]">
                 @can('activity_log.view')
-                    <x-activity-log.section
-                        title="Activity Log"
-                        :activities="$projectActivities"
-                        empty-message="No activity logged for this project yet."
-                        :view-all-url="route('activity.log', ['subject_type' => 'project', 'subject_id' => $project->id])"
-                    />
+                    <x-activity-log.section title="Activity Log" :activities="$projectActivities" empty-message="No activity logged for this project yet." :view-all-url="route('activity.log', ['subject_type' => 'project', 'subject_id' => $project->id])" />
                 @endcan
 
 

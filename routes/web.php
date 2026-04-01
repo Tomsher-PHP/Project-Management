@@ -204,6 +204,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
+        Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
+        Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
         Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
         Route::patch('modules/reorder', [ProjectModuleController::class, 'reorder'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.reorder');

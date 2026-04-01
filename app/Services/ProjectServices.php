@@ -114,6 +114,37 @@ class ProjectServices
         });
     }
 
+    public function updateStatus(Project $project, int $statusId): Project
+    {
+        return DB::transaction(function () use ($project, $statusId) {
+            if ((int) $project->status_id !== $statusId) {
+                $project->update([
+                    'status_id' => $statusId,
+                ]);
+
+                ProjectStatusHistory::create([
+                    'project_id' => $project->id,
+                    'status_id' => $statusId,
+                ]);
+            }
+
+            return $project->fresh();
+        });
+    }
+
+    public function updateStage(Project $project, ?int $projectStageId): Project
+    {
+        return DB::transaction(function () use ($project, $projectStageId) {
+            if ((int) ($project->project_stage_id ?? 0) !== (int) ($projectStageId ?? 0)) {
+                $project->update([
+                    'project_stage_id' => $projectStageId,
+                ]);
+            }
+
+            return $project->fresh();
+        });
+    }
+
     public function getTimelines(Project $project): array
     {
         return [

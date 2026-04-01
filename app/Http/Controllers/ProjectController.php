@@ -77,9 +77,11 @@ class ProjectController extends Controller
             ->latest()
             ->limit(3)
             ->get();
-        $timelines = $service->getTimelines($project);
 
-        return view('projects.detail-page', compact('project', 'projectActivities', 'timelines'));
+        return view('projects.detail-page', array_merge([
+            'project' => $project,
+            'projectActivities' => $projectActivities,
+        ], $this->getProjectHeaderData($project, $service)));
     }
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
@@ -98,19 +100,48 @@ class ProjectController extends Controller
     {
         $project = $service->update($project, $request->validated());
 
-        $priority = config('constants.project_priorities')[$project->priority] ?? null;
-        $timelines = $service->getTimelines($project);
-
         return response()->json([
             'success' => true,
             'message' => 'Project updated successfully.',
             'project' => $project,
-            'project_header' => view('projects.partials.header', [
-                'project' => $project,
-                'priority' => $priority,
-                'projectTimeline' => $timelines['projectTimeline'],
-                'customerTimeline' => $timelines['customerTimeline'],
-            ])->render(),
+            'project_header' => $this->renderProjectHeader($project, $service),
+        ], Response::HTTP_OK);
+    }
+
+    public function updateProjectStatus(Request $request, Project $project, ProjectServices $service)
+    {
+        $validated = $request->validate([
+            'status_id' => 'required|exists:project_statuses,id',
+        ]);
+
+        $project = $service->updateStatus($project, (int) $validated['status_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project status updated successfully.',
+            'project_header' => $this->renderProjectHeader($project, $service),
+        ], Response::HTTP_OK);
+    }
+
+    public function updateProjectStage(Request $request, Project $project, ProjectServices $service)
+    {
+        $request->merge([
+            'project_stage_id' => $request->filled('project_stage_id') ? $request->input('project_stage_id') : null,
+        ]);
+
+        $validated = $request->validate([
+            'project_stage_id' => 'nullable|exists:project_stages,id',
+        ]);
+
+        $project = $service->updateStage(
+            $project,
+            isset($validated['project_stage_id']) ? (int) $validated['project_stage_id'] : null
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project stage updated successfully.',
+            'project_header' => $this->renderProjectHeader($project, $service),
         ], Response::HTTP_OK);
     }
 
@@ -319,5 +350,26 @@ class ProjectController extends Controller
             'projectStages',
             'priorities'
         ))->render();
+    }
+
+    private function getProjectHeaderData(Project $project, ProjectServices $service): array
+    {
+        $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
+        $timelines = $service->getTimelines($project);
+
+        return [
+            'priority' => config('constants.project_priorities')[$project->priority] ?? null,
+            'projectTimeline' => $timelines['projectTimeline'],
+            'customerTimeline' => $timelines['customerTimeline'],
+            'projectStatuses' => ProjectStatus::active()->orderBy('order', 'asc')->get(),
+            'projectStages' => ProjectStage::active()->orderBy('order', 'asc')->get(),
+        ];
+    }
+
+    private function renderProjectHeader(Project $project, ProjectServices $service): string
+    {
+        return view('projects.partials.header', array_merge([
+            'project' => $project,
+        ], $this->getProjectHeaderData($project, $service)))->render();
     }
 }

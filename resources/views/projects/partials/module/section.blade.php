@@ -17,7 +17,7 @@
                     </p>
                     @can('project_module.edit')
                         <p class="mt-2 inline-flex items-center rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:bg-darkblack-500 dark:text-success-300">
-                            Click Change Order -> drag modules -> Save.
+                            Click Change Order -> Drag Modules -> Save Order
                         </p>
                     @endcan
                 </div>
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <div class="space-y-6 px-5 py-5" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
+        <div class="space-y-6 overflow-y-auto px-5 py-5 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
                 @php
                     $modulePreviewSprints = collect([
@@ -105,11 +105,11 @@
                     ]);
                 @endphp
 
-                <div x-data="{ open: false, showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
-                    <div class="border-b border-bgray-200 bg-white px-4 py-4 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5">
+                <div x-data="{ open: false, showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" data-module-color="{{ $module->color ?: '#D1D5DB' }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
+                    <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
-                                <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-drag-handle>
+                                <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-drag-handle>
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                     </svg>
