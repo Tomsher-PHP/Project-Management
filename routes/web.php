@@ -204,9 +204,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
 
-        Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.store');
-        Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.update');
-        Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.modules.destroy');
+        Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
+        Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.update');
+        Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project_module.delete', 'can:update,project'])->name('projects.modules.destroy');
 
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');

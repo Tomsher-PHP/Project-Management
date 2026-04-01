@@ -8,7 +8,7 @@
                 </p>
             </div>
 
-            @can('project.edit')
+            @can('project_module.create')
                 <a
                     href="javascript:void(0)"
                     data-target="#project-module-modal"
@@ -80,7 +80,7 @@
                         </td>
                         <td class="px-6 py-5 xl:px-0">
                             <div class="flex items-center gap-2">
-                                @can('project.edit')
+                                @can('project_module.edit')
                                     <a
                                         href="javascript:void(0)"
                                         class="edit-record"
@@ -99,7 +99,9 @@
                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                         </svg>
                                     </a>
+                                @endcan
 
+                                @can('project_module.delete')
                                     <x-delete-form :action="route('projects.modules.destroy', [$project, $module])" />
                                 @endcan
                             </div>
@@ -113,7 +115,7 @@
     </div>
 </div>
 
-@can('project.edit')
+@canany(['project_module.create', 'project_module.edit'])
     <x-form-modal modalId="project-module-modal" module="Project Module" formId="projectModuleForm" :action="route('projects.modules.store', $project)" button="Create Project Module">
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Module Library</label>
@@ -160,4 +162,4 @@
             <input type="number" min="1" name="order" value="{{ max($projectModules->count() + 1, 1) }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
         </div>
     </x-form-modal>
-@endcan
+@endcanany

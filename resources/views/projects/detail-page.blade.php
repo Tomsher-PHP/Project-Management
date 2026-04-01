@@ -27,11 +27,11 @@
                                 Overview
                             </button>
 
-                            @if ($project->is_agile)
+                            {{-- @if ($project->is_agile)
                                 <button @click="activeTab = 'modules'; localStorage.setItem('projectTab_{{ $project->id }}', 'modules')" :class="activeTab === 'modules' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
                                     Modules
                                 </button>
-                            @endif
+                            @endif --}}
 
                             <button @click="activeTab = 'tasks'; localStorage.setItem('projectTab_{{ $project->id }}', 'tasks')" :class="activeTab === 'tasks' ? 'border-success-300 text-success-300' : 'text-bgray-500 border-transparent'" class="pb-3 border-b-2 font-semibold transition">
                                 Tasks

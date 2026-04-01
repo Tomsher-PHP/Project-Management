@@ -3,36 +3,50 @@
 @section('page-content')
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
+        @php
+            $hasSettingsAccess = auth()->user()->can('department.view')
+                || auth()->user()->can('designation.view')
+                || auth()->user()->can('shift.view')
+                || auth()->user()->can('technology.view')
+                || auth()->user()->can('project_category.view')
+                || auth()->user()->can('industry.view')
+                || auth()->user()->can('project_status.view')
+                || auth()->user()->can('project_stage.view')
+                || auth()->user()->can('configuration.view')
+                || auth()->user()->can('agile_module.view')
+                || auth()->user()->can('agile_sprint.view');
+        @endphp
+
         <!-- write your code here-->
-        <div class="grid gap-3 lg:grid-cols-2 lg:gap-4 xl:grid-cols-3 xl:gap-6 2xl:grid-cols-4">
+        @if ($hasSettingsAccess)
+            <div class="grid gap-3 lg:grid-cols-2 lg:gap-4 xl:grid-cols-3 xl:gap-6 2xl:grid-cols-4">
 
-            @can('department.view')
-                <a href="{{ route('settings.departments.index') }}" class="block group transition duration-300">
+                @can('department.view')
+                    <a href="{{ route('settings.departments.index') }}" class="block group transition duration-300">
 
-                    <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
 
-                        <span class="absolute right-6 top-6">
-                            <svg width="24" height="25" class="stroke-bgray-50 group-hover:stroke-orange-500 transition" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
-                                <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
-                                <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
-                            </svg>
-                        </span>
+                            <span class="absolute right-6 top-6">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
+                                    <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
+                                    <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
+                                </svg>
+                            </span>
 
                         <div class="flex space-x-5">
                             <div class="shrink-0">
-                                <div class="flex h-14 w-14 items-center justify-center rounded-lg 
-                            bg-orange-100 dark:bg-orange-900 
-                            group-hover:bg-orange-200 transition">
-                                    <svg class="h-8 w-8 text-orange-600 dark:text-orange-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 9h2m-2 4h2m4-4h2m-2 4h2M10 21v-4h4v4" />
+                                <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+                                    <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 20V8h10v12" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 12h4M10 16h4" />
                                     </svg>
                                 </div>
                             </div>
 
                             <div>
-                                <h3 class="text-2xl font-bold text-bgray-900 dark:text-white 
-                           group-hover:text-orange-600 transition">
+                                <h3 class="text-2xl font-bold text-bgray-900 dark:text-white">
                                     Departments
                                 </h3>
                                 <span class="text-lg text-bgray-600 dark:text-bgray-50">
@@ -42,12 +56,12 @@
                         </div>
 
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Organize your company into structured departments for better management and reporting
+                            Group employees into clear teams for easier structure and access.
                         </p>
 
-                    </div>
-                </a>
-            @endcan
+                        </div>
+                    </a>
+                @endcan
 
             @can('designation.view')
                 <a href="{{ route('settings.designations.index') }}" class="block group transition duration-300">
@@ -63,12 +77,10 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h9" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h9" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h9" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h.01M4 12h.01M4 17h.01" />
                                     </svg>
                                 </div>
                             </div>
@@ -80,7 +92,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Create and organize job roles for structured workforce management.
+                            Define role titles so teams and reporting lines stay consistent.
                         </p>
                     </div>
                 </a>
@@ -100,12 +112,8 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <circle cx="12" cy="12" r="8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5l3 2" />
                                     </svg>
                                 </div>
                             </div>
@@ -117,7 +125,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Shift management for the company.
+                            Set working hours, rotations, and availability windows.
                         </p>
                     </div>
                 </a>
@@ -137,12 +145,9 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10H7z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 10h4M10 14h4" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 10h1M4 14h1M19 10h1M19 14h1" />
                                     </svg>
                                 </div>
                             </div>
@@ -154,7 +159,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Technologies management for the company projects.
+                            Maintain the tech stack options used across your projects.
                         </p>
                     </div>
                 </a>
@@ -174,12 +179,10 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h10" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l3 3-3 3" />
                                     </svg>
                                 </div>
                             </div>
@@ -191,7 +194,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Project Categories management for the company projects.
+                            Classify projects by service line, delivery type, or business area.
                         </p>
                     </div>
                 </a>
@@ -211,12 +214,10 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <circle cx="12" cy="12" r="8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4a12 12 0 010 16" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4a12 12 0 000 16" />
                                     </svg>
                                 </div>
                             </div>
@@ -228,7 +229,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Industries management for the company projects.
+                            Track customer industries for segmentation and reporting.
                         </p>
                     </div>
                 </a>
@@ -248,12 +249,8 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12l4 4 8-8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 5h14v14H5z" />
                                     </svg>
                                 </div>
                             </div>
@@ -265,7 +262,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Project Statuses management for the company projects.
+                            Define the status options used to track project progress.
                         </p>
                     </div>
                 </a>
@@ -285,12 +282,12 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18h12" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12h8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h4" />
+                                        <circle cx="18" cy="18" r="1.5" />
+                                        <circle cx="14" cy="12" r="1.5" />
+                                        <circle cx="10" cy="6" r="1.5" />
                                     </svg>
                                 </div>
                             </div>
@@ -302,7 +299,7 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Project Stages management for the company projects.
+                            Set milestone stages to map delivery progress from start to finish.
                         </p>
                     </div>
                 </a>
@@ -322,24 +319,21 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h6l2 3h8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h6l2-3h8" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 7v10" />
                                     </svg>
                                 </div>
                             </div>
                             <div>
                                 <h3 class="text-2xl font-bold text-bgray-900 dark:text-white">
-                                    Agile Flow
+                                    Project Agile Flow
                                 </h3>
                                 <span class="text-lg text-bgray-600 dark:text-bgray-50">Setup Agile Flow</span>
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Setup agile flow for your projects.
+                            Manage reusable agile modules and sprint templates for planning.
                         </p>
                     </div>
                 </a>
@@ -359,12 +353,15 @@
                             <div class="shrink-0">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                     <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                        <!-- User -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5z" />
-                                        <!-- Shoulders -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 22c0-4 4-6 8-6s8 2 8 6" />
-                                        <!-- Badge Line -->
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17h6" />
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 12h1" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h1" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19v1" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 7l.7-.7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 17.7L7 17" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17l.7.7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 6.3L7 7" />
                                     </svg>
                                 </div>
                             </div>
@@ -376,13 +373,21 @@
                             </div>
                         </div>
                         <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                            Configurations for the company.
+                            Control company-wide defaults, branding, and system behavior.
                         </p>
                     </div>
                 </a>
             @endcan
 
-        </div>
+            </div>
+        @else
+            <div class="rounded-xl border border-dashed border-bgray-300 bg-white px-6 py-10 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+                <h3 class="text-xl font-semibold text-red-500 dark:text-red-400">No Settings Access</h3>
+                <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">
+                    You do not have permission to view any settings sections. Please contact your administrator if you need access.
+                </p>
+            </div>
+        @endif
         <!-- write your code here-->
     </main>
     <!-- Page ends -->

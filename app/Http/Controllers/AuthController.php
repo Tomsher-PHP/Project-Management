@@ -17,6 +17,10 @@ class AuthController extends Controller
 
     public function showLogin()
     {
+        // redirect to dashboard if already logged
+        if (Auth::check()) {
+            return redirect()->route('dashboard'); // or url('/dashboard')
+        }
         return view('auth.login');
     }
 
@@ -95,7 +99,9 @@ class AuthController extends Controller
 
         if (
             !$user ||
-            $user->password_otp !== $request->otp /** Hash::check($request->otp, $user->password_otp) */ ||
+            $user->password_otp !== $request->otp
+            /** Hash::check($request->otp, $user->password_otp) */
+            ||
             now()->gt($user->password_otp_expires_at)
         ) {
 
