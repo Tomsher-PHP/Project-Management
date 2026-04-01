@@ -149,15 +149,12 @@
             @endcan
 
             <!-- Estimated Time -->
-            <div class="flex flex-col gap-2">
-                <label for="estimated_time_hrs" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Estimated Time (hrs)
-                </label>
-                <input type="number" name="estimated_time_hrs" id="estimated_time_hrs" value="{{ old('estimated_time_hrs', $project->estimated_time_hours ?? '') }}" class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white @error('estimated_time_hrs') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" x-on:input="markDirty()">
-                @error('estimated_time_hrs')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-forms.estimated-time-input
+                label="Estimated Time"
+                name="estimated_time_minutes"
+                :total-minutes="old('estimated_time_minutes', $project->estimated_time_seconds !== null ? intdiv($project->estimated_time_seconds, 60) : 0)"
+                input-action="markDirty()"
+            />
 
         </div>
     </div>

@@ -4,6 +4,84 @@ $(document).on('click', '.delete-form', function (e) {
 
     const form = this;
     const route = $(form).data('route');
+    const isAjaxDelete = $(form).data('ajax-delete') === true || $(form).attr('data-ajax-delete') === 'true';
+
+    const replaceRenderedSection = (response) => {
+        if (!response.html || !response.render_target) {
+            return false;
+        }
+
+        const currentTarget = document.querySelector(response.render_target);
+
+        if (!currentTarget) {
+            return false;
+        }
+
+        if (response.render_mode === 'replace_inner') {
+            currentTarget.innerHTML = response.html;
+
+            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                window.Alpine.initTree(currentTarget);
+            }
+
+            document.dispatchEvent(new CustomEvent('ajax-form:rendered', {
+                detail: { root: currentTarget, selector: response.render_target },
+            }));
+
+            return true;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = response.html.trim();
+        const newRoot = wrapper.firstElementChild;
+
+        if (!newRoot) {
+            return false;
+        }
+
+        currentTarget.replaceWith(newRoot);
+
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(newRoot);
+        }
+
+        document.dispatchEvent(new CustomEvent('ajax-form:rendered', {
+            detail: { root: newRoot, selector: response.render_target },
+        }));
+
+        return true;
+    };
+
+    const submitDelete = () => {
+        if (!isAjaxDelete) {
+            form.submit();
+            return;
+        }
+
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: $(form).serialize(),
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function (response) {
+                if (response.status) {
+                    Alert.success(response.message || 'Deleted successfully.');
+
+                    if (response.redirect_url) {
+                        window.location.href = response.redirect_url;
+                    } else if (!replaceRenderedSection(response)) {
+                        window.location.reload();
+                    }
+                }
+            },
+            error: function (xhr) {
+                const message = xhr.responseJSON?.message || 'Unable to delete this record.';
+                Alert.error(message);
+            }
+        });
+    };
 
     const confirmDelete = (message = 'Delete record?') => {
         Alert.confirm({
@@ -13,7 +91,7 @@ $(document).on('click', '.delete-form', function (e) {
             cancelText: 'Cancel'
         }).then(result => {
             if (result.isConfirmed) {
-                form.submit();
+                submitDelete();
             }
         });
     };

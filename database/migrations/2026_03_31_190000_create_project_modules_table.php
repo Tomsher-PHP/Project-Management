@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('color')->nullable();
             $table->text('description')->nullable();
-            $table->bigInteger('estimated_time_seconds')->nullable();
+            $table->unsignedBigInteger('estimated_time_seconds')->nullable();
             $table->unsignedInteger('order')->default(1);
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

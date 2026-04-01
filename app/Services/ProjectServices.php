@@ -65,10 +65,12 @@ class ProjectServices
                 unset($data['project_status']);
             }
 
-            // Convert hours → seconds
-            if (isset($data['estimated_time_hrs'])) {
-                $data['estimated_time_seconds'] = $data['estimated_time_hrs'] * 3600;
-                unset($data['estimated_time_hrs']);
+            // Convert minutes -> seconds
+            if (array_key_exists('estimated_time_minutes', $data)) {
+                $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
+                    ? (int) $data['estimated_time_minutes'] * 60
+                    : null;
+                unset($data['estimated_time_minutes']);
             }
 
             // Default values

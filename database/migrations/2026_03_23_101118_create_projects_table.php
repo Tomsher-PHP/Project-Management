@@ -30,7 +30,7 @@ return new class extends Migration
             $table->date('customer_end_date')->nullable();
 
             // Estimation
-            $table->bigInteger('estimated_time_seconds')->nullable();
+            $table->unsignedBigInteger('estimated_time_seconds')->nullable();
 
             // Extra
             $table->string('domain')->nullable();

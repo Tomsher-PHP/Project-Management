@@ -3,9 +3,21 @@
     'id' => '',
     'checkRoute' => '',
     'formClass' => 'delete-form',
+    'ajax' => false,
+    'renderTarget' => '',
+    'renderMode' => 'replace_outer',
 ])
 
-<form action="{{ $action }}" method="POST" class="{{ $formClass }}" data-id="{{ $id }}" data-route="{{ $checkRoute }}">
+<form
+    action="{{ $action }}"
+    method="POST"
+    class="{{ $formClass }}"
+    data-id="{{ $id }}"
+    data-route="{{ $checkRoute }}"
+    @if ($ajax) data-ajax-delete="true" @endif
+    @if ($renderTarget) data-render-target="{{ $renderTarget }}" @endif
+    @if ($renderMode) data-render-mode="{{ $renderMode }}" @endif
+>
     @csrf
     @method('DELETE')
 

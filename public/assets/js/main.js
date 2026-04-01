@@ -160,16 +160,15 @@ function dateFilterAction(selector) {
 
 // Multi Step Modal in Signin Page
 function ModalExist() {
-  const modalContent = document.querySelector(".modal-content");
+  const modal = document.getElementById("multi-step-modal");
+  const modalContent = modal ? modal.querySelector(".modal-content") : null;
+  const modalOpen = document.querySelector('.modal-open[data-target="#multi-step-modal"]');
+  const modalOverlay = modal ? modal.querySelector(".modal-overlay") : null;
 
-  if (modalContent) {
-    // Multi Step Modal in Signin Page
-    const modal = document.getElementById("multi-step-modal");
+  if (modal && modalContent && modalOpen && modalOverlay) {
     const stepContents = modalContent.querySelectorAll(".step-content");
     const nextButtons = modalContent.querySelectorAll('[id$="-next"]');
     const cancelButtons = modalContent.querySelectorAll('[id$="-cancel"]');
-    const modalOpen = document.querySelector(".modal-open");
-    const modalOverlay = document.querySelector(".modal-overlay");
 
     // Show modal when trigger button is clicked
     modalOpen.addEventListener("click", () => {
@@ -316,4 +315,3 @@ themeToggle.addEventListener('click', function () {
     document.documentElement.classList.remove('dark');
   }
 });
-

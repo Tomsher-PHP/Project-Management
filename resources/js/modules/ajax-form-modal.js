@@ -1,4 +1,72 @@
 $(document).ready(function () {
+    const refreshEstimatedTimeInputs = (modal) => {
+        modal.find('[data-estimated-time]').each(function () {
+            this.dispatchEvent(new CustomEvent('estimated-time:refresh'));
+        });
+    };
+
+    const resetTomSelectFields = (modal) => {
+        modal.find('select.tom-select').each(function () {
+            if (this.tomselect) {
+                this.tomselect.clear(true);
+            } else {
+                this.value = '';
+            }
+        });
+    };
+
+    const resetModalForm = (modal) => {
+        modal.find('form')[0].reset();
+        resetTomSelectFields(modal);
+        refreshEstimatedTimeInputs(modal);
+        clearFormErrors(modal.find('.ajax-form'));
+    };
+
+    const replaceRenderedSection = (response) => {
+        if (!response.html || !response.render_target) {
+            return false;
+        }
+
+        const currentTarget = document.querySelector(response.render_target);
+
+        if (!currentTarget) {
+            return false;
+        }
+
+        if (response.render_mode === 'replace_inner') {
+            currentTarget.innerHTML = response.html;
+
+            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                window.Alpine.initTree(currentTarget);
+            }
+
+            document.dispatchEvent(new CustomEvent('ajax-form:rendered', {
+                detail: { root: currentTarget, selector: response.render_target },
+            }));
+
+            return true;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = response.html.trim();
+        const newRoot = wrapper.firstElementChild;
+
+        if (!newRoot) {
+            return false;
+        }
+
+        currentTarget.replaceWith(newRoot);
+
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(newRoot);
+        }
+
+        document.dispatchEvent(new CustomEvent('ajax-form:rendered', {
+            detail: { root: newRoot, selector: response.render_target },
+        }));
+
+        return true;
+    };
 
     $.ajaxSetup({
         headers: {
@@ -19,15 +87,13 @@ $(document).ready(function () {
         modal.find('.ajax-form').attr('action', url);
         modal.find('.form-method').val(method);
 
-        modal.find('form')[0].reset();
+        resetModalForm(modal);
 
         // Change title and button text
         modal.find('.modal-title').text(`Add ${module}`);
         modal.find('.submit-btn').text(`Create ${module}`);
 
         modal.removeClass('hidden');
-
-        clearFormErrors(modal.find('.ajax-form'),);
     });
 
     // OPEN EDIT
@@ -41,6 +107,7 @@ $(document).ready(function () {
 
         modal.find('.ajax-form').attr('action', url);
         modal.find('.form-method').val(method);
+        resetModalForm(modal);
 
         $.each($(this).data(), function (key, value) {
 
@@ -64,8 +131,6 @@ $(document).ready(function () {
         modal.find('.submit-btn').text('Update ' + $(this).data('module'));
 
         modal.removeClass('hidden');
-
-        clearFormErrors(modal.find('.ajax-form'),);
     });
 
     // CLOSE MODAL
@@ -73,7 +138,7 @@ $(document).ready(function () {
         let modal = $(this).closest('.modal-form');
 
         modal.addClass('hidden');
-        modal.find('form')[0].reset();
+        resetModalForm(modal);
     });
 
     // SUBMIT FORM
@@ -97,10 +162,13 @@ $(document).ready(function () {
                 if (response.status) {
                     Alert.success(response.message);
 
-                    // Redirect to route if provided
+                    const modal = form.closest('.modal-form');
+                    modal.addClass('hidden');
+                    resetModalForm(modal);
+
                     if (response.redirect_url) {
                         window.location.href = response.redirect_url;
-                    } else {
+                    } else if (!replaceRenderedSection(response)) {
                         location.reload();
                     }
                 }
