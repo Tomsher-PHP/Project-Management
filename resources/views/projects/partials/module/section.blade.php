@@ -86,12 +86,7 @@
             </div>
         </div>
 
-        <div
-            x-data="{ activeModuleId: @js($openModuleId ?? null) }"
-            class="space-y-6 overflow-y-auto px-5 py-5 pr-3 min-h-[42rem] max-h-[42rem]"
-            data-project-module-list
-            @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif
-        >
+        <div x-data="{ activeModuleId: @js($openModuleId ?? null) }" class="space-y-6 overflow-y-auto px-5 py-5 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
                 <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" data-module-color="{{ $module->color ?: '#D1D5DB' }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
@@ -185,12 +180,8 @@
                         </div>
                     </div>
 
-                    <div
-                        x-show="activeModuleId === {{ $module->id }}"
-                        x-transition
-                        class="px-4 py-5 sm:px-5"
-                    >
-                        <div x-data="{ activeSprintId: @js(($openModuleId ?? null) === $module->id ? ($openSprintId ?? null) : null) }">
+                    <div x-show="activeModuleId === {{ $module->id }}" x-transition class="px-4 py-5 sm:px-5">
+                        <div x-data="{ activeSprintId: @js(($openModuleId ?? null) === $module->id ? $openSprintId ?? null : null) }">
                             @include('projects.partials.module.sprints', ['projectSprints' => $module->projectSprints, 'module' => $module])
                         </div>
                     </div>

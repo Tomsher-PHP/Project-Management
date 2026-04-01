@@ -1,24 +1,14 @@
-<div
-    class="space-y-3 border-l-2 border-dashed border-bgray-200 pl-4 transition duration-200 dark:border-darkblack-400 md:pl-6"
-    data-project-sprint-list
->
+<div class="space-y-3 border-l-2 border-dashed border-bgray-200 pl-4 transition duration-200 dark:border-darkblack-400 md:pl-6" data-project-sprint-list>
     @forelse ($projectSprints as $projectSprint)
         @php
             $estimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
             $derivedSeconds = (int) ($projectSprint->derived_time_sec ?? 0);
             $timeDifferenceSeconds = $derivedSeconds - $estimatedSeconds;
             $hasTimeDifference = $timeDifferenceSeconds !== 0;
-            $timeDifferenceClasses = $timeDifferenceSeconds > 0
-                ? 'bg-red-50 text-red-500 dark:bg-darkblack-600 dark:text-red-400'
-                : 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-300';
+            $timeDifferenceClasses = $timeDifferenceSeconds > 0 ? 'bg-red-50 text-red-500 dark:bg-darkblack-600 dark:text-red-400' : 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-300';
             $timeDifferencePrefix = $timeDifferenceSeconds > 0 ? '+' : '-';
         @endphp
-        <div
-            class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500"
-            data-project-sprint-card
-            data-project-sprint-id="{{ $projectSprint->id }}"
-            style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}"
-        >
+        <div class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-sprint-card data-project-sprint-id="{{ $projectSprint->id }}" style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}">
             <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center gap-3">
                     <div class="min-w-0">
@@ -59,21 +49,8 @@
                     @endcan
 
                     @can('project_sprint.edit')
-                        <a
-                            href="javascript:void(0)"
-                            class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300"
-                            data-modal="project-sprint-modal"
-                            data-url="{{ route('projects.sprints.update', [$project, $projectSprint]) }}"
-                            data-method="PUT"
-                            data-module="Project Sprint"
-                            data-module-context="project-sprint"
-                            data-project_module_id="{{ $projectSprint->project_module_id }}"
-                            data-name="{{ $projectSprint->name }}"
-                            data-color="{{ $projectSprint->color }}"
-                            data-description="{{ $projectSprint->description }}"
-                            data-estimated_time_minutes="{{ $projectSprint->estimated_time_minutes }}"
-                            title="Edit sprint"
-                        >
+                        <a href="javascript:void(0)" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-modal="project-sprint-modal" data-url="{{ route('projects.sprints.update', [$project, $projectSprint]) }}" data-method="PUT" data-module="Project Sprint"
+                            data-module-context="project-sprint" data-project_module_id="{{ $projectSprint->project_module_id }}" data-name="{{ $projectSprint->name }}" data-color="{{ $projectSprint->color }}" data-description="{{ $projectSprint->description }}" data-estimated_time_minutes="{{ $projectSprint->estimated_time_minutes }}" title="Edit sprint">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                             </svg>
