@@ -59,6 +59,104 @@ const initializeProjectModuleModal = () => {
     modal.dataset.projectModuleModalInitialized = 'true';
 };
 
+const initializeProjectSprintModal = () => {
+    const modal = document.getElementById('project-sprint-modal');
+
+    if (!modal || modal.dataset.projectSprintModalInitialized === 'true') {
+        return;
+    }
+
+    const librarySelect = modal.querySelector('#library_sprint_id');
+    const nameInput = modal.querySelector('[name="name"]');
+    const colorInput = modal.querySelector('[name="color"]');
+    const descriptionInput = modal.querySelector('[name="description"]');
+    const parentModuleInput = modal.querySelector('#project_sprint_module_id');
+    const form = modal.querySelector('form');
+    const sprintStoreUrlTemplate = modal.querySelector('#project_sprint_store_url_template')?.value || '';
+    const descriptionCount = modal.querySelector('[data-project-sprint-description-count]');
+
+    if (!librarySelect || !nameInput || !colorInput || !descriptionInput || !parentModuleInput || !form || !sprintStoreUrlTemplate) {
+        modal.dataset.projectSprintModalInitialized = 'true';
+        return;
+    }
+
+    const updateDescriptionCount = () => {
+        if (descriptionCount) {
+            descriptionCount.textContent = String(descriptionInput.value.length);
+        }
+    };
+
+    const fillFromLibraryOption = () => {
+        const selectedOption = librarySelect.options[librarySelect.selectedIndex];
+
+        if (!selectedOption || !selectedOption.value) {
+            updateDescriptionCount();
+            return;
+        }
+
+        nameInput.value = selectedOption.dataset.name || '';
+        colorInput.value = selectedOption.dataset.color || '#000000';
+        descriptionInput.value = selectedOption.dataset.description || '';
+        updateDescriptionCount();
+    };
+
+    descriptionInput.addEventListener('input', updateDescriptionCount);
+    librarySelect.addEventListener('change', fillFromLibraryOption);
+    updateDescriptionCount();
+
+    const syncSprintFormAction = () => {
+        if (modal.dataset.projectSprintMode !== 'create') {
+            return;
+        }
+
+        const moduleId = parentModuleInput.value || '';
+
+        if (!moduleId) {
+            return;
+        }
+
+        form.setAttribute('action', sprintStoreUrlTemplate.replace('__MODULE__', moduleId));
+    };
+
+    parentModuleInput.addEventListener('change', syncSprintFormAction);
+
+    document.addEventListener('click', function (event) {
+        const createButton = event.target.closest('.modal-open[data-module-context="project-sprint"]');
+        const editButton = event.target.closest('.edit-record[data-module-context="project-sprint"]');
+
+        if (!createButton && !editButton) {
+            return;
+        }
+
+        window.setTimeout(() => {
+            librarySelect.value = '';
+
+            if (librarySelect.tomselect) {
+                librarySelect.tomselect.clear(true);
+            }
+
+            if (createButton) {
+                modal.dataset.projectSprintMode = 'create';
+                parentModuleInput.value = createButton.dataset.projectModuleId || '';
+
+                if (parentModuleInput.tomselect) {
+                    parentModuleInput.tomselect.setValue(createButton.dataset.projectModuleId || '', true);
+                }
+
+                syncSprintFormAction();
+            }
+
+            if (editButton) {
+                modal.dataset.projectSprintMode = 'edit';
+            }
+
+            updateDescriptionCount();
+        }, 0);
+    });
+
+    modal.dataset.projectSprintModalInitialized = 'true';
+};
+
 const initializeProjectModuleSection = (section = document.querySelector('[data-project-module-section]')) => {
     if (!section || section.dataset.projectModuleSectionInitialized === 'true') {
         return;
@@ -78,7 +176,6 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
 
     const getModuleCards = () => Array.from(moduleList.querySelectorAll('[data-project-module-card]'));
     const getModuleIds = () => getModuleCards().map((card) => Number(card.dataset.moduleId));
-
     const replaceRenderedSection = (response) => {
         if (!response.html || !response.render_target) {
             return false;
@@ -272,7 +369,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             const badge = card.querySelector('[data-project-module-order-badge]');
 
             if (badge) {
-                badge.textContent = `Order ${index + 1}`;
+                badge.textContent = String(index + 1);
             }
         });
     };
@@ -440,6 +537,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
 
 document.addEventListener('DOMContentLoaded', function () {
     initializeProjectModuleModal();
+    initializeProjectSprintModal();
     initializeProjectModuleSection();
 });
 
@@ -449,6 +547,7 @@ document.addEventListener('project-tab:loaded', function (event) {
     }
 
     initializeProjectModuleModal();
+    initializeProjectSprintModal();
     initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-module-section]'));
 });
 

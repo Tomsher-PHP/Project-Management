@@ -282,7 +282,14 @@ class ProjectController extends Controller
     private function renderModulesTab(Project $project): string
     {
         $projectModules = $project->projectModules()
-            ->with(['addedBy', 'updatedBy'])
+            ->with([
+                'addedBy',
+                'updatedBy',
+                'projectSprints' => fn ($query) => $query
+                    ->with(['addedBy', 'updatedBy'])
+                    ->orderBy('order')
+                    ->orderBy('id'),
+            ])
             ->orderBy('order')
             ->orderBy('id')
             ->get();

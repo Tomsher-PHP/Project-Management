@@ -126,6 +126,8 @@ $(document).ready(function () {
             }
         });
 
+        refreshEstimatedTimeInputs(modal);
+
         // Change title and button text
         modal.find('.modal-title').text('Edit ' + $(this).data('module'));
         modal.find('.submit-btn').text('Update ' + $(this).data('module'));

@@ -15,6 +15,7 @@ use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectModuleController;
+use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\RolePermissionController;
@@ -208,6 +209,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
         Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
+        Route::post('modules/{projectModule}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.modules.sprints.store');
+        Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
+        Route::patch('modules/{projectModule}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.modules.sprints.reorder');
         Route::patch('modules/reorder', [ProjectModuleController::class, 'reorder'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.reorder');
         Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.update');
         Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project_module.delete', 'can:update,project'])->name('projects.modules.destroy');

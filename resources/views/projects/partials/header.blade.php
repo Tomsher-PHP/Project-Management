@@ -164,10 +164,7 @@
                         <ul class="max-h-72 overflow-y-auto">
                             <li>
                                 <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-header-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-current-value="{{ $project->project_stage_id ?? '' }}">
-                                    <span>No Stage</span>
-                                    @if (blank($project->project_stage_id))
-                                        <span class="text-success-400 dark:text-success-300">Current</span>
-                                    @endif
+                                    <span @if (blank($project->project_stage_id)) class="text-success-400 dark:text-success-300" @endif>No Stage</span>
                                 </button>
                             </li>
                             @foreach ($projectStages as $stageOption)

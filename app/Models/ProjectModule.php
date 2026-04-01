@@ -17,6 +17,7 @@ class ProjectModule extends Model
         'color',
         'description',
         'estimated_time_seconds',
+        'derived_time_sec',
         'order',
         'added_by',
         'updated_by',
@@ -25,6 +26,7 @@ class ProjectModule extends Model
     protected $casts = [
         'project_id' => 'integer',
         'estimated_time_seconds' => 'integer',
+        'derived_time_sec' => 'integer',
         'order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -56,6 +58,11 @@ class ProjectModule extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function projectSprints()
+    {
+        return $this->hasMany(ProjectSprint::class)->orderBy('order');
+    }
+
     public function getEstimatedTimeFormattedAttribute()
     {
         $seconds = $this->estimated_time_seconds ?? 0;
@@ -71,5 +78,22 @@ class ProjectModule extends Model
         return $this->estimated_time_seconds !== null
             ? (int) round($this->estimated_time_seconds / 60)
             : null;
+    }
+
+    public function refreshDerivedTimeSec(): void
+    {
+        $derivedSeconds = $this->projectSprints()
+            ->get(['estimated_time_seconds', 'derived_time_sec'])
+            ->sum(function (ProjectSprint $projectSprint) {
+                $taskDerivedSeconds = (int) ($projectSprint->derived_time_sec ?? 0);
+
+                return $taskDerivedSeconds > 0
+                    ? $taskDerivedSeconds
+                    : (int) ($projectSprint->estimated_time_seconds ?? 0);
+            });
+
+        $this->updateQuietly([
+            'derived_time_sec' => (int) $derivedSeconds,
+        ]);
     }
 }

@@ -44,8 +44,36 @@ function initializeEstimatedTimeInput(wrapper) {
     syncFromTotalMinutes();
 }
 
+function initializeEstimatedTimeInputs(root = document) {
+    if (!root) {
+        return;
+    }
+
+    const wrappers = root.querySelectorAll
+        ? root.querySelectorAll('[data-estimated-time]')
+        : [];
+
+    wrappers.forEach(initializeEstimatedTimeInput);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-estimated-time]').forEach(initializeEstimatedTimeInput);
+    initializeEstimatedTimeInputs();
 });
 
-export { initializeEstimatedTimeInput };
+document.addEventListener('project-tab:loaded', (event) => {
+    if (!event.detail?.panel) {
+        return;
+    }
+
+    initializeEstimatedTimeInputs(event.detail.panel);
+});
+
+document.addEventListener('ajax-form:rendered', (event) => {
+    if (!event.detail?.root) {
+        return;
+    }
+
+    initializeEstimatedTimeInputs(event.detail.root);
+});
+
+export { initializeEstimatedTimeInput, initializeEstimatedTimeInputs };

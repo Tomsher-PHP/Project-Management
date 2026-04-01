@@ -1,4 +1,4 @@
-@foreach ($previewTasks as $taskName)
+@forelse ($previewTasks as $taskName)
     <div class="flex flex-col gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 md:flex-row md:items-center md:justify-between">
         <div class="flex min-w-0 items-start gap-3">
             <button type="button" class="inline-flex h-8 w-8 shrink-0 cursor-move items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
@@ -31,4 +31,8 @@
             @endcan
         </div>
     </div>
-@endforeach
+@empty
+    <div class="rounded-xl border border-dashed border-bgray-300 bg-white px-4 py-4 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+        No tasks added yet.
+    </div>
+@endforelse

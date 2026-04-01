@@ -186,11 +186,18 @@ class ProjectModuleController extends Controller
             });
     }
 
-    private function renderSection(Project $project): string
+    private function renderSection(Project $project, ?int $openModuleId = null, ?int $openSprintId = null): string
     {
         $project->load([
             'projectModules' => fn ($query) => $query
-                ->with(['addedBy', 'updatedBy'])
+                ->with([
+                    'addedBy',
+                    'updatedBy',
+                    'projectSprints' => fn ($sprintQuery) => $sprintQuery
+                        ->with(['addedBy', 'updatedBy'])
+                        ->orderBy('order')
+                        ->orderBy('id'),
+                ])
                 ->orderBy('order')
                 ->orderBy('id'),
         ]);
@@ -199,6 +206,8 @@ class ProjectModuleController extends Controller
             'project' => $project,
             'projectModules' => $project->projectModules,
             'agileSprints' => AgileSprint::active()->orderBy('order', 'asc')->get(),
+            'openModuleId' => $openModuleId,
+            'openSprintId' => $openSprintId,
             'trashedProjectModules' => ProjectModule::onlyTrashed()
                 ->where('project_id', $project->id)
                 ->orderByDesc('deleted_at')
