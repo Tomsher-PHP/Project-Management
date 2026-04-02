@@ -15,19 +15,15 @@ class DummyDataSeeder extends Seeder
      */
     public function run(): void
     {
-        //truncate tables
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        // DB::table('model_has_permissions')->truncate();
-        // DB::table('model_has_roles')->truncate();
-        // DB::table('role_has_permissions')->truncate();
-        // DB::table('users')->truncate();
-        // DB::table('user_details')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         $this->call([
             AdminUserSeeder::class,
             DummyUserSeeder::class,
         ]);
+
+        DB::transaction(function () {
+            Project::withTrashed()->forceDelete();
+            Customer::withTrashed()->forceDelete();
+        });
 
         Customer::factory(12)->create();
         Project::factory(12)->create();

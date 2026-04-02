@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\ProjectServices;
 use App\Services\UserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -73,16 +74,45 @@ class ProjectController extends Controller
 
     public function edit(Project $project, ProjectServices $service)
     {
-        $projectActivities = $project->activities()
-            ->with('causer')
-            ->latest()
-            ->limit(3)
-            ->get();
-
         return view('projects.detail-page', array_merge([
             'project' => $project,
-            'projectActivities' => $projectActivities,
+            'projectActivitiesCount' => $project->activities()->count(),
+            'projectCommentsCount' => $project->comments()->count(),
         ], $this->getProjectHeaderData($project, $service)));
+    }
+
+    public function activityModal(Project $project): JsonResponse
+    {
+        $activities = $project->activities()
+            ->with('causer')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('projects.partials.modals.activity-content', [
+                'project' => $project,
+                'activities' => $activities,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function commentsModal(Project $project): JsonResponse
+    {
+        $comments = $project->comments()
+            ->with('user.primaryAttachment')
+            ->latest()
+            ->limit(30)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('projects.partials.modals.comments-content', [
+                'project' => $project,
+                'comments' => $comments,
+            ])->render(),
+        ], Response::HTTP_OK);
     }
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)

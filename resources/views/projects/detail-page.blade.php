@@ -7,22 +7,18 @@
             $priority = config('constants.project_priorities')[$project->priority] ?? null;
         @endphp
 
-        <div class="2xl:flex 2xl:space-x-[30px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}">
+        <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}">
+            <div id="project-header">
+                @include('projects.partials.header', [
+                    'projectTimeline' => $projectTimeline,
+                    'customerTimeline' => $customerTimeline,
+                ])
+            </div>
 
-                <!-- PROJECT HEADER -->
-                <div id="project-header">
-                    @include('projects.partials.header', [
-                        'projectTimeline' => $projectTimeline,
-                        'customerTimeline' => $customerTimeline,
-                    ])
-                </div>
-
-                <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-
-                    <!-- Tabs Header -->
-                    <div class="border-b border-bgray-300 dark:border-darkblack-400 mb-6">
-                        <div class="flex space-x-6">
+            <div class="rounded-[20px] bg-white px-5 py-5 shadow-sm dark:bg-darkblack-600 xl:px-7 xl:py-6">
+                <div class="mb-6 flex flex-col gap-4 border-b border-bgray-200 pb-5 dark:border-darkblack-400 xl:flex-row xl:items-center xl:justify-between">
+                    <div class="overflow-x-auto">
+                        <div class="flex min-w-max items-center gap-6">
                             <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-success-300 pb-3 font-semibold text-success-300 transition">
                                 Overview
                             </button>
@@ -55,74 +51,57 @@
                         </div>
                     </div>
 
-                    <!-- TAB CONTENT -->
-                    <div data-project-tab-panels>
-                        <div data-project-tab-panel="overview" data-loaded="true">
-                            @include('projects.partials.tabs.overview')
-                        </div>
-
-                        @if ($project->is_agile)
-                            <div class="hidden" data-project-tab-panel="modules" data-loaded="false"></div>
-                        @endif
-
-                        <div class="hidden" data-project-tab-panel="tasks" data-loaded="false"></div>
-                        <div class="hidden" data-project-tab-panel="team" data-loaded="false"></div>
-                        <div class="hidden" data-project-tab-panel="scope" data-loaded="false"></div>
-                        <div class="hidden" data-project-tab-panel="notes" data-loaded="false"></div>
-                        <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
-                    </div>
-                </div>
-            </section>
-            <!-- Activity log section -->
-
-            <!-- Project comment section -->
-            <section class="flex w-full flex-col gap-6 2xl:w-[400px]">
-                @can('activity_log.view')
-                    <x-activity-log.section title="Activity Log" :activities="$projectActivities" empty-message="No activity logged for this project yet." :view-all-url="route('activity.log', ['subject_type' => 'project', 'subject_id' => $project->id])" />
-                @endcan
-
-
-                <div class="flex w-full flex-col justify-between rounded-lg bg-white dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <div class="flex justify-between border-b border-bgray-300 px-[26px] py-6 dark:border-darkblack-400">
-                        <h1 class="text-2xl font-semibold text-bgray-900 dark:text-white">
-                            Comments
-                        </h1>
-                    </div>
-                    <div class="w-full px-5 py-6 lg:px-[35px] lg:py-[38px]">
-                        <div class="mb-5 flex flex-col space-y-[32px]">
-                            <div class="flex justify-start">
-                                <div class="flex items-end space-x-3">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="h-[35px] w-[36px] overflow-hidden rounded-full">
-                                            <img src="{{ asset('assets/images/avatar/user-1.png') }}" alt="avater" class="h-full w-full object-cover" />
-                                        </div>
-                                        <div class="rounded-lg bg-bgray-100 p-3 dark:bg-darkblack-500">
-                                            <p class="text-sm font-medium text-bgray-900 dark:text-white">
-                                                First comment of the project.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex h-[58px] w-full items-center space-x-4">
-                            <div class="flex h-full w-full items-center justify-between rounded-lg border border-transparent bg-bgray-100 px-5 focus-within:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 lg:w-[318px]">
-                                <label class="w-full">
-                                    <input type="text" placeholder="Type your comment..." class="w-full border-none bg-bgray-100 p-0 pl-[15px] font-medium placeholder:text-sm placeholder:font-medium placeholder:text-bgray-400 focus:outline-none focus:ring-0 dark:bg-darkblack-500 dark:text-white" />
-                                </label>
-                            </div>
-                            <button type="button">
-                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.3894 0H2.61094C0.339326 0 -0.844596 2.63548 0.696196 4.26234L3.78568 7.52441C4.23 7.99355 4.47673 8.60858 4.47673 9.24704V15.4553C4.47673 17.8735 7.61615 18.9233 9.13941 17.0145L19.4463 4.09894C20.7775 2.43071 19.5578 0 17.3894 0Z" fill="#22C55E" />
-                                </svg>
+                    <div class="flex flex-wrap items-center gap-3">
+                        @can('activity_log.view')
+                            <button type="button" data-project-insights-trigger data-project-insights-url="{{ route('projects.activity.modal', $project) }}" class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-2.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white text-bgray-700 shadow-sm dark:bg-darkblack-600 dark:text-bgray-200">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M15.75 9C15.75 12.7279 12.7279 15.75 9 15.75C5.27208 15.75 2.25 12.7279 2.25 9C2.25 5.27208 5.27208 2.25 9 2.25C12.7279 2.25 15.75 5.27208 15.75 9Z" stroke="currentColor" stroke-width="1.6" />
+                                    </svg>
+                                </span>
+                                <span>Activity</span>
+                                <span class="inline-flex min-w-[28px] items-center justify-center rounded-full bg-white px-2 py-1 text-xs font-bold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                                    {{ $projectActivitiesCount }}
+                                </span>
                             </button>
-                        </div>
+                        @endcan
+
+                        <button type="button" data-project-insights-trigger data-project-insights-url="{{ route('projects.comments.modal', $project) }}" class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-2.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white text-bgray-700 shadow-sm dark:bg-darkblack-600 dark:text-bgray-200">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                    <path d="M5.25 9.75H10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                    <path d="M6.75 14.25L4.13388 15.9931C3.80201 16.2143 3.375 15.9764 3.375 15.5776V4.5C3.375 3.67157 4.04657 3 4.875 3H13.125C13.9534 3 14.625 3.67157 14.625 4.5V12C14.625 12.8284 13.9534 13.5 13.125 13.5H7.58211C7.28548 13.5 6.99551 13.5879 6.75 13.7525V14.25Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <span>Comments</span>
+                            <span class="inline-flex min-w-[28px] items-center justify-center rounded-full bg-white px-2 py-1 text-xs font-bold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                                {{ $projectCommentsCount }}
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </section>
-        </div>
 
+                <div data-project-tab-panels>
+                    <div data-project-tab-panel="overview" data-loaded="true">
+                        @include('projects.partials.tabs.overview')
+                    </div>
+
+                    @if ($project->is_agile)
+                        <div class="hidden" data-project-tab-panel="modules" data-loaded="false"></div>
+                    @endif
+
+                    <div class="hidden" data-project-tab-panel="tasks" data-loaded="false"></div>
+                    <div class="hidden" data-project-tab-panel="team" data-loaded="false"></div>
+                    <div class="hidden" data-project-tab-panel="scope" data-loaded="false"></div>
+                    <div class="hidden" data-project-tab-panel="notes" data-loaded="false"></div>
+                    <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
+                </div>
+            </div>
+        </section>
+
+        @include('projects.partials.modals.insights-modal')
     </main>
 @endsection
 
