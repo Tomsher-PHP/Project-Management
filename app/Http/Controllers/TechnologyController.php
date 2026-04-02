@@ -53,10 +53,10 @@ class TechnologyController extends Controller
 
     public function destroy(Technology $technology)
     {
-        if ($technology->is_default) {
+        if ($technology->is_system) {
             return redirect()
                 ->route('settings.technologies.index')
-                ->with('error', 'Default technology cannot be deleted.');
+                ->with('error', 'System technology cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $technology->delete());

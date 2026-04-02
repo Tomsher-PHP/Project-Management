@@ -6,6 +6,8 @@ use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectModule extends Model
 {
@@ -16,8 +18,14 @@ class ProjectModule extends Model
         'name',
         'color',
         'description',
+        'status_id',
+        'owner_id',
+        'start_date',
+        'end_date',
+        'completed_at',
         'estimated_time_seconds',
-        'derived_time_sec',
+        'derived_time_seconds',
+        'actual_time_seconds',
         'sort_order',
         'added_by',
         'updated_by',
@@ -25,8 +33,14 @@ class ProjectModule extends Model
 
     protected $casts = [
         'project_id' => 'integer',
+        'status_id' => 'integer',
+        'owner_id' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'completed_at' => 'datetime',
         'estimated_time_seconds' => 'integer',
-        'derived_time_sec' => 'integer',
+        'derived_time_seconds' => 'integer',
+        'actual_time_seconds' => 'integer',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -46,6 +60,16 @@ class ProjectModule extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(AgileModuleStatus::class, 'status_id');
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function addedBy()
@@ -80,20 +104,63 @@ class ProjectModule extends Model
             : null;
     }
 
-    public function refreshDerivedTimeSec(): void
+    public function getDerivedTimeFormattedAttribute(): string
+    {
+        return $this->formatSeconds($this->derived_time_seconds);
+    }
+
+    public function getActualTimeFormattedAttribute(): string
+    {
+        return $this->formatSeconds($this->actual_time_seconds);
+    }
+
+    public function refreshTrackedTimeMetrics(): void
     {
         $derivedSeconds = $this->projectSprints()
-            ->get(['estimated_time_seconds', 'derived_time_sec'])
+            ->get(['estimated_time_seconds', 'derived_time_seconds'])
             ->sum(function (ProjectSprint $projectSprint) {
-                $taskDerivedSeconds = (int) ($projectSprint->derived_time_sec ?? 0);
+                $taskDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
 
                 return $taskDerivedSeconds > 0
                     ? $taskDerivedSeconds
                     : (int) ($projectSprint->estimated_time_seconds ?? 0);
             });
 
+        $actualSeconds = 0;
+
+        if (
+            Schema::hasTable('project_tasks')
+            && Schema::hasColumn('project_tasks', 'project_sprint_id')
+            && Schema::hasColumn('project_tasks', 'actual_time_seconds')
+            && Schema::hasTable('project_sprints')
+        ) {
+            $query = DB::table('project_tasks')
+                ->join('project_sprints', 'project_sprints.id', '=', 'project_tasks.project_sprint_id')
+                ->where('project_sprints.project_module_id', $this->id);
+
+            if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+                $query->whereNull('project_tasks.deleted_at');
+            }
+
+            if (Schema::hasColumn('project_sprints', 'deleted_at')) {
+                $query->whereNull('project_sprints.deleted_at');
+            }
+
+            $actualSeconds = (int) $query->sum('project_tasks.actual_time_seconds');
+        }
+
         $this->updateQuietly([
-            'derived_time_sec' => (int) $derivedSeconds,
+            'derived_time_seconds' => (int) $derivedSeconds,
+            'actual_time_seconds' => (int) $actualSeconds,
         ]);
+    }
+
+    private function formatSeconds(?int $seconds): string
+    {
+        $totalSeconds = max(0, (int) ($seconds ?? 0));
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+
+        return sprintf('%02d h : %02d m', $hours, $minutes);
     }
 }

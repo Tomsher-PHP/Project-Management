@@ -46,10 +46,6 @@ class AgileSprintController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if (!empty($data['is_default'])) {
-            AgileSprint::query()->update(['is_default' => false]);
-        }
-
         $agileSprint = AgileSprint::create($data);
 
         return response()->json([
@@ -74,10 +70,10 @@ class AgileSprintController extends Controller
 
     public function destroy(AgileSprint $agileSprint)
     {
-        if ($agileSprint->is_default) {
+        if ($agileSprint->is_system) {
             return redirect()
                 ->route('settings.agile-sprints.index')
-                ->with('error', 'Default agile sprint cannot be deleted.');
+                ->with('error', 'System agile sprint cannot be deleted.');
         }
 
         $agileSprint->delete();

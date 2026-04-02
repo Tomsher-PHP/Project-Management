@@ -11,6 +11,12 @@
 
             return sprintf('%02d h : %02d m', $hours, $minutes);
         };
+        $formatDate = function ($date): string {
+            return $date ? $date->format('d M Y') : '--';
+        };
+        $formatDateTime = function ($date): string {
+            return $date ? $date->format('d M Y h:i A') : '--';
+        };
     @endphp
 
     <div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -107,11 +113,14 @@
                                                 $sprintCount = $module->projectSprints->count();
                                                 $taskPreviewCount = 0;
                                                 $estimatedSeconds = (int) ($module->estimated_time_seconds ?? 0);
-                                                $derivedSeconds = (int) ($module->derived_time_sec ?? 0);
+                                                $derivedSeconds = (int) ($module->derived_time_seconds ?? 0);
+                                                $actualSeconds = (int) ($module->actual_time_seconds ?? 0);
                                                 $timeDifferenceSeconds = $derivedSeconds - $estimatedSeconds;
                                                 $hasTimeDifference = $timeDifferenceSeconds !== 0;
                                                 $timeDifferenceClasses = $timeDifferenceSeconds > 0 ? 'bg-red-50 text-red-500 dark:bg-darkblack-500 dark:text-red-400' : 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300';
                                                 $timeDifferencePrefix = $timeDifferenceSeconds > 0 ? '+' : '-';
+                                                $ownerName = $module->owner?->name ?? 'Not assigned';
+                                                $statusName = $module->status?->name ?? 'No status';
                                             @endphp
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $module->color ?: '#E5E7EB' }}"></span>
@@ -119,6 +128,7 @@
                                                 <span title="Module sort order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-module-order-badge>{{ $module->sort_order }}</span>
                                                 <span title="Estimated Time: {{ $formatDuration($estimatedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $formatDuration($estimatedSeconds) }}</span>
                                                 <span title="Derived Time: {{ $formatDuration($derivedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $formatDuration($derivedSeconds) }}</span>
+                                                <span title="Actual Time: {{ $formatDuration($actualSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $formatDuration($actualSeconds) }}</span>
                                                 @if ($hasTimeDifference)
                                                     <span title="{{ $timeDifferenceSeconds > 0 ? 'Exceeds estimate by' : 'Under estimate by' }} {{ $formatDuration(abs($timeDifferenceSeconds)) }}" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $timeDifferenceClasses }}">
                                                         {{ $timeDifferencePrefix }}{{ $formatDuration(abs($timeDifferenceSeconds)) }}
@@ -142,6 +152,16 @@
                                                     </button>
                                                 @endif
                                             </div>
+
+                                            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
+                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Status: {{ $statusName }}</span>
+                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Owner: {{ $ownerName }}</span>
+                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Start: {{ $formatDate($module->start_date) }}</span>
+                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">End: {{ $formatDate($module->end_date) }}</span>
+                                                @if ($module->completed_at)
+                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Completed: {{ $formatDateTime($module->completed_at) }}</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -160,7 +180,7 @@
 
                                 @can('project_module.edit')
                                     <a href="javascript:void(0)" class="edit-record inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-modal="project-module-modal" data-url="{{ route('projects.modules.update', [$project, $module]) }}" data-name="{{ $module->name }}"
-                                        data-color="{{ $module->color }}" data-description="{{ $module->description }}" data-estimated_time_minutes="{{ $module->estimated_time_minutes }}" data-method="PUT" data-module="Project Module" data-module-context="project-module">
+                                        data-color="{{ $module->color }}" data-description="{{ $module->description }}" data-status_id="{{ $module->status_id }}" data-owner_id="{{ $module->owner_id }}" data-start_date="{{ $module->start_date?->format('Y-m-d') }}" data-end_date="{{ $module->end_date?->format('Y-m-d') }}" data-completed_at="{{ $module->completed_at?->format('Y-m-d\\TH:i') }}" data-estimated_time_minutes="{{ $module->estimated_time_minutes }}" data-method="PUT" data-module="Project Module" data-module-context="project-module">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                         </svg>

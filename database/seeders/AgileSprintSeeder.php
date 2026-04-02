@@ -38,7 +38,7 @@ class AgileSprintSeeder extends Seeder
                 'color' => $sprint['color'],
                 'description' => $sprint['description'],
                 'sort_order' => $key + 1,
-                'is_default' => 1,
+                'is_system' => 1,
                 'is_active' => 1,
             ]);
         }

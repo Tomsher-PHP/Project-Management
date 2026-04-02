@@ -7,6 +7,8 @@ use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
+use App\Models\ProjectStatus;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,11 +64,11 @@ class ProjectSprintController extends Controller
 
             if ($moduleChanged && $originalProjectModule) {
                 $this->normalizeOrder($originalProjectModule);
-                $originalProjectModule->refreshDerivedTimeSec();
+                $originalProjectModule->refreshTrackedTimeMetrics();
             }
 
             $this->normalizeOrder($targetProjectModule);
-            $targetProjectModule->refreshDerivedTimeSec();
+            $targetProjectModule->refreshTrackedTimeMetrics();
         });
 
         $projectSprint->refresh();
@@ -155,6 +157,8 @@ class ProjectSprintController extends Controller
                 ->with([
                     'addedBy',
                     'updatedBy',
+                    'status',
+                    'owner',
                     'projectSprints' => fn ($sprintQuery) => $sprintQuery
                         ->with(['addedBy', 'updatedBy'])
                         ->orderBy('sort_order')
@@ -168,6 +172,8 @@ class ProjectSprintController extends Controller
             'project' => $project,
             'projectModules' => $project->projectModules,
             'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
+            'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
+            'assignableUsers' => app(UserService::class)->getAccessibleUsers(auth()->user()),
             'openModuleId' => $openModuleId,
             'openSprintId' => $openSprintId,
             'trashedProjectModules' => ProjectModule::onlyTrashed()

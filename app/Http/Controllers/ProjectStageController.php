@@ -52,10 +52,10 @@ class ProjectStageController extends Controller
 
     public function destroy(ProjectStage $projectStage)
     {
-        if ($projectStage->is_default) {
+        if ($projectStage->is_system) {
             return redirect()
                 ->route('settings.project_stages.index')
-                ->with('error', 'Default project stage cannot be deleted.');
+                ->with('error', 'System project stage cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $projectStage->delete());

@@ -16,7 +16,7 @@ class Industry extends Model
         'name',
         'parent_id',
         'sort_order',
-        'is_default',
+        'is_system',
         'is_active'
     ];
 
@@ -33,7 +33,7 @@ class Industry extends Model
             'name' => 'string',
             'parent_id' => 'integer',
             'sort_order' => 'integer',
-            'is_default' => 'boolean',
+            'is_system' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

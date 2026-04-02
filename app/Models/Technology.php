@@ -15,7 +15,7 @@ class Technology extends Model
     protected $fillable = [
         'name',
         'sort_order',
-        'is_default',
+        'is_system',
         'is_active',
     ];
 
@@ -29,7 +29,7 @@ class Technology extends Model
     protected $casts = [
         'name' => 'string',
         'sort_order' => 'integer',
-        'is_default' => 'boolean',
+        'is_system' => 'boolean',
         'is_active' => 'boolean',
     ];
 

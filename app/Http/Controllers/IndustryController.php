@@ -53,10 +53,10 @@ class IndustryController extends Controller
 
     public function destroy(Industry $industry)
     {
-        if ($industry->is_default) {
+        if ($industry->is_system) {
             return redirect()
                 ->route('settings.industries.index')
-                ->with('error', 'Default industry cannot be deleted.');
+                ->with('error', 'System industry cannot be deleted.');
         }
         // Check if this industry has children
         $hasChildren = Industry::where('parent_id', $industry->id)->exists();

@@ -26,7 +26,11 @@ class ProjectStatusRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('project_statuses', 'name')->ignore($id)],
+            'code' => ['required', 'string', 'max:255', Rule::unique('project_statuses', 'code')->ignore($id)],
+            'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
+            'type' => ['required', 'string', Rule::in(['open', 'in_progress', 'closed'])],
             'sort_order' => ['required', 'numeric'],
+            'is_completed' => ['nullable', 'boolean'],
         ];
     }
 }

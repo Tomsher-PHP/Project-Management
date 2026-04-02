@@ -16,7 +16,7 @@ class AgileSprint extends Model
         'color',
         'description',
         'sort_order',
-        'is_default',
+        'is_system',
         'is_active',
     ];
 
@@ -36,7 +36,7 @@ class AgileSprint extends Model
         'color' => 'string',
         'description' => 'string',
         'sort_order' => 'integer',
-        'is_default' => 'boolean',
+        'is_system' => 'boolean',
         'is_active' => 'boolean',
     ];
 

@@ -259,8 +259,11 @@
         <div>
             <label for="project_status" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Status <x-red-star /></label>
             <select name="project_status" id="project_status" class="tom-select-no-search w-full">
+                @php
+                    $defaultProjectStatusId = old('project_status', $statuses->firstWhere('is_default', true)?->id);
+                @endphp
                 @foreach ($statuses as $status)
-                    <option value="{{ $status->id }}">{{ $status->name }}</option>
+                    <option value="{{ $status->id }}" {{ (string) $defaultProjectStatusId === (string) $status->id ? 'selected' : '' }}>{{ $status->name }}{{ $status->type ? ' (' . str_replace('_', ' ', ucfirst($status->type)) . ')' : '' }}</option>
                 @endforeach
             </select>
             @error('project_status')

@@ -2,7 +2,7 @@
     @forelse ($projectSprints as $projectSprint)
         @php
             $estimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
-            $derivedSeconds = (int) ($projectSprint->derived_time_sec ?? 0);
+            $derivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
             $timeDifferenceSeconds = $derivedSeconds - $estimatedSeconds;
             $hasTimeDifference = $timeDifferenceSeconds !== 0;
             $timeDifferenceClasses = $timeDifferenceSeconds > 0 ? 'bg-red-50 text-red-500 dark:bg-darkblack-600 dark:text-red-400' : 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-300';

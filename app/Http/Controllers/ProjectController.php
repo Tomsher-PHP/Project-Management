@@ -7,6 +7,7 @@ use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
 use App\Models\AgileModule;
+use App\Models\AgileModuleStatus;
 use App\Models\AgileSprint;
 use App\Models\Customer;
 use App\Models\Project;
@@ -285,6 +286,8 @@ class ProjectController extends Controller
             ->with([
                 'addedBy',
                 'updatedBy',
+                'status',
+                'owner',
                 'projectSprints' => fn ($query) => $query
                     ->with(['addedBy', 'updatedBy'])
                     ->orderBy('sort_order')
@@ -296,6 +299,8 @@ class ProjectController extends Controller
 
         $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
+        $agileModuleStatuses = AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get();
+        $assignableUsers = app(UserService::class)->getAccessibleUsers(auth()->user());
         $trashedProjectModules = ProjectModule::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
@@ -306,6 +311,8 @@ class ProjectController extends Controller
             'projectModules',
             'agileModules',
             'agileSprints',
+            'agileModuleStatuses',
+            'assignableUsers',
             'trashedProjectModules'
         ))->render();
     }

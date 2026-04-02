@@ -23,6 +23,26 @@
         </div>
 
         <div>
+            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Module Status</label>
+            <select name="status_id" class="tom-select w-full" data-placeholder="Select status" data-sort="0">
+                <option value="">Select status</option>
+                @foreach ($agileModuleStatuses as $agileModuleStatus)
+                    <option value="{{ $agileModuleStatus->id }}">{{ $agileModuleStatus->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Owner</label>
+            <select name="owner_id" class="tom-select w-full" data-placeholder="Select owner" data-sort="0">
+                <option value="">Select owner</option>
+                @foreach ($assignableUsers as $assignableUser)
+                    <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
             <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Color</label>
             <div class="rounded-2xl border border-bgray-200 bg-bgray-50/80 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/70">
                 <div class="flex items-center gap-4 rounded-xl border border-bgray-200 bg-white p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -38,11 +58,33 @@
         <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="300" hours-placeholder="Hours" minutes-placeholder="Minutes" panel />
 
         <div>
+            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Start Date</label>
+            <input type="date" name="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">End Date</label>
+            <input type="date" name="end_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Completed At</label>
+            <input type="datetime-local" name="completed_at" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
+                Leave empty until the module is fully completed.
+            </p>
+        </div>
+
+        <div>
             <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Description</label>
             <textarea name="description" rows="3" maxlength="100" placeholder="Add a short module description" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
             <p class="mt-1 text-right text-xs text-bgray-500 dark:text-bgray-300">
                 <span data-project-module-description-count>0</span>/100 characters
             </p>
+        </div>
+
+        <div class="rounded-2xl border border-bgray-200 bg-bgray-50/80 p-4 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/70 dark:text-bgray-300">
+            Actual time is tracked automatically from module tasks and is shown on the board as work progresses.
         </div>
     </x-form-modal>
 @endcanany

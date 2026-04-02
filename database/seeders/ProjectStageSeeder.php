@@ -31,7 +31,8 @@ class ProjectStageSeeder extends Seeder
             ProjectStage::create([
                 'name' => $stage,
                 'sort_order' => $key + 1,
-                'is_default' => 1,
+                'is_default' => $key === 0,
+                'is_system' => 1,
                 'is_active' => 1,
             ]);
         }

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Project;
 use App\Models\ProjectNote;
+use App\Models\ProjectStage;
+use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -29,9 +31,12 @@ class ProjectServices
                 $data['end_date'] = Carbon::parse($startDate)->addDays(7)->toDateString();
             }
 
-            // Map correct column (important fix)
-            $data['status_id'] = $data['project_status'];
+            // Fresh projects should fall back to the configured default status.
+            $data['status_id'] = $data['project_status']
+                ?? ProjectStatus::active()->where('is_default', true)->value('id');
             unset($data['project_status']);
+
+            $defaultProjectStageId = ProjectStage::active()->where('is_default', true)->value('id');
 
             // Create project
             $project = Project::create([
@@ -41,6 +46,7 @@ class ProjectServices
                 'project_type' => $data['project_type'],
                 'priority' => $data['priority'],
                 'status_id' => $data['status_id'],
+                'project_stage_id' => $defaultProjectStageId,
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
             ]);

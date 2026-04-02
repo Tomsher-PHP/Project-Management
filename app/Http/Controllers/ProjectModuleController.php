@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectModuleRequest;
+use App\Models\AgileModuleStatus;
 use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectModule;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,11 +21,15 @@ class ProjectModuleController extends Controller
         $this->ensureAgileProject($project);
 
         $projectModule = DB::transaction(function () use ($project, $request) {
-            return $project->projectModules()->create(
+            $projectModule = $project->projectModules()->create(
                 $this->prepareData($request, [
                     'sort_order' => $this->nextOrder($project),
                 ])
             );
+
+            $projectModule->refreshTrackedTimeMetrics();
+
+            return $projectModule;
         });
 
         return response()->json([
@@ -193,6 +199,8 @@ class ProjectModuleController extends Controller
                 ->with([
                     'addedBy',
                     'updatedBy',
+                    'status',
+                    'owner',
                     'projectSprints' => fn ($sprintQuery) => $sprintQuery
                         ->with(['addedBy', 'updatedBy'])
                         ->orderBy('sort_order')
@@ -206,6 +214,8 @@ class ProjectModuleController extends Controller
             'project' => $project,
             'projectModules' => $project->projectModules,
             'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
+            'agileModuleStatuses' => AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get(),
+            'assignableUsers' => app(UserService::class)->getAccessibleUsers(auth()->user()),
             'openModuleId' => $openModuleId,
             'openSprintId' => $openSprintId,
             'trashedProjectModules' => ProjectModule::onlyTrashed()

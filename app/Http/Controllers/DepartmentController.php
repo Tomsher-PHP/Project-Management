@@ -52,10 +52,10 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department)
     {
-        if ($department->is_default) {
+        if ($department->is_system) {
             return redirect()
                 ->route('settings.departments.index')
-                ->with('error', 'Default department cannot be deleted.');
+                ->with('error', 'System department cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $department->delete());

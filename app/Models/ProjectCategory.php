@@ -15,7 +15,7 @@ class ProjectCategory extends Model
     protected $fillable = [
         'name',
         'sort_order',
-        'is_default',
+        'is_system',
         'is_active'
     ];
 
@@ -31,7 +31,7 @@ class ProjectCategory extends Model
         return [
             'name' => 'string',
             'sort_order' => 'integer',
-            'is_default' => 'boolean',
+            'is_system' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

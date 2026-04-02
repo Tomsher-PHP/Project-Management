@@ -36,6 +36,26 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
+                                            <x-sorting.sortable-column column="code" label="Code" />
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Color</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <x-sorting.sortable-column column="type" label="Type" />
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Completed</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                        <div class="flex w-full items-center space-x-2.5">
                                             <x-sorting.sortable-column column="sort_order" label="Sort Order" />
                                         </div>
                                     </td>
@@ -60,7 +80,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center space-x-2.5">
-                                                @if ($projectStatus->is_default == 1)
+                                                @if ($projectStatus->is_system == 1)
                                                     <span>
                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" fill="#F6A723" stroke="#F6A723" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -78,6 +98,23 @@
                                                 </p>
                                             </div>
                                         </td>
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <span class="text-sm font-medium text-bgray-600 dark:text-bgray-50">{{ $projectStatus->code }}</span>
+                                        </td>
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <div class="flex items-center gap-3">
+                                                <span class="inline-flex h-8 w-8 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $projectStatus->color ?: '#E5E7EB' }}"></span>
+                                                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">{{ $projectStatus->color ?: '--' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold uppercase text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ str_replace('_', ' ', $projectStatus->type) }}</span>
+                                        </td>
+                                        <td class="px-6 py-5 xl:px-0">
+                                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $projectStatus->is_completed ? 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50' }}">
+                                                {{ $projectStatus->is_completed ? 'Yes' : 'No' }}
+                                            </span>
+                                        </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
                                                 <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $projectStatus->sort_order }}</span>
@@ -91,14 +128,14 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @can('project_status.edit')
-                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-statuses.update', $projectStatus->id) }}" data-name="{{ $projectStatus->name }}" data-sort_order="{{ $projectStatus->sort_order }}" data-method="PUT" data-module="Project Status">
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-statuses.update', $projectStatus->id) }}" data-name="{{ $projectStatus->name }}" data-code="{{ $projectStatus->code }}" data-color="{{ $projectStatus->color }}" data-type="{{ $projectStatus->type }}" data-is_completed="{{ (int) $projectStatus->is_completed }}" data-sort_order="{{ $projectStatus->sort_order }}" data-method="PUT" data-module="Project Status">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
                                                     </a>
                                                 @endcan
                                                 @can('project_status.delete')
-                                                    @if (!$projectStatus->is_default)
+                                                    @if (!$projectStatus->is_system)
                                                         <x-delete-form :action="route('settings.project-statuses.destroy', $projectStatus->id)" />
                                                     @endif
                                                 @endcan
@@ -106,7 +143,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <x-table-no-data :col-span="5" message="No project statuses found." />
+                                    <x-table-no-data :col-span="9" message="No project statuses found." />
                                 @endforelse
                             </table>
                         </div>
@@ -125,6 +162,33 @@
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <input type="text" name="code" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Type <x-red-star /></label>
+            <select name="type" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="closed">Closed</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Is Completed</label>
+            <select name="is_completed" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
         </div>
 
         <div>

@@ -52,6 +52,11 @@ const initializeProjectModuleModal = () => {
 
         window.setTimeout(() => {
             librarySelect.value = '';
+
+            if (librarySelect.tomselect) {
+                librarySelect.tomselect.clear(true);
+            }
+
             updateDescriptionCount();
         }, 0);
     });
@@ -90,6 +95,7 @@ const initializeProjectSprintModal = () => {
         const selectedOption = librarySelect.options[librarySelect.selectedIndex];
 
         if (!selectedOption || !selectedOption.value) {
+            colorInput.value = colorInput.value || '#000000';
             updateDescriptionCount();
             return;
         }

@@ -52,10 +52,10 @@ class ProjectStatusController extends Controller
 
     public function destroy(ProjectStatus $projectStatus)
     {
-        if ($projectStatus->is_default) {
+        if ($projectStatus->is_system) {
             return redirect()
                 ->route('settings.project_statuses.index')
-                ->with('error', 'Default project status cannot be deleted.');
+                ->with('error', 'System project status cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $projectStatus->delete());

@@ -8,37 +8,57 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Designation extends Model
+class AgileModuleStatus extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
     protected $fillable = [
         'name',
+        'code',
+        'color',
+        'type',
         'sort_order',
+        'is_default',
+        'is_completed',
         'is_system',
-        'is_active'
+        'is_active',
     ];
 
     protected $sortable = [
         'name',
+        'code',
+        'type',
         'sort_order',
     ];
 
-    protected $searchable = ['name'];
+    protected $searchable = [
+        'name',
+        'code',
+        'type',
+    ];
 
     protected function casts(): array
     {
         return [
             'name' => 'string',
+            'code' => 'string',
+            'color' => 'string',
+            'type' => 'string',
             'sort_order' => 'integer',
+            'is_default' => 'boolean',
+            'is_completed' => 'boolean',
             'is_system' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
 
-
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function projectModules()
+    {
+        return $this->hasMany(ProjectModule::class, 'status_id');
     }
 }

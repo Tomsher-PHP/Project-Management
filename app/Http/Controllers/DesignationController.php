@@ -52,10 +52,10 @@ class DesignationController extends Controller
 
     public function destroy(Designation $designation)
     {
-        if ($designation->is_default) {
+        if ($designation->is_system) {
             return redirect()
                 ->route('settings.designations.index')
-                ->with('error', 'Default designation cannot be deleted.');
+                ->with('error', 'System designation cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $designation->delete());

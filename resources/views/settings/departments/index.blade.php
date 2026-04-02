@@ -60,7 +60,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center space-x-2.5">
-                                                @if ($department->is_default == 1)
+                                                @if ($department->is_system == 1)
                                                     <span>
                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" fill="#F6A723" stroke="#F6A723" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -98,7 +98,7 @@
                                                     </a>
                                                 @endcan
                                                 @can('department.delete')
-                                                    @if (!$department->is_default)
+                                                    @if (!$department->is_system)
                                                         <x-delete-form :action="route('settings.departments.destroy', $department->id)" />
                                                     @endif
                                                 @endcan

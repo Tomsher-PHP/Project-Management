@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->tinyInteger('sort_order')->default('1');
-            $table->boolean('is_default')->default(false);
+            $table->boolean('is_system')->default(false);
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

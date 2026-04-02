@@ -20,7 +20,7 @@ class ProjectSprint extends Model
         'color',
         'description',
         'estimated_time_seconds',
-        'derived_time_sec',
+        'derived_time_seconds',
         'sort_order',
         'added_by',
         'updated_by',
@@ -30,7 +30,7 @@ class ProjectSprint extends Model
         'project_id' => 'integer',
         'project_module_id' => 'integer',
         'estimated_time_seconds' => 'integer',
-        'derived_time_sec' => 'integer',
+        'derived_time_seconds' => 'integer',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -47,17 +47,17 @@ class ProjectSprint extends Model
         });
 
         static::saved(function (ProjectSprint $projectSprint) {
-            $projectSprint->refreshDerivedTimeSec();
-            $projectSprint->projectModule?->refreshDerivedTimeSec();
+            $projectSprint->refreshDerivedTimeSeconds();
+            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
         });
 
         static::deleted(function (ProjectSprint $projectSprint) {
-            $projectSprint->projectModule?->refreshDerivedTimeSec();
+            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
         });
 
         static::restored(function (ProjectSprint $projectSprint) {
-            $projectSprint->refreshDerivedTimeSec();
-            $projectSprint->projectModule?->refreshDerivedTimeSec();
+            $projectSprint->refreshDerivedTimeSeconds();
+            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
         });
     }
 
@@ -100,7 +100,7 @@ class ProjectSprint extends Model
 
     public function getDerivedTimeFormattedAttribute(): string
     {
-        $seconds = $this->derived_time_sec ?? 0;
+        $seconds = $this->derived_time_seconds ?? 0;
 
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
@@ -124,7 +124,7 @@ class ProjectSprint extends Model
         return (int) $query->count();
     }
 
-    public function refreshDerivedTimeSec(): void
+    public function refreshDerivedTimeSeconds(): void
     {
         $derivedSeconds = 0;
 
@@ -144,7 +144,7 @@ class ProjectSprint extends Model
         }
 
         $this->updateQuietly([
-            'derived_time_sec' => $derivedSeconds,
+            'derived_time_seconds' => $derivedSeconds,
         ]);
     }
 }

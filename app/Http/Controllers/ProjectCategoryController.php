@@ -52,10 +52,10 @@ class ProjectCategoryController extends Controller
 
     public function destroy(ProjectCategory $projectCategory)
     {
-        if ($projectCategory->is_default) {
+        if ($projectCategory->is_system) {
             return redirect()
                 ->route('settings.project_categories.index')
-                ->with('error', 'Default project category cannot be deleted.');
+                ->with('error', 'System project category cannot be deleted.');
         }
 
         activity()->withoutLogs(fn () => $projectCategory->delete());

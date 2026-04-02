@@ -76,7 +76,7 @@
                     <option value="">Select Status</option>
                     @foreach ($statuses as $status)
                         <option value="{{ $status->id }}" {{ old('project_status', $project->status_id ?? '') == $status->id ? 'selected' : '' }}>
-                            {{ $status->name }}
+                            {{ $status->name }}{{ $status->type ? ' (' . str_replace('_', ' ', ucfirst($status->type)) . ')' : '' }}
                         </option>
                     @endforeach
                 </select>

@@ -13,29 +13,28 @@ class DesignationSeeder extends Seeder
      */
     public function run(): void
     {
-        $array = [
-            'Manager',
-            'Project Head',
-            'Business Development Manager',
+        $designations = [
             'Project Manager',
             'Product Manager',
-            'Sales Manager',
-            'Sr Developer',
-            'Jr Developer',
-            'Sr Designer',
-            'Jr Designer',
-            'Quality Analyst',
-            'SEO Analyst',
-            'Finance Specialist',
-            'Sales Excecutive',
+            'Business Analyst',
+            'Frontend Developer',
+            'Backend Developer',
+            'Full Stack Developer',
+            'UI/UX Designer',
+            'QA Engineer',
+            'DevOps Engineer',
+            'Sales Executive',
+            'HR Executive',
+            'Accountant',
             'IT Support',
         ];
 
-        foreach ($array as $key => $name) {
-            Designation::firstOrCreate(
+        foreach ($designations as $key => $name) {
+            Designation::updateOrCreate(
                 ['name' => $name],
                 [
                     'sort_order' => $key + 1,
+                    'is_system' => 1,
                     'is_active' => 1,
                 ]
             );

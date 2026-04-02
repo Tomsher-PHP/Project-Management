@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->text('description')->nullable();
             $table->tinyInteger('sort_order')->default('1');
-            $table->boolean('is_default')->default(true);
+            $table->boolean('is_system')->default(false);
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

@@ -46,10 +46,6 @@ class AgileModuleController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if (!empty($data['is_default'])) {
-            AgileModule::query()->update(['is_default' => false]);
-        }
-
         $agileModule = AgileModule::create($data);
 
         return response()->json([
@@ -74,10 +70,10 @@ class AgileModuleController extends Controller
 
     public function destroy(AgileModule $agileModule)
     {
-        if ($agileModule->is_default) {
+        if ($agileModule->is_system) {
             return redirect()
                 ->route('settings.agile-modules.index')
-                ->with('error', 'Default agile module cannot be deleted.');
+                ->with('error', 'System agile module cannot be deleted.');
         }
 
         $agileModule->delete();

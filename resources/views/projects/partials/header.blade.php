@@ -124,7 +124,7 @@
         <div class="flex flex-nowrap items-center gap-3 md:justify-end">
             @if ($canChangeProjectStatus)
                 <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
-                    <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg border border-success-300 bg-success-300 px-4 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400 dark:border-success-300 dark:bg-success-300 dark:text-white dark:hover:bg-success-400 sm:w-[165px]" data-project-header-trigger>
+                    <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-project-header-trigger style="border: 1px solid {{ $project->projectStatus->color ?? '#6B7280' }}; background-color: {{ $project->projectStatus->color ?? '#6B7280' }};">
                         <span class="truncate whitespace-nowrap">{{ $project->projectStatus->name ?? 'No Status' }}</span>
                         <span>
                             <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
@@ -137,7 +137,10 @@
                             @foreach ($projectStatuses as $statusOption)
                                 <li>
                                     <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-header-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-current-value="{{ $project->status_id }}">
-                                        <span @if ((int) $project->status_id === (int) $statusOption->id) class="text-success-400 dark:text-success-300" @endif>{{ $statusOption->name }}</span>
+                                        <span class="flex items-center gap-2 @if ((int) $project->status_id === (int) $statusOption->id) text-success-400 dark:text-success-300 @endif">
+                                            <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
+                                            <span>{{ $statusOption->name }}</span>
+                                        </span>
                                     </button>
                                 </li>
                             @endforeach
@@ -145,7 +148,7 @@
                     </div>
                 </div>
             @else
-                <span class="whitespace-nowrap rounded-full border border-success-300 bg-success-300 px-4 py-1 text-sm font-semibold text-white dark:border-success-300 dark:bg-success-300 dark:text-white">
+                <span class="whitespace-nowrap rounded-full px-4 py-1 text-sm font-semibold text-white" style="border: 1px solid {{ $project->projectStatus->color ?? '#6B7280' }}; background-color: {{ $project->projectStatus->color ?? '#6B7280' }};">
                     {{ $project->projectStatus->name ?? 'No Status' }}
                 </span>
             @endif
