@@ -26,7 +26,7 @@ class ProjectModuleRequest extends FormRequest
             'status_id' => ['nullable', 'integer', 'exists:agile_module_statuses,id'],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:100'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'completed_at' => ['nullable', 'date'],

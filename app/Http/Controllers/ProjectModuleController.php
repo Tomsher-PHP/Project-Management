@@ -24,7 +24,7 @@ class ProjectModuleController extends Controller
             $projectModule = $project->projectModules()->create(
                 $this->prepareData($request, [
                     'sort_order' => $this->nextOrder($project),
-                ])
+                ], true)
             );
 
             $projectModule->refreshTrackedTimeMetrics();
@@ -36,6 +36,7 @@ class ProjectModuleController extends Controller
             'status' => true,
             'message' => 'Project module created successfully.',
             'data' => $projectModule,
+            'module' => $this->serializeModule($projectModule),
             'html' => $this->renderSection($project),
             'render_target' => '[data-project-module-section]',
             'render_mode' => 'replace_outer',
@@ -53,6 +54,7 @@ class ProjectModuleController extends Controller
             'status' => true,
             'message' => 'Project module updated successfully.',
             'data' => $projectModule,
+            'module' => $this->serializeModule($projectModule),
             'html' => $this->renderSection($project),
             'render_target' => '[data-project-module-section]',
             'render_mode' => 'replace_outer',
@@ -125,6 +127,9 @@ class ProjectModuleController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Project modules reordered successfully.',
+            'html' => $this->renderSection($project),
+            'render_target' => '[data-project-module-section]',
+            'render_mode' => 'replace_outer',
         ]);
     }
 
@@ -159,9 +164,16 @@ class ProjectModuleController extends Controller
         ]);
     }
 
-    private function prepareData(ProjectModuleRequest $request, array $overrides = []): array
+    private function prepareData(ProjectModuleRequest $request, array $overrides = [], bool $applyDefaultStatus = false): array
     {
         $data = $request->validated();
+
+        if ($applyDefaultStatus && empty($data['status_id'])) {
+            $data['status_id'] = AgileModuleStatus::query()
+                ->where('is_default', true)
+                ->value('id');
+        }
+
         $data['estimated_time_seconds'] = array_key_exists('estimated_time_minutes', $data) && $data['estimated_time_minutes'] !== null
             ? (int) $data['estimated_time_minutes'] * 60
             : null;
@@ -258,5 +270,26 @@ class ProjectModuleController extends Controller
         }
 
         return $candidate;
+    }
+
+    private function serializeModule(ProjectModule $projectModule): array
+    {
+        $projectModule->loadMissing(['status', 'owner']);
+
+        return [
+            'id' => $projectModule->id,
+            'name' => $projectModule->name,
+            'color' => $projectModule->color,
+            'description' => $projectModule->description,
+            'status_id' => $projectModule->status_id,
+            'owner_id' => $projectModule->owner_id,
+            'start_date' => $projectModule->start_date?->format('Y-m-d'),
+            'end_date' => $projectModule->end_date?->format('Y-m-d'),
+            'completed_at' => $projectModule->completed_at?->format('Y-m-d\TH:i'),
+            'estimated_time_minutes' => $projectModule->estimated_time_minutes,
+            'sort_order' => $projectModule->sort_order,
+            'status_name' => $projectModule->status?->name,
+            'owner_name' => $projectModule->owner?->name,
+        ];
     }
 }

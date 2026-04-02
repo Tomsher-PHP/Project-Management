@@ -4,6 +4,17 @@
         $canEditProjectModules = auth()->user()->can('project_module.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.modules.reorder', $project) : null;
         $trashedCount = $trashedProjectModules->count();
+        $projectModuleBuilderSource = $projectModules->map(fn ($module) => [
+            'id' => $module->id,
+            'name' => $module->name,
+            'color' => $module->color,
+            'description' => $module->description,
+            'owner_id' => $module->owner_id,
+            'start_date' => $module->start_date?->format('Y-m-d'),
+            'end_date' => $module->end_date?->format('Y-m-d'),
+            'estimated_time_minutes' => $module->estimated_time_minutes,
+            'sort_order' => $module->sort_order,
+        ])->values();
         $formatDuration = function (?int $seconds): string {
             $totalSeconds = max(0, (int) ($seconds ?? 0));
             $hours = intdiv($totalSeconds, 3600);
@@ -27,11 +38,6 @@
                     <p class="mt-1 max-w-3xl text-sm text-bgray-600 dark:text-bgray-300">
                         Compact builder view focused on module items with nested sprints and task placeholders.
                     </p>
-                    @can('project_module.edit')
-                        <p class="mt-2 inline-flex items-center rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:bg-darkblack-500 dark:text-success-300">
-                            Click Change Order -> Drag Modules -> Save Order
-                        </p>
-                    @endcan
                 </div>
 
                 <div class="flex flex-col gap-2 xl:items-end">
@@ -60,31 +66,13 @@
 
                     @if (auth()->user()->can('project_module.edit') || auth()->user()->can('project_module.create'))
                         <div class="flex flex-wrap items-center gap-2 xl:justify-end">
-                            @can('project_module.edit')
-                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-reorder-toggle>
-                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
-                                    </svg>
-                                    <span data-project-module-reorder-toggle-label>Change Order</span>
-                                </button>
-
-                                <button type="button"
-                                    class="inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-xs font-semibold text-success-400 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
-                                    data-project-module-reorder-save disabled>
-                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3.75-3.75a1 1 0 111.414-1.414l3.043 3.043 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span>Save Order</span>
-                                </button>
-                            @endcan
-
                             @can('project_module.create')
-                                <a href="javascript:void(0)" data-target="#project-module-modal" data-module="Project Module" data-url="{{ route('projects.modules.store', $project) }}" data-method="POST" class="modal-open inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-module-context="project-module">
+                                <button type="button" class="project-module-builder-open inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                     </svg>
-                                    <span>Module</span>
-                                </a>
+                                    <span>Modules</span>
+                                </button>
                             @endcan
                         </div>
                     @endif
@@ -94,7 +82,7 @@
 
         <div x-data="{ activeModuleId: @js($openModuleId ?? null) }" class="space-y-6 overflow-y-auto px-5 py-5 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
-                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" data-module-color="{{ $module->color ?: '#D1D5DB' }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
+                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
@@ -179,12 +167,11 @@
                                 @endcan
 
                                 @can('project_module.edit')
-                                    <a href="javascript:void(0)" class="edit-record inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-modal="project-module-modal" data-url="{{ route('projects.modules.update', [$project, $module]) }}" data-name="{{ $module->name }}"
-                                        data-color="{{ $module->color }}" data-description="{{ $module->description }}" data-status_id="{{ $module->status_id }}" data-owner_id="{{ $module->owner_id }}" data-start_date="{{ $module->start_date?->format('Y-m-d') }}" data-end_date="{{ $module->end_date?->format('Y-m-d') }}" data-completed_at="{{ $module->completed_at?->format('Y-m-d\\TH:i') }}" data-estimated_time_minutes="{{ $module->estimated_time_minutes }}" data-method="PUT" data-module="Project Module" data-module-context="project-module">
+                                    <button type="button" class="project-module-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-module-id="{{ $module->id }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                         </svg>
-                                    </a>
+                                    </button>
                                 @endcan
 
                                 @can('project_module.delete')
@@ -221,18 +208,22 @@
                         </p>
 
                         @can('project_module.create')
-                            <a href="javascript:void(0)" data-target="#project-module-modal" data-module="Project Module" data-url="{{ route('projects.modules.store', $project) }}" data-method="POST" class="modal-open mt-5 inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-module-context="project-module">
+                            <button type="button" class="project-module-builder-open mt-5 inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                 </svg>
                                 <span>Add First Module</span>
-                            </a>
+                            </button>
                         @endcan
                     </div>
                 </div>
             @endforelse
         </div>
     </div>
+
+    <script type="application/json" data-project-module-builder-source>
+        {!! json_encode($projectModuleBuilderSource, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    </script>
 
     @can('project_module.restore')
         <div class="modal fixed inset-0 z-50 hidden overflow-y-auto" id="project-module-restore-modal" data-project-module-restore-modal>
