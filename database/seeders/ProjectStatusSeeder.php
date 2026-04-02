@@ -30,7 +30,7 @@ class ProjectStatusSeeder extends Seeder
         foreach ($statuses as $key => $status) {
             ProjectStatus::create([
                 'name' => $status,
-                'order' => $key + 1,
+                'sort_order' => $key + 1,
                 'default' => 1,
                 'status' => 1,
             ]);

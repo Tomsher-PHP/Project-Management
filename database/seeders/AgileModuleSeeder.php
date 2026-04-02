@@ -24,16 +24,16 @@ class AgileModuleSeeder extends Seeder
             ['SEO', '#27AE60', 'Search engine optimization'],
         ];
 
-        $order = 1;
+        $sortOrder = 1;
         foreach ($modules as  [$name, $color, $description]) {
             AgileModule::create([
                 'name' => $name,
                 'color' => $color,
                 'description' => $description,
                 'default' => true,
-                'order' => $order,
+                'sort_order' => $sortOrder,
             ]);
-            $order++;
+            $sortOrder++;
         }
     }
 }

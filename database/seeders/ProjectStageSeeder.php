@@ -30,7 +30,7 @@ class ProjectStageSeeder extends Seeder
         foreach ($stages as $key => $stage) {
             ProjectStage::create([
                 'name' => $stage,
-                'order' => $key + 1,
+                'sort_order' => $key + 1,
                 'default' => 1,
                 'status' => 1,
             ]);

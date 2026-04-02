@@ -21,7 +21,7 @@ class DepartmentRequest extends FormRequest
         
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('departments', 'name')->ignore($id)],
-            'order' => ['required', 'numeric'],
+            'sort_order' => ['required', 'numeric'],
         ];
     }
 }

@@ -22,7 +22,7 @@ class ProjectSprintController extends Controller
             return $projectModule->projectSprints()->create($this->prepareData($request, [
                 'project_id' => $project->id,
                 'project_module_id' => $projectModule->id,
-                'order' => $this->nextOrder($projectModule),
+                'sort_order' => $this->nextOrder($projectModule),
             ]));
         });
 
@@ -55,7 +55,7 @@ class ProjectSprintController extends Controller
             ]);
 
             if ($moduleChanged) {
-                $updateData['order'] = $this->nextOrder($targetProjectModule);
+                $updateData['sort_order'] = $this->nextOrder($targetProjectModule);
             }
 
             $projectSprint->update($updateData);
@@ -103,7 +103,7 @@ class ProjectSprintController extends Controller
             foreach ($sprintIds as $index => $sprintId) {
                 $projectModule->projectSprints()
                     ->whereKey($sprintId)
-                    ->update(['order' => $index + 1]);
+                    ->update(['sort_order' => $index + 1]);
             }
         });
 
@@ -132,18 +132,18 @@ class ProjectSprintController extends Controller
 
     private function nextOrder(ProjectModule $projectModule): int
     {
-        return ((int) $projectModule->projectSprints()->max('order')) + 1;
+        return ((int) $projectModule->projectSprints()->max('sort_order')) + 1;
     }
 
     private function normalizeOrder(ProjectModule $projectModule): void
     {
         $projectModule->projectSprints()
-            ->orderBy('order')
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get(['id'])
             ->each(function (ProjectSprint $projectSprint, int $index) {
                 $projectSprint->updateQuietly([
-                    'order' => $index + 1,
+                    'sort_order' => $index + 1,
                 ]);
             });
     }
@@ -157,17 +157,17 @@ class ProjectSprintController extends Controller
                     'updatedBy',
                     'projectSprints' => fn ($sprintQuery) => $sprintQuery
                         ->with(['addedBy', 'updatedBy'])
-                        ->orderBy('order')
+                        ->orderBy('sort_order')
                         ->orderBy('id'),
                 ])
-                ->orderBy('order')
+                ->orderBy('sort_order')
                 ->orderBy('id'),
         ]);
 
         return view('projects.partials.module.section', [
             'project' => $project,
             'projectModules' => $project->projectModules,
-            'agileSprints' => AgileSprint::active()->orderBy('order', 'asc')->get(),
+            'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
             'openModuleId' => $openModuleId,
             'openSprintId' => $openSprintId,
             'trashedProjectModules' => ProjectModule::onlyTrashed()

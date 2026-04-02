@@ -43,8 +43,8 @@ class UserController extends Controller
             ->withQueryString();
 
         $roles = Role::get();
-        $departments = Department::orderBy('order', 'asc')->get();
-        $designations = Designation::orderBy('order', 'asc')->get();
+        $departments = Department::orderBy('sort_order', 'asc')->get();
+        $designations = Designation::orderBy('sort_order', 'asc')->get();
 
         return view('users.index', compact('users', 'perPage', 'roles', 'departments', 'designations'));
     }
@@ -55,8 +55,8 @@ class UserController extends Controller
         $roles = Role::where('status', true)->get();
 
         //Department and Designation can be added later if needed
-        $departments = Department::active()->orderBy('order', 'asc')->get();
-        $designations = Designation::active()->orderBy('order', 'asc')->get();
+        $departments = Department::active()->orderBy('sort_order', 'asc')->get();
+        $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
 
         // Get reporter and managers
         $managers = app(UserService::class)->getAccessibleUsers(auth()->user());
@@ -75,8 +75,8 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::where('status', true)->get();
-        $departments = Department::active()->orderBy('order', 'asc')->get();
-        $designations = Designation::active()->orderBy('order', 'asc')->get();
+        $departments = Department::active()->orderBy('sort_order', 'asc')->get();
+        $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
         $managerIds = collect([
             $user->details?->reporter_id,
             $user->details?->manager_id,

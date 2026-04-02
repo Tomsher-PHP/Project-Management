@@ -52,7 +52,7 @@ class ProjectController extends Controller
         });
 
         $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
+        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('constants.project_priorities');
         $types = config('constants.project_types');
 
@@ -287,15 +287,15 @@ class ProjectController extends Controller
                 'updatedBy',
                 'projectSprints' => fn ($query) => $query
                     ->with(['addedBy', 'updatedBy'])
-                    ->orderBy('order')
+                    ->orderBy('sort_order')
                     ->orderBy('id'),
             ])
-            ->orderBy('order')
+            ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
-        $agileModules = AgileModule::active()->orderBy('order', 'asc')->get();
-        $agileSprints = AgileSprint::active()->orderBy('order', 'asc')->get();
+        $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();
+        $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
         $trashedProjectModules = ProjectModule::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
@@ -341,10 +341,10 @@ class ProjectController extends Controller
         $project->load('technologies');
 
         $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('order', 'asc')->get();
-        $projectCategories = ProjectCategory::active()->orderBy('order', 'asc')->get();
-        $projectTechnologies = Technology::active()->orderBy('order', 'asc')->get();
-        $projectStages = ProjectStage::active()->orderBy('order', 'asc')->get();
+        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
+        $projectCategories = ProjectCategory::active()->orderBy('sort_order', 'asc')->get();
+        $projectTechnologies = Technology::active()->orderBy('sort_order', 'asc')->get();
+        $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('constants.project_priorities');
 
         return view('projects.partials.tabs.settings', compact(
@@ -368,8 +368,8 @@ class ProjectController extends Controller
             'priority' => config('constants.project_priorities')[$project->priority] ?? null,
             'projectTimeline' => $timelines['projectTimeline'],
             'customerTimeline' => $timelines['customerTimeline'],
-            'projectStatuses' => ProjectStatus::active()->orderBy('order', 'asc')->get(),
-            'projectStages' => ProjectStage::active()->orderBy('order', 'asc')->get(),
+            'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
+            'projectStages' => ProjectStage::active()->orderBy('sort_order', 'asc')->get(),
         ];
     }
 

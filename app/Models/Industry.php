@@ -15,14 +15,14 @@ class Industry extends Model
     protected $fillable = [
         'name',
         'parent_id',
-        'order',
+        'sort_order',
         'default',
         'status'
     ];
 
     protected $sortable = [
         'name',
-        'order',
+        'sort_order',
     ];
 
     protected $searchable = ['name'];
@@ -32,7 +32,7 @@ class Industry extends Model
         return [
             'name' => 'string',
             'parent_id' => 'integer',
-            'order' => 'integer',
+            'sort_order' => 'integer',
             'default' => 'boolean',
             'status' => 'boolean',
         ];

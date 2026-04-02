@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('project_stages', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->tinyInteger('order')->default('1');
+            $table->tinyInteger('sort_order')->default('1');
             $table->boolean('default')->default(false);
             $table->boolean('status')->default(true);
 

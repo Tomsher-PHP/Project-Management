@@ -144,12 +144,12 @@ class Project extends Model
 
     public function projectModules()
     {
-        return $this->hasMany(ProjectModule::class)->orderBy('order');
+        return $this->hasMany(ProjectModule::class)->orderBy('sort_order');
     }
 
     public function projectSprints()
     {
-        return $this->hasMany(ProjectSprint::class)->orderBy('order');
+        return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
     }
 
     public function latestStatusHistory()

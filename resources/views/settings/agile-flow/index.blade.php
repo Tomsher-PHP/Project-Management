@@ -69,7 +69,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <x-sorting.sortable-column column="order" label="Order" />
+                                            <x-sorting.sortable-column column="sort_order" label="Sort Order" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -121,7 +121,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center text-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $record->order }}</span>
+                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $record->sort_order }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -140,7 +140,7 @@
                                                         data-name="{{ $record->name }}"
                                                         data-color="{{ $record->color }}"
                                                         data-description="{{ $record->description }}"
-                                                        data-order="{{ $record->order }}"
+                                                        data-sort_order="{{ $record->sort_order }}"
                                                         data-default="{{ (int) $record->default }}"
                                                         data-method="PUT"
                                                         data-module="{{ $entityLabel }}"
@@ -189,8 +189,8 @@
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Order <x-red-star /></label>
-            <input type="number" name="order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
         </div>
     </x-form-modal>
 

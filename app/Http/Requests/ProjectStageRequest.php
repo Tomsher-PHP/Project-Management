@@ -26,7 +26,7 @@ class ProjectStageRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('project_stages', 'name')->ignore($id)],
-            'order' => ['required', 'numeric'],
+            'sort_order' => ['required', 'numeric'],
         ];
     }
 }

@@ -15,14 +15,14 @@ class AgileSprint extends Model
         'name',
         'color',
         'description',
-        'order',
+        'sort_order',
         'default',
         'status',
     ];
 
     protected $sortable = [
         'name',
-        'order',
+        'sort_order',
     ];
 
     protected $searchable = [
@@ -35,7 +35,7 @@ class AgileSprint extends Model
         'name' => 'string',
         'color' => 'string',
         'description' => 'string',
-        'order' => 'integer',
+        'sort_order' => 'integer',
         'default' => 'boolean',
         'status' => 'boolean',
     ];

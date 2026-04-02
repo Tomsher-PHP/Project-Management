@@ -38,7 +38,7 @@ class CustomerController extends Controller
 
     public function create()
     {
-        $industries = Industry::active()->orderBy('order', 'asc')->get();
+        $industries = Industry::active()->orderBy('sort_order', 'asc')->get();
         $emirates = config('constants.emirates');
 
         // Generate customer code
@@ -57,7 +57,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
-        $industries = Industry::active()->orderBy('order', 'asc')->get();
+        $industries = Industry::active()->orderBy('sort_order', 'asc')->get();
         $emirates = config('constants.emirates');
 
         // Generate customer code

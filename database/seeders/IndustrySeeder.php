@@ -33,7 +33,7 @@ class IndustrySeeder extends Seeder
                 ['name' => $name],
                 [
                     'parent_id' => null,
-                    'order' => $key + 1,
+                    'sort_order' => $key + 1,
                     'status' => 1,
                 ]
             );

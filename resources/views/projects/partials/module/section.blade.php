@@ -116,7 +116,7 @@
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $module->color ?: '#E5E7EB' }}"></span>
                                                 <h5 title="{{ $module->name }}" class="text-lg font-semibold text-bgray-900 dark:text-white">{{ \Illuminate\Support\Str::limit($module->name, 20) }}</h5>
-                                                <span title="Module order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-module-order-badge>{{ $module->order }}</span>
+                                                <span title="Module sort order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-module-order-badge>{{ $module->sort_order }}</span>
                                                 <span title="Estimated Time: {{ $formatDuration($estimatedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $formatDuration($estimatedSeconds) }}</span>
                                                 <span title="Derived Time: {{ $formatDuration($derivedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $formatDuration($derivedSeconds) }}</span>
                                                 @if ($hasTimeDifference)

@@ -26,7 +26,7 @@ class DepartmentSeeder extends Seeder
             Department::firstOrCreate(
                 ['name' => $name],
                 [
-                    'order' => $key + 1,
+                    'sort_order' => $key + 1,
                     'status' => 1,
                 ]
             );

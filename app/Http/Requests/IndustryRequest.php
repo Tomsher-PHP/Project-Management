@@ -27,7 +27,7 @@ class IndustryRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('industries', 'name')->ignore($id)],
             'parent_id' => ['nullable', 'exists:industries,id'],
-            'order' => ['required', 'numeric'],
+            'sort_order' => ['required', 'numeric'],
         ];
     }
 }

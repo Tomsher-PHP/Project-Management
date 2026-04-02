@@ -14,21 +14,21 @@ class Technology extends Model
 
     protected $fillable = [
         'name',
-        'order',
+        'sort_order',
         'default',
         'status',
     ];
 
     protected $sortable = [
         'name',
-        'order',
+        'sort_order',
     ];
 
     protected $searchable = ['name'];
 
     protected $casts = [
         'name' => 'string',
-        'order' => 'integer',
+        'sort_order' => 'integer',
         'default' => 'boolean',
         'status' => 'boolean',
     ];

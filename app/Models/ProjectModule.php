@@ -18,7 +18,7 @@ class ProjectModule extends Model
         'description',
         'estimated_time_seconds',
         'derived_time_sec',
-        'order',
+        'sort_order',
         'added_by',
         'updated_by',
     ];
@@ -27,7 +27,7 @@ class ProjectModule extends Model
         'project_id' => 'integer',
         'estimated_time_seconds' => 'integer',
         'derived_time_sec' => 'integer',
-        'order' => 'integer',
+        'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];
@@ -60,7 +60,7 @@ class ProjectModule extends Model
 
     public function projectSprints()
     {
-        return $this->hasMany(ProjectSprint::class)->orderBy('order');
+        return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
     }
 
     public function getEstimatedTimeFormattedAttribute()

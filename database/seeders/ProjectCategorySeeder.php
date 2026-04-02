@@ -27,7 +27,7 @@ class ProjectCategorySeeder extends Seeder
             ProjectCategory::firstOrCreate(
                 ['name' => $name],
                 [
-                    'order' => $key + 1,
+                    'sort_order' => $key + 1,
                     'status' => 1,
                 ]
             );

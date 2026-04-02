@@ -21,7 +21,7 @@ class AgileModuleRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', Rule::unique('agile_modules', 'name')->ignore($agileModuleId)],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'order' => ['required', 'numeric'],
+            'sort_order' => ['required', 'numeric'],
             'default' => ['nullable', 'boolean'],
         ];
     }

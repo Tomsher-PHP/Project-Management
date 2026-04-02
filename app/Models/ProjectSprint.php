@@ -21,7 +21,7 @@ class ProjectSprint extends Model
         'description',
         'estimated_time_seconds',
         'derived_time_sec',
-        'order',
+        'sort_order',
         'added_by',
         'updated_by',
     ];
@@ -31,7 +31,7 @@ class ProjectSprint extends Model
         'project_module_id' => 'integer',
         'estimated_time_seconds' => 'integer',
         'derived_time_sec' => 'integer',
-        'order' => 'integer',
+        'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];

@@ -15,13 +15,13 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->text('description')->nullable();
             $table->unsignedBigInteger('estimated_time_seconds')->nullable();
-            $table->unsignedInteger('order')->default(1);
+            $table->unsignedInteger('sort_order')->default(1);
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['project_id', 'order']);
+            $table->index(['project_id', 'sort_order']);
         });
     }
 

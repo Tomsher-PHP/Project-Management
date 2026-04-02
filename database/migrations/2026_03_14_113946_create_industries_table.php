@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('parent_id')->nullable();
-            $table->tinyInteger('order')->default('1');
+            $table->tinyInteger('sort_order')->default('1');
             $table->boolean('default')->default(false);
             $table->boolean('status')->default(true);
 

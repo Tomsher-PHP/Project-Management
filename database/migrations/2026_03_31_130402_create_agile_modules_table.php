@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('color')->nullable();
             $table->text('description')->nullable();
-            $table->tinyInteger('order')->default('1');
+            $table->tinyInteger('sort_order')->default('1');
             $table->boolean('default')->default(true);
             $table->boolean('status')->default(true);
 

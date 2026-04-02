@@ -14,14 +14,14 @@ class Designation extends Model
 
     protected $fillable = [
         'name',
-        'order',
+        'sort_order',
         'default',
         'status'
     ];
 
     protected $sortable = [
         'name',
-        'order',
+        'sort_order',
     ];
 
     protected $searchable = ['name'];
@@ -30,7 +30,7 @@ class Designation extends Model
     {
         return [
             'name' => 'string',
-            'order' => 'integer',
+            'sort_order' => 'integer',
             'default' => 'boolean',
             'status' => 'boolean',
         ];
