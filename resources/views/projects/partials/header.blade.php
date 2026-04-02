@@ -53,7 +53,7 @@
                 </span>
 
                 <span>
-                    <strong>Project Type:</strong> {{ strtoupper($project->project_type ?? '--') }}
+                    <strong>Project Flow:</strong> {{ strtoupper($project->project_flow ?? '--') }}
                 </span>
 
                 <span>

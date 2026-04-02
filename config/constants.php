@@ -146,8 +146,8 @@ return [
         ],
     ],
 
-    // Project Type constant
-    'project_types' => [
+    // Project Flow constant
+    'project_flows' => [
         'agile' => 'Agile',
         'linear' => 'Linear',
     ],

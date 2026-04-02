@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class Customer extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
     protected $fillable = [
         'customer_code',

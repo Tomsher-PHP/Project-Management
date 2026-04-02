@@ -31,14 +31,14 @@
                     @enderror
                 </div>
 
-                <!-- Project Type -->
+                <!-- Project Flow -->
                 <div>
-                    <label for="project_type" class="block text-sm font-medium">Project Type <x-red-star /></label>
-                    <select name="project_type" id="project_type" class="tom-select w-full">
+                    <label for="project_flow" class="block text-sm font-medium">Project Flow <x-red-star /></label>
+                    <select name="project_flow" id="project_flow" class="tom-select w-full">
                         <option value="agile">Agile</option>
                         <option value="simple">Simple</option>
                     </select>
-                    @error('project_type')
+                    @error('project_flow')
                         <p class="mt-2 text-sm text-error-300">
                             {{ $message }}
                         </p>

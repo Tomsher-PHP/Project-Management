@@ -18,7 +18,7 @@ class Project extends Model
         'project_code',
         'name',
         'customer_id',
-        'project_type',
+        'project_flow',
         'priority',
         'status_id',
         'project_stage_id',
@@ -169,12 +169,12 @@ class Project extends Model
 
     public function getIsAgileAttribute()
     {
-        return $this->project_type === 'agile';
+        return $this->project_flow === 'agile';
     }
 
     public function getIsSimpleAttribute()
     {
-        return $this->project_type === 'simple';
+        return $this->project_flow === 'simple';
     }
 
     public function scopeActive($query)

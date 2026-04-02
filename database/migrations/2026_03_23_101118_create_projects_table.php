@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('customer_id')->nullable()->constrained('customers')->nullOnDelete();
 
-            $table->enum('project_type', ['agile', 'linear']);
+            $table->enum('project_flow', ['agile', 'linear']);
             $table->string('priority')->nullable();
             $table->foreignId('status_id')->constrained('project_statuses');
             $table->foreignId('project_stage_id')->nullable()->constrained('project_stages')->nullOnDelete();

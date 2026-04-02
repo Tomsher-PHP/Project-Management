@@ -55,7 +55,7 @@ class ProjectController extends Controller
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('constants.project_priorities');
-        $types = config('constants.project_types');
+        $types = config('constants.project_flows');
 
         return view('projects.index', compact('projects', 'perPage', 'customers', 'statuses', 'priorities', 'types'));
     }

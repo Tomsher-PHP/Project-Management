@@ -43,7 +43,7 @@ class ProjectServices
                 'project_code' => Project::generateProjectCode(),
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
-                'project_type' => $data['project_type'],
+                'project_flow' => $data['project_flow'],
                 'priority' => $data['priority'],
                 'status_id' => $data['status_id'],
                 'project_stage_id' => $defaultProjectStageId,

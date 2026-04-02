@@ -30,7 +30,7 @@ class ProjectRequest extends FormRequest
         ];
 
         if ($this->isMethod('POST')) {
-            $rules['project_type'] = 'required|in:agile,linear';
+            $rules['project_flow'] = 'required|in:agile,linear';
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {

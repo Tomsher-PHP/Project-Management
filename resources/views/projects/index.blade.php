@@ -46,7 +46,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project Type</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project Flow</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -132,7 +132,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ strtoupper($project->project_type ?? '--') }}</span>
+                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ strtoupper($project->project_flow ?? '--') }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -189,7 +189,7 @@
     <x-filters.drawer>
         <x-filters.input-search name="name" label="Name" />
         <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
-        <x-filters.multi-select name="project_type" label="Project Type" :options="$typesFilter" />
+        <x-filters.multi-select name="project_flow" label="Project Flow" :options="$typesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
     </x-filters.drawer>
@@ -225,15 +225,15 @@
             @enderror
         </div>
 
-        <!-- Project Type -->
+        <!-- Project Flow -->
         <div>
-            <label for="project_type" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Type <x-red-star /></label>
-            <select name="project_type" id="project_type" class="tom-select-no-search w-full">
+            <label for="project_flow" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Flow <x-red-star /></label>
+            <select name="project_flow" id="project_flow" class="tom-select-no-search w-full">
                 @foreach ($types as $key => $type)
                     <option value="{{ $key }}">{{ $type }}</option>
                 @endforeach
             </select>
-            @error('project_type')
+            @error('project_flow')
                 <p class="mt-2 text-sm text-error-300">
                     {{ $message }}
                 </p>
