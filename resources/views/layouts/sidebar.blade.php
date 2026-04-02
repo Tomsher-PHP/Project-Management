@@ -1,5 +1,5 @@
-<aside class="sidebar-wrapper fixed top-0 z-30 block h-full w-[308px] bg-white dark:bg-darkblack-600 sm:hidden xl:block">
-    <div class="sidebar-header relative z-30 flex h-[108px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-[50px] dark:border-darkblack-400">
+<aside class="sidebar-wrapper fixed top-0 z-30 block h-full bg-white dark:bg-darkblack-600 sm:hidden xl:block">
+    <div class="sidebar-header relative z-30 flex h-[84px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 dark:border-darkblack-400">
         <a href="{{ route('dashboard') }}">
             <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
             <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
@@ -13,8 +13,8 @@
             </span>
         </button>
     </div>
-    <div class="sidebar-body overflow-style-none relative z-30 h-screen w-full overflow-y-scroll pb-[200px] pl-[48px] pt-[14px]">
-        <div class="nav-wrapper mb-[36px] pr-[50px]">
+    <div class="sidebar-body overflow-style-none relative z-30 h-screen w-full overflow-y-scroll pb-[200px] pl-8 pt-3">
+        <div class="nav-wrapper mb-[36px] pr-8">
             <div class="item-wrapper mb-5">
                 <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
                     Menu

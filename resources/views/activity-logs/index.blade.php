@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]" data-activity-log-page>
+    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-activity-log-page>
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <x-filters.button />
 

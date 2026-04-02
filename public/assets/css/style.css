@@ -35,7 +35,8 @@ body {
 }
 
 .layout-wrapper .sidebar-wrapper {
-  left: -308px;
+  width: 272px;
+  left: -272px;
   transition: left 0.5s ease-in-out;
 }
 .layout-wrapper.active .sidebar-wrapper {
@@ -53,7 +54,7 @@ body {
   transition: margin-left 0.5s ease-in-out;
 }
 .layout-wrapper.active .body-wrapper {
-  margin-left: 208px;
+  margin-left: 172px;
 }
 .upgrade-wrapper .upgrade-banner {
   background-repeat: no-repeat;
@@ -68,7 +69,7 @@ body {
   transition: opacity 0.5s ease-in-out;
 }
 .layout-wrapper.active .body-wrapper .header-wrapper {
-  width: calc(100% - 308px);
+  width: calc(100% - 272px);
   transition: width 0.5s ease-in-out;
 }
 .layout-wrapper .body-wrapper .header-wrapper {
@@ -668,7 +669,7 @@ svg
     margin-left: 0;
   }
   .layout-wrapper.active .sidebar-wrapper {
-    left: -308px;
+    left: -272px;
   }
   .layout-wrapper .sidebar-wrapper {
     left: 0;

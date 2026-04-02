@@ -3,7 +3,7 @@
     $unreadCount = auth()->user()->unreadNotifications->count(); // unread badge
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
-    <div class="relative flex h-[108px] w-full items-center justify-between bg-white px-10 dark:bg-darkblack-600 2xl:px-[76px]">
+    <div class="relative flex h-[84px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
         <button title="Ctrl+b" type="button" class="drawer-btn absolute left-0 top-auto rotate-180 transform">
             <span>
                 <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -13,11 +13,11 @@
             </span>
         </button>
         <!--page-title-->
-        <div>
-            <h3 class="text-xl font-bold text-bgray-900 dark:text-bgray-50 lg:text-3xl lg:leading-[36.4px]">
+        <div class="space-y-1">
+            <h3 class="text-lg font-bold leading-tight text-bgray-900 dark:text-bgray-50 lg:text-[28px]">
                 {{ $pageTitle ?? 'Dashboard' }}
             </h3>
-            <p class="text-xs font-medium text-bgray-600 dark:text-bgray-50 lg:text-sm lg:leading-[25.2px]">
+            <p class="text-[11px] font-medium leading-4 text-bgray-600 dark:text-bgray-50 lg:text-xs">
                 {{ $subTitle ?? 'Let’s check your update today' }}
             </p>
         </div>
@@ -49,9 +49,9 @@
         </div> --}}
         <!-- quick access-->
         <div class="quick-access-wrapper relative">
-            <div class="flex items-center space-x-[43px]">
-                <div class="hidden items-center space-x-5 xl:flex">
-                    <button type="button" id="theme-toggle" class="relative flex h-[52px] w-[52px] items-center justify-center rounded-[12px] border border-success-300 dark:border-darkblack-400">
+            <div class="flex items-center space-x-7">
+                <div class="hidden items-center space-x-3 xl:flex">
+                    <button type="button" id="theme-toggle" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400">
                         <span class="block dark:hidden">
                             <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M18.3284 14.8687C13.249 14.8687 9.13135 10.751 9.13135 5.67163C9.13135 4.74246 9.26914 3.84548 9.5254 3C5.74897 4.14461 3 7.65276 3 11.803C3 16.8824 7.11765 21 12.197 21C16.3472 21 19.8554 18.251 21 14.4746C20.1545 14.7309 19.2575 14.8687 18.3284 14.8687Z" stroke-width="1.5" stroke-linejoin="round" />
@@ -69,7 +69,7 @@
                             </svg>
                         </span>
                     </button>
-                    <button onclick="notificationAction()" id="notification-btn" type="button" class="relative flex h-[52px] w-[52px] items-center justify-center rounded-[12px] border border-success-300 dark:border-darkblack-400">
+                    <button onclick="notificationAction()" id="notification-btn" type="button" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400">
                         <span class="absolute -right-[5px] -top-[2px] h-3.5 w-3.5 rounded-full border-2 border-white bg-bgray-300 dark:border-none dark:bg-bgray-600">
                         </span>
                         <svg class="fill-bgray-900 dark:fill-white" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -91,10 +91,10 @@
                         </svg>
                     </button> --}}
                 </div>
-                <div class="hidden h-[48px] w-[1px] bg-bgray-300 dark:bg-darkblack-400 xl:block"></div>
+                <div class="hidden h-10 w-[1px] bg-bgray-300 dark:bg-darkblack-400 xl:block"></div>
                 <!--author-->
                 <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">
-                    <div class="h-[52px] w-[52px] overflow-hidden rounded-xl border border-bgray-300">
+                    <div class="h-11 w-11 overflow-hidden rounded-xl border border-bgray-300">
                         <img class="object-cover" src="{{ auth()->user()->profileImageUrl ?? './assets/images/avatar/profile-52x52.png' }}" alt="avater" />
                     </div>
                     <div class="hidden 2xl:block">
@@ -117,9 +117,9 @@
             <!--notification, message, store-->
             <div class="notification-popup-wrapper">
                 <div onclick="notificationAction()" id="noti-outside" class="fixed -left-[43px] top-0 hidden h-full w-full"></div>
-                <div id="notification-box" style="filter: drop-shadow(12px 12px 40px rgba(0, 0, 0, 0.08));" class="absolute -left-[347px] top-[81px] hidden w-[400px] rounded-lg bg-white dark:bg-darkblack-600">
-                    <div class="relative w-full pb-[75px] pt-[66px]">
-                        <div class="absolute left-0 top-0 flex h-[66px] w-full items-center justify-between px-8">
+                <div id="notification-box" style="filter: drop-shadow(12px 12px 40px rgba(0, 0, 0, 0.08));" class="absolute -left-[347px] top-[68px] hidden w-[400px] rounded-lg bg-white dark:bg-darkblack-600">
+                    <div class="relative w-full pb-[68px] pt-[58px]">
+                        <div class="absolute left-0 top-0 flex h-[58px] w-full items-center justify-between px-6">
                             <h3 class="text-xl font-bold text-bgray-900 dark:text-white">
                                 Notifications
                             </h3>
@@ -151,7 +151,7 @@
                                 </li>
                             @endforelse
                         </ul>
-                        <div class="absolute bottom-0 left-0 flex h-[75px] w-full items-center justify-between px-8">
+                        <div class="absolute bottom-0 left-0 flex h-[68px] w-full items-center justify-between px-6">
                             <div>
                                 <a href="{{ route('notifications.markAllRead') }}">
                                     <div class="flex items-center space-x-2">
@@ -174,7 +174,7 @@
             <div class="profile-wrapper">
                 <div onclick="profileAction()" class="profile-outside fixed -left-[43px] top-0 hidden h-full w-full">
                 </div>
-                <div style="filter: drop-shadow(12px 12px 40px rgba(0, 0, 0, 0.08));" class="profile-box absolute right-0 top-[81px] hidden w-[300px] overflow-hidden rounded-lg bg-white dark:bg-darkblack-600">
+                <div style="filter: drop-shadow(12px 12px 40px rgba(0, 0, 0, 0.08));" class="profile-box absolute right-0 top-[68px] hidden w-[300px] overflow-hidden rounded-lg bg-white dark:bg-darkblack-600">
                     <div class="relative w-full px-3 py-2">
                         <div>
                             <ul>

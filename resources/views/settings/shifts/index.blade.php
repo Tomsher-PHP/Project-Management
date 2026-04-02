@@ -2,7 +2,7 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
+    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
 
         @can('shift.create')
             <a href="{{ route('settings.shifts.create') }}" class="inline-flex items-center px-4 py-1.5
