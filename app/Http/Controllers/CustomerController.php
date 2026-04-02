@@ -85,12 +85,12 @@ class CustomerController extends Controller
     public function toggleStatus(Request $request)
     {
         $customer = Customer::findOrFail($request->id);
-        $customer->status = !$customer->status;
+        $customer->is_active = !$customer->is_active;
         $customer->save();
 
         return response()->json([
             'success' => true,
-            'status' => $customer->status,
+            'is_active' => $customer->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

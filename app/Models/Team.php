@@ -30,7 +30,7 @@ class Team extends Model
     protected function casts(): array
     {
         return [
-            'status' => 'boolean',
+            'is_active' => 'boolean',
             'added_by' => 'integer',
             'updated_by' => 'integer',
         ];

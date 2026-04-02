@@ -53,7 +53,7 @@ class IndustryController extends Controller
 
     public function destroy(Industry $industry)
     {
-        if ($industry->default) {
+        if ($industry->is_default) {
             return redirect()
                 ->route('settings.industries.index')
                 ->with('error', 'Default industry cannot be deleted.');
@@ -77,12 +77,12 @@ class IndustryController extends Controller
     public function toggleStatus(Request $request)
     {
         $industry = Industry::findOrFail($request->id);
-        $industry->status = !$industry->status;
+        $industry->is_active = !$industry->is_active;
         activity()->withoutLogs(fn () => $industry->save());
 
         return response()->json([
             'success' => true,
-            'status' => $industry->status,
+            'is_active' => $industry->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

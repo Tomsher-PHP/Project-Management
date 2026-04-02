@@ -20,7 +20,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->boolean('is_super_admin')->default(false);
 
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
             $table->boolean('delete_status')->default(false);
 
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['status', 'delete_status'], 'users_status_delete_status_index');
+            $table->index(['is_active', 'delete_status'], 'users_is_active_delete_status_index');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

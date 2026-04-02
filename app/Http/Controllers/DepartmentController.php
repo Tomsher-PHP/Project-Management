@@ -52,7 +52,7 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department)
     {
-        if ($department->default) {
+        if ($department->is_default) {
             return redirect()
                 ->route('settings.departments.index')
                 ->with('error', 'Default department cannot be deleted.');
@@ -68,12 +68,12 @@ class DepartmentController extends Controller
     public function toggleStatus(Request $request)
     {
         $department = Department::findOrFail($request->id);
-        $department->status = !$department->status;
+        $department->is_active = !$department->is_active;
         activity()->withoutLogs(fn () => $department->save());
 
         return response()->json([
             'success' => true,
-            'status' => $department->status,
+            'is_active' => $department->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

@@ -73,7 +73,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
@@ -89,7 +89,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-start space-x-2.5">
-                                                @if ($record->default)
+                                                @if ($record->is_default)
                                                     <span class="mt-0.5">
                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" fill="#F6A723" stroke="#F6A723" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -141,7 +141,7 @@
                                                         data-color="{{ $record->color }}"
                                                         data-description="{{ $record->description }}"
                                                         data-sort_order="{{ $record->sort_order }}"
-                                                        data-default="{{ (int) $record->default }}"
+                                                        data-is_default="{{ (int) $record->is_default }}"
                                                         data-method="PUT"
                                                         data-module="{{ $entityLabel }}"
                                                     >
@@ -152,7 +152,7 @@
                                                 @endcan
 
                                                 @can($deletePermission)
-                                                    @if (! $record->default)
+                                                    @if (! $record->is_default)
                                                         <x-delete-form :action="route($destroyRouteName, $record->id)" />
                                                     @endif
                                                 @endcan
@@ -196,7 +196,7 @@
 
     <x-filters.drawer>
         <x-filters.input-search name="search" :label="$entityLabel . ' Name'" />
-        <x-filters.select name="status" label="Status" :options="[
+        <x-filters.select name="is_active" label="Is Active" :options="[
             1 => 'Active',
             0 => 'Inactive',
         ]" />

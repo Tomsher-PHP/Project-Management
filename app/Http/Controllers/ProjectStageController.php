@@ -52,7 +52,7 @@ class ProjectStageController extends Controller
 
     public function destroy(ProjectStage $projectStage)
     {
-        if ($projectStage->default) {
+        if ($projectStage->is_default) {
             return redirect()
                 ->route('settings.project_stages.index')
                 ->with('error', 'Default project stage cannot be deleted.');
@@ -68,12 +68,12 @@ class ProjectStageController extends Controller
     public function toggleStatus(Request $request)
     {
         $projectStage = ProjectStage::findOrFail($request->id);
-        $projectStage->status = !$projectStage->status;
+        $projectStage->is_active = !$projectStage->is_active;
         activity()->withoutLogs(fn () => $projectStage->save());
 
         return response()->json([
             'success' => true,
-            'status' => $projectStage->status,
+            'is_active' => $projectStage->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
 
             $table->longText('description')->nullable();
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
 
             $table->unsignedBigInteger('added_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();

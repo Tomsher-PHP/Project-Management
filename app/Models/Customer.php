@@ -25,14 +25,14 @@ class Customer extends Model
         'company_address',
         'sales_person',
         'new_to_company',
-        'status',
+        'is_active',
         'added_by',
         'updated_by',
     ];
 
     protected $casts = [
         'new_to_company' => 'boolean',
-        'status' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected $sortable = [
@@ -99,6 +99,6 @@ class Customer extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', true);
+        return $query->where('is_active', true);
     }
 }

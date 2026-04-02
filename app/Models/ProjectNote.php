@@ -15,14 +15,14 @@ class ProjectNote extends Model
     protected $fillable = [
         'project_id',
         'description',
-        'status',
+        'is_active',
         'added_by',
         'updated_by',
     ];
 
     protected $casts = [
         'project_id' => 'integer',
-        'status' => 'boolean',
+        'is_active' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];

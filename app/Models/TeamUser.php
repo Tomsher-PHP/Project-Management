@@ -24,7 +24,7 @@ class TeamUser extends Model
             'user_id' => 'integer',
             'team_role' => 'string',
             'joined_at' => 'datetime',
-            'status' => 'boolean',
+            'is_active' => 'boolean',
             'added_by' => 'integer',
             'updated_by' => 'integer',
         ];

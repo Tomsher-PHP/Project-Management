@@ -22,14 +22,14 @@ class CustomerContact extends Model
         'whatsapp',
         'designation',
         'is_primary',
-        'status',
+        'is_active',
         'added_by',
         'updated_by',
     ];
 
     protected $casts = [
         'is_primary' => 'boolean',
-        'status' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected $sortable = [

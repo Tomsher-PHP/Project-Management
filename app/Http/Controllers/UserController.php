@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -52,7 +52,7 @@ class UserController extends Controller
     public function create()
     {
         //get roles
-        $roles = Role::where('status', true)->get();
+        $roles = Role::active()->get();
 
         //Department and Designation can be added later if needed
         $departments = Department::active()->orderBy('sort_order', 'asc')->get();
@@ -74,7 +74,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::where('status', true)->get();
+        $roles = Role::active()->get();
         $departments = Department::active()->orderBy('sort_order', 'asc')->get();
         $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
         $managerIds = collect([
@@ -107,7 +107,7 @@ class UserController extends Controller
 
         $user->update([
             'delete_status' => true,
-            'status' => false,
+            'is_active' => false,
         ]);
 
         return redirect()
@@ -118,12 +118,12 @@ class UserController extends Controller
     public function toggleStatus(Request $request)
     {
         $user = User::findOrFail($request->id);
-        $user->status = !$user->status;
+        $user->is_active = ! $user->is_active;
         $user->save();
 
         return response()->json([
             'success' => true,
-            'status' => $user->status,
+            'is_active' => $user->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

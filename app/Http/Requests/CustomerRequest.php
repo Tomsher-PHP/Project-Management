@@ -56,7 +56,7 @@ class CustomerRequest extends FormRequest
             'contacts.*.whatsapp' => 'nullable|string|max:255',
             'contacts.*.designation' => 'nullable|string|max:255',
             'contacts.*.is_primary' => 'boolean',
-            'contacts.*.status' => 'boolean',
+            'contacts.*.is_active' => 'boolean',
         ];
     }
 
@@ -102,7 +102,7 @@ class CustomerRequest extends FormRequest
             'contacts.*.name.required' => 'Contact name is required.',
             'contacts.*.email.email' => 'Please enter a valid email address for contact.',
             'contacts.*.is_primary.boolean' => 'Is primary must be true or false.',
-            'contacts.*.status.boolean' => 'Status must be true or false.',
+            'contacts.*.is_active.boolean' => 'Is active must be true or false.',
         ];
     }
 }

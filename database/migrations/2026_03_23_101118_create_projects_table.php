@@ -39,7 +39,7 @@ return new class extends Migration
             // Billing
             $table->boolean('default_billable')->default(false);
 
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
 
             // Sales
             $table->foreignId('sales_person_id')->nullable()->constrained('users')->nullOnDelete();

@@ -22,12 +22,12 @@ return new class extends Migration
             $table->string('color_code')->default('#f3f4f6')->nullable();
 
             $table->boolean('is_default')->default(false)->comment('System default'); // only ONE shift should be default (handle in logic)
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
 
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('status');
+            $table->index('is_active');
         });
     }
 

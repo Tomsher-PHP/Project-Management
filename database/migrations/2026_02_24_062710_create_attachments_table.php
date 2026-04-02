@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('visibility')->default('private')->comment('private, public');
             $table->boolean('is_primary')->default(false);
 
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
 
             $table->timestamps();

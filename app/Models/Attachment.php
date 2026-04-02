@@ -23,7 +23,7 @@ class Attachment extends Model
         'disk',
         'visibility',
         'is_primary',
-        'status',
+        'is_active',
         'added_by'
     ];
 
@@ -34,7 +34,7 @@ class Attachment extends Model
             'link_type' => 'string',
             'category' => 'string',
             'is_primary' => 'boolean',
-            'status' => 'boolean',
+            'is_active' => 'boolean',
             'added_by' => 'integer',
         ];
     }

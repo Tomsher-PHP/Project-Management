@@ -28,7 +28,7 @@ class ProjectCategorySeeder extends Seeder
                 ['name' => $name],
                 [
                     'sort_order' => $key + 1,
-                    'status' => 1,
+                    'is_active' => 1,
                 ]
             );
         }

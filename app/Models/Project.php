@@ -29,7 +29,7 @@ class Project extends Model
         'domain',
         'project_category_id',
         'default_billable',
-        'status',
+        'is_active',
         'sales_person_id',
         'added_by',
         'updated_by',
@@ -43,7 +43,7 @@ class Project extends Model
         'default_billable' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
-        'status' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected $sortable = [
@@ -179,14 +179,14 @@ class Project extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereHas('status', function ($q) {
+        return $query->whereHas('is_active', function ($q) {
             $q->where('is_completed', false);
         });
     }
 
     public function scopeCompleted($query)
     {
-        return $query->whereHas('status', function ($q) {
+        return $query->whereHas('is_active', function ($q) {
             $q->where('is_completed', true);
         });
     }

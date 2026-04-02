@@ -16,8 +16,8 @@ class Industry extends Model
         'name',
         'parent_id',
         'sort_order',
-        'default',
-        'status'
+        'is_default',
+        'is_active'
     ];
 
     protected $sortable = [
@@ -33,8 +33,8 @@ class Industry extends Model
             'name' => 'string',
             'parent_id' => 'integer',
             'sort_order' => 'integer',
-            'default' => 'boolean',
-            'status' => 'boolean',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -46,6 +46,6 @@ class Industry extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', true);
+        return $query->where('is_active', true);
     }
 }

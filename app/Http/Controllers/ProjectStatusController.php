@@ -52,7 +52,7 @@ class ProjectStatusController extends Controller
 
     public function destroy(ProjectStatus $projectStatus)
     {
-        if ($projectStatus->default) {
+        if ($projectStatus->is_default) {
             return redirect()
                 ->route('settings.project_statuses.index')
                 ->with('error', 'Default project status cannot be deleted.');
@@ -68,12 +68,12 @@ class ProjectStatusController extends Controller
     public function toggleStatus(Request $request)
     {
         $projectStatus = ProjectStatus::findOrFail($request->id);
-        $projectStatus->status = !$projectStatus->status;
+        $projectStatus->is_active = !$projectStatus->is_active;
         activity()->withoutLogs(fn () => $projectStatus->save());
 
         return response()->json([
             'success' => true,
-            'status' => $projectStatus->status,
+            'is_active' => $projectStatus->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

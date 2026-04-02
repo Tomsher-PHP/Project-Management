@@ -53,7 +53,7 @@ class TechnologyController extends Controller
 
     public function destroy(Technology $technology)
     {
-        if ($technology->default) {
+        if ($technology->is_default) {
             return redirect()
                 ->route('settings.technologies.index')
                 ->with('error', 'Default technology cannot be deleted.');
@@ -69,12 +69,12 @@ class TechnologyController extends Controller
     public function toggleStatus(Request $request)
     {
         $technology = Technology::findOrFail($request->id);
-        $technology->status = !$technology->status;
+        $technology->is_active = !$technology->is_active;
         activity()->withoutLogs(fn () => $technology->save());
 
         return response()->json([
             'success' => true,
-            'status' => $technology->status,
+            'is_active' => $technology->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

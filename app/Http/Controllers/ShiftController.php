@@ -75,12 +75,12 @@ class ShiftController extends Controller
     public function toggleStatus(Request $request)
     {
         $shift = Shift::findOrFail($request->id);
-        $shift->status = !$shift->status;
+        $shift->is_active = !$shift->is_active;
         activity()->withoutLogs(fn () => $shift->save());
 
         return response()->json([
             'success' => true,
-            'status' => $shift->status,
+            'is_active' => $shift->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

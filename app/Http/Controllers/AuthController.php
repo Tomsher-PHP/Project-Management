@@ -53,8 +53,8 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember');
 
-        //status should be true to allow login
-        $credentials['status'] = true;
+        // is_active should be true to allow login
+        $credentials['is_active'] = true;
 
         // Attempt login
         if (! Auth::attempt($credentials, $remember)) {

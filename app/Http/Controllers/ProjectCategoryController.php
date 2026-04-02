@@ -52,7 +52,7 @@ class ProjectCategoryController extends Controller
 
     public function destroy(ProjectCategory $projectCategory)
     {
-        if ($projectCategory->default) {
+        if ($projectCategory->is_default) {
             return redirect()
                 ->route('settings.project_categories.index')
                 ->with('error', 'Default project category cannot be deleted.');
@@ -68,12 +68,12 @@ class ProjectCategoryController extends Controller
     public function toggleStatus(Request $request)
     {
         $projectCategory = ProjectCategory::findOrFail($request->id);
-        $projectCategory->status = !$projectCategory->status;
+        $projectCategory->is_active = !$projectCategory->is_active;
         activity()->withoutLogs(fn () => $projectCategory->save());
 
         return response()->json([
             'success' => true,
-            'status' => $projectCategory->status,
+            'is_active' => $projectCategory->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

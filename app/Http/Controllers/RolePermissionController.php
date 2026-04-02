@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RolePermissionRequest;
-use App\Models\Role as ModelsRole;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RolePermissionController extends Controller
 {
@@ -26,7 +25,7 @@ class RolePermissionController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $roles = ModelsRole::filter($request->all())
+        $roles = Role::filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)
             ->withQueryString();
@@ -92,12 +91,12 @@ class RolePermissionController extends Controller
     public function toggleStatus(Request $request)
     {
         $role = Role::findById($request->id);
-        $role->status = !$role->status;
+        $role->is_active = !$role->is_active;
         $role->save();
 
         return response()->json([
             'success' => true,
-            'status' => $role->status,
+            'is_active' => $role->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

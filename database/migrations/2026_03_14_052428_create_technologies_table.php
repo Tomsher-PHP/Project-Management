@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->tinyInteger('sort_order')->default('1');
-            $table->boolean('default')->default(false);
-            $table->boolean('status')->default(true);
+            $table->boolean('is_default')->default(false);
+            $table->boolean('is_active')->default(true);
 
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('status');
+            $table->index('is_active');
         });
     }
 

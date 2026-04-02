@@ -52,7 +52,7 @@ class DesignationController extends Controller
 
     public function destroy(Designation $designation)
     {
-        if ($designation->default) {
+        if ($designation->is_default) {
             return redirect()
                 ->route('settings.designations.index')
                 ->with('error', 'Default designation cannot be deleted.');
@@ -68,12 +68,12 @@ class DesignationController extends Controller
     public function toggleStatus(Request $request)
     {
         $designation = Designation::findOrFail($request->id);
-        $designation->status = !$designation->status;
+        $designation->is_active = !$designation->is_active;
         activity()->withoutLogs(fn () => $designation->save());
 
         return response()->json([
             'success' => true,
-            'status' => $designation->status,
+            'is_active' => $designation->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 class Role extends SpatieRole
@@ -22,6 +21,12 @@ class Role extends SpatieRole
     {
         return [
             'name' => 'string',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

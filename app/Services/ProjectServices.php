@@ -182,7 +182,7 @@ class ProjectServices
         return DB::transaction(function () use ($project, $data) {
             $note = $project->projectNotes()->create([
                 'description' => $data['description'],
-                'status' => true,
+                'is_active' => true,
             ]);
 
             if (!empty($data['attachments'])) {

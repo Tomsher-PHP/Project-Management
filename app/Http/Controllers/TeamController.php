@@ -99,12 +99,12 @@ class TeamController extends Controller
     public function toggleStatus(Request $request)
     {
         $team = Team::findOrFail($request->id);
-        $team->status = !$team->status;
+        $team->is_active = !$team->is_active;
         $team->save();
 
         return response()->json([
             'success' => true,
-            'status' => $team->status,
+            'is_active' => $team->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

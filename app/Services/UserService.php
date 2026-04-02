@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserService
 {
@@ -132,7 +132,7 @@ class UserService
         $accessibleIds = User::accessibleBy($authUser)->select('id');
 
         return User::query()
-            ->select('id', 'name', 'email', 'status')
+            ->select('id', 'name', 'email', 'is_active')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
                 $q->whereIn('id', $accessibleIds);
 
@@ -141,7 +141,7 @@ class UserService
                 }
             })
             ->where(function ($q) use ($includeIds) {
-                $q->where('status', true);
+                $q->where('is_active', true);
 
                 if (!empty($includeIds)) {
                     $q->orWhereIn('id', $includeIds);

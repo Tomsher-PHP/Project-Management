@@ -30,7 +30,7 @@ class AgileModuleSeeder extends Seeder
                 'name' => $name,
                 'color' => $color,
                 'description' => $description,
-                'default' => true,
+                'is_default' => true,
                 'sort_order' => $sortOrder,
             ]);
             $sortOrder++;

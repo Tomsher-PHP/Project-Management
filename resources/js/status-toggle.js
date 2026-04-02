@@ -22,7 +22,7 @@ $(document).on('click', '.status-toggle', function () {
 
         if (!result.isConfirmed) {
             btn.data('processing', false);
-            btn.toggleClass('active', isActive);            
+            btn.toggleClass('active', isActive);
             return;
         }
 
@@ -38,10 +38,8 @@ $(document).on('click', '.status-toggle', function () {
 
                 if (response.success) {
 
-                    let newStatus = response.status == 1;
+                    let newStatus = (response.is_active ?? response.status) == 1;
 
-                    console.log(newStatus);
-                    
                     // Update switch UI
                     btn.attr('aria-checked', newStatus);
                     btn.toggleClass('active', newStatus);

@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->string('name');
 
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
 
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
             $table->unsignedBigInteger('updated_by')->nullable()->comment('user id')->index();

@@ -36,7 +36,7 @@ class User extends Authenticatable
         'password_otp',
         'password_otp_expires_at',
 
-        'status',
+        'is_active',
         'delete_status',
     ];
 
@@ -66,7 +66,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'status' => 'boolean',
+            'is_active' => 'boolean',
             'delete_status' => 'boolean',
             'added_by' => 'integer',
             'updated_by' => 'integer',
@@ -128,7 +128,7 @@ class User extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('status', true);
+        return $query->where('is_active', true);
     }
 
     public function getRoleIdAttribute()

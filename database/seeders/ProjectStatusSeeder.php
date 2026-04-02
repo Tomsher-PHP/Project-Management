@@ -31,8 +31,8 @@ class ProjectStatusSeeder extends Seeder
             ProjectStatus::create([
                 'name' => $status,
                 'sort_order' => $key + 1,
-                'default' => 1,
-                'status' => 1,
+                'is_default' => 1,
+                'is_active' => 1,
             ]);
         }
     }

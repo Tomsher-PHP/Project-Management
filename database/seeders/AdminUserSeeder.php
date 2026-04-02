@@ -23,7 +23,7 @@ class AdminUserSeeder extends Seeder
             'password' => Hash::make('12345678'),
             'email_verified_at' => now(),
             'is_super_admin' => false,
-            'status' => true,
+            'is_active' => true,
             'delete_status' => false,
         ]);
 

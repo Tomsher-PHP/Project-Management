@@ -46,8 +46,8 @@ class AgileModuleController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if ($data['default']) {
-            AgileModule::query()->update(['default' => false]);
+        if (!empty($data['is_default'])) {
+            AgileModule::query()->update(['is_default' => false]);
         }
 
         $agileModule = AgileModule::create($data);
@@ -74,7 +74,7 @@ class AgileModuleController extends Controller
 
     public function destroy(AgileModule $agileModule)
     {
-        if ($agileModule->default) {
+        if ($agileModule->is_default) {
             return redirect()
                 ->route('settings.agile-modules.index')
                 ->with('error', 'Default agile module cannot be deleted.');
@@ -90,12 +90,12 @@ class AgileModuleController extends Controller
     public function toggleStatus(Request $request)
     {
         $agileModule = AgileModule::findOrFail($request->id);
-        $agileModule->status = ! $agileModule->status;
+        $agileModule->is_active = ! $agileModule->is_active;
         $agileModule->save();
 
         return response()->json([
             'success' => true,
-            'status' => $agileModule->status,
+            'is_active' => $agileModule->is_active,
             'message' => 'Status updated successfully',
         ], Response::HTTP_OK);
     }

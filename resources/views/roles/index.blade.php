@@ -39,7 +39,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -93,7 +93,7 @@
     <!-- Filter drawer -->
     <x-filters.drawer>
         <x-filters.input-search name="search" label="Role Name" />
-        <x-filters.select name="status" label="Status" :options="[
+        <x-filters.select name="is_active" label="Is Active" :options="[
             1 => 'Active',
             0 => 'Inactive',
         ]" />

@@ -46,8 +46,8 @@ class AgileSprintController extends Controller
     {
         $data = $this->prepareData($request);
 
-        if ($data['default']) {
-            AgileSprint::query()->update(['default' => false]);
+        if (!empty($data['is_default'])) {
+            AgileSprint::query()->update(['is_default' => false]);
         }
 
         $agileSprint = AgileSprint::create($data);
@@ -74,7 +74,7 @@ class AgileSprintController extends Controller
 
     public function destroy(AgileSprint $agileSprint)
     {
-        if ($agileSprint->default) {
+        if ($agileSprint->is_default) {
             return redirect()
                 ->route('settings.agile-sprints.index')
                 ->with('error', 'Default agile sprint cannot be deleted.');
@@ -90,12 +90,12 @@ class AgileSprintController extends Controller
     public function toggleStatus(Request $request)
     {
         $agileSprint = AgileSprint::findOrFail($request->id);
-        $agileSprint->status = ! $agileSprint->status;
+        $agileSprint->is_active = ! $agileSprint->is_active;
         $agileSprint->save();
 
         return response()->json([
             'success' => true,
-            'status' => $agileSprint->status,
+            'is_active' => $agileSprint->is_active,
             'message' => 'Status updated successfully',
         ], Response::HTTP_OK);
     }

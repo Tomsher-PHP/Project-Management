@@ -242,12 +242,12 @@ class ProjectController extends Controller
     public function toggleStatus(Request $request)
     {
         $project = Project::findOrFail($request->id);
-        $project->status = !$project->status;
+        $project->is_active = !$project->is_active;
         $project->save();
 
         return response()->json([
             'success' => true,
-            'status' => $project->status,
+            'is_active' => $project->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
     }

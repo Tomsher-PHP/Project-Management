@@ -20,7 +20,7 @@ class Shift extends Model
         'break_duration',
         'color_code',
         'is_default',
-        'status',
+        'is_active',
     ];
 
     protected $sortable = [
@@ -37,7 +37,7 @@ class Shift extends Model
             'time_to' => 'datetime:H:i:s',
             'break_duration' => 'integer',
             'is_default' => 'boolean',
-            'status' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 

@@ -85,7 +85,7 @@ class AttachmentService
             'disk'          => $disk,
             'visibility'    => $visibility,
             'is_primary'    => $isPrimary ? 1 : 0,
-            'status'        => 1,
+            'is_active'        => 1,
         ]);
     }
 

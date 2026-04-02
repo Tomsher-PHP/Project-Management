@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('whatsapp')->nullable();
             $table->string('designation')->nullable();
             $table->boolean('is_primary')->default(false);
-            $table->boolean('status')->default(true);
+            $table->boolean('is_active')->default(true);
 
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
@@ -32,11 +32,11 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index('customer_id');
-            $table->index('status');
+            $table->index('is_active');
             $table->index('is_primary');
 
             // optional optimization
-            $table->index(['customer_id', 'status']);
+            $table->index(['customer_id', 'is_active']);
         });
     }
 

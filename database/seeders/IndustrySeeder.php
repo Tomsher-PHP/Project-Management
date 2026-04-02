@@ -34,7 +34,7 @@ class IndustrySeeder extends Seeder
                 [
                     'parent_id' => null,
                     'sort_order' => $key + 1,
-                    'status' => 1,
+                    'is_active' => 1,
                 ]
             );
         }
