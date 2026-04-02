@@ -3,10 +3,13 @@
         @php
             $estimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
             $derivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
+            $actualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
             $timeDifferenceSeconds = $derivedSeconds - $estimatedSeconds;
             $hasTimeDifference = $timeDifferenceSeconds !== 0;
             $timeDifferenceClasses = $timeDifferenceSeconds > 0 ? 'bg-red-50 text-red-500 dark:bg-darkblack-600 dark:text-red-400' : 'bg-success-50 text-success-400 dark:bg-darkblack-600 dark:text-success-300';
             $timeDifferencePrefix = $timeDifferenceSeconds > 0 ? '+' : '-';
+            $statusName = $projectSprint->status?->name ?? 'No status';
+            $formatDate = static fn ($date) => $date ? $date->format('d M Y') : '--';
         @endphp
         <div class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-sprint-card data-project-sprint-id="{{ $projectSprint->id }}" style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}">
             <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
@@ -20,6 +23,9 @@
                             </span>
                             <span title="Derived Time: {{ $projectSprint->derived_time_formatted }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
                                 {{ $projectSprint->derived_time_formatted }}
+                            </span>
+                            <span title="Actual Time: {{ $projectSprint->actual_time_formatted }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
+                                {{ $projectSprint->actual_time_formatted }}
                             </span>
                             @if ($hasTimeDifference)
                                 <span title="{{ $timeDifferenceSeconds > 0 ? 'Exceeds estimate by' : 'Under estimate by' }} {{ sprintf('%02d h : %02d m', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $timeDifferenceClasses }}">
@@ -35,6 +41,11 @@
                                 {{ \Illuminate\Support\Str::limit($projectSprint->description, 100) }}
                             </p>
                         @endif
+                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
+                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Status: {{ $statusName }}</span>
+                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Start: {{ $formatDate($projectSprint->start_date) }}</span>
+                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">End: {{ $formatDate($projectSprint->end_date) }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -49,12 +60,12 @@
                     @endcan
 
                     @can('project_sprint.edit')
-                        <a href="javascript:void(0)" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-modal="project-sprint-modal" data-url="{{ route('projects.sprints.update', [$project, $projectSprint]) }}" data-method="PUT" data-module="Project Sprint"
-                            data-module-context="project-sprint" data-project_module_id="{{ $projectSprint->project_module_id }}" data-name="{{ $projectSprint->name }}" data-color="{{ $projectSprint->color }}" data-description="{{ $projectSprint->description }}" data-estimated_time_minutes="{{ $projectSprint->estimated_time_minutes }}" title="Edit sprint">
+                        <button type="button" class="project-sprint-builder-edit inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300"
+                            data-project-sprint-id="{{ $projectSprint->id }}" data-project-module-id="{{ $projectSprint->project_module_id }}" data-project-module-name="{{ $module->name }}" title="Edit sprint">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                             </svg>
-                        </a>
+                        </button>
                     @endcan
 
                     @can('project_sprint.delete')

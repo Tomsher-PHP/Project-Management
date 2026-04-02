@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectSprintRequest;
 use App\Models\AgileSprint;
+use App\Models\AgileSprintStatus;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
@@ -25,13 +26,14 @@ class ProjectSprintController extends Controller
                 'project_id' => $project->id,
                 'project_module_id' => $projectModule->id,
                 'sort_order' => $this->nextOrder($projectModule),
-            ]));
+            ], true));
         });
 
         return response()->json([
             'status' => true,
             'message' => 'Project sprint created successfully.',
             'data' => $projectSprint,
+            'sprint' => $this->serializeSprint($projectSprint),
             'html' => $this->renderSection($project, $projectModule->id, $projectSprint->id),
             'render_target' => '[data-project-module-section]',
             'render_mode' => 'replace_outer',
@@ -77,6 +79,7 @@ class ProjectSprintController extends Controller
             'status' => true,
             'message' => 'Project sprint updated successfully.',
             'data' => $projectSprint,
+            'sprint' => $this->serializeSprint($projectSprint),
             'html' => $this->renderSection($project, $projectSprint->project_module_id, $projectSprint->id),
             'render_target' => '[data-project-module-section]',
             'render_mode' => 'replace_outer',
@@ -115,9 +118,16 @@ class ProjectSprintController extends Controller
         ]);
     }
 
-    private function prepareData(ProjectSprintRequest $request, array $overrides = []): array
+    private function prepareData(ProjectSprintRequest $request, array $overrides = [], bool $applyDefaultStatus = false): array
     {
         $data = $request->validated();
+
+        if ($applyDefaultStatus && empty($data['status_id'])) {
+            $data['status_id'] = AgileSprintStatus::query()
+                ->where('is_default', true)
+                ->value('id');
+        }
+
         $data['estimated_time_seconds'] = array_key_exists('estimated_time_minutes', $data) && $data['estimated_time_minutes'] !== null
             ? (int) $data['estimated_time_minutes'] * 60
             : null;
@@ -150,6 +160,22 @@ class ProjectSprintController extends Controller
             });
     }
 
+    private function serializeSprint(ProjectSprint $projectSprint): array
+    {
+        return [
+            'id' => $projectSprint->id,
+            'project_module_id' => $projectSprint->project_module_id,
+            'name' => $projectSprint->name,
+            'color' => $projectSprint->color,
+            'description' => $projectSprint->description,
+            'status_id' => $projectSprint->status_id,
+            'start_date' => $projectSprint->start_date?->format('Y-m-d'),
+            'end_date' => $projectSprint->end_date?->format('Y-m-d'),
+            'estimated_time_minutes' => $projectSprint->estimated_time_minutes,
+            'sort_order' => $projectSprint->sort_order,
+        ];
+    }
+
     private function renderSection(Project $project, ?int $openModuleId = null, ?int $openSprintId = null): string
     {
         $project->load([
@@ -160,7 +186,7 @@ class ProjectSprintController extends Controller
                     'status',
                     'owner',
                     'projectSprints' => fn ($sprintQuery) => $sprintQuery
-                        ->with(['addedBy', 'updatedBy'])
+                        ->with(['addedBy', 'updatedBy', 'status'])
                         ->orderBy('sort_order')
                         ->orderBy('id'),
                 ])

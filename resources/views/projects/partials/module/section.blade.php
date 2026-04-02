@@ -1,6 +1,6 @@
 <div class="space-y-6" data-project-module-section>
     @php
-        $librarySprintCount = $agileSprints->count();
+        $projectSprintCount = $projectModules->sum(fn ($module) => $module->projectSprints->count());
         $canEditProjectModules = auth()->user()->can('project_module.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.modules.reorder', $project) : null;
         $trashedCount = $trashedProjectModules->count();
@@ -14,6 +14,20 @@
             'end_date' => $module->end_date?->format('Y-m-d'),
             'estimated_time_minutes' => $module->estimated_time_minutes,
             'sort_order' => $module->sort_order,
+        ])->values();
+        $projectSprintBuilderSource = $projectModules->map(fn ($module) => [
+            'id' => $module->id,
+            'name' => $module->name,
+            'sprints' => $module->projectSprints->map(fn ($sprint) => [
+                'id' => $sprint->id,
+                'name' => $sprint->name,
+                'color' => $sprint->color,
+                'description' => $sprint->description,
+                'start_date' => $sprint->start_date?->format('Y-m-d'),
+                'end_date' => $sprint->end_date?->format('Y-m-d'),
+                'estimated_time_minutes' => $sprint->estimated_time_minutes,
+                'sort_order' => $sprint->sort_order,
+            ])->values(),
         ])->values();
         $formatDuration = function (?int $seconds): string {
             $totalSeconds = max(0, (int) ($seconds ?? 0));
@@ -47,8 +61,8 @@
                             <span class="font-semibold text-bgray-900 dark:text-white">{{ $projectModules->count() }}</span>
                         </span>
                         <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1.5 text-xs font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50">
-                            <span class="text-bgray-500 dark:text-bgray-300">Sprint Library</span>
-                            <span class="font-semibold text-bgray-900 dark:text-white">{{ $librarySprintCount }}</span>
+                            <span class="text-bgray-500 dark:text-bgray-300">Sprints</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white">{{ $projectSprintCount }}</span>
                         </span>
 
                         @can('project_module.restore')
@@ -157,13 +171,13 @@
 
                             <div class="flex flex-wrap items-center gap-2 xl:max-w-[320px] xl:justify-end">
                                 @can('project_sprint.create')
-                                    <a href="javascript:void(0)" data-target="#project-sprint-modal" data-module="Project Sprint" data-url="{{ route('projects.modules.sprints.store', [$project, $module]) }}" data-method="POST" data-project-module-id="{{ $module->id }}" data-project-module-name="{{ $module->name }}"
-                                        class="modal-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white" data-module-context="project-sprint">
+                                    <button type="button" data-project-module-id="{{ $module->id }}" data-project-module-name="{{ $module->name }}"
+                                        class="project-sprint-builder-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
                                         <span>Sprint</span>
-                                    </a>
+                                    </button>
                                 @endcan
 
                                 @can('project_module.edit')
@@ -223,6 +237,10 @@
 
     <script type="application/json" data-project-module-builder-source>
         {!! json_encode($projectModuleBuilderSource, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+    </script>
+
+    <script type="application/json" data-project-sprint-builder-source>
+        {!! json_encode($projectSprintBuilderSource, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
 
     @can('project_module.restore')

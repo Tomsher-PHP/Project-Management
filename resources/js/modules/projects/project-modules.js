@@ -929,103 +929,868 @@ const initializeProjectModuleBuilderModal = () => {
     modal.dataset.projectModuleBuilderInitialized = 'true';
 };
 
-const initializeProjectSprintModal = () => {
+const syncSprintCardDateRange = (card) => {
+    const rangeInput = card.querySelector('[data-project-sprint-builder-date-range]');
+    const startInput = card.querySelector('[name="start_date"]');
+    const endInput = card.querySelector('[name="end_date"]');
+
+    if (!rangeInput || !startInput || !endInput) {
+        return;
+    }
+
+    const value = rangeInput.value.trim();
+
+    if (!value) {
+        startInput.value = '';
+        endInput.value = '';
+        return;
+    }
+
+    const [startDate = '', endDate = ''] = value.split(' to ').map((item) => item.trim());
+    startInput.value = startDate || '';
+    endInput.value = endDate || '';
+};
+
+const initializeSprintCardDatepicker = (card) => {
+    initDatepicker('.project-sprint-date-range', {}, card);
+    syncSprintCardDateRange(card);
+};
+
+const normalizeDateOnly = (value) => {
+    if (!value) {
+        return '';
+    }
+
+    const stringValue = String(value).trim();
+
+    if (!stringValue) {
+        return '';
+    }
+
+    return stringValue.includes('T')
+        ? stringValue.split('T')[0]
+        : stringValue;
+};
+
+const renderSprintBuilderCard = (sprint, extraClass = '') => `
+    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="true" draggable="false">
+        <input type="hidden" name="color" value="${escapeHtml(sprint.color || '#22C55E')}">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex items-start gap-3">
+                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-sprint-builder-drag-handle>
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                    </svg>
+                </button>
+
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex h-3.5 w-3.5 rounded-full" data-project-sprint-builder-color-dot style="background-color: ${escapeHtml(sprint.color || '#22C55E')}"></span>
+                        <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-sprint-builder-title>${escapeHtml(sprint.name || 'New Sprint')}</h5>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-sprint-builder-order>${escapeHtml(sprint.sort_order || '')}</span>
+                    </div>
+                    <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-sprint-builder-status>Saved</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Collapse sprint" title="Collapse sprint">
+                    <svg class="h-4 w-4 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
+                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-4 border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-sprint-builder-body>
+            <div class="grid gap-4 xl:grid-cols-2">
+                <div>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
+                    <input type="text" name="name" value="${escapeHtml(sprint.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Estimated Minutes</label>
+                    <input type="number" min="0" step="1" name="estimated_time_minutes" value="${escapeHtml(sprint.estimated_time_minutes ?? 0)}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
+                    <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-project-sprint-builder-date-range>
+                    <input type="hidden" name="start_date" value="${escapeHtml(sprint.start_date || '')}">
+                    <input type="hidden" name="end_date" value="${escapeHtml(sprint.end_date || '')}">
+                </div>
+
+                <div class="xl:col-span-2">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
+                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-builder-description-count>${escapeHtml(String((sprint.description || '').length))}</span>/100</span>
+                    </div>
+                    <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(sprint.description || '')}</textarea>
+                </div>
+            </div>
+        </div>
+    </article>
+`;
+
+const initializeProjectSprintBuilderModal = () => {
     const modal = document.getElementById('project-sprint-modal');
 
-    if (!modal || modal.dataset.projectSprintModalInitialized === 'true') {
+    if (!modal || modal.dataset.projectSprintBuilderInitialized === 'true') {
         return;
     }
 
-    const librarySelect = modal.querySelector('#library_sprint_id');
-    const nameInput = modal.querySelector('[name="name"]');
-    const colorInput = modal.querySelector('[name="color"]');
-    const descriptionInput = modal.querySelector('[name="description"]');
-    const parentModuleInput = modal.querySelector('#project_sprint_module_id');
-    const form = modal.querySelector('form');
-    const sprintStoreUrlTemplate = modal.querySelector('#project_sprint_store_url_template')?.value || '';
-    const descriptionCount = modal.querySelector('[data-project-sprint-description-count]');
+    const configNode = document.getElementById('project-sprint-builder-config');
+    const workspace = modal.querySelector('[data-project-sprint-builder-workspace]');
+    const library = modal.querySelector('[data-project-sprint-builder-library]');
+    const searchInput = modal.querySelector('[data-project-sprint-builder-library-search]');
+    const resetSearchButton = modal.querySelector('[data-project-sprint-builder-reset-search]');
+    const countBadge = modal.querySelector('[data-project-sprint-builder-count]');
+    const moduleNameNode = modal.querySelector('[data-project-sprint-builder-module-name]');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    if (!librarySelect || !nameInput || !colorInput || !descriptionInput || !parentModuleInput || !form || !sprintStoreUrlTemplate) {
-        modal.dataset.projectSprintModalInitialized = 'true';
+    if (!configNode || !workspace || !library || !moduleNameNode || !csrfToken) {
+        modal.dataset.projectSprintBuilderInitialized = 'true';
         return;
     }
 
-    const updateDescriptionCount = () => {
-        if (descriptionCount) {
-            descriptionCount.textContent = String(descriptionInput.value.length);
+    const config = JSON.parse(configNode.textContent || '{}');
+    let activeModuleId = null;
+    let activeModuleName = '';
+    let draggedLibrarySprint = null;
+    let draggedWorkspaceCard = null;
+    let handleCard = null;
+    const cardTimers = new Map();
+
+    const getCards = () => Array.from(workspace.querySelectorAll('[data-project-sprint-builder-card]'));
+    const getHelper = () => workspace.querySelector('[data-project-sprint-builder-helper]');
+    const getDropzone = () => workspace.querySelector('[data-project-sprint-builder-dropzone]');
+    const helperMarkup = `
+        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                </svg>
+            </span>
+            <div>
+                <p class="text-sm font-semibold">Drag here for more sprints</p>
+                <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected module.</p>
+            </div>
+        </div>
+    `;
+    const dropzoneMarkup = `
+        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-sprint-builder-dropzone></div>
+    `;
+
+    const createWorkspaceGuide = (markup) => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = markup.trim();
+        return wrapper.firstElementChild;
+    };
+
+    const getSectionSprintSource = () => {
+        const sourceNode = document.querySelector('[data-project-module-section] [data-project-sprint-builder-source]');
+
+        if (!sourceNode) {
+            return null;
+        }
+
+        try {
+            const parsed = JSON.parse(sourceNode.textContent || '[]');
+            return Array.isArray(parsed) ? parsed : null;
+        } catch (error) {
+            return null;
         }
     };
 
-    const fillFromLibraryOption = () => {
-        const selectedOption = librarySelect.options[librarySelect.selectedIndex];
-
-        if (!selectedOption || !selectedOption.value) {
-            colorInput.value = colorInput.value || '#000000';
-            updateDescriptionCount();
-            return;
-        }
-
-        nameInput.value = selectedOption.dataset.name || '';
-        colorInput.value = selectedOption.dataset.color || '#000000';
-        descriptionInput.value = selectedOption.dataset.description || '';
-        updateDescriptionCount();
+    const getActiveModuleSource = () => {
+        const modules = getSectionSprintSource() || [];
+        return modules.find((module) => Number(module.id) === Number(activeModuleId)) || null;
     };
 
-    descriptionInput.addEventListener('input', updateDescriptionCount);
-    librarySelect.addEventListener('change', fillFromLibraryOption);
-    updateDescriptionCount();
-
-    const syncSprintFormAction = () => {
-        if (modal.dataset.projectSprintMode !== 'create') {
-            return;
-        }
-
-        const moduleId = parentModuleInput.value || '';
-
-        if (!moduleId) {
-            return;
-        }
-
-        form.setAttribute('action', sprintStoreUrlTemplate.replace('__MODULE__', moduleId));
+    const updateModuleContext = () => {
+        moduleNameNode.textContent = activeModuleName || 'Select a module';
     };
 
-    parentModuleInput.addEventListener('change', syncSprintFormAction);
+    const openModal = ({ moduleId, moduleName = '', sprintId = null } = {}) => {
+        activeModuleId = Number(moduleId) || null;
+        const latestModule = getActiveModuleSource();
+        activeModuleName = moduleName || latestModule?.name || '';
+        updateModuleContext();
+        renderWorkspaceFromSprints(latestModule?.sprints || []);
 
-    document.addEventListener('click', function (event) {
-        const createButton = event.target.closest('.modal-open[data-module-context="project-sprint"]');
-        const editButton = event.target.closest('.edit-record[data-module-context="project-sprint"]');
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
 
-        if (!createButton && !editButton) {
+        if (sprintId) {
+            const targetCard = workspace.querySelector(`[data-project-sprint-builder-card][data-sprint-id="${sprintId}"]`);
+
+            if (targetCard) {
+                setCardExpanded(targetCard, true);
+                highlightCard(targetCard);
+            }
             return;
         }
 
-        window.setTimeout(() => {
-            librarySelect.value = '';
+        const firstCard = getCards()[0];
 
-            if (librarySelect.tomselect) {
-                librarySelect.tomselect.clear(true);
+        if (firstCard) {
+            setCardExpanded(firstCard, true);
+        }
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    const syncWorkspaceGuides = () => {
+        const cards = getCards();
+        let helper = getHelper();
+        let dropzone = getDropzone();
+
+        if (!cards.length) {
+            helper?.remove();
+            dropzone?.remove();
+            return;
+        }
+
+        if (!helper) {
+            helper = createWorkspaceGuide(helperMarkup);
+        }
+
+        if (!dropzone) {
+            dropzone = createWorkspaceGuide(dropzoneMarkup);
+        }
+
+        workspace.appendChild(helper);
+        workspace.appendChild(dropzone);
+    };
+
+    const appendCardToWorkspace = (card) => {
+        syncWorkspaceGuides();
+        const dropzone = getDropzone();
+
+        if (dropzone) {
+            workspace.insertBefore(card, dropzone);
+            return;
+        }
+
+        workspace.appendChild(card);
+    };
+
+    const updateCount = () => {
+        if (countBadge) {
+            countBadge.textContent = String(getCards().length);
+        }
+    };
+
+    const ensureEmptyState = () => {
+        const cards = getCards();
+        const emptyState = workspace.querySelector('[data-project-sprint-builder-empty]');
+
+        if (cards.length && emptyState) {
+            emptyState.remove();
+        }
+
+        if (!cards.length && !emptyState) {
+            workspace.innerHTML = `
+                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-sprint-builder-empty>
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </span>
+                    <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Sprints Selected Yet</h5>
+                    <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                        Drag one or more items from the sprint library to start building this module workspace.
+                    </p>
+                </div>
+            `;
+        }
+
+        updateCount();
+        syncOrderBadges();
+        syncWorkspaceGuides();
+    };
+
+    const renderWorkspaceFromSprints = (sprints) => {
+        workspace.innerHTML = '';
+
+        sprints.forEach((sprint) => {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.innerHTML = renderSprintBuilderCard(sprint);
+            const card = cardWrapper.firstElementChild;
+
+            if (!card) {
+                return;
             }
 
-            if (createButton) {
-                modal.dataset.projectSprintMode = 'create';
-                parentModuleInput.value = createButton.dataset.projectModuleId || '';
+            appendCardToWorkspace(card);
+            initializeSprintCardDatepicker(card);
+            syncDescriptionCount(card);
+            syncSprintColor(card);
+        });
 
-                if (parentModuleInput.tomselect) {
-                    parentModuleInput.tomselect.setValue(createButton.dataset.projectModuleId || '', true);
+        ensureEmptyState();
+        getCards().forEach((card) => setCardExpanded(card, false));
+    };
+
+    const setCardStatus = (card, status, classes = '') => {
+        const statusNode = card.querySelector('[data-project-sprint-builder-status]');
+
+        if (!statusNode) {
+            return;
+        }
+
+        statusNode.className = `mt-2 text-xs font-medium ${classes || 'text-bgray-500 dark:text-bgray-300'}`;
+        statusNode.textContent = status;
+    };
+
+    const syncCardTitle = (card) => {
+        const title = card.querySelector('[data-project-sprint-builder-title]');
+        const nameInput = card.querySelector('[name="name"]');
+
+        if (title && nameInput) {
+            const nextTitle = nameInput.value.trim() || 'Untitled Sprint';
+            title.textContent = nextTitle;
+        }
+    };
+
+    const syncDescriptionCount = (card) => {
+        const countNode = card.querySelector('[data-project-sprint-builder-description-count]');
+        const textarea = card.querySelector('[name="description"]');
+
+        if (!countNode || !textarea) {
+            return;
+        }
+
+        countNode.textContent = String(textarea.value.length);
+    };
+
+    const syncSprintColor = (card) => {
+        const colorValue = card.querySelector('[name="color"]')?.value || '#22C55E';
+        const colorPicker = card.querySelector('[name="color_picker"]');
+        const colorDot = card.querySelector('[data-project-sprint-builder-color-dot]');
+
+        if (colorPicker && colorPicker.value !== colorValue) {
+            colorPicker.value = colorValue;
+        }
+
+        if (colorDot) {
+            colorDot.style.backgroundColor = colorValue;
+        }
+
+        card.style.borderColor = colorValue || '#E5E7EB';
+    };
+
+    const syncOrderBadges = () => {
+        getCards().forEach((card, index) => {
+            const badge = card.querySelector('[data-project-sprint-builder-order]');
+
+            if (badge) {
+                badge.textContent = String(index + 1);
+            }
+        });
+    };
+
+    const setCardExpanded = (card, expanded) => {
+        const body = card.querySelector('[data-project-sprint-builder-body]');
+        const icon = card.querySelector('[data-project-sprint-builder-toggle-icon]');
+        const toggleButton = card.querySelector('[data-project-sprint-builder-toggle]');
+
+        if (expanded) {
+            getCards().forEach((item) => {
+                if (item !== card) {
+                    item.dataset.expanded = 'false';
+                    item.querySelector('[data-project-sprint-builder-body]')?.classList.add('hidden');
+                    item.querySelector('[data-project-sprint-builder-toggle-icon]')?.classList.add('rotate-180');
+                    item.querySelector('[data-project-sprint-builder-toggle]')?.setAttribute('aria-label', 'Expand sprint');
+                    item.querySelector('[data-project-sprint-builder-toggle]')?.setAttribute('title', 'Expand sprint');
                 }
+            });
+        }
 
-                syncSprintFormAction();
-            }
+        card.dataset.expanded = expanded ? 'true' : 'false';
 
-            if (editButton) {
-                modal.dataset.projectSprintMode = 'edit';
-            }
+        if (body) {
+            body.classList.toggle('hidden', !expanded);
+        }
 
-            updateDescriptionCount();
-        }, 0);
+        if (icon) {
+            icon.classList.toggle('rotate-180', !expanded);
+        }
+
+        if (toggleButton) {
+            const label = expanded ? 'Collapse sprint' : 'Expand sprint';
+            toggleButton.setAttribute('aria-label', label);
+            toggleButton.setAttribute('title', label);
+        }
+    };
+
+    const collectCardPayload = (card) => ({
+        project_module_id: activeModuleId,
+        name: card.querySelector('[name="name"]')?.value.trim() || '',
+        estimated_time_minutes: card.querySelector('[name="estimated_time_minutes"]')?.value || 0,
+        color: card.querySelector('[name="color"]')?.value || '',
+        description: card.querySelector('[name="description"]')?.value || '',
+        start_date: card.querySelector('[name="start_date"]')?.value || '',
+        end_date: card.querySelector('[name="end_date"]')?.value || '',
     });
 
-    modal.dataset.projectSprintModalInitialized = 'true';
+    const normalizePayload = (payload) => {
+        const normalized = { ...payload };
+
+        if ('project_module_id' in normalized) {
+            normalized.project_module_id = Number(normalized.project_module_id) || null;
+        }
+
+        if ('estimated_time_minutes' in normalized) {
+            normalized.estimated_time_minutes = Number.parseInt(normalized.estimated_time_minutes || 0, 10) || 0;
+        }
+
+        if ('color' in normalized) {
+            normalized.color = normalized.color || null;
+        }
+
+        if ('description' in normalized) {
+            normalized.description = normalized.description || null;
+        }
+
+        if ('start_date' in normalized) {
+            normalized.start_date = normalized.start_date || null;
+        }
+
+        if ('end_date' in normalized) {
+            normalized.end_date = normalized.end_date || null;
+        }
+
+        return normalized;
+    };
+
+    const requestJson = async (url, method, payload) => {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.status === false || result.success === false) {
+            const error = new Error(result.message || 'Unable to save the project sprint.');
+            error.payload = result;
+            throw error;
+        }
+
+        return result;
+    };
+
+    const buildUniqueSprintName = (baseName, ignoreCard = null) => {
+        const existingNames = getCards()
+            .filter((card) => card !== ignoreCard)
+            .map((card) => (card.querySelector('[name="name"]')?.value || '').trim().toLowerCase())
+            .filter(Boolean);
+
+        if (!existingNames.includes(baseName.trim().toLowerCase())) {
+            return baseName.trim();
+        }
+
+        let suffix = 2;
+        let candidate = `${baseName} ${suffix}`;
+
+        while (existingNames.includes(candidate.trim().toLowerCase())) {
+            suffix += 1;
+            candidate = `${baseName} ${suffix}`;
+        }
+
+        return candidate;
+    };
+
+    const hydrateCardFromSprint = (card, sprint) => {
+        const normalizedColor = sprint.color || '#22C55E';
+        const normalizedStartDate = normalizeDateOnly(sprint.start_date);
+        const normalizedEndDate = normalizeDateOnly(sprint.end_date);
+
+        card.dataset.sprintId = String(sprint.id || card.dataset.sprintId || '');
+        card.querySelector('[name="name"]').value = sprint.name || '';
+        card.querySelector('[name="estimated_time_minutes"]').value = sprint.estimated_time_minutes ?? 0;
+        card.querySelector('[name="color"]').value = normalizedColor;
+        card.querySelector('[name="description"]').value = sprint.description || '';
+        card.querySelector('[name="start_date"]').value = normalizedStartDate;
+        card.querySelector('[name="end_date"]').value = normalizedEndDate;
+        const rangeInput = card.querySelector('[data-project-sprint-builder-date-range]');
+
+        if (rangeInput) {
+            rangeInput.value = [normalizedStartDate, normalizedEndDate].filter(Boolean).join(' to ');
+        }
+
+        syncCardTitle(card);
+        syncDescriptionCount(card);
+        syncSprintCardDateRange(card);
+        syncSprintColor(card);
+        setCardStatus(card, 'Saved');
+    };
+
+    const createLibrarySprintCard = async (librarySprint) => {
+        if (!activeModuleId) {
+            Alert.error('Select a project module before adding sprints.');
+            return;
+        }
+
+        const payload = normalizePayload({
+            project_module_id: activeModuleId,
+            name: buildUniqueSprintName(librarySprint.name || 'New Sprint'),
+            color: librarySprint.color || '#22C55E',
+            description: librarySprint.description || '',
+            estimated_time_minutes: 0,
+            start_date: '',
+            end_date: '',
+        });
+
+        const cardWrapper = document.createElement('div');
+        cardWrapper.innerHTML = renderSprintBuilderCard({
+            ...payload,
+            id: '',
+            sort_order: getCards().length + 1,
+        }, 'ring-2 ring-success-200 dark:ring-success-900/30');
+
+        const card = cardWrapper.firstElementChild;
+
+        if (!card) {
+            return;
+        }
+
+        appendCardToWorkspace(card);
+        initializeSprintCardDatepicker(card);
+        syncDescriptionCount(card);
+        syncSprintColor(card);
+        setCardExpanded(card, true);
+        ensureEmptyState();
+        setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
+
+        try {
+            const result = await requestJson(config.storeUrlTemplate.replace('__MODULE__', activeModuleId), 'POST', payload);
+            hydrateCardFromSprint(card, {
+                ...payload,
+                ...(result.sprint || result.data || {}),
+                estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
+            });
+            card.classList.remove('ring-2', 'ring-success-200', 'dark:ring-success-900/30');
+            replaceRenderedSection(result);
+        } catch (error) {
+            card.remove();
+            ensureEmptyState();
+            Alert.error(error.message || 'Unable to create the project sprint.');
+        }
+    };
+
+    const saveSprintCard = async (card) => {
+        const sprintId = card.dataset.sprintId;
+
+        if (!sprintId) {
+            return;
+        }
+
+        const payload = normalizePayload(collectCardPayload(card));
+
+        if (!payload.name) {
+            setCardStatus(card, 'Name is required', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+            return;
+        }
+
+        setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
+
+        try {
+            const result = await requestJson(config.updateUrlTemplate.replace('__SPRINT__', sprintId), 'PUT', payload);
+            hydrateCardFromSprint(card, {
+                ...payload,
+                ...(result.sprint || result.data || {}),
+                estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
+            });
+            replaceRenderedSection(result);
+        } catch (error) {
+            setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+            Alert.error(error.message || 'Unable to update the project sprint.');
+        }
+    };
+
+    const queueSprintSave = (card, delay = 500) => {
+        const existingTimer = cardTimers.get(card);
+
+        if (existingTimer) {
+            window.clearTimeout(existingTimer);
+        }
+
+        const timer = window.setTimeout(() => {
+            cardTimers.delete(card);
+            saveSprintCard(card);
+        }, delay);
+
+        cardTimers.set(card, timer);
+    };
+
+    const persistWorkspaceOrder = async () => {
+        const sprintIds = getCards()
+            .map((card) => Number(card.dataset.sprintId))
+            .filter(Boolean);
+
+        if (!activeModuleId || !sprintIds.length) {
+            return;
+        }
+
+        try {
+            const result = await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeModuleId), 'PATCH', { sprint_ids: sprintIds });
+            syncOrderBadges();
+            replaceRenderedSection(result);
+        } catch (error) {
+            Alert.error(error.message || 'Unable to reorder project sprints.');
+        }
+    };
+
+    const highlightCard = (card) => {
+        card.classList.add('ring-2', 'ring-success-300', 'dark:ring-success-900/40');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        window.setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-success-300', 'dark:ring-success-900/40');
+        }, 1800);
+    };
+
+    document.addEventListener('click', function (event) {
+        const createTrigger = event.target.closest('.project-sprint-builder-open');
+
+        if (createTrigger) {
+            openModal({
+                moduleId: createTrigger.dataset.projectModuleId,
+                moduleName: createTrigger.dataset.projectModuleName,
+            });
+            return;
+        }
+
+        const editTrigger = event.target.closest('.project-sprint-builder-edit');
+
+        if (editTrigger) {
+            openModal({
+                moduleId: editTrigger.dataset.projectModuleId,
+                moduleName: editTrigger.dataset.projectModuleName,
+                sprintId: editTrigger.dataset.projectSprintId,
+            });
+            return;
+        }
+
+        if (event.target.closest('[data-project-sprint-builder-close]')) {
+            closeModal();
+        }
+    });
+
+    modal.addEventListener('click', function (event) {
+        if (event.target.closest('[data-project-sprint-builder-close]')) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+
+    library.addEventListener('dragstart', function (event) {
+        const item = event.target.closest('[data-project-sprint-library-item]');
+
+        if (!item) {
+            return;
+        }
+
+        draggedLibrarySprint = {
+            id: item.dataset.librarySprintId,
+            name: item.dataset.name || '',
+            color: item.dataset.color || '#22C55E',
+            description: item.dataset.description || '',
+        };
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'copy';
+        }
+    });
+
+    library.addEventListener('dragend', function () {
+        draggedLibrarySprint = null;
+    });
+
+    workspace.addEventListener('dragover', function (event) {
+        if (draggedLibrarySprint || draggedWorkspaceCard) {
+            event.preventDefault();
+        }
+
+        const targetCard = event.target.closest('[data-project-sprint-builder-card]');
+        const dropzone = event.target.closest('[data-project-sprint-builder-dropzone]');
+
+        if (!draggedWorkspaceCard || !targetCard || targetCard === draggedWorkspaceCard) {
+            if (draggedWorkspaceCard && dropzone) {
+                appendCardToWorkspace(draggedWorkspaceCard);
+            }
+
+            return;
+        }
+
+        const bounds = targetCard.getBoundingClientRect();
+        const shouldInsertAfter = event.clientY > bounds.top + (bounds.height / 2);
+
+        if (shouldInsertAfter) {
+            workspace.insertBefore(draggedWorkspaceCard, targetCard.nextElementSibling);
+        } else {
+            workspace.insertBefore(draggedWorkspaceCard, targetCard);
+        }
+    });
+
+    workspace.addEventListener('drop', async function (event) {
+        event.preventDefault();
+
+        if (draggedLibrarySprint) {
+            await createLibrarySprintCard(draggedLibrarySprint);
+            draggedLibrarySprint = null;
+            return;
+        }
+
+        if (draggedWorkspaceCard) {
+            draggedWorkspaceCard.classList.remove('opacity-60');
+            draggedWorkspaceCard = null;
+            syncOrderBadges();
+            await persistWorkspaceOrder();
+        }
+    });
+
+    workspace.addEventListener('mousedown', function (event) {
+        const handle = event.target.closest('[data-project-sprint-builder-drag-handle]');
+
+        if (!handle) {
+            return;
+        }
+
+        const card = handle.closest('[data-project-sprint-builder-card]');
+
+        if (!card) {
+            return;
+        }
+
+        handleCard = card;
+        card.setAttribute('draggable', 'true');
+    });
+
+    workspace.addEventListener('dragstart', function (event) {
+        const card = event.target.closest('[data-project-sprint-builder-card]');
+
+        if (!card || handleCard !== card) {
+            event.preventDefault();
+            return;
+        }
+
+        draggedWorkspaceCard = card;
+        card.classList.add('opacity-60');
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+    });
+
+    workspace.addEventListener('dragend', function () {
+        if (draggedWorkspaceCard) {
+            draggedWorkspaceCard.classList.remove('opacity-60');
+            draggedWorkspaceCard.setAttribute('draggable', 'false');
+            draggedWorkspaceCard = null;
+        }
+
+        if (handleCard) {
+            handleCard.setAttribute('draggable', 'false');
+            handleCard = null;
+        }
+    });
+
+    workspace.addEventListener('input', function (event) {
+        const card = event.target.closest('[data-project-sprint-builder-card]');
+
+        if (!card) {
+            return;
+        }
+
+        if (event.target.name === 'name') {
+            syncCardTitle(card);
+        }
+
+        if (event.target.name === 'description') {
+            syncDescriptionCount(card);
+        }
+
+        if (event.target.matches('[data-project-sprint-builder-date-range]')) {
+            syncSprintCardDateRange(card);
+        }
+
+        setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        queueSprintSave(card, event.target.tagName === 'TEXTAREA' ? 650 : 500);
+    });
+
+    workspace.addEventListener('change', function (event) {
+        const card = event.target.closest('[data-project-sprint-builder-card]');
+
+        if (!card) {
+            return;
+        }
+
+        if (event.target.closest('[data-project-sprint-builder-toggle]')) {
+            return;
+        }
+
+        if (event.target.matches('[data-project-sprint-builder-date-range]')) {
+            syncSprintCardDateRange(card);
+        }
+
+        setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        queueSprintSave(card, 150);
+    });
+
+    workspace.addEventListener('click', function (event) {
+        const toggleButton = event.target.closest('[data-project-sprint-builder-toggle]');
+
+        if (!toggleButton) {
+            return;
+        }
+
+        const card = toggleButton.closest('[data-project-sprint-builder-card]');
+
+        if (!card) {
+            return;
+        }
+
+        setCardExpanded(card, card.dataset.expanded !== 'true');
+    });
+
+    searchInput?.addEventListener('input', function () {
+        const query = this.value.trim().toLowerCase();
+
+        library.querySelectorAll('[data-project-sprint-library-item]').forEach((item) => {
+            const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''}`.toLowerCase();
+            item.classList.toggle('hidden', !haystack.includes(query));
+        });
+    });
+
+    resetSearchButton?.addEventListener('click', function () {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    });
+
+    ensureEmptyState();
+    updateModuleContext();
+    modal.dataset.projectSprintBuilderInitialized = 'true';
 };
 
 const initializeProjectModuleSection = (section = document.querySelector('[data-project-module-section]')) => {
@@ -1274,7 +2039,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
 
 document.addEventListener('DOMContentLoaded', function () {
     initializeProjectModuleBuilderModal();
-    initializeProjectSprintModal();
+    initializeProjectSprintBuilderModal();
     initializeProjectModuleSection();
 });
 
@@ -1284,7 +2049,7 @@ document.addEventListener('project-tab:loaded', function (event) {
     }
 
     initializeProjectModuleBuilderModal();
-    initializeProjectSprintModal();
+    initializeProjectSprintBuilderModal();
     initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-module-section]'));
 });
 

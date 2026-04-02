@@ -9,6 +9,11 @@
             'name' => $user->name,
         ])->values(),
     ];
+    $projectSprintBuilderConfig = [
+        'storeUrlTemplate' => route('projects.modules.sprints.store', ['project' => $project, 'projectModule' => '__MODULE__']),
+        'updateUrlTemplate' => route('projects.sprints.update', ['project' => $project, 'projectSprint' => '__SPRINT__']),
+        'reorderUrlTemplate' => route('projects.modules.sprints.reorder', ['project' => $project, 'projectModule' => '__MODULE__']),
+    ];
 @endphp
 
 @include('projects.partials.module.section')
@@ -220,65 +225,108 @@
 @endcanany
 
 @canany(['project_sprint.create', 'project_sprint.edit'])
-    <x-form-modal modalId="project-sprint-modal" module="Project Sprint" formId="projectSprintForm" action="{{ route('projects.modules.sprints.store', ['project' => $project, 'projectModule' => '__MODULE__']) }}" button="Create Project Sprint">
-        <input type="hidden" id="project_sprint_store_url_template" value="{{ route('projects.modules.sprints.store', ['project' => $project, 'projectModule' => '__MODULE__']) }}">
+    <div class="modal fixed inset-0 z-50 hidden overflow-y-auto" id="project-sprint-modal" data-project-sprint-builder-modal>
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-sprint-builder-close></div>
 
-        <div>
-            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Project Module <x-red-star /></label>
-            <select name="project_module_id" id="project_sprint_module_id" class="project-sprint-module-select tom-select w-full" data-placeholder="Select project module" data-sort="0">
-                <option value="">Select project module</option>
-                @foreach ($projectModules as $projectModuleOption)
-                    <option value="{{ $projectModuleOption->id }}">
-                        {{ $projectModuleOption->name }}
-                    </option>
-                @endforeach
-            </select>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
-                Choose which project module this sprint belongs to.
-            </p>
-        </div>
+        <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div class="relative z-10 w-full max-w-7xl">
+                <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
+                        <div>
+                            <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Build Project Sprints</h3>
+                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                Add library sprints into a module work area, then adjust the live sprint details your team needs.
+                            </p>
+                        </div>
 
-        <div>
-            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Sprint Library</label>
-            <select name="library_sprint_id" id="library_sprint_id" class="project-sprint-library-select tom-select w-full" data-placeholder="Select a library sprint" data-sort="0">
-                <option value="">Select a library sprint</option>
-                @foreach ($agileSprints as $librarySprint)
-                    <option value="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color }}" data-description="{{ $librarySprint->description }}">
-                        {{ $librarySprint->name }}
-                    </option>
-                @endforeach
-            </select>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
-                Selecting a library sprint copies its values into this project sprint form only.
-            </p>
-        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
+                                Selected: <span data-project-sprint-builder-count>0</span>
+                            </div>
 
-        <div>
-            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Name <x-red-star /></label>
-            <input type="text" name="name" placeholder="Enter sprint name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-        </div>
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-sprint-builder-close>
+                                ✕
+                            </button>
+                        </div>
+                    </div>
 
-        <div>
-            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Color</label>
-            <div class="rounded-2xl border border-bgray-200 bg-bgray-50/80 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/70">
-                <div class="flex items-center gap-4 rounded-xl border border-bgray-200 bg-white p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <input type="color" name="color" title="Choose sprint color" class="h-14 w-20 cursor-pointer rounded-xl border border-bgray-200 bg-transparent p-1 shadow-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400">
-                    <div>
-                        <p class="text-sm font-medium text-bgray-700 dark:text-white">Sprint Accent Color</p>
-                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Used for the sprint marker inside the selected module.</p>
+                    <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
+                        <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
+                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
+                                        <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
+                                            Module: <span class="ml-1" data-project-sprint-builder-module-name>Select a module</span>
+                                        </span>
+                                    </div>
+                                    <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                        Drag needed sprints here, then fine-tune each sprint directly inside this module workspace.
+                                    </p>
+                                </div>
+
+                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-reset-search>
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 10a7 7 0 1112.95 3.95l1.55 1.55a1 1 0 01-1.414 1.414l-1.55-1.55A7 7 0 013 10zm7-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span>Show All Library</span>
+                                </button>
+                            </div>
+
+                            <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
+                                <div class="space-y-4" data-project-sprint-builder-workspace></div>
+                            </div>
+                        </div>
+
+                        <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
+                            <div class="mb-5">
+                                <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
+                            </div>
+
+                            <label class="relative mb-4 block">
+                                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bgray-400">
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 013.93 9.35l3.61 3.61a1 1 0 01-1.414 1.414l-3.61-3.61A5.5 5.5 0 118.5 3zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                                <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search sprint library..." data-project-sprint-builder-library-search>
+                            </label>
+
+                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]">
+                                <div class="space-y-3" data-project-sprint-builder-library>
+                                    @foreach ($agileSprints as $librarySprint)
+                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $librarySprint->color ?: '#22C55E' }}"></span>
+                                                        <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                                                            {{ $librarySprint->name }}
+                                                        </h5>
+                                                    </div>
+                                                    <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                                                        {{ $librarySprint->description ?: 'No library description added yet.' }}
+                                                    </p>
+                                                </div>
+
+                                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </article>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </aside>
                     </div>
                 </div>
             </div>
         </div>
 
-        <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="480" hours-placeholder="Hours" minutes-placeholder="Minutes" panel />
-
-        <div>
-            <label class="mb-2.5 block text-left text-sm font-medium text-bgray-600 dark:text-white">Description</label>
-            <textarea name="description" rows="3" maxlength="100" placeholder="Add a short sprint description" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
-            <p class="mt-1 text-right text-xs text-bgray-500 dark:text-bgray-300">
-                <span data-project-sprint-description-count>0</span>/100 characters
-            </p>
-        </div>
-    </x-form-modal>
+        <script type="application/json" id="project-sprint-builder-config">
+            {!! json_encode($projectSprintBuilderConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        </script>
+    </div>
 @endcanany

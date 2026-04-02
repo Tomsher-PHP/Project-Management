@@ -15,10 +15,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('color')->nullable();
             $table->text('description')->nullable();
+            $table->foreignId('status_id')->nullable()->constrained('agile_sprint_statuses')->nullOnDelete();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->unsignedBigInteger('estimated_time_seconds')->nullable();
             $table->unsignedBigInteger('derived_time_seconds')->default(0);
+            $table->unsignedBigInteger('actual_time_seconds')->default(0);
             $table->unsignedInteger('sort_order')->default(1);
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
@@ -26,6 +29,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['project_id', 'sort_order']);
+            $table->index('status_id');
         });
     }
 

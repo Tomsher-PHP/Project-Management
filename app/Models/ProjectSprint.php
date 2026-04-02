@@ -19,8 +19,12 @@ class ProjectSprint extends Model
         'name',
         'color',
         'description',
+        'status_id',
+        'start_date',
+        'end_date',
         'estimated_time_seconds',
         'derived_time_seconds',
+        'actual_time_seconds',
         'sort_order',
         'added_by',
         'updated_by',
@@ -29,8 +33,12 @@ class ProjectSprint extends Model
     protected $casts = [
         'project_id' => 'integer',
         'project_module_id' => 'integer',
+        'status_id' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'estimated_time_seconds' => 'integer',
         'derived_time_seconds' => 'integer',
+        'actual_time_seconds' => 'integer',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -71,6 +79,11 @@ class ProjectSprint extends Model
         return $this->belongsTo(ProjectModule::class);
     }
 
+    public function status()
+    {
+        return $this->belongsTo(AgileSprintStatus::class, 'status_id');
+    }
+
     public function addedBy()
     {
         return $this->belongsTo(User::class, 'added_by');
@@ -108,6 +121,16 @@ class ProjectSprint extends Model
         return sprintf('%02d h : %02d m', $hours, $minutes);
     }
 
+    public function getActualTimeFormattedAttribute(): string
+    {
+        $seconds = $this->actual_time_seconds ?? 0;
+
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+
+        return sprintf('%02d h : %02d m', $hours, $minutes);
+    }
+
     public function getTaskCountAttribute(): int
     {
         if (!Schema::hasTable('project_tasks') || !Schema::hasColumn('project_tasks', 'project_sprint_id')) {
@@ -127,11 +150,11 @@ class ProjectSprint extends Model
     public function refreshDerivedTimeSeconds(): void
     {
         $derivedSeconds = 0;
+        $actualSeconds = 0;
 
         if (
             Schema::hasTable('project_tasks')
             && Schema::hasColumn('project_tasks', 'project_sprint_id')
-            && Schema::hasColumn('project_tasks', 'estimated_time_seconds')
         ) {
             $query = DB::table('project_tasks')
                 ->where('project_sprint_id', $this->id);
@@ -140,11 +163,18 @@ class ProjectSprint extends Model
                 $query->whereNull('deleted_at');
             }
 
-            $derivedSeconds = (int) $query->sum('estimated_time_seconds');
+            if (Schema::hasColumn('project_tasks', 'estimated_time_seconds')) {
+                $derivedSeconds = (int) $query->sum('estimated_time_seconds');
+            }
+
+            if (Schema::hasColumn('project_tasks', 'actual_time_seconds')) {
+                $actualSeconds = (int) $query->sum('actual_time_seconds');
+            }
         }
 
         $this->updateQuietly([
             'derived_time_seconds' => $derivedSeconds,
+            'actual_time_seconds' => $actualSeconds,
         ]);
     }
 }
