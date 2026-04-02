@@ -1,6 +1,6 @@
 <div class="space-y-6" data-project-module-section>
     @php
-        $projectSprintCount = $projectModules->sum(fn ($module) => $module->projectSprints->count());
+        $projectSprintCount = $projectModules->sum(fn ($module) => (int) ($module->project_sprints_count ?? 0));
         $canEditProjectModules = auth()->user()->can('project_module.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.modules.reorder', $project) : null;
         $trashedCount = $trashedProjectModules->count();
@@ -14,20 +14,6 @@
             'end_date' => $module->end_date?->format('Y-m-d'),
             'estimated_time_minutes' => $module->estimated_time_minutes,
             'sort_order' => $module->sort_order,
-        ])->values();
-        $projectSprintBuilderSource = $projectModules->map(fn ($module) => [
-            'id' => $module->id,
-            'name' => $module->name,
-            'sprints' => $module->projectSprints->map(fn ($sprint) => [
-                'id' => $sprint->id,
-                'name' => $sprint->name,
-                'color' => $sprint->color,
-                'description' => $sprint->description,
-                'start_date' => $sprint->start_date?->format('Y-m-d'),
-                'end_date' => $sprint->end_date?->format('Y-m-d'),
-                'estimated_time_minutes' => $sprint->estimated_time_minutes,
-                'sort_order' => $sprint->sort_order,
-            ])->values(),
         ])->values();
         $formatDuration = function (?int $seconds): string {
             $totalSeconds = max(0, (int) ($seconds ?? 0));
@@ -96,7 +82,7 @@
 
         <div x-data="{ activeModuleId: @js($openModuleId ?? null) }" class="space-y-6 overflow-y-auto px-5 py-5 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
-                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
+                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
@@ -112,7 +98,7 @@
                                             @php
                                                 $moduleDescription = $module->description ?: 'No description added yet.';
                                                 $hasLongDescription = \Illuminate\Support\Str::length($moduleDescription) > 60;
-                                                $sprintCount = $module->projectSprints->count();
+                                                $sprintCount = (int) ($module->project_sprints_count ?? 0);
                                                 $taskPreviewCount = 0;
                                                 $estimatedSeconds = (int) ($module->estimated_time_seconds ?? 0);
                                                 $derivedSeconds = (int) ($module->derived_time_seconds ?? 0);
@@ -136,7 +122,7 @@
                                                         {{ $timeDifferencePrefix }}{{ $formatDuration(abs($timeDifferenceSeconds)) }}
                                                     </span>
                                                 @endif
-                                                <span title="Sprint count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Sprints {{ $sprintCount }}</span>
+                                                <span title="Sprint count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Sprints <span class="ml-1" data-project-module-sprint-count>{{ $sprintCount }}</span></span>
                                                 <span title="Task count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Tasks {{ $taskPreviewCount }}</span>
                                             </div>
 
@@ -172,6 +158,7 @@
                             <div class="flex flex-wrap items-center gap-2 xl:max-w-[320px] xl:justify-end">
                                 @can('project_sprint.create')
                                     <button type="button" data-project-module-id="{{ $module->id }}" data-project-module-name="{{ $module->name }}"
+                                        data-project-sprint-load-url="{{ route('projects.modules.sprints.index', [$project, $module]) }}"
                                         class="project-sprint-builder-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -192,7 +179,7 @@
                                     <x-delete-form :action="route('projects.modules.destroy', [$project, $module])" ajax render-target="[data-project-module-section]" render-mode="replace_outer" />
                                 @endcan
 
-                                <button type="button" @click="activeModuleId = activeModuleId === {{ $module->id }} ? null : {{ $module->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <button type="button" @click="activeModuleId = activeModuleId === {{ $module->id }} ? null : {{ $module->id }}" data-project-module-toggle data-module-id="{{ $module->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                     <svg class="h-5 w-5 transition duration-200" :style="{ transform: activeModuleId === {{ $module->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -202,8 +189,17 @@
                     </div>
 
                     <div x-show="activeModuleId === {{ $module->id }}" x-transition class="px-4 py-5 sm:px-5">
-                        <div x-data="{ activeSprintId: @js(($openModuleId ?? null) === $module->id ? $openSprintId ?? null : null) }">
-                            @include('projects.partials.module.sprints', ['projectSprints' => $module->projectSprints, 'module' => $module])
+                        <div x-data="{ activeSprintId: @js(($openModuleId ?? null) === $module->id ? $openSprintId ?? null : null) }"
+                            data-project-module-sprints-panel
+                            data-module-id="{{ $module->id }}"
+                            data-load-url="{{ route('projects.modules.sprints.index', [$project, $module]) }}"
+                            data-loaded="false"
+                            data-autoload="{{ ($openModuleId ?? null) === $module->id ? 'true' : 'false' }}">
+                            <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-module-sprints-state>
+                                <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">
+                                    {{ ($openModuleId ?? null) === $module->id ? 'Loading sprints...' : 'Expand this module to load its sprints.' }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -237,10 +233,6 @@
 
     <script type="application/json" data-project-module-builder-source>
         {!! json_encode($projectModuleBuilderSource, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-    </script>
-
-    <script type="application/json" data-project-sprint-builder-source>
-        {!! json_encode($projectSprintBuilderSource, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
 
     @can('project_module.restore')

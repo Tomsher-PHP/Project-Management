@@ -318,11 +318,8 @@ class ProjectController extends Controller
                 'updatedBy',
                 'status',
                 'owner',
-                'projectSprints' => fn ($query) => $query
-                    ->with(['addedBy', 'updatedBy'])
-                    ->orderBy('sort_order')
-                    ->orderBy('id'),
             ])
+            ->withCount('projectSprints')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();

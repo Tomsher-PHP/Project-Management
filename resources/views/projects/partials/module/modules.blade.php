@@ -64,7 +64,7 @@
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                     <div class="space-y-4" data-project-module-builder-workspace>
                                     @forelse ($projectModules as $module)
-                                        <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="true" draggable="false">
+                                        <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $module->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
@@ -93,15 +93,15 @@
                                                         </svg>
                                                         <span>Delete</span>
                                                     </button>
-                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Collapse module" title="Collapse module">
-                                                        <svg class="h-4 w-4 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
+                                                        <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
                                                             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                                                         </svg>
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            <div class="mt-4 border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
+                                            <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
                                                 <div class="grid gap-4 xl:grid-cols-2">
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>

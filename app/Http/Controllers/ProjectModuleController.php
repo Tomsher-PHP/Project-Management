@@ -213,11 +213,8 @@ class ProjectModuleController extends Controller
                     'updatedBy',
                     'status',
                     'owner',
-                    'projectSprints' => fn ($sprintQuery) => $sprintQuery
-                        ->with(['addedBy', 'updatedBy'])
-                        ->orderBy('sort_order')
-                        ->orderBy('id'),
                 ])
+                ->withCount('projectSprints')
                 ->orderBy('sort_order')
                 ->orderBy('id'),
         ]);

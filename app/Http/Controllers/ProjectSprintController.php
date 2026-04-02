@@ -16,6 +16,35 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectSprintController extends Controller
 {
+    public function index(Project $project, ProjectModule $projectModule): JsonResponse
+    {
+        $this->ensureAgileProject($project);
+        abort_unless($projectModule->project_id === $project->id, 404);
+
+        $projectSprints = $projectModule->projectSprints()
+            ->with(['addedBy', 'updatedBy', 'status'])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'module' => [
+                'id' => $projectModule->id,
+                'name' => $projectModule->name,
+            ],
+            'count' => $projectSprints->count(),
+            'sprints' => $projectSprints
+                ->map(fn (ProjectSprint $projectSprint) => $this->serializeSprint($projectSprint))
+                ->values(),
+            'html' => view('projects.partials.module.sprints', [
+                'project' => $project,
+                'module' => $projectModule,
+                'projectSprints' => $projectSprints,
+            ])->render(),
+        ]);
+    }
+
     public function store(ProjectSprintRequest $request, Project $project, ProjectModule $projectModule): JsonResponse
     {
         $this->ensureAgileProject($project);
@@ -185,11 +214,8 @@ class ProjectSprintController extends Controller
                     'updatedBy',
                     'status',
                     'owner',
-                    'projectSprints' => fn ($sprintQuery) => $sprintQuery
-                        ->with(['addedBy', 'updatedBy', 'status'])
-                        ->orderBy('sort_order')
-                        ->orderBy('id'),
                 ])
+                ->withCount('projectSprints')
                 ->orderBy('sort_order')
                 ->orderBy('id'),
         ]);

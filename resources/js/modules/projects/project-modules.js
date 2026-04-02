@@ -54,8 +54,122 @@ const renderSelectOptions = (items, selectedValue, placeholder) => {
     return options.join('');
 };
 
+const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+const projectModuleSprintPayloadCache = new Map();
+const projectModuleSprintRequestCache = new Map();
+
+const getProjectModuleSectionRoot = () => document.querySelector('[data-project-module-section]');
+
+const getProjectModuleSprintsPanel = (moduleId, root = getProjectModuleSectionRoot()) => {
+    if (!root || !moduleId) {
+        return null;
+    }
+
+    return root.querySelector(`[data-project-module-sprints-panel][data-module-id="${moduleId}"]`);
+};
+
+const renderProjectModuleSprintsState = (message, extraClasses = '') => `
+    <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-module-sprints-state>
+        <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">${escapeHtml(message)}</p>
+    </div>
+`;
+
+const updateProjectModuleSprintCount = (moduleId, count, root = getProjectModuleSectionRoot()) => {
+    const card = root?.querySelector(`[data-project-module-card][data-module-id="${moduleId}"]`);
+
+    card?.querySelector('[data-project-module-sprint-count]')?.replaceChildren(document.createTextNode(String(count)));
+};
+
+const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectModuleSectionRoot()) => {
+    const panel = getProjectModuleSprintsPanel(moduleId, root);
+
+    if (!panel) {
+        return;
+    }
+
+    panel.innerHTML = payload.html || renderProjectModuleSprintsState('No sprints added under this module yet.');
+    panel.dataset.loaded = 'true';
+
+    if (typeof payload.count === 'number') {
+        updateProjectModuleSprintCount(moduleId, payload.count, root);
+    }
+
+    if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+        window.Alpine.initTree(panel);
+    }
+
+    panel.querySelectorAll('[data-project-sprint-list]').forEach((sprintList) => {
+        initializeProjectSprintList(sprintList);
+    });
+};
+
+const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = '', root = getProjectModuleSectionRoot() } = {}) => {
+    const normalizedModuleId = Number(moduleId) || null;
+
+    if (!normalizedModuleId) {
+        throw new Error('Unable to determine which module should load sprints.');
+    }
+
+    const panel = getProjectModuleSprintsPanel(normalizedModuleId, root);
+    const resolvedLoadUrl = loadUrl || panel?.dataset.loadUrl || '';
+
+    if (!resolvedLoadUrl) {
+        throw new Error('Unable to load sprints for this module.');
+    }
+
+    if (!force && projectModuleSprintPayloadCache.has(normalizedModuleId)) {
+        const cachedPayload = projectModuleSprintPayloadCache.get(normalizedModuleId);
+        applyProjectModuleSprintsPayload(normalizedModuleId, cachedPayload, root);
+        return cachedPayload;
+    }
+
+    if (projectModuleSprintRequestCache.has(normalizedModuleId)) {
+        return projectModuleSprintRequestCache.get(normalizedModuleId);
+    }
+
+    if (panel && panel.dataset.loaded !== 'true') {
+        panel.innerHTML = renderProjectModuleSprintsState('Loading sprints...');
+    }
+
+    const request = fetch(resolvedLoadUrl, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    }).then(async (response) => {
+        const result = await response.json();
+
+        if (!response.ok || result.status === false || result.success === false) {
+            throw new Error(result.message || 'Unable to load project sprints.');
+        }
+
+        projectModuleSprintPayloadCache.set(normalizedModuleId, result);
+        applyProjectModuleSprintsPayload(normalizedModuleId, result, root);
+
+        return result;
+    }).catch((error) => {
+        if (panel && panel.dataset.loaded !== 'true') {
+            panel.innerHTML = renderProjectModuleSprintsState('Unable to load sprints right now.', 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-darkblack-600');
+        }
+
+        throw error;
+    }).finally(() => {
+        projectModuleSprintRequestCache.delete(normalizedModuleId);
+    });
+
+    projectModuleSprintRequestCache.set(normalizedModuleId, request);
+
+    return request;
+};
+
+const clearProjectModuleSprintCache = () => {
+    projectModuleSprintPayloadCache.clear();
+    projectModuleSprintRequestCache.clear();
+};
+
 const renderModuleBuilderCard = (module, config, extraClass = '') => `
-    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(module.color || '#E5E7EB')};" data-project-module-builder-card data-module-id="${module.id ?? ''}" data-module-name="${escapeHtml(module.name || '')}" data-expanded="true" draggable="false">
+    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(module.color || '#E5E7EB')};" data-project-module-builder-card data-module-id="${module.id ?? ''}" data-module-name="${escapeHtml(module.name || '')}" data-expanded="false" draggable="false">
         <input type="hidden" name="color" value="${escapeHtml(module.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
@@ -82,15 +196,15 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
                 </svg>
                 <span>Delete</span>
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Collapse module" title="Collapse module">
-                <svg class="h-4 w-4 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
+                <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
     </div>
 
-        <div class="mt-4 border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
+        <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
@@ -285,12 +399,6 @@ const initializeProjectModuleBuilderModal = () => {
 
         ensureEmptyState();
         getCards().forEach((card) => setCardExpanded(card, false));
-
-        const firstCard = getCards()[0];
-
-        if (firstCard) {
-            setCardExpanded(firstCard, true);
-        }
     };
 
     const appendCardToWorkspace = (card) => {
@@ -919,10 +1027,6 @@ const initializeProjectModuleBuilderModal = () => {
 
     ensureEmptyState();
     getCards().forEach((card) => setCardExpanded(card, false));
-    const firstCard = getCards()[0];
-    if (firstCard) {
-        setCardExpanded(firstCard, true);
-    }
     getCards().forEach((card) => initializeCardDatepicker(card));
     getCards().forEach((card) => initializeCardTomSelect(card));
     getCards().forEach((card) => syncDescriptionCount(card));
@@ -973,7 +1077,7 @@ const normalizeDateOnly = (value) => {
 };
 
 const renderSprintBuilderCard = (sprint, extraClass = '') => `
-    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="true" draggable="false">
+    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="false" draggable="false">
         <input type="hidden" name="color" value="${escapeHtml(sprint.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
@@ -994,15 +1098,15 @@ const renderSprintBuilderCard = (sprint, extraClass = '') => `
             </div>
 
             <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Collapse sprint" title="Collapse sprint">
-                    <svg class="h-4 w-4 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
+                    <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
         </div>
 
-        <div class="mt-4 border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-sprint-builder-body>
+        <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-sprint-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
                 <div>
                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
@@ -1088,39 +1192,52 @@ const initializeProjectSprintBuilderModal = () => {
         return wrapper.firstElementChild;
     };
 
-    const getSectionSprintSource = () => {
-        const sourceNode = document.querySelector('[data-project-module-section] [data-project-sprint-builder-source]');
-
-        if (!sourceNode) {
-            return null;
-        }
-
-        try {
-            const parsed = JSON.parse(sourceNode.textContent || '[]');
-            return Array.isArray(parsed) ? parsed : null;
-        } catch (error) {
-            return null;
-        }
-    };
-
-    const getActiveModuleSource = () => {
-        const modules = getSectionSprintSource() || [];
-        return modules.find((module) => Number(module.id) === Number(activeModuleId)) || null;
-    };
-
     const updateModuleContext = () => {
         moduleNameNode.textContent = activeModuleName || 'Select a module';
     };
 
-    const openModal = ({ moduleId, moduleName = '', sprintId = null } = {}) => {
+    const renderWorkspaceLoadingState = () => {
+        workspace.innerHTML = `
+            <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+                <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                    <svg class="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M8 12H4m13.657-5.657l-2.829 2.829M9.172 14.828l-2.829 2.829m0-11.314l2.829 2.829m5.656 5.656l2.829 2.829" />
+                    </svg>
+                </span>
+                <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">Loading Sprints</h5>
+                <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                    Fetching the latest sprint list for this module work area.
+                </p>
+            </div>
+        `;
+        updateCount();
+    };
+
+    const openModal = async ({ moduleId, moduleName = '', sprintId = null, loadUrl = '' } = {}) => {
         activeModuleId = Number(moduleId) || null;
-        const latestModule = getActiveModuleSource();
-        activeModuleName = moduleName || latestModule?.name || '';
+        activeModuleName = moduleName || '';
         updateModuleContext();
-        renderWorkspaceFromSprints(latestModule?.sprints || []);
 
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
+
+        if (!activeModuleId) {
+            renderWorkspaceFromSprints([]);
+            return;
+        }
+
+        renderWorkspaceLoadingState();
+
+        try {
+            const payload = await fetchProjectModuleSprints(activeModuleId, { loadUrl });
+            activeModuleName = moduleName || payload.module?.name || activeModuleName;
+            updateModuleContext();
+            renderWorkspaceFromSprints(payload.sprints || []);
+        } catch (error) {
+            renderWorkspaceFromSprints([]);
+            Alert.error(error.message || 'Unable to load project sprints.');
+            return;
+        }
 
         if (sprintId) {
             const targetCard = workspace.querySelector(`[data-project-sprint-builder-card][data-sprint-id="${sprintId}"]`);
@@ -1130,12 +1247,6 @@ const initializeProjectSprintBuilderModal = () => {
                 highlightCard(targetCard);
             }
             return;
-        }
-
-        const firstCard = getCards()[0];
-
-        if (firstCard) {
-            setCardExpanded(firstCard, true);
         }
     };
 
@@ -1482,6 +1593,7 @@ const initializeProjectSprintBuilderModal = () => {
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
             card.classList.remove('ring-2', 'ring-success-200', 'dark:ring-success-900/30');
+            projectModuleSprintPayloadCache.delete(activeModuleId);
             replaceRenderedSection(result);
         } catch (error) {
             card.remove();
@@ -1513,6 +1625,7 @@ const initializeProjectSprintBuilderModal = () => {
                 ...(result.sprint || result.data || {}),
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
+            projectModuleSprintPayloadCache.delete(activeModuleId);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
@@ -1545,9 +1658,10 @@ const initializeProjectSprintBuilderModal = () => {
         }
 
         try {
-            const result = await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeModuleId), 'PATCH', { sprint_ids: sprintIds });
+            await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeModuleId), 'PATCH', { sprint_ids: sprintIds });
             syncOrderBadges();
-            replaceRenderedSection(result);
+            projectModuleSprintPayloadCache.delete(activeModuleId);
+            fetchProjectModuleSprints(activeModuleId, { force: true }).catch(() => {});
         } catch (error) {
             Alert.error(error.message || 'Unable to reorder project sprints.');
         }
@@ -1569,6 +1683,7 @@ const initializeProjectSprintBuilderModal = () => {
             openModal({
                 moduleId: createTrigger.dataset.projectModuleId,
                 moduleName: createTrigger.dataset.projectModuleName,
+                loadUrl: createTrigger.dataset.projectSprintLoadUrl,
             });
             return;
         }
@@ -1580,6 +1695,7 @@ const initializeProjectSprintBuilderModal = () => {
                 moduleId: editTrigger.dataset.projectModuleId,
                 moduleName: editTrigger.dataset.projectModuleName,
                 sprintId: editTrigger.dataset.projectSprintId,
+                loadUrl: editTrigger.dataset.projectSprintLoadUrl,
             });
             return;
         }
@@ -1793,6 +1909,233 @@ const initializeProjectSprintBuilderModal = () => {
     modal.dataset.projectSprintBuilderInitialized = 'true';
 };
 
+const initializeProjectSprintList = (sprintList) => {
+    if (!sprintList || sprintList.dataset.projectSprintListInitialized === 'true') {
+        return;
+    }
+
+    const reorderUrl = sprintList.dataset.reorderUrl;
+    const csrfToken = getCsrfToken();
+
+    if (!reorderUrl || !csrfToken) {
+        sprintList.dataset.projectSprintListInitialized = 'true';
+        return;
+    }
+
+    let pendingSprintCard = null;
+    let draggingSprintCard = null;
+    let dragStartOrder = [];
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+
+    const getSprintCards = () => Array.from(sprintList.querySelectorAll('[data-project-sprint-card]'));
+    const getSprintIds = () => getSprintCards().map((card) => Number(card.dataset.projectSprintId));
+    const animateSprintCardReorder = (mutation) => {
+        const firstRects = new Map(
+            getSprintCards().map((card) => [card, card.getBoundingClientRect()])
+        );
+
+        mutation();
+
+        getSprintCards().forEach((card) => {
+            const firstRect = firstRects.get(card);
+
+            if (!firstRect) {
+                return;
+            }
+
+            const lastRect = card.getBoundingClientRect();
+            const deltaY = firstRect.top - lastRect.top;
+
+            if (Math.abs(deltaY) < 1 || typeof card.animate !== 'function') {
+                return;
+            }
+
+            card.animate(
+                [
+                    { transform: `translateY(${deltaY}px)` },
+                    { transform: 'translateY(0)' },
+                ],
+                {
+                    duration: 180,
+                    easing: 'ease-out',
+                }
+            );
+        });
+    };
+
+    const persistSprintOrder = async () => {
+        const sprintIds = getSprintIds();
+
+        try {
+            const response = await fetch(reorderUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({ sprint_ids: sprintIds }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                throw new Error(result.message || 'Unable to save the new sprint order.');
+            }
+
+            projectModuleSprintPayloadCache.delete(Number(sprintList.closest('[data-project-module-sprints-panel]')?.dataset.moduleId));
+            Alert.success(result.message || 'Sprint order updated successfully.');
+        } catch (error) {
+            Alert.error(error.message || 'Unable to save the new sprint order.');
+            window.location.reload();
+        }
+    };
+
+    const setDraggingState = (card, isDragging) => {
+        if (!card) {
+            return;
+        }
+
+        card.classList.toggle('opacity-60', isDragging);
+        card.classList.toggle('ring-2', isDragging);
+        card.classList.toggle('ring-success-300', isDragging);
+        card.classList.toggle('dark:ring-success-900/40', isDragging);
+        card.style.boxShadow = isDragging
+            ? '0 18px 35px -18px rgba(15, 23, 42, 0.35)'
+            : '';
+    };
+
+    const resetSprintPointerState = () => {
+        setDraggingState(draggingSprintCard, false);
+        pendingSprintCard = null;
+        draggingSprintCard = null;
+        dragStartOrder = [];
+        document.body.classList.remove('select-none');
+    };
+
+    const maybeMoveSprintCard = (clientX, clientY) => {
+        if (!draggingSprintCard) {
+            return;
+        }
+
+        const listBounds = sprintList.getBoundingClientRect();
+
+        if (
+            clientX >= listBounds.left
+            && clientX <= listBounds.right
+            && clientY >= listBounds.top
+            && clientY <= listBounds.bottom
+        ) {
+            const targetCard = document.elementFromPoint(clientX, clientY)?.closest('[data-project-sprint-card]');
+
+            if (!targetCard || !sprintList.contains(targetCard)) {
+                if (sprintList.lastElementChild !== draggingSprintCard) {
+                    animateSprintCardReorder(() => {
+                        sprintList.appendChild(draggingSprintCard);
+                    });
+                }
+                return;
+            }
+
+            if (targetCard === draggingSprintCard) {
+                return;
+            }
+
+            const targetBounds = targetCard.getBoundingClientRect();
+            const insertAfterTarget = clientY > targetBounds.top + (targetBounds.height / 2);
+
+            if (insertAfterTarget) {
+                if (draggingSprintCard.nextElementSibling !== targetCard.nextElementSibling) {
+                    animateSprintCardReorder(() => {
+                        sprintList.insertBefore(draggingSprintCard, targetCard.nextElementSibling);
+                    });
+                }
+                return;
+            }
+
+            if (draggingSprintCard.nextElementSibling !== targetCard) {
+                animateSprintCardReorder(() => {
+                    sprintList.insertBefore(draggingSprintCard, targetCard);
+                });
+            }
+        }
+    };
+
+    const handlePointerMove = (event) => {
+        if (!pendingSprintCard && !draggingSprintCard) {
+            return;
+        }
+
+        const movedX = Math.abs(event.clientX - pointerStartX);
+        const movedY = Math.abs(event.clientY - pointerStartY);
+
+        if (!draggingSprintCard) {
+            if (Math.max(movedX, movedY) < 5) {
+                return;
+            }
+
+            draggingSprintCard = pendingSprintCard;
+            dragStartOrder = getSprintIds();
+            setDraggingState(draggingSprintCard, true);
+            document.body.classList.add('select-none');
+        }
+
+        event.preventDefault();
+        maybeMoveSprintCard(event.clientX, event.clientY);
+    };
+
+    const handlePointerUp = async () => {
+        if (!pendingSprintCard && !draggingSprintCard) {
+            return;
+        }
+
+        const currentOrder = getSprintIds();
+        const orderChanged = draggingSprintCard
+            && JSON.stringify(currentOrder) !== JSON.stringify(dragStartOrder);
+
+        resetSprintPointerState();
+
+        if (orderChanged) {
+            await persistSprintOrder();
+        }
+    };
+
+    const handlePointerCancel = () => {
+        resetSprintPointerState();
+    };
+
+    sprintList.addEventListener('pointerdown', function (event) {
+        const handle = event.target.closest('[data-project-sprint-drag-handle]');
+
+        if (!handle) {
+            return;
+        }
+
+        const card = handle.closest('[data-project-sprint-card]');
+
+        if (!card) {
+            return;
+        }
+
+        pendingSprintCard = card;
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+        event.preventDefault();
+    });
+
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerCancel);
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            handlePointerCancel();
+        }
+    });
+
+    sprintList.dataset.projectSprintListInitialized = 'true';
+};
+
 const initializeProjectModuleSection = (section = document.querySelector('[data-project-module-section]')) => {
     if (!section || section.dataset.projectModuleSectionInitialized === 'true') {
         return;
@@ -1801,7 +2144,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     const moduleList = section.querySelector('[data-project-module-list]');
     const restoreModal = section.querySelector('[data-project-module-restore-modal]');
     const restoreOpenButton = section.querySelector('[data-project-module-restore-open]');
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const csrfToken = getCsrfToken();
     let draggedModuleCard = null;
     let dragHandleCard = null;
     let dragStartOrder = [];
@@ -1880,159 +2223,185 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
         });
     }
 
-    if (!moduleList || !moduleList.dataset.reorderUrl || !csrfToken) {
-        section.dataset.projectModuleSectionInitialized = 'true';
-        return;
-    }
+    section.querySelectorAll('[data-project-sprint-list]').forEach((sprintList) => {
+        initializeProjectSprintList(sprintList);
+    });
 
-    const syncVisibleOrderBadges = () => {
-        getModuleCards().forEach((card, index) => {
-            const badge = card.querySelector('[data-project-module-order-badge]');
+    section.addEventListener('click', function (event) {
+        const toggleButton = event.target.closest('[data-project-module-toggle]');
 
-            if (badge) {
-                badge.textContent = String(index + 1);
+        if (!toggleButton) {
+            return;
+        }
+
+        const moduleId = Number(toggleButton.dataset.moduleId);
+        const panel = getProjectModuleSprintsPanel(moduleId, section);
+
+        if (!panel || panel.dataset.loaded === 'true') {
+            return;
+        }
+
+        fetchProjectModuleSprints(moduleId, { root: section }).catch((error) => {
+            Alert.error(error.message || 'Unable to load project sprints.');
+        });
+    });
+
+    section.querySelectorAll('[data-project-module-sprints-panel][data-autoload="true"]').forEach((panel) => {
+        const moduleId = Number(panel.dataset.moduleId);
+
+        fetchProjectModuleSprints(moduleId, { root: section }).catch(() => {});
+    });
+
+    if (moduleList && moduleList.dataset.reorderUrl && csrfToken) {
+        const syncVisibleOrderBadges = () => {
+            getModuleCards().forEach((card, index) => {
+                const badge = card.querySelector('[data-project-module-order-badge]');
+
+                if (badge) {
+                    badge.textContent = String(index + 1);
+                }
+            });
+        };
+
+        const persistModuleOrder = async () => {
+            const moduleIds = getModuleIds();
+
+            try {
+                const response = await fetch(moduleList.dataset.reorderUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ module_ids: moduleIds }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.status) {
+                    throw new Error(result.message || 'Unable to save the new module order.');
+                }
+
+                syncVisibleOrderBadges();
+                replaceRenderedSection(result);
+                Alert.success(result.message || 'Module order updated successfully.');
+            } catch (error) {
+                Alert.error(error.message || 'Unable to save the new module order.');
+                window.location.reload();
+            }
+        };
+
+        const resetDraggedCardState = () => {
+            if (draggedModuleCard) {
+                draggedModuleCard.classList.remove('opacity-60', 'scale-[0.99]');
+                draggedModuleCard.setAttribute('draggable', 'false');
+                draggedModuleCard.style.boxShadow = '';
+            }
+
+            if (dragHandleCard) {
+                dragHandleCard.setAttribute('draggable', 'false');
+            }
+
+            draggedModuleCard = null;
+            dragHandleCard = null;
+        };
+
+        moduleList.addEventListener('mousedown', function (event) {
+            const handle = event.target.closest('[data-project-module-drag-handle]');
+
+            if (!handle) {
+                return;
+            }
+
+            const card = handle.closest('[data-project-module-card]');
+
+            if (!card) {
+                return;
+            }
+
+            dragHandleCard = card;
+            card.setAttribute('draggable', 'true');
+        });
+
+        moduleList.addEventListener('mouseup', function () {
+            if (!draggedModuleCard && dragHandleCard) {
+                dragHandleCard.setAttribute('draggable', 'false');
+                dragHandleCard = null;
             }
         });
-    };
 
-    const persistModuleOrder = async () => {
-        const moduleIds = getModuleIds();
+        moduleList.addEventListener('mouseleave', function () {
+            if (!draggedModuleCard && dragHandleCard) {
+                dragHandleCard.setAttribute('draggable', 'false');
+                dragHandleCard = null;
+            }
+        });
 
-        try {
-            const response = await fetch(moduleList.dataset.reorderUrl, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify({ module_ids: moduleIds }),
-            });
+        moduleList.addEventListener('dragstart', function (event) {
+            const card = event.target.closest('[data-project-module-card]');
 
-            const result = await response.json();
+            if (!card || card !== dragHandleCard) {
+                event.preventDefault();
+                return;
+            }
 
-            if (!response.ok || !result.status) {
-                throw new Error(result.message || 'Unable to save the new module order.');
+            draggedModuleCard = card;
+            dragStartOrder = getModuleIds();
+            card.classList.add('opacity-60', 'scale-[0.99]');
+            card.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
+
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', card.dataset.moduleId || '');
+            }
+        });
+
+        moduleList.addEventListener('dragover', function (event) {
+            if (draggedModuleCard) {
+                event.preventDefault();
+            }
+
+            const targetCard = event.target.closest('[data-project-module-card]');
+
+            if (!draggedModuleCard || !targetCard || targetCard === draggedModuleCard) {
+                return;
+            }
+
+            const targetBounds = targetCard.getBoundingClientRect();
+            const insertAfterTarget = event.clientY > targetBounds.top + (targetBounds.height / 2);
+
+            if (insertAfterTarget) {
+                moduleList.insertBefore(draggedModuleCard, targetCard.nextElementSibling);
+                return;
+            }
+
+            moduleList.insertBefore(draggedModuleCard, targetCard);
+        });
+
+        moduleList.addEventListener('drop', async function (event) {
+            if (!draggedModuleCard) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const currentOrder = getModuleIds();
+
+            if (JSON.stringify(currentOrder) === JSON.stringify(dragStartOrder)) {
+                resetDraggedCardState();
+                return;
             }
 
             syncVisibleOrderBadges();
-            replaceRenderedSection(result);
-            Alert.success(result.message || 'Module order updated successfully.');
-        } catch (error) {
-            Alert.error(error.message || 'Unable to save the new module order.');
-            window.location.reload();
-        }
-    };
+            await persistModuleOrder();
+        });
 
-    const resetDraggedCardState = () => {
-        if (draggedModuleCard) {
-            draggedModuleCard.classList.remove('opacity-60', 'scale-[0.99]');
-            draggedModuleCard.setAttribute('draggable', 'false');
-            draggedModuleCard.style.boxShadow = '';
-        }
-
-        if (dragHandleCard) {
-            dragHandleCard.setAttribute('draggable', 'false');
-        }
-
-        draggedModuleCard = null;
-        dragHandleCard = null;
-    };
-
-    moduleList.addEventListener('mousedown', function (event) {
-        const handle = event.target.closest('[data-project-module-drag-handle]');
-
-        if (!handle) {
-            return;
-        }
-
-        const card = handle.closest('[data-project-module-card]');
-
-        if (!card) {
-            return;
-        }
-
-        dragHandleCard = card;
-        card.setAttribute('draggable', 'true');
-    });
-
-    moduleList.addEventListener('mouseup', function () {
-        if (!draggedModuleCard && dragHandleCard) {
-            dragHandleCard.setAttribute('draggable', 'false');
-            dragHandleCard = null;
-        }
-    });
-
-    moduleList.addEventListener('mouseleave', function () {
-        if (!draggedModuleCard && dragHandleCard) {
-            dragHandleCard.setAttribute('draggable', 'false');
-            dragHandleCard = null;
-        }
-    });
-
-    moduleList.addEventListener('dragstart', function (event) {
-        const card = event.target.closest('[data-project-module-card]');
-
-        if (!card || card !== dragHandleCard) {
-            event.preventDefault();
-            return;
-        }
-
-        draggedModuleCard = card;
-        dragStartOrder = getModuleIds();
-        card.classList.add('opacity-60', 'scale-[0.99]');
-        card.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
-
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', card.dataset.moduleId || '');
-        }
-    });
-
-    moduleList.addEventListener('dragover', function (event) {
-        if (draggedModuleCard) {
-            event.preventDefault();
-        }
-
-        const targetCard = event.target.closest('[data-project-module-card]');
-
-        if (!draggedModuleCard || !targetCard || targetCard === draggedModuleCard) {
-            return;
-        }
-
-        const targetBounds = targetCard.getBoundingClientRect();
-        const insertAfterTarget = event.clientY > targetBounds.top + (targetBounds.height / 2);
-
-        if (insertAfterTarget) {
-            moduleList.insertBefore(draggedModuleCard, targetCard.nextElementSibling);
-            return;
-        }
-
-        moduleList.insertBefore(draggedModuleCard, targetCard);
-    });
-
-    moduleList.addEventListener('drop', async function (event) {
-        if (!draggedModuleCard) {
-            return;
-        }
-
-        event.preventDefault();
-
-        const currentOrder = getModuleIds();
-
-        if (JSON.stringify(currentOrder) === JSON.stringify(dragStartOrder)) {
+        moduleList.addEventListener('dragend', function () {
             resetDraggedCardState();
-            return;
-        }
-
-        syncVisibleOrderBadges();
-        await persistModuleOrder();
-    });
-
-    moduleList.addEventListener('dragend', function () {
-        resetDraggedCardState();
-        dragStartOrder = [];
-    });
+            dragStartOrder = [];
+        });
+    }
 
     section.dataset.projectModuleSectionInitialized = 'true';
 };
@@ -2048,6 +2417,7 @@ document.addEventListener('project-tab:loaded', function (event) {
         return;
     }
 
+    clearProjectModuleSprintCache();
     initializeProjectModuleBuilderModal();
     initializeProjectSprintBuilderModal();
     initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-module-section]'));
@@ -2058,5 +2428,6 @@ document.addEventListener('ajax-form:rendered', function (event) {
         return;
     }
 
+    clearProjectModuleSprintCache();
     initializeProjectModuleSection(event.detail.root);
 });

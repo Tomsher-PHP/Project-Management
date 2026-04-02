@@ -211,6 +211,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
         Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
+        Route::get('modules/{projectModule}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.modules.sprints.index');
         Route::post('modules/{projectModule}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.modules.sprints.store');
         Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
         Route::patch('modules/{projectModule}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.modules.sprints.reorder');
