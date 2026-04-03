@@ -24,8 +24,9 @@ class ProjectStatusController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $projectStatuses = ProjectStatus::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) ProjectStatus::max('sort_order')) + 1;
 
-        return view('settings.project-statuses.index', compact('projectStatuses', 'perPage'));
+        return view('settings.project-statuses.index', compact('projectStatuses', 'perPage', 'nextSortOrder'));
     }
 
     public function store(ProjectStatusRequest $request)

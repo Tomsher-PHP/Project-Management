@@ -24,8 +24,9 @@ class DesignationController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $designations = Designation::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) Designation::max('sort_order')) + 1;
 
-        return view('settings.designations.index', compact('designations', 'perPage'));
+        return view('settings.designations.index', compact('designations', 'perPage', 'nextSortOrder'));
     }
 
     public function store(DesignationRequest $request)

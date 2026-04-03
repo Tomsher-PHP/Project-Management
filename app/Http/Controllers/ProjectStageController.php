@@ -24,8 +24,9 @@ class ProjectStageController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $projectStages = ProjectStage::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) ProjectStage::max('sort_order')) + 1;
 
-        return view('settings.project-stages.index', compact('projectStages', 'perPage'));
+        return view('settings.project-stages.index', compact('projectStages', 'perPage', 'nextSortOrder'));
     }
 
     public function store(ProjectStageRequest $request)

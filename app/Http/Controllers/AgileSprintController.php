@@ -23,10 +23,12 @@ class AgileSprintController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
         $records = AgileSprint::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) AgileSprint::max('sort_order')) + 1;
 
         return view('settings.agile-flow.index', [
             'records' => $records,
             'perPage' => $perPage,
+            'nextSortOrder' => $nextSortOrder,
             'currentTab' => 'sprints',
             'entityLabel' => 'Sprint',
             'entityPluralLabel' => 'Agile Sprints',

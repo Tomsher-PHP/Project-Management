@@ -23,10 +23,12 @@ class AgileModuleController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
         $records = AgileModule::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) AgileModule::max('sort_order')) + 1;
 
         return view('settings.agile-flow.index', [
             'records' => $records,
             'perPage' => $perPage,
+            'nextSortOrder' => $nextSortOrder,
             'currentTab' => 'modules',
             'entityLabel' => 'Module',
             'entityPluralLabel' => 'Agile Modules',

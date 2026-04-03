@@ -24,8 +24,9 @@ class ProjectCategoryController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $projectCategories = ProjectCategory::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
 
-        return view('settings.project-categories.index', compact('projectCategories', 'perPage'));
+        return view('settings.project-categories.index', compact('projectCategories', 'perPage', 'nextSortOrder'));
     }
 
     public function store(ProjectCategoryRequest $request)

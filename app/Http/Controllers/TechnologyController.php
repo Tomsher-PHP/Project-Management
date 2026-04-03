@@ -25,8 +25,9 @@ class TechnologyController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $technologies = Technology::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
+        $nextSortOrder = ((int) Technology::max('sort_order')) + 1;
 
-        return view('settings.technologies.index', compact('technologies', 'perPage'));
+        return view('settings.technologies.index', compact('technologies', 'perPage', 'nextSortOrder'));
     }
 
     public function store(TechnologyRequest $request)

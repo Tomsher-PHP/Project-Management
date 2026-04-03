@@ -101,6 +101,27 @@ $(document).ready(function () {
 
         resetModalForm(modal);
 
+        $.each($(this).data(), function (key, value) {
+            if (['target', 'url', 'method', 'module'].includes(key)) {
+                return;
+            }
+
+            let field = modal.find('[name="' + key + '"]');
+
+            if (!field.length) {
+                return;
+            }
+
+            if (field.hasClass('tom-select') && field[0].tomselect) {
+                field[0].tomselect.setValue(value);
+            } else {
+                field.val(value);
+            }
+        });
+
+        refreshEstimatedTimeInputs(modal);
+        refreshDescriptionCounter(modal);
+
         // Change title and button text
         modal.find('.modal-title').text(`Add ${module}`);
         modal.find('.submit-btn').text(`Create ${module}`);

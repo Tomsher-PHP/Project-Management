@@ -25,8 +25,9 @@ class IndustryController extends Controller
 
         $industries = Industry::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
         $parentIndustries = Industry::where('parent_id', null)->orderBy('sort_order', 'asc')->get();
+        $nextSortOrder = ((int) Industry::max('sort_order')) + 1;
 
-        return view('settings.industries.index', compact('industries', 'perPage', 'parentIndustries'));
+        return view('settings.industries.index', compact('industries', 'perPage', 'parentIndustries', 'nextSortOrder'));
     }
 
     public function store(IndustryRequest $request)
