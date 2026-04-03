@@ -3,6 +3,7 @@
 @section('page-content')
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
+        <div class="mb-6 flex flex-wrap items-center gap-3">
 
         @can('project_status.create')
             <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Status" data-url="{{ route('settings.project-statuses.store') }}" data-method="POST">
@@ -15,6 +16,7 @@
         @endcan
 
         <x-filters.button />
+        </div>
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
