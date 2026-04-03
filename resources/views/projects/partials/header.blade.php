@@ -25,18 +25,15 @@
         'end_label' => $project->customer_end_date?->format($globalDateFormat) ?? '--',
     ];
 @endphp
-<div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600">
 
-    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-
-        <!-- LEFT: Project Info -->
-        <div>
+<div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600" data-project-header-card data-project-id="{{ $project->id }}">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div class="min-w-0 flex-1">
             <div class="flex items-center gap-3">
-                <!-- Priority Indicator -->
                 <div class="h-10 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
 
-                <div>
-                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
+                <div class="min-w-0">
+                    <h2 class="truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
                         {{ $project->name }}
                     </h2>
                     <p class="text-sm text-bgray-500">
@@ -45,83 +42,15 @@
                 </div>
             </div>
 
-            <!-- Meta Info -->
-            <div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-bgray-600 dark:text-bgray-300">
-
-                <span>
-                    <strong>Customer:</strong> {{ $project->customer->name ?? '--' }}
-                </span>
-
-                <span>
-                    <strong>Project Flow:</strong> {{ strtoupper($project->project_flow ?? '--') }}
-                </span>
-
-                <span>
-                    <strong>Start Date:</strong> {{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}
-                </span>
-
-                <span>
-                    <strong>End Date:</strong> {{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}
-                </span>
-
-                {{-- @if ($canCustomerEndDate)
-                    <span>
-                        <strong>Customer End Date:</strong> {{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}
-                    </span>
-                @endcan --}}
-
-        </div>
-
-        <div class="mt-5 grid gap-4 xl:grid-cols-2">
-            <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
-
-                <div class="flex items-center gap-3">
-                    <div class="flex-1">
-                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
-                            <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
-                        </div>
-
-                        <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
-                            <span>{{ $projectTimeline['start_label'] }}</span>
-                            <span>{{ $projectTimeline['end_label'] }}</span>
-                        </div>
-                    </div>
-
-                    <span class="shrink-0 text-sm font-bold {{ $projectTimeline['text_class'] }}">
-                        {{ $projectTimeline['percentage'] }}%
-                    </span>
-                </div>
+            <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-bgray-600 dark:text-bgray-300">
+                <span><strong>Customer:</strong> {{ $project->customer->name ?? '--' }}</span>
+                <span><strong>Project Flow:</strong> {{ strtoupper($project->project_flow ?? '--') }}</span>
+                <span><strong>Start Date:</strong> {{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</span>
+                <span><strong>End Date:</strong> {{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</span>
             </div>
-
-            @if ($canCustomerEndDate)
-                <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                    <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
-
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
-                                <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
-                            </div>
-
-                            <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
-                                <span>{{ $customerTimeline['start_label'] }}</span>
-                                <span>{{ $customerTimeline['end_label'] }}</span>
-                            </div>
-                        </div>
-
-                        <span class="shrink-0 text-sm font-bold {{ $customerTimeline['text_class'] }}">
-                            {{ $customerTimeline['percentage'] }}%
-                        </span>
-                    </div>
-                </div>
-            @endif
         </div>
-    </div>
 
-    <!-- RIGHT: Status + Priority -->
-    <div class="flex flex-col gap-3 md:min-w-[220px] md:items-end md:self-stretch md:justify-between">
-        <div class="flex flex-nowrap items-center gap-3 md:justify-end">
+        <div class="flex flex-wrap items-center gap-3 xl:justify-end">
             @if ($canChangeProjectStatus)
                 <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
                     <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-project-header-trigger style="border: 1px solid {{ $project->projectStatus->color ?? '#6B7280' }}; background-color: {{ $project->projectStatus->color ?? '#6B7280' }};">
@@ -185,17 +114,71 @@
                     {{ $project->projectStage->name ?? 'No Stage' }}
                 </span>
             @endif
-        </div>
 
-        <div class="px-1 py-1 text-right">
-            <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                {{ $project->addedBy->name ?? '--' }}
-            </p>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
-                {{ $projectCreatedAtLabel }}
-            </p>
+            <button type="button" class="inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-header-collapse-toggle aria-expanded="false" aria-label="Expand project header details">
+                <svg class="h-5 w-5 transition duration-200" data-project-header-collapse-icon viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
         </div>
     </div>
 
-</div>
+    <div class="mt-5 hidden border-t border-bgray-200 pt-4 dark:border-darkblack-400" data-project-header-expandable>
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+            <div class="grid gap-4 xl:grid-cols-2">
+                <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
+                    <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
+
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                                <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
+                            </div>
+
+                            <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
+                                <span>{{ $projectTimeline['start_label'] }}</span>
+                                <span>{{ $projectTimeline['end_label'] }}</span>
+                            </div>
+                        </div>
+
+                        <span class="shrink-0 text-sm font-bold {{ $projectTimeline['text_class'] }}">
+                            {{ $projectTimeline['percentage'] }}%
+                        </span>
+                    </div>
+                </div>
+
+                @if ($canCustomerEndDate)
+                    <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
+                        <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
+
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
+                                    <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
+                                </div>
+
+                                <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
+                                    <span>{{ $customerTimeline['start_label'] }}</span>
+                                    <span>{{ $customerTimeline['end_label'] }}</span>
+                                </div>
+                            </div>
+
+                            <span class="shrink-0 text-sm font-bold {{ $customerTimeline['text_class'] }}">
+                                {{ $customerTimeline['percentage'] }}%
+                            </span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="px-1 py-1 text-right">
+                <p class="text-sm font-semibold text-bgray-900 dark:text-white">
+                    {{ $project->addedBy->name ?? '--' }}
+                </p>
+                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
+                    {{ $projectCreatedAtLabel }}
+                </p>
+            </div>
+        </div>
+    </div>
 </div>

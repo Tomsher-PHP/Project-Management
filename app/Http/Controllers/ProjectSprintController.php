@@ -12,7 +12,9 @@ use App\Models\ProjectStatus;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectSprintController extends Controller
 {
@@ -115,6 +117,85 @@ class ProjectSprintController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, Project $project, ProjectSprint $projectSprint)
+    {
+        $this->ensureAgileProject($project);
+        abort_unless($projectSprint->project_id === $project->id, 404);
+
+        if ($this->sprintHasTasks($projectSprint)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'This sprint cannot be deleted because it already has tasks.',
+                ], 422);
+            }
+
+            return redirect()
+                ->route('projects.edit', $project)
+                ->with('error', 'This sprint cannot be deleted because it already has tasks.');
+        }
+
+        $projectModule = $projectSprint->projectModule;
+
+        DB::transaction(function () use ($projectSprint, $projectModule) {
+            $projectSprint->delete();
+
+            if ($projectModule) {
+                $this->normalizeOrder($projectModule);
+                $projectModule->refreshTrackedTimeMetrics();
+            }
+        });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Project sprint deleted successfully.',
+                'html' => $this->renderSection($project, $projectModule?->id),
+                'render_target' => '[data-project-module-section]',
+                'render_mode' => 'replace_outer',
+            ]);
+        }
+
+        return redirect()
+            ->route('projects.edit', $project)
+            ->with('success', 'Project sprint deleted successfully.');
+    }
+
+    public function restore(Request $request, Project $project, int $projectSprint): JsonResponse
+    {
+        $this->ensureAgileProject($project);
+
+        $trashedSprint = ProjectSprint::onlyTrashed()
+            ->where('project_id', $project->id)
+            ->findOrFail($projectSprint);
+
+        $projectModule = ProjectModule::query()
+            ->where('project_id', $project->id)
+            ->findOrFail($trashedSprint->project_module_id);
+
+        $restoredName = $this->resolveRestoredName($projectModule, $trashedSprint->name, $trashedSprint->id);
+
+        DB::transaction(function () use ($trashedSprint, $projectModule, $restoredName) {
+            $trashedSprint->name = $restoredName;
+            $trashedSprint->sort_order = $this->nextOrder($projectModule);
+            $trashedSprint->updated_by = Auth::id();
+            $trashedSprint->restore();
+            $trashedSprint->saveQuietly();
+        });
+
+        $message = $restoredName === $trashedSprint->getOriginal('name')
+            ? 'Project sprint restored successfully.'
+            : "Project sprint restored as \"{$restoredName}\" because the previous name already exists.";
+
+        return response()->json([
+            'status' => true,
+            'message' => $message,
+            'html' => $this->renderSection($project, $projectModule->id, $trashedSprint->id),
+            'render_target' => '[data-project-module-section]',
+            'render_mode' => 'replace_outer',
+        ]);
+    }
+
     public function reorder(Project $project, ProjectModule $projectModule, Request $request): JsonResponse
     {
         $this->ensureAgileProject($project);
@@ -189,6 +270,22 @@ class ProjectSprintController extends Controller
             });
     }
 
+    private function sprintHasTasks(ProjectSprint $projectSprint): bool
+    {
+        if (!Schema::hasTable('project_tasks') || !Schema::hasColumn('project_tasks', 'project_sprint_id')) {
+            return false;
+        }
+
+        $query = DB::table('project_tasks')
+            ->where('project_sprint_id', $projectSprint->id);
+
+        if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+            $query->whereNull('deleted_at');
+        }
+
+        return $query->exists();
+    }
+
     private function serializeSprint(ProjectSprint $projectSprint): array
     {
         return [
@@ -197,12 +294,32 @@ class ProjectSprintController extends Controller
             'name' => $projectSprint->name,
             'color' => $projectSprint->color,
             'description' => $projectSprint->description,
+            'task_count' => $projectSprint->task_count,
             'status_id' => $projectSprint->status_id,
             'start_date' => $projectSprint->start_date?->format('Y-m-d'),
             'end_date' => $projectSprint->end_date?->format('Y-m-d'),
             'estimated_time_minutes' => $projectSprint->estimated_time_minutes,
             'sort_order' => $projectSprint->sort_order,
         ];
+    }
+
+    private function resolveRestoredName(ProjectModule $projectModule, string $originalName, int $restoringSprintId): string
+    {
+        $candidate = $originalName;
+        $suffix = 1;
+
+        while ($projectModule->projectSprints()
+            ->where('name', $candidate)
+            ->whereKeyNot($restoringSprintId)
+            ->exists()) {
+            $candidate = $suffix === 1
+                ? "{$originalName} (Restored)"
+                : "{$originalName} (Restored {$suffix})";
+
+            $suffix++;
+        }
+
+        return $candidate;
     }
 
     private function renderSection(Project $project, ?int $openModuleId = null, ?int $openSprintId = null): string
@@ -232,6 +349,11 @@ class ProjectSprintController extends Controller
                 ->where('project_id', $project->id)
                 ->orderByDesc('deleted_at')
                 ->get(),
+            'trashedProjectSprintsByModule' => ProjectSprint::onlyTrashed()
+                ->where('project_id', $project->id)
+                ->orderByDesc('deleted_at')
+                ->get()
+                ->groupBy('project_module_id'),
         ])->render();
     }
 }

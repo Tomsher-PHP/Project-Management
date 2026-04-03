@@ -1,4 +1,15 @@
 $(document).ready(function () {
+    const refreshDescriptionCounter = (modal) => {
+        const textarea = modal.find('textarea[name="description"][maxlength]').first();
+        const counter = modal.find('[data-modal-description-count]').first();
+
+        if (!textarea.length || !counter.length) {
+            return;
+        }
+
+        counter.text(textarea.val().length);
+    };
+
     const refreshEstimatedTimeInputs = (modal) => {
         modal.find('[data-estimated-time]').each(function () {
             this.dispatchEvent(new CustomEvent('estimated-time:refresh'));
@@ -19,6 +30,7 @@ $(document).ready(function () {
         modal.find('form')[0].reset();
         resetTomSelectFields(modal);
         refreshEstimatedTimeInputs(modal);
+        refreshDescriptionCounter(modal);
         clearFormErrors(modal.find('.ajax-form'));
     };
 
@@ -131,6 +143,7 @@ $(document).ready(function () {
         // Change title and button text
         modal.find('.modal-title').text('Edit ' + $(this).data('module'));
         modal.find('.submit-btn').text('Update ' + $(this).data('module'));
+        refreshDescriptionCounter(modal);
 
         modal.removeClass('hidden');
     });
@@ -196,5 +209,9 @@ $(document).ready(function () {
         form.find('select').removeClass('border-red-500');
         form.find('textarea').removeClass('border-red-500');
     }
+
+    $(document).on('input', '.modal-form textarea[name="description"][maxlength]', function () {
+        refreshDescriptionCounter($(this).closest('.modal-form'));
+    });
 
 });

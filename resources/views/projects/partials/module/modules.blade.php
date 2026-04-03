@@ -4,6 +4,8 @@
         'updateUrlTemplate' => route('projects.modules.update', ['project' => $project, 'projectModule' => '__MODULE__']),
         'destroyUrlTemplate' => route('projects.modules.destroy', ['project' => $project, 'projectModule' => '__MODULE__']),
         'reorderUrl' => route('projects.modules.reorder', $project),
+        'libraryStoreUrl' => route('settings.agile-modules.store'),
+        'nextLibrarySortOrder' => ((int) $agileModules->max('sort_order')) + 1,
         'owners' => $assignableUsers->map(fn ($user) => [
             'id' => $user->id,
             'name' => $user->name,
@@ -12,7 +14,11 @@
     $projectSprintBuilderConfig = [
         'storeUrlTemplate' => route('projects.modules.sprints.store', ['project' => $project, 'projectModule' => '__MODULE__']),
         'updateUrlTemplate' => route('projects.sprints.update', ['project' => $project, 'projectSprint' => '__SPRINT__']),
+        'destroyUrlTemplate' => route('projects.sprints.destroy', ['project' => $project, 'projectSprint' => '__SPRINT__']),
         'reorderUrlTemplate' => route('projects.modules.sprints.reorder', ['project' => $project, 'projectModule' => '__MODULE__']),
+        'libraryStoreUrl' => route('settings.agile-sprints.store'),
+        'nextLibrarySortOrder' => ((int) $agileSprints->max('sort_order')) + 1,
+        'canDelete' => auth()->user()->can('project_sprint.delete'),
     ];
 @endphp
 
@@ -87,11 +93,10 @@
                                                 </div>
 
                                                 <div class="flex items-center gap-2">
-                                                    <button type="button" class="inline-flex h-10 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 text-sm font-medium text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete>
-                                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd" d="M8.5 3A1.5 1.5 0 007 4.5V5H4.75a.75.75 0 000 1.5h.538l.63 8.214A2.25 2.25 0 008.161 16.8h3.678a2.25 2.25 0 002.243-2.086l.63-8.214h.538a.75.75 0 000-1.5H13v-.5A1.5 1.5 0 0011.5 3h-3zm3 2V4.5h-3V5h3z" clip-rule="evenodd" />
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete module" title="Delete module">
+                                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
-                                                        <span>Delete</span>
                                                     </button>
                                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
                                                         <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
@@ -172,8 +177,15 @@
                         </div>
 
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
-                            <div class="mb-5">
+                            <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Module Library</h4>
+                                @can('agile_module.create')
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-module-library-create-open aria-label="Add module library item" title="Add module library item">
+                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </button>
+                                @endcan
                             </div>
 
                             <label class="relative mb-4 block">
@@ -185,10 +197,10 @@
                                 <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search module library..." data-project-module-builder-library-search>
                             </label>
 
-                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]">
+                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-module-builder-library-scroll>
                                 <div class="space-y-3" data-project-module-builder-library>
                                     @foreach ($agileModules as $libraryModule)
-                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}">
+                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">
@@ -222,6 +234,69 @@
             {!! json_encode($projectModuleBuilderConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
     </div>
+
+    @can('agile_module.create')
+        <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-module-library-create-modal" data-project-module-library-create-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-module-library-create-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-3xl">
+                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                        <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                            <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Module</h3>
+
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-library-create-close>
+                                ✕
+                            </button>
+                        </div>
+
+                        <form class="flex max-h-[80vh] flex-col" data-project-module-library-create-form>
+                            <div class="overflow-y-auto px-6 py-6 sm:px-7">
+                                <div class="grid gap-6 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                                        <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="name"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+                                        <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="color"></p>
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <div class="mb-2.5 flex items-center justify-between gap-3">
+                                            <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-library-description-count>0</span>/100</span>
+                                        </div>
+                                        <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="description"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                                        <input type="number" name="sort_order" min="1" step="1" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="sort_order"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
+                                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-module-library-create-close>
+                                    Cancel
+                                </button>
+
+                                <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-module-library-create-submit>
+                                    Create Module
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 @endcanany
 
 @canany(['project_sprint.create', 'project_sprint.edit'])
@@ -279,8 +354,15 @@
                         </div>
 
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
-                            <div class="mb-5">
+                            <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
+                                @can('agile_sprint.create')
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
+                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </button>
+                                @endcan
                             </div>
 
                             <label class="relative mb-4 block">
@@ -292,10 +374,10 @@
                                 <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search sprint library..." data-project-sprint-builder-library-search>
                             </label>
 
-                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]">
+                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-sprint-builder-library-scroll>
                                 <div class="space-y-3" data-project-sprint-builder-library>
                                     @foreach ($agileSprints as $librarySprint)
-                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}">
+                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">
@@ -329,4 +411,67 @@
             {!! json_encode($projectSprintBuilderConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
     </div>
+
+    @can('agile_sprint.create')
+        <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-sprint-library-create-modal" data-project-sprint-library-create-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-sprint-library-create-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-3xl">
+                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                        <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
+                            <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Sprint</h3>
+
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-sprint-library-create-close>
+                                ✕
+                            </button>
+                        </div>
+
+                        <form class="flex max-h-[80vh] flex-col" data-project-sprint-library-create-form>
+                            <div class="overflow-y-auto px-6 py-6 sm:px-7">
+                                <div class="grid gap-6 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                                        <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="name"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+                                        <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="color"></p>
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <div class="mb-2.5 flex items-center justify-between gap-3">
+                                            <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-library-description-count>0</span>/100</span>
+                                        </div>
+                                        <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="description"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                                        <input type="number" name="sort_order" min="1" step="1" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="sort_order"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
+                                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-sprint-library-create-close>
+                                    Cancel
+                                </button>
+
+                                <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-sprint-library-create-submit>
+                                    Create Sprint
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 @endcanany

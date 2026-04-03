@@ -55,6 +55,80 @@ const renderSelectOptions = (items, selectedValue, placeholder) => {
 };
 
 const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+const requestFormJson = async (url, formData, csrfToken = getCsrfToken()) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+        },
+        body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || result.status === false || result.success === false) {
+        const error = new Error(result.message || 'Unable to save the library item.');
+        error.payload = result;
+        throw error;
+    }
+
+    return result;
+};
+
+const clearInlineFormErrors = (form, errorAttribute) => {
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll(`[${errorAttribute}]`).forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+
+    form.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.classList.remove('border-red-500');
+    });
+};
+
+const applyInlineFormErrors = (form, errors, errorAttribute) => {
+    clearInlineFormErrors(form, errorAttribute);
+
+    Object.entries(errors || {}).forEach(([fieldName, messages]) => {
+        const input = form.querySelector(`[name="${fieldName}"]`);
+        const errorNode = form.querySelector(`[${errorAttribute}="${fieldName}"]`);
+
+        input?.classList.add('border-red-500');
+
+        if (errorNode) {
+            errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
+            errorNode.classList.remove('hidden');
+        }
+    });
+};
+
+const highlightLibraryItem = (item, scrollContainer = null) => {
+    if (!item) {
+        return;
+    }
+
+    item.classList.add('ring-2', 'ring-success-300', 'dark:ring-success-900/40');
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    if (scrollContainer) {
+        scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: 'smooth',
+        });
+    }
+
+    window.setTimeout(() => {
+        item.classList.remove('ring-2', 'ring-success-300', 'dark:ring-success-900/40');
+    }, 1800);
+};
+
 const projectModuleSprintPayloadCache = new Map();
 const projectModuleSprintRequestCache = new Map();
 
@@ -190,11 +264,10 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
             </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" class="inline-flex h-10 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 text-sm font-medium text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete>
-                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.5 3A1.5 1.5 0 007 4.5V5H4.75a.75.75 0 000 1.5h.538l.63 8.214A2.25 2.25 0 008.161 16.8h3.678a2.25 2.25 0 002.243-2.086l.63-8.214h.538a.75.75 0 000-1.5H13v-.5A1.5 1.5 0 0011.5 3h-3zm3 2V4.5h-3V5h3z" clip-rule="evenodd" />
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete module" title="Delete module">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                <span>Delete</span>
             </button>
             <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
                 <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
@@ -242,6 +315,30 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
     </article>
 `;
 
+const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
+    <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-module-library-item data-library-module-id="${escapeHtml(libraryModule.id ?? '')}" data-name="${escapeHtml(libraryModule.name || '')}" data-color="${escapeHtml(libraryModule.color || '#22C55E')}" data-description="${escapeHtml(libraryModule.description || '')}" data-sort-order="${escapeHtml(libraryModule.sort_order ?? '')}">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: ${escapeHtml(libraryModule.color || '#22C55E')}"></span>
+                    <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                        ${escapeHtml(libraryModule.name || 'New Module')}
+                    </h5>
+                </div>
+                <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                    ${escapeHtml(libraryModule.description || 'No library description added yet.')}
+                </p>
+            </div>
+
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+                </svg>
+            </span>
+        </div>
+    </article>
+`;
+
 const initializeProjectModuleBuilderModal = () => {
     const modal = document.getElementById('project-module-modal');
 
@@ -252,9 +349,13 @@ const initializeProjectModuleBuilderModal = () => {
     const configNode = document.getElementById('project-module-builder-config');
     const workspace = modal.querySelector('[data-project-module-builder-workspace]');
     const library = modal.querySelector('[data-project-module-builder-library]');
+    const libraryScrollContainer = modal.querySelector('[data-project-module-builder-library-scroll]');
     const searchInput = modal.querySelector('[data-project-module-builder-library-search]');
     const resetSearchButton = modal.querySelector('[data-project-module-builder-reset-search]');
     const countBadge = modal.querySelector('[data-project-module-builder-count]');
+    const libraryCreateModal = document.getElementById('project-module-library-create-modal');
+    const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-module-library-create-form]') || null;
+    const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-module-library-create-submit]') || null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     if (!configNode || !workspace || !library || !csrfToken) {
@@ -267,6 +368,99 @@ const initializeProjectModuleBuilderModal = () => {
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const cardTimers = new Map();
+    const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
+    const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-module-library-item]'))
+        .map((item) => Number(item.dataset.sortOrder) || 0);
+
+    const getNextLibrarySortOrder = () => Math.max(
+        Number(config.nextLibrarySortOrder) || 0,
+        (Math.max(0, ...getLibrarySortOrders()) || 0) + 1,
+        1
+    );
+
+    const syncLibraryDescriptionCount = () => {
+        if (!libraryCreateForm) {
+            return;
+        }
+
+        const textarea = libraryCreateForm.querySelector('textarea[name="description"]');
+        const countNode = libraryCreateForm.querySelector('[data-project-module-library-description-count]');
+
+        if (!textarea || !countNode) {
+            return;
+        }
+
+        countNode.textContent = String(textarea.value.length);
+    };
+
+    const resetLibraryCreateForm = () => {
+        if (!libraryCreateForm) {
+            return;
+        }
+
+        libraryCreateForm.reset();
+        libraryCreateForm.querySelector('[name="color"]')?.setAttribute('value', '#22C55E');
+        const colorInput = libraryCreateForm.querySelector('[name="color"]');
+
+        if (colorInput) {
+            colorInput.value = '#22C55E';
+        }
+
+        const sortOrderInput = libraryCreateForm.querySelector('[name="sort_order"]');
+
+        if (sortOrderInput) {
+            sortOrderInput.value = String(getNextLibrarySortOrder());
+        }
+
+        clearInlineFormErrors(libraryCreateForm, 'data-project-module-library-create-error');
+        syncLibraryDescriptionCount();
+    };
+
+    const openLibraryCreateModal = () => {
+        if (!libraryCreateModal) {
+            return;
+        }
+
+        resetLibraryCreateForm();
+        libraryCreateModal.classList.remove('hidden');
+        libraryCreateForm?.querySelector('[name="name"]')?.focus();
+    };
+
+    const closeLibraryCreateModal = () => {
+        if (!libraryCreateModal) {
+            return;
+        }
+
+        libraryCreateModal.classList.add('hidden');
+        resetLibraryCreateForm();
+    };
+
+    const appendLibraryModuleItem = (libraryModule) => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = renderModuleLibraryCard(libraryModule);
+        const item = wrapper.firstElementChild;
+
+        if (!item) {
+            return null;
+        }
+
+        library.appendChild(item);
+        config.nextLibrarySortOrder = Math.max(
+            Number(config.nextLibrarySortOrder) || 0,
+            (Number(libraryModule.sort_order) || 0) + 1
+        );
+
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+
+        highlightLibraryItem(item, libraryScrollContainer);
+
+        return item;
+    };
 
     const syncCardDateRange = (card) => {
         const rangeInput = card.querySelector('[data-project-module-builder-date-range]');
@@ -691,7 +885,7 @@ const initializeProjectModuleBuilderModal = () => {
         } catch (error) {
             card.remove();
             ensureEmptyState();
-            Alert.error(error.message || 'Unable to create the project module.');
+            showModalError(error.message || 'Unable to create the project module.');
         }
     };
 
@@ -718,7 +912,7 @@ const initializeProjectModuleBuilderModal = () => {
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            Alert.error(error.message || 'Unable to update the project module.');
+            showModalError(error.message || 'Unable to update the project module.');
         }
     };
 
@@ -755,7 +949,7 @@ const initializeProjectModuleBuilderModal = () => {
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            Alert.error(error.message || 'Unable to delete the project module.');
+            showModalError(error.message || 'Unable to delete the project module.');
         }
     };
 
@@ -773,7 +967,7 @@ const initializeProjectModuleBuilderModal = () => {
             syncOrderBadges();
             replaceRenderedSection(result);
         } catch (error) {
-            Alert.error(error.message || 'Unable to reorder project modules.');
+            showModalError(error.message || 'Unable to reorder project modules.');
         }
     };
 
@@ -787,6 +981,11 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-project-module-library-create-open]')) {
+            openLibraryCreateModal();
+            return;
+        }
+
         if (event.target.closest('.project-module-builder-open')) {
             openModal();
             return;
@@ -819,11 +1018,55 @@ const initializeProjectModuleBuilderModal = () => {
         }
     });
 
+    libraryCreateModal?.addEventListener('click', function (event) {
+        if (event.target.closest('[data-project-module-library-create-close]')) {
+            closeLibraryCreateModal();
+        }
+    });
+
     document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && libraryCreateModal && !libraryCreateModal.classList.contains('hidden')) {
+            closeLibraryCreateModal();
+            return;
+        }
+
         if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal();
         }
     });
+
+    libraryCreateForm?.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        clearInlineFormErrors(libraryCreateForm, 'data-project-module-library-create-error');
+        libraryCreateSubmitButton?.setAttribute('disabled', 'disabled');
+
+        try {
+            const result = await requestFormJson(
+                config.libraryStoreUrl,
+                new FormData(libraryCreateForm),
+                csrfToken
+            );
+
+            appendLibraryModuleItem(result.data || {});
+            closeLibraryCreateModal();
+            showModalSuccess(result.message || 'Agile module created successfully.');
+        } catch (error) {
+            if (error.payload?.errors) {
+                applyInlineFormErrors(
+                    libraryCreateForm,
+                    error.payload.errors,
+                    'data-project-module-library-create-error'
+                );
+            } else {
+                showModalError(error.message || 'Unable to create the agile module.');
+            }
+        } finally {
+            libraryCreateSubmitButton?.removeAttribute('disabled');
+        }
+    });
+
+    libraryCreateForm?.querySelector('textarea[name="description"]')?.addEventListener('input', syncLibraryDescriptionCount);
 
     library.addEventListener('dragstart', function (event) {
         const item = event.target.closest('[data-project-module-library-item]');
@@ -1076,7 +1319,7 @@ const normalizeDateOnly = (value) => {
         : stringValue;
 };
 
-const renderSprintBuilderCard = (sprint, extraClass = '') => `
+const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
     <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="false" draggable="false">
         <input type="hidden" name="color" value="${escapeHtml(sprint.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1092,12 +1335,20 @@ const renderSprintBuilderCard = (sprint, extraClass = '') => `
                         <span class="inline-flex h-3.5 w-3.5 rounded-full" data-project-sprint-builder-color-dot style="background-color: ${escapeHtml(sprint.color || '#22C55E')}"></span>
                         <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-sprint-builder-title>${escapeHtml(sprint.name || 'New Sprint')}</h5>
                         <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-sprint-builder-order>${escapeHtml(sprint.sort_order || '')}</span>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-sprint-builder-task-count>Tasks ${escapeHtml(sprint.task_count ?? 0)}</span>
                     </div>
                     <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-sprint-builder-status>Saved</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
+                ${config?.canDelete ? `
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                ` : ''}
                 <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
                     <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
@@ -1137,6 +1388,30 @@ const renderSprintBuilderCard = (sprint, extraClass = '') => `
     </article>
 `;
 
+const renderSprintLibraryCard = (librarySprint, extraClass = '') => `
+    <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-sprint-library-item data-library-sprint-id="${escapeHtml(librarySprint.id ?? '')}" data-name="${escapeHtml(librarySprint.name || '')}" data-color="${escapeHtml(librarySprint.color || '#22C55E')}" data-description="${escapeHtml(librarySprint.description || '')}" data-sort-order="${escapeHtml(librarySprint.sort_order ?? '')}">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: ${escapeHtml(librarySprint.color || '#22C55E')}"></span>
+                    <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                        ${escapeHtml(librarySprint.name || 'New Sprint')}
+                    </h5>
+                </div>
+                <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                    ${escapeHtml(librarySprint.description || 'No library description added yet.')}
+                </p>
+            </div>
+
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01" />
+                </svg>
+            </span>
+        </div>
+    </article>
+`;
+
 const initializeProjectSprintBuilderModal = () => {
     const modal = document.getElementById('project-sprint-modal');
 
@@ -1147,10 +1422,14 @@ const initializeProjectSprintBuilderModal = () => {
     const configNode = document.getElementById('project-sprint-builder-config');
     const workspace = modal.querySelector('[data-project-sprint-builder-workspace]');
     const library = modal.querySelector('[data-project-sprint-builder-library]');
+    const libraryScrollContainer = modal.querySelector('[data-project-sprint-builder-library-scroll]');
     const searchInput = modal.querySelector('[data-project-sprint-builder-library-search]');
     const resetSearchButton = modal.querySelector('[data-project-sprint-builder-reset-search]');
     const countBadge = modal.querySelector('[data-project-sprint-builder-count]');
     const moduleNameNode = modal.querySelector('[data-project-sprint-builder-module-name]');
+    const libraryCreateModal = document.getElementById('project-sprint-library-create-modal');
+    const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-sprint-library-create-form]') || null;
+    const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-sprint-library-create-submit]') || null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     if (!configNode || !workspace || !library || !moduleNameNode || !csrfToken) {
@@ -1165,6 +1444,99 @@ const initializeProjectSprintBuilderModal = () => {
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const cardTimers = new Map();
+    const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
+    const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-sprint-library-item]'))
+        .map((item) => Number(item.dataset.sortOrder) || 0);
+
+    const getNextLibrarySortOrder = () => Math.max(
+        Number(config.nextLibrarySortOrder) || 0,
+        (Math.max(0, ...getLibrarySortOrders()) || 0) + 1,
+        1
+    );
+
+    const syncLibraryDescriptionCount = () => {
+        if (!libraryCreateForm) {
+            return;
+        }
+
+        const textarea = libraryCreateForm.querySelector('textarea[name="description"]');
+        const countNode = libraryCreateForm.querySelector('[data-project-sprint-library-description-count]');
+
+        if (!textarea || !countNode) {
+            return;
+        }
+
+        countNode.textContent = String(textarea.value.length);
+    };
+
+    const resetLibraryCreateForm = () => {
+        if (!libraryCreateForm) {
+            return;
+        }
+
+        libraryCreateForm.reset();
+        libraryCreateForm.querySelector('[name="color"]')?.setAttribute('value', '#22C55E');
+        const colorInput = libraryCreateForm.querySelector('[name="color"]');
+
+        if (colorInput) {
+            colorInput.value = '#22C55E';
+        }
+
+        const sortOrderInput = libraryCreateForm.querySelector('[name="sort_order"]');
+
+        if (sortOrderInput) {
+            sortOrderInput.value = String(getNextLibrarySortOrder());
+        }
+
+        clearInlineFormErrors(libraryCreateForm, 'data-project-sprint-library-create-error');
+        syncLibraryDescriptionCount();
+    };
+
+    const openLibraryCreateModal = () => {
+        if (!libraryCreateModal) {
+            return;
+        }
+
+        resetLibraryCreateForm();
+        libraryCreateModal.classList.remove('hidden');
+        libraryCreateForm?.querySelector('[name="name"]')?.focus();
+    };
+
+    const closeLibraryCreateModal = () => {
+        if (!libraryCreateModal) {
+            return;
+        }
+
+        libraryCreateModal.classList.add('hidden');
+        resetLibraryCreateForm();
+    };
+
+    const appendLibrarySprintItem = (librarySprint) => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = renderSprintLibraryCard(librarySprint);
+        const item = wrapper.firstElementChild;
+
+        if (!item) {
+            return null;
+        }
+
+        library.appendChild(item);
+        config.nextLibrarySortOrder = Math.max(
+            Number(config.nextLibrarySortOrder) || 0,
+            (Number(librarySprint.sort_order) || 0) + 1
+        );
+
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        }
+
+        highlightLibraryItem(item, libraryScrollContainer);
+
+        return item;
+    };
 
     const getCards = () => Array.from(workspace.querySelectorAll('[data-project-sprint-builder-card]'));
     const getHelper = () => workspace.querySelector('[data-project-sprint-builder-helper]');
@@ -1235,7 +1607,7 @@ const initializeProjectSprintBuilderModal = () => {
             renderWorkspaceFromSprints(payload.sprints || []);
         } catch (error) {
             renderWorkspaceFromSprints([]);
-            Alert.error(error.message || 'Unable to load project sprints.');
+            showModalError(error.message || 'Unable to load project sprints.');
             return;
         }
 
@@ -1330,7 +1702,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         sprints.forEach((sprint) => {
             const cardWrapper = document.createElement('div');
-            cardWrapper.innerHTML = renderSprintBuilderCard(sprint);
+            cardWrapper.innerHTML = renderSprintBuilderCard(sprint, config);
             const card = cardWrapper.firstElementChild;
 
             if (!card) {
@@ -1541,6 +1913,12 @@ const initializeProjectSprintBuilderModal = () => {
             rangeInput.value = [normalizedStartDate, normalizedEndDate].filter(Boolean).join(' to ');
         }
 
+        const taskCountBadge = card.querySelector('[data-project-sprint-builder-task-count]');
+
+        if (taskCountBadge) {
+            taskCountBadge.textContent = `Tasks ${sprint.task_count ?? 0}`;
+        }
+
         syncCardTitle(card);
         syncDescriptionCount(card);
         syncSprintCardDateRange(card);
@@ -1550,7 +1928,7 @@ const initializeProjectSprintBuilderModal = () => {
 
     const createLibrarySprintCard = async (librarySprint) => {
         if (!activeModuleId) {
-            Alert.error('Select a project module before adding sprints.');
+            showModalError('Select a project module before adding sprints.');
             return;
         }
 
@@ -1569,7 +1947,7 @@ const initializeProjectSprintBuilderModal = () => {
             ...payload,
             id: '',
             sort_order: getCards().length + 1,
-        }, 'ring-2 ring-success-200 dark:ring-success-900/30');
+        }, config, 'ring-2 ring-success-200 dark:ring-success-900/30');
 
         const card = cardWrapper.firstElementChild;
 
@@ -1598,7 +1976,7 @@ const initializeProjectSprintBuilderModal = () => {
         } catch (error) {
             card.remove();
             ensureEmptyState();
-            Alert.error(error.message || 'Unable to create the project sprint.');
+            showModalError(error.message || 'Unable to create the project sprint.');
         }
     };
 
@@ -1629,7 +2007,7 @@ const initializeProjectSprintBuilderModal = () => {
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            Alert.error(error.message || 'Unable to update the project sprint.');
+            showModalError(error.message || 'Unable to update the project sprint.');
         }
     };
 
@@ -1648,6 +2026,29 @@ const initializeProjectSprintBuilderModal = () => {
         cardTimers.set(card, timer);
     };
 
+    const deleteSprintCard = async (card) => {
+        const sprintId = card.dataset.sprintId;
+
+        if (!sprintId) {
+            card.remove();
+            ensureEmptyState();
+            return;
+        }
+
+        setCardStatus(card, 'Deleting...', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+
+        try {
+            const result = await requestJson(config.destroyUrlTemplate.replace('__SPRINT__', sprintId), 'DELETE', {});
+            card.remove();
+            ensureEmptyState();
+            projectModuleSprintPayloadCache.delete(activeModuleId);
+            replaceRenderedSection(result);
+        } catch (error) {
+            setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+            showModalError(error.message || 'Unable to delete the project sprint.');
+        }
+    };
+
     const persistWorkspaceOrder = async () => {
         const sprintIds = getCards()
             .map((card) => Number(card.dataset.sprintId))
@@ -1663,7 +2064,7 @@ const initializeProjectSprintBuilderModal = () => {
             projectModuleSprintPayloadCache.delete(activeModuleId);
             fetchProjectModuleSprints(activeModuleId, { force: true }).catch(() => {});
         } catch (error) {
-            Alert.error(error.message || 'Unable to reorder project sprints.');
+            showModalError(error.message || 'Unable to reorder project sprints.');
         }
     };
 
@@ -1677,6 +2078,11 @@ const initializeProjectSprintBuilderModal = () => {
     };
 
     document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-project-sprint-library-create-open]')) {
+            openLibraryCreateModal();
+            return;
+        }
+
         const createTrigger = event.target.closest('.project-sprint-builder-open');
 
         if (createTrigger) {
@@ -1711,11 +2117,55 @@ const initializeProjectSprintBuilderModal = () => {
         }
     });
 
+    libraryCreateModal?.addEventListener('click', function (event) {
+        if (event.target.closest('[data-project-sprint-library-create-close]')) {
+            closeLibraryCreateModal();
+        }
+    });
+
     document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && libraryCreateModal && !libraryCreateModal.classList.contains('hidden')) {
+            closeLibraryCreateModal();
+            return;
+        }
+
         if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal();
         }
     });
+
+    libraryCreateForm?.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        clearInlineFormErrors(libraryCreateForm, 'data-project-sprint-library-create-error');
+        libraryCreateSubmitButton?.setAttribute('disabled', 'disabled');
+
+        try {
+            const result = await requestFormJson(
+                config.libraryStoreUrl,
+                new FormData(libraryCreateForm),
+                csrfToken
+            );
+
+            appendLibrarySprintItem(result.data || {});
+            closeLibraryCreateModal();
+            showModalSuccess(result.message || 'Agile sprint created successfully.');
+        } catch (error) {
+            if (error.payload?.errors) {
+                applyInlineFormErrors(
+                    libraryCreateForm,
+                    error.payload.errors,
+                    'data-project-sprint-library-create-error'
+                );
+            } else {
+                showModalError(error.message || 'Unable to create the agile sprint.');
+            }
+        } finally {
+            libraryCreateSubmitButton?.removeAttribute('disabled');
+        }
+    });
+
+    libraryCreateForm?.querySelector('textarea[name="description"]')?.addEventListener('input', syncLibraryDescriptionCount);
 
     library.addEventListener('dragstart', function (event) {
         const item = event.target.closest('[data-project-sprint-library-item]');
@@ -1875,6 +2325,18 @@ const initializeProjectSprintBuilderModal = () => {
         const toggleButton = event.target.closest('[data-project-sprint-builder-toggle]');
 
         if (!toggleButton) {
+            const deleteButton = event.target.closest('[data-project-sprint-builder-delete]');
+
+            if (deleteButton) {
+                const card = deleteButton.closest('[data-project-sprint-builder-card]');
+
+                if (!card) {
+                    return;
+                }
+
+                deleteSprintCard(card);
+            }
+
             return;
         }
 
@@ -2144,6 +2606,8 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     const moduleList = section.querySelector('[data-project-module-list]');
     const restoreModal = section.querySelector('[data-project-module-restore-modal]');
     const restoreOpenButton = section.querySelector('[data-project-module-restore-open]');
+    const sprintRestoreOpenButtons = section.querySelectorAll('[data-project-sprint-restore-open]');
+    const sprintRestoreModals = section.querySelectorAll('[data-project-sprint-restore-modal]');
     const csrfToken = getCsrfToken();
     let draggedModuleCard = null;
     let dragHandleCard = null;
@@ -2222,6 +2686,78 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             }
         });
     }
+
+    sprintRestoreOpenButtons.forEach((button) => {
+        button.addEventListener('click', function () {
+            const moduleId = button.dataset.projectSprintRestoreOpen;
+            const modal = section.querySelector(`[data-project-sprint-restore-modal="${moduleId}"]`);
+
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        });
+    });
+
+    sprintRestoreModals.forEach((modal) => {
+        const closeSprintRestoreModal = () => {
+            modal.classList.add('hidden');
+        };
+
+        modal.querySelectorAll('[data-project-sprint-restore-close]').forEach((button) => {
+            button.addEventListener('click', closeSprintRestoreModal);
+        });
+
+        modal.addEventListener('click', async function (event) {
+            const restoreButton = event.target.closest('[data-project-sprint-restore-action]');
+
+            if (!restoreButton) {
+                return;
+            }
+
+            const sprintName = restoreButton.dataset.sprintName || 'this sprint';
+            const restoreUrl = restoreButton.dataset.restoreUrl;
+
+            const result = await Alert.confirm({
+                target: modal,
+                title: 'Restore Sprint',
+                text: `Restore ${sprintName}?`,
+                confirmText: 'Yes, restore',
+                cancelText: 'Cancel',
+            });
+
+            if (!result.isConfirmed || !restoreUrl) {
+                return;
+            }
+
+            restoreButton.disabled = true;
+
+            try {
+                const response = await fetch(restoreUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.status) {
+                    throw new Error(payload.message || 'Unable to restore this sprint.');
+                }
+
+                closeSprintRestoreModal();
+                Alert.success(payload.message || 'Project sprint restored successfully.');
+
+                if (!replaceRenderedSection(payload)) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                restoreButton.disabled = false;
+                Alert.error(error.message || 'Unable to restore this sprint.');
+            }
+        });
+    });
 
     section.querySelectorAll('[data-project-sprint-list]').forEach((sprintList) => {
         initializeProjectSprintList(sprintList);

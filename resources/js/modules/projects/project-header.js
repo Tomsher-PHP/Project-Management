@@ -1,5 +1,44 @@
 import Alert from '../../alert';
 
+const getProjectHeaderStorageKey = (projectId) => `project-header-expanded:${projectId}`;
+
+const applyProjectHeaderExpandedState = (headerCard, isExpanded) => {
+    if (!headerCard) {
+        return;
+    }
+
+    const expandable = headerCard.querySelector('[data-project-header-expandable]');
+    const toggle = headerCard.querySelector('[data-project-header-collapse-toggle]');
+    const icon = headerCard.querySelector('[data-project-header-collapse-icon]');
+
+    if (expandable) {
+        expandable.classList.toggle('hidden', !isExpanded);
+    }
+
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        toggle.setAttribute('aria-label', isExpanded ? 'Collapse project header details' : 'Expand project header details');
+    }
+
+    if (icon) {
+        icon.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+};
+
+const syncProjectHeaderExpandedState = (headerRoot = document.getElementById('project-header')) => {
+    const headerCard = headerRoot?.querySelector('[data-project-header-card]');
+
+    if (!headerCard) {
+        return;
+    }
+
+    const projectId = headerCard.dataset.projectId;
+    const savedState = projectId ? window.localStorage.getItem(getProjectHeaderStorageKey(projectId)) : null;
+    const isExpanded = savedState === 'true';
+
+    applyProjectHeaderExpandedState(headerCard, isExpanded);
+};
+
 const initializeProjectHeader = () => {
     if (document.body.dataset.projectHeaderInitialized === 'true') {
         return;
@@ -31,6 +70,28 @@ const initializeProjectHeader = () => {
             const shouldOpen = menu.classList.contains('hidden');
             closeAllMenus(dropdown);
             menu.classList.toggle('hidden', !shouldOpen);
+            return;
+        }
+
+        const collapseToggle = event.target.closest('[data-project-header-collapse-toggle]');
+
+        if (collapseToggle) {
+            const headerCard = collapseToggle.closest('[data-project-header-card]');
+
+            if (!headerCard) {
+                return;
+            }
+
+            const projectId = headerCard.dataset.projectId;
+            const isExpanded = collapseToggle.getAttribute('aria-expanded') === 'true';
+            const nextState = !isExpanded;
+
+            applyProjectHeaderExpandedState(headerCard, nextState);
+
+            if (projectId) {
+                window.localStorage.setItem(getProjectHeaderStorageKey(projectId), nextState ? 'true' : 'false');
+            }
+
             return;
         }
 
@@ -76,6 +137,7 @@ const initializeProjectHeader = () => {
 
                 if (header && data.project_header) {
                     header.innerHTML = data.project_header;
+                    syncProjectHeaderExpandedState(header);
                 }
 
                 Alert.success(data.message || 'Project updated successfully.');
@@ -99,4 +161,4 @@ const initializeProjectHeader = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initializeProjectHeader);
-
+document.addEventListener('DOMContentLoaded', () => syncProjectHeaderExpandedState());

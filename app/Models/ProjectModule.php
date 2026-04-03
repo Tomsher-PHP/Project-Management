@@ -114,6 +114,31 @@ class ProjectModule extends Model
         return $this->formatSeconds($this->actual_time_seconds);
     }
 
+    public function getTaskCountAttribute(): int
+    {
+        if (
+            !Schema::hasTable('project_tasks')
+            || !Schema::hasColumn('project_tasks', 'project_sprint_id')
+            || !Schema::hasTable('project_sprints')
+        ) {
+            return 0;
+        }
+
+        $query = DB::table('project_tasks')
+            ->join('project_sprints', 'project_sprints.id', '=', 'project_tasks.project_sprint_id')
+            ->where('project_sprints.project_module_id', $this->id);
+
+        if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+            $query->whereNull('project_tasks.deleted_at');
+        }
+
+        if (Schema::hasColumn('project_sprints', 'deleted_at')) {
+            $query->whereNull('project_sprints.deleted_at');
+        }
+
+        return (int) $query->count();
+    }
+
     public function refreshTrackedTimeMetrics(): void
     {
         $derivedSeconds = $this->projectSprints()

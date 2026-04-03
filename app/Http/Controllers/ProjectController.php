@@ -14,6 +14,7 @@ use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
+use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
@@ -332,6 +333,11 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
             ->get();
+        $trashedProjectSprintsByModule = ProjectSprint::onlyTrashed()
+            ->where('project_id', $project->id)
+            ->orderByDesc('deleted_at')
+            ->get()
+            ->groupBy('project_module_id');
 
         return view('projects.partials.tabs.modules', compact(
             'project',
@@ -340,7 +346,8 @@ class ProjectController extends Controller
             'agileSprints',
             'agileModuleStatuses',
             'assignableUsers',
-            'trashedProjectModules'
+            'trashedProjectModules',
+            'trashedProjectSprintsByModule'
         ))->render();
     }
 

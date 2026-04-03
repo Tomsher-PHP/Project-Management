@@ -7,6 +7,7 @@ use App\Models\AgileModuleStatus;
 use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectModule;
+use App\Models\ProjectSprint;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -231,6 +232,11 @@ class ProjectModuleController extends Controller
                 ->where('project_id', $project->id)
                 ->orderByDesc('deleted_at')
                 ->get(),
+            'trashedProjectSprintsByModule' => ProjectSprint::onlyTrashed()
+                ->where('project_id', $project->id)
+                ->orderByDesc('deleted_at')
+                ->get()
+                ->groupBy('project_module_id'),
         ])->render();
     }
 

@@ -1,5 +1,19 @@
 import Swal from 'sweetalert2';
 
+const normalizeToastArgs = (titleOrOptions, maybeOptions = {}) => {
+    if (titleOrOptions && typeof titleOrOptions === 'object' && !Array.isArray(titleOrOptions)) {
+        return {
+            title: titleOrOptions.title,
+            options: titleOrOptions,
+        };
+    }
+
+    return {
+        title: titleOrOptions,
+        options: maybeOptions,
+    };
+};
+
 const Alert = {
 
     confirm(options) {
@@ -20,11 +34,14 @@ const Alert = {
         });
     },
 
-    success(message, title = 'Success') {
+    success(message, title = 'Success', options = {}) {
+        const normalized = normalizeToastArgs(title, options);
+
         return Swal.fire({
+            target: normalized.options.target || document.body,
             position: "top-end",
             icon: 'success',
-            title: title,
+            title: normalized.title || 'Success',
             text: message,
             showConfirmButton: false,
             timer: 1500,
@@ -39,11 +56,14 @@ const Alert = {
         });
     },
 
-    error(message, title = 'Error') {
+    error(message, title = 'Error', options = {}) {
+        const normalized = normalizeToastArgs(title, options);
+
         return Swal.fire({
+            target: normalized.options.target || document.body,
             position: "top-end",
             icon: "error",
-            title: title,
+            title: normalized.title || 'Error',
             text: message,
             showConfirmButton: false,
             timer: 3000,
@@ -58,11 +78,14 @@ const Alert = {
         });
     },
 
-    info(message, title = 'Info') {
+    info(message, title = 'Info', options = {}) {
+        const normalized = normalizeToastArgs(title, options);
+
         return Swal.fire({
+            target: normalized.options.target || document.body,
             position: "top-end",
             icon: 'info',
-            title: title,
+            title: normalized.title || 'Info',
             text: message,
             showConfirmButton: false,
             timer: 1500,

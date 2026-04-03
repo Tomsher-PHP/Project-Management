@@ -184,8 +184,11 @@
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
-            <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
+            <div class="mb-2.5 flex items-center justify-between gap-3">
+                <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-modal-description-count>0</span>/100</span>
+            </div>
+            <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
         </div>
 
         <div>

@@ -20,7 +20,7 @@ class AgileSprintRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('agile_sprints', 'name')->ignore($agileSprintId)],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['nullable', 'string', 'max:100'],
             'sort_order' => ['required', 'numeric'],
         ];
     }
