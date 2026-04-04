@@ -154,17 +154,18 @@ class ProjectController extends Controller
     {
         $validated = $request->validated();
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $latestSprint = ProjectSprint::query()
+        $isLinearFlow = $project->project_flow === 'linear';
+        $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->first();
-        $selectedSprint = ! empty($validated['project_sprint_id'])
-            ? ProjectSprint::query()
+        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
+            ? null
+            : ProjectSprint::query()
                 ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id'])
-            : null;
-        $targetSprint = $selectedSprint ?: $latestSprint;
+                ->find($validated['project_sprint_id']);
+        $targetSprint = $isLinearFlow ? null : ($selectedSprint ?: $latestSprint);
 
         $defaultStatusId = ProjectTaskStatus::query()
             ->where('flow_type', $project->project_flow)
@@ -186,7 +187,10 @@ class ProjectController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Task added successfully.',
-            'html' => $this->renderTasksTab($project, $targetSprint ? 'sprint-' . $targetSprint->id : 'ungrouped'),
+            'html' => $this->renderTasksTab(
+                $project,
+                $isLinearFlow ? 'all-tasks' : ($targetSprint ? 'sprint-' . $targetSprint->id : 'ungrouped')
+            ),
         ], Response::HTTP_OK);
     }
 
@@ -426,12 +430,13 @@ class ProjectController extends Controller
     private function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
     {
         $taskGroups = $this->buildProjectTaskGroups($project);
-        $latestSprint = ProjectSprint::query()
+        $isLinearFlow = $project->project_flow === 'linear';
+        $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->first();
-        $projectSprints = ProjectSprint::query()
+        $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
             ->orderByDesc('created_at')
@@ -454,6 +459,7 @@ class ProjectController extends Controller
             'initialTasks' => $initialTasks,
             'totalTaskCount' => (int) $taskGroups->sum('task_count'),
             'sprintCount' => (int) $taskGroups->where('is_unscheduled', false)->count(),
+            'isLinearFlow' => $isLinearFlow,
             'assignableUsers' => $assignableUsers,
             'projectSprints' => $projectSprints,
             'defaultSprintId' => $latestSprint?->id,
@@ -501,6 +507,28 @@ class ProjectController extends Controller
 
     private function buildProjectTaskGroups(Project $project): Collection
     {
+        if ($project->project_flow === 'linear') {
+            $allTasks = ProjectTask::query()->where('project_id', $project->id);
+            $taskCount = (clone $allTasks)->count();
+            $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
+
+            return collect([[
+                'key' => 'all-tasks',
+                'sprint_id' => null,
+                'name' => 'All Tasks',
+                'subtitle' => null,
+                'accent_color' => '#3B82F6',
+                'task_count' => $taskCount,
+                'estimated_seconds' => $estimatedSeconds,
+                'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
+                'date_label' => null,
+                'created_label' => null,
+                'is_latest' => true,
+                'is_unscheduled' => false,
+                'is_linear_group' => true,
+            ]]);
+        }
+
         $taskGroups = ProjectSprint::query()
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
@@ -510,6 +538,10 @@ class ProjectController extends Controller
             ->orderByDesc('id')
             ->get()
             ->map(function (ProjectSprint $projectSprint, int $index) {
+                $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
+                    ? (int) $projectSprint->estimated_time_seconds
+                    : (int) ($projectSprint->project_tasks_sum_estimated_time_seconds ?? 0);
+
                 return [
                     'key' => 'sprint-' . $projectSprint->id,
                     'sprint_id' => $projectSprint->id,
@@ -517,14 +549,15 @@ class ProjectController extends Controller
                     'subtitle' => $projectSprint->projectModule?->name,
                     'accent_color' => $projectSprint->color ?: '#22C55E',
                     'task_count' => (int) $projectSprint->project_tasks_count,
-                    'estimated_seconds' => (int) ($projectSprint->project_tasks_sum_estimated_time_seconds ?? 0),
-                    'estimated_label' => $this->formatSecondsShort((int) ($projectSprint->project_tasks_sum_estimated_time_seconds ?? 0)),
+                    'estimated_seconds' => $sprintEstimatedSeconds,
+                    'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
                     'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
                     'created_label' => $projectSprint->created_at
                         ? AppServiceProvider::formatAppDate($projectSprint->created_at)
                         : null,
                     'is_latest' => $index === 0,
                     'is_unscheduled' => false,
+                    'is_linear_group' => false,
                 ];
             });
 
@@ -550,6 +583,7 @@ class ProjectController extends Controller
                 'created_label' => null,
                 'is_latest' => $taskGroups->isEmpty(),
                 'is_unscheduled' => true,
+                'is_linear_group' => false,
             ]);
         }
 
@@ -572,6 +606,8 @@ class ProjectController extends Controller
 
         if ($groupKey === 'ungrouped') {
             $query->whereNull('project_sprint_id');
+        } elseif ($groupKey === 'all-tasks') {
+            // Linear-flow projects display a flat task list without sprint grouping.
         } else {
             abort_unless(str_starts_with($groupKey, 'sprint-'), Response::HTTP_NOT_FOUND);
 

@@ -47,6 +47,9 @@
                 <span><strong>Project Flow:</strong> {{ strtoupper($project->project_flow ?? '--') }}</span>
                 <span><strong>Start Date:</strong> {{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</span>
                 <span><strong>End Date:</strong> {{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</span>
+                @if ($canCustomerEndDate)
+                    <span><strong>Customer End Date:</strong> {{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}</span>
+                @endif
             </div>
         </div>
 

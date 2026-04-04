@@ -48,11 +48,6 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project Flow</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
                                             <x-sorting.sortable-column column="start_date" label="Start Date" />
                                         </div>
                                     </td>
@@ -73,18 +68,36 @@
                                 @forelse ($projects as $key => $project)
                                     @php
                                         $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
+                                        $isAgileFlow = $project->project_flow === 'agile';
+                                        $flowLabel = ucfirst($project->project_flow ?? 'linear');
                                     @endphp
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-stretch">
-
                                                 <!-- 🎨 Priority Vertical Line -->
                                                 @if (isset($priority))
                                                     <div class="w-1 rounded-sm mr-4 {{ $priority['bg_class'] }}" title="{{ 'Priority: ' . ($priority['label'] ?? '--') }}"></div>
                                                 @endif
 
                                                 <!-- Content -->
-                                                <div class="flex-1">
+                                                <div class="relative flex-1 pr-8">
+                                                    <span
+                                                        class="absolute right-0 top-0 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-bgray-200 bg-bgray-50 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100"
+                                                        title="Project Flow: {{ $flowLabel }}"
+                                                    >
+                                                        @if ($isAgileFlow)
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h4m0 0v4m0-4l-6 6" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 17h4m-4 0v-4m0 4l10-10" opacity=".45" />
+                                                            </svg>
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l4 4-4 4" />
+                                                            </svg>
+                                                        @endif
+                                                    </span>
+
                                                     <a href="{{ route('projects.edit', $project->id) }}">
                                                         <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                             {{ $project->name }}
@@ -93,14 +106,7 @@
                                                             Code: {{ $project->project_code ?? '--' }}
                                                         </p>
                                                     </a>
-
-                                                    <div class="flex flex-col">
-                                                        <span class="dark:text-bgray-50 {{ $priority['text_class'] ?? '' }}">
-                                                            Priority: {{ $priority['label'] ?? '--' }}
-                                                        </span>
-                                                    </div>
-
-                                                    <div class="mt-3 max-w-xs">
+                                                    <div class="mt-3 w-full">
                                                         <div class="mb-1 flex items-center justify-between gap-3">
                                                             <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
                                                                 Timeline
@@ -114,9 +120,10 @@
                                                             <div class="h-full rounded-full {{ $project->project_timeline['bar_class'] }}" style="width: {{ $project->project_timeline['percentage'] }}%;"></div>
                                                         </div>
 
-                                                        <p class="mt-1 text-[11px] text-bgray-400 dark:text-bgray-300">
-                                                            {{ $project->project_timeline['start_label'] }} to {{ $project->project_timeline['end_label'] }}
-                                                        </p>
+                                                        <div class="mt-1 flex items-center justify-between gap-3 text-[11px] text-bgray-500 dark:text-bgray-200">
+                                                            <span>{{ $project->project_timeline['start_label'] }}</span>
+                                                            <span class="text-right">{{ $project->project_timeline['end_label'] }}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -130,11 +137,6 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->projectStatus->name ?? '--' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ strtoupper($project->project_flow ?? '--') }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -160,7 +162,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <x-table-no-data col-span="7" message="No projects found." />
+                                    <x-table-no-data col-span="6" message="No projects found." />
                                 @endforelse
                             </table>
                         </div>
@@ -231,8 +233,11 @@
         <div>
             <label for="project_flow" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Flow <x-red-star /></label>
             <select name="project_flow" id="project_flow" class="tom-select-no-search w-full">
+                @php
+                    $defaultProjectFlow = old('project_flow', 'agile');
+                @endphp
                 @foreach ($types as $key => $type)
-                    <option value="{{ $key }}">{{ $type }}</option>
+                    <option value="{{ $key }}" {{ (string) $defaultProjectFlow === (string) $key ? 'selected' : '' }}>{{ $type }}</option>
                 @endforeach
             </select>
             @error('project_flow')
@@ -246,8 +251,11 @@
         <div>
             <label for="priority" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Priority <x-red-star /></label>
             <select name="priority" id="priority" class="tom-select-no-search w-full">
+                @php
+                    $defaultProjectPriority = old('priority', 'medium');
+                @endphp
                 @foreach ($priorities as $key => $priority)
-                    <option value="{{ $key }}">{{ $priority['label'] }}</option>
+                    <option value="{{ $key }}" {{ (string) $defaultProjectPriority === (string) $key ? 'selected' : '' }}>{{ $priority['label'] }}</option>
                 @endforeach
             </select>
             @error('priority')
@@ -279,7 +287,7 @@
         <div>
             <label for="start_date" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Start Date</label>
             <input type="date" name="start_date" id="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" value="{{ old('start_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
+                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" value="{{ old('start_date', now($globalTimezone)->toDateString()) }}" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
 
             @error('start_date')
                 <p class="mt-2 text-sm text-error-300">

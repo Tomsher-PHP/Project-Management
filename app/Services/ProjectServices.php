@@ -22,9 +22,11 @@ class ProjectServices
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $data['project_flow'] = $data['project_flow'] ?? 'agile';
+            $data['priority'] = $data['priority'] ?? 'medium';
 
             // Handle default start date
-            $startDate = $data['start_date'] ?? now()->toDateString();
+            $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
 
             // Handle end date logic
             if (empty($data['end_date'])) {

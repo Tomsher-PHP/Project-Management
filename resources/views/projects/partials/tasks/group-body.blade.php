@@ -17,10 +17,8 @@
                 @forelse ($tasks as $task)
                     @php
                         $statusColor = $task->status?->color ?: '#CBD5E1';
-                        $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium'))
-                            ?? config('project_constants.task_priorities.medium');
-                        $typeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal'))
-                            ?? config('project_constants.task_type.normal');
+                        $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
+                        $typeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal')) ?? config('project_constants.task_type.normal');
                         $typePalette = [
                             'gray' => ['bg' => '#E5E7EB', 'text' => '#374151'],
                             'green' => ['bg' => '#DCFCE7', 'text' => '#166534'],
@@ -95,8 +93,7 @@
                         </td>
 
                         <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
-                            <span class="inline-flex min-w-[96px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold"
-                                style="background-color: {{ $typeColor['bg'] }}; color: {{ $typeColor['text'] }};">
+                            <span class="inline-flex min-w-[96px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold" style="background-color: {{ $typeColor['bg'] }}; color: {{ $typeColor['text'] }};">
                                 {{ $typeLabel }}
                             </span>
                         </td>
@@ -131,7 +128,7 @@
                     <tr>
                         <td colspan="7" class="px-6 py-10 text-center">
                             <div class="mx-auto max-w-md rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                <p class="text-base font-semibold text-bgray-900 dark:text-white">No tasks in {{ $group['name'] }}</p>
+                                <p class="text-base font-semibold text-bgray-900 dark:text-white">No tasks</p>
                                 <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">
                                     This group is ready, but there are no tasks to display yet.
                                 </p>

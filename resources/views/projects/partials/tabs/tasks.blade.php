@@ -2,7 +2,9 @@
     <div class="flex flex-col gap-2 rounded-[20px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
-            <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">Sprint task board</h3>
+            <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">
+                {{ $isLinearFlow ? 'Project task board' : 'Sprint task board' }}
+            </h3>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -10,9 +12,11 @@
                 Total Tasks <span class="ml-1">{{ $totalTaskCount }}</span>
             </span>
 
-            <span title="Sprint count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
-                Sprints <span class="ml-1">{{ $sprintCount }}</span>
-            </span>
+            @unless ($isLinearFlow)
+                <span title="Sprint count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                    Sprints <span class="ml-1">{{ $sprintCount }}</span>
+                </span>
+            @endunless
 
             @can('task.create')
                 <button
@@ -91,20 +95,22 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_id"></p>
                             </div>
 
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint</label>
-                                <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
-                                    <option value="">Select sprint</option>
-                                    @foreach ($projectSprints as $projectSprint)
-                                        <option value="{{ $projectSprint->id }}">
-                                            {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
-                                                - {{ $projectSprint->projectModule->name }}
-                                            @endif
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
-                            </div>
+                            @unless ($isLinearFlow)
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint</label>
+                                    <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
+                                        <option value="">Select sprint</option>
+                                        @foreach ($projectSprints as $projectSprint)
+                                            <option value="{{ $projectSprint->id }}">
+                                                {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
+                                                    - {{ $projectSprint->projectModule->name }}
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
+                                </div>
+                            @endunless
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Estimate time</label>

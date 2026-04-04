@@ -177,9 +177,14 @@ class Project extends Model
         return $this->project_flow === 'agile';
     }
 
+    public function getIsLinearAttribute()
+    {
+        return $this->project_flow === 'linear';
+    }
+
     public function getIsSimpleAttribute()
     {
-        return $this->project_flow === 'simple';
+        return $this->is_linear;
     }
 
     public function scopeActive($query)

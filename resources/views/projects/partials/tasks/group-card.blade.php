@@ -14,7 +14,7 @@
             <div class="flex min-w-0 flex-1 items-center gap-3 select-text">
                 <h4 class="truncate text-base font-semibold text-bgray-900 dark:text-white">{{ $group['name'] }}</h4>
 
-                @if ($group['is_unscheduled'])
+                @if ($group['is_unscheduled'] && empty($group['is_linear_group']))
                     <span class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
                         Backlog
                     </span>
@@ -24,7 +24,9 @@
                     <span class="truncate text-sm text-bgray-600 dark:text-bgray-300">{{ $group['subtitle'] }}</span>
                 @endif
 
-                <span class="text-sm text-bgray-600 dark:text-bgray-300">{{ $group['date_label'] }}</span>
+                @if (!empty($group['date_label']))
+                    <span class="text-sm text-bgray-600 dark:text-bgray-300">{{ $group['date_label'] }}</span>
+                @endif
 
                 @if ($group['created_label'])
                     <span class="text-sm text-bgray-600 dark:text-bgray-300">Created {{ $group['created_label'] }}</span>
@@ -42,12 +44,8 @@
             </span>
 
             @can('task.create')
-                @if (! $group['is_unscheduled'])
-                    <span
-                        class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400"
-                        data-project-task-modal-open
-                        data-project-task-sprint-id="{{ $group['sprint_id'] }}"
-                    >
+                @if (!$group['is_unscheduled'] && empty($group['is_linear_group']))
+                    <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $group['sprint_id'] }}">
                         + Task
                     </span>
                 @endif

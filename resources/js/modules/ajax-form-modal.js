@@ -16,13 +16,33 @@ $(document).ready(function () {
         });
     };
 
-    const resetTomSelectFields = (modal) => {
-        modal.find('select.tom-select').each(function () {
-            if (this.tomselect) {
-                this.tomselect.clear(true);
+    const syncTomSelectField = (field, value = null) => {
+        if (!field) {
+            return;
+        }
+
+        const nextValue = value ?? (field.multiple
+            ? Array.from(field.selectedOptions || []).map((option) => option.value)
+            : (field.value ?? ''));
+
+        if (field.tomselect) {
+            if (Array.isArray(nextValue)) {
+                field.tomselect.setValue(nextValue, true);
+            } else if (nextValue === null || nextValue === undefined || nextValue === '') {
+                field.tomselect.clear(true);
             } else {
-                this.value = '';
+                field.tomselect.setValue(String(nextValue), true);
             }
+
+            return;
+        }
+
+        field.value = nextValue;
+    };
+
+    const resetTomSelectFields = (modal) => {
+        modal.find('select.tom-select, input.tom-select, select.tom-select-no-search, input.tom-select-no-search, select.tom-select-multiple, input.tom-select-multiple').each(function () {
+            syncTomSelectField(this, this.value);
         });
     };
 
@@ -112,8 +132,8 @@ $(document).ready(function () {
                 return;
             }
 
-            if (field.hasClass('tom-select') && field[0].tomselect) {
-                field[0].tomselect.setValue(value);
+            if (field[0].tomselect) {
+                syncTomSelectField(field[0], value);
             } else {
                 field.val(value);
             }
@@ -149,9 +169,8 @@ $(document).ready(function () {
             if (field.length) {
 
                 // If it's a select with TomSelect
-                if (field.hasClass('tom-select') && field[0].tomselect) {
-
-                    field[0].tomselect.setValue(value);
+                if (field[0].tomselect) {
+                    syncTomSelectField(field[0], value);
                 } else {
                     field.val(value);
                 }

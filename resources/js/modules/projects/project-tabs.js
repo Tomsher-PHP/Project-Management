@@ -25,6 +25,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const getPanel = (tab) => tabsRoot.querySelector(`[data-project-tab-panel="${tab}"]`);
     const getTrigger = (tab) => tabsRoot.querySelector(`[data-project-tab-trigger="${tab}"]`);
+    const invalidateTab = (tab) => {
+        const panel = getPanel(tab);
+
+        if (!panel) {
+            return;
+        }
+
+        panel.dataset.loaded = 'false';
+        panel.innerHTML = '';
+    };
 
     const setActiveStyles = (activeTab) => {
         triggers.forEach((trigger) => {
@@ -114,8 +124,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    document.addEventListener('project-tab:invalidate', function (event) {
+        const tab = event.detail?.tab;
+
+        if (!tab) {
+            return;
+        }
+
+        invalidateTab(tab);
+    });
+
     const savedTab = localStorage.getItem(storageKey);
-    const initialTab = availableTabs.includes(savedTab) ? savedTab : defaultTab;
+    const initialTab = savedTab && savedTab !== 'tasks' && availableTabs.includes(savedTab)
+        ? savedTab
+        : defaultTab;
 
     loadTab(initialTab);
 });

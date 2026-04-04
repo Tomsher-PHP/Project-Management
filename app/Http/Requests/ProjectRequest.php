@@ -50,4 +50,54 @@ class ProjectRequest extends FormRequest
 
         return $rules;
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Please enter a project name.',
+            'name.max' => 'The project name may not be greater than 255 characters.',
+            'customer_id.required' => 'Please select a customer.',
+            'customer_id.exists' => 'The selected customer is invalid.',
+            'project_flow.required' => 'Please choose a project flow.',
+            'project_flow.in' => 'The selected project flow is invalid.',
+            'priority.required' => 'Please choose a priority.',
+            'priority.in' => 'The selected priority is invalid.',
+            'project_status.required' => 'Please choose a project status.',
+            'project_status.exists' => 'The selected project status is invalid.',
+            'start_date.date' => 'Please enter a valid start date.',
+            'end_date.date' => 'Please enter a valid end date.',
+            'end_date.after_or_equal' => 'The end date must be the same as or after the start date.',
+            'customer_end_date.date' => 'Please enter a valid customer end date.',
+            'customer_end_date.after_or_equal' => 'The customer end date must be the same as or after the end date.',
+            'estimated_time_minutes.integer' => 'Estimate time must be a whole number of minutes.',
+            'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
+            'sales_person_id.exists' => 'The selected sales person is invalid.',
+            'project_stage_id.exists' => 'The selected project stage is invalid.',
+            'project_category_id.exists' => 'The selected project category is invalid.',
+            'default_billable.boolean' => 'The default billable value is invalid.',
+            'project_technology_ids.array' => 'Project technologies must be provided as a list.',
+            'project_technology_ids.*.exists' => 'One or more selected technologies are invalid.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name' => 'project name',
+            'customer_id' => 'customer',
+            'project_flow' => 'project flow',
+            'priority' => 'priority',
+            'project_status' => 'project status',
+            'start_date' => 'start date',
+            'end_date' => 'end date',
+            'customer_end_date' => 'customer end date',
+            'estimated_time_minutes' => 'estimate time',
+            'domain' => 'domain',
+            'sales_person_id' => 'sales person',
+            'project_stage_id' => 'project stage',
+            'project_category_id' => 'project category',
+            'default_billable' => 'default billable',
+            'project_technology_ids' => 'project technologies',
+        ];
+    }
 }
