@@ -32,34 +32,50 @@
                     @endphp
 
                     <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
-                        <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                        <td class="group border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 h-12 w-1.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
 
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <p class="font-semibold text-bgray-900 dark:text-white">{{ $task->title }}</p>
+                                <div class="flex min-w-0 flex-1 items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <p class="font-semibold text-bgray-900 dark:text-white">{{ $task->title }}</p>
 
-                                        <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
-                                            {{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}
-                                        </span>
-
-                                        @if ($task->child_tasks_count > 0)
                                             <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
-                                                {{ $task->child_tasks_count }} subtask{{ $task->child_tasks_count > 1 ? 's' : '' }}
+                                                {{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}
                                             </span>
+
+                                            @if ($task->child_tasks_count > 0)
+                                                <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
+                                                    {{ $task->child_tasks_count }} subtask{{ $task->child_tasks_count > 1 ? 's' : '' }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        @if ($task->parentTask)
+                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->title }}</p>
+                                        @endif
+
+                                        @if ($task->description)
+                                            <p class="mt-1 line-clamp-2 text-sm text-bgray-600 dark:text-bgray-300">
+                                                {{ \Illuminate\Support\Str::limit(strip_tags($task->description), 120) }}
+                                            </p>
                                         @endif
                                     </div>
 
-                                    @if ($task->parentTask)
-                                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->title }}</p>
-                                    @endif
-
-                                    @if ($task->description)
-                                        <p class="mt-1 line-clamp-2 text-sm text-bgray-600 dark:text-bgray-300">
-                                            {{ \Illuminate\Support\Str::limit(strip_tags($task->description), 120) }}
-                                        </p>
-                                    @endif
+                                    <button
+                                        type="button"
+                                        class="invisible inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-transparent text-bgray-400 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 hover:border-success-200 hover:text-success-400 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300"
+                                        title="Open task"
+                                        data-project-task-detail-open
+                                        data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
+                                        data-project-task-group-key="{{ $group['key'] }}"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </td>

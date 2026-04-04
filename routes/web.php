@@ -203,7 +203,9 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
         Route::get('tasks/groups/{group}', [ProjectController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
+        Route::get('tasks/{task}/modal', [ProjectController::class, 'taskModal'])->middleware('permission.type:project.view')->name('projects.tasks.modal');
         Route::post('tasks', [ProjectController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
+        Route::put('tasks/{task}', [ProjectController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project'])->name('projects.tasks.update');
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
         Route::get('comments-modal', [ProjectController::class, 'commentsModal'])->middleware('permission.type:project.view')->name('projects.comments.modal');
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');

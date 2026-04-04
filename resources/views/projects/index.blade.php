@@ -5,21 +5,21 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
 
-        @can('project.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center px-4 py-1.5
+            @can('project.create')
+                <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center px-4 py-1.5
                rounded-md bg-success-300
                text-sm font-semibold text-white
                hover:bg-success-400
                transition duration-200" data-module="Project" data-url="{{ route('projects.store') }}" data-method="POST">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
 
-                <span>New Project</span>
-            </a>
-        @endcan
+                    <span>New Project</span>
+                </a>
+            @endcan
 
-        <x-filters.button />
+            <x-filters.button />
         </div>
 
         <!-- write your code here-->
@@ -81,10 +81,7 @@
 
                                                 <!-- Content -->
                                                 <div class="relative flex-1 pr-8">
-                                                    <span
-                                                        class="absolute right-0 top-0 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-bgray-200 bg-bgray-50 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100"
-                                                        title="Project Flow: {{ $flowLabel }}"
-                                                    >
+                                                    <span class="absolute right-0 top-0 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-bgray-200 bg-bgray-50 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100" title="Project Flow: {{ $flowLabel }}">
                                                         @if ($isAgileFlow)
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h4m0 0v4m0-4l-6 6" />

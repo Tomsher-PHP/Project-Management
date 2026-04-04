@@ -78,6 +78,33 @@ const applyTaskFormErrors = (form, errors = {}) => {
     });
 };
 
+const clearTaskDetailFormErrors = (form) => {
+    form.querySelectorAll('[data-project-task-detail-error]').forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+
+    form.querySelectorAll('input, select, textarea').forEach((field) => {
+        field.classList.remove('border-red-500');
+    });
+};
+
+const applyTaskDetailFormErrors = (form, errors = {}) => {
+    clearTaskDetailFormErrors(form);
+
+    Object.entries(errors).forEach(([fieldName, messages]) => {
+        const field = form.querySelector(`[name="${fieldName}"], [name="${fieldName}[]"]`);
+        const errorNode = form.querySelector(`[data-project-task-detail-error="${fieldName}"]`);
+
+        field?.classList.add('border-red-500');
+
+        if (errorNode) {
+            errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
+            errorNode.classList.remove('hidden');
+        }
+    });
+};
+
 const closeTaskModal = (modal) => {
     if (!modal) {
         return;
@@ -98,6 +125,86 @@ const openTaskModal = (modal) => {
     window.requestAnimationFrame(() => {
         modal.querySelector('[name="title"]')?.focus();
     });
+};
+
+const openTaskDetailModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+};
+
+const closeTaskDetailModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    const content = modal.querySelector('[data-project-task-detail-content]');
+
+    modal.classList.add('hidden');
+
+    if (content) {
+        content.innerHTML = '';
+    }
+};
+
+const showTaskDetailLoading = (modal) => {
+    const content = modal?.querySelector('[data-project-task-detail-content]');
+
+    if (!content) {
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-500 dark:text-bgray-300">
+                Loading task details...
+            </div>
+        </div>
+    `;
+};
+
+const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
+    const modal = root.querySelector('[data-project-task-detail-modal]');
+    const content = modal?.querySelector('[data-project-task-detail-content]');
+
+    if (!modal || !content || !loadUrl) {
+        return;
+    }
+
+    openTaskDetailModal(modal);
+    showTaskDetailLoading(modal);
+
+    try {
+        const response = await fetch(loadUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load task details.');
+        }
+
+        content.innerHTML = result.html;
+        initTomSelect(content);
+
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(content);
+        }
+
+        const form = content.querySelector('[data-project-task-detail-form]');
+
+        if (form) {
+            form.dataset.groupKey = groupKey || '';
+        }
+    } catch (error) {
+        closeTaskDetailModal(modal);
+        Alert.error(error.message || 'Unable to load task details.');
+    }
 };
 
 const replaceTasksRoot = (currentRoot, html) => {
@@ -179,6 +286,17 @@ const initializeProjectTasksRoot = (root) => {
     initTomSelect(root);
 
     root.addEventListener('click', async (event) => {
+        const detailOpenButton = event.target.closest('[data-project-task-detail-open]');
+
+        if (detailOpenButton && root.contains(detailOpenButton)) {
+            await loadTaskDetailModal(
+                root,
+                detailOpenButton.dataset.projectTaskDetailUrl || '',
+                detailOpenButton.dataset.projectTaskGroupKey || ''
+            );
+            return;
+        }
+
         const openButton = event.target.closest('[data-project-task-modal-open]');
 
         if (openButton && root.contains(openButton)) {
@@ -191,6 +309,13 @@ const initializeProjectTasksRoot = (root) => {
 
         if (closeButton && root.contains(closeButton)) {
             closeTaskModal(root.querySelector('[data-project-task-modal]'));
+            return;
+        }
+
+        const detailCloseButton = event.target.closest('[data-project-task-detail-close]');
+
+        if (detailCloseButton && root.contains(detailCloseButton)) {
+            closeTaskDetailModal(root.querySelector('[data-project-task-detail-modal]'));
             return;
         }
 
@@ -291,6 +416,73 @@ const initializeProjectTasksRoot = (root) => {
             }
         });
     }
+
+    root.addEventListener('submit', async (event) => {
+        const detailForm = event.target.closest('[data-project-task-detail-form]');
+
+        if (!detailForm || !root.contains(detailForm)) {
+            return;
+        }
+
+        event.preventDefault();
+        clearTaskDetailFormErrors(detailForm);
+
+        const submitButton = detailForm.querySelector('[data-project-task-detail-submit]');
+        const modal = root.querySelector('[data-project-task-detail-modal]');
+        const actionUrl = detailForm.getAttribute('action');
+
+        if (!actionUrl) {
+            Alert.error('Unable to update the task right now.');
+            return;
+        }
+
+        submitButton?.setAttribute('disabled', 'disabled');
+
+        if (submitButton) {
+            submitButton.textContent = 'Updating...';
+        }
+
+        try {
+            const response = await fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: new FormData(detailForm),
+            });
+            const result = await response.json();
+
+            if (response.status === 422 && result.errors) {
+                applyTaskDetailFormErrors(detailForm, result.errors);
+                throw new Error(result.message || 'Please correct the highlighted fields.');
+            }
+
+            if (!response.ok || !result.status) {
+                throw new Error(result.message || 'Unable to update the task.');
+            }
+
+            const newRoot = replaceTasksRoot(root, result.html);
+
+            closeTaskDetailModal(modal);
+            Alert.success(result.message || 'Task updated successfully.');
+
+            if (newRoot) {
+                initializeProjectTasksRoot(newRoot);
+            }
+        } catch (error) {
+            if (!(error.message || '').includes('highlighted fields')) {
+                Alert.error(error.message || 'Unable to update the task.');
+            }
+        } finally {
+            submitButton?.removeAttribute('disabled');
+
+            if (submitButton) {
+                submitButton.textContent = 'Update Task';
+            }
+        }
+    });
 };
 
 document.addEventListener('DOMContentLoaded', () => {

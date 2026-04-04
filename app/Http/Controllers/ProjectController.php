@@ -6,6 +6,7 @@ use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Http\Requests\ProjectTaskQuickStoreRequest;
+use App\Http\Requests\ProjectTaskUpdateRequest;
 use App\Models\Attachment;
 use App\Models\AgileModule;
 use App\Models\AgileModuleStatus;
@@ -20,6 +21,8 @@ use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\ProjectTask;
 use App\Models\ProjectTaskStatus;
+use App\Models\ProjectTaskStatusHistory;
+use App\Models\Tag;
 use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
@@ -30,6 +33,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
@@ -191,6 +195,103 @@ class ProjectController extends Controller
                 $project,
                 $isLinearFlow ? 'all-tasks' : ($targetSprint ? 'sprint-' . $targetSprint->id : 'ungrouped')
             ),
+        ], Response::HTTP_OK);
+    }
+
+    public function taskModal(Project $project, ProjectTask $task): JsonResponse
+    {
+        abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+
+        $task->load([
+            'projectModule:id,name',
+            'projectSprint:id,name,project_module_id',
+            'parentTask:id,title',
+            'currentAssignee.primaryAttachment',
+            'status:id,name,color',
+            'tags:id,name,color',
+            'addedBy:id,name',
+            'updatedBy:id,name',
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'html' => view('projects.partials.tasks.modals.detail-content', array_merge([
+                'project' => $project,
+                'task' => $task,
+            ], $this->getTaskModalData($project, $task)))->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function updateTask(ProjectTaskUpdateRequest $request, Project $project, ProjectTask $task): JsonResponse
+    {
+        abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+
+        $validated = $request->validated();
+        $isLinearFlow = $project->project_flow === 'linear';
+        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
+            ? null
+            : ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($validated['project_sprint_id']);
+        $resolvedModuleId = $selectedSprint?->project_module_id
+            ?? (! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null);
+        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
+        $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
+        $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
+        $previousStatusId = (int) ($task->status_id ?? 0);
+        $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
+
+        DB::transaction(function () use (
+            $validated,
+            $task,
+            $resolvedModuleId,
+            $resolvedSprintId,
+            $newStatusId,
+            $newAssigneeId,
+            $previousStatusId,
+            $previousAssigneeId
+        ) {
+            $task->update([
+                'project_module_id' => $resolvedModuleId,
+                'project_sprint_id' => $resolvedSprintId,
+                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'status_id' => $newStatusId,
+                'task_type' => $validated['task_type'],
+                'task_mode' => $validated['task_mode'],
+                'priority' => $validated['priority'],
+                'current_assignee_id' => $newAssigneeId,
+                'start_date' => $validated['start_date'] ?? null,
+                'due_date' => $validated['due_date'] ?? null,
+                'completed_at' => $validated['completed_at'] ?? null,
+                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
+                'is_billable' => (bool) ($validated['is_billable'] ?? false),
+                'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
+            ]);
+
+            if (array_key_exists('tag_ids', $validated)) {
+                $task->tags()->sync($validated['tag_ids'] ?? []);
+            }
+
+            if ($newStatusId && $newStatusId !== $previousStatusId) {
+                ProjectTaskStatusHistory::create([
+                    'project_task_id' => $task->id,
+                    'status_id' => $newStatusId,
+                ]);
+            }
+
+            if ($newAssigneeId !== ($previousAssigneeId ?: null)) {
+                $this->syncTaskAssignmentState($task, $newAssigneeId);
+            }
+        });
+
+        $task->refresh();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Task updated successfully.',
+            'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
         ], Response::HTTP_OK);
     }
 
@@ -622,6 +723,90 @@ class ProjectController extends Controller
         }
 
         return $query->get();
+    }
+
+    private function getTaskModalData(Project $project, ?ProjectTask $task = null): array
+    {
+        $taskTypeOptions = collect(config('project_constants.task_type', []))
+            ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            ->values();
+        $taskModeOptions = collect(config('project_constants.task_mode', []))
+            ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            ->values();
+        $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
+            ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            ->values();
+
+        return [
+            'canEditTask' => auth()->user()->can('task.edit'),
+            'isLinearFlow' => $project->project_flow === 'linear',
+            'taskStatuses' => ProjectTaskStatus::query()
+                ->active()
+                ->forFlow($project->project_flow)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'color']),
+            'projectModules' => ProjectModule::query()
+                ->where('project_id', $project->id)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'projectSprints' => ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->with(['projectModule:id,name'])
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->get(['id', 'project_module_id', 'name']),
+            'assignableUsers' => $project->activeMembers()
+                ->orderBy('users.name')
+                ->get(['users.id', 'users.name']),
+            'parentTaskOptions' => ProjectTask::query()
+                ->where('project_id', $project->id)
+                ->when($task, fn ($query) => $query->whereKeyNot($task->id))
+                ->orderBy('title')
+                ->get(['id', 'title']),
+            'tagOptions' => Tag::query()
+                ->active()
+                ->orderBy('name')
+                ->get(['id', 'name', 'color']),
+            'taskTypeOptions' => $taskTypeOptions,
+            'taskModeOptions' => $taskModeOptions,
+            'taskPriorityOptions' => $taskPriorityOptions,
+        ];
+    }
+
+    private function syncTaskAssignmentState(ProjectTask $task, ?int $newAssigneeId): void
+    {
+        $currentLog = $task->currentAssignmentLog()->first();
+        $now = now(config('constants.timezone'));
+
+        if ($currentLog) {
+            $currentLog->update([
+                'assigned_to' => $now,
+                'is_current' => false,
+            ]);
+        }
+
+        if ($newAssigneeId) {
+            $task->assignmentLogs()->create([
+                'user_id' => $newAssigneeId,
+                'assigned_from' => $now,
+                'is_current' => true,
+            ]);
+        }
+    }
+
+    private function resolveTaskGroupKey(Project $project, ProjectTask $task): string
+    {
+        if ($project->project_flow === 'linear') {
+            return 'all-tasks';
+        }
+
+        if ($task->project_sprint_id) {
+            return 'sprint-' . $task->project_sprint_id;
+        }
+
+        return 'ungrouped';
     }
 
     private function formatDateRange($startDate, $endDate): string
