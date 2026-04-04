@@ -1,36 +1,145 @@
-<div>
-    <div class="mb-4 flex items-center justify-between">
-        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Project Tasks</h3>
-        @if ($project->is_agile)
-            <span class="inline-flex items-center rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-400 dark:bg-darkblack-500 dark:text-success-300">
-                Tasks will be managed under modules and sprints for agile projects.
+<div class="space-y-3" data-project-tasks-root data-default-sprint-id="{{ $defaultSprintId ?? '' }}">
+    <div class="flex flex-col gap-2 rounded-[20px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
+            <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">Sprint task board</h3>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <span title="Task count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                Total Tasks <span class="ml-1">{{ $totalTaskCount }}</span>
             </span>
-        @endif
-        <button class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white hover:bg-success-400">
-            + Add Task
-        </button>
+
+            <span title="Sprint count" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                Sprints <span class="ml-1">{{ $sprintCount }}</span>
+            </span>
+
+            @can('task.create')
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400"
+                    data-project-task-modal-open
+                    data-project-task-sprint-id="{{ $defaultSprintId ?? '' }}"
+                >
+                    + Task
+                </button>
+            @endcan
+        </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead>
-                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                    <th class="py-3 text-left text-sm font-semibold text-bgray-600">Task</th>
-                    <th class="py-3 text-left text-sm font-semibold text-bgray-600">Assigned To</th>
-                    <th class="py-3 text-left text-sm font-semibold text-bgray-600">Due Date</th>
-                    <th class="py-3 text-left text-sm font-semibold text-bgray-600">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="border-b border-bgray-200">
-                    <td class="py-4 font-medium text-bgray-900 dark:text-white">Sample static task</td>
-                    <td class="py-4 text-bgray-600">John</td>
-                    <td class="py-4 text-bgray-600">25 Mar 2026</td>
-                    <td class="py-4">
-                        <span class="rounded bg-warning-50 px-3 py-1 text-xs text-warning-500">Pending</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    @if ($taskGroups->isEmpty())
+        <div class="rounded-[24px] border border-dashed border-bgray-300 bg-bgray-50 px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+            <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">No tasks added yet</h4>
+            <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">
+                Tasks will appear here once they are linked to this project.
+            </p>
+        </div>
+    @else
+        <div class="space-y-4">
+            @foreach ($taskGroups as $group)
+                @include('projects.partials.tasks.group-card', [
+                    'project' => $project,
+                    'group' => $group,
+                    'isOpen' => $group['key'] === $initialGroupKey,
+                    'tasks' => $group['key'] === $initialGroupKey ? $initialTasks : collect(),
+                ])
+            @endforeach
+        </div>
+    @endif
+
+    @can('task.create')
+        <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-project-task-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-modal-close></div>
+
+            <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-lg">
+                    <div class="overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600">
+                        <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                            <div>
+                                <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300"
+                                data-project-task-modal-close
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form class="space-y-4 px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Name</label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                    placeholder="Enter task name"
+                                >
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="title"></p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Assignee</label>
+                                <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
+                                    <option value="">Select assignee</option>
+                                    @foreach ($assignableUsers as $assignableUser)
+                                        <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_id"></p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint</label>
+                                <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
+                                    <option value="">Select sprint</option>
+                                    @foreach ($projectSprints as $projectSprint)
+                                        <option value="{{ $projectSprint->id }}">
+                                            {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
+                                                - {{ $projectSprint->projectModule->name }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Estimate time</label>
+                                <input
+                                    type="number"
+                                    name="estimated_time_minutes"
+                                    min="0"
+                                    step="1"
+                                    class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                    placeholder="Minutes"
+                                >
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300"
+                                    data-project-task-modal-close
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400"
+                                    data-project-task-submit
+                                >
+                                    Save Task
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endcan
 </div>

@@ -28,7 +28,7 @@
             @if ($member->pivot->project_role === 'team_leader') bg-purple-100 text-purple-600
             @elseif($member->pivot->project_role === 'coordinator') bg-blue-100 text-blue-600
             @else bg-gray-200 text-gray-600 @endif">
-            {{ config('constants.project_roles')[$member->pivot->project_role] }}
+            {{ config('project_constants.project_roles')[$member->pivot->project_role] }}
         </span>
     </div>
 

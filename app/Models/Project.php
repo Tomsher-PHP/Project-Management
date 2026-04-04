@@ -152,6 +152,11 @@ class Project extends Model
         return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
     }
 
+    public function projectTasks()
+    {
+        return $this->hasMany(ProjectTask::class)->orderBy('sort_order');
+    }
+
     public function latestStatusHistory()
     {
         return $this->hasOne(ProjectStatusHistory::class)->latestOfMany();

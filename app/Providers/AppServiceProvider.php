@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Configuration;
+use Carbon\CarbonInterface;
+use DateTimeInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -47,7 +50,10 @@ class AppServiceProvider extends ServiceProvider
             'constants.date_format' => $dateFormat,
             'constants.time_format' => $timeFormat,
             'constants.timezone' => $timezone,
+            'app.timezone' => $timezone,
         ]);
+
+        date_default_timezone_set($timezone);
 
         view()->share([
             'globalDateFormat' => $dateFormat,
@@ -55,8 +61,78 @@ class AppServiceProvider extends ServiceProvider
             'globalTimezone' => $timezone,
         ]);
 
+        Blade::directive('appDate', function ($expression) {
+            return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDate({$expression}); ?>";
+        });
+
+        Blade::directive('appTime', function ($expression) {
+            return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppTime({$expression}); ?>";
+        });
+
+        Blade::directive('appDateTime', function ($expression) {
+            return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDateTime({$expression}); ?>";
+        });
+
         Gate::before(function ($user, $ability) {
             return $user->is_super_admin ? true : null;
         });
+    }
+
+    public static function formatAppDate($value, string $fallback = '--'): string
+    {
+        if (empty($value)) {
+            return $fallback;
+        }
+
+        return self::normalizeForAppTimezone($value)
+            ?->format((string) config('constants.date_format'))
+            ?? $fallback;
+    }
+
+    public static function formatAppTime($value, string $fallback = '--'): string
+    {
+        if (empty($value)) {
+            return $fallback;
+        }
+
+        return self::normalizeForAppTimezone($value)
+            ?->format((string) config('constants.time_format'))
+            ?? $fallback;
+    }
+
+    public static function formatAppDateTime($value, string $fallback = '--'): string
+    {
+        if (empty($value)) {
+            return $fallback;
+        }
+
+        $date = self::normalizeForAppTimezone($value);
+
+        if (! $date) {
+            return $fallback;
+        }
+
+        return $date->format(
+            trim((string) config('constants.date_format') . ' ' . (string) config('constants.time_format'))
+        );
+    }
+
+    private static function normalizeForAppTimezone($value): ?CarbonInterface
+    {
+        try {
+            $timezone = (string) config('constants.timezone', config('app.timezone'));
+
+            if ($value instanceof CarbonInterface) {
+                return $value->copy()->timezone($timezone);
+            }
+
+            if ($value instanceof DateTimeInterface) {
+                return Carbon::instance($value)->timezone($timezone);
+            }
+
+            return Carbon::parse($value)->timezone($timezone);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

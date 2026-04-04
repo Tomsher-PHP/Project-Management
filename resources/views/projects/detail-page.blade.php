@@ -4,7 +4,7 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
 
         @php
-            $priority = config('constants.project_priorities')[$project->priority] ?? null;
+            $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
         @endphp
 
         <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}">

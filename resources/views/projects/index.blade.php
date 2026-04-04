@@ -72,7 +72,7 @@
                                 @endphp
                                 @forelse ($projects as $key => $project)
                                     @php
-                                        $priority = config('constants.project_priorities')[$project->priority] ?? null;
+                                        $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
                                     @endphp
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">

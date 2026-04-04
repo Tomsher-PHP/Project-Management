@@ -94,6 +94,11 @@ class ProjectSprint extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function projectTasks()
+    {
+        return $this->hasMany(ProjectTask::class)->orderBy('sort_order');
+    }
+
     public function getEstimatedTimeFormattedAttribute()
     {
         $seconds = $this->estimated_time_seconds ?? 0;

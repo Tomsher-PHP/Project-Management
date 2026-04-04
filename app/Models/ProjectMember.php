@@ -35,7 +35,7 @@ class ProjectMember extends Model
 
     public function getProjectRoleLabelAttribute()
     {
-        return config('constants.project_roles')[$this->project_role] ?? $this->project_role;
+        return config('project_constants.project_roles')[$this->project_role] ?? $this->project_role;
     }
 
     //team leader

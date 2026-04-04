@@ -71,13 +71,6 @@ return [
         'member' => 'Member',
     ],
 
-    // Default project roles for project management
-    'project_roles' => [
-        'team_leader' => 'Team Leader',
-        'coordinator' => 'Coordinator',
-        'member' => 'Member',
-    ],
-
     // Date format
     'date_format' => 'Y-m-d',
 
@@ -105,60 +98,6 @@ return [
         'ras_al_khaimah' => 'Ras Al Khaimah',
         'sharjah' => 'Sharjah',
         'umm_al_quwain' => 'Umm Al Quwain',
-    ],
-
-    // Project Roles constant
-    'project_roles' => [
-        'team_leader' => 'Team Leader',
-        'coordinator' => 'Coordinator',
-        'member' => 'Member',
-    ],
-
-    // Project Priority constant
-    'project_priorities' => [
-        'urgent' => [
-            'label' => 'Urgent',
-            'color' => 'red',
-            'bg_class' => 'bg-error-300',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-error-300',
-        ],
-        'high' => [
-            'label' => 'High',
-            'color' => 'orange',
-            'bg_class' => 'bg-orange',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-warning-300',
-        ],
-        'medium' => [
-            'label' => 'Medium',
-            'color' => 'yellow',
-            'bg_class' => 'bg-primary',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-blue-500',
-        ],
-        'low' => [
-            'label' => 'Low',
-            'color' => 'green',
-            'bg_class' => 'bg-success-400',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-success-400',
-        ],
-    ],
-
-    // Project Flow constant
-    'project_flows' => [
-        'agile' => 'Agile',
-        'linear' => 'Linear',
-    ],
-
-    // Project Status constant
-    'project_statuses' => [
-        'pending' => 'Pending',
-        'in_progress' => 'In Progress',
-        'completed' => 'Completed',
-        'on_hold' => 'On Hold',
-        'cancelled' => 'Cancelled',
     ],
 
     // Date Format constant

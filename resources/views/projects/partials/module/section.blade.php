@@ -24,10 +24,10 @@
             return sprintf('%02d h : %02d m', $hours, $minutes);
         };
         $formatDate = function ($date): string {
-            return $date ? $date->format('d M Y') : '--';
+            return \App\Providers\AppServiceProvider::formatAppDate($date);
         };
         $formatDateTime = function ($date): string {
-            return $date ? $date->format('d M Y h:i A') : '--';
+            return \App\Providers\AppServiceProvider::formatAppDateTime($date);
         };
     @endphp
 

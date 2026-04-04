@@ -179,4 +179,24 @@ class User extends Authenticatable
         return $this->belongsToMany(Project::class, 'project_members')
             ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
     }
+
+    public function currentAssignedProjectTasks()
+    {
+        return $this->hasMany(ProjectTask::class, 'current_assignee_id');
+    }
+
+    public function projectTaskAssignmentLogs()
+    {
+        return $this->hasMany(ProjectTaskAssignmentLog::class);
+    }
+
+    public function projectTaskTimeLogs()
+    {
+        return $this->hasMany(ProjectTaskTimeLog::class);
+    }
+
+    public function projectTaskStatusHistories()
+    {
+        return $this->hasMany(ProjectTaskStatusHistory::class, 'added_by');
+    }
 }
