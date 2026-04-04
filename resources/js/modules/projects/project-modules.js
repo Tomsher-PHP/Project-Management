@@ -2965,5 +2965,8 @@ document.addEventListener('ajax-form:rendered', function (event) {
     }
 
     clearProjectModuleSprintCache();
+    document.dispatchEvent(new CustomEvent('project-tab:invalidate', {
+        detail: { tab: 'tasks' },
+    }));
     initializeProjectModuleSection(event.detail.root);
 });
