@@ -63,14 +63,7 @@
 
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        class="invisible inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-transparent text-bgray-400 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 hover:border-success-200 hover:text-success-400 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300"
-                                        title="Open task"
-                                        data-project-task-detail-open
-                                        data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}"
-                                        data-project-task-group-key="{{ $group['key'] }}"
-                                    >
+                                    <button type="button" class="invisible inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-transparent text-bgray-400 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 hover:border-success-200 hover:text-success-400 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="{{ $group['key'] }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                                             <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
