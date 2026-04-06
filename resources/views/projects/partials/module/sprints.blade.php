@@ -28,13 +28,13 @@
                                 <span class="inline-flex h-3.5 w-3.5 rounded-full" style="background-color: {{ $projectSprint->color ?: '#E5E7EB' }}"></span>
                                 <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $projectSprint->name }}</p>
                                 <span title="Estimated Time: {{ $projectSprint->estimated_time_formatted }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
-                                    {{ $projectSprint->estimated_time_formatted }}
+                                    Estimate <span class="ml-1">{{ $projectSprint->estimated_time_formatted }}</span>
                                 </span>
                                 <span title="Derived Time: {{ $projectSprint->derived_time_formatted }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
-                                    {{ $projectSprint->derived_time_formatted }}
+                                    Derived <span class="ml-1">{{ $projectSprint->derived_time_formatted }}</span>
                                 </span>
                                 <span title="Actual Time: {{ $projectSprint->actual_time_formatted }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
-                                    {{ $projectSprint->actual_time_formatted }}
+                                    Actual <span class="ml-1">{{ $projectSprint->actual_time_formatted }}</span>
                                 </span>
                                 @if ($hasTimeDifference)
                                     <span title="{{ $timeDifferenceSeconds > 0 ? 'Exceeds estimate by' : 'Under estimate by' }} {{ sprintf('%02d h : %02d m', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $timeDifferenceClasses }}">

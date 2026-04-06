@@ -654,8 +654,8 @@ class ProjectController extends Controller
             ->withCount([
                 'projectTasks' => fn ($query) => $query->accessibleBy($authUser),
             ])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get()
             ->map(function (ProjectSprint $projectSprint, int $index) {
                 $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
