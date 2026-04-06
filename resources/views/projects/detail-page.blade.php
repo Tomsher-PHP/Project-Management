@@ -76,7 +76,7 @@
                                 </svg>
                             </span>
                             <span>Comments</span>
-                            <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                            <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100" data-project-comments-count>
                                 {{ $projectCommentsCount }}
                             </span>
                         </button>

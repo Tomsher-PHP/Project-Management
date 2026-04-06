@@ -211,6 +211,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('tasks/{task}', [ProjectController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
         Route::get('comments-modal', [ProjectController::class, 'commentsModal'])->middleware('permission.type:project.view')->name('projects.comments.modal');
+        Route::post('comments', [ProjectController::class, 'storeComment'])->middleware('permission.type:project.view')->name('projects.comments.store');
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');

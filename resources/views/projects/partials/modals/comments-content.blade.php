@@ -1,14 +1,10 @@
-@php
-    $totalComments = $comments->count();
-@endphp
-
-<div class="flex h-full flex-col">
+<div class="flex h-full flex-col" data-project-comments-root>
     <div class="flex items-start justify-between gap-4 border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">Project Comments</p>
             <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $project->name }}</h3>
             <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                {{ $totalComments }} {{ \Illuminate\Support\Str::plural('comment', $totalComments) }} available for this project.
+                Showing the latest {{ $comments->count() }} of {{ $totalComments }} {{ \Illuminate\Support\Str::plural('comment', $totalComments) }}.
             </p>
         </div>
 
@@ -20,38 +16,31 @@
         </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-6 py-6">
-        <div class="space-y-4">
-            @forelse ($comments as $comment)
-                <article class="rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <div class="flex items-start gap-4">
-                        <div class="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-bgray-100 dark:bg-darkblack-500">
-                            <img src="{{ $comment->user?->profileImageUrl ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $comment->user?->name ?? 'User' }}" class="h-full w-full object-cover" />
-                        </div>
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div class="min-h-0 max-h-[50vh] flex-1 overflow-y-auto px-6 py-6" data-project-comments-scroll>
+            @include('projects.partials.modals.comment-items', ['comments' => $comments])
+        </div>
 
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                                        {{ $comment->user?->name ?? 'Unknown User' }}
-                                    </p>
-                                    <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
-                                        {{ $comment->created_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 rounded-xl bg-bgray-50 px-4 py-3 text-sm leading-6 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
-                                {!! nl2br(e($comment->comment)) !!}
-                            </div>
-                        </div>
+        <div class="border-t border-bgray-200 bg-white px-6 py-5 pb-7 dark:border-darkblack-400 dark:bg-darkblack-600 sm:pb-6">
+            <form method="POST" action="{{ route('projects.comments.store', $project) }}" data-project-comment-form>
+                @csrf
+                <div class="flex flex-col gap-3">
+                    <textarea
+                        id="project-comment-message"
+                        name="comment"
+                        rows="3"
+                        class="w-full rounded-xl border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                        placeholder="Write a comment..."
+                        data-project-comment-input
+                    ></textarea>
+                    <p class="hidden text-sm text-error-300" data-project-comment-error></p>
+                    <div class="flex flex-wrap justify-end gap-3">
+                        <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-comment-submit>
+                            Send
+                        </button>
                     </div>
-                </article>
-            @empty
-                <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
-                    No comments have been added to this project yet.
                 </div>
-            @endforelse
+            </form>
         </div>
     </div>
 </div>

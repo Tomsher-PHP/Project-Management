@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             content.innerHTML = data.html;
+            document.dispatchEvent(new CustomEvent('project-insights:loaded', {
+                detail: { url, content },
+            }));
         } catch (error) {
             closeModal();
             Alert.error(error.message || 'Unable to load the project details.');

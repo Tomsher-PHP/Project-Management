@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectFileRequest;
+use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Http\Requests\ProjectTaskQuickStoreRequest;
@@ -114,17 +115,37 @@ class ProjectController extends Controller
 
     public function commentsModal(Project $project): JsonResponse
     {
-        $comments = $project->comments()
-            ->with('user.primaryAttachment')
-            ->latest()
-            ->limit(30)
-            ->get();
+        $comments = $this->getRecentProjectComments($project);
+        $totalComments = $project->comments()->count();
 
         return response()->json([
             'success' => true,
             'html' => view('projects.partials.modals.comments-content', [
                 'project' => $project,
                 'comments' => $comments,
+                'totalComments' => $totalComments,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function storeComment(ProjectCommentRequest $request, Project $project): JsonResponse
+    {
+        $project->comments()->create([
+            'user_id' => auth()->id(),
+            'comment' => $request->validated()['comment'],
+        ]);
+
+        $comments = $this->getRecentProjectComments($project);
+        $totalComments = $project->comments()->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully.',
+            'count' => $totalComments,
+            'html' => view('projects.partials.modals.comments-content', [
+                'project' => $project,
+                'comments' => $comments,
+                'totalComments' => $totalComments,
             ])->render(),
         ], Response::HTTP_OK);
     }
@@ -576,6 +597,17 @@ class ProjectController extends Controller
             'settings' => $this->renderSettingsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
         };
+    }
+
+    private function getRecentProjectComments(Project $project, int $limit = 10): Collection
+    {
+        return $project->comments()
+            ->with('user.primaryAttachment')
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->sortBy('created_at')
+            ->values();
     }
 
     private function renderModulesTab(Project $project): string
