@@ -202,6 +202,7 @@ const highlightLibraryItem = (item, scrollContainer = null) => {
 
 const projectModuleSprintPayloadCache = new Map();
 const projectModuleSprintRequestCache = new Map();
+const projectModuleSprintPaginationObservers = new WeakMap();
 
 const getProjectModuleSectionRoot = () => document.querySelector('[data-project-module-section]');
 
@@ -219,24 +220,147 @@ const renderProjectModuleSprintsState = (message, extraClasses = '') => `
     </div>
 `;
 
+const getProjectModuleSprintCacheKey = (moduleId, { page = 1, all = false } = {}) => `${Number(moduleId)}:${all ? 'all' : `page-${Number(page) || 1}`}`;
+
+const clearProjectModuleSprintCache = (moduleId = null) => {
+    if (moduleId == null) {
+        projectModuleSprintPayloadCache.clear();
+        projectModuleSprintRequestCache.clear();
+        return;
+    }
+
+    const cachePrefix = `${Number(moduleId)}:`;
+
+    Array.from(projectModuleSprintPayloadCache.keys()).forEach((key) => {
+        if (key.startsWith(cachePrefix)) {
+            projectModuleSprintPayloadCache.delete(key);
+        }
+    });
+
+    Array.from(projectModuleSprintRequestCache.keys()).forEach((key) => {
+        if (key.startsWith(cachePrefix)) {
+            projectModuleSprintRequestCache.delete(key);
+        }
+    });
+};
+
+const syncProjectSprintListReorderState = (sprintList) => {
+    if (!sprintList) {
+        return;
+    }
+
+    const allPagesLoaded = sprintList.dataset.allPagesLoaded === 'true';
+
+    sprintList.querySelectorAll('[data-project-sprint-drag-handle]').forEach((handle) => {
+        handle.disabled = !allPagesLoaded;
+        handle.classList.toggle('cursor-move', allPagesLoaded);
+        handle.classList.toggle('cursor-not-allowed', !allPagesLoaded);
+        handle.classList.toggle('opacity-50', !allPagesLoaded);
+
+        if (allPagesLoaded) {
+            handle.removeAttribute('title');
+            return;
+        }
+
+        handle.setAttribute('title', 'Scroll to load all sprints before reordering');
+    });
+};
+
 const updateProjectModuleSprintCount = (moduleId, count, root = getProjectModuleSectionRoot()) => {
     const card = root?.querySelector(`[data-project-module-card][data-module-id="${moduleId}"]`);
 
     card?.querySelector('[data-project-module-sprint-count]')?.replaceChildren(document.createTextNode(String(count)));
 };
 
-const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectModuleSectionRoot()) => {
+const initializeProjectModuleSprintPagination = (panel, root = getProjectModuleSectionRoot()) => {
+    if (!panel) {
+        return;
+    }
+
+    const existingObserver = projectModuleSprintPaginationObservers.get(panel);
+
+    if (existingObserver) {
+        existingObserver.disconnect();
+        projectModuleSprintPaginationObservers.delete(panel);
+    }
+
+    const sentinel = panel.querySelector('[data-project-sprint-pagination-sentinel]');
+
+    if (!sentinel || panel.dataset.hasMorePages !== 'true') {
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        const hasVisibleEntry = entries.some((entry) => entry.isIntersecting);
+
+        if (!hasVisibleEntry || panel.dataset.loadingMore === 'true') {
+            return;
+        }
+
+        const nextPage = Number(panel.dataset.nextPage || 0);
+        const moduleId = Number(panel.dataset.moduleId || 0);
+
+        if (!nextPage || !moduleId) {
+            return;
+        }
+
+        fetchProjectModuleSprints(moduleId, {
+            page: nextPage,
+            append: true,
+            root,
+        }).catch((error) => {
+            Alert.error(error.message || 'Unable to load more sprints.');
+        });
+    }, {
+        threshold: 0.1,
+    });
+
+    observer.observe(sentinel);
+    projectModuleSprintPaginationObservers.set(panel, observer);
+};
+
+const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectModuleSectionRoot(), { append = false } = {}) => {
     const panel = getProjectModuleSprintsPanel(moduleId, root);
 
     if (!panel) {
         return;
     }
 
-    panel.innerHTML = payload.html || renderProjectModuleSprintsState('No sprints added under this module yet.');
+    if (!append) {
+        panel.innerHTML = payload.html || renderProjectModuleSprintsState('No sprints added under this module yet.');
+    } else {
+        const sprintList = panel.querySelector('[data-project-sprint-list]');
+
+        if (sprintList && payload.items_html) {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = payload.items_html;
+
+            Array.from(wrapper.children).forEach((child) => {
+                sprintList.appendChild(child);
+            });
+        }
+    }
+
     panel.dataset.loaded = 'true';
+    panel.dataset.currentPage = String(payload.pagination?.page || 1);
+    panel.dataset.nextPage = payload.pagination?.next_page ? String(payload.pagination.next_page) : '';
+    panel.dataset.hasMorePages = payload.pagination?.has_more_pages ? 'true' : 'false';
+    delete panel.dataset.loadingMore;
 
     if (typeof payload.count === 'number') {
         updateProjectModuleSprintCount(moduleId, payload.count, root);
+    }
+
+    const sprintList = panel.querySelector('[data-project-sprint-list]');
+
+    if (sprintList) {
+        sprintList.dataset.currentPage = String(payload.pagination?.page || 1);
+        sprintList.dataset.allPagesLoaded = payload.pagination?.all_pages_loaded ? 'true' : 'false';
+    }
+
+    if (panel.dataset.hasMorePages !== 'true') {
+        panel.querySelector('[data-project-sprint-pagination-sentinel]')?.remove();
+        panel.querySelector('[data-project-sprint-pagination-loading]')?.remove();
     }
 
     if (window.Alpine && typeof window.Alpine.initTree === 'function') {
@@ -244,11 +368,14 @@ const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectMo
     }
 
     panel.querySelectorAll('[data-project-sprint-list]').forEach((sprintList) => {
+        syncProjectSprintListReorderState(sprintList);
         initializeProjectSprintList(sprintList);
     });
+
+    initializeProjectModuleSprintPagination(panel, root);
 };
 
-const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = '', root = getProjectModuleSectionRoot() } = {}) => {
+const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = '', root = getProjectModuleSectionRoot(), page = 1, append = false, all = false } = {}) => {
     const normalizedModuleId = Number(moduleId) || null;
 
     if (!normalizedModuleId) {
@@ -262,21 +389,40 @@ const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = ''
         throw new Error('Unable to load sprints for this module.');
     }
 
-    if (!force && projectModuleSprintPayloadCache.has(normalizedModuleId)) {
-        const cachedPayload = projectModuleSprintPayloadCache.get(normalizedModuleId);
-        applyProjectModuleSprintsPayload(normalizedModuleId, cachedPayload, root);
+    const cacheKey = getProjectModuleSprintCacheKey(normalizedModuleId, { page, all });
+
+    if (!force && projectModuleSprintPayloadCache.has(cacheKey)) {
+        const cachedPayload = projectModuleSprintPayloadCache.get(cacheKey);
+
+        if (!append) {
+            applyProjectModuleSprintsPayload(normalizedModuleId, cachedPayload, root);
+        }
+
         return cachedPayload;
     }
 
-    if (projectModuleSprintRequestCache.has(normalizedModuleId)) {
-        return projectModuleSprintRequestCache.get(normalizedModuleId);
+    if (projectModuleSprintRequestCache.has(cacheKey)) {
+        return projectModuleSprintRequestCache.get(cacheKey);
     }
 
-    if (panel && panel.dataset.loaded !== 'true') {
+    if (panel && !append && panel.dataset.loaded !== 'true') {
         panel.innerHTML = renderProjectModuleSprintsState('Loading sprints...');
     }
 
-    const request = fetch(resolvedLoadUrl, {
+    if (panel && append) {
+        panel.dataset.loadingMore = 'true';
+        panel.querySelector('[data-project-sprint-pagination-loading]')?.removeAttribute('hidden');
+    }
+
+    const requestUrl = new URL(resolvedLoadUrl, window.location.origin);
+
+    if (all) {
+        requestUrl.searchParams.set('all', '1');
+    } else {
+        requestUrl.searchParams.set('page', String(page));
+    }
+
+    const request = fetch(requestUrl.toString(), {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -289,28 +435,28 @@ const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = ''
             throw new Error(result.message || 'Unable to load project sprints.');
         }
 
-        projectModuleSprintPayloadCache.set(normalizedModuleId, result);
-        applyProjectModuleSprintsPayload(normalizedModuleId, result, root);
+        projectModuleSprintPayloadCache.set(cacheKey, result);
+        applyProjectModuleSprintsPayload(normalizedModuleId, result, root, { append });
 
         return result;
     }).catch((error) => {
-        if (panel && panel.dataset.loaded !== 'true') {
+        if (panel && !append && panel.dataset.loaded !== 'true') {
             panel.innerHTML = renderProjectModuleSprintsState('Unable to load sprints right now.', 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-darkblack-600');
         }
 
         throw error;
     }).finally(() => {
-        projectModuleSprintRequestCache.delete(normalizedModuleId);
+        if (panel && append) {
+            panel.querySelector('[data-project-sprint-pagination-loading]')?.setAttribute('hidden', 'hidden');
+            delete panel.dataset.loadingMore;
+        }
+
+        projectModuleSprintRequestCache.delete(cacheKey);
     });
 
-    projectModuleSprintRequestCache.set(normalizedModuleId, request);
+    projectModuleSprintRequestCache.set(cacheKey, request);
 
     return request;
-};
-
-const clearProjectModuleSprintCache = () => {
-    projectModuleSprintPayloadCache.clear();
-    projectModuleSprintRequestCache.clear();
 };
 
 const renderModuleBuilderCard = (module, config, extraClass = '') => `
@@ -1690,7 +1836,7 @@ const initializeProjectSprintBuilderModal = () => {
         renderWorkspaceLoadingState();
 
         try {
-            const payload = await fetchProjectModuleSprints(activeModuleId, { loadUrl });
+            const payload = await fetchProjectModuleSprints(activeModuleId, { loadUrl, all: true });
             activeModuleName = moduleName || payload.module?.name || activeModuleName;
             updateModuleContext();
             renderWorkspaceFromSprints(payload.sprints || []);
@@ -2070,7 +2216,7 @@ const initializeProjectSprintBuilderModal = () => {
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
             card.classList.remove('ring-2', 'ring-success-200', 'dark:ring-success-900/30');
-            projectModuleSprintPayloadCache.delete(activeModuleId);
+            clearProjectModuleSprintCache(activeModuleId);
             replaceRenderedSection(result);
         } catch (error) {
             card.remove();
@@ -2102,7 +2248,7 @@ const initializeProjectSprintBuilderModal = () => {
                 ...(result.sprint || result.data || {}),
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
-            projectModuleSprintPayloadCache.delete(activeModuleId);
+            clearProjectModuleSprintCache(activeModuleId);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
@@ -2140,7 +2286,7 @@ const initializeProjectSprintBuilderModal = () => {
             const result = await requestJson(config.destroyUrlTemplate.replace('__SPRINT__', sprintId), 'DELETE', {});
             card.remove();
             ensureEmptyState();
-            projectModuleSprintPayloadCache.delete(activeModuleId);
+            clearProjectModuleSprintCache(activeModuleId);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
@@ -2160,8 +2306,8 @@ const initializeProjectSprintBuilderModal = () => {
         try {
             await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeModuleId), 'PATCH', { sprint_ids: sprintIds });
             syncOrderBadges();
-            projectModuleSprintPayloadCache.delete(activeModuleId);
-            fetchProjectModuleSprints(activeModuleId, { force: true }).catch(() => {});
+            clearProjectModuleSprintCache(activeModuleId);
+            fetchProjectModuleSprints(activeModuleId, { force: true, all: true }).catch(() => {});
         } catch (error) {
             showModalError(error.message || 'Unable to reorder project sprints.');
         }
@@ -2474,6 +2620,13 @@ const initializeProjectSprintList = (sprintList) => {
         return;
     }
 
+    syncProjectSprintListReorderState(sprintList);
+
+    if (sprintList.dataset.allPagesLoaded !== 'true') {
+        sprintList.dataset.projectSprintListInitialized = 'pending';
+        return;
+    }
+
     const reorderUrl = sprintList.dataset.reorderUrl;
     const csrfToken = getCsrfToken();
 
@@ -2544,7 +2697,7 @@ const initializeProjectSprintList = (sprintList) => {
                 throw new Error(result.message || 'Unable to save the new sprint order.');
             }
 
-            projectModuleSprintPayloadCache.delete(Number(sprintList.closest('[data-project-module-sprints-panel]')?.dataset.moduleId));
+            clearProjectModuleSprintCache(Number(sprintList.closest('[data-project-module-sprints-panel]')?.dataset.moduleId));
             Alert.success(result.message || 'Sprint order updated successfully.');
         } catch (error) {
             Alert.error(error.message || 'Unable to save the new sprint order.');

@@ -18,16 +18,44 @@ use Illuminate\Support\Facades\Schema;
 
 class ProjectSprintController extends Controller
 {
+    private const SPRINTS_PER_PAGE = 5;
+
     public function index(Project $project, ProjectModule $projectModule): JsonResponse
     {
         $this->ensureAgileProject($project);
         abort_unless($projectModule->project_id === $project->id, 404);
 
-        $projectSprints = $projectModule->projectSprints()
+        $loadAll = request()->boolean('all');
+        $page = max((int) request()->integer('page', 1), 1);
+        $perPage = self::SPRINTS_PER_PAGE;
+        $sprintsQuery = $projectModule->projectSprints()
             ->with(['addedBy', 'updatedBy', 'status'])
             ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
+        $totalCount = (clone $sprintsQuery)->count();
+        $lastPage = max((int) ceil($totalCount / $perPage), 1);
+
+        if ($loadAll) {
+            $page = 1;
+            $projectSprints = $sprintsQuery->get();
+        } else {
+            $page = min($page, $lastPage);
+            $projectSprints = $sprintsQuery
+                ->forPage($page, $perPage)
+                ->get();
+        }
+
+        $hasMorePages = ! $loadAll && $page < $lastPage;
+        $pagination = [
+            'page' => $page,
+            'per_page' => $loadAll ? max($totalCount, 1) : $perPage,
+            'total' => $totalCount,
+            'last_page' => $loadAll ? 1 : $lastPage,
+            'next_page' => $hasMorePages ? $page + 1 : null,
+            'has_more_pages' => $hasMorePages,
+            'all_pages_loaded' => $loadAll || ! $hasMorePages,
+            'load_all' => $loadAll,
+        ];
 
         return response()->json([
             'status' => true,
@@ -35,14 +63,23 @@ class ProjectSprintController extends Controller
                 'id' => $projectModule->id,
                 'name' => $projectModule->name,
             ],
-            'count' => $projectSprints->count(),
+            'count' => $totalCount,
             'sprints' => $projectSprints
                 ->map(fn (ProjectSprint $projectSprint) => $this->serializeSprint($projectSprint))
                 ->values(),
+            'pagination' => $pagination,
             'html' => view('projects.partials.module.sprints', [
                 'project' => $project,
                 'module' => $projectModule,
                 'projectSprints' => $projectSprints,
+                'pagination' => $pagination,
+            ])->render(),
+            'items_html' => view('projects.partials.module.sprint-cards', [
+                'project' => $project,
+                'module' => $projectModule,
+                'projectSprints' => $projectSprints,
+                'allPagesLoaded' => $pagination['all_pages_loaded'],
+                'showEmptyState' => false,
             ])->render(),
         ]);
     }

@@ -15,6 +15,9 @@ const ERROR_HTML = `
     </div>
 `;
 
+const taskGroupPaginationObservers = new WeakMap();
+const taskListPaginationObservers = new WeakMap();
+
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
     panel: group.querySelector('[data-project-task-group-panel]'),
@@ -239,6 +242,222 @@ const setExpandedState = (group, expanded) => {
     icon?.classList.toggle('rotate-90', expanded);
 };
 
+const loadMoreTaskGroups = async (root, groupList, page, loadUrl) => {
+    if (!root || !groupList || !loadUrl || groupList.dataset.loading === 'true') {
+        return;
+    }
+
+    groupList.dataset.loading = 'true';
+    root.querySelector('[data-project-task-group-pagination-loading]')?.removeAttribute('hidden');
+
+    try {
+        const requestUrl = new URL(loadUrl, window.location.origin);
+        requestUrl.searchParams.set('page', String(page));
+
+        const response = await fetch(requestUrl.toString(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load more sprints.');
+        }
+
+        if (result.html) {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = result.html;
+            const newChildren = Array.from(wrapper.children);
+
+            newChildren.forEach((child) => {
+                groupList.appendChild(child);
+            });
+
+            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                newChildren.forEach((child) => {
+                    window.Alpine.initTree(child);
+                });
+            }
+        }
+
+        groupList.dataset.currentPage = String(result.pagination?.page || page);
+        groupList.dataset.nextPage = result.pagination?.next_page ? String(result.pagination.next_page) : '';
+        groupList.dataset.hasMorePages = result.pagination?.has_more_pages ? 'true' : 'false';
+
+        if (groupList.dataset.hasMorePages !== 'true') {
+            root.querySelector('[data-project-task-group-pagination-sentinel]')?.remove();
+            root.querySelector('[data-project-task-group-pagination-loading]')?.remove();
+        }
+    } finally {
+        delete groupList.dataset.loading;
+
+        if (groupList.dataset.hasMorePages === 'true') {
+            root.querySelector('[data-project-task-group-pagination-loading]')?.setAttribute('hidden', 'hidden');
+        }
+    }
+};
+
+const initializeTaskGroupPagination = (root) => {
+    if (!root) {
+        return;
+    }
+
+    const groupList = root.querySelector('[data-project-task-group-list]');
+    const sentinel = root.querySelector('[data-project-task-group-pagination-sentinel]');
+    const loadUrl = groupList?.dataset.loadUrl || '';
+    const existingObserver = taskGroupPaginationObservers.get(root);
+
+    if (existingObserver) {
+        existingObserver.disconnect();
+        taskGroupPaginationObservers.delete(root);
+    }
+
+    if (!groupList || !sentinel || !loadUrl || groupList.dataset.hasMorePages !== 'true') {
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        const hasVisibleEntry = entries.some((entry) => entry.isIntersecting);
+
+        if (!hasVisibleEntry) {
+            return;
+        }
+
+        const nextPage = Number(groupList.dataset.nextPage || 0);
+
+        if (!nextPage) {
+            return;
+        }
+
+        loadMoreTaskGroups(root, groupList, nextPage, loadUrl)
+            .then(() => {
+                initializeTaskGroupPagination(root);
+            })
+            .catch((error) => {
+                Alert.error(error.message || 'Unable to load more sprints.');
+            });
+    }, {
+        threshold: 0,
+        rootMargin: '320px 0px',
+    });
+
+    observer.observe(sentinel);
+    taskGroupPaginationObservers.set(root, observer);
+};
+
+const initializeTaskListPagination = (group) => {
+    if (!group) {
+        return;
+    }
+
+    const { body } = getGroupElements(group);
+    const taskList = body?.querySelector('[data-project-task-group-task-list]');
+    const scrollContainer = body?.querySelector('[data-project-task-group-scroll]');
+    const sentinel = body?.querySelector('[data-project-task-group-tasks-sentinel]');
+    const loadUrl = group.dataset.loadUrl || '';
+    const existingObserver = body ? taskListPaginationObservers.get(body) : null;
+
+    if (existingObserver) {
+        existingObserver.disconnect();
+        taskListPaginationObservers.delete(body);
+    }
+
+    if (!body || !taskList || !scrollContainer || !sentinel || !loadUrl || taskList.dataset.hasMorePages !== 'true') {
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        const hasVisibleEntry = entries.some((entry) => entry.isIntersecting);
+
+        if (!hasVisibleEntry || taskList.dataset.loading === 'true') {
+            return;
+        }
+
+        const nextPage = Number(taskList.dataset.nextPage || 0);
+
+        if (!nextPage) {
+            return;
+        }
+
+        loadMoreGroupTasks(group, nextPage).catch((error) => {
+            Alert.error(error.message || 'Unable to load more tasks.');
+        });
+    }, {
+        root: scrollContainer,
+        threshold: 0,
+        rootMargin: '220px 0px',
+    });
+
+    observer.observe(sentinel);
+    taskListPaginationObservers.set(body, observer);
+};
+
+const loadMoreGroupTasks = async (group, page) => {
+    const { body } = getGroupElements(group);
+    const taskList = body?.querySelector('[data-project-task-group-task-list]');
+    const rows = body?.querySelector('[data-project-task-group-rows]');
+    const loadUrl = group.dataset.loadUrl;
+
+    if (!body || !taskList || !rows || !loadUrl || taskList.dataset.loading === 'true') {
+        return;
+    }
+
+    taskList.dataset.loading = 'true';
+    body.querySelector('[data-project-task-group-tasks-loading]')?.removeAttribute('hidden');
+
+    try {
+        const requestUrl = new URL(loadUrl, window.location.origin);
+        requestUrl.searchParams.set('page', String(page));
+
+        const response = await fetch(requestUrl.toString(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load more tasks.');
+        }
+
+        if (result.items_html) {
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = result.items_html;
+            const newChildren = Array.from(wrapper.children);
+
+            newChildren.forEach((child) => {
+                rows.appendChild(child);
+            });
+
+            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                newChildren.forEach((child) => {
+                    window.Alpine.initTree(child);
+                });
+            }
+        }
+
+        taskList.dataset.currentPage = String(result.pagination?.page || page);
+        taskList.dataset.nextPage = result.pagination?.next_page ? String(result.pagination.next_page) : '';
+        taskList.dataset.hasMorePages = result.pagination?.has_more_pages ? 'true' : 'false';
+
+        if (taskList.dataset.hasMorePages !== 'true') {
+            body.querySelector('[data-project-task-group-tasks-sentinel]')?.remove();
+            body.querySelector('[data-project-task-group-tasks-loading]')?.remove();
+        }
+
+        initializeTaskListPagination(group);
+    } finally {
+        delete taskList.dataset.loading;
+
+        if (taskList.dataset.hasMorePages === 'true') {
+            body.querySelector('[data-project-task-group-tasks-loading]')?.setAttribute('hidden', 'hidden');
+        }
+    }
+};
+
 const loadGroupTasks = async (group) => {
     const { body } = getGroupElements(group);
     const loadUrl = group.dataset.loadUrl;
@@ -274,6 +493,8 @@ const loadGroupTasks = async (group) => {
         if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             window.Alpine.initTree(body);
         }
+
+        initializeTaskListPagination(group);
     } catch (error) {
         body.innerHTML = ERROR_HTML;
         Alert.error(error.message || 'Unable to load sprint tasks.');
@@ -289,6 +510,7 @@ const initializeProjectTasksRoot = (root) => {
 
     root.dataset.initialized = 'true';
     initTomSelect(root);
+    initializeTaskGroupPagination(root);
 
     root.addEventListener('click', async (event) => {
         const detailOpenButton = event.target.closest('[data-project-task-detail-open]');
@@ -352,7 +574,10 @@ const initializeProjectTasksRoot = (root) => {
 
         if (body?.dataset.loaded !== 'true') {
             loadGroupTasks(group);
+            return;
         }
+
+        initializeTaskListPagination(group);
     });
 
     const form = root.querySelector('[data-project-task-form]');

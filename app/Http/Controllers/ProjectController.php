@@ -38,6 +38,9 @@ use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
+    private const TASK_GROUPS_PER_PAGE = 5;
+    private const TASKS_PER_GROUP_PAGE = 5;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -140,9 +143,15 @@ class ProjectController extends Controller
 
     public function taskGroup(Project $project, string $group): JsonResponse
     {
-        $groupData = $this->buildProjectTaskGroups($project)->firstWhere('key', $group);
+        $groupData = $this->findProjectTaskGroup($project, $group);
 
         abort_unless($groupData, Response::HTTP_NOT_FOUND);
+        $taskPage = $this->getProjectTaskGroupTaskPage(
+            $project,
+            $group,
+            max((int) request()->integer('page', 1), 1),
+            self::TASKS_PER_GROUP_PAGE
+        );
 
         return response()->json([
             'status' => true,
@@ -150,8 +159,33 @@ class ProjectController extends Controller
             'html' => view('projects.partials.tasks.group-body', [
                 'project' => $project,
                 'group' => $groupData,
-                'tasks' => $this->getProjectTaskGroupTasks($project, $group),
+                'tasks' => $taskPage['tasks'],
+                'pagination' => $taskPage['pagination'],
             ])->render(),
+            'items_html' => view('projects.partials.tasks.task-rows', [
+                'project' => $project,
+                'group' => $groupData,
+                'tasks' => $taskPage['tasks'],
+                'showEmptyState' => false,
+            ])->render(),
+            'pagination' => $taskPage['pagination'],
+        ], Response::HTTP_OK);
+    }
+
+    public function taskGroupsPage(Request $request, Project $project): JsonResponse
+    {
+        $page = max((int) $request->integer('page', 1), 1);
+        $pageData = $this->getProjectTaskGroupPage($project, $page, self::TASK_GROUPS_PER_PAGE);
+
+        return response()->json([
+            'status' => true,
+            'html' => view('projects.partials.tasks.group-cards', [
+                'project' => $project,
+                'taskGroups' => $pageData['taskGroups'],
+                'initialGroupKey' => null,
+                'initialTasks' => collect(),
+            ])->render(),
+            'pagination' => $pageData['pagination'],
         ], Response::HTTP_OK);
     }
 
@@ -550,25 +584,24 @@ class ProjectController extends Controller
 
     private function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
     {
-        $taskGroups = $this->buildProjectTaskGroups($project);
         $isLinearFlow = $project->project_flow === 'linear';
         $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->first();
+        $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey);
+        $taskGroups = $taskGroupViewData['taskGroups'];
         $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();
-        $initialGroupKey = $preferredGroupKey && $taskGroups->contains(fn ($group) => $group['key'] === $preferredGroupKey)
-            ? $preferredGroupKey
-            : ($taskGroups->first()['key'] ?? null);
-        $initialTasks = $initialGroupKey
-            ? $this->getProjectTaskGroupTasks($project, $initialGroupKey)
-            : collect();
+        $initialGroupKey = $taskGroupViewData['initialGroupKey'];
+        $initialTaskPage = $initialGroupKey
+            ? $this->getProjectTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
+            : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
             ->get(['users.id', 'users.name']);
@@ -577,13 +610,15 @@ class ProjectController extends Controller
             'project' => $project,
             'taskGroups' => $taskGroups,
             'initialGroupKey' => $initialGroupKey,
-            'initialTasks' => $initialTasks,
-            'totalTaskCount' => (int) $taskGroups->sum('task_count'),
-            'sprintCount' => (int) $taskGroups->where('is_unscheduled', false)->count(),
+            'initialTasks' => $initialTaskPage['tasks'],
+            'initialTasksPagination' => $initialTaskPage['pagination'],
+            'totalTaskCount' => $taskGroupViewData['totalTaskCount'],
+            'sprintCount' => $taskGroupViewData['sprintCount'],
             'isLinearFlow' => $isLinearFlow,
             'assignableUsers' => $assignableUsers,
             'projectSprints' => $projectSprints,
             'defaultSprintId' => $latestSprint?->id,
+            'taskGroupsPagination' => $taskGroupViewData['pagination'],
         ])->render();
     }
 
@@ -628,37 +663,103 @@ class ProjectController extends Controller
 
     private function buildProjectTaskGroups(Project $project): Collection
     {
-        $authUser = auth()->user();
-
         if ($project->project_flow === 'linear') {
-            $allTasks = ProjectTask::query()
-                ->where('project_id', $project->id)
-                ->accessibleBy($authUser);
-            $taskCount = (clone $allTasks)->count();
-            $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
-            $derivedSeconds = (int) (clone $allTasks)->sum('derived_time_seconds');
-            $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
-
-            return collect([[
-                'key' => 'all-tasks',
-                'sprint_id' => null,
-                'name' => 'All Tasks',
-                'subtitle' => null,
-                'accent_color' => '#3B82F6',
-                'task_count' => $taskCount,
-                'estimated_seconds' => $estimatedSeconds,
-                'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
-                'derived_seconds' => $derivedSeconds,
-                'derived_label' => $this->formatSecondsShort($derivedSeconds),
-                'actual_seconds' => $actualSeconds,
-                'actual_label' => $this->formatSecondsShort($actualSeconds),
-                'date_label' => null,
-                'created_label' => null,
-                'is_latest' => true,
-                'is_unscheduled' => false,
-                'is_linear_group' => true,
-            ]]);
+            return collect([$this->buildLinearTaskGroup($project)]);
         }
+
+        $pageData = $this->getProjectTaskGroupPage($project, 1, max($this->getSprintCount($project), 1));
+
+        return $pageData['taskGroups'];
+    }
+
+    private function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null): array
+    {
+        if ($project->project_flow === 'linear') {
+            $taskGroup = $this->buildLinearTaskGroup($project);
+
+            return [
+                'taskGroups' => collect([$taskGroup]),
+                'initialGroupKey' => 'all-tasks',
+                'totalTaskCount' => $taskGroup['task_count'],
+                'sprintCount' => 0,
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        $perPage = self::TASK_GROUPS_PER_PAGE;
+        $loadedPages = $this->resolveTaskGroupLoadedPages($project, $preferredGroupKey, $perPage);
+        $sprintCount = $this->getSprintCount($project);
+        $loadedSprintLimit = max($loadedPages * $perPage, $perPage);
+        $taskGroups = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectModule:id,name'])
+            ->withCount([
+                'projectTasks' => fn ($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit($loadedSprintLimit)
+            ->get()
+            ->values()
+            ->map(fn (ProjectSprint $projectSprint, int $index) => $this->mapProjectSprintToTaskGroup(
+                $projectSprint,
+                $index
+            ));
+        $ungroupedTasks = ProjectTask::query()
+            ->where('project_id', $project->id)
+            ->whereNull('project_sprint_id')
+            ->accessibleBy(auth()->user());
+        $ungroupedCount = (clone $ungroupedTasks)->count();
+
+        if ($ungroupedCount > 0 && $loadedSprintLimit >= $sprintCount) {
+            $taskGroups->push($this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty()));
+        }
+
+        $initialGroupKey = $preferredGroupKey && $taskGroups->contains(fn ($group) => $group['key'] === $preferredGroupKey)
+            ? $preferredGroupKey
+            : ($taskGroups->first()['key'] ?? null);
+        $totalTaskCount = (int) ProjectTask::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
+            ->count();
+        $hasMorePages = $loadedSprintLimit < $sprintCount;
+
+        return [
+            'taskGroups' => $taskGroups,
+            'initialGroupKey' => $initialGroupKey,
+            'totalTaskCount' => $totalTaskCount,
+            'sprintCount' => $sprintCount,
+            'pagination' => [
+                'page' => $loadedPages,
+                'next_page' => $hasMorePages ? $loadedPages + 1 : null,
+                'has_more_pages' => $hasMorePages,
+            ],
+        ];
+    }
+
+    private function getProjectTaskGroupPage(Project $project, int $page, int $perPage): array
+    {
+        if ($project->project_flow === 'linear') {
+            return [
+                'taskGroups' => collect([$this->buildLinearTaskGroup($project)]),
+                'pagination' => [
+                    'page' => 1,
+                    'next_page' => null,
+                    'has_more_pages' => false,
+                ],
+            ];
+        }
+
+        $authUser = auth()->user();
+        $page = max($page, 1);
+        $perPage = max($perPage, 1);
+        $sprintCount = $this->getSprintCount($project);
+        $lastPage = max((int) ceil($sprintCount / $perPage), 1);
+        $page = min($page, $lastPage);
 
         $taskGroups = ProjectSprint::query()
             ->where('project_id', $project->id)
@@ -668,69 +769,214 @@ class ProjectController extends Controller
             ])
             ->orderBy('sort_order')
             ->orderBy('id')
+            ->forPage($page, $perPage)
             ->get()
-            ->map(function (ProjectSprint $projectSprint, int $index) {
-                $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
-                $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
-                $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
-
-                return [
-                    'key' => 'sprint-' . $projectSprint->id,
-                    'sprint_id' => $projectSprint->id,
-                    'name' => $projectSprint->name,
-                    'subtitle' => $projectSprint->projectModule?->name,
-                    'accent_color' => $projectSprint->color ?: '#22C55E',
-                    'task_count' => (int) $projectSprint->project_tasks_count,
-                    'estimated_seconds' => $sprintEstimatedSeconds,
-                    'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
-                    'derived_seconds' => $sprintDerivedSeconds,
-                    'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
-                    'actual_seconds' => $sprintActualSeconds,
-                    'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
-                    'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
-                    'created_label' => $projectSprint->created_at
-                        ? AppServiceProvider::formatAppDate($projectSprint->created_at)
-                        : null,
-                    'is_latest' => $index === 0,
-                    'is_unscheduled' => false,
-                    'is_linear_group' => false,
-                ];
-            });
+            ->values()
+            ->map(fn (ProjectSprint $projectSprint, int $index) => $this->mapProjectSprintToTaskGroup(
+                $projectSprint,
+                (($page - 1) * $perPage) + $index
+            ));
 
         $ungroupedTasks = ProjectTask::query()
             ->where('project_id', $project->id)
             ->whereNull('project_sprint_id')
             ->accessibleBy($authUser);
-
         $ungroupedCount = (clone $ungroupedTasks)->count();
+        $includeUngrouped = $ungroupedCount > 0 && ($sprintCount === 0 || $page >= $lastPage);
 
-        if ($ungroupedCount > 0) {
-            $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
-            $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
-            $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
-
-            $taskGroups->push([
-                'key' => 'ungrouped',
-                'sprint_id' => null,
-                'name' => 'Unscheduled Tasks',
-                'subtitle' => 'Tasks without a sprint',
-                'accent_color' => '#94A3B8',
-                'task_count' => $ungroupedCount,
-                'estimated_seconds' => $ungroupedEstimatedSeconds,
-                'estimated_label' => $this->formatSecondsShort($ungroupedEstimatedSeconds),
-                'derived_seconds' => $ungroupedDerivedSeconds,
-                'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
-                'actual_seconds' => $ungroupedActualSeconds,
-                'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
-                'date_label' => 'No sprint dates',
-                'created_label' => null,
-                'is_latest' => $taskGroups->isEmpty(),
-                'is_unscheduled' => true,
-                'is_linear_group' => false,
-            ]);
+        if ($includeUngrouped) {
+            $taskGroups->push($this->buildUngroupedTaskGroup($ungroupedTasks, $taskGroups->isEmpty() && $page === 1));
         }
 
-        return $taskGroups->values();
+        return [
+            'taskGroups' => $taskGroups->values(),
+            'pagination' => [
+                'page' => $page,
+                'next_page' => $page < $lastPage ? $page + 1 : null,
+                'has_more_pages' => $page < $lastPage,
+            ],
+        ];
+    }
+
+    private function findProjectTaskGroup(Project $project, string $groupKey): ?array
+    {
+        if ($groupKey === 'all-tasks' && $project->project_flow === 'linear') {
+            return $this->buildLinearTaskGroup($project);
+        }
+
+        if ($groupKey === 'ungrouped' && $project->project_flow !== 'linear') {
+            $ungroupedTasks = ProjectTask::query()
+                ->where('project_id', $project->id)
+                ->whereNull('project_sprint_id')
+                ->accessibleBy(auth()->user());
+
+            if (! (clone $ungroupedTasks)->exists()) {
+                return null;
+            }
+
+            return $this->buildUngroupedTaskGroup($ungroupedTasks, false);
+        }
+
+        if (! str_starts_with($groupKey, 'sprint-')) {
+            return null;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
+        $projectSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->with(['projectModule:id,name'])
+            ->withCount([
+                'projectTasks' => fn ($query) => $query->accessibleBy(auth()->user()),
+            ])
+            ->find($projectSprintId);
+
+        if (! $projectSprint) {
+            return null;
+        }
+
+        $position = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->where(function ($query) use ($projectSprint) {
+                $query->where('sort_order', '<', $projectSprint->sort_order)
+                    ->orWhere(function ($nestedQuery) use ($projectSprint) {
+                        $nestedQuery->where('sort_order', $projectSprint->sort_order)
+                            ->where('id', '<=', $projectSprint->id);
+                    });
+            })
+            ->count();
+
+        return $this->mapProjectSprintToTaskGroup($projectSprint, max($position - 1, 0));
+    }
+
+    private function resolveTaskGroupLoadedPages(Project $project, ?string $preferredGroupKey, int $perPage): int
+    {
+        if (! $preferredGroupKey || $project->project_flow === 'linear') {
+            return 1;
+        }
+
+        if ($preferredGroupKey === 'ungrouped') {
+            return max((int) ceil($this->getSprintCount($project) / $perPage), 1);
+        }
+
+        if (! str_starts_with($preferredGroupKey, 'sprint-')) {
+            return 1;
+        }
+
+        $projectSprintId = (int) str_replace('sprint-', '', $preferredGroupKey);
+        $targetSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->find($projectSprintId);
+
+        if (! $targetSprint) {
+            return 1;
+        }
+
+        $position = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->where(function ($query) use ($targetSprint) {
+                $query->where('sort_order', '<', $targetSprint->sort_order)
+                    ->orWhere(function ($nestedQuery) use ($targetSprint) {
+                        $nestedQuery->where('sort_order', $targetSprint->sort_order)
+                            ->where('id', '<=', $targetSprint->id);
+                    });
+            })
+            ->count();
+
+        return max((int) ceil($position / $perPage), 1);
+    }
+
+    private function getSprintCount(Project $project): int
+    {
+        return (int) ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->count();
+    }
+
+    private function buildLinearTaskGroup(Project $project): array
+    {
+        $allTasks = ProjectTask::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user());
+        $taskCount = (clone $allTasks)->count();
+        $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
+        $derivedSeconds = (int) (clone $allTasks)->sum('derived_time_seconds');
+        $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
+
+        return [
+            'key' => 'all-tasks',
+            'sprint_id' => null,
+            'name' => 'All Tasks',
+            'subtitle' => null,
+            'accent_color' => '#3B82F6',
+            'task_count' => $taskCount,
+            'estimated_seconds' => $estimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
+            'derived_seconds' => $derivedSeconds,
+            'derived_label' => $this->formatSecondsShort($derivedSeconds),
+            'actual_seconds' => $actualSeconds,
+            'actual_label' => $this->formatSecondsShort($actualSeconds),
+            'date_label' => null,
+            'created_label' => null,
+            'is_latest' => true,
+            'is_unscheduled' => false,
+            'is_linear_group' => true,
+        ];
+    }
+
+    private function mapProjectSprintToTaskGroup(ProjectSprint $projectSprint, int $index): array
+    {
+        $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
+        $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
+        $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
+
+        return [
+            'key' => 'sprint-' . $projectSprint->id,
+            'sprint_id' => $projectSprint->id,
+            'name' => $projectSprint->name,
+            'subtitle' => $projectSprint->projectModule?->name,
+            'accent_color' => $projectSprint->color ?: '#22C55E',
+            'task_count' => (int) $projectSprint->project_tasks_count,
+            'estimated_seconds' => $sprintEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
+            'derived_seconds' => $sprintDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
+            'actual_seconds' => $sprintActualSeconds,
+            'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
+            'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
+            'created_label' => $projectSprint->created_at
+                ? AppServiceProvider::formatAppDate($projectSprint->created_at)
+                : null,
+            'is_latest' => $index === 0,
+            'is_unscheduled' => false,
+            'is_linear_group' => false,
+        ];
+    }
+
+    private function buildUngroupedTaskGroup($ungroupedTasks, bool $isLatest): array
+    {
+        $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
+        $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
+        $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
+
+        return [
+            'key' => 'ungrouped',
+            'sprint_id' => null,
+            'name' => 'Unscheduled Tasks',
+            'subtitle' => 'Tasks without a sprint',
+            'accent_color' => '#94A3B8',
+            'task_count' => (clone $ungroupedTasks)->count(),
+            'estimated_seconds' => $ungroupedEstimatedSeconds,
+            'estimated_label' => $this->formatSecondsShort($ungroupedEstimatedSeconds),
+            'derived_seconds' => $ungroupedDerivedSeconds,
+            'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
+            'actual_seconds' => $ungroupedActualSeconds,
+            'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
+            'date_label' => 'No sprint dates',
+            'created_label' => null,
+            'is_latest' => $isLatest,
+            'is_unscheduled' => true,
+            'is_linear_group' => false,
+        ];
     }
 
     private function resolveTaskTagIds(array $submittedTags): array
@@ -795,7 +1041,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function getProjectTaskGroupTasks(Project $project, string $groupKey): Collection
+    private function buildProjectTaskGroupTasksQuery(Project $project, string $groupKey)
     {
         $query = ProjectTask::query()
             ->where('project_id', $project->id)
@@ -827,7 +1073,35 @@ class ProjectController extends Controller
             $query->where('project_sprint_id', $projectSprintId);
         }
 
-        return $query->get();
+        return $query;
+    }
+
+    private function getProjectTaskGroupTasks(Project $project, string $groupKey): Collection
+    {
+        return $this->buildProjectTaskGroupTasksQuery($project, $groupKey)->get();
+    }
+
+    private function getProjectTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage): array
+    {
+        $page = max($page, 1);
+        $perPage = max($perPage, 1);
+        $query = $this->buildProjectTaskGroupTasksQuery($project, $groupKey);
+        $total = (clone $query)->count();
+        $lastPage = max((int) ceil($total / $perPage), 1);
+        $page = min($page, $lastPage);
+
+        return [
+            'tasks' => $query
+                ->forPage($page, $perPage)
+                ->get(),
+            'pagination' => [
+                'page' => $page,
+                'next_page' => $page < $lastPage ? $page + 1 : null,
+                'has_more_pages' => $page < $lastPage,
+                'total' => $total,
+                'per_page' => $perPage,
+            ],
+        ];
     }
 
     private function getTaskModalData(Project $project, ?ProjectTask $task = null): array

@@ -34,16 +34,24 @@
             </p>
         </div>
     @else
-        <div class="space-y-4">
-            @foreach ($taskGroups as $group)
-                @include('projects.partials.tasks.group-card', [
-                    'project' => $project,
-                    'group' => $group,
-                    'isOpen' => $group['key'] === $initialGroupKey,
-                    'tasks' => $group['key'] === $initialGroupKey ? $initialTasks : collect(),
-                ])
-            @endforeach
+        <div class="space-y-4" data-project-task-group-list @unless($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
+            @include('projects.partials.tasks.group-cards', [
+                'project' => $project,
+                'taskGroups' => $taskGroups,
+                'initialGroupKey' => $initialGroupKey,
+                'initialTasks' => $initialTasks,
+                'initialTasksPagination' => $initialTasksPagination ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
+            ])
         </div>
+
+        @unless ($isLinearFlow)
+            @if (!empty($taskGroupsPagination['has_more_pages']))
+                <div class="flex justify-center" data-project-task-group-pagination-loading hidden>
+                    <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Loading more sprints...</span>
+                </div>
+                <div class="h-1 w-full" data-project-task-group-pagination-sentinel aria-hidden="true"></div>
+            @endif
+        @endunless
     @endif
 
     @can('task.create')

@@ -68,6 +68,7 @@
                     'project' => $project,
                     'group' => $group,
                     'tasks' => $tasks,
+                    'pagination' => $initialTasksPagination ?? ['page' => 1, 'next_page' => null, 'has_more_pages' => false],
                 ])
             @endif
         </div>
