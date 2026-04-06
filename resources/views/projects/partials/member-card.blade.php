@@ -1,6 +1,6 @@
 <div class="relative rounded-lg p-4 team-member-card transition-shadow
     @if ($member->pivot->is_active) bg-gray-100 dark:bg-darkblack-500 border-t border-success-300 @else bg-gray-50 dark:bg-darkblack-600 opacity-70 @endif
-    @if ($member->pivot->project_role === 'team_leader') border border-success-300 @endif" data-member-id="{{ $member->id }}">
+    @if ($member->pivot->project_role === 'team_leader') border border-success-300 @endif" data-member-id="{{ $member->id }}" data-project-role="{{ $member->pivot->project_role }}">
 
     <span class="absolute right-4 top-4 inline-block rounded-full px-3 py-1 text-xs
         @if ($member->pivot->project_role === 'team_leader') bg-purple-100 text-purple-600

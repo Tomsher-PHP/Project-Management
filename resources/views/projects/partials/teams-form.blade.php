@@ -1,4 +1,9 @@
 <form id="project-team-form" class="mt-6 p-6 border rounded-lg dark:border-darkblack-400 bg-gray-50 dark:bg-darkblack-500">
+    @php
+        $defaultProjectRole = $project->members->contains(fn ($member) => $member->pivot->project_role === 'team_leader')
+            ? 'member'
+            : 'team_leader';
+    @endphp
 
     <div class="grid md:grid-cols-3 gap-6 items-end">
 
@@ -11,7 +16,7 @@
             <select name="project_role" id="project_role" class="tom-select-no-search w-full">
                 <option value="">Select Role</option>
                 @foreach ($projectRoles as $key => $role)
-                    <option value="{{ $key }}" @if ($key === 'member') selected @endif>{{ $role }}</option>
+                    <option value="{{ $key }}" @selected($key === $defaultProjectRole)>{{ $role }}</option>
                 @endforeach
             </select>
         </div>

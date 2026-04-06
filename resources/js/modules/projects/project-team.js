@@ -5,10 +5,51 @@ const initializeProjectTeam = (root = document) => {
     const form = root.querySelector ? root.querySelector('#project-team-form') : document.getElementById('project-team-form');
     const addButton = root.querySelector ? root.querySelector('#add-member-btn') : document.getElementById('add-member-btn');
     const membersContainer = root.querySelector ? root.querySelector('#members-container') : document.getElementById('members-container');
+    const roleElement = root.querySelector ? root.querySelector('#project_role') : document.getElementById('project_role');
+    const userElement = root.querySelector ? root.querySelector('#user_id') : document.getElementById('user_id');
 
     let loading = false;
     const showError = (msg) => Alert.error(msg);
     const showSuccess = (msg) => Alert.success(msg);
+    const applyUserSelectionMode = (role) => {
+        const userSelect = userElement?.tomselect;
+
+        if (!userSelect) {
+            return;
+        }
+
+        if (role === 'team_leader' || role === 'coordinator') {
+            userSelect.setMaxItems(1);
+
+            const values = userSelect.getValue();
+            if (Array.isArray(values) && values.length > 1) {
+                userSelect.setValue([values[0]], true);
+            }
+
+            return;
+        }
+
+        userSelect.setMaxItems(null);
+    };
+    const getDefaultProjectRole = () => membersContainer?.querySelector('[data-project-role="team_leader"]')
+        ? 'member'
+        : 'team_leader';
+    const syncDefaultProjectRole = () => {
+        const roleSelect = roleElement?.tomselect;
+        const nextRole = getDefaultProjectRole();
+
+        if (!roleSelect) {
+            return;
+        }
+
+        if (roleSelect.getValue() === nextRole) {
+            applyUserSelectionMode(nextRole);
+            return;
+        }
+
+        roleSelect.setValue(nextRole, true);
+        applyUserSelectionMode(nextRole);
+    };
     const syncMemberCards = (cards = {}) => {
         if (!membersContainer) {
             return;
@@ -27,16 +68,23 @@ const initializeProjectTeam = (root = document) => {
 
             membersContainer.insertAdjacentHTML('beforeend', html);
         });
+
+        syncDefaultProjectRole();
     };
 
     if (form && addButton && form.dataset.projectTeamInitialized !== 'true') {
+        roleElement?.addEventListener('change', (event) => {
+            applyUserSelectionMode(event.target.value);
+        });
+
+        syncDefaultProjectRole();
+
         addButton.addEventListener('click', async function () {
             if (loading) return;
 
             const formData = new FormData(form);
             const selectedUserIds = formData.getAll('user_id[]').map((value) => String(value)).filter(Boolean);
-            const userSelect = document.getElementById('user_id')?.tomselect;
-            const roleSelect = document.getElementById('project_role')?.tomselect;
+            const userSelect = userElement?.tomselect;
 
             loading = true;
 
@@ -65,7 +113,7 @@ const initializeProjectTeam = (root = document) => {
                 userSelect?.refreshOptions(false);
                 userSelect?.clear();
 
-                roleSelect?.setValue('member');
+                syncDefaultProjectRole();
 
             } catch (error) {
                 showError(error.message);
@@ -118,7 +166,7 @@ const initializeProjectTeam = (root = document) => {
 
                 card?.remove();
 
-                const userSelect = document.getElementById('user_id')?.tomselect;
+                const userSelect = userElement?.tomselect;
                 if (memberName && userSelect && !userSelect.options[userId]) {
                     userSelect.addOption({
                         value: String(userId),
@@ -130,6 +178,8 @@ const initializeProjectTeam = (root = document) => {
                 if (membersContainer && !membersContainer.querySelector('.team-member-card')) {
                     emptyRow();
                 }
+
+                syncDefaultProjectRole();
 
             } catch (error) {
                 showError(error.message);
@@ -245,6 +295,8 @@ const initializeProjectTeam = (root = document) => {
         } else {
             emptyRow.style.display = '';
         }
+
+        syncDefaultProjectRole();
     }
 
 };
