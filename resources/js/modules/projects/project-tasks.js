@@ -1,4 +1,5 @@
 import Alert from '../../alert';
+import { initDatepicker } from '../../components/datepicker';
 import { initTomSelect } from '../../components/tom-select';
 
 const LOADING_HTML = `
@@ -191,6 +192,7 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
 
         content.innerHTML = result.html;
         initTomSelect(content);
+        initDatepicker('.datepicker', {}, content);
 
         if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             window.Alpine.initTree(content);

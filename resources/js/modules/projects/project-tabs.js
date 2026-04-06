@@ -135,9 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const savedTab = localStorage.getItem(storageKey);
-    const initialTab = savedTab && savedTab !== 'tasks' && availableTabs.includes(savedTab)
-        ? savedTab
-        : defaultTab;
+    const initialTab = availableTabs.includes(savedTab) ? savedTab : defaultTab;
 
     loadTab(initialTab);
 });

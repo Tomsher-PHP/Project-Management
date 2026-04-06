@@ -11,7 +11,7 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Seed the application's all system resources.
      */
     public function run(): void
     {
@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             ProjectStatusSeeder::class,
             ProjectTaskStatusSeeder::class,
             ProjectStageSeeder::class,
+            TagsSeeder::class,
             AgileModuleSeeder::class,
             AgileSprintSeeder::class,
             AgileModuleStatusSeeder::class,

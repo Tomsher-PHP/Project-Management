@@ -8,6 +8,7 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ProjectTask extends Model
 {
@@ -54,7 +55,6 @@ class ProjectTask extends Model
         'description',
         'task_type',
         'task_mode',
-        'priority',
     ];
 
     protected $casts = [
@@ -80,6 +80,10 @@ class ProjectTask extends Model
     {
         static::creating(function (ProjectTask $projectTask) {
             $projectTask->added_by = Auth::id();
+
+            if (blank($projectTask->start_date)) {
+                $projectTask->start_date = now(config('constants.timezone'))->toDateString();
+            }
 
             if (blank($projectTask->code)) {
                 $project = $projectTask->relationLoaded('project')
@@ -229,6 +233,19 @@ class ProjectTask extends Model
     public function getActualTimeFormattedAttribute(): string
     {
         return $this->formatSeconds($this->actual_time_seconds);
+    }
+
+    public function scopeAccessibleBy($query, User $user)
+    {
+        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
+            return $query;
+        }
+
+        return $query->where(function ($taskQuery) use ($user) {
+            $taskQuery
+                ->where('added_by', $user->id)
+                ->orWhere('current_assignee_id', $user->id);
+        });
     }
 
     public static function nextSortOrder(int $projectId, ?int $projectSprintId = null): int

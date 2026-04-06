@@ -17,6 +17,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->string('code', 100)->unique();
+            $table->longText('description')->nullable();
 
             $table->foreignId('status_id')->nullable()->constrained('project_task_statuses');
 

@@ -43,6 +43,14 @@
                 Estimate <span class="ml-1">{{ $group['estimated_label'] }}</span>
             </span>
 
+            <span title="Derived time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                Derived <span class="ml-1">{{ $group['derived_label'] ?? '0h' }}</span>
+            </span>
+
+            <span title="Actual time" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">
+                Actual <span class="ml-1">{{ $group['actual_label'] ?? '0h' }}</span>
+            </span>
+
             @can('task.create')
                 @if (!$group['is_unscheduled'] && empty($group['is_linear_group']))
                     <span class="inline-flex cursor-pointer items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $group['sprint_id'] }}">

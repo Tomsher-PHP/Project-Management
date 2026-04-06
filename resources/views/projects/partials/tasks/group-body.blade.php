@@ -7,9 +7,9 @@
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Assignee</th>
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Status</th>
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Type</th>
+                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task Mode</th>
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Estimate Time</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Due Date</th>
-                    <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Tags</th>
+                    <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Due Date</th>
                 </tr>
             </thead>
 
@@ -19,6 +19,7 @@
                         $statusColor = $task->status?->color ?: '#CBD5E1';
                         $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
                         $typeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal')) ?? config('project_constants.task_type.normal');
+                        $modeConfig = config('project_constants.task_mode.' . ($task->task_mode ?: 'standard')) ?? config('project_constants.task_mode.standard');
                         $typePalette = [
                             'gray' => ['bg' => '#E5E7EB', 'text' => '#374151'],
                             'green' => ['bg' => '#DCFCE7', 'text' => '#166534'],
@@ -26,9 +27,13 @@
                             'pink' => ['bg' => '#FCE7F3', 'text' => '#BE185D'],
                             'blue' => ['bg' => '#DBEAFE', 'text' => '#1D4ED8'],
                             'violet' => ['bg' => '#EDE9FE', 'text' => '#6D28D9'],
+                            'orange' => ['bg' => '#FFEDD5', 'text' => '#C2410C'],
+                            'cyan' => ['bg' => '#CFFAFE', 'text' => '#0E7490'],
                         ];
                         $typeColor = $typePalette[$typeConfig['color'] ?? 'gray'] ?? $typePalette['gray'];
                         $typeLabel = $typeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'normal'));
+                        $modeColor = $typePalette[$modeConfig['color'] ?? 'blue'] ?? $typePalette['blue'];
+                        $modeLabel = $modeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'standard'));
                     @endphp
 
                     <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
@@ -56,11 +61,6 @@
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->title }}</p>
                                         @endif
 
-                                        @if ($task->description)
-                                            <p class="mt-1 line-clamp-2 text-sm text-bgray-600 dark:text-bgray-300">
-                                                {{ \Illuminate\Support\Str::limit(strip_tags($task->description), 120) }}
-                                            </p>
-                                        @endif
                                     </div>
 
                                     <button
@@ -115,29 +115,23 @@
                         </td>
 
                         <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                            <span class="inline-flex min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold" style="background-color: {{ $modeColor['bg'] }}; color: {{ $modeColor['text'] }};">
+                                {{ $modeLabel }}
+                            </span>
+                        </td>
+
+                        <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
                             <div class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>
                             <div class="text-xs text-bgray-500 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
                         </td>
 
-                        <td class="border-b border-r border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                        <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                             @if ($task->due_date)
                                 <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDate($task->due_date)</div>
                                 <div class="text-xs text-bgray-500 dark:text-bgray-300">Starts @appDate($task->start_date)</div>
                             @else
                                 <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
                             @endif
-                        </td>
-
-                        <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                            <div class="flex flex-wrap gap-2">
-                                @forelse ($task->tags as $tag)
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-bgray-700 ring-1 ring-inset ring-bgray-200 dark:text-bgray-100 dark:ring-darkblack-400" @if ($tag->color) style="background-color: {{ $tag->color }}1A;" @endif>
-                                        {{ $tag->name }}
-                                    </span>
-                                @empty
-                                    <span class="text-sm text-bgray-500 dark:text-bgray-300">No tags</span>
-                                @endforelse
-                            </div>
                         </td>
                     </tr>
                 @empty

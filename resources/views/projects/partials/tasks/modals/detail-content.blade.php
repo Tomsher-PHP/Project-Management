@@ -1,8 +1,11 @@
 @php
-    $completedAtValue = $task->completed_at
-        ? $task->completed_at->copy()->timezone(config('constants.timezone'))->format('Y-m-d\TH:i')
-        : '';
     $selectedTagIds = $task->tags->pluck('id')->map(fn ($id) => (string) $id)->all();
+    $textInputClasses = $canEditTask
+        ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white'
+        : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
+    $textareaClasses = $canEditTask
+        ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white'
+        : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
 @endphp
 
 <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
@@ -27,7 +30,7 @@
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Name <x-red-star /></label>
-                    <input type="text" name="title" value="{{ $task->title }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
+                    <input type="text" name="title" value="{{ $task->title }}" class="{{ $textInputClasses }}" @disabled(! $canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="title"></p>
                 </div>
 
@@ -38,7 +41,7 @@
 
                 <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
-                    <textarea name="description" rows="4" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>{{ $task->description }}</textarea>
+                    <textarea name="description" rows="4" class="{{ $textareaClasses }}" @disabled(! $canEditTask)>{{ $task->description }}</textarea>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="description"></p>
                 </div>
 
@@ -99,34 +102,6 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Module</label>
-                    <select name="project_module_id" class="tom-select w-full" data-sort="0" @disabled(! $canEditTask)>
-                        <option value="">Select module</option>
-                        @foreach ($projectModules as $projectModule)
-                            <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
-                                {{ $projectModule->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_module_id"></p>
-                </div>
-
-                @unless ($isLinearFlow)
-                    <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sprint</label>
-                        <select name="project_sprint_id" class="tom-select w-full" data-sort="0" @disabled(! $canEditTask)>
-                            <option value="">Select sprint</option>
-                            @foreach ($projectSprints as $projectSprint)
-                                <option value="{{ $projectSprint->id }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
-                                    {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name) - {{ $projectSprint->projectModule->name }} @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_sprint_id"></p>
-                    </div>
-                @endunless
-
-                <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Parent Task</label>
                     <select name="parent_task_id" class="tom-select w-full" data-sort="0" @disabled(! $canEditTask)>
                         <option value="">Select parent task</option>
@@ -141,37 +116,25 @@
 
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Estimate Time</label>
-                    <input type="number" name="estimated_time_minutes" min="0" step="1" value="{{ $task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0 }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
+                    <input type="number" name="estimated_time_minutes" min="0" step="1" value="{{ $task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0 }}" class="{{ $textInputClasses }}" @disabled(! $canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order</label>
-                    <input type="number" name="sort_order" min="1" step="1" value="{{ $task->sort_order }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="sort_order"></p>
-                </div>
-
-                <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Start Date</label>
-                    <input type="date" name="start_date" value="{{ $task->start_date?->format('Y-m-d') }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
+                    <input type="date" name="start_date" value="{{ $task->start_date?->format('Y-m-d') }}" class="datepicker {{ $textInputClasses }}" placeholder="Select a date" @disabled(! $canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="start_date"></p>
                 </div>
 
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Due Date</label>
-                    <input type="date" name="due_date" value="{{ $task->due_date?->format('Y-m-d') }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
+                    <input type="date" name="due_date" value="{{ $task->due_date?->format('Y-m-d') }}" class="datepicker {{ $textInputClasses }}" placeholder="Select a date" @disabled(! $canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date"></p>
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Completed At</label>
-                    <input type="datetime-local" name="completed_at" value="{{ $completedAtValue }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" @disabled(! $canEditTask)>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="completed_at"></p>
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Tags</label>
-                    <select name="tag_ids[]" class="tom-select-multiple w-full" multiple @disabled(! $canEditTask)>
+                    <select name="tag_ids[]" class="tom-select-tags w-full" multiple @disabled(! $canEditTask)>
                         @foreach ($tagOptions as $tagOption)
                             <option value="{{ $tagOption->id }}" {{ in_array((string) $tagOption->id, $selectedTagIds, true) ? 'selected' : '' }}>
                                 {{ $tagOption->name }}

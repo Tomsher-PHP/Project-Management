@@ -1,16 +1,38 @@
 export function initTomSelect(root = document) {
+    const normalizeText = (value = '') => String(value).trim().toLowerCase();
+
+    const applyDisabledStyles = (instance, el) => {
+        if (!instance?.wrapper || !instance?.control || !el.disabled) return;
+
+        instance.wrapper.classList.add('opacity-100');
+        instance.control.classList.add(
+            'border-bgray-200',
+            'bg-bgray-50',
+            'text-bgray-600',
+            'dark:border-darkblack-400',
+            'dark:bg-darkblack-500',
+            'dark:text-bgray-200'
+        );
+        instance.control.classList.remove('bg-white');
+
+        instance.control.querySelectorAll('.item, input, .ts-control > div').forEach(node => {
+            node.classList.add('text-bgray-600', 'dark:text-bgray-200');
+        });
+    };
 
     // Standard Select
     root.querySelectorAll('select.tom-select-no-search, input.tom-select-no-search').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
 
-        new TomSelect(el, {
+        const instance = new TomSelect(el, {
             create: false,
             persist: false,
             hideDropdownArrow: false,
             plugins: ['clear_button'],
         });
+
+        applyDisabledStyles(instance, el);
     });
 
     // Standard Select
@@ -49,7 +71,74 @@ export function initTomSelect(root = document) {
             config.sortField = { field: "text", direction: "asc" };
         }
 
-        new TomSelect(el, config);
+        const instance = new TomSelect(el, config);
+        applyDisabledStyles(instance, el);
+    });
+
+    root.querySelectorAll('select.tom-select-tags, input.tom-select-tags').forEach(el => {
+        if (el.tomselect) return;
+
+        const instance = new TomSelect(el, {
+            plugins: ['remove_button', 'clear_button'],
+            maxItems: null,
+            persist: false,
+            createOnBlur: true,
+            hideSelected: true,
+            closeAfterSelect: false,
+            placeholder: 'Search or add tags',
+            create: el.disabled ? false : (input) => {
+                const text = String(input || '').trim();
+
+                return {
+                    value: text,
+                    text,
+                };
+            },
+            createFilter(input) {
+                const normalizedInput = normalizeText(input);
+
+                if (!normalizedInput) {
+                    return false;
+                }
+
+                return !Object.values(this.options).some((option) => {
+                    const optionText = normalizeText(option?.text ?? option?.value ?? '');
+                    return optionText === normalizedInput;
+                });
+            },
+            score(search) {
+                const normalizedSearch = normalizeText(search);
+
+                return function (item) {
+                    const text = normalizeText(item.text);
+
+                    if (!normalizedSearch) {
+                        return 1;
+                    }
+
+                    if (text === normalizedSearch) {
+                        return 2;
+                    }
+
+                    return text.includes(normalizedSearch) ? 1 : 0;
+                };
+            },
+            render: {
+                option(data, escape) {
+                    return `
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${escape(data.text)}</span>
+                            ${data.$option ? '' : '<span class="text-xs font-semibold text-success-400">Create</span>'}
+                        </div>
+                    `;
+                },
+                item(data, escape) {
+                    return `<div class="font-medium">${escape(data.text)}</div>`;
+                },
+            },
+        });
+
+        applyDisabledStyles(instance, el);
     });
 
     // Multiple select
@@ -57,10 +146,12 @@ export function initTomSelect(root = document) {
 
         if (el.tomselect) return; // Prevent double init
 
-        new TomSelect(el, {
+        const instance = new TomSelect(el, {
             plugins: ['remove_button', 'dropdown_input', 'clear_button'],
             maxItems: null,
         });
+
+        applyDisabledStyles(instance, el);
     });
 
     // Lazy load tom select
@@ -91,7 +182,8 @@ export function initTomSelect(root = document) {
             }
         };
 
-        new TomSelect(el, config);
+        const instance = new TomSelect(el, config);
+        applyDisabledStyles(instance, el);
     });
 
     document.dispatchEvent(new Event('tomselect:ready'));

@@ -34,6 +34,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -182,6 +183,7 @@ class ProjectController extends Controller
             'title' => $validated['title'],
             'status_id' => $defaultStatusId,
             'current_assignee_id' => $assigneeId,
+            'start_date' => now(config('constants.timezone'))->toDateString(),
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
             'sort_order' => ProjectTask::nextSortOrder($project->id, $targetSprint?->id),
         ]);
@@ -201,6 +203,7 @@ class ProjectController extends Controller
     public function taskModal(Project $project, ProjectTask $task): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless(auth()->user()->can('view', $task), Response::HTTP_FORBIDDEN);
 
         $task->load([
             'projectModule:id,name',
@@ -225,17 +228,22 @@ class ProjectController extends Controller
     public function updateTask(ProjectTaskUpdateRequest $request, Project $project, ProjectTask $task): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
 
         $validated = $request->validated();
         $isLinearFlow = $project->project_flow === 'linear';
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
+        $hasSprintField = array_key_exists('project_sprint_id', $validated);
+        $selectedSprint = $isLinearFlow || ! $hasSprintField || empty($validated['project_sprint_id'])
             ? null
             : ProjectSprint::query()
                 ->where('project_id', $project->id)
                 ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $selectedSprint?->project_module_id
-            ?? (! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null);
-        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
+        $resolvedModuleId = $hasSprintField
+            ? ($selectedSprint?->project_module_id ?? $task->project_module_id)
+            : $task->project_module_id;
+        $resolvedSprintId = $hasSprintField
+            ? ($isLinearFlow ? null : $selectedSprint?->id)
+            : $task->project_sprint_id;
         $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $previousStatusId = (int) ($task->status_id ?? 0);
@@ -264,14 +272,14 @@ class ProjectController extends Controller
                 'current_assignee_id' => $newAssigneeId,
                 'start_date' => $validated['start_date'] ?? null,
                 'due_date' => $validated['due_date'] ?? null,
-                'completed_at' => $validated['completed_at'] ?? null,
+                'completed_at' => $validated['completed_at'] ?? $task->completed_at,
                 'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
                 'is_billable' => (bool) ($validated['is_billable'] ?? false),
                 'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
             ]);
 
             if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($validated['tag_ids'] ?? []);
+                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
             }
 
             if ($newStatusId && $newStatusId !== $previousStatusId) {
@@ -608,10 +616,16 @@ class ProjectController extends Controller
 
     private function buildProjectTaskGroups(Project $project): Collection
     {
+        $authUser = auth()->user();
+
         if ($project->project_flow === 'linear') {
-            $allTasks = ProjectTask::query()->where('project_id', $project->id);
+            $allTasks = ProjectTask::query()
+                ->where('project_id', $project->id)
+                ->accessibleBy($authUser);
             $taskCount = (clone $allTasks)->count();
             $estimatedSeconds = (int) (clone $allTasks)->sum('estimated_time_seconds');
+            $derivedSeconds = (int) (clone $allTasks)->sum('derived_time_seconds');
+            $actualSeconds = (int) (clone $allTasks)->sum('actual_time_seconds');
 
             return collect([[
                 'key' => 'all-tasks',
@@ -622,6 +636,10 @@ class ProjectController extends Controller
                 'task_count' => $taskCount,
                 'estimated_seconds' => $estimatedSeconds,
                 'estimated_label' => $this->formatSecondsShort($estimatedSeconds),
+                'derived_seconds' => $derivedSeconds,
+                'derived_label' => $this->formatSecondsShort($derivedSeconds),
+                'actual_seconds' => $actualSeconds,
+                'actual_label' => $this->formatSecondsShort($actualSeconds),
                 'date_label' => null,
                 'created_label' => null,
                 'is_latest' => true,
@@ -633,15 +651,16 @@ class ProjectController extends Controller
         $taskGroups = ProjectSprint::query()
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
-            ->withCount('projectTasks')
-            ->withSum('projectTasks', 'estimated_time_seconds')
+            ->withCount([
+                'projectTasks' => fn ($query) => $query->accessibleBy($authUser),
+            ])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get()
             ->map(function (ProjectSprint $projectSprint, int $index) {
-                $sprintEstimatedSeconds = $projectSprint->estimated_time_seconds !== null
-                    ? (int) $projectSprint->estimated_time_seconds
-                    : (int) ($projectSprint->project_tasks_sum_estimated_time_seconds ?? 0);
+                $sprintEstimatedSeconds = (int) ($projectSprint->estimated_time_seconds ?? 0);
+                $sprintDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
+                $sprintActualSeconds = (int) ($projectSprint->actual_time_seconds ?? 0);
 
                 return [
                     'key' => 'sprint-' . $projectSprint->id,
@@ -652,6 +671,10 @@ class ProjectController extends Controller
                     'task_count' => (int) $projectSprint->project_tasks_count,
                     'estimated_seconds' => $sprintEstimatedSeconds,
                     'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
+                    'derived_seconds' => $sprintDerivedSeconds,
+                    'derived_label' => $this->formatSecondsShort($sprintDerivedSeconds),
+                    'actual_seconds' => $sprintActualSeconds,
+                    'actual_label' => $this->formatSecondsShort($sprintActualSeconds),
                     'date_label' => $this->formatDateRange($projectSprint->start_date, $projectSprint->end_date),
                     'created_label' => $projectSprint->created_at
                         ? AppServiceProvider::formatAppDate($projectSprint->created_at)
@@ -664,12 +687,15 @@ class ProjectController extends Controller
 
         $ungroupedTasks = ProjectTask::query()
             ->where('project_id', $project->id)
-            ->whereNull('project_sprint_id');
+            ->whereNull('project_sprint_id')
+            ->accessibleBy($authUser);
 
         $ungroupedCount = (clone $ungroupedTasks)->count();
 
         if ($ungroupedCount > 0) {
             $ungroupedEstimatedSeconds = (int) (clone $ungroupedTasks)->sum('estimated_time_seconds');
+            $ungroupedDerivedSeconds = (int) (clone $ungroupedTasks)->sum('derived_time_seconds');
+            $ungroupedActualSeconds = (int) (clone $ungroupedTasks)->sum('actual_time_seconds');
 
             $taskGroups->push([
                 'key' => 'ungrouped',
@@ -680,6 +706,10 @@ class ProjectController extends Controller
                 'task_count' => $ungroupedCount,
                 'estimated_seconds' => $ungroupedEstimatedSeconds,
                 'estimated_label' => $this->formatSecondsShort($ungroupedEstimatedSeconds),
+                'derived_seconds' => $ungroupedDerivedSeconds,
+                'derived_label' => $this->formatSecondsShort($ungroupedDerivedSeconds),
+                'actual_seconds' => $ungroupedActualSeconds,
+                'actual_label' => $this->formatSecondsShort($ungroupedActualSeconds),
                 'date_label' => 'No sprint dates',
                 'created_label' => null,
                 'is_latest' => $taskGroups->isEmpty(),
@@ -691,10 +721,73 @@ class ProjectController extends Controller
         return $taskGroups->values();
     }
 
+    private function resolveTaskTagIds(array $submittedTags): array
+    {
+        return collect($submittedTags)
+            ->map(fn ($value) => is_string($value) ? trim($value) : $value)
+            ->filter(fn ($value) => filled($value))
+            ->map(function ($value) {
+                if (is_numeric($value)) {
+                    $existingId = Tag::query()->whereKey((int) $value)->value('id');
+
+                    if ($existingId) {
+                        return (int) $existingId;
+                    }
+                }
+
+                return $this->firstOrCreateTaskTag((string) $value)->id;
+            })
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function firstOrCreateTaskTag(string $name): Tag
+    {
+        $cleanName = trim($name);
+        $baseSlug = Str::slug($cleanName);
+        $slug = $baseSlug !== '' ? $baseSlug : Str::lower(Str::random(8));
+
+        $existingTag = Tag::withTrashed()
+            ->whereRaw('LOWER(name) = ?', [Str::lower($cleanName)])
+            ->orWhere('slug', $slug)
+            ->first();
+
+        if ($existingTag) {
+            if ($existingTag->trashed()) {
+                $existingTag->restore();
+            }
+
+            if (! $existingTag->is_active) {
+                $existingTag->is_active = true;
+                $existingTag->save();
+            }
+
+            return $existingTag;
+        }
+
+        $candidateSlug = $slug;
+        $suffix = 2;
+
+        while (Tag::withTrashed()->where('slug', $candidateSlug)->exists()) {
+            $candidateSlug = $slug . '-' . $suffix;
+            $suffix++;
+        }
+
+        return Tag::create([
+            'name' => $cleanName,
+            'slug' => $candidateSlug,
+            'type' => 'general',
+            'is_active' => true,
+            'is_system' => false,
+        ]);
+    }
+
     private function getProjectTaskGroupTasks(Project $project, string $groupKey): Collection
     {
         $query = ProjectTask::query()
             ->where('project_id', $project->id)
+            ->accessibleBy(auth()->user())
             ->with([
                 'currentAssignee.primaryAttachment',
                 'status',
@@ -738,7 +831,7 @@ class ProjectController extends Controller
             ->values();
 
         return [
-            'canEditTask' => auth()->user()->can('task.edit'),
+            'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
             'taskStatuses' => ProjectTaskStatus::query()
                 ->active()
@@ -762,6 +855,7 @@ class ProjectController extends Controller
                 ->get(['users.id', 'users.name']),
             'parentTaskOptions' => ProjectTask::query()
                 ->where('project_id', $project->id)
+                ->accessibleBy(auth()->user())
                 ->when($task, fn ($query) => $query->whereKeyNot($task->id))
                 ->orderBy('title')
                 ->get(['id', 'title']),

@@ -71,7 +71,7 @@ class ProjectTaskUpdateRequest extends FormRequest
             'is_billable' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:1'],
             'tag_ids' => ['nullable', 'array'],
-            'tag_ids.*' => ['integer', Rule::exists('tags', 'id')],
+            'tag_ids.*' => ['nullable', 'string', 'max:100'],
         ];
     }
 
@@ -91,7 +91,7 @@ class ProjectTaskUpdateRequest extends FormRequest
             'due_date.after_or_equal' => 'The due date must be the same as or after the start date.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'sort_order.min' => 'Sort order must be at least 1.',
-            'tag_ids.*.exists' => 'One or more selected tags are invalid.',
+            'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];
     }
 }
