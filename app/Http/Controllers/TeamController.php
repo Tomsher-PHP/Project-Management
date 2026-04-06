@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TeamRequest;
 use App\Models\Team;
-use App\Models\User;
+use App\Models\TeamUser;
 use App\Services\AttachmentService;
 use App\Services\TeamService;
 use App\Services\UserService;
@@ -44,8 +44,7 @@ class TeamController extends Controller
 
     public function create()
     {
-        // Get users for team members
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
+        $users = $this->getAvailableTeamUsers();
 
         $teamRoles = config('constants.team_roles');
 
@@ -63,12 +62,9 @@ class TeamController extends Controller
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
-        $teamUsers = $team->users()->get();
+        $teamUsers = $team->users()->with('primaryAttachment')->get();
 
-        $teamUsersIds = $teamUsers->pluck('id')->toArray();
-
-        // Get users for team members
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), $teamUsersIds);
+        $users = $this->getAvailableTeamUsers($team);
 
         $teamRoles = config('constants.team_roles');
 
@@ -107,5 +103,20 @@ class TeamController extends Controller
             'is_active' => $team->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
+    }
+
+    private function getAvailableTeamUsers(?Team $team = null)
+    {
+        $assignedUserIds = TeamUser::query()
+            ->whereNull('deleted_at')
+            ->when($team, fn ($query) => $query->where('team_id', '!=', $team->id))
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return app(UserService::class)
+            ->getAccessibleUsers(auth()->user())
+            ->whereNotIn('id', $assignedUserIds)
+            ->values();
     }
 }

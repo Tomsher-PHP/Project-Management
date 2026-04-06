@@ -133,6 +133,7 @@ class UserService
 
         return User::query()
             ->select('id', 'name', 'email', 'is_active')
+            ->with('primaryAttachment')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
                 $q->whereIn('id', $accessibleIds);
 

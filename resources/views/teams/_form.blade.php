@@ -63,74 +63,96 @@
 
     {{-- ================= Team Members Information ================= --}}
     <div>
+        @php
+            $oldMembers = session()->hasOldInput('members')
+                ? collect(old('members', []))->values()
+                : null;
+            $memberUserLookup = $users->concat($teamUsers)->keyBy('id');
+            $displayMembers = $oldMembers
+                ? $oldMembers->map(function ($member) use ($memberUserLookup) {
+                    $userId = (int) ($member['user_id'] ?? 0);
+                    $user = $memberUserLookup->get($userId);
+
+                    return (object) [
+                        'user_id' => $userId,
+                        'name' => $user->name ?? ('User #' . $userId),
+                        'email' => $user->email ?? '',
+                        'profile_image_url' => $user?->profile_image_url ?? asset(config('assets.images.default_avatar')),
+                        'team_role' => $member['team_role'] ?? 'member',
+                    ];
+                })
+                : $teamUsers->map(function ($teamUser) {
+                    return (object) [
+                        'user_id' => (int) $teamUser->pivot->user_id,
+                        'name' => $teamUser->name,
+                        'email' => $teamUser->email,
+                        'profile_image_url' => $teamUser->profile_image_url,
+                        'team_role' => $teamUser->pivot->team_role,
+                    ];
+                });
+            $selectedMemberIds = $displayMembers->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
+            $availableUsers = $users->whereNotIn('id', $selectedMemberIds);
+            $defaultTeamRole = $displayMembers->contains(fn ($member) => $member->team_role === 'team_leader')
+                ? 'member'
+                : 'team_leader';
+        @endphp
 
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
             Team Members
         </h3>
 
-        {{-- Members Table --}}
-        <div class="overflow-x-auto rounded-lg border dark:border-darkblack-400">
-            <table class="w-full text-left">
-                <thead class="bg-gray-100 dark:bg-darkblack-500">
-                    <tr>
-                        <th class="p-4 text-sm font-semibold">User</th>
-                        <th class="p-4 text-sm font-semibold">Role</th>
-                        <th class="p-4 text-sm font-semibold text-center">Action</th>
-                    </tr>
-                </thead>
+        <div id="members-table" class="grid grid-cols-1 gap-5 rounded-lg border p-5 dark:border-darkblack-400 sm:grid-cols-2 xl:grid-cols-3">
+            @forelse ($displayMembers as $memberEntry)
+                <div class="relative rounded-lg border border-bgray-200 bg-gray-50 p-4 team-member-card transition-shadow dark:border-darkblack-400 dark:bg-darkblack-500" data-member-id="{{ $memberEntry->user_id }}">
+                    <span class="absolute right-4 top-4 inline-block rounded-full px-3 py-1 text-xs
+                        @if ($memberEntry->team_role === 'team_leader') bg-purple-100 text-purple-600
+                        @else bg-gray-200 text-gray-600 @endif">
+                        {{ config('constants.team_roles.' . $memberEntry->team_role) ?? \Illuminate\Support\Str::headline(str_replace('_', ' ', $memberEntry->team_role)) }}
+                    </span>
 
-                <tbody id="members-table" class="divide-y dark:divide-darkblack-400">
+                    <div class="pr-24">
+                        <div class="mb-3 flex items-center gap-3">
+                            <img src="{{ $memberEntry->profile_image_url }}" class="h-10 w-10 rounded-full object-cover" alt="{{ $memberEntry->name }}">
 
-                    @forelse ($teamUsers as $teamUser)
-                        <tr class="border-t team-member-row">
-                            <td class="p-4 member-name">{{ $teamUser->name }}</td>
-                            <td class="p-4 member-role">{{ config('constants.team_roles')[$teamUser->pivot->team_role] }}</td>
-                            <td class="p-4 text-center">
-                                <button type="button" class="remove-member text-error-300 hover:underline">
-                                    Remove
-                                </button>
+                            <div class="min-w-0">
+                                <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white">
+                                    {{ $memberEntry->name }}
+                                </h4>
+                                <p class="member-email truncate text-sm text-gray-500 dark:text-bgray-50">
+                                    {{ $memberEntry->email ?: '--' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                                <input type="hidden" class="input-user-id" name="members[{{ $teamUser->pivot->user_id }}][user_id]" value="{{ $teamUser->pivot->user_id }}">
-                                <input type="hidden" class="input-team-role" name="members[{{ $teamUser->pivot->user_id }}][team_role]" value="{{ $teamUser->pivot->team_role }}">
-                            </td>
-                        </tr>
-                    @empty
-                        <tr id="empty-row">
-                            <td colspan="3" class="p-6 text-center text-gray-400">
-                                No team members added yet.
-                            </td>
-                        </tr>
-                    @endforelse
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" class="remove-member flex items-center gap-1 rounded-full border border-bgray-200 bg-error-50 px-3 py-1 text-xs font-medium text-error-300 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Remove
+                        </button>
 
-                </tbody>
-            </table>
+                        <input type="hidden" class="input-user-id" name="members[{{ $memberEntry->user_id }}][user_id]" value="{{ $memberEntry->user_id }}">
+                        <input type="hidden" class="input-team-role" name="members[{{ $memberEntry->user_id }}][team_role]" value="{{ $memberEntry->team_role }}">
+                    </div>
+                </div>
+            @empty
+                <div id="empty-row" class="col-span-full rounded-lg border border-dashed border-bgray-300 bg-white px-6 py-10 text-center text-gray-400 dark:border-darkblack-400 dark:bg-darkblack-600">
+                    No team members added yet.
+                </div>
+            @endforelse
         </div>
+        @error('members')
+            <p class="mt-2 text-sm text-error-300">
+                {{ $message }}
+            </p>
+        @enderror
 
         {{-- Add Member Section --}}
-        @php
-            $teamUsersIds = $teamUsers->pluck('id')->toArray();
-            $users = $users->whereNotIn('id', $teamUsersIds);
-        @endphp
         <div class="mt-6 p-6 border rounded-lg dark:border-darkblack-400 bg-gray-50 dark:bg-darkblack-500">
 
             <div class="grid md:grid-cols-3 gap-6 items-end">
-
-                {{-- User --}}
-                <div class="flex flex-col gap-2">
-                    <label for="team_member" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                        Team Member
-                    </label>
-
-                    <select id="team_member" class="tom-select w-full">
-                        <option value="">Select Member</option>
-
-                        @foreach ($users as $user)
-                            <option value="{{ $user->id }}">
-                                {{ $user->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
 
                 {{-- Role --}}
                 <div class="flex flex-col gap-2">
@@ -142,8 +164,26 @@
                         <option value="">Select Role</option>
 
                         @foreach ($teamRoles as $key => $role)
-                            <option value="{{ $key }}">
+                            <option value="{{ $key }}" @selected($key === $defaultTeamRole)>
                                 {{ $role }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- User --}}
+                <div class="flex flex-col gap-2">
+                    <label for="team_member" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
+                        Team Member
+                    </label>
+
+                    <select id="team_member" class="tom-select-multiple w-full" multiple>
+                        @foreach ($availableUsers as $user)
+                            <option value="{{ $user->id }}" data-data='@json([
+                                "email" => $user->email,
+                                "profile_image_url" => $user->profile_image_url,
+                            ])'>
+                                {{ $user->name }}
                             </option>
                         @endforeach
                     </select>
@@ -177,16 +217,30 @@
 </form>
 
 <template id="member-row-template">
-    <tr class="border-t team-member-row">
-        <td class="p-4 member-name"></td>
-        <td class="p-4 member-role"></td>
-        <td class="p-4 text-center">
-            <button type="button" class="remove-member text-error-300 hover:underline">
+    <div class="relative rounded-lg border border-bgray-200 bg-gray-50 p-4 team-member-card transition-shadow dark:border-darkblack-400 dark:bg-darkblack-500">
+        <span class="member-role-badge absolute right-4 top-4 inline-block rounded-full px-3 py-1 text-xs"></span>
+
+        <div class="pr-24">
+            <div class="mb-3 flex items-center gap-3">
+                <img src="{{ asset(config('assets.images.default_avatar')) }}" class="member-avatar h-10 w-10 rounded-full object-cover" alt="">
+
+                <div class="min-w-0">
+                    <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white"></h4>
+                    <p class="member-email truncate text-sm text-gray-500 dark:text-bgray-50"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+            <button type="button" class="remove-member flex items-center gap-1 rounded-full border border-bgray-200 bg-error-50 px-3 py-1 text-xs font-medium text-error-300 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Remove
             </button>
 
             <input type="hidden" class="input-user-id" name="">
             <input type="hidden" class="input-team-role" name="">
-        </td>
-    </tr>
+        </div>
+    </div>
 </template>
