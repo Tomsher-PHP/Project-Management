@@ -67,7 +67,7 @@ return [
 
     // Default team roles for team management
     'team_roles' => [
-        'owner' => 'Owner',
+        'team_leader' => 'Team Leader',
         'member' => 'Member',
     ],
 

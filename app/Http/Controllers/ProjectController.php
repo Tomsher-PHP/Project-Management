@@ -531,9 +531,19 @@ class ProjectController extends Controller
     private function renderTeamTab(Project $project): string
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
-        $projectRoles = config('project_constants.project_roles');
         $project->load('members');
+
+        $existingMemberIds = $project->members
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $users = app(UserService::class)
+            ->getAccessibleUsers(auth()->user(), [], $salesPersonIds)
+            ->reject(fn ($user) => in_array((int) $user->id, $existingMemberIds, true))
+            ->values();
+
+        $projectRoles = config('project_constants.project_roles');
 
         return view('projects.partials.tabs.team', compact('project', 'users', 'projectRoles'))->render();
     }

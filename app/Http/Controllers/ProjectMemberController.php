@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectMemberRequest;
 use App\Models\Project;
 use App\Models\ProjectMember;
-use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +17,14 @@ class ProjectMemberController extends Controller
         return DB::transaction(function () use ($request, $project) {
             $userIds = (array) $request->user_id;
             $role = $request->project_role;
+            $updatedCardIds = [];
+
+            if (in_array($role, ['team_leader', 'coordinator'], true) && count($userIds) > 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Only one user can be assigned as team leader or coordinator at a time.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
             $existingMembers = $project->membersAll()
                 ->whereIn('users.id', $userIds)
@@ -30,7 +38,6 @@ class ProjectMemberController extends Controller
 
                 if ($existing) {
                     if ($existing->pivot->removed_at) {
-                        // If the member was removed before, re-add them
                         $project->membersAll()->updateExistingPivot($userId, [
                             'project_role' => $role,
                             'is_active' => true,
@@ -41,7 +48,6 @@ class ProjectMemberController extends Controller
                         $newlyAddedIds[] = $userId;
                     }
                 } else {
-                    // Attach new user to project
                     $project->membersAll()->syncWithoutDetaching([
                         $userId => [
                             'project_role' => $role,
@@ -51,6 +57,10 @@ class ProjectMemberController extends Controller
 
                     $newlyAddedIds[] = $userId;
                 }
+            }
+
+            if (in_array($role, ['team_leader', 'coordinator'], true) && !empty($newlyAddedIds)) {
+                $updatedCardIds = $this->assignExclusiveRole($project, (int) $newlyAddedIds[0], $role);
             }
 
             if (empty($newlyAddedIds)) {
@@ -71,10 +81,13 @@ class ProjectMemberController extends Controller
                 $html .= view('projects.partials.member-card', compact('project', 'member'))->render();
             }
 
+            $updatedCards = $this->renderMemberCards($project, array_diff($updatedCardIds, $newlyAddedIds));
+
             return response()->json([
                 'status' => true,
                 'message' => 'Members added successfully.',
                 'member_cards' => $html,
+                'updated_cards' => $updatedCards,
             ]);
         });
     }
@@ -106,7 +119,10 @@ class ProjectMemberController extends Controller
 
     public function toggleStatus(Project $project, $userId)
     {
-        $member = $project->membersAll()->where('user_id', $userId)->whereNull('removed_at')->firstOrFail();
+        $member = $project->membersAll()
+            ->where('user_id', $userId)
+            ->whereNull('project_members.removed_at')
+            ->firstOrFail();
 
         $member->pivot->update([
             'is_active' => !$member->pivot->is_active,
@@ -122,5 +138,87 @@ class ProjectMemberController extends Controller
             'member_card' => $cardHtml,
             'user_id' => $userId,
         ]);
+    }
+
+    public function updateRole(Request $request, Project $project, $userId)
+    {
+        $validated = $request->validate([
+            'project_role' => ['required', 'in:team_leader,coordinator'],
+        ]);
+
+        return DB::transaction(function () use ($project, $userId, $validated) {
+            $member = $project->membersAll()
+                ->where('users.id', $userId)
+                ->whereNull('project_members.removed_at')
+                ->firstOrFail();
+
+            $role = $validated['project_role'];
+
+            if ($member->pivot->project_role === $role) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Member role is already up to date.',
+                    'updated_cards' => $this->renderMemberCards($project, [(int) $userId]),
+                ]);
+            }
+
+            $updatedCardIds = $this->assignExclusiveRole($project, (int) $userId, $role);
+
+            return response()->json([
+                'status' => true,
+                'message' => sprintf('%s assigned successfully.', ucwords(str_replace('_', ' ', $role))),
+                'updated_cards' => $this->renderMemberCards($project, $updatedCardIds),
+            ]);
+        });
+    }
+
+    private function assignExclusiveRole(Project $project, int $userId, string $role): array
+    {
+        $updatedUserIds = [$userId];
+
+        if (!in_array($role, ['team_leader', 'coordinator'], true)) {
+            $project->membersAll()->updateExistingPivot($userId, [
+                'project_role' => $role,
+            ]);
+
+            return $updatedUserIds;
+        }
+
+        $existingRoleHolder = $project->membersAll()
+            ->where('users.id', '!=', $userId)
+            ->whereNull('project_members.removed_at')
+            ->wherePivot('project_role', $role)
+            ->first();
+
+        if ($existingRoleHolder) {
+            $project->membersAll()->updateExistingPivot($existingRoleHolder->id, [
+                'project_role' => 'member',
+            ]);
+
+            $updatedUserIds[] = (int) $existingRoleHolder->id;
+        }
+
+        $project->membersAll()->updateExistingPivot($userId, [
+            'project_role' => $role,
+        ]);
+
+        return array_values(array_unique($updatedUserIds));
+    }
+
+    private function renderMemberCards(Project $project, array $userIds): array
+    {
+        if (empty($userIds)) {
+            return [];
+        }
+
+        return $project->membersAll()
+            ->whereIn('users.id', $userIds)
+            ->get()
+            ->mapWithKeys(function ($member) use ($project) {
+                return [
+                    (string) $member->id => view('projects.partials.member-card', compact('project', 'member'))->render(),
+                ];
+            })
+            ->all();
     }
 }

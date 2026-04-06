@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\SingleRolePerProject;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,7 +30,6 @@ class ProjectMemberRequest extends FormRequest
             'project_role' => [
                 'required',
                 'in:team_leader,coordinator,member',
-                new SingleRolePerProject($this->project)
             ],
         ];
     }

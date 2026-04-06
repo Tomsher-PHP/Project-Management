@@ -9,12 +9,36 @@ const initializeProjectTeam = (root = document) => {
     let loading = false;
     const showError = (msg) => Alert.error(msg);
     const showSuccess = (msg) => Alert.success(msg);
+    const syncMemberCards = (cards = {}) => {
+        if (!membersContainer) {
+            return;
+        }
+
+        Object.entries(cards).forEach(([userId, html]) => {
+            if (!html) {
+                return;
+            }
+
+            const existingCard = membersContainer.querySelector(`[data-member-id="${userId}"]`);
+            if (existingCard) {
+                existingCard.outerHTML = html;
+                return;
+            }
+
+            membersContainer.insertAdjacentHTML('beforeend', html);
+        });
+    };
 
     if (form && addButton && form.dataset.projectTeamInitialized !== 'true') {
         addButton.addEventListener('click', async function () {
             if (loading) return;
 
             const formData = new FormData(form);
+            const selectedUserIds = formData.getAll('user_id[]').map((value) => String(value)).filter(Boolean);
+            const userSelect = document.getElementById('user_id')?.tomselect;
+            const roleSelect = document.getElementById('project_role')?.tomselect;
+
+            loading = true;
 
             try {
                 const response = await fetch(`/projects/${projectId}/members`, {
@@ -32,13 +56,15 @@ const initializeProjectTeam = (root = document) => {
                 showSuccess(res.message);
                 document.getElementById('empty-row')?.remove();
                 membersContainer.insertAdjacentHTML('beforeend', res.member_cards);
+                syncMemberCards(res.updated_cards || {});
 
-                // Reset User Select (MULTIPLE)
-                const userSelect = document.getElementById('user_id')?.tomselect;
+                selectedUserIds.forEach((userId) => {
+                    userSelect?.removeOption(userId);
+                });
+
+                userSelect?.refreshOptions(false);
                 userSelect?.clear();
 
-                // Reset Role to "member"
-                const roleSelect = document.getElementById('project_role')?.tomselect;
                 roleSelect?.setValue('member');
 
             } catch (error) {
@@ -87,11 +113,20 @@ const initializeProjectTeam = (root = document) => {
 
                 showSuccess(res.message);
 
-                // Remove the card from DOM
                 const card = btn.closest('.team-member-card');
+                const memberName = card?.querySelector('.member-name')?.textContent?.trim();
+
                 card?.remove();
 
-                // Check if no cards remain
+                const userSelect = document.getElementById('user_id')?.tomselect;
+                if (memberName && userSelect && !userSelect.options[userId]) {
+                    userSelect.addOption({
+                        value: String(userId),
+                        text: memberName,
+                    });
+                    userSelect.refreshOptions(false);
+                }
+
                 if (membersContainer && !membersContainer.querySelector('.team-member-card')) {
                     emptyRow();
                 }
@@ -104,9 +139,9 @@ const initializeProjectTeam = (root = document) => {
         });
 
         document.addEventListener('click', async function (e) {
-            if (!e.target.classList.contains('toggle-member')) return;
+            const btn = e.target.closest('.toggle-member');
+            if (!btn) return;
 
-            const btn = e.target;
             const userId = btn.dataset.id;
             const isActive = btn.dataset.active === '1';
 
@@ -147,6 +182,49 @@ const initializeProjectTeam = (root = document) => {
 
             } catch (error) {
                 Alert.error(error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.set-project-role');
+            if (!btn) return;
+
+            const userId = btn.dataset.id;
+            const role = btn.dataset.role;
+            const roleLabel = btn.dataset.roleLabel || 'Role';
+
+            const result = await Alert.confirm({
+                title: `Set as ${roleLabel}?`,
+                text: `Only one ${roleLabel.toLowerCase()} can exist per project. The current ${roleLabel.toLowerCase()} will be changed to member.`,
+            });
+
+            if (!result.isConfirmed) return;
+
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/projects/${projectId}/members/${userId}/role`, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ project_role: role }),
+                });
+
+                const res = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(res.message || 'Failed to update member role.');
+                }
+
+                syncMemberCards(res.updated_cards || {});
+                showSuccess(res.message);
+            } catch (error) {
+                showError(error.message);
             } finally {
                 btn.disabled = false;
             }
