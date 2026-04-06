@@ -205,6 +205,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
         Route::get('tasks/groups', [ProjectController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
+        Route::get('tasks/parent-options', [ProjectController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectController::class, 'taskModal'])->middleware(['permission.type:project.view', 'can:view,task'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');

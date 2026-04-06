@@ -24,15 +24,66 @@ const getGroupElements = (group) => ({
     body: group.querySelector('[data-project-task-group-body]'),
 });
 
+const ADVANCED_TASK_FIELDS = new Set([
+    'description',
+    'status_id',
+    'parent_task_id',
+    'task_type',
+    'task_mode',
+    'priority',
+    'start_date',
+    'due_date',
+    'tag_ids',
+    'is_billable',
+]);
+
 const clearTaskFormErrors = (form) => {
     form.querySelectorAll('[data-project-task-error]').forEach((node) => {
         node.textContent = '';
         node.classList.add('hidden');
     });
 
-    form.querySelectorAll('input, select').forEach((field) => {
+    form.querySelectorAll('input, select, textarea').forEach((field) => {
         field.classList.remove('border-red-500');
     });
+};
+
+const syncTaskFormSelectState = (form) => {
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll('select').forEach((field) => {
+        if (!field.tomselect) {
+            return;
+        }
+
+        if (field.multiple) {
+            const selectedValues = Array.from(field.selectedOptions).map((option) => option.value);
+            field.tomselect.setValue(selectedValues, true);
+            return;
+        }
+
+        field.tomselect.setValue(field.value || '', true);
+    });
+};
+
+const setTaskModalAdvancedState = (root, expanded) => {
+    const modal = root?.querySelector('[data-project-task-modal]');
+    const panel = root?.querySelector('[data-project-task-modal-panel]');
+    const form = root?.querySelector('[data-project-task-form]');
+    const advancedSection = form?.querySelector('[data-project-task-advanced-section]');
+    const toggleButton = form?.querySelector('[data-project-task-advanced-toggle]');
+
+    if (!modal || !panel || !form || !advancedSection || !toggleButton) {
+        return;
+    }
+
+    form.dataset.advanced = expanded ? 'true' : 'false';
+    advancedSection.hidden = !expanded;
+    panel.classList.toggle('max-w-lg', !expanded);
+    panel.classList.toggle('max-w-5xl', expanded);
+    toggleButton.textContent = expanded ? 'Minimal Form' : 'Advanced Form';
 };
 
 const setTaskFormSprint = (form, sprintId) => {
@@ -49,10 +100,12 @@ const setTaskFormSprint = (form, sprintId) => {
 
     if (sprintField.tomselect) {
         sprintField.tomselect.setValue(normalizedSprintId, true);
+        sprintField.dispatchEvent(new Event('change', { bubbles: true }));
         return;
     }
 
     sprintField.value = normalizedSprintId;
+    sprintField.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
 const prepareTaskModal = (root, sprintId = '') => {
@@ -63,17 +116,30 @@ const prepareTaskModal = (root, sprintId = '') => {
     }
 
     initializeEstimatedTimeInputs(form);
+    initDatepicker('.datepicker', {}, form);
     form.reset();
     clearTaskFormErrors(form);
+    setTaskModalAdvancedState(root, false);
+    syncTaskFormSelectState(form);
     setTaskFormSprint(form, sprintId || root.dataset.defaultSprintId || '');
+
+    if (!form.querySelector('[name="project_sprint_id"]')) {
+        loadParentTaskOptions(form).catch(() => {});
+    }
 };
 
 const applyTaskFormErrors = (form, errors = {}) => {
     clearTaskFormErrors(form);
 
+    if (Object.keys(errors).some((fieldName) => ADVANCED_TASK_FIELDS.has(fieldName.split('.')[0]))) {
+        const root = form.closest('[data-project-tasks-root]');
+        setTaskModalAdvancedState(root, true);
+    }
+
     Object.entries(errors).forEach(([fieldName, messages]) => {
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        const errorNode = form.querySelector(`[data-project-task-error="${fieldName}"]`);
+        const normalizedFieldName = fieldName.split('.')[0];
+        const field = form.querySelector(`[name="${normalizedFieldName}"], [name="${normalizedFieldName}[]"]`);
+        const errorNode = form.querySelector(`[data-project-task-error="${normalizedFieldName}"]`);
 
         field?.classList.add('border-red-500');
 
@@ -81,6 +147,103 @@ const applyTaskFormErrors = (form, errors = {}) => {
             errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
             errorNode.classList.remove('hidden');
         }
+    });
+};
+
+const setParentTaskOptions = (selectField, options = [], { placeholder = 'Select parent task', disabled = false } = {}) => {
+    if (!selectField) {
+        return;
+    }
+
+    if (selectField.tomselect) {
+        selectField.tomselect.clear(true);
+        selectField.tomselect.clearOptions();
+        selectField.tomselect.addOption([{ value: '', text: placeholder }]);
+
+        if (options.length) {
+            selectField.tomselect.addOption(options);
+        }
+
+        selectField.tomselect.refreshOptions(false);
+        selectField.tomselect.enable();
+
+        if (disabled) {
+            selectField.tomselect.disable();
+        }
+
+        return;
+    }
+
+    selectField.innerHTML = '';
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = placeholder;
+    selectField.appendChild(placeholderOption);
+
+    options.forEach((option) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.value;
+        optionElement.textContent = option.text;
+        selectField.appendChild(optionElement);
+    });
+
+    selectField.disabled = disabled;
+};
+
+const loadParentTaskOptions = async (form) => {
+    if (!form) {
+        return;
+    }
+
+    const parentTaskField = form.querySelector('[data-parent-task-select]');
+
+    if (!parentTaskField) {
+        return;
+    }
+
+    const sprintField = form.querySelector('[name="project_sprint_id"]');
+    const loadUrl = parentTaskField.dataset.parentTaskUrl || '';
+    const sprintId = sprintField?.value || '';
+    const isLinearFlow = !sprintField;
+
+    if (!loadUrl) {
+        return;
+    }
+
+    if (!isLinearFlow && !sprintId) {
+        setParentTaskOptions(parentTaskField, [], {
+            placeholder: 'Select sprint first',
+            disabled: true,
+        });
+        return;
+    }
+
+    setParentTaskOptions(parentTaskField, [], {
+        placeholder: 'Loading parent tasks...',
+        disabled: true,
+    });
+
+    const requestUrl = new URL(loadUrl, window.location.origin);
+
+    if (sprintId) {
+        requestUrl.searchParams.set('project_sprint_id', sprintId);
+    }
+
+    const response = await fetch(requestUrl.toString(), {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.status) {
+        throw new Error(result.message || 'Unable to load parent tasks.');
+    }
+
+    setParentTaskOptions(parentTaskField, result.options || [], {
+        placeholder: (result.options || []).length ? 'Select parent task' : 'No parent tasks available',
+        disabled: false,
     });
 };
 
@@ -532,6 +695,14 @@ const initializeProjectTasksRoot = (root) => {
             return;
         }
 
+        const advancedToggle = event.target.closest('[data-project-task-advanced-toggle]');
+
+        if (advancedToggle && root.contains(advancedToggle)) {
+            const form = root.querySelector('[data-project-task-form]');
+            setTaskModalAdvancedState(root, form?.dataset.advanced !== 'true');
+            return;
+        }
+
         const closeButton = event.target.closest('[data-project-task-modal-close]');
 
         if (closeButton && root.contains(closeButton)) {
@@ -567,6 +738,24 @@ const initializeProjectTasksRoot = (root) => {
 
         setExpandedState(group, true);
         await loadGroupTasks(group);
+    });
+
+    root.addEventListener('change', (event) => {
+        const sprintField = event.target.closest('[name="project_sprint_id"]');
+
+        if (!sprintField || !root.contains(sprintField)) {
+            return;
+        }
+
+        const form = sprintField.closest('[data-project-task-form]');
+
+        if (!form) {
+            return;
+        }
+
+        loadParentTaskOptions(form).catch((error) => {
+            Alert.error(error.message || 'Unable to load parent tasks.');
+        });
     });
 
     root.querySelectorAll('[data-project-task-group][data-expanded="true"]').forEach((group) => {
