@@ -70,6 +70,7 @@ class Attachment extends Model
     {
         return match ($this->link_type) {
             ProjectNote::class => 'project',
+            TaskNote::class => 'task',
             default => Str::snake(class_basename($this->link_type ?: static::class)),
         };
     }
@@ -78,6 +79,7 @@ class Attachment extends Model
     {
         return match ($this->category) {
             'project_note' => 'note_attachments',
+            'task_note' => 'note_attachments',
             null, '' => null,
             default => Str::snake($this->category),
         };

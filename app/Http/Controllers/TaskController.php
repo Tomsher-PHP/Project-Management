@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskNoteRequest;
+use App\Http\Requests\TaskCommentRequest;
 use App\Http\Requests\TaskUpdateRequest;
+use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
@@ -10,11 +13,14 @@ use App\Models\ProjectTask;
 use App\Models\ProjectTaskStatusHistory;
 use App\Models\ProjectTaskStatus;
 use App\Models\Tag;
+use App\Models\TaskNote;
 use App\Models\User;
+use App\Services\AttachmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -175,6 +181,7 @@ class TaskController extends Controller
         return view('tasks.detail-page', [
             'task' => $task,
             'project' => $task->project,
+            'taskCommentsCount' => $task->comments()->count(),
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
         ] + $overviewData);
     }
@@ -310,6 +317,134 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function commentsModal(ProjectTask $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+        $comments = $this->getRecentTaskComments($task);
+        $totalComments = $task->comments()->count();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('tasks.partials.modals.comments-content', [
+                'task' => $task,
+                'comments' => $comments,
+                'totalComments' => $totalComments,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function storeComment(TaskCommentRequest $request, ProjectTask $task): JsonResponse
+    {
+        $task->comments()->create([
+            'user_id' => auth()->id(),
+            'comment' => $request->validated()['comment'],
+        ]);
+
+        $task = $this->loadTaskForDetail($task);
+        $comments = $this->getRecentTaskComments($task);
+        $totalComments = $task->comments()->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added successfully.',
+            'count' => $totalComments,
+            'html' => view('tasks.partials.modals.comments-content', [
+                'task' => $task,
+                'comments' => $comments,
+                'totalComments' => $totalComments,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function storeNote(TaskNoteRequest $request, ProjectTask $task, AttachmentService $attachmentService): JsonResponse
+    {
+        DB::transaction(function () use ($task, $request, $attachmentService) {
+            $validated = $request->validated();
+
+            $note = $task->taskNotes()->create([
+                'description' => $validated['description'] ?? null,
+                'is_active' => true,
+            ]);
+
+            if (! empty($validated['attachments'])) {
+                $projectCode = $task->project?->project_code ?: 'project';
+                $taskCode = $task->code ?: ('task-' . $task->id);
+                $directory = 'task_files/' . $projectCode . '/' . $taskCode . '/notes';
+
+                foreach ($validated['attachments'] as $file) {
+                    $attachmentService->upload(
+                        $file,
+                        $directory,
+                        $note,
+                        'public',
+                        'public',
+                        false,
+                        'task_note'
+                    );
+                }
+            }
+        });
+
+        $task = $this->loadTaskForDetail($task);
+        $taskNotes = $this->getPaginatedTaskNotes($task, 1);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note added successfully.',
+            'html' => view('tasks.partials.task-notes-list', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'canRemove' => auth()->user()->can('update', $task),
+            ])->render(),
+            'current_page' => $taskNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteNote(Request $request, ProjectTask $task, TaskNote $note, AttachmentService $attachmentService): JsonResponse
+    {
+        abort_unless($note->project_task_id === $task->id, Response::HTTP_NOT_FOUND);
+
+        $attachmentService->delete($note->attachments);
+        $note->delete();
+        $task = $this->loadTaskForDetail($task);
+        $taskNotes = $this->getPaginatedTaskNotes($task, (int) $request->input('notes_page', 1));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Note deleted successfully.',
+            'html' => view('tasks.partials.task-notes-list', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'canRemove' => auth()->user()->can('update', $task),
+            ])->render(),
+            'current_page' => $taskNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
+    public function deleteNoteAttachment(Request $request, ProjectTask $task, TaskNote $note, Attachment $attachment, AttachmentService $attachmentService): JsonResponse
+    {
+        abort_unless($note->project_task_id === $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless(
+            $attachment->link_type === TaskNote::class && (int) $attachment->link_id === (int) $note->id,
+            Response::HTTP_NOT_FOUND
+        );
+
+        $attachmentService->delete(collect([$attachment]));
+        $task = $this->loadTaskForDetail($task);
+        $taskNotes = $this->getPaginatedTaskNotes($task, (int) $request->input('notes_page', 1));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File removed successfully.',
+            'html' => view('tasks.partials.task-notes-list', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'canRemove' => auth()->user()->can('update', $task),
+            ])->render(),
+            'current_page' => $taskNotes->currentPage(),
+        ], Response::HTTP_OK);
+    }
+
     private function loadTaskForDetail(ProjectTask $task): ProjectTask
     {
         $task->load([
@@ -345,6 +480,7 @@ class TaskController extends Controller
             'notes' => view('tasks.partials.tabs.notes', [
                 'task' => $task,
                 'project' => $task->project,
+                'taskNotes' => $this->getPaginatedTaskNotes($task, (int) request()->input('notes_page', 1)),
             ])->render(),
             'settings' => view('tasks.partials.tabs.settings', [
                 'task' => $task,
@@ -433,6 +569,32 @@ class TaskController extends Controller
                 ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
                 ->values(),
         ];
+    }
+
+    private function getPaginatedTaskNotes(ProjectTask $task, int $page)
+    {
+        $total = $task->taskNotes()->count();
+
+        if ($total > 0 && $page > (int) ceil($total / 10)) {
+            $page = max((int) ceil($total / 10), 1);
+        }
+
+        return $task->taskNotes()
+            ->with(['attachments', 'addedBy'])
+            ->paginate(10, ['*'], 'notes_page', $page)
+            ->withPath(route('tasks.edit', $task))
+            ->withQueryString();
+    }
+
+    private function getRecentTaskComments(ProjectTask $task, int $limit = 10): Collection
+    {
+        return $task->comments()
+            ->with('user.primaryAttachment')
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->sortBy('created_at')
+            ->values();
     }
 
     private function syncTaskAssignmentState(ProjectTask $task, ?int $newAssigneeId): void

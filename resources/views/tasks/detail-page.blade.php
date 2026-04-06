@@ -32,6 +32,20 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
+                                <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                    <path d="M5.25 9.75H10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                    <path d="M6.75 14.25L4.13388 15.9931C3.80201 16.2143 3.375 15.9764 3.375 15.5776V4.5C3.375 3.67157 4.04657 3 4.875 3H13.125C13.9534 3 14.625 3.67157 14.625 4.5V12C14.625 12.8284 13.9534 13.5 13.125 13.5H7.58211C7.28548 13.5 6.99551 13.5879 6.75 13.7525V14.25Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <span>Comments</span>
+                            <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100" data-task-comments-count>
+                                {{ $taskCommentsCount }}
+                            </span>
+                        </button>
+
                         @if ($project && auth()->user()->can('view', $project))
                             <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
                                 <span>Open Project</span>
@@ -58,6 +72,8 @@
                 </div>
             </div>
         </section>
+
+        @include('tasks.partials.modals.insights-modal')
     </main>
 @endsection
 

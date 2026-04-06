@@ -253,6 +253,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::get('tasks/{task}/tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
     Route::get('tasks/{task}/parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
+    Route::get('tasks/{task}/comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
+    Route::post('tasks/{task}/comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+    Route::post('tasks/{task}/notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.store');
+    Route::delete('tasks/{task}/notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.delete');
+    Route::delete('tasks/{task}/notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.attachments.delete');
     Route::get('tasks/{task}/edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
     Route::put('tasks/{task}', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);

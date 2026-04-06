@@ -4,6 +4,9 @@ import { initDatepicker } from '../components/datepicker';
 import { initTimepicker } from '../components/timepicker';
 import { initWeekPicker } from '../components/weekpicker';
 import { initializeEstimatedTimeInputs } from '../components/estimated-time-input';
+import './task-insights-modal';
+import './task-comments';
+import './task-files';
 
 const TASK_DETAIL_LOADING_HTML = (tab) => `
     <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">

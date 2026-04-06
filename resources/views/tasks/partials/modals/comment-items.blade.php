@@ -20,7 +20,7 @@
         </article>
     @empty
         <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
-            No comments have been added to this project yet.
+            No comments have been added to this task yet.
         </div>
     @endforelse
 </div>

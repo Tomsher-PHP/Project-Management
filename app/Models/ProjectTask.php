@@ -212,6 +212,16 @@ class ProjectTask extends Model
             ->withTimestamps();
     }
 
+    public function comments()
+    {
+        return $this->hasMany(TaskComment::class, 'project_task_id')->orderBy('created_at', 'desc');
+    }
+
+    public function taskNotes()
+    {
+        return $this->hasMany(TaskNote::class, 'project_task_id')->orderBy('created_at', 'desc');
+    }
+
     public function tagLinks()
     {
         return $this->hasMany(ProjectTaskTag::class);
