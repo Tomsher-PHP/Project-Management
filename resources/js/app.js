@@ -10,6 +10,7 @@ import './modules/reset-password';
 import './modules/ajax-form-modal';
 import './modules/config';
 import './modules/activity-log-details';
+import './modules/task-filters';
 import './delete-alert';
 import './components/filterDrawer';
 import './components/estimated-time-input';

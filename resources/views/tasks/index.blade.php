@@ -104,12 +104,14 @@
                                             <span class="mt-0.5 h-12 w-1.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
 
                                             <div class="min-w-0">
-                                                <p class="truncate text-lg font-semibold text-bgray-900 dark:text-white">
-                                                    {{ $task->title }}
-                                                </p>
-                                                <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
-                                                    {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
-                                                </p>
+                                                <a href="{{ route('tasks.edit', $task) }}" class="block">
+                                                    <p class="truncate text-lg font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
+                                                        {{ $task->title }}
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
+                                                        {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
+                                                    </p>
+                                                </a>
 
                                                 @if ($task->project?->project_flow === 'agile')
                                                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-500 dark:text-bgray-300">
@@ -127,8 +129,18 @@
 
                                     <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
                                         <div class="min-w-0">
-                                            <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">
-                                                {{ $task->project?->name ?? '--' }}
+                                            <p class="flex items-center gap-2 truncate text-sm font-semibold text-bgray-900 dark:text-white">
+                                                @if ($task->project)
+                                                    <a
+                                                        href="{{ route('projects.edit', $task->project) }}"
+                                                        class="inline-flex min-w-0 items-center gap-2 truncate transition duration-200 hover:text-success-400 dark:hover:text-success-300"
+                                                    >
+                                                        <x-project-flow-icon :flow="$task->project->project_flow" size="sm" />
+                                                        <span class="truncate">{{ $task->project->name }}</span>
+                                                    </a>
+                                                @else
+                                                    <span class="truncate">--</span>
+                                                @endif
                                             </p>
                                         </div>
                                     </td>
@@ -184,7 +196,14 @@
                                     </td>
 
                                     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <div class="flex items-center">
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ route('tasks.edit', $task) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" title="Open task">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 3h7m0 0v7m0-7L10 14" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5v14h14v-5" />
+                                                </svg>
+                                            </a>
+
                                             @can('delete', $task)
                                                 <x-delete-form :action="route('tasks.destroy', $task->id)" />
                                             @endcan
@@ -214,10 +233,20 @@
 
     <x-filters.drawer>
         <x-filters.input-search name="search" label="Task" />
+        <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
+        <x-filters.multi-select name="project_module_id" label="Module" :options="$projectModules" />
+        <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
         <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" />
         <x-filters.multi-select name="status_id" label="Status" :options="$statuses" />
         <x-filters.multi-select name="priority" label="Priority" :options="$priorityOptions" />
         <x-filters.multi-select name="task_type" label="Type" :options="$typeOptions" />
         <x-filters.multi-select name="task_mode" label="Task Mode" :options="$modeOptions" />
     </x-filters.drawer>
+
+    <script id="task-filter-dependencies" type="application/json">
+        @json([
+            'modules' => $projectModules->values(),
+            'sprints' => $projectSprints->values(),
+        ])
+    </script>
 @endsection

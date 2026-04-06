@@ -250,6 +250,8 @@ Route::middleware(['auth'])->group(function () {
     // Task Routes
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
+    Route::get('tasks/{task}/tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
+    Route::get('tasks/{task}/parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
     Route::get('tasks/{task}/edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
     Route::put('tasks/{task}', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);

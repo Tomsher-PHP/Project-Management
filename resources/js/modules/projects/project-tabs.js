@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const triggers = Array.from(tabsRoot.querySelectorAll('[data-project-tab-trigger]'));
     const panels = Array.from(tabsRoot.querySelectorAll('[data-project-tab-panel]'));
     const availableTabs = triggers.map((trigger) => trigger.dataset.projectTabTrigger);
+    const params = new URLSearchParams(window.location.search);
     let activeRequestTab = null;
 
     if (!projectId || !tabsUrlTemplate || !triggers.length || !panels.length) {
@@ -94,7 +95,13 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         try {
-            const response = await fetch(tabsUrlTemplate.replace('__TAB__', tab), {
+            const requestUrl = new URL(tabsUrlTemplate.replace('__TAB__', tab), window.location.origin);
+
+            params.forEach((value, key) => {
+                requestUrl.searchParams.append(key, value);
+            });
+
+            const response = await fetch(requestUrl.toString(), {
                 headers: {
                     'Accept': 'application/json',
                 },
@@ -135,7 +142,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const savedTab = localStorage.getItem(storageKey);
-    const initialTab = availableTabs.includes(savedTab) ? savedTab : defaultTab;
+    const requestedTab = params.get('tab');
+    const initialTab = availableTabs.includes(requestedTab)
+        ? requestedTab
+        : (availableTabs.includes(savedTab) ? savedTab : defaultTab);
 
     loadTab(initialTab);
 });

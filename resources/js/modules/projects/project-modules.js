@@ -214,6 +214,88 @@ const getProjectModuleSprintsPanel = (moduleId, root = getProjectModuleSectionRo
     return root.querySelector(`[data-project-module-sprints-panel][data-module-id="${moduleId}"]`);
 };
 
+const getProjectModuleDeepLinkState = () => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    const moduleId = Number(params.get('module') || 0) || null;
+    const sprintId = Number(params.get('sprint') || 0) || null;
+
+    return {
+        tab,
+        moduleId,
+        sprintId,
+    };
+};
+
+const waitForNextFrame = () => new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+});
+
+const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot()) => {
+    if (!section) {
+        return;
+    }
+
+    const { tab, moduleId, sprintId } = getProjectModuleDeepLinkState();
+
+    if (tab !== 'modules' || !moduleId) {
+        return;
+    }
+
+    const deepLinkKey = `${moduleId}:${sprintId || ''}`;
+
+    if (section.dataset.deepLinkHandled === deepLinkKey) {
+        return;
+    }
+
+    const moduleCard = section.querySelector(`[data-project-module-card][data-module-id="${moduleId}"]`);
+    const moduleToggle = section.querySelector(`[data-project-module-toggle][data-module-id="${moduleId}"]`);
+    const sprintPanel = getProjectModuleSprintsPanel(moduleId, section);
+
+    if (!moduleCard || !moduleToggle || !sprintPanel) {
+        return;
+    }
+
+    section.dataset.deepLinkHandled = deepLinkKey;
+
+    const panelContainer = sprintPanel.parentElement;
+    const isExpanded = Boolean(panelContainer && panelContainer.offsetParent !== null);
+
+    if (!isExpanded) {
+        moduleToggle.click();
+        await waitForNextFrame();
+        await waitForNextFrame();
+    }
+
+    moduleCard.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+    });
+
+    if (!sprintId) {
+        return;
+    }
+
+    try {
+        await fetchProjectModuleSprints(moduleId, {
+            root: section,
+            all: true,
+        });
+
+        await waitForNextFrame();
+
+        const sprintCard = section.querySelector(`[data-project-sprint-card][data-project-sprint-id="${sprintId}"]`);
+
+        sprintCard?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+    } catch (error) {
+        delete section.dataset.deepLinkHandled;
+        throw error;
+    }
+};
+
 const renderProjectModuleSprintsState = (message, extraClasses = '') => `
     <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-module-sprints-state>
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">${escapeHtml(message)}</p>
@@ -3037,6 +3119,10 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
         const moduleId = Number(panel.dataset.moduleId);
 
         fetchProjectModuleSprints(moduleId, { root: section }).catch(() => {});
+    });
+
+    handleProjectModuleDeepLink(section).catch((error) => {
+        Alert.error(error.message || 'Unable to open the requested sprint.');
     });
 
     if (moduleList && moduleList.dataset.reorderUrl && csrfToken) {
