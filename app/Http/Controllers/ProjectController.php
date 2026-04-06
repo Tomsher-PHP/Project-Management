@@ -503,7 +503,9 @@ class ProjectController extends Controller
         $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
         $agileModuleStatuses = AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get();
-        $assignableUsers = app(UserService::class)->getAccessibleUsers(auth()->user());
+        $assignableUsers = $project->activeMembers()
+            ->orderBy('users.name')
+            ->get(['users.id', 'users.name']);
         $trashedProjectModules = ProjectModule::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')

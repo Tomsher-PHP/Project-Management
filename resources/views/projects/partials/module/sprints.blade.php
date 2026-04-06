@@ -11,7 +11,7 @@
             $statusName = $projectSprint->status?->name ?? 'No status';
             $formatDate = static fn($date) => \App\Providers\AppServiceProvider::formatAppDate($date);
         @endphp
-        <div class="overflow-hidden rounded-2xl border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-sprint-card data-project-sprint-id="{{ $projectSprint->id }}" draggable="false" style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}">
+        <div class="overflow-hidden rounded-none border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-sprint-card data-project-sprint-id="{{ $projectSprint->id }}" draggable="false" style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}">
             <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-start gap-3">
                     @can('project_sprint.edit')

@@ -24,6 +24,8 @@
         'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
         'end_label' => $project->customer_end_date?->format($globalDateFormat) ?? '--',
     ];
+    $isAgileFlow = $project->project_flow === 'agile';
+    $flowLabel = ucfirst($project->project_flow ?? 'linear');
 @endphp
 
 <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600" data-project-header-card data-project-id="{{ $project->id }}">
@@ -44,7 +46,23 @@
 
             <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-bgray-600 dark:text-bgray-300">
                 <span><strong>Customer:</strong> {{ $project->customer->name ?? '--' }}</span>
-                <span><strong>Project Flow:</strong> {{ strtoupper($project->project_flow ?? '--') }}</span>
+                <span class="inline-flex items-center gap-2">
+                    <strong>Project Flow:</strong>
+                    <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-bgray-200 bg-bgray-50 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100" title="Project Flow: {{ $flowLabel }}">
+                        @if ($isAgileFlow)
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h4m0 0v4m0-4l-6 6" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 17h4m-4 0v-4m0 4l10-10" opacity=".45" />
+                            </svg>
+                        @else
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l4 4-4 4" />
+                            </svg>
+                        @endif
+                    </span>
+                    <span>{{ strtoupper($project->project_flow ?? '--') }}</span>
+                </span>
                 <span><strong>Start Date:</strong> {{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</span>
                 <span><strong>End Date:</strong> {{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</span>
                 @if ($canCustomerEndDate)

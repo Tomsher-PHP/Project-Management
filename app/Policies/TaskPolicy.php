@@ -29,4 +29,9 @@ class TaskPolicy
     {
         return $user->can('task.edit') && $this->view($user, $task);
     }
+
+    public function delete(User $user, ProjectTask $task): bool
+    {
+        return $user->can('task.delete') && $this->view($user, $task);
+    }
 }

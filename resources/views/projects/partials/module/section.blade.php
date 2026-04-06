@@ -76,7 +76,7 @@
 
         <div x-data="{ activeModuleId: @js($openModuleId ?? null) }" class="space-y-5 overflow-y-auto px-4 py-4 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
-                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-2xl border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
+                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-none border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">

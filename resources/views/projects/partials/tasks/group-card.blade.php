@@ -2,7 +2,7 @@
     $isLoaded = $isOpen;
 @endphp
 
-<article class="overflow-hidden rounded-[24px] border border-bgray-200 bg-white shadow-sm transition dark:border-darkblack-400 dark:bg-darkblack-600" data-project-task-group data-group-key="{{ $group['key'] }}" data-expanded="{{ $isOpen ? 'true' : 'false' }}" data-load-url="{{ route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]) }}" style="border-left-width: 4px; border-left-color: {{ $group['accent_color'] }};">
+<article class="overflow-hidden rounded-none border border-bgray-200 bg-white shadow-sm transition dark:border-darkblack-400 dark:bg-darkblack-600" data-project-task-group data-group-key="{{ $group['key'] }}" data-expanded="{{ $isOpen ? 'true' : 'false' }}" data-load-url="{{ route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]) }}" style="border-left-width: 4px; border-left-color: {{ $group['accent_color'] }};">
     <div class="flex items-center justify-between gap-4 overflow-x-auto px-4 py-3 text-left transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/70">
         <div class="flex min-w-0 flex-1 items-center gap-3 whitespace-nowrap">
             <button type="button" class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-700 shadow-sm transition hover:border-primary hover:bg-bgray-50 hover:text-primary dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300" data-project-task-group-toggle aria-label="Toggle sprint tasks">

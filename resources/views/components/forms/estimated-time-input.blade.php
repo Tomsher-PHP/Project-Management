@@ -8,6 +8,8 @@
     'minutesPlaceholder' => 'e.g. 30',
     'panel' => false,
     'helpText' => 'Enter time naturally. We’ll convert it automatically for calculation.',
+    'showLabel' => true,
+    'disabled' => false,
 ])
 
 @php
@@ -22,9 +24,11 @@
 @endphp
 
 <div class="flex flex-col gap-2" data-estimated-time>
-    <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-        {{ $label }}
-    </label>
+    @if ($showLabel)
+        <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+            {{ $label }}
+        </label>
+    @endif
 
     <input type="hidden" name="{{ $name }}" value="{{ $normalizedTotalMinutes }}" data-estimated-total-minutes>
 
@@ -40,6 +44,7 @@
                     placeholder="{{ $hoursPlaceholder }}"
                     data-estimated-hours
                     class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white {{ $inputClasses }}"
+                    @disabled($disabled)
                     {!! $inputEvents !!}
                 >
             </div>
@@ -54,6 +59,7 @@
                     placeholder="{{ $minutesPlaceholder }}"
                     data-estimated-extra-minutes
                     class="w-full rounded-lg border p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white {{ $inputClasses }}"
+                    @disabled($disabled)
                     {!! $inputEvents !!}
                 >
             </div>

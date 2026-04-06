@@ -99,8 +99,13 @@
                             @endunless
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Estimate time</label>
-                                <input type="number" name="estimated_time_minutes" min="0" step="1" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Minutes">
+                                <x-forms.estimated-time-input
+                                    label="Estimated Time"
+                                    name="estimated_time_minutes"
+                                    :total-minutes="0"
+                                    help-text="Enter time naturally. We’ll convert it automatically for calculation."
+                                    :show-label="false"
+                                />
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
                             </div>
 

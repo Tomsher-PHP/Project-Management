@@ -8,7 +8,6 @@ use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
-use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -225,7 +224,9 @@ class ProjectModuleController extends Controller
             'projectModules' => $project->projectModules,
             'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
             'agileModuleStatuses' => AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get(),
-            'assignableUsers' => app(UserService::class)->getAccessibleUsers(auth()->user()),
+            'assignableUsers' => $project->activeMembers()
+                ->orderBy('users.name')
+                ->get(['users.id', 'users.name']),
             'openModuleId' => $openModuleId,
             'openSprintId' => $openSprintId,
             'trashedProjectModules' => ProjectModule::onlyTrashed()

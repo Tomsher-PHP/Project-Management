@@ -70,7 +70,7 @@
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                     <div class="space-y-4" data-project-module-builder-workspace>
                                     @forelse ($projectModules as $module)
-                                        <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="false" draggable="false">
+                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $module->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
@@ -109,7 +109,7 @@
                                             <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
                                                 <div class="grid gap-4 xl:grid-cols-2">
                                                 <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
+                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <x-red-star /></label>
                                                     <input type="text" name="name" value="{{ $module->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                                 </div>
 
@@ -124,13 +124,17 @@
                                                 </div>
 
                                                 <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Estimated Minutes</label>
-                                                    <input type="number" min="0" step="1" name="estimated_time_minutes" value="{{ $module->estimated_time_minutes ?? 0 }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                                    <x-forms.estimated-time-input
+                                                        label="Estimated Time"
+                                                        name="estimated_time_minutes"
+                                                        :total-minutes="$module->estimated_time_minutes ?? 0"
+                                                        :show-label="false"
+                                                    />
                                                 </div>
 
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                                                    <input type="text" value="{{ $module->start_date?->format('Y-m-d') }}{{ $module->start_date && $module->end_date ? ' to ' : '' }}{{ $module->end_date?->format('Y-m-d') }}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-project-module-builder-date-range>
+                                                    <input type="text" value="{{ $module->start_date?->format('Y-m-d') }}{{ $module->start_date && $module->end_date ? ' to ' : '' }}{{ $module->end_date?->format('Y-m-d') }}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ now(config('constants.timezone'))->toDateString() }}" data-project-module-builder-date-range>
                                                     <input type="hidden" name="start_date" value="{{ $module->start_date?->format('Y-m-d') }}">
                                                     <input type="hidden" name="end_date" value="{{ $module->end_date?->format('Y-m-d') }}">
                                                 </div>
@@ -200,7 +204,7 @@
                             <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-module-builder-library-scroll>
                                 <div class="space-y-3" data-project-module-builder-library>
                                     @foreach ($agileModules as $libraryModule)
-                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
+                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">
@@ -377,7 +381,7 @@
                             <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-sprint-builder-library-scroll>
                                 <div class="space-y-3" data-project-sprint-builder-library>
                                     @foreach ($agileSprints as $librarySprint)
-                                        <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
+                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-sprint-library-item data-library-sprint-id="{{ $librarySprint->id }}" data-name="{{ $librarySprint->name }}" data-color="{{ $librarySprint->color ?: '#22C55E' }}" data-description="{{ $librarySprint->description }}" data-sort-order="{{ $librarySprint->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">

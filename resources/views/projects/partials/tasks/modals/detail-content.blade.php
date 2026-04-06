@@ -111,8 +111,14 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Estimate Time</label>
-                    <input type="number" name="estimated_time_minutes" min="0" step="1" value="{{ $task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0 }}" class="{{ $textInputClasses }}" @disabled(!$canEditTask)>
+                    <x-forms.estimated-time-input
+                        label="Estimated Time"
+                        name="estimated_time_minutes"
+                        :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0"
+                        :show-label="false"
+                        :disabled="!$canEditTask"
+                        help-text="Enter time naturally. We’ll convert it automatically for calculation."
+                    />
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
                 </div>
 

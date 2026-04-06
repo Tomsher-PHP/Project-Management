@@ -1,5 +1,6 @@
 import Alert from '../../alert';
 import { initDatepicker } from '../../components/datepicker';
+import { initializeEstimatedTimeInputs } from '../../components/estimated-time-input';
 import { initTomSelect } from '../../components/tom-select';
 
 const LOADING_HTML = `
@@ -58,6 +59,7 @@ const prepareTaskModal = (root, sprintId = '') => {
         return;
     }
 
+    initializeEstimatedTimeInputs(form);
     form.reset();
     clearTaskFormErrors(form);
     setTaskFormSprint(form, sprintId || root.dataset.defaultSprintId || '');
@@ -193,6 +195,7 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
         content.innerHTML = result.html;
         initTomSelect(content);
         initDatepicker('.datepicker', {}, content);
+        initializeEstimatedTimeInputs(content);
 
         if (window.Alpine && typeof window.Alpine.initTree === 'function') {
             window.Alpine.initTree(content);

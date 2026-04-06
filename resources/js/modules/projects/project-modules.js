@@ -1,5 +1,6 @@
 import Alert from '../../alert';
 import { initDatepicker } from '../../components/datepicker';
+import { initializeEstimatedTimeInputs } from '../../components/estimated-time-input';
 import { initTomSelect } from '../../components/tom-select';
 
 const replaceRenderedSection = (response) => {
@@ -55,6 +56,76 @@ const renderSelectOptions = (items, selectedValue, placeholder) => {
 };
 
 const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+const formatPickerDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const getTodayDate = () => {
+    const now = new Date();
+
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+const getCurrentWeekRange = () => {
+    const today = getTodayDate();
+    const startOfWeek = new Date(today);
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+    startOfWeek.setDate(today.getDate() + diffToMonday);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    const effectiveStart = startOfWeek < today ? today : startOfWeek;
+
+    return {
+        minDate: formatPickerDate(today),
+        startDate: formatPickerDate(effectiveStart),
+        endDate: formatPickerDate(endOfWeek),
+    };
+};
+
+const applyMinDateToRangeInput = (rangeInput) => {
+    if (!rangeInput) {
+        return;
+    }
+
+    const { minDate } = getCurrentWeekRange();
+    rangeInput.dataset.minDate = minDate;
+
+    if (rangeInput._flatpickr) {
+        rangeInput._flatpickr.set('minDate', minDate);
+    }
+};
+
+const renderEstimatedTimeInput = (totalMinutes = 0) => {
+    const normalizedTotalMinutes = Math.max(0, Number.parseInt(totalMinutes || 0, 10) || 0);
+    const hours = Math.floor(normalizedTotalMinutes / 60);
+    const minutes = normalizedTotalMinutes % 60;
+
+    return `
+        <div class="flex flex-col gap-2" data-estimated-time>
+            <input type="hidden" name="estimated_time_minutes" value="${escapeHtml(normalizedTotalMinutes)}" data-estimated-total-minutes>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Hours</label>
+                    <input type="number" min="0" step="1" value="${escapeHtml(hours)}" data-estimated-hours class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+                <div>
+                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Minutes</label>
+                    <input type="number" min="0" step="1" value="${escapeHtml(minutes)}" data-estimated-extra-minutes class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                </div>
+            </div>
+            <p class="text-xs text-bgray-500 dark:text-bgray-300">Enter time naturally. We’ll convert it automatically for calculation.</p>
+        </div>
+    `;
+};
 
 const requestFormJson = async (url, formData, csrfToken = getCsrfToken()) => {
     const response = await fetch(url, {
@@ -243,7 +314,7 @@ const clearProjectModuleSprintCache = () => {
 };
 
 const renderModuleBuilderCard = (module, config, extraClass = '') => `
-    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(module.color || '#E5E7EB')};" data-project-module-builder-card data-module-id="${module.id ?? ''}" data-module-name="${escapeHtml(module.name || '')}" data-expanded="false" draggable="false">
+    <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(module.color || '#E5E7EB')};" data-project-module-builder-card data-module-id="${module.id ?? ''}" data-module-name="${escapeHtml(module.name || '')}" data-expanded="false" draggable="false">
         <input type="hidden" name="color" value="${escapeHtml(module.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
@@ -280,7 +351,7 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
         <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
             <div>
-                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
+                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                 <input type="text" name="name" value="${escapeHtml(module.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
             </div>
 
@@ -292,13 +363,12 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
             </div>
 
             <div>
-                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Estimated Minutes</label>
-                <input type="number" min="0" step="1" name="estimated_time_minutes" value="${escapeHtml(module.estimated_time_minutes ?? 0)}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                ${renderEstimatedTimeInput(module.estimated_time_minutes ?? 0)}
             </div>
 
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                <input type="text" value="${escapeHtml([module.start_date, module.end_date].filter(Boolean).join(' to '))}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-project-module-builder-date-range>
+                <input type="text" value="${escapeHtml([module.start_date, module.end_date].filter(Boolean).join(' to '))}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getCurrentWeekRange().minDate)}" data-project-module-builder-date-range>
                 <input type="hidden" name="start_date" value="${escapeHtml(module.start_date || '')}">
                 <input type="hidden" name="end_date" value="${escapeHtml(module.end_date || '')}">
             </div>
@@ -316,7 +386,7 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
 `;
 
 const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
-    <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-module-library-item data-library-module-id="${escapeHtml(libraryModule.id ?? '')}" data-name="${escapeHtml(libraryModule.name || '')}" data-color="${escapeHtml(libraryModule.color || '#22C55E')}" data-description="${escapeHtml(libraryModule.description || '')}" data-sort-order="${escapeHtml(libraryModule.sort_order ?? '')}">
+    <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-module-library-item data-library-module-id="${escapeHtml(libraryModule.id ?? '')}" data-name="${escapeHtml(libraryModule.name || '')}" data-color="${escapeHtml(libraryModule.color || '#22C55E')}" data-description="${escapeHtml(libraryModule.description || '')}" data-sort-order="${escapeHtml(libraryModule.sort_order ?? '')}">
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex items-center gap-2">
@@ -485,12 +555,17 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const initializeCardDatepicker = (card) => {
+        applyMinDateToRangeInput(card.querySelector('[data-project-module-builder-date-range]'));
         initDatepicker('.project-module-date-range', {}, card);
         syncCardDateRange(card);
     };
 
     const initializeCardTomSelect = (card) => {
         initTomSelect(card);
+    };
+
+    const initializeCardEstimatedTime = (card) => {
+        initializeEstimatedTimeInputs(card);
     };
 
     const getSectionModuleSource = () => {
@@ -588,6 +663,7 @@ const initializeProjectModuleBuilderModal = () => {
             appendCardToWorkspace(card);
             initializeCardDatepicker(card);
             initializeCardTomSelect(card);
+            initializeCardEstimatedTime(card);
             syncDescriptionCount(card);
         });
 
@@ -817,7 +893,14 @@ const initializeProjectModuleBuilderModal = () => {
         } else if (ownerSelect) {
             ownerSelect.value = module.owner_id || '';
         }
-        card.querySelector('[name="estimated_time_minutes"]').value = module.estimated_time_minutes ?? 0;
+        const estimatedTimeInput = card.querySelector('[name="estimated_time_minutes"]');
+        const estimatedTimeWrapper = card.querySelector('[data-estimated-time]');
+
+        if (estimatedTimeInput) {
+            estimatedTimeInput.value = module.estimated_time_minutes ?? 0;
+        }
+
+        estimatedTimeWrapper?.dispatchEvent(new CustomEvent('estimated-time:refresh'));
         card.querySelector('[name="description"]').value = module.description || '';
         card.querySelector('[name="start_date"]').value = module.start_date || '';
         card.querySelector('[name="end_date"]').value = module.end_date || '';
@@ -844,14 +927,15 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const createLibraryModuleCard = async (libraryModule) => {
+        const currentWeekRange = getCurrentWeekRange();
         const payload = normalizePayload({
             name: buildUniqueModuleName(libraryModule.name || 'New Module'),
             color: libraryModule.color || '#22C55E',
             description: libraryModule.description || '',
             estimated_time_minutes: 0,
             owner_id: '',
-            start_date: '',
-            end_date: '',
+            start_date: currentWeekRange.startDate,
+            end_date: currentWeekRange.endDate,
         });
 
         const tempId = `temp-${Date.now()}`;
@@ -872,6 +956,7 @@ const initializeProjectModuleBuilderModal = () => {
         appendCardToWorkspace(card);
         initializeCardDatepicker(card);
         initializeCardTomSelect(card);
+        initializeCardEstimatedTime(card);
         syncDescriptionCount(card);
         setCardExpanded(card, true);
         ensureEmptyState();
@@ -1200,7 +1285,6 @@ const initializeProjectModuleBuilderModal = () => {
         }
 
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
-        queueModuleSave(card, event.target.tagName === 'TEXTAREA' ? 650 : 500);
     });
 
     workspace.addEventListener('change', function (event) {
@@ -1272,6 +1356,7 @@ const initializeProjectModuleBuilderModal = () => {
     getCards().forEach((card) => setCardExpanded(card, false));
     getCards().forEach((card) => initializeCardDatepicker(card));
     getCards().forEach((card) => initializeCardTomSelect(card));
+    getCards().forEach((card) => initializeCardEstimatedTime(card));
     getCards().forEach((card) => syncDescriptionCount(card));
     modal.dataset.projectModuleBuilderInitialized = 'true';
 };
@@ -1299,8 +1384,13 @@ const syncSprintCardDateRange = (card) => {
 };
 
 const initializeSprintCardDatepicker = (card) => {
+    applyMinDateToRangeInput(card.querySelector('[data-project-sprint-builder-date-range]'));
     initDatepicker('.project-sprint-date-range', {}, card);
     syncSprintCardDateRange(card);
+};
+
+const initializeSprintCardEstimatedTime = (card) => {
+    initializeEstimatedTimeInputs(card);
 };
 
 const normalizeDateOnly = (value) => {
@@ -1320,7 +1410,7 @@ const normalizeDateOnly = (value) => {
 };
 
 const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
-    <article class="select-text rounded-2xl border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="false" draggable="false">
+    <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(sprint.color || '#E5E7EB')};" data-project-sprint-builder-card data-sprint-id="${sprint.id ?? ''}" data-expanded="false" draggable="false">
         <input type="hidden" name="color" value="${escapeHtml(sprint.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
@@ -1360,18 +1450,17 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
         <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-sprint-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
                 <div>
-                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name</label>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="${escapeHtml(sprint.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Estimated Minutes</label>
-                    <input type="number" min="0" step="1" name="estimated_time_minutes" value="${escapeHtml(sprint.estimated_time_minutes ?? 0)}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                    ${renderEstimatedTimeInput(sprint.estimated_time_minutes ?? 0)}
                 </div>
 
                 <div>
                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                    <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-project-sprint-builder-date-range>
+                    <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getCurrentWeekRange().minDate)}" data-project-sprint-builder-date-range>
                     <input type="hidden" name="start_date" value="${escapeHtml(sprint.start_date || '')}">
                     <input type="hidden" name="end_date" value="${escapeHtml(sprint.end_date || '')}">
                 </div>
@@ -1389,7 +1478,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
 `;
 
 const renderSprintLibraryCard = (librarySprint, extraClass = '') => `
-    <article class="cursor-grab rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-sprint-library-item data-library-sprint-id="${escapeHtml(librarySprint.id ?? '')}" data-name="${escapeHtml(librarySprint.name || '')}" data-color="${escapeHtml(librarySprint.color || '#22C55E')}" data-description="${escapeHtml(librarySprint.description || '')}" data-sort-order="${escapeHtml(librarySprint.sort_order ?? '')}">
+    <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-sprint-library-item data-library-sprint-id="${escapeHtml(librarySprint.id ?? '')}" data-name="${escapeHtml(librarySprint.name || '')}" data-color="${escapeHtml(librarySprint.color || '#22C55E')}" data-description="${escapeHtml(librarySprint.description || '')}" data-sort-order="${escapeHtml(librarySprint.sort_order ?? '')}">
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex items-center gap-2">
@@ -1711,6 +1800,7 @@ const initializeProjectSprintBuilderModal = () => {
 
             appendCardToWorkspace(card);
             initializeSprintCardDatepicker(card);
+            initializeSprintCardEstimatedTime(card);
             syncDescriptionCount(card);
             syncSprintColor(card);
         });
@@ -1902,7 +1992,14 @@ const initializeProjectSprintBuilderModal = () => {
 
         card.dataset.sprintId = String(sprint.id || card.dataset.sprintId || '');
         card.querySelector('[name="name"]').value = sprint.name || '';
-        card.querySelector('[name="estimated_time_minutes"]').value = sprint.estimated_time_minutes ?? 0;
+        const estimatedTimeInput = card.querySelector('[name="estimated_time_minutes"]');
+        const estimatedTimeWrapper = card.querySelector('[data-estimated-time]');
+
+        if (estimatedTimeInput) {
+            estimatedTimeInput.value = sprint.estimated_time_minutes ?? 0;
+        }
+
+        estimatedTimeWrapper?.dispatchEvent(new CustomEvent('estimated-time:refresh'));
         card.querySelector('[name="color"]').value = normalizedColor;
         card.querySelector('[name="description"]').value = sprint.description || '';
         card.querySelector('[name="start_date"]').value = normalizedStartDate;
@@ -1932,14 +2029,15 @@ const initializeProjectSprintBuilderModal = () => {
             return;
         }
 
+        const currentWeekRange = getCurrentWeekRange();
         const payload = normalizePayload({
             project_module_id: activeModuleId,
             name: buildUniqueSprintName(librarySprint.name || 'New Sprint'),
             color: librarySprint.color || '#22C55E',
             description: librarySprint.description || '',
             estimated_time_minutes: 0,
-            start_date: '',
-            end_date: '',
+            start_date: currentWeekRange.startDate,
+            end_date: currentWeekRange.endDate,
         });
 
         const cardWrapper = document.createElement('div');
@@ -1957,6 +2055,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         appendCardToWorkspace(card);
         initializeSprintCardDatepicker(card);
+        initializeSprintCardEstimatedTime(card);
         syncDescriptionCount(card);
         syncSprintColor(card);
         setCardExpanded(card, true);
@@ -2299,7 +2398,6 @@ const initializeProjectSprintBuilderModal = () => {
         }
 
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
-        queueSprintSave(card, event.target.tagName === 'TEXTAREA' ? 650 : 500);
     });
 
     workspace.addEventListener('change', function (event) {

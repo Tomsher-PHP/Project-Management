@@ -25,6 +25,7 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -242,6 +243,14 @@ Route::middleware(['auth'])->group(function () {
     Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.update');
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.delete', 'can:delete,project'])->only(['destroy']);
     // End Project Routes
+
+    // Task Routes
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
+    Route::get('tasks/{task}/edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+    Route::put('tasks/{task}', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
+    // End Task Routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
