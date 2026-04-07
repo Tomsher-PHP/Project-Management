@@ -6,12 +6,12 @@ use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectTaskAssignmentLog extends Model
+class TaskAssignmentLog extends Model
 {
     use LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'user_id',
         'assigned_from',
         'assigned_to',
@@ -23,7 +23,7 @@ class ProjectTaskAssignmentLog extends Model
     ];
 
     protected $casts = [
-        'project_task_id' => 'integer',
+        'task_id' => 'integer',
         'user_id' => 'integer',
         'assigned_from' => 'datetime',
         'assigned_to' => 'datetime',
@@ -35,18 +35,18 @@ class ProjectTaskAssignmentLog extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectTaskAssignmentLog $assignmentLog) {
+        static::creating(function (TaskAssignmentLog $assignmentLog) {
             $assignmentLog->added_by = Auth::id();
         });
 
-        static::updating(function (ProjectTaskAssignmentLog $assignmentLog) {
+        static::updating(function (TaskAssignmentLog $assignmentLog) {
             $assignmentLog->updated_by = Auth::id();
         });
     }
 
-    public function projectTask()
+    public function task()
     {
-        return $this->belongsTo(ProjectTask::class);
+        return $this->belongsTo(Task::class);
     }
 
     public function user()
@@ -56,7 +56,7 @@ class ProjectTaskAssignmentLog extends Model
 
     public function timeLogs()
     {
-        return $this->hasMany(ProjectTaskTimeLog::class)->latest('started_at');
+        return $this->hasMany(TaskTimeLog::class)->latest('started_at');
     }
 
     public function addedBy()

@@ -94,9 +94,9 @@ class ProjectSprint extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function projectTasks()
+    public function tasks()
     {
-        return $this->hasMany(ProjectTask::class)->orderBy('sort_order');
+        return $this->hasMany(Task::class)->orderBy('sort_order');
     }
 
     public function getEstimatedTimeFormattedAttribute()
@@ -138,14 +138,14 @@ class ProjectSprint extends Model
 
     public function getTaskCountAttribute(): int
     {
-        if (!Schema::hasTable('project_tasks') || !Schema::hasColumn('project_tasks', 'project_sprint_id')) {
+        if (!Schema::hasTable('tasks') || !Schema::hasColumn('tasks', 'project_sprint_id')) {
             return 0;
         }
 
-        $query = DB::table('project_tasks')
+        $query = DB::table('tasks')
             ->where('project_sprint_id', $this->id);
 
-        if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+        if (Schema::hasColumn('tasks', 'deleted_at')) {
             $query->whereNull('deleted_at');
         }
 
@@ -158,21 +158,21 @@ class ProjectSprint extends Model
         $actualSeconds = 0;
 
         if (
-            Schema::hasTable('project_tasks')
-            && Schema::hasColumn('project_tasks', 'project_sprint_id')
+            Schema::hasTable('tasks')
+            && Schema::hasColumn('tasks', 'project_sprint_id')
         ) {
-            $query = DB::table('project_tasks')
+            $query = DB::table('tasks')
                 ->where('project_sprint_id', $this->id);
 
-            if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+            if (Schema::hasColumn('tasks', 'deleted_at')) {
                 $query->whereNull('deleted_at');
             }
 
-            if (Schema::hasColumn('project_tasks', 'estimated_time_seconds')) {
+            if (Schema::hasColumn('tasks', 'estimated_time_seconds')) {
                 $derivedSeconds = (int) $query->sum('estimated_time_seconds');
             }
 
-            if (Schema::hasColumn('project_tasks', 'actual_time_seconds')) {
+            if (Schema::hasColumn('tasks', 'actual_time_seconds')) {
                 $actualSeconds = (int) $query->sum('actual_time_seconds');
             }
         }

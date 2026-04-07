@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_task_assignment_logs', function (Blueprint $table) {
+        Schema::create('task_assignment_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_task_id')->constrained('project_tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
             $table->unsignedBigInteger('user_id');
             $table->timestamp('assigned_from')->nullable();
             $table->timestamp('assigned_to')->nullable();
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index('project_task_id');
+            $table->index('task_id');
             $table->index('user_id');
             $table->index('is_current');
         });
@@ -29,6 +29,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('project_task_assignment_logs');
+        Schema::dropIfExists('task_assignment_logs');
     }
 };

@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::create('task_comments', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('project_task_id')->constrained('project_tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
             $table->longText('comment');
 
             $table->timestamps();
 
-            $table->index(['project_task_id', 'created_at']);
+            $table->index(['task_id', 'created_at']);
         });
     }
 

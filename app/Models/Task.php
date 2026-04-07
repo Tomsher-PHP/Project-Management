@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
-class ProjectTask extends Model
+class Task extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
@@ -85,46 +85,46 @@ class ProjectTask extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectTask $projectTask) {
-            $projectTask->added_by = Auth::id();
+        static::creating(function (Task $task) {
+            $task->added_by = Auth::id();
 
-            if (blank($projectTask->start_date)) {
-                $projectTask->start_date = now(config('constants.timezone'))->toDateString();
+            if (blank($task->start_date)) {
+                $task->start_date = now(config('constants.timezone'))->toDateString();
             }
 
-            if (blank($projectTask->code)) {
-                $project = $projectTask->relationLoaded('project')
-                    ? $projectTask->project
-                    : Project::find($projectTask->project_id);
+            if (blank($task->code)) {
+                $project = $task->relationLoaded('project')
+                    ? $task->project
+                    : Project::find($task->project_id);
 
-                $projectTask->code = self::generateTaskCode($project);
+                $task->code = self::generateTaskCode($project);
             }
 
-            if (blank($projectTask->sort_order)) {
-                $projectTask->sort_order = self::nextSortOrder(
-                    (int) $projectTask->project_id,
-                    $projectTask->project_sprint_id ? (int) $projectTask->project_sprint_id : null
+            if (blank($task->sort_order)) {
+                $task->sort_order = self::nextSortOrder(
+                    (int) $task->project_id,
+                    $task->project_sprint_id ? (int) $task->project_sprint_id : null
                 );
             }
         });
 
-        static::updating(function (ProjectTask $projectTask) {
-            $projectTask->updated_by = Auth::id();
+        static::updating(function (Task $task) {
+            $task->updated_by = Auth::id();
         });
 
-        static::saved(function (ProjectTask $projectTask) {
-            $projectTask->projectSprint?->refreshDerivedTimeSeconds();
-            $projectTask->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+        static::saved(function (Task $task) {
+            $task->projectSprint?->refreshDerivedTimeSeconds();
+            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
         });
 
-        static::deleted(function (ProjectTask $projectTask) {
-            $projectTask->projectSprint?->refreshDerivedTimeSeconds();
-            $projectTask->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+        static::deleted(function (Task $task) {
+            $task->projectSprint?->refreshDerivedTimeSeconds();
+            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
         });
 
-        static::restored(function (ProjectTask $projectTask) {
-            $projectTask->projectSprint?->refreshDerivedTimeSeconds();
-            $projectTask->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+        static::restored(function (Task $task) {
+            $task->projectSprint?->refreshDerivedTimeSeconds();
+            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
         });
     }
 
@@ -168,7 +168,7 @@ class ProjectTask extends Model
 
     public function status()
     {
-        return $this->belongsTo(ProjectTaskStatus::class, 'status_id');
+        return $this->belongsTo(TaskStatus::class, 'status_id');
     }
 
     public function currentAssignee()
@@ -178,53 +178,53 @@ class ProjectTask extends Model
 
     public function assignmentLogs()
     {
-        return $this->hasMany(ProjectTaskAssignmentLog::class)->latest('assigned_from');
+        return $this->hasMany(TaskAssignmentLog::class)->latest('assigned_from');
     }
 
     public function currentAssignmentLog()
     {
-        return $this->hasOne(ProjectTaskAssignmentLog::class)->where('is_current', true);
+        return $this->hasOne(TaskAssignmentLog::class)->where('is_current', true);
     }
 
     public function timeLogs()
     {
-        return $this->hasMany(ProjectTaskTimeLog::class)->latest('started_at');
+        return $this->hasMany(TaskTimeLog::class)->latest('started_at');
     }
 
     public function statusHistories()
     {
-        return $this->hasMany(ProjectTaskStatusHistory::class)->orderBy('added_at', 'desc');
+        return $this->hasMany(TaskStatusHistory::class)->orderBy('added_at', 'desc');
     }
 
     public function latestStatusHistory()
     {
-        return $this->hasOne(ProjectTaskStatusHistory::class)->latestOfMany();
+        return $this->hasOne(TaskStatusHistory::class)->latestOfMany();
     }
 
     public function activeTimeLog()
     {
-        return $this->hasOne(ProjectTaskTimeLog::class)->where('is_running', true);
+        return $this->hasOne(TaskTimeLog::class)->where('is_running', true);
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'project_task_tags')
+        return $this->belongsToMany(Tag::class, 'task_tags')
             ->withTimestamps();
     }
 
     public function comments()
     {
-        return $this->hasMany(TaskComment::class, 'project_task_id')->orderBy('created_at', 'desc');
+        return $this->hasMany(TaskComment::class, 'task_id')->orderBy('created_at', 'desc');
     }
 
     public function taskNotes()
     {
-        return $this->hasMany(TaskNote::class, 'project_task_id')->orderBy('created_at', 'desc');
+        return $this->hasMany(TaskNote::class, 'task_id')->orderBy('created_at', 'desc');
     }
 
     public function tagLinks()
     {
-        return $this->hasMany(ProjectTaskTag::class);
+        return $this->hasMany(TaskTag::class);
     }
 
     public function addedBy()

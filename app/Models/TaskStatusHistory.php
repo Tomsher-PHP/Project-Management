@@ -6,12 +6,12 @@ use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectTaskStatusHistory extends Model
+class TaskStatusHistory extends Model
 {
     use LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'status_id',
         'added_by',
         'added_at',
@@ -19,7 +19,7 @@ class ProjectTaskStatusHistory extends Model
     ];
 
     protected $casts = [
-        'project_task_id' => 'integer',
+        'task_id' => 'integer',
         'status_id' => 'integer',
         'added_by' => 'integer',
         'added_at' => 'datetime',
@@ -27,20 +27,20 @@ class ProjectTaskStatusHistory extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectTaskStatusHistory $history) {
+        static::creating(function (TaskStatusHistory $history) {
             $history->added_by = Auth::id();
             $history->added_at = now();
         });
     }
 
-    public function projectTask()
+    public function task()
     {
-        return $this->belongsTo(ProjectTask::class);
+        return $this->belongsTo(Task::class);
     }
 
     public function status()
     {
-        return $this->belongsTo(ProjectTaskStatus::class);
+        return $this->belongsTo(TaskStatus::class);
     }
 
     public function addedBy()

@@ -25,7 +25,7 @@ class TaskUpdateRequest extends FormRequest
             'status_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_task_statuses', 'id')->where(
+                Rule::exists('task_statuses', 'id')->where(
                     fn ($query) => $query->where('flow_type', $project?->project_flow)->where('is_active', true)
                 ),
             ],
@@ -39,7 +39,7 @@ class TaskUpdateRequest extends FormRequest
             'parent_task_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_tasks', 'id')->where(
+                Rule::exists('tasks', 'id')->where(
                     fn ($query) => $query->where('project_id', $projectId)
                 ),
                 Rule::notIn([$taskId]),

@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Configuration;
-use App\Models\ProjectTask;
+use App\Models\Task;
 use App\Policies\TaskPolicy;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -75,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDateTime({$expression}); ?>";
         });
 
-        Gate::policy(ProjectTask::class, TaskPolicy::class);
+        Gate::policy(Task::class, TaskPolicy::class);
 
         Gate::before(function ($user, $ability) {
             return $user->is_super_admin ? true : null;

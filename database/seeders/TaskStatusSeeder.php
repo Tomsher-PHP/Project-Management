@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\ProjectTaskStatus;
+use App\Models\TaskStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class ProjectTaskStatusSeeder extends Seeder
+class TaskStatusSeeder extends Seeder
 {
     public function run(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        ProjectTaskStatus::truncate();
+        TaskStatus::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $statuses = [
@@ -28,7 +28,7 @@ class ProjectTaskStatusSeeder extends Seeder
         ];
 
         foreach ($statuses as $status) {
-            DB::table('project_task_statuses')->insert($status + [
+            DB::table('task_statuses')->insert($status + [
                 'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),

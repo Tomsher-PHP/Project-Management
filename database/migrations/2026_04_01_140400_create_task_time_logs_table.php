@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_task_time_logs', function (Blueprint $table) {
+        Schema::create('task_time_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_task_id')->constrained('project_tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
             $table->unsignedBigInteger('user_id');
-            $table->foreignId('project_task_assignment_log_id')->nullable()->constrained('project_task_assignment_logs');
+            $table->foreignId('task_assignment_log_id')->nullable()->constrained('task_assignment_logs');
             $table->timestamp('started_at')->nullable();
             $table->timestamp('ended_at')->nullable();
             $table->unsignedBigInteger('duration_seconds')->default(0);
@@ -22,15 +22,15 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->index('project_task_id');
+            $table->index('task_id');
             $table->index('user_id');
-            $table->index('project_task_assignment_log_id');
+            $table->index('task_assignment_log_id');
             $table->index('is_running');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('project_task_time_logs');
+        Schema::dropIfExists('task_time_logs');
     }
 };

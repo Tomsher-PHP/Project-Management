@@ -87,9 +87,9 @@ class ProjectModule extends Model
         return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
     }
 
-    public function projectTasks()
+    public function tasks()
     {
-        return $this->hasMany(ProjectTask::class)->orderBy('sort_order');
+        return $this->hasMany(Task::class)->orderBy('sort_order');
     }
 
     public function getEstimatedTimeFormattedAttribute()
@@ -122,19 +122,19 @@ class ProjectModule extends Model
     public function getTaskCountAttribute(): int
     {
         if (
-            !Schema::hasTable('project_tasks')
-            || !Schema::hasColumn('project_tasks', 'project_sprint_id')
+            !Schema::hasTable('tasks')
+            || !Schema::hasColumn('tasks', 'project_sprint_id')
             || !Schema::hasTable('project_sprints')
         ) {
             return 0;
         }
 
-        $query = DB::table('project_tasks')
-            ->join('project_sprints', 'project_sprints.id', '=', 'project_tasks.project_sprint_id')
+        $query = DB::table('tasks')
+            ->join('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
             ->where('project_sprints.project_module_id', $this->id);
 
-        if (Schema::hasColumn('project_tasks', 'deleted_at')) {
-            $query->whereNull('project_tasks.deleted_at');
+        if (Schema::hasColumn('tasks', 'deleted_at')) {
+            $query->whereNull('tasks.deleted_at');
         }
 
         if (Schema::hasColumn('project_sprints', 'deleted_at')) {
@@ -159,24 +159,24 @@ class ProjectModule extends Model
         $actualSeconds = 0;
 
         if (
-            Schema::hasTable('project_tasks')
-            && Schema::hasColumn('project_tasks', 'project_sprint_id')
-            && Schema::hasColumn('project_tasks', 'actual_time_seconds')
+            Schema::hasTable('tasks')
+            && Schema::hasColumn('tasks', 'project_sprint_id')
+            && Schema::hasColumn('tasks', 'actual_time_seconds')
             && Schema::hasTable('project_sprints')
         ) {
-            $query = DB::table('project_tasks')
-                ->join('project_sprints', 'project_sprints.id', '=', 'project_tasks.project_sprint_id')
+            $query = DB::table('tasks')
+                ->join('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
                 ->where('project_sprints.project_module_id', $this->id);
 
-            if (Schema::hasColumn('project_tasks', 'deleted_at')) {
-                $query->whereNull('project_tasks.deleted_at');
+            if (Schema::hasColumn('tasks', 'deleted_at')) {
+                $query->whereNull('tasks.deleted_at');
             }
 
             if (Schema::hasColumn('project_sprints', 'deleted_at')) {
                 $query->whereNull('project_sprints.deleted_at');
             }
 
-            $actualSeconds = (int) $query->sum('project_tasks.actual_time_seconds');
+            $actualSeconds = (int) $query->sum('tasks.actual_time_seconds');
         }
 
         $this->updateQuietly([

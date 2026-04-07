@@ -5,23 +5,23 @@ namespace App\Models;
 use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
-class ProjectTaskTag extends Model
+class TaskTag extends Model
 {
     use LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'tag_id',
     ];
 
     protected $casts = [
-        'project_task_id' => 'integer',
+        'task_id' => 'integer',
         'tag_id' => 'integer',
     ];
 
-    public function projectTask()
+    public function task()
     {
-        return $this->belongsTo(ProjectTask::class);
+        return $this->belongsTo(Task::class);
     }
 
     public function tag()

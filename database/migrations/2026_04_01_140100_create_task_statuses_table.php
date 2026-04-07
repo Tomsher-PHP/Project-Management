@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_task_statuses', function (Blueprint $table) {
+        Schema::create('task_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
             $table->enum('flow_type', ['agile', 'linear']);
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['flow_type', 'code'], 'project_task_statuses_flow_type_code_unique');
+            $table->unique(['flow_type', 'code'], 'task_statuses_flow_type_code_unique');
             $table->index('flow_type');
             $table->index('is_active');
             $table->index('sort_order');
@@ -34,6 +34,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('project_task_statuses');
+        Schema::dropIfExists('task_statuses');
     }
 };

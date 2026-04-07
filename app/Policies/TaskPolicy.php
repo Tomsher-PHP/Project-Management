@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\ProjectTask;
+use App\Models\Task;
 use App\Models\User;
 
 class TaskPolicy
@@ -12,7 +12,7 @@ class TaskPolicy
         return $user->is_super_admin || $user->can('task.view_all_tasks');
     }
 
-    public function view(User $user, ProjectTask $task): bool
+    public function view(User $user, Task $task): bool
     {
         if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
             return true;
@@ -25,12 +25,12 @@ class TaskPolicy
         return (int) ($task->current_assignee_id ?? 0) === (int) $user->id;
     }
 
-    public function update(User $user, ProjectTask $task): bool
+    public function update(User $user, Task $task): bool
     {
         return $user->can('task.edit') && $this->view($user, $task);
     }
 
-    public function delete(User $user, ProjectTask $task): bool
+    public function delete(User $user, Task $task): bool
     {
         return $user->can('task.delete') && $this->view($user, $task);
     }

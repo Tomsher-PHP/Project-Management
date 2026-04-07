@@ -666,7 +666,7 @@ const loadGroupTasks = async (group) => {
     }
 };
 
-const initializeProjectTasksRoot = (root) => {
+const initializeTasksRoot = (root) => {
     if (!root || root.dataset.initialized === 'true') {
         return;
     }
@@ -820,7 +820,7 @@ const initializeProjectTasksRoot = (root) => {
                 Alert.success(result.message || 'Task added successfully.');
 
                 if (newRoot) {
-                    initializeProjectTasksRoot(newRoot);
+                    initializeTasksRoot(newRoot);
                 }
             } catch (error) {
                 if (!(error.message || '').includes('highlighted fields')) {
@@ -888,7 +888,7 @@ const initializeProjectTasksRoot = (root) => {
             Alert.success(result.message || 'Task updated successfully.');
 
             if (newRoot) {
-                initializeProjectTasksRoot(newRoot);
+                initializeTasksRoot(newRoot);
             }
         } catch (error) {
             if (!(error.message || '').includes('highlighted fields')) {
@@ -906,7 +906,7 @@ const initializeProjectTasksRoot = (root) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-project-tasks-root]').forEach((root) => {
-        initializeProjectTasksRoot(root);
+        initializeTasksRoot(root);
     });
 });
 
@@ -916,6 +916,6 @@ document.addEventListener('project-tab:loaded', (event) => {
     }
 
     event.detail.panel?.querySelectorAll('[data-project-tasks-root]').forEach((root) => {
-        initializeProjectTasksRoot(root);
+        initializeTasksRoot(root);
     });
 });

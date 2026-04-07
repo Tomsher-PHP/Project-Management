@@ -9,9 +9,9 @@ use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
-use App\Models\ProjectTask;
-use App\Models\ProjectTaskStatusHistory;
-use App\Models\ProjectTaskStatus;
+use App\Models\Task;
+use App\Models\TaskStatusHistory;
+use App\Models\TaskStatus;
 use App\Models\Tag;
 use App\Models\TaskNote;
 use App\Models\User;
@@ -44,7 +44,7 @@ class TaskController extends Controller
         $user = $request->user();
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $accessibleTasksQuery = ProjectTask::query()
+        $accessibleTasksQuery = Task::query()
             ->accessibleBy($user);
 
         $projectIds = (clone $accessibleTasksQuery)
@@ -120,7 +120,7 @@ class TaskController extends Controller
                 ])->filter()->implode(' / '),
             ]);
 
-        $statuses = ProjectTaskStatus::active()
+        $statuses = TaskStatus::active()
             ->orderBy('sort_order', 'asc')
             ->get(['id', 'name']);
 
@@ -173,7 +173,7 @@ class TaskController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProjectTask $task)
+    public function edit(Task $task)
     {
         $task = $this->loadTaskForDetail($task);
         $overviewData = $this->getTaskOverviewData($task);
@@ -186,7 +186,7 @@ class TaskController extends Controller
         ] + $overviewData);
     }
 
-    public function tab(Request $request, ProjectTask $task, string $tab): JsonResponse
+    public function tab(Request $request, Task $task, string $tab): JsonResponse
     {
         $allowedTabs = ['overview', 'activity', 'notes', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -200,13 +200,13 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function parentTaskOptions(Request $request, ProjectTask $task): JsonResponse
+    public function parentTaskOptions(Request $request, Task $task): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
         $project = $task->project;
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
 
-        $query = ProjectTask::query()
+        $query = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy($request->user())
             ->whereKeyNot($task->id)
@@ -229,7 +229,7 @@ class TaskController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (ProjectTask $parentTask) {
+            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
                 return [
                     'value' => (string) $parentTask->id,
                     'text' => $parentTask->title,
@@ -239,7 +239,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(TaskUpdateRequest $request, ProjectTask $task): JsonResponse
+    public function update(TaskUpdateRequest $request, Task $task): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
         $project = $task->project;
@@ -291,8 +291,8 @@ class TaskController extends Controller
             }
 
             if ($newStatusId && $newStatusId !== $previousStatusId) {
-                ProjectTaskStatusHistory::create([
-                    'project_task_id' => $task->id,
+                TaskStatusHistory::create([
+                    'task_id' => $task->id,
                     'status_id' => $newStatusId,
                 ]);
             }
@@ -317,7 +317,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function commentsModal(ProjectTask $task): JsonResponse
+    public function commentsModal(Task $task): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
         $comments = $this->getRecentTaskComments($task);
@@ -333,7 +333,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeComment(TaskCommentRequest $request, ProjectTask $task): JsonResponse
+    public function storeComment(TaskCommentRequest $request, Task $task): JsonResponse
     {
         $task->comments()->create([
             'user_id' => auth()->id(),
@@ -356,7 +356,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeNote(TaskNoteRequest $request, ProjectTask $task, AttachmentService $attachmentService): JsonResponse
+    public function storeNote(TaskNoteRequest $request, Task $task, AttachmentService $attachmentService): JsonResponse
     {
         DB::transaction(function () use ($task, $request, $attachmentService) {
             $validated = $request->validated();
@@ -400,9 +400,9 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function deleteNote(Request $request, ProjectTask $task, TaskNote $note, AttachmentService $attachmentService): JsonResponse
+    public function deleteNote(Request $request, Task $task, TaskNote $note, AttachmentService $attachmentService): JsonResponse
     {
-        abort_unless($note->project_task_id === $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless($note->task_id === $task->id, Response::HTTP_NOT_FOUND);
 
         $attachmentService->delete($note->attachments);
         $note->delete();
@@ -421,9 +421,9 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function deleteNoteAttachment(Request $request, ProjectTask $task, TaskNote $note, Attachment $attachment, AttachmentService $attachmentService): JsonResponse
+    public function deleteNoteAttachment(Request $request, Task $task, TaskNote $note, Attachment $attachment, AttachmentService $attachmentService): JsonResponse
     {
-        abort_unless($note->project_task_id === $task->id, Response::HTTP_NOT_FOUND);
+        abort_unless($note->task_id === $task->id, Response::HTTP_NOT_FOUND);
         abort_unless(
             $attachment->link_type === TaskNote::class && (int) $attachment->link_id === (int) $note->id,
             Response::HTTP_NOT_FOUND
@@ -445,7 +445,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    private function loadTaskForDetail(ProjectTask $task): ProjectTask
+    private function loadTaskForDetail(Task $task): Task
     {
         $task->load([
             'project:id,name,project_code,project_flow,customer_id',
@@ -466,7 +466,7 @@ class TaskController extends Controller
         return $task;
     }
 
-    private function renderTaskTab(ProjectTask $task, string $tab): string
+    private function renderTaskTab(Task $task, string $tab): string
     {
         return match ($tab) {
             'overview' => view('tasks.partials.tabs.overview', [
@@ -490,7 +490,7 @@ class TaskController extends Controller
         };
     }
 
-    private function getTaskOverviewData(ProjectTask $task): array
+    private function getTaskOverviewData(Task $task): array
     {
         $taskTypeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal')) ?? config('project_constants.task_type.normal');
         $taskModeConfig = config('project_constants.task_mode.' . ($task->task_mode ?: 'standard')) ?? config('project_constants.task_mode.standard');
@@ -516,7 +516,7 @@ class TaskController extends Controller
         ];
     }
 
-    private function getTaskActivityData(ProjectTask $task): array
+    private function getTaskActivityData(Task $task): array
     {
         return [
             'taskActivities' => $task->activities()
@@ -527,14 +527,14 @@ class TaskController extends Controller
         ];
     }
 
-    private function getTaskSettingsData(ProjectTask $task): array
+    private function getTaskSettingsData(Task $task): array
     {
         $project = $task->project;
 
         return [
             'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
-            'taskStatuses' => ProjectTaskStatus::query()
+            'taskStatuses' => TaskStatus::query()
                 ->active()
                 ->forFlow($project->project_flow)
                 ->orderBy('sort_order')
@@ -549,7 +549,7 @@ class TaskController extends Controller
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')
                 ->get(['users.id', 'users.name']),
-            'parentTaskOptions' => ProjectTask::query()
+            'parentTaskOptions' => Task::query()
                 ->where('project_id', $project->id)
                 ->accessibleBy(auth()->user())
                 ->whereKeyNot($task->id)
@@ -571,7 +571,7 @@ class TaskController extends Controller
         ];
     }
 
-    private function getPaginatedTaskNotes(ProjectTask $task, int $page)
+    private function getPaginatedTaskNotes(Task $task, int $page)
     {
         $total = $task->taskNotes()->count();
 
@@ -586,7 +586,7 @@ class TaskController extends Controller
             ->withQueryString();
     }
 
-    private function getRecentTaskComments(ProjectTask $task, int $limit = 10): Collection
+    private function getRecentTaskComments(Task $task, int $limit = 10): Collection
     {
         return $task->comments()
             ->with('user.primaryAttachment')
@@ -597,7 +597,7 @@ class TaskController extends Controller
             ->values();
     }
 
-    private function syncTaskAssignmentState(ProjectTask $task, ?int $newAssigneeId): void
+    private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
     {
         $currentLog = $task->currentAssignmentLog()->first();
         $now = now(config('constants.timezone'));
@@ -678,7 +678,7 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProjectTask $task): RedirectResponse
+    public function destroy(Task $task): RedirectResponse
     {
         $task->delete();
 

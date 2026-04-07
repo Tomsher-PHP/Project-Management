@@ -6,8 +6,8 @@ use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
-use App\Http\Requests\ProjectTaskQuickStoreRequest;
-use App\Http\Requests\ProjectTaskUpdateRequest;
+use App\Http\Requests\TaskQuickStoreRequest;
+use App\Http\Requests\TaskProjectUpdateRequest;
 use App\Models\Attachment;
 use App\Models\AgileModule;
 use App\Models\AgileModuleStatus;
@@ -20,9 +20,9 @@ use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
-use App\Models\ProjectTask;
-use App\Models\ProjectTaskStatus;
-use App\Models\ProjectTaskStatusHistory;
+use App\Models\Task;
+use App\Models\TaskStatus;
+use App\Models\TaskStatusHistory;
 use App\Models\Tag;
 use App\Models\Technology;
 use App\Models\User;
@@ -164,10 +164,10 @@ class ProjectController extends Controller
 
     public function taskGroup(Project $project, string $group): JsonResponse
     {
-        $groupData = $this->findProjectTaskGroup($project, $group);
+        $groupData = $this->findTaskGroup($project, $group);
 
         abort_unless($groupData, Response::HTTP_NOT_FOUND);
-        $taskPage = $this->getProjectTaskGroupTaskPage(
+        $taskPage = $this->getTaskGroupTaskPage(
             $project,
             $group,
             max((int) request()->integer('page', 1), 1),
@@ -196,7 +196,7 @@ class ProjectController extends Controller
     public function taskGroupsPage(Request $request, Project $project): JsonResponse
     {
         $page = max((int) $request->integer('page', 1), 1);
-        $pageData = $this->getProjectTaskGroupPage($project, $page, self::TASK_GROUPS_PER_PAGE);
+        $pageData = $this->getTaskGroupPage($project, $page, self::TASK_GROUPS_PER_PAGE);
 
         return response()->json([
             'status' => true,
@@ -213,7 +213,7 @@ class ProjectController extends Controller
     public function taskParentOptions(Request $request, Project $project): JsonResponse
     {
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
-        $query = ProjectTask::query()
+        $query = Task::query()
             ->where('project_id', $project->id)
             ->orderBy('title')
             ->orderBy('id');
@@ -239,7 +239,7 @@ class ProjectController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (ProjectTask $task) {
+            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $task) {
                 return [
                     'value' => (string) $task->id,
                     'text' => $task->title,
@@ -249,7 +249,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeTask(ProjectTaskQuickStoreRequest $request, Project $project): JsonResponse
+    public function storeTask(TaskQuickStoreRequest $request, Project $project): JsonResponse
     {
         $validated = $request->validated();
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
@@ -268,7 +268,7 @@ class ProjectController extends Controller
                 ->find($validated['project_sprint_id']);
         $targetSprint = $isLinearFlow ? null : ($selectedSprint ?: $latestSprint);
 
-        $defaultStatusId = ProjectTaskStatus::query()
+        $defaultStatusId = TaskStatus::query()
             ->where('flow_type', $project->project_flow)
             ->where('is_default', true)
             ->value('id');
@@ -276,7 +276,7 @@ class ProjectController extends Controller
         $defaultTaskMode = array_key_first(config('project_constants.task_mode', [])) ?: 'standard';
         $defaultTaskPriority = array_key_first(config('project_constants.task_priorities', [])) ?: 'medium';
 
-        $task = $project->projectTasks()->create([
+        $task = $project->tasks()->create([
             'project_module_id' => $targetSprint?->project_module_id,
             'project_sprint_id' => $targetSprint?->id,
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
@@ -291,7 +291,7 @@ class ProjectController extends Controller
             'due_date' => $validated['due_date'] ?? null,
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
             'is_billable' => (bool) ($validated['is_billable'] ?? false),
-            'sort_order' => ProjectTask::nextSortOrder($project->id, $targetSprint?->id),
+            'sort_order' => Task::nextSortOrder($project->id, $targetSprint?->id),
         ]);
 
         if (array_key_exists('tag_ids', $validated)) {
@@ -310,7 +310,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function taskModal(Project $project, ProjectTask $task): JsonResponse
+    public function taskModal(Project $project, Task $task): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('view', $task), Response::HTTP_FORBIDDEN);
@@ -335,7 +335,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateTask(ProjectTaskUpdateRequest $request, Project $project, ProjectTask $task): JsonResponse
+    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
@@ -393,8 +393,8 @@ class ProjectController extends Controller
             }
 
             if ($newStatusId && $newStatusId !== $previousStatusId) {
-                ProjectTaskStatusHistory::create([
-                    'project_task_id' => $task->id,
+                TaskStatusHistory::create([
+                    'task_id' => $task->id,
                     'status_id' => $newStatusId,
                 ]);
             }
@@ -687,7 +687,7 @@ class ProjectController extends Controller
             ->get();
         $initialGroupKey = $taskGroupViewData['initialGroupKey'];
         $initialTaskPage = $initialGroupKey
-            ? $this->getProjectTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
+            ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
             : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
@@ -701,7 +701,7 @@ class ProjectController extends Controller
         $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
             ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
             ->values();
-        $taskStatuses = ProjectTaskStatus::query()
+        $taskStatuses = TaskStatus::query()
             ->active()
             ->forFlow($project->project_flow)
             ->orderBy('sort_order')
@@ -772,13 +772,13 @@ class ProjectController extends Controller
         ))->render();
     }
 
-    private function buildProjectTaskGroups(Project $project): Collection
+    private function buildTaskGroups(Project $project): Collection
     {
         if ($project->project_flow === 'linear') {
             return collect([$this->buildLinearTaskGroup($project)]);
         }
 
-        $pageData = $this->getProjectTaskGroupPage($project, 1, max($this->getSprintCount($project), 1));
+        $pageData = $this->getTaskGroupPage($project, 1, max($this->getSprintCount($project), 1));
 
         return $pageData['taskGroups'];
     }
@@ -809,7 +809,7 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
             ->withCount([
-                'projectTasks' => fn ($query) => $query->accessibleBy(auth()->user()),
+                'tasks' => fn ($query) => $query->accessibleBy(auth()->user()),
             ])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -820,7 +820,7 @@ class ProjectController extends Controller
                 $projectSprint,
                 $index
             ));
-        $ungroupedTasks = ProjectTask::query()
+        $ungroupedTasks = Task::query()
             ->where('project_id', $project->id)
             ->whereNull('project_sprint_id')
             ->accessibleBy(auth()->user());
@@ -833,7 +833,7 @@ class ProjectController extends Controller
         $initialGroupKey = $preferredGroupKey && $taskGroups->contains(fn ($group) => $group['key'] === $preferredGroupKey)
             ? $preferredGroupKey
             : ($taskGroups->first()['key'] ?? null);
-        $totalTaskCount = (int) ProjectTask::query()
+        $totalTaskCount = (int) Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user())
             ->count();
@@ -852,7 +852,7 @@ class ProjectController extends Controller
         ];
     }
 
-    private function getProjectTaskGroupPage(Project $project, int $page, int $perPage): array
+    private function getTaskGroupPage(Project $project, int $page, int $perPage): array
     {
         if ($project->project_flow === 'linear') {
             return [
@@ -876,7 +876,7 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
             ->withCount([
-                'projectTasks' => fn ($query) => $query->accessibleBy($authUser),
+                'tasks' => fn ($query) => $query->accessibleBy($authUser),
             ])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -888,7 +888,7 @@ class ProjectController extends Controller
                 (($page - 1) * $perPage) + $index
             ));
 
-        $ungroupedTasks = ProjectTask::query()
+        $ungroupedTasks = Task::query()
             ->where('project_id', $project->id)
             ->whereNull('project_sprint_id')
             ->accessibleBy($authUser);
@@ -909,14 +909,14 @@ class ProjectController extends Controller
         ];
     }
 
-    private function findProjectTaskGroup(Project $project, string $groupKey): ?array
+    private function findTaskGroup(Project $project, string $groupKey): ?array
     {
         if ($groupKey === 'all-tasks' && $project->project_flow === 'linear') {
             return $this->buildLinearTaskGroup($project);
         }
 
         if ($groupKey === 'ungrouped' && $project->project_flow !== 'linear') {
-            $ungroupedTasks = ProjectTask::query()
+            $ungroupedTasks = Task::query()
                 ->where('project_id', $project->id)
                 ->whereNull('project_sprint_id')
                 ->accessibleBy(auth()->user());
@@ -937,7 +937,7 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
             ->withCount([
-                'projectTasks' => fn ($query) => $query->accessibleBy(auth()->user()),
+                'tasks' => fn ($query) => $query->accessibleBy(auth()->user()),
             ])
             ->find($projectSprintId);
 
@@ -1005,7 +1005,7 @@ class ProjectController extends Controller
 
     private function buildLinearTaskGroup(Project $project): array
     {
-        $allTasks = ProjectTask::query()
+        $allTasks = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user());
         $taskCount = (clone $allTasks)->count();
@@ -1046,7 +1046,7 @@ class ProjectController extends Controller
             'name' => $projectSprint->name,
             'subtitle' => $projectSprint->projectModule?->name,
             'accent_color' => $projectSprint->color ?: '#22C55E',
-            'task_count' => (int) $projectSprint->project_tasks_count,
+            'task_count' => (int) $projectSprint->tasks_count,
             'estimated_seconds' => $sprintEstimatedSeconds,
             'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),
             'derived_seconds' => $sprintDerivedSeconds,
@@ -1152,9 +1152,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function buildProjectTaskGroupTasksQuery(Project $project, string $groupKey)
+    private function buildTaskGroupTasksQuery(Project $project, string $groupKey)
     {
-        $query = ProjectTask::query()
+        $query = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user())
             ->with([
@@ -1187,16 +1187,16 @@ class ProjectController extends Controller
         return $query;
     }
 
-    private function getProjectTaskGroupTasks(Project $project, string $groupKey): Collection
+    private function getTaskGroupTasks(Project $project, string $groupKey): Collection
     {
-        return $this->buildProjectTaskGroupTasksQuery($project, $groupKey)->get();
+        return $this->buildTaskGroupTasksQuery($project, $groupKey)->get();
     }
 
-    private function getProjectTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage): array
+    private function getTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage): array
     {
         $page = max($page, 1);
         $perPage = max($perPage, 1);
-        $query = $this->buildProjectTaskGroupTasksQuery($project, $groupKey);
+        $query = $this->buildTaskGroupTasksQuery($project, $groupKey);
         $total = (clone $query)->count();
         $lastPage = max((int) ceil($total / $perPage), 1);
         $page = min($page, $lastPage);
@@ -1215,7 +1215,7 @@ class ProjectController extends Controller
         ];
     }
 
-    private function getTaskModalData(Project $project, ?ProjectTask $task = null): array
+    private function getTaskModalData(Project $project, ?Task $task = null): array
     {
         $taskTypeOptions = collect(config('project_constants.task_type', []))
             ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
@@ -1230,7 +1230,7 @@ class ProjectController extends Controller
         return [
             'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
-            'taskStatuses' => ProjectTaskStatus::query()
+            'taskStatuses' => TaskStatus::query()
                 ->active()
                 ->forFlow($project->project_flow)
                 ->orderBy('sort_order')
@@ -1252,7 +1252,7 @@ class ProjectController extends Controller
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')
                 ->get(['users.id', 'users.name']),
-            'parentTaskOptions' => ProjectTask::query()
+            'parentTaskOptions' => Task::query()
                 ->where('project_id', $project->id)
                 ->accessibleBy(auth()->user())
                 ->when($task, fn ($query) => $query->whereKeyNot($task->id))
@@ -1268,7 +1268,7 @@ class ProjectController extends Controller
         ];
     }
 
-    private function syncTaskAssignmentState(ProjectTask $task, ?int $newAssigneeId): void
+    private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
     {
         $currentLog = $task->currentAssignmentLog()->first();
         $now = now(config('constants.timezone'));
@@ -1289,7 +1289,7 @@ class ProjectController extends Controller
         }
     }
 
-    private function resolveTaskGroupKey(Project $project, ProjectTask $task): string
+    private function resolveTaskGroupKey(Project $project, Task $task): string
     {
         if ($project->project_flow === 'linear') {
             return 'all-tasks';

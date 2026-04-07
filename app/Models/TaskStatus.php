@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectTaskStatus extends Model
+class TaskStatus extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
@@ -63,12 +63,12 @@ class ProjectTaskStatus extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectTaskStatus $projectTaskStatus) {
-            $projectTaskStatus->added_by = Auth::id();
+        static::creating(function (TaskStatus $status) {
+            $status->added_by = Auth::id();
         });
 
-        static::updating(function (ProjectTaskStatus $projectTaskStatus) {
-            $projectTaskStatus->updated_by = Auth::id();
+        static::updating(function (TaskStatus $status) {
+            $status->updated_by = Auth::id();
         });
     }
 
@@ -82,14 +82,14 @@ class ProjectTaskStatus extends Model
         return $query->where('flow_type', $flowType);
     }
 
-    public function projectTasks()
+    public function tasks()
     {
-        return $this->hasMany(ProjectTask::class, 'status_id');
+        return $this->hasMany(Task::class, 'status_id');
     }
 
     public function statusHistories()
     {
-        return $this->hasMany(ProjectTaskStatusHistory::class, 'status_id');
+        return $this->hasMany(TaskStatusHistory::class, 'status_id');
     }
 
     public function addedBy()

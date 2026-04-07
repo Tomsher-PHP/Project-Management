@@ -67,15 +67,15 @@ class Tag extends Model
         return $query->where('is_active', true);
     }
 
-    public function projectTasks()
+    public function tasks()
     {
-        return $this->belongsToMany(ProjectTask::class, 'project_task_tags')
+        return $this->belongsToMany(Task::class, 'task_tags')
             ->withTimestamps();
     }
 
-    public function projectTaskTags()
+    public function taskTags()
     {
-        return $this->hasMany(ProjectTaskTag::class);
+        return $this->hasMany(TaskTag::class);
     }
 
     public function addedBy()

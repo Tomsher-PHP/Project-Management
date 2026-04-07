@@ -6,14 +6,14 @@ use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectTaskTimeLog extends Model
+class TaskTimeLog extends Model
 {
     use LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'user_id',
-        'project_task_assignment_log_id',
+        'task_assignment_log_id',
         'started_at',
         'ended_at',
         'duration_seconds',
@@ -24,9 +24,9 @@ class ProjectTaskTimeLog extends Model
     ];
 
     protected $casts = [
-        'project_task_id' => 'integer',
+        'task_id' => 'integer',
         'user_id' => 'integer',
-        'project_task_assignment_log_id' => 'integer',
+        'task_assignment_log_id' => 'integer',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
         'duration_seconds' => 'integer',
@@ -37,18 +37,18 @@ class ProjectTaskTimeLog extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectTaskTimeLog $timeLog) {
+        static::creating(function (TaskTimeLog $timeLog) {
             $timeLog->added_by = Auth::id();
         });
 
-        static::updating(function (ProjectTaskTimeLog $timeLog) {
+        static::updating(function (TaskTimeLog $timeLog) {
             $timeLog->updated_by = Auth::id();
         });
     }
 
-    public function projectTask()
+    public function task()
     {
-        return $this->belongsTo(ProjectTask::class);
+        return $this->belongsTo(Task::class);
     }
 
     public function user()
@@ -58,7 +58,7 @@ class ProjectTaskTimeLog extends Model
 
     public function assignmentLog()
     {
-        return $this->belongsTo(ProjectTaskAssignmentLog::class, 'project_task_assignment_log_id');
+        return $this->belongsTo(TaskAssignmentLog::class, 'task_assignment_log_id');
     }
 
     public function addedBy()

@@ -8,21 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_task_status_histories', function (Blueprint $table) {
+        Schema::create('task_status_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_task_id')->constrained('project_tasks')->cascadeOnDelete();
-            $table->foreignId('status_id')->constrained('project_task_statuses');
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
+            $table->foreignId('status_id')->constrained('task_statuses');
             $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
             $table->timestamp('added_at')->useCurrent();
             $table->text('remarks')->nullable();
             $table->timestamps();
 
-            $table->index(['project_task_id', 'status_id']);
+            $table->index(['task_id', 'status_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('project_task_status_histories');
+        Schema::dropIfExists('task_status_histories');
     }
 };

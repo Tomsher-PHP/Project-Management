@@ -8,18 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_tasks', function (Blueprint $table) {
+        Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
             $table->foreignId('project_module_id')->nullable()->constrained('project_modules');
             $table->foreignId('project_sprint_id')->nullable()->constrained('project_sprints');
-            $table->foreignId('parent_task_id')->nullable()->constrained('project_tasks');
+            $table->foreignId('parent_task_id')->nullable()->constrained('tasks');
 
             $table->string('title');
             $table->string('code', 100)->unique();
             $table->longText('description')->nullable();
 
-            $table->foreignId('status_id')->nullable()->constrained('project_task_statuses');
+            $table->foreignId('status_id')->nullable()->constrained('task_statuses');
 
             $table->string('task_type', 50)->default('normal')->comment('behavior or nature');
             // sample task_type values: normal, quality, bug, test etc.
@@ -60,6 +60,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('project_tasks');
+        Schema::dropIfExists('tasks');
     }
 };

@@ -309,14 +309,14 @@ class ProjectSprintController extends Controller
 
     private function sprintHasTasks(ProjectSprint $projectSprint): bool
     {
-        if (!Schema::hasTable('project_tasks') || !Schema::hasColumn('project_tasks', 'project_sprint_id')) {
+        if (!Schema::hasTable('tasks') || !Schema::hasColumn('tasks', 'project_sprint_id')) {
             return false;
         }
 
-        $query = DB::table('project_tasks')
+        $query = DB::table('tasks')
             ->where('project_sprint_id', $projectSprint->id);
 
-        if (Schema::hasColumn('project_tasks', 'deleted_at')) {
+        if (Schema::hasColumn('tasks', 'deleted_at')) {
             $query->whereNull('deleted_at');
         }
 

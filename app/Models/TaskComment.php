@@ -10,14 +10,14 @@ class TaskComment extends Model
     use LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'user_id',
         'comment',
     ];
 
     public function task()
     {
-        return $this->belongsTo(ProjectTask::class, 'project_task_id');
+        return $this->belongsTo(Task::class, 'task_id');
     }
 
     public function user()

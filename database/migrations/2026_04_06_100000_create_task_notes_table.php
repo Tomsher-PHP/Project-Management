@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('task_notes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_task_id')->constrained('project_tasks')->cascadeOnDelete();
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
 
             $table->longText('description')->nullable();
             $table->boolean('is_active')->default(true);

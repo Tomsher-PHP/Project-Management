@@ -13,7 +13,7 @@ class TaskNote extends Model
     use HasFactory, SoftDeletes, LogsModelActivity;
 
     protected $fillable = [
-        'project_task_id',
+        'task_id',
         'description',
         'is_active',
         'added_by',
@@ -21,7 +21,7 @@ class TaskNote extends Model
     ];
 
     protected $casts = [
-        'project_task_id' => 'integer',
+        'task_id' => 'integer',
         'is_active' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -40,7 +40,7 @@ class TaskNote extends Model
 
     public function task()
     {
-        return $this->belongsTo(ProjectTask::class, 'project_task_id');
+        return $this->belongsTo(Task::class, 'task_id');
     }
 
     public function attachments()
