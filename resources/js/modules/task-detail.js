@@ -313,6 +313,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const getPanel = (tab) => tabsRoot.querySelector(`[data-task-tab-panel="${tab}"]`);
+    const getCurrentParams = () => new URLSearchParams(window.location.search);
+    const syncUrlForTab = (tab) => {
+        const url = new URL(window.location.href);
+
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url);
+    };
 
     const setActiveStyles = (activeTab) => {
         triggers.forEach((trigger) => {
@@ -331,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setActiveStyles(tab);
         localStorage.setItem(storageKey, tab);
+        syncUrlForTab(tab);
     };
 
     const loadTab = async (tab) => {
@@ -353,7 +361,14 @@ document.addEventListener('DOMContentLoaded', function () {
         panel.innerHTML = TASK_DETAIL_LOADING_HTML(tab);
 
         try {
-            const response = await fetch(tabsUrlTemplate.replace('__TAB__', tab), {
+            const requestUrl = new URL(tabsUrlTemplate.replace('__TAB__', tab), window.location.origin);
+            const params = getCurrentParams();
+
+            params.forEach((value, key) => {
+                requestUrl.searchParams.append(key, value);
+            });
+
+            const response = await fetch(requestUrl.toString(), {
                 headers: {
                     Accept: 'application/json',
                 },
@@ -385,7 +400,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const savedTab = localStorage.getItem(storageKey);
-    const initialTab = availableTabs.includes(savedTab) ? savedTab : defaultTab;
+    const requestedTab = getCurrentParams().get('tab');
+    const initialTab = availableTabs.includes(requestedTab)
+        ? requestedTab
+        : (availableTabs.includes(savedTab) ? savedTab : defaultTab);
 
     loadTab(initialTab);
 });

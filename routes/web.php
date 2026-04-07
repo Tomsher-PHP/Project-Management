@@ -203,21 +203,29 @@ Route::middleware(['auth'])->group(function () {
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
+
+        // Project task routes
         Route::get('tasks/groups', [ProjectController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
         Route::get('tasks/parent-options', [ProjectController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectController::class, 'taskModal'])->middleware(['permission.type:project.view', 'can:view,task'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');
+
+        // Comments and activity log routes
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
         Route::get('comments-modal', [ProjectController::class, 'commentsModal'])->middleware('permission.type:project.view')->name('projects.comments.modal');
         Route::post('comments', [ProjectController::class, 'storeComment'])->middleware('permission.type:project.view')->name('projects.comments.store');
+
+        // Project notes and attachments routes
         Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
         Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
         Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
+
         Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
+        // Project module and sprint routes
         Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
         Route::get('modules/{projectModule}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.modules.sprints.index');
         Route::post('modules/{projectModule}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.modules.sprints.store');
@@ -249,17 +257,24 @@ Route::middleware(['auth'])->group(function () {
     // End Project Routes
 
     // Task Routes
+    Route::prefix('tasks/{task}')->middleware('can:view,task')->group(function () {
+        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
+        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
+
+        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
+        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+
+        // Task notes and attachments routes
+        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
+        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
+        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+
+        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+        Route::put('/', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
+    });
+
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
-    Route::get('tasks/{task}/tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
-    Route::get('tasks/{task}/parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
-    Route::get('tasks/{task}/comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
-    Route::post('tasks/{task}/comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
-    Route::post('tasks/{task}/notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.store');
-    Route::delete('tasks/{task}/notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.delete');
-    Route::delete('tasks/{task}/notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.notes.attachments.delete');
-    Route::get('tasks/{task}/edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
-    Route::put('tasks/{task}', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     // End Task Routes
 

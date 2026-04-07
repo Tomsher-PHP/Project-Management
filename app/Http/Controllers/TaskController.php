@@ -80,45 +80,45 @@ class TaskController extends Controller
         $projects = $projectIds->isEmpty()
             ? collect()
             : Project::query()
-                ->whereIn('id', $projectIds)
-                ->orderBy('name', 'asc')
-                ->get(['id', 'name']);
+            ->whereIn('id', $projectIds)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
 
         $projectModules = $projectModuleIds->isEmpty()
             ? collect()
             : ProjectModule::query()
-                ->with('project:id,name')
-                ->whereIn('id', $projectModuleIds)
-                ->orderBy('name', 'asc')
-                ->get(['id', 'project_id', 'name'])
-                ->map(fn(ProjectModule $projectModule) => (object) [
-                    'id' => $projectModule->id,
-                    'project_id' => $projectModule->project_id,
-                    'name' => $projectModule->project?->name
-                        ? $projectModule->project->name . ' / ' . $projectModule->name
-                        : $projectModule->name,
-                ]);
+            ->with('project:id,name')
+            ->whereIn('id', $projectModuleIds)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'project_id', 'name'])
+            ->map(fn(ProjectModule $projectModule) => (object) [
+                'id' => $projectModule->id,
+                'project_id' => $projectModule->project_id,
+                'name' => $projectModule->project?->name
+                    ? $projectModule->project->name . ' / ' . $projectModule->name
+                    : $projectModule->name,
+            ]);
 
         $projectSprints = $projectSprintIds->isEmpty()
             ? collect()
             : ProjectSprint::query()
-                ->with([
-                    'project:id,name',
-                    'projectModule:id,name',
-                ])
-                ->whereIn('id', $projectSprintIds)
-                ->orderBy('name', 'asc')
-                ->get(['id', 'project_id', 'project_module_id', 'name'])
-                ->map(fn(ProjectSprint $projectSprint) => (object) [
-                    'id' => $projectSprint->id,
-                    'project_id' => $projectSprint->project_id,
-                    'project_module_id' => $projectSprint->project_module_id,
-                    'name' => collect([
-                        $projectSprint->project?->name,
-                        $projectSprint->projectModule?->name,
-                        $projectSprint->name,
-                    ])->filter()->implode(' / '),
-                ]);
+            ->with([
+                'project:id,name',
+                'projectModule:id,name',
+            ])
+            ->whereIn('id', $projectSprintIds)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'project_id', 'project_module_id', 'name'])
+            ->map(fn(ProjectSprint $projectSprint) => (object) [
+                'id' => $projectSprint->id,
+                'project_id' => $projectSprint->project_id,
+                'project_module_id' => $projectSprint->project_module_id,
+                'name' => collect([
+                    $projectSprint->project?->name,
+                    $projectSprint->projectModule?->name,
+                    $projectSprint->name,
+                ])->filter()->implode(' / '),
+            ]);
 
         $statuses = ProjectTaskStatus::active()
             ->orderBy('sort_order', 'asc')
@@ -248,8 +248,8 @@ class TaskController extends Controller
         $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
             ? null
             : ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id']);
+            ->where('project_id', $project->id)
+            ->find($validated['project_sprint_id']);
         $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? null);
         $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
         $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
@@ -560,13 +560,13 @@ class TaskController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'color']),
             'taskTypeOptions' => collect(config('project_constants.task_type', []))
-                ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
                 ->values(),
             'taskModeOptions' => collect(config('project_constants.task_mode', []))
-                ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
                 ->values(),
             'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
-                ->map(fn ($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
                 ->values(),
         ];
     }
@@ -621,7 +621,7 @@ class TaskController extends Controller
     private function resolveTaskTagIds(array $submittedTags): array
     {
         return collect($submittedTags)
-            ->filter(fn ($tag) => filled($tag))
+            ->filter(fn($tag) => filled($tag))
             ->map(function ($tag) {
                 if (is_numeric($tag)) {
                     return (int) $tag;

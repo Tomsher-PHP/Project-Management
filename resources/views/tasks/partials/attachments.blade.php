@@ -1,6 +1,6 @@
 @php
-    $canCreate = auth()->user()->can('update', $task);
-    $canRemove = auth()->user()->can('delete', $task);
+    $canCreate = auth()->user()->can('task.add_notes_files');
+    $canRemove = auth()->user()->can('task.remove_notes_files');
 @endphp
 
 <div class="w-full border-b border-bgray-200 pb-6 dark:border-darkblack-400">

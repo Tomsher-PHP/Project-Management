@@ -16,7 +16,7 @@
 
     @if ($taskNotes->hasPages())
         <div class="mt-6">
-            {{ $taskNotes->links() }}
+            {{ $taskNotes->appends(['tab' => 'notes'])->links() }}
         </div>
     @endif
 </div>

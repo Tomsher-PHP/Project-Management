@@ -7,6 +7,7 @@ const initializeTaskFiles = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const tabsRoot = document.querySelector('[data-task-tabs]');
     const taskId = tabsRoot?.dataset.taskId;
+    const tabsUrlTemplate = tabsRoot?.dataset.tabsUrlTemplate;
     const modal = root.querySelector ? root.querySelector('[data-task-note-modal]') : document.querySelector('[data-task-note-modal]');
     const modalOpenButton = root.querySelector ? root.querySelector('[data-task-note-modal-open]') : document.querySelector('[data-task-note-modal-open]');
     const modalCloseButtons = modal ? Array.from(modal.querySelectorAll('[data-task-note-modal-close]')) : [];
@@ -118,7 +119,7 @@ const initializeTaskFiles = (root = document) => {
 
     if (!saveBtn || !taskNoteEditor) {
         if (!taskFilesState.listenersBound) {
-            bindTaskFileDeleteListeners(token, taskId);
+            bindTaskFileListeners();
         }
 
         return;
@@ -126,7 +127,7 @@ const initializeTaskFiles = (root = document) => {
 
     if (saveBtn.dataset.taskFilesInitialized === 'true') {
         if (!taskFilesState.listenersBound) {
-            bindTaskFileDeleteListeners(token, taskId);
+            bindTaskFileListeners();
         }
 
         return;
@@ -176,7 +177,7 @@ const initializeTaskFiles = (root = document) => {
     saveBtn.dataset.taskFilesInitialized = 'true';
 
     if (!taskFilesState.listenersBound) {
-        bindTaskFileDeleteListeners(token, taskId);
+        bindTaskFileListeners();
     }
 
     function replaceNotesHistory(html, currentPage) {
@@ -282,10 +283,57 @@ const initializeTaskFiles = (root = document) => {
         }
     }
 
-    function bindTaskFileDeleteListeners(listenerToken, listenerTaskId) {
+    async function loadNotesPage(pageUrl) {
+        if (!tabsUrlTemplate) {
+            window.location.assign(pageUrl);
+            return;
+        }
+
+        const panel = tabsRoot?.querySelector('[data-task-tab-panel="notes"]');
+        const requestUrl = new URL(tabsUrlTemplate.replace('__TAB__', 'notes'), window.location.origin);
+        const targetUrl = new URL(pageUrl, window.location.origin);
+
+        targetUrl.searchParams.forEach((value, key) => {
+            requestUrl.searchParams.set(key, value);
+        });
+
+        if (panel) {
+            panel.innerHTML = `
+                <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                    Loading Notes...
+                </div>
+            `;
+        }
+
+        const response = await fetch(requestUrl.toString(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.status) {
+            throw new Error(data.message || 'Failed to load notes.');
+        }
+
+        if (!panel) {
+            return;
+        }
+
+        panel.innerHTML = data.html;
+        panel.dataset.loaded = 'true';
+
+        document.dispatchEvent(new CustomEvent('task-tab:loaded', {
+            detail: { tab: 'notes', panel },
+        }));
+    }
+
+    function bindTaskFileListeners() {
         document.addEventListener('click', async function (event) {
             const deleteNoteButton = event.target.closest('.delete-task-note');
             const deleteFileButton = event.target.closest('.delete-task-note-file');
+            const paginationLink = event.target.closest('#task-notes-history .pagination a, #task-notes-history nav a[rel]');
 
             if (deleteNoteButton) {
                 await deleteNote(deleteNoteButton);
@@ -293,6 +341,18 @@ const initializeTaskFiles = (root = document) => {
 
             if (deleteFileButton) {
                 await deleteNoteFile(deleteFileButton);
+            }
+
+            if (!paginationLink || !tabsUrlTemplate) {
+                return;
+            }
+
+            event.preventDefault();
+
+            try {
+                await loadNotesPage(paginationLink.href);
+            } catch (error) {
+                Alert.error(error.message || 'Failed to load notes.');
             }
         });
         taskFilesState.listenersBound = true;

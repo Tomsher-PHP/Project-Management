@@ -215,11 +215,6 @@ class ProjectController extends Controller
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
         $query = ProjectTask::query()
             ->where('project_id', $project->id)
-            ->accessibleBy(auth()->user())
-            ->where(function ($taskQuery) {
-                $taskQuery->whereNull('parent_task_id')
-                    ->orWhere('parent_task_id', 0);
-            })
             ->orderBy('title')
             ->orderBy('id');
 
@@ -261,6 +256,8 @@ class ProjectController extends Controller
         $isLinearFlow = $project->project_flow === 'linear';
         $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
             ->where('project_id', $project->id)
+            ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('start_date')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->first();
@@ -1247,6 +1244,8 @@ class ProjectController extends Controller
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
                 ->with(['projectModule:id,name'])
+                ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc('start_date')
                 ->orderByDesc('created_at')
                 ->orderByDesc('id')
                 ->get(['id', 'project_module_id', 'name']),

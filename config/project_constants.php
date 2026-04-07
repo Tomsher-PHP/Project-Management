@@ -97,8 +97,8 @@ return [
     ],
 
     'task_mode' => [
-        'standard' => [
-            'label' => 'Standard',
+        'new' => [
+            'label' => 'New',
             'color' => 'blue',
             'bg_class' => 'bg-blue-500',
             'bg_text' => 'text-white',
