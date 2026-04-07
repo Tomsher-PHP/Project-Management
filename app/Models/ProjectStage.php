@@ -14,6 +14,8 @@ class ProjectStage extends Model
 
     protected $fillable = [
         'name',
+        'code',
+        'color',
         'sort_order',
         'is_default',
         'is_system',
@@ -22,15 +24,18 @@ class ProjectStage extends Model
 
     protected $sortable = [
         'name',
+        'code',
         'sort_order',
     ];
 
-    protected $searchable = ['name'];
+    protected $searchable = ['name', 'code'];
 
     protected function casts(): array
     {
         return [
             'name' => 'string',
+            'code' => 'string',
+            'color' => 'string',
             'sort_order' => 'integer',
             'is_default' => 'boolean',
             'is_system' => 'boolean',

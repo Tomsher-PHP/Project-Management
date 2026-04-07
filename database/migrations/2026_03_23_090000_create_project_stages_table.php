@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('project_stages', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code', 50)->unique();
+            $table->string('color', 20)->nullable();
             $table->tinyInteger('sort_order')->default('1');
             $table->boolean('is_default')->default(false);
             $table->boolean('is_system')->default(false);

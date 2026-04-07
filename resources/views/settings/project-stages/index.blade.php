@@ -5,17 +5,17 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
 
-        @can('project_stage.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Stage" data-url="{{ route('settings.project-stages.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+            @can('project_stage.create')
+                <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Stage" data-url="{{ route('settings.project-stages.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#22C55E">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
 
-                <span>New Project Stage</span>
-            </a>
-        @endcan
+                    <span>New Project Stage</span>
+                </a>
+            @endcan
 
-        <x-filters.button />
+            <x-filters.button />
         </div>
 
         <!-- write your code here-->
@@ -62,22 +62,22 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex w-full items-center space-x-2.5">
-                                                @if ($projectStage->is_system == 1)
-                                                    <span>
-                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" fill="#F6A723" stroke="#F6A723" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </span>
-                                                @else
-                                                    <span>
-                                                        <svg class="fill-bgray-400" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12.0001 17.75L5.82808 20.995L7.00708 14.122L2.00708 9.25495L8.90708 8.25495L11.9931 2.00195L15.0791 8.25495L21.9791 9.25495L16.9791 14.122L18.1581 20.995L12.0001 17.75Z" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </span>
-                                                @endif
-                                                <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                    {{ $projectStage->name }}
-                                                </p>
+                                                <span class="inline-flex h-3 w-3 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $projectStage->color ?: '#E5E7EB' }}"></span>
+                                                <div class="space-y-1">
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <p class="text-base font-semibold text-bgray-900 dark:text-white">
+                                                            {{ $projectStage->name }}
+                                                        </p>
+                                                        @if ($projectStage->is_system)
+                                                            <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                                System
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                        {{ $projectStage->code ?: '--' }}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -93,7 +93,7 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @can('project_stage.edit')
-                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage">
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
@@ -127,7 +127,18 @@
 
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
-            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <input type="text" name="name" data-project-stage-name class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <input type="text" name="code" data-project-stage-code class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" pattern="[a-z0-9_]+" autocomplete="off">
+            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Lowercase only. Spaces are converted to underscores.</p>
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:border-darkblack-400">
         </div>
 
         <div>
@@ -148,3 +159,7 @@
     <!-- Filter drawer end -->
 
 @endsection
+
+@push('scripts')
+    @vite('resources/js/modules/project-stage-form.js')
+@endpush
