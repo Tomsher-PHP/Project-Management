@@ -25,31 +25,32 @@ class TaskQuickStoreRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('task_statuses', 'id')->where(
-                    fn ($query) => $query->where('flow_type', $project->project_flow)->where('is_active', true)
+                    fn($query) => $query->where('flow_type', $project->project_flow)->where('is_active', true)
                 ),
             ],
             'project_sprint_id' => [
                 'nullable',
                 'integer',
+                Rule::requiredIf($project->project_flow === 'agile'),
                 Rule::exists('project_sprints', 'id')->where(
-                    fn ($query) => $query->where('project_id', $projectId)
+                    fn($query) => $query->where('project_id', $projectId)
                 ),
             ],
             'parent_task_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('tasks', 'id')->where(
-                    fn ($query) => $query->where('project_id', $projectId)
+                    fn($query) => $query->where('project_id', $projectId)
                 ),
             ],
-            'task_type' => ['nullable', Rule::in(array_keys(config('project_constants.task_type', [])))],
-            'task_mode' => ['nullable', Rule::in(array_keys(config('project_constants.task_mode', [])))],
+            'task_type_id' => ['nullable', 'integer', Rule::exists('task_types', 'id')->where(fn($query) => $query->where('is_active', true))],
+            'task_mode_id' => ['nullable', 'integer', Rule::exists('task_modes', 'id')->where(fn($query) => $query->where('is_active', true))],
             'priority' => ['nullable', Rule::in(array_keys(config('project_constants.task_priorities', [])))],
             'current_assignee_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('project_members', 'user_id')->where(
-                    fn ($query) => $query
+                    fn($query) => $query
                         ->where('project_id', $projectId)
                         ->whereNull('removed_at')
                         ->where('is_active', true)
@@ -70,7 +71,10 @@ class TaskQuickStoreRequest extends FormRequest
             'title.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
+            'project_sprint_id.required' => 'The sprint is required.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
+            'task_type_id.exists' => 'The selected task type is invalid.',
+            'task_mode_id.exists' => 'The selected task mode is invalid.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
             'due_date.after_or_equal' => 'The due date must be the same as or after the start date.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',

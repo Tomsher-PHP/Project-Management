@@ -10,8 +10,10 @@ use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
 use App\Models\Task;
+use App\Models\TaskMode;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskStatus;
+use App\Models\TaskType;
 use App\Models\Tag;
 use App\Models\TaskNote;
 use App\Models\User;
@@ -71,6 +73,8 @@ class TaskController extends Controller
                 'projectSprint:id,name',
                 'currentAssignee:id,name',
                 'status:id,name,color',
+                'taskType:id,name,code,color',
+                'taskMode:id,name,code,color',
             ])
             ->filter($request->all())
             ->sort($request->all())
@@ -128,8 +132,16 @@ class TaskController extends Controller
             ->orderBy('name', 'asc')
             ->get(['id', 'name']);
 
-        $types = config('project_constants.task_type', []);
-        $modes = config('project_constants.task_mode', []);
+        $types = TaskType::query()
+            ->active()
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('name', 'asc')
+            ->get(['name', 'code']);
+        $modes = TaskMode::query()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderBy('id', 'asc')
+            ->get(['name', 'code']);
         $priorities = config('project_constants.task_priorities', []);
 
         return view('tasks.index', compact(
@@ -456,6 +468,8 @@ class TaskController extends Controller
             'parentTask:id,title,code',
             'currentAssignee:id,name',
             'status:id,name,color',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
             'tags:id,name,color',
             'addedBy:id,name',
             'updatedBy:id,name',
@@ -492,8 +506,6 @@ class TaskController extends Controller
 
     private function getTaskOverviewData(Task $task): array
     {
-        $taskTypeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal')) ?? config('project_constants.task_type.normal');
-        $taskModeConfig = config('project_constants.task_mode.' . ($task->task_mode ?: 'standard')) ?? config('project_constants.task_mode.standard');
         $taskPriorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
 
         return [
@@ -509,8 +521,8 @@ class TaskController extends Controller
                 ->with('user:id,name')
                 ->limit(10)
                 ->get(),
-            'taskTypeLabel' => $taskTypeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'normal')),
-            'taskModeLabel' => $taskModeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'standard')),
+            'taskTypeLabel' => $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature')),
+            'taskModeLabel' => $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new')),
             'taskPriorityLabel' => $taskPriorityConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->priority ?: 'medium')),
             'taskPriorityConfig' => $taskPriorityConfig,
         ];
@@ -559,11 +571,19 @@ class TaskController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'color']),
-            'taskTypeOptions' => collect(config('project_constants.task_type', []))
-                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            'taskTypeOptions' => TaskType::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['name', 'code'])
+                ->map(fn(TaskType $taskType) => ['value' => $taskType->code, 'label' => $taskType->name])
                 ->values(),
-            'taskModeOptions' => collect(config('project_constants.task_mode', []))
-                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            'taskModeOptions' => TaskMode::query()
+                ->active()
+                ->orderByDesc('is_default')
+                ->orderBy('id')
+                ->get(['name', 'code'])
+                ->map(fn(TaskMode $taskMode) => ['value' => $taskMode->code, 'label' => $taskMode->name])
                 ->values(),
             'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
                 ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])

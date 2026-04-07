@@ -21,15 +21,13 @@ return new class extends Migration
 
             $table->foreignId('status_id')->nullable()->constrained('task_statuses');
 
-            $table->string('task_type', 50)->default('normal')->comment('behavior or nature');
-            // sample task_type values: normal, quality, bug, test etc.
-            $table->string('task_mode', 50)->default('standard')->comment('method of execution');
-            // sample task_mode values: standard, rework, bug, improvement, research, etc.
+            $table->foreignId('task_type_id')->nullable()->constrained('task_types')->nullOnDelete();
+            $table->foreignId('task_mode_id')->nullable()->constrained('task_modes')->nullOnDelete();
 
             $table->string('priority', 50)->default('medium')->comment('low, medium, high, urgent');
             // sample priority values: low, medium, high, urgent.
 
-            $table->unsignedBigInteger('current_assignee_id')->nullable();
+            $table->foreignId('current_assignee_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->date('start_date')->nullable();
             $table->date('due_date')->nullable();
@@ -52,6 +50,8 @@ return new class extends Migration
             $table->index('project_sprint_id');
             $table->index('parent_task_id');
             $table->index('status_id');
+            $table->index('task_type_id');
+            $table->index('task_mode_id');
             $table->index('current_assignee_id');
             $table->index('due_date');
             $table->index('sort_order');

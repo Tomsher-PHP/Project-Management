@@ -83,7 +83,7 @@ const setTaskModalAdvancedState = (root, expanded) => {
     advancedSection.hidden = !expanded;
     panel.classList.toggle('max-w-lg', !expanded);
     panel.classList.toggle('max-w-5xl', expanded);
-    toggleButton.textContent = expanded ? 'Minimal Form' : 'Advanced Form';
+    toggleButton.textContent = expanded ? 'Hide Advanced' : 'Show Advanced';
 };
 
 const setTaskFormSprint = (form, sprintId) => {
@@ -259,6 +259,8 @@ const clearTaskDetailFormErrors = (form) => {
 };
 
 const applyTaskDetailFormErrors = (form, errors = {}) => {
+    console.log('laksdlkasl');
+    
     clearTaskDetailFormErrors(form);
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
@@ -374,7 +376,7 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
         }
     } catch (error) {
         closeTaskDetailModal(modal);
-        Alert.error(error.message || 'Unable to load task details.');
+        Alert.errorModal(error.message || 'Unable to load task details.');
     }
 };
 
@@ -499,7 +501,7 @@ const initializeTaskGroupPagination = (root) => {
                 initializeTaskGroupPagination(root);
             })
             .catch((error) => {
-                Alert.error(error.message || 'Unable to load more sprints.');
+                Alert.errorModal(error.message || 'Unable to load more sprints.');
             });
     }, {
         threshold: 0,
@@ -545,7 +547,7 @@ const initializeTaskListPagination = (group) => {
         }
 
         loadMoreGroupTasks(group, nextPage).catch((error) => {
-            Alert.error(error.message || 'Unable to load more tasks.');
+            Alert.errorModal(error.message || 'Unable to load more tasks.');
         });
     }, {
         root: scrollContainer,
@@ -660,7 +662,7 @@ const loadGroupTasks = async (group) => {
         initializeTaskListPagination(group);
     } catch (error) {
         body.innerHTML = ERROR_HTML;
-        Alert.error(error.message || 'Unable to load sprint tasks.');
+        Alert.errorModal(error.message || 'Unable to load sprint tasks.');
     } finally {
         delete body.dataset.loading;
     }
@@ -754,7 +756,7 @@ const initializeTasksRoot = (root) => {
         }
 
         loadParentTaskOptions(form).catch((error) => {
-            Alert.error(error.message || 'Unable to load parent tasks.');
+            Alert.errorModal(error.message || 'Unable to load parent tasks.');
         });
     });
 
@@ -782,7 +784,7 @@ const initializeTasksRoot = (root) => {
             const storeUrl = form.dataset.storeUrl;
 
             if (!storeUrl) {
-                Alert.error('Unable to save the task right now.');
+                Alert.errorModal('Unable to save the task right now.');
                 return;
             }
 
@@ -824,7 +826,7 @@ const initializeTasksRoot = (root) => {
                 }
             } catch (error) {
                 if (!(error.message || '').includes('highlighted fields')) {
-                    Alert.error(error.message || 'Unable to save the task.');
+                    Alert.errorModal(error.message || 'Unable to save the task.');
                 }
             } finally {
                 submitButton?.removeAttribute('disabled');
@@ -838,7 +840,7 @@ const initializeTasksRoot = (root) => {
 
     root.addEventListener('submit', async (event) => {
         const detailForm = event.target.closest('[data-project-task-detail-form]');
-
+        
         if (!detailForm || !root.contains(detailForm)) {
             return;
         }
@@ -849,9 +851,9 @@ const initializeTasksRoot = (root) => {
         const submitButton = detailForm.querySelector('[data-project-task-detail-submit]');
         const modal = root.querySelector('[data-project-task-detail-modal]');
         const actionUrl = detailForm.getAttribute('action');
-
+        
         if (!actionUrl) {
-            Alert.error('Unable to update the task right now.');
+            Alert.errorModal('Unable to update the task right now.');
             return;
         }
 
@@ -892,7 +894,7 @@ const initializeTasksRoot = (root) => {
             }
         } catch (error) {
             if (!(error.message || '').includes('highlighted fields')) {
-                Alert.error(error.message || 'Unable to update the task.');
+                Alert.errorModal(error.message || 'Unable to update the task.');
             }
         } finally {
             submitButton?.removeAttribute('disabled');

@@ -23,8 +23,8 @@ class Task extends Model
         'code',
         'description',
         'status_id',
-        'task_type',
-        'task_mode',
+        'task_type_id',
+        'task_mode_id',
         'priority',
         'current_assignee_id',
         'start_date',
@@ -45,8 +45,6 @@ class Task extends Model
         'project.name',
         'currentAssignee.name',
         'status.name',
-        'task_type',
-        'task_mode',
         'priority',
         'start_date',
         'estimated_time_seconds',
@@ -169,6 +167,16 @@ class Task extends Model
     public function status()
     {
         return $this->belongsTo(TaskStatus::class, 'status_id');
+    }
+
+    public function taskType()
+    {
+        return $this->belongsTo(TaskType::class, 'task_type_id');
+    }
+
+    public function taskMode()
+    {
+        return $this->belongsTo(TaskMode::class, 'task_mode_id');
     }
 
     public function currentAssignee()

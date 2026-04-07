@@ -69,22 +69,22 @@
 
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Type</label>
-                    <select name="task_type" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
+                    <select name="task_type_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         @foreach ($taskTypeOptions as $option)
-                            <option value="{{ $option['value'] }}" {{ $task->task_type === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
+                            <option value="{{ $option->id }}" {{ $task->task_type_id === $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
                         @endforeach
                     </select>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="task_type"></p>
+                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="task_type_id"></p>
                 </div>
 
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Mode</label>
-                    <select name="task_mode" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
+                    <select name="task_mode_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         @foreach ($taskModeOptions as $option)
-                            <option value="{{ $option['value'] }}" {{ $task->task_mode === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
+                            <option value="{{ $option->id }}" {{ $task->task_mode_id === $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
                         @endforeach
                     </select>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="task_mode"></p>
+                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="task_mode_id"></p>
                 </div>
 
                 <div>
@@ -111,14 +111,7 @@
                 </div>
 
                 <div>
-                    <x-forms.estimated-time-input
-                        label="Estimated Time"
-                        name="estimated_time_minutes"
-                        :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0"
-                        :show-label="false"
-                        :disabled="!$canEditTask"
-                        help-text="Enter time naturally. We’ll convert it automatically for calculation."
-                    />
+                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" help-text="Enter time naturally. We’ll convert it automatically for calculation." />
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
                 </div>
 

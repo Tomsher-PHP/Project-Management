@@ -16,28 +16,17 @@
         </div>
 
         @php
-            $typePalette = [
-                'gray' => ['bg' => '#E5E7EB', 'text' => '#374151'],
-                'green' => ['bg' => '#DCFCE7', 'text' => '#166534'],
-                'red' => ['bg' => '#FEE2E2', 'text' => '#B91C1C'],
-                'pink' => ['bg' => '#FCE7F3', 'text' => '#BE185D'],
-                'blue' => ['bg' => '#DBEAFE', 'text' => '#1D4ED8'],
-                'violet' => ['bg' => '#EDE9FE', 'text' => '#6D28D9'],
-                'orange' => ['bg' => '#FFEDD5', 'text' => '#C2410C'],
-                'cyan' => ['bg' => '#CFFAFE', 'text' => '#0E7490'],
-            ];
-
             $typeOptions = collect($types)->map(
-                fn($config, $key) => (object) [
-                    'id' => $key,
-                    'name' => $config['label'],
+                fn($type) => (object) [
+                    'id' => $type->code,
+                    'name' => $type->name,
                 ],
             );
 
             $modeOptions = collect($modes)->map(
-                fn($config, $key) => (object) [
-                    'id' => $key,
-                    'name' => $config['label'],
+                fn($mode) => (object) [
+                    'id' => $mode->code,
+                    'name' => $mode->name,
                 ],
             );
 
@@ -90,12 +79,10 @@
                                 @php
                                     $statusColor = $task->status?->color ?: '#CBD5E1';
                                     $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
-                                    $typeConfig = config('project_constants.task_type.' . ($task->task_type ?: 'normal')) ?? config('project_constants.task_type.normal');
-                                    $modeConfig = config('project_constants.task_mode.' . ($task->task_mode ?: 'standard')) ?? config('project_constants.task_mode.standard');
-                                    $typeColor = $typePalette[$typeConfig['color'] ?? 'gray'] ?? $typePalette['gray'];
-                                    $modeColor = $typePalette[$modeConfig['color'] ?? 'blue'] ?? $typePalette['blue'];
-                                    $typeLabel = $typeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'normal'));
-                                    $modeLabel = $modeConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'standard'));
+                                    $typeColor = $task->taskType?->color ?: '#64748B';
+                                    $modeColor = $task->taskMode?->color ?: '#3B82F6';
+                                    $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
+                                    $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
                                 @endphp
 
                                 <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
@@ -171,13 +158,13 @@
                                     </td>
 
                                     <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
-                                        <span class="inline-flex min-w-[96px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold" style="background-color: {{ $typeColor['bg'] }}; color: {{ $typeColor['text'] }};">
+                                        <span class="inline-flex min-w-[96px] items-center justify-center whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-semibold" style="border-color: {{ $typeColor }}33; background-color: {{ $typeColor }}1A; color: {{ $typeColor }};">
                                             {{ $typeLabel }}
                                         </span>
                                     </td>
 
                                     <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
-                                        <span class="inline-flex min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold" style="background-color: {{ $modeColor['bg'] }}; color: {{ $modeColor['text'] }};">
+                                        <span class="inline-flex min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-semibold" style="border-color: {{ $modeColor }}33; background-color: {{ $modeColor }}1A; color: {{ $modeColor }};">
                                             {{ $modeLabel }}
                                         </span>
                                     </td>

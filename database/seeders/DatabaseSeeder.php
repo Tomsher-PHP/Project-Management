@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             // Project related seeders            
             ProjectStatusSeeder::class,
             TaskStatusSeeder::class,
+            TaskTypeSeeder::class,
+            TaskModeSeeder::class,
             ProjectStageSeeder::class,
             TagsSeeder::class,
             AgileModuleSeeder::class,
