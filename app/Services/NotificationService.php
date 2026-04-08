@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
 use Illuminate\Support\Facades\Notification;
@@ -34,5 +35,42 @@ class NotificationService
                     new TaskAssignedNotification($title, $message, $url)
                 );
             });
+    }
+
+    public function sendTaskAssignmentIfNeeded(Task $task, ?int $currentAssigneeId, ?int $previousAssigneeId = null): void
+    {
+        $currentAssigneeId = filled($currentAssigneeId) ? (int) $currentAssigneeId : null;
+        $previousAssigneeId = filled($previousAssigneeId) ? (int) $previousAssigneeId : null;
+
+        if (!$currentAssigneeId || $currentAssigneeId === $previousAssigneeId) {
+            return;
+        }
+
+        $task->loadMissing('project:id,name');
+
+        $authUser = auth()->user();
+        $isSelfAssigned = $authUser && (int) $authUser->id === $currentAssigneeId;
+
+        $projectName = $task->project?->name ?: 'Untitled Project';
+        $title = $previousAssigneeId ? 'Task Reassigned' : 'Task Assigned';
+
+        if ($isSelfAssigned) {
+            $message = $previousAssigneeId
+                ? "You reassigned task '{$task->title}' to yourself in project '{$projectName}'."
+                : "You assigned yourself to task '{$task->title}' in project '{$projectName}'.";
+        } else {
+            $actorName = $authUser?->name ?? 'A team member';
+
+            $message = $previousAssigneeId
+                ? "{$actorName} reassigned task '{$task->title}' to you in project '{$projectName}'."
+                : "{$actorName} assigned you to task '{$task->title}' in project '{$projectName}'.";
+        }
+
+        $this->send(
+            $currentAssigneeId,
+            $title,
+            $message,
+            route('tasks.edit', $task)
+        );
     }
 }

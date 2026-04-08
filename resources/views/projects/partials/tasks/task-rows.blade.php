@@ -20,7 +20,9 @@
                 <div class="flex min-w-0 flex-1 items-start justify-between gap-3">
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                            <p class="font-semibold text-bgray-900 dark:text-white">{{ $task->title }}</p>
+                            <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
+                                {{ $task->title }}
+                            </a>
 
                             <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
                                 {{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}

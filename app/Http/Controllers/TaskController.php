@@ -19,6 +19,7 @@ use App\Models\Tag;
 use App\Models\TaskNote;
 use App\Models\User;
 use App\Services\AttachmentService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -207,17 +208,9 @@ class TaskController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
-    public function store(TaskQuickStoreRequest $request): JsonResponse
+    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService): JsonResponse
     {
         $validated = $request->validated();
         $project = Project::query()
@@ -292,19 +285,13 @@ class TaskController extends Controller
             return $task;
         });
 
+        $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
+
         return response()->json([
             'status' => true,
             'message' => 'Task added successfully.',
             'task_id' => $task->id,
         ], Response::HTTP_OK);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
     }
 
     /**
@@ -424,7 +411,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(TaskUpdateRequest $request, Task $task): JsonResponse
+    public function update(TaskUpdateRequest $request, Task $task, NotificationService $notificationService): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
         $project = $task->project;
@@ -488,6 +475,11 @@ class TaskController extends Controller
         });
 
         $task->refresh();
+        $notificationService->sendTaskAssignmentIfNeeded(
+            $task,
+            $newAssigneeId,
+            $previousAssigneeId ?: null
+        );
         $task = $this->loadTaskForDetail($task);
 
         return response()->json([
@@ -580,6 +572,7 @@ class TaskController extends Controller
                 'task' => $task,
                 'taskNotes' => $taskNotes,
                 'canRemove' => auth()->user()->can('update', $task),
+                'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -601,6 +594,7 @@ class TaskController extends Controller
                 'task' => $task,
                 'taskNotes' => $taskNotes,
                 'canRemove' => auth()->user()->can('update', $task),
+                'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -625,6 +619,7 @@ class TaskController extends Controller
                 'task' => $task,
                 'taskNotes' => $taskNotes,
                 'canRemove' => auth()->user()->can('update', $task),
+                'canCreate' => auth()->user()->can('task.add_notes_files'),
             ])->render(),
             'current_page' => $taskNotes->currentPage(),
         ], Response::HTTP_OK);

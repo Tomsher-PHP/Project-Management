@@ -30,6 +30,7 @@ use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
+use App\Services\NotificationService;
 use App\Services\ProjectServices;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -253,7 +254,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeTask(TaskQuickStoreRequest $request, Project $project): JsonResponse
+    public function storeTask(TaskQuickStoreRequest $request, Project $project, NotificationService $notificationService): JsonResponse
     {
         $validated = $request->validated();
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
@@ -312,6 +313,7 @@ class ProjectController extends Controller
             $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
         }
 
+        $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
         $project->refresh();
 
         return response()->json([
@@ -349,7 +351,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task): JsonResponse
+    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
@@ -419,6 +421,11 @@ class ProjectController extends Controller
         });
 
         $task->refresh();
+        $notificationService->sendTaskAssignmentIfNeeded(
+            $task,
+            $newAssigneeId,
+            $previousAssigneeId ?: null
+        );
 
         return response()->json([
             'status' => true,
@@ -504,6 +511,7 @@ class ProjectController extends Controller
             'html' => view('projects.partials.project-notes-list', [
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
+                'canCreate' => auth()->user()->can('project.add_notes_files'),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -523,6 +531,7 @@ class ProjectController extends Controller
             'html' => view('projects.partials.project-notes-list', [
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
+                'canCreate' => auth()->user()->can('project.add_notes_files'),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);
@@ -545,6 +554,7 @@ class ProjectController extends Controller
             'html' => view('projects.partials.project-notes-list', [
                 'projectNotes' => $projectNotes,
                 'canRemove' => auth()->user()->can('project.remove_notes_files'),
+                'canCreate' => auth()->user()->can('project.add_notes_files'),
             ])->render(),
             'current_page' => $projectNotes->currentPage(),
         ], Response::HTTP_OK);

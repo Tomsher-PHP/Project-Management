@@ -3,32 +3,14 @@
     $canRemove = auth()->user()->can('task.remove_notes_files');
 @endphp
 
-<div class="w-full border-b border-bgray-200 pb-6 dark:border-darkblack-400">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes & Files</h3>
-            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                Keep task-specific notes, updates, and related files together.
-            </p>
-        </div>
-
-        @if ($canCreate)
-            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-note-modal-open>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Note & Files</span>
-            </button>
-        @endif
-    </div>
-
-    <div class="mt-6">
-        @if (!$canCreate)
+<div class="w-full">
+    @if (!$canCreate)
+        <div class="mb-6">
             <p class="rounded-lg border border-dashed border-bgray-300 px-4 py-3 text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
                 You have view-only access to task notes.
             </p>
-        @endif
-    </div>
+        </div>
+    @endif
 
     @if ($canCreate)
         <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-task-note-modal>
@@ -91,6 +73,6 @@
     @endif
 </div>
 
-<div class="w-full pt-6">
-    @include('tasks.partials.task-notes-list', ['task' => $task, 'taskNotes' => $taskNotes, 'canRemove' => $canRemove])
+<div class="w-full">
+    @include('tasks.partials.task-notes-list', ['task' => $task, 'taskNotes' => $taskNotes, 'canRemove' => $canRemove, 'canCreate' => $canCreate])
 </div>

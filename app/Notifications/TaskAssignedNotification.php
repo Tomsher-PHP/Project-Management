@@ -23,6 +23,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;
+        $this->afterCommit();
     }
 
     /**
