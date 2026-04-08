@@ -31,6 +31,7 @@
                         <div>
                             <label for="project_change_date" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Date <x-red-star /></label>
                             <input type="text" id="project_change_date" name="change_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="{{ $globalDateFormat }}" placeholder="Select a date" autocomplete="off" required>
+                            <p class="mt-1 hidden text-xs text-error-300" data-project-change-min-date-hint></p>
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-change-error-for="change_date"></p>
                         </div>
 

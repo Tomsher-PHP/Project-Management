@@ -134,9 +134,33 @@ class AppServiceProvider extends ServiceProvider
                 return Carbon::instance($value)->timezone($timezone);
             }
 
-            return Carbon::parse($value)->timezone($timezone);
+            $stringValue = trim((string) $value);
+
+            if ($stringValue === '') {
+                return null;
+            }
+
+            if (! self::hasTimeComponent($stringValue)) {
+                return Carbon::parse($stringValue, $timezone)->timezone($timezone);
+            }
+
+            if (self::hasExplicitTimezone($stringValue)) {
+                return Carbon::parse($stringValue)->timezone($timezone);
+            }
+
+            return Carbon::parse($stringValue, 'UTC')->timezone($timezone);
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private static function hasTimeComponent(string $value): bool
+    {
+        return preg_match('/\d{1,2}:\d{2}/', $value) === 1 || str_contains($value, 'T');
+    }
+
+    private static function hasExplicitTimezone(string $value): bool
+    {
+        return preg_match('/(?:[zZ]|[+\-]\d{2}:?\d{2})$/', $value) === 1;
     }
 }

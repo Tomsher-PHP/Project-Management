@@ -47,12 +47,12 @@ class ProjectStatusHistory extends Model
 
     public function status()
     {
-        return $this->belongsTo(ProjectStatus::class);
+        return $this->belongsTo(ProjectStatus::class)->withTrashed();
     }
 
     public function fromStatus()
     {
-        return $this->belongsTo(ProjectStatus::class, 'from_status_id');
+        return $this->belongsTo(ProjectStatus::class, 'from_status_id')->withTrashed();
     }
 
     public function addedBy()

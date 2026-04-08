@@ -73,6 +73,48 @@ const setProjectChangeDateValue = (input, value) => {
     input.value = value || '';
 };
 
+const setProjectChangeMinDate = (modal, minDate = '', minDateLabel = '') => {
+    if (!modal) {
+        return;
+    }
+
+    const form = modal.querySelector('[data-project-change-form]');
+    const dateField = modal.querySelector('[name="change_date"]');
+    const hint = modal.querySelector('[data-project-change-min-date-hint]');
+
+    if (form) {
+        form.dataset.minDate = minDate || '';
+    }
+
+    if (!dateField) {
+        return;
+    }
+
+    if (minDate) {
+        dateField.dataset.minDate = minDate;
+    } else {
+        delete dateField.dataset.minDate;
+    }
+
+    dateField.setAttribute('min', minDate || '');
+
+    if (dateField._flatpickr) {
+        dateField._flatpickr.set('minDate', minDate || null);
+    }
+
+    if (!hint) {
+        return;
+    }
+
+    if (minDate) {
+        hint.textContent = `Date must be on or after ${minDateLabel || minDate}.`;
+        hint.classList.remove('hidden');
+    } else {
+        hint.textContent = '';
+        hint.classList.add('hidden');
+    }
+};
+
 const resetProjectChangeModal = (modal) => {
     if (!modal) {
         return;
@@ -118,6 +160,7 @@ const resetProjectChangeModal = (modal) => {
         selectedColor.style.backgroundColor = '#9CA3AF';
     }
 
+    setProjectChangeMinDate(modal);
     setProjectChangeDateValue(dateField, modal.dataset.defaultDate || '');
 
     if (remarksField) {
@@ -160,6 +203,11 @@ const openProjectChangeModal = (option) => {
     const submitButton = modal.querySelector('[data-project-change-submit]');
     const dateField = modal.querySelector('[name="change_date"]');
     const remarksField = modal.querySelector('[name="remarks"]');
+    const minDate = option.dataset.minDate || '';
+    const defaultDate = modal.dataset.defaultDate || '';
+    const initialDate = minDate && (!defaultDate || minDate > defaultDate)
+        ? minDate
+        : defaultDate;
 
     resetProjectChangeModal(modal);
 
@@ -189,11 +237,13 @@ const openProjectChangeModal = (option) => {
         selectedColor.style.backgroundColor = option.dataset.itemColor || '#9CA3AF';
     }
 
+    setProjectChangeMinDate(modal, minDate, option.dataset.minDateLabel || '');
+
     if (submitButton) {
         submitButton.textContent = form.dataset.submitLabel;
     }
 
-    setProjectChangeDateValue(dateField, modal.dataset.defaultDate || '');
+    setProjectChangeDateValue(dateField, initialDate);
 
     if (remarksField) {
         remarksField.value = '';

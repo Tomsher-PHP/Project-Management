@@ -35,8 +35,10 @@ use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ProjectController extends Controller
@@ -154,7 +156,7 @@ class ProjectController extends Controller
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
-        $allowedTabs = ['modules', 'tasks', 'team', 'scope', 'notes', 'settings'];
+        $allowedTabs = ['modules', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         return response()->json([
@@ -437,11 +439,14 @@ class ProjectController extends Controller
 
     public function updateProjectStatus(Request $request, Project $project, ProjectServices $service)
     {
-        $validated = $request->validate([
+        $latestStatusChangeDate = $this->getLatestProjectStatusChangeDate($project);
+        $validator = Validator::make($request->all(), [
             'status_id' => 'required|exists:project_statuses,id',
             'change_date' => 'required|date',
             'remarks' => 'nullable|string|max:150',
         ]);
+        $this->applyProjectChangeDateValidation($validator, $request->input('change_date'), $latestStatusChangeDate);
+        $validated = $validator->validate();
 
         $project = $service->updateStatus(
             $project,
@@ -463,11 +468,14 @@ class ProjectController extends Controller
             'project_stage_id' => $request->filled('project_stage_id') ? $request->input('project_stage_id') : null,
         ]);
 
-        $validated = $request->validate([
+        $latestStageChangeDate = $this->getLatestProjectStageChangeDate($project);
+        $validator = Validator::make($request->all(), [
             'project_stage_id' => 'nullable|exists:project_stages,id',
             'change_date' => 'required|date',
             'remarks' => 'nullable|string|max:150',
         ]);
+        $this->applyProjectChangeDateValidation($validator, $request->input('change_date'), $latestStageChangeDate);
+        $validated = $validator->validate();
 
         $project = $service->updateStage(
             $project,
@@ -612,6 +620,7 @@ class ProjectController extends Controller
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
+            'history' => $this->renderHistoryTab($project),
             'settings' => $this->renderSettingsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
         };
@@ -770,6 +779,62 @@ class ProjectController extends Controller
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
         return view('projects.partials.tabs.notes', compact('project', 'projectNotes'))->render();
+    }
+
+    private function renderHistoryTab(Project $project): string
+    {
+        $statusHistory = $project->statusHistories()
+            ->with(['status', 'fromStatus', 'addedBy:id,name'])
+            ->reorder('added_at')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'from_label' => $history->fromStatus?->name ?? 'Start',
+                    'from_color' => $history->fromStatus?->color ?: '#CBD5E1',
+                    'to_label' => $history->status?->name ?? 'No Status',
+                    'to_color' => $history->status?->color ?: '#CBD5E1',
+                    'changed_at' => $this->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                    'changed_by' => $history->addedBy?->name ?? '--',
+                    'remarks' => $history->remarks,
+                ];
+            })
+            ->values();
+
+        $stageHistory = $project->stageHistories()
+            ->with(['stage', 'fromStage', 'addedBy:id,name'])
+            ->reorder('added_at')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($history) {
+                return [
+                    'from_label' => $history->fromStage?->name ?? 'Start',
+                    'from_color' => $history->fromStage?->color ?: '#CBD5E1',
+                    'to_label' => $history->stage?->name ?? 'No Stage',
+                    'to_color' => $history->stage?->color ?: '#CBD5E1',
+                    'changed_at' => $this->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                    'changed_by' => $history->addedBy?->name ?? '--',
+                    'remarks' => $history->remarks,
+                ];
+            })
+            ->values();
+
+        $currentStatus = [
+            'label' => $project->projectStatus?->name ?? 'No Status',
+            'color' => $project->projectStatus?->color ?: '#CBD5E1',
+        ];
+        $currentStage = [
+            'label' => $project->projectStage?->name ?? 'No Stage',
+            'color' => $project->projectStage?->color ?: '#CBD5E1',
+        ];
+
+        return view('projects.partials.tabs.history', compact(
+            'project',
+            'statusHistory',
+            'stageHistory',
+            'currentStatus',
+            'currentStage'
+        ))->render();
     }
 
     private function renderSettingsTab(Project $project): string
@@ -1377,6 +1442,8 @@ class ProjectController extends Controller
     {
         $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
         $timelines = $service->getTimelines($project);
+        $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
+        $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
 
         return [
             'priority' => config('project_constants.project_priorities')[$project->priority] ?? null,
@@ -1384,6 +1451,10 @@ class ProjectController extends Controller
             'customerTimeline' => $timelines['customerTimeline'],
             'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
             'projectStages' => ProjectStage::active()->orderBy('sort_order', 'asc')->get(),
+            'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
+            'statusChangeMinDateLabel' => $statusChangeMinDate ? AppServiceProvider::formatAppDate($statusChangeMinDate) : null,
+            'stageChangeMinDate' => $stageChangeMinDate?->toDateString(),
+            'stageChangeMinDateLabel' => $stageChangeMinDate ? AppServiceProvider::formatAppDate($stageChangeMinDate) : null,
         ];
     }
 
@@ -1392,5 +1463,64 @@ class ProjectController extends Controller
         return view('projects.partials.header', array_merge([
             'project' => $project,
         ], $this->getProjectHeaderData($project, $service)))->render();
+    }
+
+    private function getLatestProjectStatusChangeDate(Project $project): ?Carbon
+    {
+        $latestDate = $project->statusHistories()
+            ->reorderDesc('added_at')
+            ->orderByDesc('id')
+            ->value('added_at');
+
+        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
+    }
+
+    private function getLatestProjectStageChangeDate(Project $project): ?Carbon
+    {
+        $latestDate = $project->stageHistories()
+            ->reorderDesc('added_at')
+            ->orderByDesc('id')
+            ->value('added_at');
+
+        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
+    }
+
+    private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void
+    {
+        if (blank($changeDate) || ! $minimumDate) {
+            return;
+        }
+
+        $validator->after(function ($validator) use ($changeDate, $minimumDate) {
+            try {
+                $submittedDate = Carbon::parse($changeDate, config('constants.timezone'))->startOfDay();
+
+                if ($submittedDate->lt($minimumDate)) {
+                    $validator->errors()->add(
+                        'change_date',
+                        'The change date must be on or after ' . AppServiceProvider::formatAppDate($minimumDate) . '.'
+                    );
+                }
+            } catch (\Throwable) {
+                // The base date validation already reports invalid formats.
+            }
+        });
+    }
+
+    private function convertStoredTimestampToConfigTimezone($value): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, 'UTC')->timezone(config('constants.timezone'));
+        } catch (\Throwable) {
+            try {
+                return Carbon::parse($value, config('constants.timezone'))->timezone(config('constants.timezone'));
+            } catch (\Throwable) {
+                return null;
+            }
+        }
     }
 }

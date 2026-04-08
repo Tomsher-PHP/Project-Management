@@ -47,12 +47,12 @@ class ProjectStageHistory extends Model
 
     public function stage()
     {
-        return $this->belongsTo(ProjectStage::class);
+        return $this->belongsTo(ProjectStage::class)->withTrashed();
     }
 
     public function fromStage()
     {
-        return $this->belongsTo(ProjectStage::class, 'from_stage_id');
+        return $this->belongsTo(ProjectStage::class, 'from_stage_id')->withTrashed();
     }
 
     public function addedBy()

@@ -18,7 +18,7 @@
     "src": "_weekpicker-CksuuEqD.css"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DmWdt3QW.css",
+    "file": "assets/app-C4jP_a4O.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -64,7 +64,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CrELRAQy.js",
+    "file": "assets/project-detail-DPTKWdLe.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
