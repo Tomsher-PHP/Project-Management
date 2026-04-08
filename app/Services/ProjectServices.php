@@ -75,6 +75,13 @@ class ProjectServices
                 unset($data['estimated_time_minutes']);
             }
 
+            if (array_key_exists('default_task_estimate_minutes', $data)) {
+                $data['default_task_estimate_seconds'] = $data['default_task_estimate_minutes'] !== null
+                    ? (int) $data['default_task_estimate_minutes'] * 60
+                    : null;
+                unset($data['default_task_estimate_minutes']);
+            }
+
             // Default values
             $data['customer_id'] = $data['customer_id'] ?? null;
             $data['default_billable'] = $data['default_billable'] ?? 0;
@@ -88,6 +95,7 @@ class ProjectServices
                 'end_date' => $data['end_date'] ?? null,
                 'customer_end_date' => $data['customer_end_date'] ?? null,
                 'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
+                'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'project_category_id' => $data['project_category_id'] ?? null,

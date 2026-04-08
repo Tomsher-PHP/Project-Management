@@ -119,7 +119,7 @@
                                     <x-forms.estimated-time-input
                                         label="Estimated Time"
                                         name="estimated_time_minutes"
-                                        :total-minutes="0"
+                                        :total-minutes="$defaultTaskEstimateMinutes ?? 0"
                                         help-text="Enter time naturally. We’ll convert it automatically for calculation."
                                         :show-label="false"
                                     />

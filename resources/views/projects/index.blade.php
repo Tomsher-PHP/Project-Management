@@ -20,6 +20,7 @@
             @endcan
 
             <x-filters.button />
+            <x-project-flow-indicator class="sm:ml-auto" />
         </div>
 
         <!-- write your code here-->

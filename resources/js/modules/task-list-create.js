@@ -117,6 +117,24 @@ const setCheckboxValue = (field, checked) => {
     field.checked = Boolean(checked);
 };
 
+const setEstimatedTimeValue = (form, totalMinutes = 0) => {
+    if (!form) {
+        return;
+    }
+
+    const totalMinutesInput = form.querySelector('[name="estimated_time_minutes"]');
+    const wrapper = totalMinutesInput?.closest('[data-estimated-time]');
+
+    if (!totalMinutesInput) {
+        return;
+    }
+
+    totalMinutesInput.value = String(Math.max(0, Number.parseInt(totalMinutes || '0', 10) || 0));
+    wrapper?.dispatchEvent(new Event('estimated-time:refresh'));
+    totalMinutesInput.dispatchEvent(new Event('input', { bubbles: true }));
+    totalMinutesInput.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
 const setTaskCreateRequiredIndicators = (form, isAgile) => {
     if (!form) {
         return;
@@ -302,6 +320,7 @@ const setEmptyProjectState = (form) => {
         placeholder: 'Select project first',
         disabled: true,
     });
+    setEstimatedTimeValue(form, 0);
     setCheckboxValue(form.querySelector('[name="is_billable"]'), false);
 };
 
@@ -355,6 +374,7 @@ const applyProjectDefaults = async (form, dependencies) => {
 
     setFieldValue(startDateField, dependencies.defaults?.start_date || '');
     setFieldValue(dueDateField, dependencies.defaults?.due_date || '');
+    setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
     await loadParentTaskOptions(form, dependencies);

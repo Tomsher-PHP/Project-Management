@@ -158,7 +158,7 @@ class TaskController extends Controller
                 'activeMembers:id,name',
             ])
             ->orderBy('name', 'asc')
-            ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable']);
+            ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']);
         $taskTypeOptions = TaskType::query()
             ->active()
             ->orderByDesc('is_default')
@@ -251,6 +251,7 @@ class TaskController extends Controller
             ->orderBy('id')
             ->value('id');
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
+        $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
 
         $task = DB::transaction(function () use (
             $project,
@@ -261,7 +262,8 @@ class TaskController extends Controller
             $defaultStatusId,
             $defaultTaskTypeId,
             $defaultTaskModeId,
-            $defaultTaskPriority
+            $defaultTaskPriority,
+            $defaultTaskEstimateSeconds
         ) {
             $task = $project->tasks()->create([
                 'project_module_id' => $resolvedModuleId,
@@ -276,7 +278,9 @@ class TaskController extends Controller
                 'current_assignee_id' => $assigneeId,
                 'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
                 'due_date' => $validated['due_date'] ?? null,
-                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
+                'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
+                    ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
+                    : $defaultTaskEstimateSeconds,
                 'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
                 'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
             ]);
@@ -809,6 +813,9 @@ class TaskController extends Controller
                     'flow' => $project->project_flow,
                     'default_billable' => (bool) $project->default_billable,
                     'default_status_id' => $defaultStatusIdsByFlow[$project->project_flow] ?? null,
+                    'default_task_estimate_minutes' => $project->default_task_estimate_seconds !== null
+                        ? intdiv((int) $project->default_task_estimate_seconds, 60)
+                        : 0,
                     'modules' => $project->projectModules
                         ->map(fn(ProjectModule $projectModule) => [
                             'value' => (string) $projectModule->id,
@@ -889,6 +896,11 @@ class TaskController extends Controller
         }
 
         return (string) (array_key_first($priorities) ?? 'medium');
+    }
+
+    private function getDefaultTaskEstimateSeconds(Project $project): int
+    {
+        return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
     }
 
     private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void

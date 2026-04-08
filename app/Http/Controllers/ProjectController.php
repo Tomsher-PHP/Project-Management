@@ -286,6 +286,7 @@ class ProjectController extends Controller
             ->orderBy('id')
             ->value('id');
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
+        $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
 
         $task = $project->tasks()->create([
             'project_module_id' => $targetSprint?->project_module_id,
@@ -300,7 +301,9 @@ class ProjectController extends Controller
             'current_assignee_id' => $assigneeId,
             'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
             'due_date' => $validated['due_date'] ?? null,
-            'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
+            'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
+                ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
+                : $defaultTaskEstimateSeconds,
             'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
             'sort_order' => Task::nextSortOrder($project->id, $targetSprint?->id),
         ]);
@@ -744,6 +747,9 @@ class ProjectController extends Controller
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
         $defaultTaskStartDate = now(config('constants.timezone'))->toDateString();
         $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
+        $defaultTaskEstimateMinutes = $project->default_task_estimate_seconds !== null
+            ? intdiv((int) $project->default_task_estimate_seconds, 60)
+            : 0;
         $tagOptions = Tag::query()
             ->active()
             ->orderBy('name')
@@ -768,10 +774,16 @@ class ProjectController extends Controller
             'taskModeOptions' => $taskModeOptions,
             'taskPriorityOptions' => $taskPriorityOptions,
             'defaultTaskPriority' => $defaultTaskPriority,
+            'defaultTaskEstimateMinutes' => $defaultTaskEstimateMinutes,
             'defaultTaskStartDate' => $defaultTaskStartDate,
             'defaultTaskDueDate' => $defaultTaskDueDate,
             'tagOptions' => $tagOptions,
         ])->render();
+    }
+
+    private function getDefaultTaskEstimateSeconds(Project $project): int
+    {
+        return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
     }
 
     private function renderScopeTab(Project $project): string

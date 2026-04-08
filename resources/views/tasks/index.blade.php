@@ -13,6 +13,7 @@
             @endcan
 
             <x-filters.button />
+            <x-project-flow-indicator class="sm:ml-auto" />
         </div>
 
         @php
@@ -44,25 +45,25 @@
                     <table class="min-w-full border-separate border-spacing-0">
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="title" label="Task" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="project.name" label="Project" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="currentAssignee.name" label="Assignee" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="status.name" label="Status" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="task_type" label="Type" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="task_mode" label="Task Mode" />
                                 </th>
-                                <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate Time" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -86,7 +87,7 @@
                                 @endphp
 
                                 <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         <div class="flex items-start gap-3">
                                             <span class="mt-0.5 h-12 w-1.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
 
@@ -114,7 +115,7 @@
                                         </div>
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         <div class="min-w-0">
                                             <p class="flex items-center gap-2 truncate text-sm font-semibold text-bgray-900 dark:text-white">
                                                 @if ($task->project)
@@ -134,7 +135,7 @@
                                         </div>
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         @if ($task->currentAssignee)
                                             <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-100">
                                                 {{ $task->currentAssignee->name }}
@@ -146,7 +147,7 @@
                                         @endif
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         @if ($task->status)
                                             <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
                                                 <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
@@ -159,21 +160,21 @@
                                         @endif
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
                                             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $typeColor }}"></span>
                                             {{ $typeLabel }}
                                         </span>
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
                                             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $modeColor }}"></span>
                                             {{ $modeLabel }}
                                         </span>
                                     </td>
 
-                                    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
                                         <div class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>
                                         <div class="text-xs text-bgray-500 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
                                     </td>
