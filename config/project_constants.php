@@ -43,73 +43,11 @@ return [
         'linear' => 'Linear',
     ],
 
-    'task_type' => [
-        'normal' => [
-            'label' => 'Normal',
-            'color' => 'gray',
-            'bg_class' => 'bg-bgray-500',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-bgray-500',
-        ],
-        'feature' => [
-            'label' => 'Feature',
-            'color' => 'green',
-            'bg_class' => 'bg-success-400',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-success-400',
-        ],
-        'bug' => [
-            'label' => 'Bug',
-            'color' => 'red',
-            'bg_class' => 'bg-error-300',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-error-300',
-        ],
-        'quality' => [
-            'label' => 'Quality',
-            'color' => 'pink',
-            'bg_class' => 'bg-[#F08AE8]',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-[#F08AE8]',
-        ],
-        'test' => [
-            'label' => 'Test',
-            'color' => 'blue',
-            'bg_class' => 'bg-blue-500',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-blue-500',
-        ],
-        'research' => [
-            'label' => 'Research',
-            'color' => 'violet',
-            'bg_class' => 'bg-violet-500',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-violet-500',
-        ],
-    ],
-
-    'task_mode' => [
-        'new' => [
-            'label' => 'New',
-            'color' => 'blue',
-            'bg_class' => 'bg-blue-500',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-blue-500',
-        ],
-        'rework' => [
-            'label' => 'Rework',
-            'color' => 'orange',
-            'bg_class' => 'bg-orange',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-warning-300',
-        ],
-        'change_request' => [
-            'label' => 'Change Request',
-            'color' => 'cyan',
-            'bg_class' => 'bg-cyan-600',
-            'bg_text' => 'text-white',
-            'text_class' => 'text-cyan-600',
-        ],
+    'task_status_types' => [
+        'pending' => 'Pending', // Default status for new tasks
+        'active' => 'Active', // Tasks that are currently being worked on
+        'completed' => 'Completed', // Tasks that have been finished
+        'archived' => 'Archived', // Tasks that are no longer active but kept for record-keeping
     ],
 
     'task_priorities' => [

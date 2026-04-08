@@ -125,4 +125,9 @@ return [
     ['name' => 'agile_sprint.create', 'sort_order' => 101],
     ['name' => 'agile_sprint.edit', 'sort_order' => 102],
     ['name' => 'agile_sprint.delete', 'sort_order' => 103],
+
+    ['name' => 'task_settings.view', 'sort_order' => 104],
+    ['name' => 'task_settings.create', 'sort_order' => 105],
+    ['name' => 'task_settings.edit', 'sort_order' => 106],
+    ['name' => 'task_settings.delete', 'sort_order' => 107],
 ];

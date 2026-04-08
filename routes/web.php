@@ -26,6 +26,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -165,6 +166,26 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.edit')->only(['update']);
         Route::resource('agile-sprints', AgileSprintController::class)->middleware('permission.type:agile_sprint.delete')->only(['destroy']);
         // End Agile sprint Routes
+
+        // Task settings routes
+        Route::patch('/task-statuses/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskStatus'])->middleware('permission.type:task_settings.edit')->name('task_status.toggleStatus');
+        Route::resource('task-statuses', TaskSettingsController::class)->middleware('permission.type:task_settings.view')->only(['index']);
+        Route::resource('task-statuses', TaskSettingsController::class)->middleware('permission.type:task_settings.create')->only(['store']);
+        Route::resource('task-statuses', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
+        Route::resource('task-statuses', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
+
+        Route::patch('/task-types/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskType'])->middleware('permission.type:task_settings.edit')->name('task_type.toggleStatus');
+        Route::resource('task-types', TaskSettingsController::class)->middleware('permission.type:task_settings.view')->only(['index']);
+        Route::resource('task-types', TaskSettingsController::class)->middleware('permission.type:task_settings.create')->only(['store']);
+        Route::resource('task-types', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
+        Route::resource('task-types', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
+
+        Route::patch('/task-modes/toggle-status', [TaskSettingsController::class, 'toggleStatusTaskMode'])->middleware('permission.type:task_settings.edit')->name('task_mode.toggleStatus');
+        Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.view')->only(['index']);
+        Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.create')->only(['store']);
+        Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
+        Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
+        // End Task settings Routes
     });
     // End Settings Routes
 

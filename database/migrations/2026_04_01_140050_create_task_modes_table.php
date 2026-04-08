@@ -14,10 +14,9 @@ return new class extends Migration
             $table->string('code', 100)->unique();
             $table->text('description')->nullable();
             $table->string('color', 20)->nullable();
-            $table->boolean('is_rework')->default(false);
             $table->boolean('is_productive')->default(true);
-            $table->boolean('affects_performance')->default(false);
-            $table->boolean('affects_billable_time')->default(true);
+            $table->boolean('is_rework')->default(false);
+            $table->boolean('track_performance')->default(true);
             $table->unsignedInteger('sort_order')->default(1);
             $table->boolean('is_default')->default(false);
             $table->boolean('is_system')->default(false);

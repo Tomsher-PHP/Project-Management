@@ -8,13 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('task_statuses', function (Blueprint $table) {
+        $types = config('project_constants.task_status_types');
+        $firstType = array_key_first($types);
+
+        Schema::create('task_statuses', function (Blueprint $table) use ($types, $firstType) {
             $table->id();
             $table->string('name', 100);
             $table->enum('flow_type', ['agile', 'linear']);
             $table->string('code', 100);
             $table->string('color', 50)->nullable();
-            $table->string('type', 50)->nullable();
+            $table->enum('type', array_keys($types))->default($firstType);
             $table->unsignedInteger('sort_order')->default(1);
             $table->boolean('is_default')->default(false);
             $table->boolean('is_completed')->default(false);
