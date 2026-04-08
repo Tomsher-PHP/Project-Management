@@ -203,7 +203,7 @@ class ScheduleShiftService
     {
         $users = app(UserService::class)->getAccessibleUsers(auth()->user());
 
-        $shifts = Shift::whereStatus(1)->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
+        $shifts = Shift::active()->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 
         return [$users, $shifts];
     }

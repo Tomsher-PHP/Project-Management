@@ -47,6 +47,7 @@ export function initTomSelect(root = document) {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'clear_button'],
+            searchField: ['text', 'subtype'],
             render: {
                 option: function (data, escape) {
                     return `

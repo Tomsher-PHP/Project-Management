@@ -15,6 +15,7 @@ export default defineConfig({
                 'resources/js/modules/activity-logs.js',
                 'resources/js/image-draggable.js',
                 'resources/js/modules/projects/project-detail.js',
+                'resources/js/modules/task-list-create.js',
             ],
             refresh: true,
         }),

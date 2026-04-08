@@ -121,7 +121,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <x-table-no-data col-span="5" message="No teams found." />
+                                    <x-table-no-data col-span="5" message="No teams found." sub-message="There are no teams to display for the current filters." />
                                 @endforelse
                             </table>
                         </div>

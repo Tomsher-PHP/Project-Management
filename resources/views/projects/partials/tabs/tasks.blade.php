@@ -132,9 +132,9 @@
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Status</label>
                                         <select name="status_id" class="tom-select-no-search w-full">
-                                            <option value="">Select status</option>
+                                            <option value="" {{ blank($defaultTaskStatusId) ? 'selected' : '' }}>Select status</option>
                                             @foreach ($taskStatuses as $status)
-                                                <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                                <option value="{{ $status->id }}" {{ (int) $defaultTaskStatusId === (int) $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
                                             @endforeach
                                         </select>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="status_id"></p>
@@ -170,7 +170,7 @@
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Priority</label>
                                         <select name="priority" class="tom-select-no-search w-full">
                                             @foreach ($taskPriorityOptions as $option)
-                                                <option value="{{ $option['value'] }}" {{ $loop->first ? 'selected' : '' }}>{{ $option['label'] }}</option>
+                                                <option value="{{ $option['value'] }}" {{ $option['value'] === $defaultTaskPriority ? 'selected' : '' }}>{{ $option['label'] }}</option>
                                             @endforeach
                                         </select>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
@@ -178,13 +178,13 @@
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Start Date</label>
-                                        <input type="date" name="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
+                                        <input type="date" name="start_date" value="{{ $defaultTaskStartDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="start_date"></p>
                                     </div>
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
-                                        <input type="date" name="due_date" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
+                                        <input type="date" name="due_date" value="{{ $defaultTaskDueDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date"></p>
                                     </div>
 
@@ -201,7 +201,7 @@
                                     <div class="md:col-span-2">
                                         <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
                                             <input type="hidden" name="is_billable" value="0">
-                                            <input type="checkbox" name="is_billable" value="1" class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-success-300">
+                                            <input type="checkbox" name="is_billable" value="1" class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-success-300" {{ $project->default_billable ? 'checked' : '' }}>
                                             <span>Billable task</span>
                                         </label>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="is_billable"></p>

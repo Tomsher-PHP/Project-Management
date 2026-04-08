@@ -41,6 +41,11 @@ class Shift extends Model
         ];
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function weekends()
     {
         return $this->hasMany(ShiftWeekend::class);

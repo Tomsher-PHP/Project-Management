@@ -272,21 +272,20 @@ class ProjectController extends Controller
             ->find($validated['project_sprint_id']);
         $targetSprint = $isLinearFlow ? null : ($selectedSprint ?: $latestSprint);
 
-        $defaultStatusId = TaskStatus::query()
-            ->where('flow_type', $project->project_flow)
-            ->where('is_default', true)
-            ->value('id');
+        $defaultStatusId = $this->getDefaultTaskStatusId($project);
         $defaultTaskType = TaskType::query()
             ->active()
+            ->orderByDesc('is_default')
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->value('code') ?: 'feature';
+            ->value('id');
         $defaultTaskMode = TaskMode::query()
             ->active()
             ->orderByDesc('is_default')
+            ->orderBy('sort_order')
             ->orderBy('id')
-            ->value('code') ?: 'new';
-        $defaultTaskPriority = array_key_first(config('project_constants.task_priorities', [])) ?: 'medium';
+            ->value('id');
+        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
 
         $task = $project->tasks()->create([
             'project_module_id' => $targetSprint?->project_module_id,
@@ -302,7 +301,7 @@ class ProjectController extends Controller
             'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
             'due_date' => $validated['due_date'] ?? null,
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
-            'is_billable' => (bool) ($validated['is_billable'] ?? false),
+            'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
             'sort_order' => Task::nextSortOrder($project->id, $targetSprint?->id),
         ]);
 
@@ -741,6 +740,10 @@ class ProjectController extends Controller
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
+        $defaultTaskStatusId = $this->getDefaultTaskStatusId($project);
+        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
+        $defaultTaskStartDate = now(config('constants.timezone'))->toDateString();
+        $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
         $tagOptions = Tag::query()
             ->active()
             ->orderBy('name')
@@ -760,9 +763,13 @@ class ProjectController extends Controller
             'defaultSprintId' => $latestSprint?->id,
             'taskGroupsPagination' => $taskGroupViewData['pagination'],
             'taskStatuses' => $taskStatuses,
+            'defaultTaskStatusId' => $defaultTaskStatusId,
             'taskTypeOptions' => $taskTypeOptions,
             'taskModeOptions' => $taskModeOptions,
             'taskPriorityOptions' => $taskPriorityOptions,
+            'defaultTaskPriority' => $defaultTaskPriority,
+            'defaultTaskStartDate' => $defaultTaskStartDate,
+            'defaultTaskDueDate' => $defaultTaskDueDate,
             'tagOptions' => $tagOptions,
         ])->render();
     }
@@ -1522,5 +1529,28 @@ class ProjectController extends Controller
                 return null;
             }
         }
+    }
+
+    private function getDefaultTaskStatusId(Project $project): ?int
+    {
+        return TaskStatus::query()
+            ->active()
+            ->forFlow($project->project_flow)
+            ->orderByDesc('is_default')
+            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->value('id');
+    }
+
+    private function getDefaultTaskPriorityValue(): string
+    {
+        $priorities = config('project_constants.task_priorities', []);
+
+        if (array_key_exists('medium', $priorities)) {
+            return 'medium';
+        }
+
+        return (string) (array_key_first($priorities) ?? 'medium');
     }
 }

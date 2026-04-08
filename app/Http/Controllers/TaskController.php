@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskCommentRequest;
+use App\Http\Requests\TaskQuickStoreRequest;
 use App\Http\Requests\TaskUpdateRequest;
 use App\Models\Attachment;
 use App\Models\Project;
@@ -68,7 +69,7 @@ class TaskController extends Controller
 
         $tasks = (clone $accessibleTasksQuery)
             ->with([
-                'project:id,name,project_flow',
+                'project:id,name,project_code,project_flow',
                 'projectModule:id,name',
                 'projectSprint:id,name',
                 'currentAssignee:id,name',
@@ -143,6 +144,44 @@ class TaskController extends Controller
             ->orderBy('id', 'asc')
             ->get(['name', 'code']);
         $priorities = config('project_constants.task_priorities', []);
+        $taskCreateProjects = Project::query()
+            ->accessibleBy($user)
+            ->with([
+                'projectModules' => fn($query) => $query
+                    ->select('id', 'project_id', 'name')
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+                'projectSprints' => fn($query) => $query
+                    ->select('id', 'project_id', 'project_module_id', 'name')
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+                'activeMembers:id,name',
+            ])
+            ->orderBy('name', 'asc')
+            ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable']);
+        $taskTypeOptions = TaskType::query()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'color']);
+        $taskModeOptions = TaskMode::query()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'name', 'color']);
+        $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
+            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
+            ->values();
+        $tagOptions = Tag::query()
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'color']);
+        $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
+        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
+        $defaultTaskStartDate = now(config('constants.timezone'))->toDateString();
+        $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
 
         return view('tasks.index', compact(
             'tasks',
@@ -154,7 +193,16 @@ class TaskController extends Controller
             'assignees',
             'types',
             'modes',
-            'priorities'
+            'priorities',
+            'taskCreateProjects',
+            'taskTypeOptions',
+            'taskModeOptions',
+            'taskPriorityOptions',
+            'tagOptions',
+            'taskCreateDependencies',
+            'defaultTaskPriority',
+            'defaultTaskStartDate',
+            'defaultTaskDueDate'
         ));
     }
 
@@ -169,9 +217,82 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(TaskQuickStoreRequest $request): JsonResponse
     {
-        //
+        $validated = $request->validated();
+        $project = Project::query()
+            ->accessibleBy($request->user())
+            ->findOrFail($validated['project_id']);
+        $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
+        $isLinearFlow = $project->project_flow === 'linear';
+        $selectedModule = $isLinearFlow || empty($validated['project_module_id'])
+            ? null
+            : ProjectModule::query()
+                ->where('project_id', $project->id)
+                ->find($validated['project_module_id']);
+        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
+            ? null
+            : ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($validated['project_sprint_id']);
+        $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? $selectedModule?->id);
+        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
+        $defaultStatusId = $this->getDefaultTaskStatusIdForFlow($project->project_flow);
+        $defaultTaskTypeId = TaskType::query()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->value('id');
+        $defaultTaskModeId = TaskMode::query()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->value('id');
+        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
+
+        $task = DB::transaction(function () use (
+            $project,
+            $validated,
+            $assigneeId,
+            $resolvedModuleId,
+            $resolvedSprintId,
+            $defaultStatusId,
+            $defaultTaskTypeId,
+            $defaultTaskModeId,
+            $defaultTaskPriority
+        ) {
+            $task = $project->tasks()->create([
+                'project_module_id' => $resolvedModuleId,
+                'project_sprint_id' => $resolvedSprintId,
+                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
+                'task_type_id' => $validated['task_type_id'] ?? $defaultTaskTypeId,
+                'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskModeId,
+                'priority' => $validated['priority'] ?? $defaultTaskPriority,
+                'current_assignee_id' => $assigneeId,
+                'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
+                'due_date' => $validated['due_date'] ?? null,
+                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
+                'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
+                'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
+            ]);
+
+            if (array_key_exists('tag_ids', $validated)) {
+                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
+            }
+
+            return $task;
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Task added successfully.',
+            'task_id' => $task->id,
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -237,6 +358,54 @@ class TaskController extends Controller
             );
 
             $query->where('project_sprint_id', $sprintId);
+        }
+
+        return response()->json([
+            'status' => true,
+            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
+                return [
+                    'value' => (string) $parentTask->id,
+                    'text' => $parentTask->title,
+                    'subtype' => $parentTask->code ?: 'Parent task',
+                ];
+            })->values(),
+        ], Response::HTTP_OK);
+    }
+
+    public function quickCreateParentOptions(Request $request): JsonResponse
+    {
+        $projectId = $request->filled('project_id') ? (int) $request->input('project_id') : null;
+        $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
+
+        abort_unless($projectId, Response::HTTP_NOT_FOUND);
+
+        $project = Project::query()
+            ->accessibleBy($request->user())
+            ->findOrFail($projectId);
+
+        $query = Task::query()
+            ->where('project_id', $project->id)
+            ->accessibleBy($request->user())
+            ->orderBy('title')
+            ->orderBy('id');
+
+        if ($project->project_flow === 'linear') {
+            $query->whereNull('project_sprint_id');
+        } elseif ($sprintId) {
+            abort_unless(
+                ProjectSprint::query()
+                    ->where('project_id', $project->id)
+                    ->whereKey($sprintId)
+                    ->exists(),
+                Response::HTTP_NOT_FOUND
+            );
+
+            $query->where('project_sprint_id', $sprintId);
+        } else {
+            return response()->json([
+                'status' => true,
+                'options' => [],
+            ], Response::HTTP_OK);
         }
 
         return response()->json([
@@ -615,6 +784,111 @@ class TaskController extends Controller
             ->get()
             ->sortBy('created_at')
             ->values();
+    }
+
+    private function buildTaskCreateDependencies(Collection $projects): array
+    {
+        $statusOptionsByFlow = TaskStatus::query()
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'flow_type'])
+            ->groupBy('flow_type')
+            ->map(fn(Collection $statuses) => $statuses->map(fn(TaskStatus $status) => [
+                'value' => (string) $status->id,
+                'text' => $status->name,
+            ])->values())
+            ->toArray();
+        $defaultStatusIdsByFlow = collect(array_keys(config('project_constants.project_flows', [])))
+            ->mapWithKeys(fn(string $flowType) => [$flowType => $this->getDefaultTaskStatusIdForFlow($flowType)]);
+
+        return [
+            'projects' => $projects->mapWithKeys(function (Project $project) use ($defaultStatusIdsByFlow) {
+                return [(string) $project->id => [
+                    'id' => $project->id,
+                    'flow' => $project->project_flow,
+                    'default_billable' => (bool) $project->default_billable,
+                    'default_status_id' => $defaultStatusIdsByFlow[$project->project_flow] ?? null,
+                    'modules' => $project->projectModules
+                        ->map(fn(ProjectModule $projectModule) => [
+                            'value' => (string) $projectModule->id,
+                            'text' => $projectModule->name,
+                        ])
+                        ->values(),
+                    'sprints' => $project->projectSprints
+                        ->map(fn(ProjectSprint $projectSprint) => [
+                            'value' => (string) $projectSprint->id,
+                            'text' => $projectSprint->name,
+                            'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                        ])
+                        ->values(),
+                    'assignees' => $project->activeMembers
+                        ->sortBy('name')
+                        ->values()
+                        ->map(fn(User $user) => [
+                            'value' => (string) $user->id,
+                            'text' => $user->name,
+                        ]),
+                ]];
+            }),
+            'status_options_by_flow' => $statusOptionsByFlow,
+            'defaults' => [
+                'project_id' => $projects->firstWhere('id', $this->resolveDefaultTaskCreateProjectId($projects))?->id,
+                'priority' => $this->getDefaultTaskPriorityValue(),
+                'start_date' => now(config('constants.timezone'))->toDateString(),
+                'due_date' => now(config('constants.timezone'))->addDay()->toDateString(),
+            ],
+            'parent_options_url' => route('tasks.quick-create-parent-options'),
+        ];
+    }
+
+    private function resolveDefaultTaskCreateProjectId(Collection $projects): ?int
+    {
+        $userId = auth()->id();
+
+        if (! $userId) {
+            return null;
+        }
+
+        $projectId = Task::query()
+            ->where('added_by', $userId)
+            ->whereNotNull('project_id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->value('project_id');
+
+        if (! $projectId) {
+            return null;
+        }
+
+        return $projects->contains('id', $projectId) ? (int) $projectId : null;
+    }
+
+    private function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
+    {
+        if (blank($flowType)) {
+            return null;
+        }
+
+        return TaskStatus::query()
+            ->active()
+            ->where('flow_type', $flowType)
+            ->orderByDesc('is_default')
+            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->value('id');
+    }
+
+    private function getDefaultTaskPriorityValue(): string
+    {
+        $priorities = config('project_constants.task_priorities', []);
+
+        if (array_key_exists('medium', $priorities)) {
+            return 'medium';
+        }
+
+        return (string) (array_key_first($priorities) ?? 'medium');
     }
 
     private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void

@@ -278,6 +278,8 @@ Route::middleware(['auth'])->group(function () {
     // End Project Routes
 
     // Task Routes
+    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->middleware(['permission.type:task.create'])->name('tasks.quick-create-parent-options');
+
     Route::prefix('tasks/{task}')->middleware('can:view,task')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
         Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
