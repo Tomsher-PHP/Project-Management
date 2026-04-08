@@ -50,6 +50,7 @@ class ProjectStatusRequest extends FormRequest
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'type' => ['required', 'string', Rule::in(['open', 'in_progress', 'closed'])],
             'sort_order' => ['required', 'numeric'],
+            'is_default' => ['boolean'],
             'is_completed' => ['nullable', 'boolean'],
         ];
     }

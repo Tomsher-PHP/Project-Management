@@ -83,6 +83,11 @@
                                                                 System
                                                             </span>
                                                         @endif
+                                                        @if ($projectStatus->is_default)
+                                                            <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                                Default
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                     <p class="text-sm text-bgray-500 dark:text-bgray-300">
                                                         {{ $projectStatus->code ?: '--' }}
@@ -111,7 +116,7 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @can('project_status.edit')
-                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-statuses.update', $projectStatus->id) }}" data-name="{{ $projectStatus->name }}" data-code="{{ $projectStatus->code }}" data-color="{{ $projectStatus->color }}" data-type="{{ $projectStatus->type }}" data-is_completed="{{ (int) $projectStatus->is_completed }}" data-sort_order="{{ $projectStatus->sort_order }}" data-method="PUT" data-module="Project Status">
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-statuses.update', $projectStatus->id) }}" data-name="{{ $projectStatus->name }}" data-code="{{ $projectStatus->code }}" data-color="{{ $projectStatus->color }}" data-type="{{ $projectStatus->type }}" data-is_completed="{{ (int) $projectStatus->is_completed }}" data-is_default="{{ (int) $projectStatus->is_default }}" data-sort_order="{{ $projectStatus->sort_order }}" data-method="PUT" data-module="Project Status">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
@@ -179,6 +184,11 @@
             <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
             <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
+
+        <label for="is_default" class="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Is Default</span>
+        </label>
 
     </x-form-modal>
 

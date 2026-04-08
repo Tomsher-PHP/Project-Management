@@ -67,42 +67,6 @@
                 @enderror
             </div>
 
-            <!-- Status -->
-            <div class="flex flex-col gap-2">
-                <label for="project_status" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Project Status <x-red-star />
-                </label>
-                <select name="project_status" id="project_status" class="tom-select-no-search w-full" x-on:change="markDirty()">
-                    <option value="">Select Status</option>
-                    @foreach ($statuses as $status)
-                        <option value="{{ $status->id }}" {{ old('project_status', $project->status_id ?? '') == $status->id ? 'selected' : '' }}>
-                            {{ $status->name }}{{ $status->type ? ' (' . str_replace('_', ' ', ucfirst($status->type)) . ')' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('project_status')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Project Stage -->
-            <div class="flex flex-col gap-2">
-                <label for="project_stage_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Project Stage
-                </label>
-                <select name="project_stage_id" id="project_stage_id" class="tom-select-no-search w-full" x-on:change="markDirty()">
-                    <option value="">Select Project Stage</option>
-                    @foreach ($projectStages as $stage)
-                        <option value="{{ $stage->id }}" {{ old('project_stage_id', $project->project_stage_id ?? '') == $stage->id ? 'selected' : '' }}>
-                            {{ $stage->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('project_stage_id')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
-
         </div>
     </div>
 

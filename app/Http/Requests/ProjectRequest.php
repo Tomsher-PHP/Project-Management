@@ -25,12 +25,12 @@ class ProjectRequest extends FormRequest
             'name' => 'required|string|max:255',
             'customer_id' => 'required|exists:customers,id',
             'priority' => 'required|in:urgent,high,medium,low',
-            'project_status' => 'required|exists:project_statuses,id',
             'start_date' => 'nullable|date',
         ];
 
         if ($this->isMethod('POST')) {
             $rules['project_flow'] = 'required|in:agile,linear';
+            $rules['project_status'] = 'required|exists:project_statuses,id';
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
@@ -40,7 +40,6 @@ class ProjectRequest extends FormRequest
                 'estimated_time_minutes' => 'nullable|integer|min:0',
                 'domain' => 'nullable|string',
                 'sales_person_id' => 'nullable|exists:users,id',
-                'project_stage_id' => 'nullable|exists:project_stages,id',
                 'project_category_id' => 'nullable|exists:project_categories,id',
                 'default_billable' => 'nullable|boolean',
                 'project_technology_ids' => 'nullable|array',
@@ -72,7 +71,6 @@ class ProjectRequest extends FormRequest
             'estimated_time_minutes.integer' => 'Estimate time must be a whole number of minutes.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'sales_person_id.exists' => 'The selected sales person is invalid.',
-            'project_stage_id.exists' => 'The selected project stage is invalid.',
             'project_category_id.exists' => 'The selected project category is invalid.',
             'default_billable.boolean' => 'The default billable value is invalid.',
             'project_technology_ids.array' => 'Project technologies must be provided as a list.',
@@ -94,7 +92,6 @@ class ProjectRequest extends FormRequest
             'estimated_time_minutes' => 'estimate time',
             'domain' => 'domain',
             'sales_person_id' => 'sales person',
-            'project_stage_id' => 'project stage',
             'project_category_id' => 'project category',
             'default_billable' => 'default billable',
             'project_technology_ids' => 'project technologies',

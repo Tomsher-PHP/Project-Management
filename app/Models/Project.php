@@ -132,6 +132,11 @@ class Project extends Model
         return $this->hasMany(ProjectStatusHistory::class)->orderBy('added_at', 'desc');
     }
 
+    public function stageHistories()
+    {
+        return $this->hasMany(ProjectStageHistory::class)->orderBy('added_at', 'desc');
+    }
+
     public function comments()
     {
         return $this->hasMany(ProjectComment::class)->orderBy('created_at', 'desc');

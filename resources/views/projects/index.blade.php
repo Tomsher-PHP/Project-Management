@@ -41,9 +41,9 @@
                                             <x-sorting.sortable-column column="customer.name" label="Customer" />
                                         </div>
                                     </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project Status</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status / Stage</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -70,6 +70,8 @@
                                         $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
                                         $isAgileFlow = $project->project_flow === 'agile';
                                         $flowLabel = ucfirst($project->project_flow ?? 'linear');
+                                        $projectStatusColor = $project->projectStatus->color ?? '#CBD5E1';
+                                        $projectStageColor = $project->projectStage->color ?? '#CBD5E1';
                                     @endphp
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
@@ -123,9 +125,16 @@
                                                 <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->customer->name ?? '--' }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->projectStatus->name ?? '--' }}</span>
+                                        <td class="px-6 py-5 xl:w-[220px] xl:px-0">
+                                            <div class="flex w-full flex-col gap-2">
+                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                                                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $projectStatusColor }}"></span>
+                                                    {{ $project->projectStatus->name ?? 'No Status' }}
+                                                </span>
+                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                                                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $projectStageColor }}"></span>
+                                                    {{ $project->projectStage->name ?? 'No Stage' }}
+                                                </span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">

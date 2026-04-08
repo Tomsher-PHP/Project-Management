@@ -439,9 +439,16 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'status_id' => 'required|exists:project_statuses,id',
+            'change_date' => 'required|date',
+            'remarks' => 'nullable|string|max:150',
         ]);
 
-        $project = $service->updateStatus($project, (int) $validated['status_id']);
+        $project = $service->updateStatus(
+            $project,
+            (int) $validated['status_id'],
+            $validated['change_date'],
+            $validated['remarks'] ?? null
+        );
 
         return response()->json([
             'success' => true,
@@ -458,11 +465,15 @@ class ProjectController extends Controller
 
         $validated = $request->validate([
             'project_stage_id' => 'nullable|exists:project_stages,id',
+            'change_date' => 'required|date',
+            'remarks' => 'nullable|string|max:150',
         ]);
 
         $project = $service->updateStage(
             $project,
-            isset($validated['project_stage_id']) ? (int) $validated['project_stage_id'] : null
+            isset($validated['project_stage_id']) ? (int) $validated['project_stage_id'] : null,
+            $validated['change_date'],
+            $validated['remarks'] ?? null
         );
 
         return response()->json([

@@ -26,6 +26,8 @@
     ];
     $isAgileFlow = $project->project_flow === 'agile';
     $flowLabel = ucfirst($project->project_flow ?? 'linear');
+    $projectStatusColor = $project->projectStatus->color ?? '#6B7280';
+    $projectStageColor = $project->projectStage->color ?? '#6B7280';
 @endphp
 
 <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600" data-project-header-card data-project-id="{{ $project->id }}">
@@ -72,69 +74,75 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 xl:justify-end">
-            @if ($canChangeProjectStatus)
-                <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
-                    <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-project-header-trigger style="border: 1px solid {{ $project->projectStatus->color ?? '#6B7280' }}; background-color: {{ $project->projectStatus->color ?? '#6B7280' }};">
-                        <span class="truncate whitespace-nowrap">{{ $project->projectStatus->name ?? 'No Status' }}</span>
-                        <span>
-                            <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
-                                <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </button>
-                    <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
-                        <ul class="max-h-72 overflow-y-auto">
-                            @foreach ($projectStatuses as $statusOption)
-                                <li>
-                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-header-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-current-value="{{ $project->status_id }}">
-                                        <span class="flex items-center gap-2 @if ((int) $project->status_id === (int) $statusOption->id) text-success-400 dark:text-success-300 @endif">
-                                            <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
-                                            <span>{{ $statusOption->name }}</span>
-                                        </span>
-                                    </button>
-                                </li>
-                            @endforeach
-                        </ul>
+            <div class="flex items-center gap-2.5">
+                <span class="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-600 dark:text-bgray-200">Status</span>
+                @if ($canChangeProjectStatus)
+                    <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
+                        <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-project-header-trigger style="border: 1px solid {{ $projectStatusColor }}; background-color: {{ $projectStatusColor }};">
+                            <span class="truncate whitespace-nowrap">{{ $project->projectStatus->name ?? 'No Status' }}</span>
+                            <span>
+                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                                    <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </button>
+                        <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
+                            <ul class="max-h-72 overflow-y-auto">
+                                @foreach ($projectStatuses as $statusOption)
+                                    <li>
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-item-name="{{ $statusOption->name }}" data-item-color="{{ $statusOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->status_id }}" data-modal-title="Change Project Status" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Status">
+                                            <span class="flex items-center gap-2 @if ((int) $project->status_id === (int) $statusOption->id) text-success-400 dark:text-success-300 @endif">
+                                                <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
+                                                <span>{{ $statusOption->name }}</span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            @else
-                <span class="whitespace-nowrap rounded-full px-4 py-1 text-sm font-semibold text-white" style="border: 1px solid {{ $project->projectStatus->color ?? '#6B7280' }}; background-color: {{ $project->projectStatus->color ?? '#6B7280' }};">
-                    {{ $project->projectStatus->name ?? 'No Status' }}
-                </span>
-            @endif
+                @else
+                    <span class="inline-flex h-[42px] items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-white" style="border: 1px solid {{ $projectStatusColor }}; background-color: {{ $projectStatusColor }};">
+                        {{ $project->projectStatus->name ?? 'No Status' }}
+                    </span>
+                @endif
+            </div>
 
-            @if ($canChangeProjectStage)
-                <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
-                    <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg border border-bgray-200 bg-bgray-100 px-4 text-sm font-semibold text-blue-500 shadow-sm transition duration-200 hover:text-blue-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-blue-500 dark:hover:bg-darkblack-400 sm:w-[165px]" data-project-header-trigger>
-                        <span class="truncate whitespace-nowrap">{{ $project->projectStage->name ?? 'No Stage' }}</span>
-                        <span>
-                            <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
-                                <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </button>
-                    <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
-                        <ul class="max-h-72 overflow-y-auto">
-                            <li>
-                                <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-header-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-current-value="{{ $project->project_stage_id ?? '' }}">
-                                    <span @if (blank($project->project_stage_id)) class="text-success-400 dark:text-success-300" @endif>No Stage</span>
-                                </button>
-                            </li>
-                            @foreach ($projectStages as $stageOption)
+            <div class="flex items-center gap-2.5">
+                <span class="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-600 dark:text-bgray-200">Stage</span>
+                @if ($canChangeProjectStage)
+                    <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-project-header-dropdown>
+                        <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-project-header-trigger style="border: 1px solid {{ $projectStageColor }}; background-color: {{ $projectStageColor }};">
+                            <span class="truncate whitespace-nowrap">{{ $project->projectStage->name ?? 'No Stage' }}</span>
+                            <span>
+                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                                    <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </button>
+                        <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
+                            <ul class="max-h-72 overflow-y-auto">
                                 <li>
-                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-header-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-current-value="{{ $project->project_stage_id ?? '' }}">
-                                        <span @if ((int) ($project->project_stage_id ?? 0) === (int) $stageOption->id) class="text-success-400 dark:text-success-300" @endif>{{ $stageOption->name }}</span>
+                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-item-name="No Stage" data-item-color="#9CA3AF" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage">
+                                        <span @if (blank($project->project_stage_id)) class="text-success-400 dark:text-success-300" @endif>No Stage</span>
                                     </button>
                                 </li>
-                            @endforeach
-                        </ul>
+                                @foreach ($projectStages as $stageOption)
+                                    <li>
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage">
+                                            <span @if ((int) ($project->project_stage_id ?? 0) === (int) $stageOption->id) class="text-success-400 dark:text-success-300" @endif>{{ $stageOption->name }}</span>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            @else
-                <span class="whitespace-nowrap rounded-full border border-bgray-200 bg-bgray-100 px-4 py-1 text-sm font-semibold text-blue-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-blue-500">
-                    {{ $project->projectStage->name ?? 'No Stage' }}
-                </span>
-            @endif
+                @else
+                    <span class="inline-flex h-[42px] items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-white" style="border: 1px solid {{ $projectStageColor }}; background-color: {{ $projectStageColor }};">
+                        {{ $project->projectStage->name ?? 'No Stage' }}
+                    </span>
+                @endif
+            </div>
 
             <button type="button" class="inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-header-collapse-toggle aria-expanded="false" aria-label="Expand project header details">
                 <svg class="h-5 w-5 transition duration-200" data-project-header-collapse-icon viewBox="0 0 24 24" fill="none" stroke="currentColor">

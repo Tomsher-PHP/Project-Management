@@ -6,6 +6,7 @@ use App\Http\Requests\ProjectStatusRequest;
 use App\Models\ProjectStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ProjectStatusController extends Controller
 {
@@ -31,7 +32,16 @@ class ProjectStatusController extends Controller
 
     public function store(ProjectStatusRequest $request)
     {
-        $projectStatus = activity()->withoutLogs(fn () => ProjectStatus::create($request->validated()));
+        $data = $request->validated();
+        $data['is_default'] = $request->boolean('is_default');
+
+        $projectStatus = DB::transaction(function () use ($data) {
+            if ($data['is_default']) {
+                $this->clearExistingDefaults();
+            }
+
+            return activity()->withoutLogs(fn () => ProjectStatus::create($data));
+        });
 
         return response()->json([
             'status' => true,
@@ -42,7 +52,18 @@ class ProjectStatusController extends Controller
 
     public function update(ProjectStatusRequest $request, ProjectStatus $projectStatus)
     {
-        activity()->withoutLogs(fn () => $projectStatus->update($request->validated()));
+        $data = $request->validated();
+        $data['is_default'] = $request->boolean('is_default');
+
+        $projectStatus = DB::transaction(function () use ($projectStatus, $data) {
+            if ($data['is_default']) {
+                $this->clearExistingDefaults($projectStatus->id);
+            }
+
+            activity()->withoutLogs(fn () => $projectStatus->update($data));
+
+            return $projectStatus->refresh();
+        });
 
         return response()->json([
             'status' => true,
@@ -77,5 +98,18 @@ class ProjectStatusController extends Controller
             'is_active' => $projectStatus->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
+    }
+
+    protected function clearExistingDefaults(?int $exceptId = null): void
+    {
+        $query = ProjectStatus::query();
+
+        if ($exceptId !== null) {
+            $query->whereKeyNot($exceptId);
+        }
+
+        $query->update([
+            'is_default' => false,
+        ]);
     }
 }

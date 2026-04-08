@@ -102,6 +102,7 @@
         </section>
 
         @include('projects.partials.modals.insights-modal')
+        @include('projects.partials.modals.change-project-attribute-modal')
     </main>
 @endsection
 

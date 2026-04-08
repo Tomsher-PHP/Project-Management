@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\ProjectNote;
 use App\Models\ProjectStage;
+use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
 use Illuminate\Support\Carbon;
@@ -66,13 +67,6 @@ class ProjectServices
     public function update(Project $project, array $data)
     {
         return DB::transaction(function () use ($project, $data) {
-
-            // Map status
-            if (isset($data['project_status'])) {
-                $data['status_id'] = $data['project_status'];
-                unset($data['project_status']);
-            }
-
             // Convert minutes -> seconds
             if (array_key_exists('estimated_time_minutes', $data)) {
                 $data['estimated_time_seconds'] = $data['estimated_time_minutes'] !== null
@@ -85,33 +79,20 @@ class ProjectServices
             $data['customer_id'] = $data['customer_id'] ?? null;
             $data['default_billable'] = $data['default_billable'] ?? 0;
 
-            // Track old status for history
-            $oldStatus = $project->status_id;
-
             // Update project
             $project->update([
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
                 'priority' => $data['priority'],
-                'status_id' => $data['status_id'],
                 'start_date' => $data['start_date'] ?? null,
                 'end_date' => $data['end_date'] ?? null,
                 'customer_end_date' => $data['customer_end_date'] ?? null,
                 'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
-                'project_stage_id' => $data['project_stage_id'] ?? null,
                 'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ]);
-
-            // Insert status history ONLY if changed
-            if ($oldStatus != $project->status_id) {
-                ProjectStatusHistory::create([
-                    'project_id' => $project->id,
-                    'status_id' => $project->status_id,
-                ]);
-            }
 
             // Attach project technologies
             if (isset($data['project_technology_ids'])) {
@@ -122,17 +103,27 @@ class ProjectServices
         });
     }
 
-    public function updateStatus(Project $project, int $statusId): Project
+    public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null): Project
     {
-        return DB::transaction(function () use ($project, $statusId) {
+        return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks) {
             if ((int) $project->status_id !== $statusId) {
+                $fromStatusId = $project->status_id;
+
                 $project->update([
                     'status_id' => $statusId,
                 ]);
 
+                $historyAddedAt = filled($statusDate)
+                    ? Carbon::parse($statusDate, config('constants.timezone'))
+                        ->setTimeFrom(now(config('constants.timezone')))
+                    : null;
+
                 ProjectStatusHistory::create([
                     'project_id' => $project->id,
+                    'from_status_id' => $fromStatusId,
                     'status_id' => $statusId,
+                    'added_at' => $historyAddedAt,
+                    'remarks' => blank($remarks) ? null : $remarks,
                 ]);
             }
 
@@ -140,12 +131,27 @@ class ProjectServices
         });
     }
 
-    public function updateStage(Project $project, ?int $projectStageId): Project
+    public function updateStage(Project $project, ?int $projectStageId, ?string $changeDate = null, ?string $remarks = null): Project
     {
-        return DB::transaction(function () use ($project, $projectStageId) {
+        return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks) {
             if ((int) ($project->project_stage_id ?? 0) !== (int) ($projectStageId ?? 0)) {
+                $fromStageId = $project->project_stage_id;
+
                 $project->update([
                     'project_stage_id' => $projectStageId,
+                ]);
+
+                $historyAddedAt = filled($changeDate)
+                    ? Carbon::parse($changeDate, config('constants.timezone'))
+                        ->setTimeFrom(now(config('constants.timezone')))
+                    : null;
+
+                ProjectStageHistory::create([
+                    'project_id' => $project->id,
+                    'from_stage_id' => $fromStageId,
+                    'stage_id' => $projectStageId,
+                    'added_at' => $historyAddedAt,
+                    'remarks' => blank($remarks) ? null : $remarks,
                 ]);
             }
 

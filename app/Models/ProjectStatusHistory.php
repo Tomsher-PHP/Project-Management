@@ -12,6 +12,7 @@ class ProjectStatusHistory extends Model
 
     protected $fillable = [
         'project_id',
+        'from_status_id',
         'status_id',
         'added_by',
         'added_at',
@@ -21,6 +22,7 @@ class ProjectStatusHistory extends Model
     protected $casts = [
         'added_at' => 'datetime',
         'added_by' => 'integer',
+        'from_status_id' => 'integer',
         'project_id' => 'integer',
         'status_id' => 'integer',
     ];
@@ -28,8 +30,13 @@ class ProjectStatusHistory extends Model
     public static function booted()
     {
         static::creating(function ($model) {
-            $model->added_by = Auth::id();
-            $model->added_at = now();
+            if (blank($model->added_by)) {
+                $model->added_by = Auth::id();
+            }
+
+            if (blank($model->added_at)) {
+                $model->added_at = now();
+            }
         });
     }
 
@@ -41,6 +48,11 @@ class ProjectStatusHistory extends Model
     public function status()
     {
         return $this->belongsTo(ProjectStatus::class);
+    }
+
+    public function fromStatus()
+    {
+        return $this->belongsTo(ProjectStatus::class, 'from_status_id');
     }
 
     public function addedBy()
