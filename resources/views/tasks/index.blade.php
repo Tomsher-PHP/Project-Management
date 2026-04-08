@@ -118,10 +118,7 @@
                                         <div class="min-w-0">
                                             <p class="flex items-center gap-2 truncate text-sm font-semibold text-bgray-900 dark:text-white">
                                                 @if ($task->project)
-                                                    <a
-                                                        href="{{ route('projects.edit', $task->project) }}"
-                                                        class="inline-flex min-w-0 flex-col items-start gap-1 transition duration-200 hover:text-success-400 dark:hover:text-success-300"
-                                                    >
+                                                    <a href="{{ route('projects.edit', $task->project) }}" class="inline-flex min-w-0 flex-col items-start gap-1 transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                                         <span class="inline-flex min-w-0 items-center gap-2">
                                                             <x-project-flow-icon :flow="$task->project->project_flow" size="sm" />
                                                             <span class="truncate">{{ $task->project->name }}</span>

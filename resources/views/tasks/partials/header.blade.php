@@ -23,10 +23,7 @@
                 <span class="inline-flex items-center gap-2">
                     <strong>Project:</strong>
                     @if ($project)
-                        <a
-                            href="{{ route('projects.edit', $project) }}"
-                            class="inline-flex items-center gap-2 transition duration-200 hover:text-success-400 dark:hover:text-success-300"
-                        >
+                        <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center gap-2 transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                             <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                             <span>{{ $project->name }}</span>
                         </a>
@@ -38,10 +35,7 @@
                     <span>
                         <strong>Module:</strong>
                         @if ($project)
-                            <a
-                                href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectModule->id]) }}"
-                                class="transition duration-200 hover:text-success-400 dark:hover:text-success-300"
-                            >
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectModule->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                 {{ $task->projectModule->name }}
                             </a>
                         @else
@@ -53,10 +47,7 @@
                     <span>
                         <strong>Sprint:</strong>
                         @if ($project)
-                            <a
-                                href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectSprint->project_module_id ?: $task->project_module_id, 'sprint' => $task->projectSprint->id]) }}"
-                                class="transition duration-200 hover:text-success-400 dark:hover:text-success-300"
-                            >
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectSprint->project_module_id ?: $task->project_module_id, 'sprint' => $task->projectSprint->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                 {{ $task->projectSprint->name }}
                             </a>
                         @else
@@ -67,10 +58,7 @@
                 @if ($task->parentTask)
                     <span>
                         <strong>Parent Task:</strong>
-                        <a
-                            href="{{ route('tasks.edit', $task->parentTask) }}"
-                            class="transition duration-200 hover:text-success-400 dark:hover:text-success-300"
-                        >
+                        <a href="{{ route('tasks.edit', $task->parentTask) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                             {{ $task->parentTask->title }}
                         </a>
                     </span>

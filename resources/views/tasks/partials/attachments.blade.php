@@ -13,11 +13,7 @@
         </div>
 
         @if ($canCreate)
-            <button
-                type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400"
-                data-task-note-modal-open
-            >
+            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-note-modal-open>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
@@ -27,7 +23,7 @@
     </div>
 
     <div class="mt-6">
-        @if (! $canCreate)
+        @if (!$canCreate)
             <p class="rounded-lg border border-dashed border-bgray-300 px-4 py-3 text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
                 You have view-only access to task notes.
             </p>
@@ -49,11 +45,7 @@
                                 </p>
                             </div>
 
-                            <button
-                                type="button"
-                                class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300"
-                                data-task-note-modal-close
-                            >
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-note-modal-close>
                                 ✕
                             </button>
                         </div>
@@ -85,11 +77,7 @@
                         </div>
 
                         <div class="flex flex-wrap justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                            <button
-                                type="button"
-                                class="rounded-lg border border-bgray-300 bg-white px-5 py-2 font-semibold text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white"
-                                data-task-note-modal-close
-                            >
+                            <button type="button" class="rounded-lg border border-bgray-300 bg-white px-5 py-2 font-semibold text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-task-note-modal-close>
                                 Cancel
                             </button>
                             <button type="button" id="saveTaskNote" class="rounded-lg bg-success-300 px-5 py-2 font-semibold text-white transition duration-200 hover:bg-success-400">

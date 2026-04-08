@@ -83,11 +83,7 @@
 
                                                 <!-- Content -->
                                                 <div class="relative flex-1 pr-8">
-                                                    <x-project-flow-icon
-                                                        :flow="$project->project_flow"
-                                                        class="absolute right-0 top-0"
-                                                        :title="'Project Flow: ' . $flowLabel"
-                                                    />
+                                                    <x-project-flow-icon :flow="$project->project_flow" class="absolute right-0 top-0" :title="'Project Flow: ' . $flowLabel" />
 
                                                     <a href="{{ route('projects.edit', $project->id) }}">
                                                         <h4 class="text-lg font-bold text-bgray-900 dark:text-white">

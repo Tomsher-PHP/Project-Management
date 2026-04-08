@@ -1,15 +1,8 @@
 @php
-    $selectedTagIds = $task->tags->pluck('id')->map(fn ($id) => (string) $id)->all();
+    $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
 @endphp
 
-<form
-    method="POST"
-    action="{{ route('tasks.update', $task) }}"
-    class="space-y-8"
-    data-task-settings-form
-    data-can-edit="{{ $canEditTask ? 'true' : 'false' }}"
-    data-parent-task-url="{{ route('tasks.parent-options', $task) }}"
->
+<form method="POST" action="{{ route('tasks.update', $task) }}" class="space-y-8" data-task-settings-form data-can-edit="{{ $canEditTask ? 'true' : 'false' }}" data-parent-task-url="{{ route('tasks.parent-options', $task) }}">
     @csrf
     @method('PUT')
 
@@ -67,11 +60,7 @@
                     <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-task-settings-sprint-select>
                         <option value="">Select sprint</option>
                         @foreach ($projectSprints as $projectSprint)
-                            <option
-                                value="{{ $projectSprint->id }}"
-                                data-module-name="{{ $projectSprint->projectModule?->name ?? '--' }}"
-                                {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}
-                            >
+                            <option value="{{ $projectSprint->id }}" data-module-name="{{ $projectSprint->projectModule?->name ?? '--' }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
                                 {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
                                     - {{ $projectSprint->projectModule->name }}
                                 @endif
@@ -140,11 +129,7 @@
             </div>
 
             <div>
-                <x-forms.estimated-time-input
-                    name="estimated_time_minutes"
-                    :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0"
-                    :show-label="false"
-                />
+                <x-forms.estimated-time-input name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" />
                 <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="estimated_time_minutes"></p>
             </div>
 
