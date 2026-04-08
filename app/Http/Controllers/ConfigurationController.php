@@ -48,6 +48,8 @@ class ConfigurationController extends Controller
             $config->update($request->only([
                 'company_name',
                 'company_email',
+                'website',
+                'email_suffix',
                 'company_phone',
                 'company_address',
                 'timezone',

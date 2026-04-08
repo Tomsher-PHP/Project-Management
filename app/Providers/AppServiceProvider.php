@@ -31,9 +31,21 @@ class AppServiceProvider extends ServiceProvider
         $dateFormat = config('constants.date_format');
         $timeFormat = config('constants.time_format');
         $timezone = config('app.timezone');
+        $companyWebsite = null;
+        $emailSuffix = '@gmail.com';
 
         if (Schema::hasTable('configurations')) {
-            $configuration = Configuration::query()->select('date_format', 'time_format', 'timezone')->first();
+            $selectColumns = ['date_format', 'time_format', 'timezone'];
+
+            if (Schema::hasColumn('configurations', 'website')) {
+                $selectColumns[] = 'website';
+            }
+
+            if (Schema::hasColumn('configurations', 'email_suffix')) {
+                $selectColumns[] = 'email_suffix';
+            }
+
+            $configuration = Configuration::query()->select($selectColumns)->first();
 
             if (! empty($configuration?->date_format)) {
                 $dateFormat = $configuration->date_format;
@@ -45,6 +57,16 @@ class AppServiceProvider extends ServiceProvider
 
             if (! empty($configuration?->timezone)) {
                 $timezone = $configuration->timezone;
+            }
+
+            if (! empty($configuration?->website)) {
+                $companyWebsite = $configuration->website;
+            }
+
+            if ($configuration && in_array('email_suffix', $selectColumns, true)) {
+                $emailSuffix = ! empty($configuration->email_suffix)
+                    ? $configuration->email_suffix
+                    : $emailSuffix;
             }
         }
 
@@ -61,6 +83,8 @@ class AppServiceProvider extends ServiceProvider
             'globalDateFormat' => $dateFormat,
             'globalTimeFormat' => $timeFormat,
             'globalTimezone' => $timezone,
+            'globalCompanyWebsite' => $companyWebsite,
+            'globalEmailSuffix' => $emailSuffix,
         ]);
 
         Blade::directive('appDate', function ($expression) {

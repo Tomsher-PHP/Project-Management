@@ -42,7 +42,7 @@
                     Name <x-red-star />
                 </label>
 
-                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                <input type="text" id="name" name="name" value="{{ old('name', $user->name ?? '') }}" placeholder="Enter full name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                     @error('name') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -55,24 +55,7 @@
                 @enderror
             </div>
 
-            <!-- Email -->
-            <div class="flex flex-col gap-2">
-                <label for="email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                    Email @if (!isset($user))
-                        <x-red-star />
-                    @endif
-                </label>
-
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                      @error('email') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" oninput="this.value = this.value.toLowerCase()" @isset($user) disabled @endisset>
-
-                @error('email')
-                    <p class="mt-2 text-sm text-error-300">
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
+            <x-forms.email-input label="Email" name="email" id="email" :value="old('email', $user->email ?? '')" :required="!isset($user)" :disabled="isset($user)" placeholder="Enter email address" />
 
             <!-- Password -->
             <div class="flex flex-col gap-2">
@@ -82,7 +65,7 @@
                     @endif
                 </label>
 
-                <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" placeholder="{{ isset($user) ? 'Leave blank to keep current password' : 'Enter password' }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                       @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -99,8 +82,8 @@
                     Date of Birth
                 </label>
 
-                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', $user->details->dob ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
+                <input type="date" name="dob" id="date_of_birth" value="{{ old('dob', isset($user) ? optional($user->details?->dob)->format('Y-m-d') : '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                    bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" data-format="{{ $globalDateFormat }}" data-open-to-date="{{ now(config('constants.timezone'))->subYears(17)->startOfYear()->toDateString() }}" placeholder="Select a date">
 
                 @error('dob')
                     <p class="mt-2 text-sm text-error-300">
@@ -115,7 +98,7 @@
                     Phone Number
                 </label>
 
-                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->details->phone ?? '') }}" placeholder="Enter phone number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('phone') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -132,7 +115,7 @@
                     WhatsApp Number
                 </label>
 
-                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                <input type="text" name="whatsapp" id="whatsapp" value="{{ old('whatsapp', $user->details->whatsapp ?? '') }}" placeholder="Enter WhatsApp number" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                     bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('whatsapp') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
@@ -212,16 +195,26 @@
                     Department
                 </label>
 
-                <select name="department_id" id="department" class="tom-select w-full">
+                <div class="flex items-center gap-2">
+                    <select name="department_id" id="department" class="tom-select w-full">
 
-                    <option value="">Select Department</option>
+                        <option value="">Select Department</option>
 
-                    @foreach ($departments as $key => $department)
-                        <option value="{{ $department->id }}" {{ old('department_id', $user->details->department_id ?? '') == $department->id ? 'selected' : '' }}>
-                            {{ $department->name }}
-                        </option>
-                    @endforeach
-                </select>
+                        @foreach ($departments as $key => $department)
+                            <option value="{{ $department->id }}" {{ old('department_id', $user->details->department_id ?? '') == $department->id ? 'selected' : '' }}>
+                                {{ $department->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @can('department.create')
+                        <button type="button" data-target="#user-department-modal" data-select-target="department_id" data-module="Department" data-url="{{ route('settings.departments.store') }}" data-method="POST" data-sort_order="{{ $nextDepartmentSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Department" aria-label="Add Department">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    @endcan
+                </div>
 
                 @error('department_id')
                     <p class="mt-2 text-sm text-error-300">
@@ -236,16 +229,26 @@
                     Designation
                 </label>
 
-                <select name="designation_id" id="designation" class="tom-select w-full">
+                <div class="flex items-center gap-2">
+                    <select name="designation_id" id="designation" class="tom-select w-full">
 
-                    <option value="">Select Designation</option>
+                        <option value="">Select Designation</option>
 
-                    @foreach ($designations as $key => $designation)
-                        <option value="{{ $designation->id }}" {{ old('designation_id', $user->details->designation_id ?? '') == $designation->id ? 'selected' : '' }}>
-                            {{ $designation->name }}
-                        </option>
-                    @endforeach
-                </select>
+                        @foreach ($designations as $key => $designation)
+                            <option value="{{ $designation->id }}" {{ old('designation_id', $user->details->designation_id ?? '') == $designation->id ? 'selected' : '' }}>
+                                {{ $designation->name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @can('designation.create')
+                        <button type="button" data-target="#user-designation-modal" data-select-target="designation_id" data-module="Designation" data-url="{{ route('settings.designations.store') }}" data-method="POST" data-sort_order="{{ $nextDesignationSortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Designation" aria-label="Add Designation">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    @endcan
+                </div>
 
                 @error('designation_id')
                     <p class="mt-2 text-sm text-error-300">
@@ -307,7 +310,7 @@
                     Employee ID
                 </label>
 
-                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="employee_id" id="employee_id" value="{{ old('employee_id', $user->details->employee_id ?? '') }}" placeholder="Enter employee ID" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('employee_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('employee_id')
@@ -323,8 +326,9 @@
                     Date of Joining
                 </label>
 
-                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', $user->details->joining_date ?? '') }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
+                <input type="date" name="joining_date" id="date_of_joining" value="{{ old('joining_date', isset($user) ? optional($user->details?->joining_date)->format('Y-m-d') : now(config('constants.timezone'))->toDateString()) }}" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                       @error('joining_date') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" data-format="{{ $globalDateFormat }}"
+                    placeholder="Select a date">
 
                 @error('joining_date')
                     <p class="mt-2 text-sm text-error-300">
@@ -350,7 +354,7 @@
                     Contact Person Name
                 </label>
 
-                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="contact_person" id="contact_person_name" value="{{ old('contact_person', $user->details->contact_person ?? '') }}" placeholder="Enter emergency contact name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person')
@@ -366,7 +370,7 @@
                     Contact Person Number
                 </label>
 
-                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <input type="text" name="contact_person_number" id="contact_person_number" value="{{ old('contact_person_number', $user->details->contact_person_number ?? '') }}" placeholder="Enter emergency contact number" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('contact_person_number') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
 
                 @error('contact_person_number')
@@ -392,7 +396,7 @@
                     Address
                 </label>
 
-                <textarea name="address" id="address" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                <textarea name="address" id="address" rows="3" placeholder="Enter full address" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                        @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
                 @error('address')
@@ -416,3 +420,30 @@
     </div>
 
 </form>
+@can('department.create')
+    <x-form-modal modalId="user-department-modal" module="Department" formId="userDepartmentForm" action="{{ route('settings.departments.store') }}" button="Create Department">
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <input type="text" name="name" placeholder="Enter department name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+    </x-form-modal>
+@endcan
+
+@can('designation.create')
+    <x-form-modal modalId="user-designation-modal" module="Designation" formId="userDesignationForm" action="{{ route('settings.designations.store') }}" button="Create Designation">
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <input type="text" name="name" placeholder="Enter designation name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+    </x-form-modal>
+@endcan

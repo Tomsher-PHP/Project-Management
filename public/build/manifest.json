@@ -1,6 +1,6 @@
 {
-  "_datepicker-B3aibTQH.js": {
-    "file": "assets/datepicker-B3aibTQH.js",
+  "_datepicker-BxghH_9E.js": {
+    "file": "assets/datepicker-BxghH_9E.js",
     "name": "datepicker",
     "imports": [
       "_flatpickr.min-D0WFQuZ-.js"
@@ -41,12 +41,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DshqmoJa.js",
+    "file": "assets/app-Bvs7p6Mg.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-B3aibTQH.js",
+      "_datepicker-BxghH_9E.js",
       "_flatpickr.min-D0WFQuZ-.js",
       "_timepicker-mZgnxHNj.js",
       "_weekpicker-BwYHMdIS.js"
@@ -80,12 +80,12 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-aS8NehCT.js",
+    "file": "assets/project-detail-B-aILkHI.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-B3aibTQH.js",
+      "_datepicker-BxghH_9E.js",
       "_flatpickr.min-D0WFQuZ-.js",
       "_timepicker-mZgnxHNj.js",
       "_weekpicker-BwYHMdIS.js"
@@ -102,12 +102,12 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-CXMWHnpx.js",
+    "file": "assets/task-list-create-B8A6HfI3.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-B3aibTQH.js",
+      "_datepicker-BxghH_9E.js",
       "_flatpickr.min-D0WFQuZ-.js"
     ]
   },

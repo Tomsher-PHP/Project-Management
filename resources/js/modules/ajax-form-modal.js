@@ -24,6 +24,64 @@ $(document).ready(function () {
         });
     };
 
+    const updateLinkedSelectField = (modal, response) => {
+        const fieldName = modal.data('selectTarget');
+        const optionId = response?.data?.id;
+        const optionLabel = response?.data?.name;
+
+        if (!fieldName || optionId === undefined || optionId === null || !optionLabel) {
+            return false;
+        }
+
+        const field = document.querySelector(`[name="${fieldName}"]`);
+
+        if (!field) {
+            return false;
+        }
+
+        const normalizedValue = String(optionId);
+
+        if (field.tomselect) {
+            field.tomselect.addOption({
+                value: normalizedValue,
+                text: optionLabel,
+            });
+            field.tomselect.refreshOptions(false);
+            field.tomselect.setValue(normalizedValue, true);
+        } else {
+            let option = Array.from(field.options).find((item) => item.value === normalizedValue);
+
+            if (!option) {
+                option = document.createElement('option');
+                option.value = normalizedValue;
+                option.textContent = optionLabel;
+                field.appendChild(option);
+            }
+
+            field.value = normalizedValue;
+        }
+
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+
+        return true;
+    };
+
+    const bumpModalTriggerSortOrder = (modal, response) => {
+        const currentSortOrder = Number.parseInt(response?.data?.sort_order ?? '', 10);
+        const modalId = modal.attr('id');
+
+        if (!modalId || Number.isNaN(currentSortOrder)) {
+            return;
+        }
+
+        const nextSortOrder = currentSortOrder + 1;
+
+        $(`.modal-open[data-target="#${modalId}"]`).each(function () {
+            $(this).data('sort_order', nextSortOrder);
+            $(this).attr('data-sort_order', nextSortOrder);
+        });
+    };
+
     const syncTomSelectField = (field, value = null) => {
         if (!field) {
             return;
@@ -124,6 +182,7 @@ $(document).ready(function () {
 
     const resetModalForm = (modal) => {
         modal.find('form')[0].reset();
+        modal.removeData('selectTarget');
         resetTomSelectFields(modal);
         initializeAutoCodeFields(modal);
         refreshEstimatedTimeInputs(modal);
@@ -192,11 +251,14 @@ $(document).ready(function () {
         let url = $(this).data('url');
         let method = $(this).data('method');
         let module = $(this).data('module');
+        let selectTarget = $(this).data('selectTarget') || '';
 
         modal.find('.ajax-form').attr('action', url);
         modal.find('.form-method').val(method);
+        modal.data('selectTarget', selectTarget);
 
         resetModalForm(modal);
+        modal.data('selectTarget', selectTarget);
 
         $.each($(this).data(), function (key, value) {
             if (['target', 'url', 'method', 'module'].includes(key)) {
@@ -234,6 +296,7 @@ $(document).ready(function () {
 
         modal.find('.ajax-form').attr('action', url);
         modal.find('.form-method').val(method);
+        modal.removeData('selectTarget');
         resetModalForm(modal);
 
         $.each($(this).data(), function (key, value) {
@@ -286,11 +349,15 @@ $(document).ready(function () {
                     Alert.success(response.message);
 
                     const modal = form.closest('.modal-form');
+                    const inlineSelectUpdated = updateLinkedSelectField(modal, response);
+                    bumpModalTriggerSortOrder(modal, response);
                     modal.addClass('hidden');
                     resetModalForm(modal);
 
                     if (response.redirect_url) {
                         window.location.href = response.redirect_url;
+                    } else if (inlineSelectUpdated) {
+                        return;
                     } else if (!replaceRenderedSection(response)) {
                         location.reload();
                     }

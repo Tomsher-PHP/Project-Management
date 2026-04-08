@@ -83,6 +83,32 @@
                                     @enderror
                                 </div>
 
+                                <!-- Website -->
+                                <div class="flex flex-col gap-2">
+                                    <label for="website" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Website
+                                    </label>
+                                    <input type="text" id="website" name="website" value="{{ old('website', $config->website ?? '') }}" placeholder="Enter company website" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                        @error('website') border-red-500 focus:ring-red-500 @enderror">
+                                    @error('website')
+                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Email Suffix -->
+                                <div class="flex flex-col gap-2">
+                                    <label for="email_suffix" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Email Suffix
+                                    </label>
+                                    <input type="text" id="email_suffix" name="email_suffix" value="{{ old('email_suffix', $config->email_suffix ?? '') }}" placeholder="Enter email suffix" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
+                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                        @error('email_suffix') border-red-500 focus:ring-red-500 @enderror">
+                                    @error('email_suffix')
+                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 <!-- Company Phone -->
                                 <div class="flex flex-col gap-2 col-span-full md:col-span-1">
                                     <label for="company_phone" class="text-base font-medium text-bgray-600 dark:text-bgray-50">

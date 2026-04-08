@@ -57,11 +57,20 @@ class UserController extends Controller
         //Department and Designation can be added later if needed
         $departments = Department::active()->orderBy('sort_order', 'asc')->get();
         $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
+        $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
+        $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
 
         // Get reporter and managers
         $managers = app(UserService::class)->getAccessibleUsers(auth()->user());
 
-        return view('users.create', compact('roles', 'departments', 'designations', 'managers'));
+        return view('users.create', compact(
+            'roles',
+            'departments',
+            'designations',
+            'managers',
+            'nextDepartmentSortOrder',
+            'nextDesignationSortOrder'
+        ));
     }
 
     public function store(UserRequest $request, UserService $service)
@@ -77,6 +86,8 @@ class UserController extends Controller
         $roles = Role::active()->get();
         $departments = Department::active()->orderBy('sort_order', 'asc')->get();
         $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
+        $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
+        $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
         $managerIds = collect([
             $user->details?->reporter_id,
             $user->details?->manager_id,
@@ -84,7 +95,15 @@ class UserController extends Controller
 
         $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $managerIds);
 
-        return view('users.edit', compact('user', 'roles', 'departments', 'designations', 'managers'));
+        return view('users.edit', compact(
+            'user',
+            'roles',
+            'departments',
+            'designations',
+            'managers',
+            'nextDepartmentSortOrder',
+            'nextDesignationSortOrder'
+        ));
     }
 
     public function update(UserRequest $request, User $user, UserService $service)
