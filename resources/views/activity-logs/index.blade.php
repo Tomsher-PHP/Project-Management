@@ -11,13 +11,9 @@
                         0 selected
                     </span>
 
-                    <button
-                        type="button"
-                        id="bulk-delete-btn"
-                        data-bulk-delete-url="{{ route('activity.log.bulkDelete') }}"
+                    <button type="button" id="bulk-delete-btn" data-bulk-delete-url="{{ route('activity.log.bulkDelete') }}"
                         class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-5 text-sm font-semibold leading-none text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 disabled:shadow-none dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
-                        disabled
-                    >
+                        disabled>
                         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -86,9 +82,15 @@
                                         $subject = $activity->subject;
                                         $subjectLabel = $subject?->name ?? ($subject?->title ?? ($subject?->original_name ?? ($subject?->file_name ?? ($subject?->project_code ?? ($subject?->customer_code ?? ($subject?->employee_id ?? ($activity->subject_id ? '#' . $activity->subject_id : '--')))))));
                                         $subjectType = $activity->subject_type ? \Illuminate\Support\Str::headline(class_basename($activity->subject_type)) : '--';
+                                        $ignoredFields = ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
+                                        $labels = collect($activity->getExtraProperty('labels', []));
                                         $changedFields = collect($activity->changes->get('attributes', []))
-                                            ->except(['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'])
-                                            ->keys();
+                                            ->keys()
+                                            ->merge(collect($activity->changes->get('old', []))->keys())
+                                            ->unique()
+                                            ->reject(fn($field) => in_array($field, $ignoredFields, true))
+                                            ->map(fn($field) => $labels->get($field, (string) \Illuminate\Support\Str::of($field)->replace('_id', '')->replace('_', ' ')->title()))
+                                            ->values();
                                         $event = $activity->event ?? 'updated';
                                         $eventClasses = match ($event) {
                                             'created' => 'bg-success-50 text-success-400',
@@ -96,6 +98,13 @@
                                             'restored' => 'bg-warning-50 text-warning-500',
                                             default => 'bg-blue-50 text-blue-500',
                                         };
+                                        $changeSummary = match ($event) {
+                                            'created' => $changedFields->isNotEmpty() ? 'Created ' . $changedFields->count() . ' ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Created a new record.',
+                                            'deleted' => $changedFields->isNotEmpty() ? 'Deleted record with ' . $changedFields->count() . ' tracked ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Deleted a record.',
+                                            'restored' => $changedFields->isNotEmpty() ? 'Restored ' . $changedFields->count() . ' ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Restored a record.',
+                                            default => $changedFields->isNotEmpty() ? 'Updated ' . $changedFields->count() . ' ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Updated a record.',
+                                        };
+                                        $activityDescription = \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description));
                                     @endphp
 
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
@@ -131,22 +140,29 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex max-w-[280px] flex-col">
+                                                <span class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                    {{ $changeSummary }}
+                                                </span>
+
                                                 @if ($changedFields->isNotEmpty())
-                                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                                        {{ $changedFields->take(3)->map(fn($field) => \Illuminate\Support\Str::headline($field))->implode(', ') }}
+                                                    <div class="mt-2 flex flex-wrap gap-1.5">
+                                                        @foreach ($changedFields->take(3) as $label)
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                                                {{ $label }}
+                                                            </span>
+                                                        @endforeach
+
                                                         @if ($changedFields->count() > 3)
-                                                            +{{ $changedFields->count() - 3 }} more
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                                                +{{ $changedFields->count() - 3 }} more
+                                                            </span>
                                                         @endif
-                                                    </span>
+                                                    </div>
                                                 @else
-                                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                                        {{ \Illuminate\Support\Str::headline(str_replace('.', ' ', $activity->description)) }}
+                                                    <span class="mt-1 text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                                        {{ $activityDescription }}
                                                     </span>
                                                 @endif
-
-                                                <span class="text-sm text-bgray-500 dark:text-bgray-300">
-                                                    {{ $activity->description }}
-                                                </span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
@@ -176,10 +192,7 @@
                                                 <x-activity-log.view-button :activity="$activity" />
 
                                                 @can('activity_log.delete')
-                                                    <x-delete-form
-                                                        :action="route('activity.log.destroy', $activity->id)"
-                                                        form-class="activity-log-delete-form"
-                                                    />
+                                                    <x-delete-form :action="route('activity.log.destroy', $activity->id)" form-class="activity-log-delete-form" />
                                                 @endcan
                                             </div>
                                         </td>
@@ -213,8 +226,6 @@
             <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
     </x-filters.drawer>
-
-    <x-activity-log.details-modal />
 @endsection
 
 @push('scripts')

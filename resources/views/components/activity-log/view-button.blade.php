@@ -6,8 +6,12 @@
 @php
     $ignoredFields = ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
     $event = $activity->event ?? 'updated';
-    $changeAttributes = collect($activity->changes->get('attributes', []))->except($ignoredFields);
-    $canViewDetails = in_array($event, ['created', 'updated'], true) && $changeAttributes->isNotEmpty();
+    $changeFields = collect($activity->changes->get('attributes', []))
+        ->keys()
+        ->merge(collect($activity->changes->get('old', []))->keys())
+        ->unique()
+        ->reject(fn($field) => in_array($field, $ignoredFields, true));
+    $canViewDetails = in_array($event, ['created', 'updated', 'deleted', 'restored'], true) && $changeFields->isNotEmpty();
 @endphp
 
 @if ($canViewDetails)

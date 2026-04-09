@@ -49,6 +49,8 @@
     </div>
     <!-- layout end -->
 
+    <x-activity-log.details-modal />
+
     <!--scripts -->
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>

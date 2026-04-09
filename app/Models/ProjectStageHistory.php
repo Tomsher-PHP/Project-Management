@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectStageHistory extends Model
 {
-    use LogsModelActivity;
 
     protected $fillable = [
         'project_id',

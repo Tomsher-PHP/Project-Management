@@ -2,7 +2,12 @@
     <div class="flex items-start justify-between gap-4">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-bgray-500 dark:text-bgray-300">
-                {{ $details['event'] === 'created' ? 'Created Details' : 'Updated Changes' }}
+                {{ match ($details['event']) {
+                    'created' => 'Created Details',
+                    'deleted' => 'Deleted Details',
+                    'restored' => 'Restored Details',
+                    default => 'Updated Changes',
+                } }}
             </p>
             <h3 class="mt-1.5 text-xl font-semibold text-bgray-900 dark:text-white">
                 {{ $details['module'] }} - {{ $details['subject'] }}
@@ -33,32 +38,5 @@
         </div>
     </div>
 
-    <div class="space-y-2.5">
-        @foreach ($details['rows'] as $row)
-            <div class="rounded-xl border border-bgray-200 p-3.5 dark:border-darkblack-400">
-                <p class="mb-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">{{ $row['field'] }}</p>
-
-                @if ($details['event'] === 'created')
-                    <div class="rounded-lg bg-bgray-50 px-3 py-2.5 text-sm font-medium text-bgray-900 dark:bg-darkblack-500 dark:text-white">
-                        <x-activity-log.value :value="$row['new']['value']" :type="$row['new']['type']" />
-                    </div>
-                @else
-                    <div class="grid gap-2.5 md:grid-cols-2">
-                        <div class="rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2.5 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Old Value</p>
-                            <div class="text-sm font-medium text-bgray-900 dark:text-white">
-                                <x-activity-log.value :value="$row['old']['value']" :type="$row['old']['type']" />
-                            </div>
-                        </div>
-                        <div class="rounded-lg border border-success-200 bg-success-50 px-3 py-2.5 dark:border-success-900/30 dark:bg-success-900/10">
-                            <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-success-400">New Value</p>
-                            <div class="text-sm font-medium text-bgray-900 dark:text-white">
-                                <x-activity-log.value :value="$row['new']['value']" :type="$row['new']['type']" />
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        @endforeach
-    </div>
+    <x-activity-log.change-list :rows="$details['rows']" :event="$details['event']" />
 </div>

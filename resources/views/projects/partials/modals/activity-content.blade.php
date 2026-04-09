@@ -1,14 +1,17 @@
 @php
     $totalActivities = $activities->count();
+    $moduleLabel = $moduleLabel ?? 'Project';
+    $subjectLabel = $subjectLabel ?? $project->name;
+    $ignoredFields = $ignoredFields ?? ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
 @endphp
 
 <div class="flex h-full flex-col">
     <div class="flex items-start justify-between gap-4 border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">Project Activity</p>
-            <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $project->name }}</h3>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">{{ $moduleLabel }} Activity</p>
+            <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $subjectLabel }}</h3>
             <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                {{ $totalActivities }} recent {{ \Illuminate\Support\Str::plural('update', $totalActivities) }} from this project.
+                {{ $totalActivities }} recent {{ \Illuminate\Support\Str::plural('update', $totalActivities) }} from this {{ \Illuminate\Support\Str::lower($moduleLabel) }}.
             </p>
         </div>
 
@@ -25,8 +28,14 @@
             @forelse ($activities as $activity)
                 @php
                     $event = $activity->event ?? 'updated';
-                    $visibleChanges = collect($activity->changes['attributes'] ?? [])
-                        ->except(['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by']);
+                    $labels = collect($activity->getExtraProperty('labels', []));
+                    $visibleChanges = collect($activity->changes->get('attributes', []))
+                        ->keys()
+                        ->merge(collect($activity->changes->get('old', []))->keys())
+                        ->unique()
+                        ->reject(fn($field) => in_array($field, $ignoredFields, true))
+                        ->map(fn($field) => $labels->get($field, (string) \Illuminate\Support\Str::of($field)->replace('_id', '')->replace('_', ' ')->title()))
+                        ->values();
                     $eventClasses = match ($event) {
                         'created' => 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-300',
                         'deleted' => 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300',
@@ -34,12 +43,10 @@
                         default => 'bg-blue-50 text-blue-500 dark:bg-blue-900/20 dark:text-blue-300',
                     };
                     $summary = match ($event) {
-                        'created' => 'Created a new project-related record.',
-                        'deleted' => 'Removed a project-related record.',
-                        'restored' => 'Restored a previously removed record.',
-                        default => $visibleChanges->isNotEmpty()
-                            ? 'Updated ' . $visibleChanges->count() . ' ' . \Illuminate\Support\Str::plural('field', $visibleChanges->count()) . '.'
-                            : 'Updated a project-related record.',
+                        'created' => $visibleChanges->isNotEmpty() ? 'Created ' . $visibleChanges->count() . ' ' . \Illuminate\Support\Str::plural('field', $visibleChanges->count()) . '.' : 'Created a new record.',
+                        'deleted' => $visibleChanges->isNotEmpty() ? 'Removed a record with ' . $visibleChanges->count() . ' tracked ' . \Illuminate\Support\Str::plural('field', $visibleChanges->count()) . '.' : 'Removed a record.',
+                        'restored' => $visibleChanges->isNotEmpty() ? 'Restored ' . $visibleChanges->count() . ' ' . \Illuminate\Support\Str::plural('field', $visibleChanges->count()) . '.' : 'Restored a record.',
+                        default => $visibleChanges->isNotEmpty() ? 'Updated ' . $visibleChanges->count() . ' ' . \Illuminate\Support\Str::plural('field', $visibleChanges->count()) . '.' : 'Updated a record.',
                     };
                 @endphp
 
@@ -58,6 +65,7 @@
                                     <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $eventClasses }}">
                                         {{ \Illuminate\Support\Str::headline($event) }}
                                     </span>
+                                    <x-activity-log.view-button :activity="$activity" label="View Details" class="h-7 rounded-full px-3" />
                                 </div>
 
                                 <p class="mt-2 text-sm leading-6 text-bgray-600 dark:text-bgray-300">
@@ -66,9 +74,9 @@
 
                                 @if ($visibleChanges->isNotEmpty())
                                     <div class="mt-3 flex flex-wrap gap-2">
-                                        @foreach ($visibleChanges->keys()->take(4) as $field)
+                                        @foreach ($visibleChanges->take(4) as $label)
                                             <span class="rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
-                                                {{ \Illuminate\Support\Str::headline($field) }}
+                                                {{ $label }}
                                             </span>
                                         @endforeach
 
@@ -89,7 +97,7 @@
                 </article>
             @empty
                 <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
-                    No activity logged for this project yet.
+                    No activity logged for this {{ \Illuminate\Support\Str::lower($moduleLabel) }} yet.
                 </div>
             @endforelse
         </div>

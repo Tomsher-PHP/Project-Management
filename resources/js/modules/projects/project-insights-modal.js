@@ -7,6 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const content = document.getElementById('project-insights-modal-content');
     let activeUrl = null;
+    const hasVisibleSiblingModal = () => {
+        const siblingModal = document.getElementById('activity-log-details-modal');
+
+        return siblingModal && !siblingModal.classList.contains('hidden');
+    };
 
     const openModal = () => {
         modal.classList.remove('hidden');
@@ -17,7 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeModal = () => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
+
+        if (!hasVisibleSiblingModal()) {
+            document.body.classList.remove('overflow-hidden');
+        }
     };
 
     const setLoadingState = () => {
@@ -79,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden') && !hasVisibleSiblingModal()) {
             closeModal();
         }
     });

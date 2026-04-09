@@ -79,5 +79,3 @@
         </div>
     </div>
 </div>
-
-<x-activity-log.details-modal />

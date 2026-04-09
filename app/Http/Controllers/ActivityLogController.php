@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 use Spatie\Activitylog\Models\Activity;
@@ -196,29 +197,13 @@ class ActivityLogController extends Controller
 
     private function buildActivityDetails(Activity $activity): array
     {
-        $ignoredFields = ['created_at', 'updated_at', 'deleted_at'];
+        $ignoredFields = ['created_at', 'updated_at', 'deleted_at', 'added_by', 'updated_by'];
         $event = $activity->event ?? 'updated';
-        $attributes = collect($activity->changes->get('attributes', []))->except($ignoredFields);
-        $oldValues = collect($activity->changes->get('old', []))->except($ignoredFields);
         $subjectModel = $this->resolveActivitySubjectModel($activity);
-
-        $rows = collect();
-
-        if ($event === 'created') {
-            $rows = $attributes->map(fn ($value, $field) => [
-                'field' => Str::headline($field),
-                'new' => $this->transformActivityValue($subjectModel, $field, $value),
-            ])->values();
-        } elseif ($event === 'updated') {
-            $rows = $attributes->map(fn ($value, $field) => [
-                'field' => Str::headline($field),
-                'old' => $this->transformActivityValue($subjectModel, $field, $oldValues->get($field)),
-                'new' => $this->transformActivityValue($subjectModel, $field, $value),
-            ])->values();
-        }
+        $rows = $this->buildActivityChangeRows($activity, $subjectModel, $ignoredFields);
 
         return [
-            'can_view' => in_array($event, ['created', 'updated'], true) && $rows->isNotEmpty(),
+            'can_view' => in_array($event, ['created', 'updated', 'deleted', 'restored'], true) && $rows->isNotEmpty(),
             'event' => $event,
             'module' => Str::headline($activity->log_name ?? 'activity'),
             'subject' => $this->resolveSubjectLabel($activity),
@@ -228,6 +213,60 @@ class ActivityLogController extends Controller
             'logged_at' => $activity->created_at,
             'rows' => $rows,
         ];
+    }
+
+    private function buildActivityChangeRows(Activity $activity, ?Model $subjectModel, array $ignoredFields = []): Collection
+    {
+        $attributes = collect($activity->changes->get('attributes', []))->except($ignoredFields);
+        $oldValues = collect($activity->changes->get('old', []))->except($ignoredFields);
+        $labels = collect($activity->getExtraProperty('labels', []));
+        $displayAttributes = collect($activity->getExtraProperty('display_attributes', []));
+        $displayOld = collect($activity->getExtraProperty('display_old', []));
+
+        return $attributes->keys()
+            ->merge($oldValues->keys())
+            ->unique()
+            ->map(function ($field) use ($activity, $subjectModel, $attributes, $oldValues, $labels, $displayAttributes, $displayOld) {
+                return [
+                    'field' => $field,
+                    'label' => $labels->get($field, $this->resolveActivityFieldLabel($activity, $field)),
+                    'old' => $this->resolveActivityFieldValue($subjectModel, $field, $oldValues, $displayOld),
+                    'new' => $this->resolveActivityFieldValue($subjectModel, $field, $attributes, $displayAttributes),
+                ];
+            })
+            ->values();
+    }
+
+    private function resolveActivityFieldLabel(Activity $activity, string $field): string
+    {
+        $subjectModel = $this->resolveActivitySubjectModel($activity);
+
+        if ($subjectModel && method_exists($subjectModel, 'getActivityAttributeLabel')) {
+            return $subjectModel->getActivityAttributeLabel($field);
+        }
+
+        return (string) Str::of($field)
+            ->replace('_id', '')
+            ->replace('_', ' ')
+            ->title();
+    }
+
+    private function resolveActivityFieldValue(?Model $subjectModel, string $field, Collection $rawValues, Collection $displayValues): array
+    {
+        if (! $rawValues->has($field) && ! $displayValues->has($field)) {
+            return [
+                'value' => null,
+                'type' => null,
+            ];
+        }
+
+        $resolved = $this->transformActivityValue($subjectModel, $field, $rawValues->get($field));
+
+        if ($displayValues->has($field)) {
+            $resolved['value'] = $displayValues->get($field);
+        }
+
+        return $resolved;
     }
 
     private function resolveSubjectLabel(Activity $activity): string

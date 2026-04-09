@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
-    use Filterable, Sortable, LogsModelActivity;
+    use Filterable, Sortable;
 
     protected $fillable = [
         'name',

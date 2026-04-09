@@ -3,14 +3,13 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
-use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProjectCategory extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use SoftDeletes, Filterable, Sortable;
 
     protected $fillable = [
         'name',

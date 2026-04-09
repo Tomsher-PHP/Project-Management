@@ -256,4 +256,50 @@ class Project extends Model
         return $this->membersAll()
             ->whereNotNull('removed_at');
     }
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'customer_id' => 'Customer Name',
+            'project_flow' => 'Project Flow',
+            'status_id' => 'Status',
+            'project_stage_id' => 'Project Stage',
+            'project_category_id' => 'Project Category',
+            'sales_person_id' => 'Sales Person',
+            'default_task_estimate_seconds' => 'Default Task Estimate',
+            'estimated_time_seconds' => 'Estimated Time',
+            'default_billable' => 'Default Billable',
+            'is_active' => 'Active',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'status_id' => ProjectStatus::find($value)?->name ?? $value,
+            'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
+            'project_category_id' => ProjectCategory::find($value)?->name ?? $value,
+            'sales_person_id' => User::find($value)?->name ?? $value,
+            'customer_id' => Customer::find($value)?->name ?? $value,
+            'default_billable' => $value ? 'Yes' : 'No',
+            'is_active' => $value ? 'Active' : 'Inactive',
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            'default_task_estimate_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+
+    protected function secondsToReadable(?int $seconds): ?string
+    {
+        if ($seconds === null) {
+            return null;
+        }
+
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+
+        return trim("{$hours}h {$minutes}m");
+    }
 }

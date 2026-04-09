@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class TaskStatusHistory extends Model
 {
-    use LogsModelActivity;
-
     protected $fillable = [
         'task_id',
         'status_id',

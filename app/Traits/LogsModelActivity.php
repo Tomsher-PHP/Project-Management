@@ -5,6 +5,7 @@ namespace App\Traits;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 trait LogsModelActivity
@@ -18,7 +19,7 @@ trait LogsModelActivity
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->dontLogIfAttributesChangedOnly($this->getActivityIgnoredOnlyChanges())
-            ->setDescriptionForEvent(fn (string $eventName) => $this->getActivityDescription($eventName));
+            ->setDescriptionForEvent(fn(string $eventName) => $this->getActivityDescription($eventName));
 
         if (! empty($this->getFillable())) {
             $options->logFillable();
@@ -73,5 +74,56 @@ trait LogsModelActivity
         }
 
         return array_values(array_unique($ignored));
+    }
+
+    public function tapActivity(Activity $activity, string $eventName): void
+    {
+        $properties = $activity->properties->toArray();
+
+        $old = $properties['old'] ?? [];
+        $attributes = $properties['attributes'] ?? [];
+
+        $labels = [];
+        $displayOld = [];
+        $displayAttributes = [];
+
+        $allKeys = array_unique(array_merge(array_keys($old), array_keys($attributes)));
+
+        foreach ($allKeys as $key) {
+            $labels[$key] = $this->getActivityAttributeLabel($key);
+
+            if (array_key_exists($key, $old)) {
+                $displayOld[$key] = $this->getActivityAttributeDisplayValue($key, $old[$key]);
+            }
+
+            if (array_key_exists($key, $attributes)) {
+                $displayAttributes[$key] = $this->getActivityAttributeDisplayValue($key, $attributes[$key]);
+            }
+        }
+
+        $activity->properties = collect($properties)->merge([
+            'labels' => $labels,
+            'display_old' => $displayOld,
+            'display_attributes' => $displayAttributes,
+        ]);
+    }
+
+    protected function getActivityAttributeLabels(): array
+    {
+        return [];
+    }
+
+    public function getActivityAttributeLabel(string $attribute): string
+    {
+        return $this->getActivityAttributeLabels()[$attribute]
+            ?? (string) str($attribute)
+                ->replace('_id', '')
+                ->replace('_', ' ')
+                ->title();
+    }
+
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return $value;
     }
 }
