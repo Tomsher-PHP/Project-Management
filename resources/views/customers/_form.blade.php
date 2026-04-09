@@ -27,13 +27,14 @@
             </div>
 
             <!-- Company Email -->
-            <div class="flex flex-col gap-2">
-                <label for="email" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Company Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email', $customer->email ?? '') }}" placeholder="Enter company email" oninput="this.value = this.value.toLowerCase()" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-                @error('email')
-                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-forms.email-input
+                label="Company Email"
+                name="email"
+                id="email"
+                :value="old('email', $customer->email ?? '')"
+                placeholder="Enter company email"
+                domain-suffix="@gmail.com"
+            />
 
             <!-- Industry -->
             <div class="flex flex-col gap-2">
