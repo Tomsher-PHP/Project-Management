@@ -23,7 +23,7 @@
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
-                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Status Flow</h4>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Status Timeline</h4>
                     <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Mapped from project status history in chronological order.</p>
                 </div>
                 <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
@@ -89,7 +89,7 @@
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
-                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Stage Flow</h4>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Stage Timeline</h4>
                     <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Mapped from project stage history in chronological order.</p>
                 </div>
                 <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
