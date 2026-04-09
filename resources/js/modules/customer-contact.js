@@ -11,6 +11,7 @@ $(document).ready(function () {
     // OPEN CREATE
     $('.modal-open').on('click', function () {
         editingIndex = null;
+        editingCard = null;
 
         let module = $(this).data('module');
 
@@ -20,7 +21,7 @@ $(document).ready(function () {
 
         modal.removeClass('hidden');
 
-        clearForms(modal.find('.modal-form'));
+        clearForms(form);
     });
 
     // --- Edit Contact ---
@@ -44,10 +45,12 @@ $(document).ready(function () {
 
     // CLOSE MODAL
     $(document).on('click', '.modal-close', function () {
-        let modal = $(this).closest('.modal-form');
+        let modal = $(this).closest('.modal');
 
         modal.addClass('hidden');
-        clearForms(modal.find('.modal-form'));
+        editingCard = null;
+        editingIndex = null;
+        clearForms(modal.find('form'));
     });
 
     // SAVE CONTACT (frontend only)
