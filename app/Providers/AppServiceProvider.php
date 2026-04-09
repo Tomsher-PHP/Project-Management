@@ -15,17 +15,6 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         $dateFormat = config('constants.date_format');
@@ -74,10 +63,7 @@ class AppServiceProvider extends ServiceProvider
             'constants.date_format' => $dateFormat,
             'constants.time_format' => $timeFormat,
             'constants.timezone' => $timezone,
-            'app.timezone' => $timezone,
         ]);
-
-        date_default_timezone_set($timezone);
 
         view()->share([
             'globalDateFormat' => $dateFormat,

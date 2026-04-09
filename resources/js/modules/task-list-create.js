@@ -142,7 +142,7 @@ const setTaskCreateRequiredIndicators = (form, isAgile) => {
 
     form.querySelectorAll('[data-task-create-required-star]').forEach((node) => {
         const fieldName = node.dataset.taskCreateRequiredStar || '';
-        const shouldShow = isAgile && ['project_module_id', 'project_sprint_id'].includes(fieldName);
+        const shouldShow = isAgile && fieldName === 'project_sprint_id';
 
         node.classList.toggle('hidden', !shouldShow);
     });

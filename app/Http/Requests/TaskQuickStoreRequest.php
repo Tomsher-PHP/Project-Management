@@ -38,7 +38,7 @@ class TaskQuickStoreRequest extends FormRequest
                 ),
             ],
             'project_module_id' => [
-                Rule::requiredIf($project?->project_flow === 'agile'),
+                // Rule::requiredIf($project?->project_flow === 'agile'),
                 'nullable',
                 'integer',
                 Rule::exists('project_modules', 'id')->where(

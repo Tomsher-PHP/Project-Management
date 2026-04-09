@@ -63,14 +63,10 @@
                                                 {{ $entry['to_label'] }}
                                             </span>
                                         </div>
-
-                                        <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
-                                            @appDateTime($entry['changed_at'])
-                                        </span>
                                     </div>
 
                                     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-bgray-500 dark:text-bgray-300">
-                                        <span>Changed by {{ $entry['changed_by'] }}</span>
+                                        <span>Changed by {{ $entry['changed_by'] }} at @appDateTime($entry['changed_at'])</span>
                                     </div>
 
                                     @if (filled($entry['remarks']))
@@ -129,14 +125,10 @@
                                                 {{ $entry['to_label'] }}
                                             </span>
                                         </div>
-
-                                        <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
-                                            @appDateTime($entry['changed_at'])
-                                        </span>
                                     </div>
 
                                     <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-bgray-500 dark:text-bgray-300">
-                                        <span>Changed by {{ $entry['changed_by'] }}</span>
+                                        <span>Changed by {{ $entry['changed_by'] }} at @appDateTime($entry['changed_at'])</span>
                                     </div>
 
                                     @if (filled($entry['remarks']))

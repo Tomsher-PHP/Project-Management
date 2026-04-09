@@ -121,10 +121,7 @@ class ProjectServices
                     'status_id' => $statusId,
                 ]);
 
-                $historyAddedAt = filled($statusDate)
-                    ? Carbon::parse($statusDate, config('constants.timezone'))
-                        ->setTimeFrom(now(config('constants.timezone')))
-                    : null;
+                $historyAddedAt = $this->resolveHistoryAddedAt($statusDate);
 
                 ProjectStatusHistory::create([
                     'project_id' => $project->id,
@@ -149,10 +146,7 @@ class ProjectServices
                     'project_stage_id' => $projectStageId,
                 ]);
 
-                $historyAddedAt = filled($changeDate)
-                    ? Carbon::parse($changeDate, config('constants.timezone'))
-                        ->setTimeFrom(now(config('constants.timezone')))
-                    : null;
+                $historyAddedAt = $this->resolveHistoryAddedAt($changeDate);
 
                 ProjectStageHistory::create([
                     'project_id' => $project->id,
@@ -286,5 +280,14 @@ class ProjectServices
             'start_label' => $start->format($dateFormat),
             'end_label' => $target->format($dateFormat),
         ];
+    }
+
+    private function resolveHistoryAddedAt(?string $date): ?Carbon
+    {
+        if (blank($date)) {
+            return null;
+        }
+
+        return Carbon::parse($date)->setTimeFrom(now());
     }
 }

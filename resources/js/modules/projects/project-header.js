@@ -254,6 +254,11 @@ const openProjectChangeModal = (option) => {
     document.body.classList.add('overflow-hidden');
 
     window.setTimeout(() => {
+        if (remarksField) {
+            remarksField.focus();
+            return;
+        }
+
         dateField?.focus();
     }, 50);
 };
@@ -462,6 +467,15 @@ const initializeProjectHeader = () => {
             if (header && result.project_header) {
                 header.innerHTML = result.project_header;
                 syncProjectHeaderExpandedState(header);
+            }
+
+            if (result.history_tab) {
+                document.dispatchEvent(new CustomEvent('project-tab:replace', {
+                    detail: {
+                        tab: 'history',
+                        html: result.history_tab,
+                    },
+                }));
             }
 
             closeProjectChangeModal();

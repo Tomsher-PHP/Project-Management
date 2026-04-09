@@ -71,6 +71,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }));
     };
 
+    const replaceTabContent = (tab, html, activate = false) => {
+        const panel = getPanel(tab);
+
+        if (!panel || typeof html !== 'string') {
+            return;
+        }
+
+        panel.innerHTML = html;
+        panel.dataset.loaded = 'true';
+        initializeInjectedContent(panel, tab);
+
+        if (activate) {
+            showTab(tab);
+        }
+    };
+
     const loadTab = async (tab) => {
         const panel = getPanel(tab);
 
@@ -139,6 +155,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         invalidateTab(tab);
+    });
+
+    document.addEventListener('project-tab:replace', function (event) {
+        const tab = event.detail?.tab;
+        const html = event.detail?.html;
+        const activate = Boolean(event.detail?.activate);
+
+        if (!tab || typeof html !== 'string') {
+            return;
+        }
+
+        replaceTabContent(tab, html, activate);
     });
 
     const savedTab = localStorage.getItem(storageKey);

@@ -468,6 +468,7 @@ class ProjectController extends Controller
             'success' => true,
             'message' => 'Project status updated successfully.',
             'project_header' => $this->renderProjectHeader($project, $service),
+            'history_tab' => $this->renderHistoryTab($project),
         ], Response::HTTP_OK);
     }
 
@@ -497,6 +498,7 @@ class ProjectController extends Controller
             'success' => true,
             'message' => 'Project stage updated successfully.',
             'project_header' => $this->renderProjectHeader($project, $service),
+            'history_tab' => $this->renderHistoryTab($project),
         ], Response::HTTP_OK);
     }
 
