@@ -289,6 +289,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
         Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
 
+        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
         Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
         Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
 

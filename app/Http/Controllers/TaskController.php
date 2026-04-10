@@ -11,15 +11,19 @@ use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
 use App\Models\Task;
+use App\Models\TaskComment;
 use App\Models\TaskMode;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskStatus;
 use App\Models\TaskType;
 use App\Models\Tag;
 use App\Models\TaskNote;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +31,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class TaskController extends Controller
 {
@@ -302,9 +307,24 @@ class TaskController extends Controller
         return view('tasks.detail-page', [
             'task' => $task,
             'project' => $task->project,
+            'taskActivitiesCount' => $this->getTaskActivitiesQuery($task)->count(),
             'taskCommentsCount' => $task->comments()->count(),
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
         ] + $overviewData);
+    }
+
+    public function activityModal(Task $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+
+        return response()->json([
+            'success' => true,
+            'html' => view('tasks.partials.modals.activity-content', [
+                'task' => $task,
+                'activities' => $this->getRecentTaskActivities($task),
+                'viewAllUrl' => route('activity.log', ['task_id' => $task->id]),
+            ])->render(),
+        ], Response::HTTP_OK);
     }
 
     public function tab(Request $request, Task $task, string $tab): JsonResponse
@@ -695,12 +715,56 @@ class TaskController extends Controller
     private function getTaskActivityData(Task $task): array
     {
         return [
-            'taskActivities' => $task->activities()
-                ->with('causer')
-                ->latest()
-                ->limit(20)
-                ->get(),
+            'taskActivities' => $this->getRecentTaskActivities($task),
         ];
+    }
+
+    private function getTaskActivitiesQuery(Task $task): Builder
+    {
+        return Activity::query()->where(function (Builder $activityQuery) use ($task) {
+            $activityQuery->where(function (Builder $subjectQuery) use ($task) {
+                $subjectQuery->where('subject_type', Task::class)
+                    ->where('subject_id', $task->id);
+            });
+
+            foreach ($this->getTaskActivitySubjectQueries($task) as $subjectType => $subjectIdsQuery) {
+                $activityQuery->orWhere(function (Builder $subjectQuery) use ($subjectType, $subjectIdsQuery) {
+                    $subjectQuery->where('subject_type', $subjectType)
+                        ->whereIn('subject_id', $subjectIdsQuery);
+                });
+            }
+        });
+    }
+
+    private function getTaskActivitySubjectQueries(Task $task): array
+    {
+        return [
+            TaskComment::class => TaskComment::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskNote::class => TaskNote::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskTimeLog::class => TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+        ];
+    }
+
+    private function getRecentTaskActivities(Task $task, int $limit = 20): Collection
+    {
+        return $this->getTaskActivitiesQuery($task)
+            ->with([
+                'subject',
+                'causer' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        User::class => ['primaryAttachment'],
+                    ]);
+                },
+            ])
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 
     private function getTaskSettingsData(Task $task): array

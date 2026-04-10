@@ -38,6 +38,21 @@
                     Clear Filter
                 </a>
             </div>
+        @elseif (!empty($filteredTask))
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success-200 bg-success-50/70 px-4 py-3 shadow-sm dark:border-success-900/30 dark:bg-darkblack-600">
+                <div>
+                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
+                        Showing activity for task {{ $filteredTask->name }}
+                    </p>
+                    <p class="text-sm text-bgray-600 dark:text-bgray-300">
+                        Includes this task and its related comments, notes, and time logs.
+                    </p>
+                </div>
+
+                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300">
+                    Clear Filter
+                </a>
+            </div>
         @endif
 
         <div class="2xl:flex 2xl:space-x-[48px]">
@@ -249,6 +264,8 @@
     <x-filters.drawer>
         @if (!empty($filteredProject))
             <input type="hidden" name="project_id" value="{{ $filteredProject->id }}">
+        @elseif (!empty($filteredTask))
+            <input type="hidden" name="task_id" value="{{ $filteredTask->id }}">
         @endif
 
         <x-filters.input-search name="search" label="Search" />

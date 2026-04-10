@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Models\Project;
+use App\Models\Task;
+use App\Models\TaskComment;
+use App\Models\TaskNote;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +38,7 @@ class ActivityLogController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
         $filteredProject = null;
+        $filteredTask = null;
 
         $activities = Activity::query()
             ->with(['causer', 'subject'])
@@ -42,6 +47,12 @@ class ActivityLogController extends Controller
                 abort_unless(auth()->user()->can('view', $filteredProject), 403);
 
                 $this->applyProjectActivityScope($query, $filteredProject);
+            })
+            ->when($request->filled('task_id'), function (Builder $query) use ($request, &$filteredTask) {
+                $filteredTask = Task::query()->with('project:id,name')->findOrFail((int) $request->input('task_id'));
+                abort_unless(auth()->user()->can('view', $filteredTask), 403);
+
+                $this->applyTaskActivityScope($query, $filteredTask);
             })
             ->when($request->filled('search'), function (Builder $query) use ($request) {
                 $this->applySearchFilter(
@@ -115,10 +126,43 @@ class ActivityLogController extends Controller
             'activities',
             'perPage',
             'filteredProject',
+            'filteredTask',
             'logNames',
             'causers',
             'eventOptions'
         ));
+    }
+
+    private function applyTaskActivityScope(Builder $query, Task $task): Builder
+    {
+        return $query->where(function (Builder $activityQuery) use ($task) {
+            $activityQuery->where(function (Builder $subjectQuery) use ($task) {
+                $subjectQuery->where('subject_type', Task::class)
+                    ->where('subject_id', $task->id);
+            });
+
+            foreach ($this->getTaskActivitySubjectQueries($task) as $subjectType => $subjectIdsQuery) {
+                $activityQuery->orWhere(function (Builder $subjectQuery) use ($subjectType, $subjectIdsQuery) {
+                    $subjectQuery->where('subject_type', $subjectType)
+                        ->whereIn('subject_id', $subjectIdsQuery);
+                });
+            }
+        });
+    }
+
+    private function getTaskActivitySubjectQueries(Task $task): array
+    {
+        return [
+            TaskComment::class => TaskComment::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskNote::class => TaskNote::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskTimeLog::class => TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+        ];
     }
 
     private function applySearchFilter(Builder $query, string $search, string $condition = 'contains'): void
