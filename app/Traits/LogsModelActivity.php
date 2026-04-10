@@ -2,8 +2,10 @@
 
 namespace App\Traits;
 
+use App\Models\Project;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -107,6 +109,13 @@ trait LogsModelActivity
             'display_old' => $displayOld,
             'display_attributes' => $displayAttributes,
         ]);
+
+        if ($this->activityLogSupportsParentColumns()) {
+            $parent = $this->getActivityParent();
+
+            $activity->parent_type = $parent['type'] ?? null;
+            $activity->parent_id = $parent['id'] ?? null;
+        }
     }
 
     protected function getActivityAttributeLabels(): array
@@ -126,5 +135,65 @@ trait LogsModelActivity
     public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
     {
         return $value;
+    }
+
+    protected function getActivityParent(): array
+    {
+        $projectId = $this->resolveActivityProjectId();
+
+        return [
+            'type' => $projectId ? Project::class : null,
+            'id' => $projectId,
+        ];
+    }
+
+    protected function secondsToReadable(?int $seconds): ?string
+    {
+        if ($seconds === null) {
+            return null;
+        }
+
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+
+        return trim("{$hours}h {$minutes}m");
+    }
+
+    protected function resolveActivityProjectId(): ?int
+    {
+        $projectId = $this->getAttribute('project_id');
+
+        if (filled($projectId)) {
+            return (int) $projectId;
+        }
+
+        if (! method_exists($this, 'task')) {
+            return null;
+        }
+
+        $task = $this->relationLoaded('task')
+            ? $this->getRelation('task')
+            : $this->task()->select('id', 'project_id')->first();
+
+        $taskProjectId = $task?->project_id;
+
+        return filled($taskProjectId) ? (int) $taskProjectId : null;
+    }
+
+    protected function activityLogSupportsParentColumns(): bool
+    {
+        static $supportsParentColumns;
+
+        if ($supportsParentColumns !== null) {
+            return $supportsParentColumns;
+        }
+
+        $schema = Schema::connection(config('activitylog.database_connection'));
+        $table = config('activitylog.table_name');
+
+        $supportsParentColumns = $schema->hasColumn($table, 'parent_type')
+            && $schema->hasColumn($table, 'parent_id');
+
+        return $supportsParentColumns;
     }
 }

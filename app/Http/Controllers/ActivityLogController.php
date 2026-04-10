@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,8 @@ use Throwable;
 
 class ActivityLogController extends Controller
 {
+    use BuildsProjectActivityQueries;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -30,9 +33,16 @@ class ActivityLogController extends Controller
     public function activityLog(Request $request)
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $filteredProject = null;
 
         $activities = Activity::query()
             ->with(['causer', 'subject'])
+            ->when($request->filled('project_id'), function (Builder $query) use ($request, &$filteredProject) {
+                $filteredProject = Project::findOrFail((int) $request->input('project_id'));
+                abort_unless(auth()->user()->can('view', $filteredProject), 403);
+
+                $this->applyProjectActivityScope($query, $filteredProject);
+            })
             ->when($request->filled('search'), function (Builder $query) use ($request) {
                 $this->applySearchFilter(
                     $query,
@@ -104,6 +114,7 @@ class ActivityLogController extends Controller
         return view('activity-logs.index', compact(
             'activities',
             'perPage',
+            'filteredProject',
             'logNames',
             'causers',
             'eventOptions'

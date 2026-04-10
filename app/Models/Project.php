@@ -259,11 +259,23 @@ class Project extends Model
 
     /*----------------Activity Log Customization----------------*/
 
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'added_by',
+        'updated_by',
+        'actual_time_seconds',
+    ];
+
+    // Skip creating activity log when only these fields change.
+    protected array $activityLogIgnoredOnlyChanges = [
+        'default_task_estimate_seconds',
+    ];
+
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {
         return [
-            'customer_id' => 'Customer Name',
+            'customer_id' => 'Customer',
             'project_flow' => 'Project Flow',
             'status_id' => 'Status',
             'project_stage_id' => 'Project Stage',
@@ -291,17 +303,5 @@ class Project extends Model
             'default_task_estimate_seconds' => $this->secondsToReadable($value),
             default => $value,
         };
-    }
-
-    protected function secondsToReadable(?int $seconds): ?string
-    {
-        if ($seconds === null) {
-            return null;
-        }
-
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
-
-        return trim("{$hours}h {$minutes}m");
     }
 }

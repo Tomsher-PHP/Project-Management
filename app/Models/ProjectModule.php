@@ -193,4 +193,58 @@ class ProjectModule extends Model
 
         return sprintf('%02d h : %02d m', $hours, $minutes);
     }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'color',
+        'description',
+        'status_id',
+        'completed_at',
+        'derived_time_seconds',
+        'actual_time_seconds',
+        'sort_order',
+        'added_by',
+        'updated_by',
+    ];
+
+    // Skip creating activity log when only these fields change.
+    protected array $activityLogIgnoredOnlyChanges = [
+        'status_id',
+        'derived_time_seconds',
+        'actual_time_seconds',
+        'completed_at',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'owner_id' => 'Owner',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'estimated_time_seconds' => 'Estimated Time',
+            'sort_order' => 'Sort Order',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => $this->project?->name ?? $value,
+            'owner_id' => User::find($value)?->name ?? $value,
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => Project::class,
+            'id' => $this->project_id,
+        ];
+    }
 }

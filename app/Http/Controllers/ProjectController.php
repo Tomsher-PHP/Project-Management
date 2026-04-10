@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
@@ -24,6 +25,7 @@ use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
 use App\Services\ProjectServices;
 use App\Services\UserService;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,6 +35,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller
 {
+    use BuildsProjectActivityQueries;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -82,15 +86,22 @@ class ProjectController extends Controller
     {
         return view('projects.detail-page', array_merge([
             'project' => $project,
-            'projectActivitiesCount' => $project->activities()->count(),
+            'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
         ], $this->getProjectHeaderData($project, $service)));
     }
 
     public function activityModal(Project $project): JsonResponse
     {
-        $activities = $project->activities()
-            ->with('causer')
+        $activities = $this->getProjectActivitiesQuery($project)
+            ->with([
+                'subject',
+                'causer' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        User::class => ['primaryAttachment'],
+                    ]);
+                },
+            ])
             ->latest()
             ->limit(20)
             ->get();
@@ -100,6 +111,7 @@ class ProjectController extends Controller
             'html' => view('projects.partials.modals.activity-content', [
                 'project' => $project,
                 'activities' => $activities,
+                'viewAllUrl' => route('activity.log', ['project_id' => $project->id]),
             ])->render(),
         ], Response::HTTP_OK);
     }

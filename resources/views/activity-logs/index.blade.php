@@ -23,6 +23,23 @@
             @endcan
         </div>
 
+        @if (!empty($filteredProject))
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success-200 bg-success-50/70 px-4 py-3 shadow-sm dark:border-success-900/30 dark:bg-darkblack-600">
+                <div>
+                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
+                        Showing activity for {{ $filteredProject->name }}
+                    </p>
+                    <p class="text-sm text-bgray-600 dark:text-bgray-300">
+                        Includes this project and all related child records.
+                    </p>
+                </div>
+
+                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300">
+                    Clear Filter
+                </a>
+            </div>
+        @endif
+
         <div class="2xl:flex 2xl:space-x-[48px]">
             <section class="mb-6 2xl:mb-0 2xl:flex-1">
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
@@ -98,6 +115,17 @@
                                             'restored' => 'bg-warning-50 text-warning-500',
                                             default => 'bg-blue-50 text-blue-500',
                                         };
+                                        $currentModuleLabel = \Illuminate\Support\Str::headline($activity->log_name ?? 'default');
+                                        $resolvedParentType = $activity->parent_type
+                                            ? (\Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($activity->parent_type) ?? $activity->parent_type)
+                                            : null;
+                                        $parentModuleLabel = $resolvedParentType
+                                            ? \Illuminate\Support\Str::headline(class_basename($resolvedParentType))
+                                            : null;
+                                        $moduleLabel = $parentModuleLabel ?: $currentModuleLabel;
+                                        $moduleSubtitle = $parentModuleLabel && $parentModuleLabel !== $currentModuleLabel
+                                            ? $currentModuleLabel
+                                            : null;
                                         $changeSummary = match ($event) {
                                             'created' => $changedFields->isNotEmpty() ? 'Created ' . $changedFields->count() . ' ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Created a new record.',
                                             'deleted' => $changedFields->isNotEmpty() ? 'Deleted record with ' . $changedFields->count() . ' tracked ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Deleted a record.',
@@ -119,9 +147,17 @@
                                             </td>
                                         @endcan
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="block rounded-md px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                {{ \Illuminate\Support\Str::headline($activity->log_name ?? 'default') }}
-                                            </span>
+                                            <div class="flex flex-col rounded-md px-4 py-1.5">
+                                                <span class="text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                    {{ $moduleLabel }}
+                                                </span>
+
+                                                @if ($moduleSubtitle)
+                                                    <span class="mt-1 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                        {{ $moduleSubtitle }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $eventClasses }}">
@@ -211,6 +247,10 @@
     </main>
 
     <x-filters.drawer>
+        @if (!empty($filteredProject))
+            <input type="hidden" name="project_id" value="{{ $filteredProject->id }}">
+        @endif
+
         <x-filters.input-search name="search" label="Search" />
         <x-filters.multi-select name="log_name" label="Module" :options="$logNames" />
         <x-filters.select name="event" label="Action" :options="$eventOptions" />

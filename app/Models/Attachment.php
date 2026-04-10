@@ -2,15 +2,12 @@
 
 namespace App\Models;
 
-use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class Attachment extends Model
 {
-    use LogsModelActivity;
-
     protected $fillable = [
         'link_id',
         'link_type',
