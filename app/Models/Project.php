@@ -257,6 +257,8 @@ class Project extends Model
             ->whereNotNull('removed_at');
     }
 
+    /*----------------Activity Log Customization----------------*/
+
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {

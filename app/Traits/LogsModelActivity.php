@@ -76,6 +76,7 @@ trait LogsModelActivity
         return array_values(array_unique($ignored));
     }
 
+    // Optional: Override this method in your model to customize how activity properties are prepared before saving.
     public function tapActivity(Activity $activity, string $eventName): void
     {
         $properties = $activity->properties->toArray();
