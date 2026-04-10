@@ -90,28 +90,28 @@
                 <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
                     Task Type
                 </label>
-                <select name="task_type" class="tom-select-no-search w-full">
+                <select name="task_type_id" class="tom-select-no-search w-full">
                     @foreach ($taskTypeOptions as $option)
-                        <option value="{{ $option['value'] }}" {{ $task->task_type === $option['value'] ? 'selected' : '' }}>
+                        <option value="{{ $option['value'] }}" {{ (string) $task->task_type_id === (string) $option['value'] ? 'selected' : '' }}>
                             {{ $option['label'] }}
                         </option>
                     @endforeach
                 </select>
-                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="task_type"></p>
+                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="task_type_id"></p>
             </div>
 
             <div>
                 <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
                     Task Mode
                 </label>
-                <select name="task_mode" class="tom-select-no-search w-full">
+                <select name="task_mode_id" class="tom-select-no-search w-full">
                     @foreach ($taskModeOptions as $option)
-                        <option value="{{ $option['value'] }}" {{ $task->task_mode === $option['value'] ? 'selected' : '' }}>
+                        <option value="{{ $option['value'] }}" {{ (string) $task->task_mode_id === (string) $option['value'] ? 'selected' : '' }}>
                             {{ $option['label'] }}
                         </option>
                     @endforeach
                 </select>
-                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="task_mode"></p>
+                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="task_mode_id"></p>
             </div>
 
             <div>

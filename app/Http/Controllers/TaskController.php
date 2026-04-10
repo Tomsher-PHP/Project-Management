@@ -219,13 +219,13 @@ class TaskController extends Controller
         $selectedModule = $isLinearFlow || empty($validated['project_module_id'])
             ? null
             : ProjectModule::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_module_id']);
+            ->where('project_id', $project->id)
+            ->find($validated['project_module_id']);
         $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
             ? null
             : ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id']);
+            ->where('project_id', $project->id)
+            ->find($validated['project_sprint_id']);
         $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? $selectedModule?->id);
         $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
         $defaultStatusId = $this->getDefaultTaskStatusIdForFlow($project->project_flow);
@@ -443,8 +443,8 @@ class TaskController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'status_id' => $newStatusId,
-                'task_type' => $validated['task_type'],
-                'task_mode' => $validated['task_mode'],
+                'task_type_id' => $validated['task_type_id'],
+                'task_mode_id' => $validated['task_mode_id'],
                 'priority' => $validated['priority'],
                 'current_assignee_id' => $newAssigneeId,
                 'due_date' => $validated['due_date'] ?? null,
@@ -739,15 +739,15 @@ class TaskController extends Controller
                 ->active()
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->get(['name', 'code'])
-                ->map(fn(TaskType $taskType) => ['value' => $taskType->code, 'label' => $taskType->name])
+                ->get(['id', 'name'])
+                ->map(fn(TaskType $taskType) => ['value' => (string) $taskType->id, 'label' => $taskType->name])
                 ->values(),
             'taskModeOptions' => TaskMode::query()
                 ->active()
                 ->orderByDesc('is_default')
                 ->orderBy('id')
-                ->get(['name', 'code'])
-                ->map(fn(TaskMode $taskMode) => ['value' => $taskMode->code, 'label' => $taskMode->name])
+                ->get(['id', 'name'])
+                ->map(fn(TaskMode $taskMode) => ['value' => (string) $taskMode->id, 'label' => $taskMode->name])
                 ->values(),
             'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
                 ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
