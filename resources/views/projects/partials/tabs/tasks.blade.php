@@ -100,8 +100,8 @@
 
                                 <div class="md:col-span-2">
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Name <x-red-star /></label>
-                                    <input type="text" name="title" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
-                                    <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="title"></p>
+                                    <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
+                                    <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
                                 </div>
 
                                 <div>
@@ -174,12 +174,6 @@
                                             @endforeach
                                         </select>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="priority"></p>
-                                    </div>
-
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Start Date</label>
-                                        <input type="date" name="start_date" value="{{ $defaultTaskStartDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="start_date"></p>
                                     </div>
 
                                     <div>

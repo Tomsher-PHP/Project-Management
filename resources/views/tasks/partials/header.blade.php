@@ -11,7 +11,7 @@
 
                 <div class="min-w-0">
                     <h2 class="truncate text-xl font-bold text-bgray-900 dark:text-white">
-                        {{ $task->title }}
+                        {{ $task->name }}
                     </h2>
                     <p class="text-sm text-bgray-500">
                         Code: {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
@@ -59,7 +59,7 @@
                     <span>
                         <strong>Parent Task:</strong>
                         <a href="{{ route('tasks.edit', $task->parentTask) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
-                            {{ $task->parentTask->title }}
+                            {{ $task->parentTask->name }}
                         </a>
                     </span>
                 @endif

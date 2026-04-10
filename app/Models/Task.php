@@ -19,7 +19,7 @@ class Task extends Model
         'project_module_id',
         'project_sprint_id',
         'parent_task_id',
-        'title',
+        'name',
         'code',
         'description',
         'status_id',
@@ -27,7 +27,6 @@ class Task extends Model
         'task_mode_id',
         'priority',
         'current_assignee_id',
-        'start_date',
         'due_date',
         'completed_at',
         'estimated_time_seconds',
@@ -40,13 +39,12 @@ class Task extends Model
     ];
 
     protected $sortable = [
-        'title',
+        'name',
         'code',
         'project.name',
         'currentAssignee.name',
         'status.name',
         'priority',
-        'start_date',
         'estimated_time_seconds',
         'actual_time_seconds',
         'due_date',
@@ -55,7 +53,7 @@ class Task extends Model
     ];
 
     protected $searchable = [
-        'title',
+        'name',
         'code',
         'description',
         'task_type',
@@ -69,7 +67,6 @@ class Task extends Model
         'parent_task_id' => 'integer',
         'status_id' => 'integer',
         'current_assignee_id' => 'integer',
-        'start_date' => 'date',
         'due_date' => 'date',
         'completed_at' => 'datetime',
         'estimated_time_seconds' => 'integer',
@@ -85,10 +82,6 @@ class Task extends Model
     {
         static::creating(function (Task $task) {
             $task->added_by = Auth::id();
-
-            if (blank($task->start_date)) {
-                $task->start_date = now(config('constants.timezone'))->toDateString();
-            }
 
             if (blank($task->code)) {
                 $project = $task->relationLoaded('project')
@@ -317,5 +310,59 @@ class Task extends Model
         $minutes = floor(($totalSeconds % 3600) / 60);
 
         return sprintf('%02d h : %02d m', $hours, $minutes);
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'code',
+        'description',
+        'derived_time_seconds',
+        'actual_time_seconds',
+        'added_by',
+        'updated_by',
+    ];
+
+    // Skip creating activity log when only these fields change.
+    protected array $activityLogIgnoredOnlyChanges = [
+        'derived_time_seconds',
+        'actual_time_seconds',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_module_id' => 'Module',
+            'project_sprint_id' => 'Sprint',
+            'parent_task_id' => 'Parent Task',
+            'estimated_time_seconds' => 'Estimated Time',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => $this->project?->name ?? $value,
+            'project_module_id' => $this->projectModule?->name ?? $value,
+            'project_sprint_id' => $this->projectSprint?->name ?? $value,
+            'parent_task_id' => $this->parentTask?->name ?? $value,
+            'status_id' => $this->status?->name ?? $value,
+            'task_type_id' => $this->taskType?->name ?? $value,
+            'task_mode_id' => $this->taskMode?->name ?? $value,
+            'current_assignee_id' => $this->currentAssignee?->name ?? $value,
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => Project::class,
+            'id' => $this->project_id,
+        ];
     }
 }

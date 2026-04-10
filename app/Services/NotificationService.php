@@ -56,14 +56,14 @@ class NotificationService
 
         if ($isSelfAssigned) {
             $message = $previousAssigneeId
-                ? "You reassigned task '{$task->title}' to yourself in project '{$projectName}'."
-                : "You assigned yourself to task '{$task->title}' in project '{$projectName}'.";
+                ? "You reassigned task '{$task->name}' to yourself in project '{$projectName}'."
+                : "You assigned yourself to task '{$task->name}' in project '{$projectName}'.";
         } else {
             $actorName = $authUser?->name ?? 'A team member';
 
             $message = $previousAssigneeId
-                ? "{$actorName} reassigned task '{$task->title}' to you in project '{$projectName}'."
-                : "{$actorName} assigned you to task '{$task->title}' in project '{$projectName}'.";
+                ? "{$actorName} reassigned task '{$task->name}' to you in project '{$projectName}'."
+                : "{$actorName} assigned you to task '{$task->name}' in project '{$projectName}'.";
         }
 
         $this->send(

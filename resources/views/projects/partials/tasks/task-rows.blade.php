@@ -21,7 +21,7 @@
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
-                                {{ $task->title }}
+                                {{ $task->name }}
                             </a>
 
                             <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
@@ -36,7 +36,7 @@
                         </div>
 
                         @if ($task->parentTask)
-                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->title }}</p>
+                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->name }}</p>
                         @endif
                     </div>
 
@@ -98,7 +98,6 @@
         <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
             @if ($task->due_date)
                 <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDate($task->due_date)</div>
-                <div class="text-xs text-bgray-500 dark:text-bgray-300">Starts @appDate($task->start_date)</div>
             @else
                 <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
             @endif

@@ -181,7 +181,6 @@ class TaskController extends Controller
             ->get(['id', 'name', 'color']);
         $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskStartDate = now(config('constants.timezone'))->toDateString();
         $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
 
         return view('tasks.index', compact(
@@ -202,7 +201,6 @@ class TaskController extends Controller
             'tagOptions',
             'taskCreateDependencies',
             'defaultTaskPriority',
-            'defaultTaskStartDate',
             'defaultTaskDueDate'
         ));
     }
@@ -262,14 +260,13 @@ class TaskController extends Controller
                 'project_module_id' => $resolvedModuleId,
                 'project_sprint_id' => $resolvedSprintId,
                 'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'title' => $validated['title'],
+                'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
                 'task_type_id' => $validated['task_type_id'] ?? $defaultTaskTypeId,
                 'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskModeId,
                 'priority' => $validated['priority'] ?? $defaultTaskPriority,
                 'current_assignee_id' => $assigneeId,
-                'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
                 'due_date' => $validated['due_date'] ?? null,
                 'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
                     ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
@@ -334,7 +331,7 @@ class TaskController extends Controller
             ->where('project_id', $project->id)
             ->accessibleBy($request->user())
             ->whereKeyNot($task->id)
-            ->orderBy('title')
+            ->orderBy('name')
             ->orderBy('id');
 
         if ($project->project_flow === 'linear' || ! $sprintId) {
@@ -353,10 +350,10 @@ class TaskController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
+            'options' => $query->get(['id', 'name', 'code'])->map(function (Task $parentTask) {
                 return [
                     'value' => (string) $parentTask->id,
-                    'text' => $parentTask->title,
+                    'text' => $parentTask->name,
                     'subtype' => $parentTask->code ?: 'Parent task',
                 ];
             })->values(),
@@ -377,7 +374,7 @@ class TaskController extends Controller
         $query = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy($request->user())
-            ->orderBy('title')
+            ->orderBy('name')
             ->orderBy('id');
 
         if ($project->project_flow === 'linear') {
@@ -401,10 +398,10 @@ class TaskController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
+            'options' => $query->get(['id', 'name', 'code'])->map(function (Task $parentTask) {
                 return [
                     'value' => (string) $parentTask->id,
-                    'text' => $parentTask->title,
+                    'text' => $parentTask->name,
                     'subtype' => $parentTask->code ?: 'Parent task',
                 ];
             })->values(),
@@ -443,14 +440,13 @@ class TaskController extends Controller
                 'project_module_id' => $resolvedModuleId,
                 'project_sprint_id' => $resolvedSprintId,
                 'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'title' => $validated['title'],
+                'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'status_id' => $newStatusId,
                 'task_type' => $validated['task_type'],
                 'task_mode' => $validated['task_mode'],
                 'priority' => $validated['priority'],
                 'current_assignee_id' => $newAssigneeId,
-                'start_date' => $validated['start_date'] ?? null,
                 'due_date' => $validated['due_date'] ?? null,
                 'completed_at' => $validated['completed_at'] ?? null,
                 'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
@@ -633,7 +629,7 @@ class TaskController extends Controller
             'projectModule:id,name',
             'projectSprint:id,name,project_module_id',
             'projectSprint.projectModule:id,name',
-            'parentTask:id,title,code',
+            'parentTask:id,name,code',
             'currentAssignee:id,name',
             'status:id,name,color',
             'taskType:id,name,code,color',
@@ -733,8 +729,8 @@ class TaskController extends Controller
                 ->where('project_id', $project->id)
                 ->accessibleBy(auth()->user())
                 ->whereKeyNot($task->id)
-                ->orderBy('title')
-                ->get(['id', 'title', 'project_sprint_id']),
+                ->orderBy('name')
+                ->get(['id', 'name', 'project_sprint_id']),
             'tagOptions' => Tag::query()
                 ->active()
                 ->orderBy('name')
@@ -837,7 +833,6 @@ class TaskController extends Controller
             'defaults' => [
                 'project_id' => $projects->firstWhere('id', $this->resolveDefaultTaskCreateProjectId($projects))?->id,
                 'priority' => $this->getDefaultTaskPriorityValue(),
-                'start_date' => now(config('constants.timezone'))->toDateString(),
                 'due_date' => now(config('constants.timezone'))->addDay()->toDateString(),
             ],
             'parent_options_url' => route('tasks.quick-create-parent-options'),

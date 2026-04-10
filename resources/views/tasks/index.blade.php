@@ -46,7 +46,7 @@
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="title" label="Task" />
+                                    <x-sorting.sortable-column column="name" label="Task" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="project.name" label="Project" />
@@ -93,8 +93,8 @@
 
                                             <div class="min-w-0">
                                                 <a href="{{ route('tasks.edit', $task) }}" class="block">
-                                                    <p class="text-lg font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300" title="{{ $task->title }}">
-                                                        {{ \Illuminate\Support\Str::limit($task->title, 20, '..') }}
+                                                    <p class="text-lg font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300" title="{{ $task->name }}">
+                                                        {{ \Illuminate\Support\Str::limit($task->name, 20, '..') }}
                                                     </p>
                                                     <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
                                                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}

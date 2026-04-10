@@ -26,8 +26,8 @@
             <div class="grid gap-6 md:grid-cols-2">
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Name <x-red-star /></label>
-                    <input type="text" name="title" value="{{ $task->title }}" class="{{ $textInputClasses }}" @disabled(!$canEditTask)>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="title"></p>
+                    <input type="text" name="name" value="{{ $task->name }}" class="{{ $textInputClasses }}" @disabled(!$canEditTask)>
+                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="name"></p>
                 </div>
 
                 <div>
@@ -103,7 +103,7 @@
                         <option value="">Select parent task</option>
                         @foreach ($parentTaskOptions as $parentTaskOption)
                             <option value="{{ $parentTaskOption->id }}" {{ (int) $task->parent_task_id === (int) $parentTaskOption->id ? 'selected' : '' }}>
-                                {{ $parentTaskOption->title }}
+                                {{ $parentTaskOption->name }}
                             </option>
                         @endforeach
                     </select>
@@ -113,12 +113,6 @@
                 <div>
                     <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" help-text="Enter time naturally. We’ll convert it automatically for calculation." />
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Start Date</label>
-                    <input type="date" name="start_date" value="{{ $task->start_date?->format('Y-m-d') }}" class="datepicker {{ $textInputClasses }}" placeholder="Select a date" @disabled(!$canEditTask)>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="start_date"></p>
                 </div>
 
                 <div>

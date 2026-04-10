@@ -28,7 +28,7 @@ class TaskQuickStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('projects', 'id'),
             ],
-            'title' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status_id' => [
                 'nullable',
@@ -73,8 +73,7 @@ class TaskQuickStoreRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'due_date' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
             'tag_ids' => ['nullable', 'array'],
@@ -87,7 +86,7 @@ class TaskQuickStoreRequest extends FormRequest
         return [
             'project_id.required' => 'Please choose a project.',
             'project_id.exists' => 'The selected project is invalid.',
-            'title.required' => 'Please enter a task name.',
+            'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
             'project_module_id.required' => 'The module is required.',
             'project_module_id.exists' => 'The selected module is invalid.',
@@ -97,7 +96,6 @@ class TaskQuickStoreRequest extends FormRequest
             'task_type_id.exists' => 'The selected task type is invalid.',
             'task_mode_id.exists' => 'The selected task mode is invalid.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
-            'due_date.after_or_equal' => 'The due date must be the same as or after the start date.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];

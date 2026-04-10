@@ -2,7 +2,7 @@
     <div class="flex items-start justify-between gap-4 border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400">
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">Task Comments</p>
-            <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $task->title }}</h3>
+            <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $task->name }}</h3>
             <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
                 Showing the latest {{ $comments->count() }} of {{ $totalComments }} {{ \Illuminate\Support\Str::plural('comment', $totalComments) }}.
             </p>

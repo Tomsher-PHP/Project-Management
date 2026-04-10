@@ -18,8 +18,8 @@
                 <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
                     Task Name <x-red-star />
                 </label>
-                <input type="text" name="title" value="{{ $task->title }}" class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="title"></p>
+                <input type="text" name="name" value="{{ $task->name }}" class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="name"></p>
             </div>
 
             <div>
@@ -79,7 +79,7 @@
                     <option value="">Select parent task</option>
                     @foreach ($parentTaskOptions as $parentTaskOption)
                         <option value="{{ $parentTaskOption->id }}" {{ (int) $task->parent_task_id === (int) $parentTaskOption->id ? 'selected' : '' }}>
-                            {{ $parentTaskOption->title }}
+                            {{ $parentTaskOption->name }}
                         </option>
                     @endforeach
                 </select>
@@ -131,14 +131,6 @@
             <div>
                 <x-forms.estimated-time-input name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" />
                 <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="estimated_time_minutes"></p>
-            </div>
-
-            <div>
-                <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                    Start Date
-                </label>
-                <input type="date" name="start_date" value="{{ $task->start_date?->format('Y-m-d') }}" class="datepicker w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="start_date"></p>
             </div>
 
             <div>

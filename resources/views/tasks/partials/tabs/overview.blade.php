@@ -18,12 +18,7 @@
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                     <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Parent Task</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->parentTask?->title ?? '--' }}</p>
-                </div>
-
-                <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                    <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Start Date</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->start_date ? $task->start_date->format($globalDateFormat) : '--' }}</p>
+                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->parentTask?->name ?? '--' }}</p>
                 </div>
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">

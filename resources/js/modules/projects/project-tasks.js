@@ -28,10 +28,9 @@ const ADVANCED_TASK_FIELDS = new Set([
     'description',
     'status_id',
     'parent_task_id',
-    'task_type',
-    'task_mode',
+    'task_type_id',
+    'task_mode_id',
     'priority',
-    'start_date',
     'due_date',
     'tag_ids',
     'is_billable',
@@ -259,8 +258,6 @@ const clearTaskDetailFormErrors = (form) => {
 };
 
 const applyTaskDetailFormErrors = (form, errors = {}) => {
-    console.log('laksdlkasl');
-    
     clearTaskDetailFormErrors(form);
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
@@ -294,7 +291,7 @@ const openTaskModal = (modal) => {
     modal.classList.add('flex');
 
     window.requestAnimationFrame(() => {
-        modal.querySelector('[name="title"]')?.focus();
+        modal.querySelector('[name="name"]')?.focus();
     });
 };
 

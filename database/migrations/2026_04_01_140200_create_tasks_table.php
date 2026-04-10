@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('project_sprint_id')->nullable()->constrained('project_sprints');
             $table->foreignId('parent_task_id')->nullable()->constrained('tasks');
 
-            $table->string('title');
+            $table->string('name');
             $table->string('code', 100)->unique();
             $table->longText('description')->nullable();
 
@@ -29,7 +29,6 @@ return new class extends Migration
 
             $table->foreignId('current_assignee_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->date('start_date')->nullable();
             $table->date('due_date')->nullable();
             $table->timestamp('completed_at')->nullable();
 

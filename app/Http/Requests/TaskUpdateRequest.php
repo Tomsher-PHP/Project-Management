@@ -20,7 +20,7 @@ class TaskUpdateRequest extends FormRequest
         $taskId = $task?->id;
 
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status_id' => [
                 'nullable',
@@ -57,8 +57,7 @@ class TaskUpdateRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'due_date' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
@@ -71,7 +70,7 @@ class TaskUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Please enter a task name.',
+            'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
@@ -82,7 +81,6 @@ class TaskUpdateRequest extends FormRequest
             'task_mode.exists' => 'The selected task mode is invalid.',
             'priority.required' => 'Please choose a task priority.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
-            'due_date.after_or_equal' => 'The due date must be the same as or after the start date.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'sort_order.min' => 'Sort order must be at least 1.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
