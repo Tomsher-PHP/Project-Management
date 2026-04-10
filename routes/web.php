@@ -59,9 +59,13 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    Route::get('/user-dashboard', function () {
+        return view('user-dashboard');
+    })->name('user.dashboard');
+
     Route::get('/profile', function () {
         return view('user-profile');
-    })->name('profile');
+    })->name('user.profile');
     // End of sample routes
 
     // Role & Permission Routes
