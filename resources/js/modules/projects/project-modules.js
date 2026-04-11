@@ -71,6 +71,22 @@ const getTodayDate = () => {
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 };
 
+const normalizeDateOnly = (value) => {
+    if (!value) {
+        return '';
+    }
+
+    const stringValue = String(value).trim();
+
+    if (!stringValue) {
+        return '';
+    }
+
+    return stringValue.includes('T')
+        ? stringValue.split('T')[0]
+        : stringValue;
+};
+
 const getCurrentWeekRange = () => {
     const today = getTodayDate();
     const startOfWeek = new Date(today);
@@ -91,12 +107,53 @@ const getCurrentWeekRange = () => {
     };
 };
 
-const applyMinDateToRangeInput = (rangeInput) => {
+const getRangeMinDate = (startDate = '', endDate = '') => {
+    const { minDate: defaultMinDate } = getCurrentWeekRange();
+    const storedMinDate = [startDate, endDate]
+        .map((value) => normalizeDateOnly(value))
+        .filter(Boolean)
+        .sort()[0];
+
+    return storedMinDate && storedMinDate < defaultMinDate
+        ? storedMinDate
+        : defaultMinDate;
+};
+
+const syncRangeInputValue = (rangeInput, startDate = '', endDate = '') => {
     if (!rangeInput) {
         return;
     }
 
-    const { minDate } = getCurrentWeekRange();
+    const normalizedStartDate = normalizeDateOnly(startDate);
+    const normalizedEndDate = normalizeDateOnly(endDate);
+    const selectedDates = [normalizedStartDate, normalizedEndDate].filter(Boolean);
+    const minDate = getRangeMinDate(normalizedStartDate, normalizedEndDate);
+
+    rangeInput.dataset.minDate = minDate;
+
+    if (rangeInput._flatpickr) {
+        rangeInput._flatpickr.set('minDate', minDate);
+
+        if (selectedDates.length) {
+            rangeInput._flatpickr.setDate(selectedDates, false, 'Y-m-d');
+        } else {
+            rangeInput._flatpickr.clear(false);
+            rangeInput.value = '';
+        }
+
+        return;
+    }
+
+    rangeInput.value = selectedDates.join(' to ');
+};
+
+const applyMinDateToRangeInput = (rangeInput, startDate = '', endDate = '') => {
+    if (!rangeInput) {
+        return;
+    }
+
+    const minDate = getRangeMinDate(startDate, endDate);
+
     rangeInput.dataset.minDate = minDate;
 
     if (rangeInput._flatpickr) {
@@ -596,7 +653,7 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
 
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                <input type="text" value="${escapeHtml([module.start_date, module.end_date].filter(Boolean).join(' to '))}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getCurrentWeekRange().minDate)}" data-project-module-builder-date-range>
+                <input type="text" value="${escapeHtml([module.start_date, module.end_date].filter(Boolean).join(' to '))}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(module.start_date, module.end_date))}" data-project-module-builder-date-range>
                 <input type="hidden" name="start_date" value="${escapeHtml(module.start_date || '')}">
                 <input type="hidden" name="end_date" value="${escapeHtml(module.end_date || '')}">
             </div>
@@ -783,9 +840,14 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const initializeCardDatepicker = (card) => {
-        applyMinDateToRangeInput(card.querySelector('[data-project-module-builder-date-range]'));
+        const rangeInput = card.querySelector('[data-project-module-builder-date-range]');
+        const startDate = card.querySelector('[name="start_date"]')?.value || '';
+        const endDate = card.querySelector('[name="end_date"]')?.value || '';
+
+        syncRangeInputValue(rangeInput, startDate, endDate);
+        applyMinDateToRangeInput(rangeInput, startDate, endDate);
         initDatepicker('.project-module-date-range', {}, card);
-        syncCardDateRange(card);
+        syncRangeInputValue(rangeInput, startDate, endDate);
     };
 
     const initializeCardTomSelect = (card) => {
@@ -1136,7 +1198,7 @@ const initializeProjectModuleBuilderModal = () => {
         const colorDot = card.querySelector('[data-project-module-builder-color-dot]');
 
         if (rangeInput) {
-            rangeInput.value = [module.start_date, module.end_date].filter(Boolean).join(' to ');
+            syncRangeInputValue(rangeInput, module.start_date || '', module.end_date || '');
         }
 
         if (colorDot) {
@@ -1612,29 +1674,18 @@ const syncSprintCardDateRange = (card) => {
 };
 
 const initializeSprintCardDatepicker = (card) => {
-    applyMinDateToRangeInput(card.querySelector('[data-project-sprint-builder-date-range]'));
+    const rangeInput = card.querySelector('[data-project-sprint-builder-date-range]');
+    const startDate = card.querySelector('[name="start_date"]')?.value || '';
+    const endDate = card.querySelector('[name="end_date"]')?.value || '';
+
+    syncRangeInputValue(rangeInput, startDate, endDate);
+    applyMinDateToRangeInput(rangeInput, startDate, endDate);
     initDatepicker('.project-sprint-date-range', {}, card);
-    syncSprintCardDateRange(card);
+    syncRangeInputValue(rangeInput, startDate, endDate);
 };
 
 const initializeSprintCardEstimatedTime = (card) => {
     initializeEstimatedTimeInputs(card);
-};
-
-const normalizeDateOnly = (value) => {
-    if (!value) {
-        return '';
-    }
-
-    const stringValue = String(value).trim();
-
-    if (!stringValue) {
-        return '';
-    }
-
-    return stringValue.includes('T')
-        ? stringValue.split('T')[0]
-        : stringValue;
 };
 
 const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
@@ -1688,7 +1739,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
 
                 <div>
                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                    <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getCurrentWeekRange().minDate)}" data-project-sprint-builder-date-range>
+                    <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(sprint.start_date, sprint.end_date))}" data-project-sprint-builder-date-range>
                     <input type="hidden" name="start_date" value="${escapeHtml(sprint.start_date || '')}">
                     <input type="hidden" name="end_date" value="${escapeHtml(sprint.end_date || '')}">
                 </div>
@@ -2235,7 +2286,7 @@ const initializeProjectSprintBuilderModal = () => {
         const rangeInput = card.querySelector('[data-project-sprint-builder-date-range]');
 
         if (rangeInput) {
-            rangeInput.value = [normalizedStartDate, normalizedEndDate].filter(Boolean).join(' to ');
+            syncRangeInputValue(rangeInput, normalizedStartDate, normalizedEndDate);
         }
 
         const taskCountBadge = card.querySelector('[data-project-sprint-builder-task-count]');
