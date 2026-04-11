@@ -266,11 +266,6 @@ class Project extends Model
         'actual_time_seconds',
     ];
 
-    // Skip creating activity log when only these fields change.
-    protected array $activityLogIgnoredOnlyChanges = [
-        'default_task_estimate_seconds',
-    ];
-
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {

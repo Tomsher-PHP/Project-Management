@@ -324,12 +324,6 @@ class Task extends Model
         'updated_by',
     ];
 
-    // Skip creating activity log when only these fields change.
-    protected array $activityLogIgnoredOnlyChanges = [
-        'derived_time_seconds',
-        'actual_time_seconds',
-    ];
-
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {

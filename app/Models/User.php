@@ -199,4 +199,39 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaskStatusHistory::class, 'added_by');
     }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'email_verified_at',
+        'remember_token',
+        'password_otp',
+        'password_otp_expires_at',
+        'is_super_admin',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_module_id' => 'Module',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'estimated_time_seconds' => 'Estimated Time',
+            'sort_order' => 'Sort Order',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'is_active' => $value ? 'Active' : 'Inactive',
+            'delete_status' => $value ? 'Deleted' : 'Not Deleted',
+            default => $value,
+        };
+    }
 }

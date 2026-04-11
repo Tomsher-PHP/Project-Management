@@ -198,14 +198,6 @@ class ProjectSprint extends Model
         'updated_by',
     ];
 
-    // Skip creating activity log when only these fields change.
-    protected array $activityLogIgnoredOnlyChanges = [
-        'status_id',
-        'derived_time_seconds',
-        'actual_time_seconds',
-        'completed_at',
-    ];
-
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {

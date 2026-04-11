@@ -66,4 +66,44 @@ class UserDetail extends Model
     {
         return $this->belongsTo(User::class, 'manager_id', 'id');
     }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'user_id',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'user_id' => 'User',
+            'department_id' => 'Department',
+            'designation_id' => 'Designation',
+            'reporter_id' => 'Reporter',
+            'manager_id' => 'Manager',
+            'employee_id' => 'Employee ID',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'department_id' => Department::find($value)?->name ?? $value,
+            'designation_id' => Designation::find($value)?->name ?? $value,
+            'reporter_id' => User::find($value)?->name ?? $value,
+            'manager_id' => User::find($value)?->name ?? $value,
+            default => $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => User::class,
+            'id' => $this->user_id,
+        ];
+    }
 }
