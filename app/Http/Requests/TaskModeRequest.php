@@ -45,6 +45,7 @@ class TaskModeRequest extends FormRequest
             'is_rework' => ['boolean'],
             'is_productive' => ['boolean'],
             'track_performance' => ['boolean'],
+            'customer_request' => ['boolean'],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];

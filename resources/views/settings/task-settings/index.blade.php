@@ -175,6 +175,7 @@
                                                             $editData['is_rework'] = (int) $record->is_rework;
                                                             $editData['is_productive'] = (int) $record->is_productive;
                                                             $editData['track_performance'] = (int) $record->track_performance;
+                                                            $editData['customer_request'] = (int) $record->customer_request;
                                                         }
 
                                                         $dataAttributes = '';
@@ -375,6 +376,21 @@
                             </svg>
                             <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
                                 Enable this when tasks using this mode should be included in performance tracking.
+                            </span>
+                        </span>
+                    </span>
+                </label>
+
+                <label for="customer_request" class="flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" name="customer_request" id="customer_request" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                        <span>Customer Request?</span>
+                        <span class="group relative inline-flex cursor-help">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            </svg>
+                            <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                Enable this when the mode is used for work introduced through a customer or change request.
                             </span>
                         </span>
                     </span>
