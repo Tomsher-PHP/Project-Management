@@ -238,6 +238,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
+        Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
 
         // Comments and activity log routes
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');

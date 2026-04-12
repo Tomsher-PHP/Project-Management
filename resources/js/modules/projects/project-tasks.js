@@ -380,9 +380,62 @@ const closeAllTaskRowMenus = (exceptDropdown = null) => {
             return;
         }
 
-        dropdown.querySelector('[data-project-task-row-menu]')?.classList.add('hidden');
+        const menu = dropdown.querySelector('[data-project-task-row-menu]');
+
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.visibility = '';
+        }
+
         dropdown.querySelector('[data-project-task-row-menu-trigger]')?.setAttribute('aria-expanded', 'false');
     });
+};
+
+const positionTaskRowMenu = (trigger, menu) => {
+    if (!trigger || !menu) {
+        return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const gutter = 8;
+    menu.style.position = 'fixed';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.top = '0px';
+    menu.style.left = '0px';
+    menu.style.minWidth = `${Math.round(Math.max(148, triggerRect.width + 100))}px`;
+    menu.style.width = 'max-content';
+
+    const measuredRect = menu.getBoundingClientRect();
+    const menuWidth = Math.max(measuredRect.width || 0, 148);
+    const menuHeight = measuredRect.height || 0;
+
+    let left = triggerRect.right - menuWidth;
+    let top = triggerRect.top + triggerRect.height - 2;
+
+    if (left < gutter) {
+        left = gutter;
+    }
+
+    if ((left + menuWidth) > (viewportWidth - gutter)) {
+        left = Math.max(gutter, viewportWidth - menuWidth - gutter);
+    }
+
+    if ((top + menuHeight) > (viewportHeight - gutter)) {
+        top = Math.max(gutter, triggerRect.top - menuHeight - gutter);
+    }
+
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
 };
 
 const openTaskMoveModal = (modal) => {
@@ -471,6 +524,52 @@ const prepareTaskMoveModal = (root, triggerButton) => {
     });
 
     return modal;
+};
+
+const deleteProjectTask = async (root, triggerButton) => {
+    const actionUrl = triggerButton?.dataset.projectTaskDeleteUrl || '';
+
+    if (!root || !actionUrl) {
+        Alert.errorModal('Unable to delete the task right now.');
+        return;
+    }
+
+    const taskName = triggerButton.dataset.projectTaskName || 'this task';
+    const confirmation = await Alert.confirm({
+        title: 'Confirm Delete',
+        text: `Delete ${taskName}?`,
+        confirmText: 'Yes, delete it',
+        cancelText: 'Cancel',
+    });
+
+    if (!confirmation?.isConfirmed) {
+        return;
+    }
+
+    const payload = new FormData();
+    payload.append('_method', 'DELETE');
+
+    const response = await fetch(actionUrl, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: payload,
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.status) {
+        throw new Error(result.message || 'Unable to delete the task.');
+    }
+
+    const newRoot = replaceTasksRoot(root, result.html);
+    Alert.success(result.message || 'Task deleted successfully.');
+
+    if (newRoot) {
+        initializeTasksRoot(newRoot);
+    }
 };
 
 const setParentTaskOptions = (selectField, options = [], selectedValue = '', { placeholder = 'Select parent task', disabled = false } = {}) => {
@@ -1014,6 +1113,12 @@ const initializeTasksRoot = (root) => {
 
             closeAllTaskRowMenus();
         });
+        window.addEventListener('resize', () => {
+            closeAllTaskRowMenus();
+        });
+        window.addEventListener('scroll', () => {
+            closeAllTaskRowMenus();
+        }, true);
         taskRowMenuDocumentListenerBound = true;
     }
 
@@ -1030,7 +1135,24 @@ const initializeTasksRoot = (root) => {
 
             const shouldOpen = menu.classList.contains('hidden');
             closeAllTaskRowMenus(dropdown);
-            menu.classList.toggle('hidden', !shouldOpen);
+
+            if (shouldOpen) {
+                menu.style.position = 'fixed';
+                menu.style.top = '0px';
+                menu.style.left = '0px';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.visibility = 'hidden';
+                menu.classList.remove('hidden');
+
+                window.requestAnimationFrame(() => {
+                    positionTaskRowMenu(rowMenuTrigger, menu);
+                    menu.style.visibility = '';
+                });
+            } else {
+                menu.classList.add('hidden');
+            }
+
             rowMenuTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
             return;
         }
@@ -1041,6 +1163,20 @@ const initializeTasksRoot = (root) => {
             closeAllTaskRowMenus();
             const modal = prepareTaskMoveModal(root, moveOpenButton);
             openTaskMoveModal(modal);
+            return;
+        }
+
+        const deleteButton = event.target.closest('[data-project-task-delete]');
+
+        if (deleteButton && root.contains(deleteButton)) {
+            closeAllTaskRowMenus();
+
+            try {
+                await deleteProjectTask(root, deleteButton);
+            } catch (error) {
+                Alert.errorModal(error.message || 'Unable to delete the task.');
+            }
+
             return;
         }
 

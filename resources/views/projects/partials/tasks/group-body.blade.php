@@ -4,27 +4,27 @@
         'next_page' => null,
         'has_more_pages' => false,
     ];
-    $showTaskActionColumn = $showTaskActionColumn ?? ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
+    $showTaskActionColumn = $showTaskActionColumn ?? auth()->user()?->can('task.delete') || ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
 @endphp
 
 <div class="overflow-hidden rounded-[20px] border border-bgray-200 dark:border-darkblack-400" data-project-task-group-task-list data-current-page="{{ $pagination['page'] }}" data-next-page="{{ $pagination['next_page'] ?? '' }}" data-has-more-pages="{{ $pagination['has_more_pages'] ? 'true' : 'false' }}">
     <div class="max-h-[34rem] overflow-y-auto" data-project-task-group-scroll>
         <div class="overflow-x-auto">
             <table class="min-w-full border-separate border-spacing-0">
-            <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
-                <tr>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Assignee</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Status</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Type</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task Mode</th>
-                    <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Estimate Time</th>
-                    <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Due Date</th>
-                    @if ($showTaskActionColumn)
-                        <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Actions</th>
-                    @endif
-                </tr>
-            </thead>
+                <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
+                    <tr>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Assignee</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Status</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Type</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task Mode</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Estimate Time</th>
+                        <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Due Date</th>
+                        @if ($showTaskActionColumn)
+                            <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Actions</th>
+                        @endif
+                    </tr>
+                </thead>
 
                 <tbody class="bg-white dark:bg-darkblack-600" data-project-task-group-rows>
                     @include('projects.partials.tasks.task-rows', [

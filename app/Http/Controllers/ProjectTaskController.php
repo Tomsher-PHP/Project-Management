@@ -329,6 +329,21 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function destroyTask(Project $project, Task $task): JsonResponse
+    {
+        abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless(auth()->user()->can('delete', $task), Response::HTTP_FORBIDDEN);
+
+        $preferredGroupKey = $this->resolveTaskGroupKey($project, $task);
+        $task->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Task deleted successfully.',
+            'html' => $this->renderTasksTab($project, $preferredGroupKey),
+        ], Response::HTTP_OK);
+    }
+
     public function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
     {
         $isLinearFlow = $project->project_flow === 'linear';

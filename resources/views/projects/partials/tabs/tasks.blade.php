@@ -1,39 +1,43 @@
 @php
-    $taskCreateProjectModules = $projectModules
-        ->reject(fn($projectModule) => (bool) ($projectModule->is_backlog || $projectModule->is_system))
-        ->values();
-    $taskCreateProjectSprints = $projectSprints
-        ->reject(fn($projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))
-        ->values();
+    $taskCreateProjectModules = $projectModules->reject(fn($projectModule) => (bool) ($projectModule->is_backlog || $projectModule->is_system))->values();
+    $taskCreateProjectSprints = $projectSprints->reject(fn($projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))->values();
     $taskCreateDefaultSprintId = $taskCreateProjectSprints->first()?->id;
     $taskPlacementOptions = [
         'modules' => $taskCreateProjectModules
-            ->map(fn($projectModule) => [
-                'value' => (string) $projectModule->id,
-                'text' => $projectModule->name,
-            ])
+            ->map(
+                fn($projectModule) => [
+                    'value' => (string) $projectModule->id,
+                    'text' => $projectModule->name,
+                ],
+            )
             ->values(),
         'sprints' => $taskCreateProjectSprints
-            ->map(fn($projectSprint) => [
-                'value' => (string) $projectSprint->id,
-                'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
-                'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
-            ])
+            ->map(
+                fn($projectSprint) => [
+                    'value' => (string) $projectSprint->id,
+                    'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
+                    'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                ],
+            )
             ->values(),
     ];
     $taskMovePlacementOptions = [
         'modules' => $projectModules
-            ->map(fn($projectModule) => [
-                'value' => (string) $projectModule->id,
-                'text' => $projectModule->name,
-            ])
+            ->map(
+                fn($projectModule) => [
+                    'value' => (string) $projectModule->id,
+                    'text' => $projectModule->name,
+                ],
+            )
             ->values(),
         'sprints' => $projectSprints
-            ->map(fn($projectSprint) => [
-                'value' => (string) $projectSprint->id,
-                'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
-                'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
-            ])
+            ->map(
+                fn($projectSprint) => [
+                    'value' => (string) $projectSprint->id,
+                    'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
+                    'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                ],
+            )
             ->values(),
     ];
 @endphp
@@ -74,7 +78,7 @@
             </p>
         </div>
     @else
-        <div class="space-y-4" data-project-task-group-list @unless($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
+        <div class="space-y-4" data-project-task-group-list @unless ($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
             @include('projects.partials.tasks.group-cards', [
                 'project' => $project,
                 'taskGroups' => $taskGroups,
@@ -173,13 +177,7 @@
                                 </div>
 
                                 <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
-                                    <x-forms.estimated-time-input
-                                        label="Estimated Time"
-                                        name="estimated_time_minutes"
-                                        :total-minutes="$defaultTaskEstimateMinutes ?? 0"
-                                        help-text="Enter time naturally. We’ll convert it automatically for calculation."
-                                        :show-label="false"
-                                    />
+                                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" help-text="Enter time naturally. We’ll convert it automatically for calculation." :show-label="false" />
                                     <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
                                 </div>
                             </div>
@@ -280,7 +278,7 @@
         </div>
     @endcan
 
-    @if (! $isLinearFlow && auth()->user()?->can('task.move'))
+    @if (!$isLinearFlow && auth()->user()?->can('task.move'))
         <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
 
