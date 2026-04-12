@@ -691,7 +691,7 @@ class ProjectTaskController extends Controller
             'sprint_id' => $projectSprint->id,
             'name' => $projectSprint->name,
             'subtitle' => $projectSprint->projectModule?->name,
-            'accent_color' => $projectSprint->color ?: '#22C55E',
+            'accent_color' => $projectSprint->color ?: '#D1D5DB',
             'task_count' => (int) $projectSprint->tasks_count,
             'estimated_seconds' => $sprintEstimatedSeconds,
             'estimated_label' => $this->formatSecondsShort($sprintEstimatedSeconds),

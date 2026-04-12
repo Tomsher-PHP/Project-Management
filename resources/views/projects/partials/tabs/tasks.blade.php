@@ -132,9 +132,7 @@
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
                                             Sprint
-                                            <span class="hidden" data-project-task-required-star="project_sprint_id">
-                                                <x-red-star />
-                                            </span>
+                                            <span class="hidden" data-project-task-required-star="project_sprint_id"></span>
                                         </label>
                                         <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
                                             <option value="">Select sprint or leave empty for backlog</option>

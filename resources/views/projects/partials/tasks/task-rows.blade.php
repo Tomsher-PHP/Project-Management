@@ -82,13 +82,15 @@
         </td>
 
         <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
-            <span class="inline-flex min-w-[96px] items-center justify-center whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-semibold" style="border-color: {{ $typeColor }}33; background-color: {{ $typeColor }}1A; color: {{ $typeColor }};">
+            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $typeColor }}"></span>
                 {{ $typeLabel }}
             </span>
         </td>
 
         <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
-            <span class="inline-flex min-w-[120px] items-center justify-center whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs font-semibold" style="border-color: {{ $modeColor }}33; background-color: {{ $modeColor }}1A; color: {{ $modeColor }};">
+            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $modeColor }}"></span>
                 {{ $modeLabel }}
             </span>
         </td>

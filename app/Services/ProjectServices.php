@@ -393,10 +393,6 @@ class ProjectServices
             ];
         }
 
-        if ($projectModuleId) {
-            throw new InvalidArgumentException('The selected module requires a sprint.');
-        }
-
         $projectModule = $this->findOrCreateUnplannedWorkModule($project);
         $projectSprint = $this->findOrCreateBacklogSprint($project, $projectModule);
 

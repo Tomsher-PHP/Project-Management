@@ -19,12 +19,6 @@ trait ValidatesAgileTaskPlacement
             return;
         }
 
-        if ($projectModuleId && ! $projectSprintId) {
-            $validator->errors()->add('project_sprint_id', 'Please choose a sprint for the selected module.');
-
-            return;
-        }
-
         if (! $projectSprintId) {
             return;
         }
