@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskProjectUpdateRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
+use App\Http\Requests\TaskMoveRequest;
 use App\Models\Project;
 use App\Models\ProjectModule;
 use App\Models\ProjectSprint;
@@ -15,6 +16,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskType;
 use App\Providers\AppServiceProvider;
 use App\Services\NotificationService;
+use App\Services\ProjectServices;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -117,24 +119,12 @@ class ProjectTaskController extends Controller
     public function storeTask(
         TaskQuickStoreRequest $request,
         Project $project,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ProjectServices $projectService
     ): JsonResponse {
         $validated = $request->validated();
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $isLinearFlow = $project->project_flow === 'linear';
-        $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END')
-            ->orderByDesc('start_date')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->first();
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id']);
-        $targetSprint = $isLinearFlow ? null : ($selectedSprint ?: $latestSprint);
 
         $defaultStatusId = $this->getDefaultTaskStatusId($project);
         $defaultTaskType = TaskType::query()
@@ -152,28 +142,50 @@ class ProjectTaskController extends Controller
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
         $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
 
-        $task = $project->tasks()->create([
-            'project_module_id' => $targetSprint?->project_module_id,
-            'project_sprint_id' => $targetSprint?->id,
-            'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
-            'task_type_id' => $validated['task_type_id'] ?? $defaultTaskType,
-            'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskMode,
-            'priority' => $validated['priority'] ?? $defaultTaskPriority,
-            'current_assignee_id' => $assigneeId,
-            'due_date' => $validated['due_date'] ?? null,
-            'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
-                ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
-                : $defaultTaskEstimateSeconds,
-            'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
-            'sort_order' => Task::nextSortOrder($project->id, $targetSprint?->id),
-        ]);
+        $task = DB::transaction(function () use (
+            $project,
+            $validated,
+            $assigneeId,
+            $defaultStatusId,
+            $defaultTaskType,
+            $defaultTaskMode,
+            $defaultTaskPriority,
+            $defaultTaskEstimateSeconds,
+            $projectService
+        ) {
+            $placement = $projectService->finalizeTaskPlacement(
+                $project,
+                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
+            );
+            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedSprintId = $placement['project_sprint_id'];
 
-        if (array_key_exists('tag_ids', $validated)) {
-            $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-        }
+            $task = $project->tasks()->create([
+                'project_module_id' => $resolvedModuleId,
+                'project_sprint_id' => $resolvedSprintId,
+                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
+                'task_type_id' => $validated['task_type_id'] ?? $defaultTaskType,
+                'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskMode,
+                'priority' => $validated['priority'] ?? $defaultTaskPriority,
+                'current_assignee_id' => $assigneeId,
+                'due_date' => $validated['due_date'] ?? null,
+                'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
+                    ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
+                    : $defaultTaskEstimateSeconds,
+                'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
+                'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
+            ]);
+
+            if (array_key_exists('tag_ids', $validated)) {
+                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
+            }
+
+            return $task;
+        });
 
         $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
         $project->refresh();
@@ -183,7 +195,7 @@ class ProjectTaskController extends Controller
             'message' => 'Task added successfully.',
             'html' => $this->renderTasksTab(
                 $project,
-                $isLinearFlow ? 'all-tasks' : ($targetSprint ? 'sprint-' . $targetSprint->id : 'ungrouped')
+                $isLinearFlow ? 'all-tasks' : ($task->project_sprint_id ? 'sprint-' . $task->project_sprint_id : 'ungrouped')
             ),
         ], Response::HTTP_OK);
     }
@@ -217,25 +229,13 @@ class ProjectTaskController extends Controller
         TaskProjectUpdateRequest $request,
         Project $project,
         Task $task,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ProjectServices $projectService
     ): JsonResponse {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
 
         $validated = $request->validated();
-        $isLinearFlow = $project->project_flow === 'linear';
-        $hasSprintField = array_key_exists('project_sprint_id', $validated);
-        $selectedSprint = $isLinearFlow || ! $hasSprintField || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $hasSprintField
-            ? ($selectedSprint?->project_module_id ?? $task->project_module_id)
-            : $task->project_module_id;
-        $resolvedSprintId = $hasSprintField
-            ? ($isLinearFlow ? null : $selectedSprint?->id)
-            : $task->project_sprint_id;
         $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $previousStatusId = (int) ($task->status_id ?? 0);
@@ -244,13 +244,21 @@ class ProjectTaskController extends Controller
         DB::transaction(function () use (
             $validated,
             $task,
-            $resolvedModuleId,
-            $resolvedSprintId,
             $newStatusId,
             $newAssigneeId,
             $previousStatusId,
-            $previousAssigneeId
+            $previousAssigneeId,
+            $project,
+            $projectService
         ) {
+            $placement = $projectService->finalizeTaskPlacement(
+                $project,
+                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
+            );
+            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedSprintId = $placement['project_sprint_id'];
+
             $task->update([
                 'project_module_id' => $resolvedModuleId,
                 'project_sprint_id' => $resolvedSprintId,
@@ -299,22 +307,43 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function moveTask(
+        TaskMoveRequest $request,
+        Project $project,
+        Task $task,
+        ProjectServices $projectService
+    ): JsonResponse {
+        abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
+        abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
+        $validated = $request->validated();
+        $task = $projectService->moveTaskToSprint(
+            $project,
+            $task,
+            (int) $validated['project_sprint_id']
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Task moved successfully.',
+            'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
+        ], Response::HTTP_OK);
+    }
+
     public function renderTasksTab(Project $project, ?string $preferredGroupKey = null): string
     {
         $isLinearFlow = $project->project_flow === 'linear';
-        $latestSprint = $isLinearFlow ? null : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->first();
         $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey);
         $taskGroups = $taskGroupViewData['taskGroups'];
+        $projectModules = $isLinearFlow ? collect() : ProjectModule::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->get(['id', 'name', 'is_backlog', 'is_system']);
         $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
             ->where('project_id', $project->id)
             ->with(['projectModule:id,name'])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->get();
+            ->orderForDisplay()
+            ->get(['id', 'project_module_id', 'name', 'is_backlog', 'is_system']);
+        $defaultSprintId = $projectSprints->first()?->id;
         $initialGroupKey = $taskGroupViewData['initialGroupKey'];
         $initialTaskPage = $initialGroupKey
             ? $this->getTaskGroupTaskPage($project, $initialGroupKey, 1, self::TASKS_PER_GROUP_PAGE)
@@ -362,8 +391,9 @@ class ProjectTaskController extends Controller
             'sprintCount' => $taskGroupViewData['sprintCount'],
             'isLinearFlow' => $isLinearFlow,
             'assignableUsers' => $assignableUsers,
+            'projectModules' => $projectModules,
             'projectSprints' => $projectSprints,
-            'defaultSprintId' => $latestSprint?->id,
+            'defaultSprintId' => $defaultSprintId,
             'taskGroupsPagination' => $taskGroupViewData['pagination'],
             'taskStatuses' => $taskStatuses,
             'defaultTaskStatusId' => $defaultTaskStatusId,
@@ -421,8 +451,7 @@ class ProjectTaskController extends Controller
             ->withCount([
                 'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
             ])
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->orderForDisplay()
             ->limit($loadedSprintLimit)
             ->get()
             ->values()
@@ -488,8 +517,7 @@ class ProjectTaskController extends Controller
             ->withCount([
                 'tasks' => fn($query) => $query->accessibleBy($authUser),
             ])
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->orderForDisplay()
             ->forPage($page, $perPage)
             ->get()
             ->values()
@@ -555,18 +583,10 @@ class ProjectTaskController extends Controller
             return null;
         }
 
-        $position = ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->where(function ($query) use ($projectSprint) {
-                $query->where('sort_order', '<', $projectSprint->sort_order)
-                    ->orWhere(function ($nestedQuery) use ($projectSprint) {
-                        $nestedQuery->where('sort_order', $projectSprint->sort_order)
-                            ->where('id', '<=', $projectSprint->id);
-                    });
-            })
-            ->count();
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($projectSprint->id);
 
-        return $this->mapProjectSprintToTaskGroup($projectSprint, max($position - 1, 0));
+        return $this->mapProjectSprintToTaskGroup($projectSprint, max(($position === false ? 0 : $position), 0));
     }
 
     private function resolveTaskGroupLoadedPages(Project $project, ?string $preferredGroupKey, int $perPage): int
@@ -592,18 +612,10 @@ class ProjectTaskController extends Controller
             return 1;
         }
 
-        $position = ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->where(function ($query) use ($targetSprint) {
-                $query->where('sort_order', '<', $targetSprint->sort_order)
-                    ->orWhere(function ($nestedQuery) use ($targetSprint) {
-                        $nestedQuery->where('sort_order', $targetSprint->sort_order)
-                            ->where('id', '<=', $targetSprint->id);
-                    });
-            })
-            ->count();
+        $position = $this->getOrderedProjectSprintIds($project)
+            ->search($targetSprint->id);
 
-        return max((int) ceil($position / $perPage), 1);
+        return max((int) ceil((($position === false ? 0 : $position) + 1) / $perPage), 1);
     }
 
     private function getSprintCount(Project $project): int
@@ -611,6 +623,15 @@ class ProjectTaskController extends Controller
         return (int) ProjectSprint::query()
             ->where('project_id', $project->id)
             ->count();
+    }
+
+    private function getOrderedProjectSprintIds(Project $project): Collection
+    {
+        return ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->orderForDisplay()
+            ->pluck('id')
+            ->values();
     }
 
     private function buildLinearTaskGroup(Project $project): array
@@ -854,16 +875,12 @@ class ProjectTaskController extends Controller
                 ->get(['id', 'name', 'color']),
             'projectModules' => ProjectModule::query()
                 ->where('project_id', $project->id)
-                ->orderBy('sort_order')
-                ->orderBy('name')
+                ->orderForDisplay()
                 ->get(['id', 'name']),
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
                 ->with(['projectModule:id,name'])
-                ->orderByRaw('CASE WHEN start_date IS NULL THEN 1 ELSE 0 END')
-                ->orderByDesc('start_date')
-                ->orderByDesc('created_at')
-                ->orderByDesc('id')
+                ->orderForDisplay()
                 ->get(['id', 'project_module_id', 'name']),
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')

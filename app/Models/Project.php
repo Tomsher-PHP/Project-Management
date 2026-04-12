@@ -151,12 +151,12 @@ class Project extends Model
 
     public function projectModules()
     {
-        return $this->hasMany(ProjectModule::class)->orderBy('sort_order');
+        return $this->hasMany(ProjectModule::class)->orderForDisplay();
     }
 
     public function projectSprints()
     {
-        return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
+        return $this->hasMany(ProjectSprint::class)->orderForDisplay();
     }
 
     public function tasks()

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProjectSprint;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,5 +47,41 @@ class ProjectSprintRequest extends FormRequest
         $projectSprint = $this->route('projectSprint');
 
         return is_object($projectSprint) ? $projectSprint->id : $projectSprint;
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $projectSprint = $this->route('projectSprint');
+
+                if (! $projectSprint instanceof ProjectSprint) {
+                    return;
+                }
+
+                if (! $this->isProtectedProjectSprint($projectSprint)) {
+                    return;
+                }
+
+                $incomingName = trim((string) $this->input('name', ''));
+                $currentName = trim((string) $projectSprint->name);
+
+                if ($incomingName !== '' && $incomingName !== $currentName) {
+                    $validator->errors()->add('name', $this->protectedSprintRenameMessage($projectSprint));
+                }
+            },
+        ];
+    }
+
+    private function isProtectedProjectSprint(ProjectSprint $projectSprint): bool
+    {
+        return (bool) ($projectSprint->is_backlog || $projectSprint->is_system);
+    }
+
+    private function protectedSprintRenameMessage(ProjectSprint $projectSprint): string
+    {
+        return $projectSprint->is_backlog
+            ? 'The project backlog sprint name cannot be changed.'
+            : 'System project sprints cannot be renamed.';
     }
 }

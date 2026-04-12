@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
 use App\Models\Project;
-use App\Models\ProjectSprint;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class TaskQuickStoreRequest extends FormRequest
 {
+    use ValidatesAgileTaskPlacement;
+
     public function authorize(): bool
     {
         return true;
@@ -38,7 +40,6 @@ class TaskQuickStoreRequest extends FormRequest
                 ),
             ],
             'project_module_id' => [
-                // Rule::requiredIf($project?->project_flow === 'agile'),
                 'nullable',
                 'integer',
                 Rule::exists('project_modules', 'id')->where(
@@ -48,7 +49,6 @@ class TaskQuickStoreRequest extends FormRequest
             'project_sprint_id' => [
                 'nullable',
                 'integer',
-                Rule::requiredIf($project?->project_flow === 'agile'),
                 Rule::exists('project_sprints', 'id')->where(
                     fn($query) => $query->where('project_id', $projectId)
                 ),
@@ -88,10 +88,8 @@ class TaskQuickStoreRequest extends FormRequest
             'project_id.exists' => 'The selected project is invalid.',
             'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
-            'project_module_id.required' => 'The module is required.',
             'project_module_id.exists' => 'The selected module is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
-            'project_sprint_id.required' => 'The sprint is required.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
             'task_type_id.exists' => 'The selected task type is invalid.',
             'task_mode_id.exists' => 'The selected task mode is invalid.',
@@ -107,9 +105,9 @@ class TaskQuickStoreRequest extends FormRequest
             function ($validator) {
                 $project = $this->resolveProject();
                 $projectId = $project?->id;
-                $parentTaskId = $this->filled('parent_task_id') ? (int) $this->input('parent_task_id') : null;
-                $projectModuleId = $this->filled('project_module_id') ? (int) $this->input('project_module_id') : null;
-                $selectedSprintId = $this->filled('project_sprint_id') ? (int) $this->input('project_sprint_id') : null;
+                $parentTaskId = $this->nullableIntegerInput('parent_task_id');
+                $projectModuleId = $this->nullableIntegerInput('project_module_id');
+                $selectedSprintId = $this->nullableIntegerInput('project_sprint_id');
 
                 if (! $project || ! $projectId) {
                     return;
@@ -126,15 +124,13 @@ class TaskQuickStoreRequest extends FormRequest
                     return;
                 }
 
-                if ($selectedSprintId) {
-                    $selectedSprint = ProjectSprint::query()
-                        ->where('project_id', $projectId)
-                        ->find($selectedSprintId);
-
-                    if ($selectedSprint && $projectModuleId && (int) $selectedSprint->project_module_id !== $projectModuleId) {
-                        $validator->errors()->add('project_sprint_id', 'Please choose a sprint from the selected module.');
-                    }
-                }
+                $this->validateAgileTaskPlacement(
+                    $validator,
+                    $project,
+                    $projectId,
+                    $projectModuleId,
+                    $selectedSprintId
+                );
 
                 if (! $parentTaskId) {
                     return;

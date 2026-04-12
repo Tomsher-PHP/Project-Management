@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class TaskProjectUpdateRequest extends FormRequest
 {
+    use ValidatesAgileTaskPlacement;
+
     public function authorize(): bool
     {
         return true;
@@ -93,5 +97,37 @@ class TaskProjectUpdateRequest extends FormRequest
             'sort_order.min' => 'Sort order must be at least 1.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $project = $this->resolveProject();
+
+                $this->validateAgileTaskPlacement(
+                    $validator,
+                    $project,
+                    $project?->id,
+                    $this->nullableIntegerInput('project_module_id'),
+                    $this->nullableIntegerInput('project_sprint_id')
+                );
+            },
+        ];
+    }
+
+    private function resolveProject(): ?Project
+    {
+        $project = $this->route('project');
+
+        if ($project instanceof Project) {
+            return $project;
+        }
+
+        if (blank($project)) {
+            return null;
+        }
+
+        return Project::query()->find($project);
     }
 }

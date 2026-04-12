@@ -22,6 +22,7 @@ use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
+use App\Services\ProjectServices;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
@@ -154,13 +155,9 @@ class TaskController extends Controller
             ->accessibleBy($user)
             ->with([
                 'projectModules' => fn($query) => $query
-                    ->select('id', 'project_id', 'name')
-                    ->orderBy('sort_order')
-                    ->orderBy('name'),
+                    ->select('id', 'project_id', 'name', 'is_backlog', 'is_system'),
                 'projectSprints' => fn($query) => $query
-                    ->select('id', 'project_id', 'project_module_id', 'name')
-                    ->orderBy('sort_order')
-                    ->orderBy('name'),
+                    ->select('id', 'project_id', 'project_module_id', 'name', 'is_backlog', 'is_system'),
                 'activeMembers:id,name',
             ])
             ->orderBy('name', 'asc')
@@ -213,26 +210,17 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService): JsonResponse
+    public function store(
+        TaskQuickStoreRequest $request,
+        NotificationService $notificationService,
+        ProjectServices $projectService
+    ): JsonResponse
     {
         $validated = $request->validated();
         $project = Project::query()
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $isLinearFlow = $project->project_flow === 'linear';
-        $selectedModule = $isLinearFlow || empty($validated['project_module_id'])
-            ? null
-            : ProjectModule::query()
-            ->where('project_id', $project->id)
-            ->find($validated['project_module_id']);
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? $selectedModule?->id);
-        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
         $defaultStatusId = $this->getDefaultTaskStatusIdForFlow($project->project_flow);
         $defaultTaskTypeId = TaskType::query()
             ->active()
@@ -253,14 +241,21 @@ class TaskController extends Controller
             $project,
             $validated,
             $assigneeId,
-            $resolvedModuleId,
-            $resolvedSprintId,
             $defaultStatusId,
             $defaultTaskTypeId,
             $defaultTaskModeId,
             $defaultTaskPriority,
-            $defaultTaskEstimateSeconds
+            $defaultTaskEstimateSeconds,
+            $projectService
         ) {
+            $placement = $projectService->finalizeTaskPlacement(
+                $project,
+                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
+            );
+            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedSprintId = $placement['project_sprint_id'];
+
             $task = $project->tasks()->create([
                 'project_module_id' => $resolvedModuleId,
                 'project_sprint_id' => $resolvedSprintId,
@@ -428,19 +423,16 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(TaskUpdateRequest $request, Task $task, NotificationService $notificationService): JsonResponse
+    public function update(
+        TaskUpdateRequest $request,
+        Task $task,
+        NotificationService $notificationService,
+        ProjectServices $projectService
+    ): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
         $project = $task->project;
         $validated = $request->validated();
-        $isLinearFlow = $project->project_flow === 'linear';
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? null);
-        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
         $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $previousStatusId = (int) ($task->status_id ?? 0);
@@ -449,13 +441,21 @@ class TaskController extends Controller
         DB::transaction(function () use (
             $validated,
             $task,
-            $resolvedModuleId,
-            $resolvedSprintId,
             $newStatusId,
             $newAssigneeId,
             $previousStatusId,
-            $previousAssigneeId
+            $previousAssigneeId,
+            $project,
+            $projectService
         ) {
+            $placement = $projectService->finalizeTaskPlacement(
+                $project,
+                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
+            );
+            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedSprintId = $placement['project_sprint_id'];
+
             $task->update([
                 'project_module_id' => $resolvedModuleId,
                 'project_sprint_id' => $resolvedSprintId,
@@ -774,6 +774,10 @@ class TaskController extends Controller
         return [
             'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
+            'projectModules' => ProjectModule::query()
+                ->where('project_id', $project->id)
+                ->orderForDisplay()
+                ->get(['id', 'name']),
             'taskStatuses' => TaskStatus::query()
                 ->active()
                 ->forFlow($project->project_flow)
@@ -783,8 +787,7 @@ class TaskController extends Controller
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
                 ->with(['projectModule:id,name'])
-                ->orderBy('sort_order')
-                ->orderBy('name')
+                ->orderForDisplay()
                 ->get(['id', 'project_module_id', 'name']),
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')
@@ -872,12 +875,14 @@ class TaskController extends Controller
                         ? intdiv((int) $project->default_task_estimate_seconds, 60)
                         : 0,
                     'modules' => $project->projectModules
+                        ->reject(fn(ProjectModule $projectModule) => (bool) ($projectModule->is_backlog || $projectModule->is_system))
                         ->map(fn(ProjectModule $projectModule) => [
                             'value' => (string) $projectModule->id,
                             'text' => $projectModule->name,
                         ])
                         ->values(),
                     'sprints' => $project->projectSprints
+                        ->reject(fn(ProjectSprint $projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))
                         ->map(fn(ProjectSprint $projectSprint) => [
                             'value' => (string) $projectSprint->id,
                             'text' => $projectSprint->name,

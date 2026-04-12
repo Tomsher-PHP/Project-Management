@@ -1,5 +1,6 @@
 @php
     $showEmptyState = $showEmptyState ?? true;
+    $showTaskActionColumn = $showTaskActionColumn ?? ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
 @endphp
 
 @forelse ($tasks as $task)
@@ -10,6 +11,7 @@
         $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
         $modeColor = $task->taskMode?->color ?: '#3B82F6';
         $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
+        $canMoveTask = $showTaskActionColumn && auth()->user()?->can('move', $task);
     @endphp
 
     <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
@@ -102,11 +104,42 @@
                 <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
             @endif
         </td>
+
+        @if ($showTaskActionColumn)
+            <td class="border-b border-bgray-200 px-4 py-4 align-top text-right dark:border-b-darkblack-400">
+                @if ($canMoveTask)
+                    <div class="relative inline-flex" data-project-task-row-dropdown>
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-500 transition hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" data-project-task-row-menu-trigger aria-expanded="false" aria-label="Task actions">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 3.75a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5.75a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5.75a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                            </svg>
+                        </button>
+
+                        <div class="absolute right-0 top-11 z-30 hidden min-w-[132px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-row-menu>
+                            <button
+                                type="button"
+                                class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white"
+                                data-project-task-move-open
+                                data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}"
+                                data-project-task-name="{{ $task->name }}"
+                                data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}"
+                                data-project-task-current-module="{{ $task->projectModule?->name ?? 'None' }}"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10.25 3a.75.75 0 01.75.75v8.69l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06L9.5 12.44V3.75A.75.75 0 0110.25 3z" clip-rule="evenodd" />
+                                </svg>
+                                <span>Move</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+            </td>
+        @endif
     </tr>
 @empty
     @if ($showEmptyState)
         <tr>
-            <td colspan="7" class="px-6 py-10 text-center">
+            <td colspan="{{ $showTaskActionColumn ? 8 : 7 }}" class="px-6 py-10 text-center">
                 <div class="mx-auto max-w-md rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-8 dark:border-darkblack-400 dark:bg-darkblack-500">
                     <p class="text-base font-semibold text-bgray-900 dark:text-white">No tasks</p>
                     <p class="mt-2 text-sm text-bgray-600 dark:text-bgray-300">

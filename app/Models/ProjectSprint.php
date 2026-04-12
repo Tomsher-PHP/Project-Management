@@ -26,6 +26,8 @@ class ProjectSprint extends Model
         'derived_time_seconds',
         'actual_time_seconds',
         'sort_order',
+        'is_backlog',
+        'is_system',
         'added_by',
         'updated_by',
     ];
@@ -40,6 +42,8 @@ class ProjectSprint extends Model
         'derived_time_seconds' => 'integer',
         'actual_time_seconds' => 'integer',
         'sort_order' => 'integer',
+        'is_backlog' => 'boolean',
+        'is_system' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];
@@ -97,6 +101,14 @@ class ProjectSprint extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class)->orderBy('sort_order');
+    }
+
+    public function scopeOrderForDisplay($query)
+    {
+        return $query
+            ->orderByRaw('CASE WHEN is_backlog = 1 THEN 1 ELSE 0 END')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function getEstimatedTimeFormattedAttribute()

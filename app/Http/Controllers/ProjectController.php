@@ -392,8 +392,7 @@ class ProjectController extends Controller
                 'owner',
             ])
             ->withCount('projectSprints')
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->orderForDisplay()
             ->get();
 
         $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();

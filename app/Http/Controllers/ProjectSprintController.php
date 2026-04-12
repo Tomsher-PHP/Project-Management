@@ -30,8 +30,7 @@ class ProjectSprintController extends Controller
         $perPage = self::SPRINTS_PER_PAGE;
         $sprintsQuery = $projectModule->projectSprints()
             ->with(['addedBy', 'updatedBy', 'status'])
-            ->orderBy('sort_order')
-            ->orderBy('id');
+            ->orderForDisplay();
         $totalCount = (clone $sprintsQuery)->count();
         $lastPage = max((int) ceil($totalCount / $perPage), 1);
 
@@ -89,6 +88,10 @@ class ProjectSprintController extends Controller
         $this->ensureAgileProject($project);
         abort_unless($projectModule->project_id === $project->id, 404);
 
+        if ($response = $this->validateBacklogModulePlacement(null, $projectModule)) {
+            return $response;
+        }
+
         $projectSprint = DB::transaction(function () use ($request, $project, $projectModule) {
             return $projectModule->projectSprints()->create($this->prepareData($request, [
                 'project_id' => $project->id,
@@ -116,6 +119,10 @@ class ProjectSprintController extends Controller
         $targetProjectModule = ProjectModule::query()
             ->where('project_id', $project->id)
             ->findOrFail($request->integer('project_module_id'));
+
+        if ($response = $this->validateBacklogModulePlacement($projectSprint, $targetProjectModule)) {
+            return $response;
+        }
 
         $originalProjectModule = $projectSprint->projectModule;
         $moduleChanged = (int) $projectSprint->project_module_id !== (int) $targetProjectModule->id;
@@ -158,6 +165,23 @@ class ProjectSprintController extends Controller
     {
         $this->ensureAgileProject($project);
         abort_unless($projectSprint->project_id === $project->id, 404);
+
+        if ($this->isProtectedProjectSprint($projectSprint)) {
+            $message = $projectSprint->is_backlog
+                ? 'The project backlog sprint cannot be deleted.'
+                : 'System project sprints cannot be deleted.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()
+                ->route('projects.edit', $project)
+                ->with('error', $message);
+        }
 
         if ($this->sprintHasTasks($projectSprint)) {
             if ($request->expectsJson()) {
@@ -209,6 +233,10 @@ class ProjectSprintController extends Controller
         $projectModule = ProjectModule::query()
             ->where('project_id', $project->id)
             ->findOrFail($trashedSprint->project_module_id);
+
+        if ($response = $this->validateBacklogModulePlacement($trashedSprint, $projectModule)) {
+            return $response;
+        }
 
         $restoredName = $this->resolveRestoredName($projectModule, $trashedSprint->name, $trashedSprint->id);
 
@@ -282,6 +310,30 @@ class ProjectSprintController extends Controller
         unset($data['estimated_time_minutes']);
 
         return array_merge($data, $overrides);
+    }
+
+    private function isProtectedProjectSprint(ProjectSprint $projectSprint): bool
+    {
+        return (bool) ($projectSprint->is_backlog || $projectSprint->is_system);
+    }
+
+    private function validateBacklogModulePlacement(?ProjectSprint $projectSprint, ProjectModule $targetProjectModule): ?JsonResponse
+    {
+        if ($projectSprint?->is_backlog && (int) $projectSprint->project_module_id !== (int) $targetProjectModule->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'The project backlog sprint must remain in the project backlog module.',
+            ], 422);
+        }
+
+        if ($targetProjectModule->is_backlog && ! $projectSprint?->is_backlog) {
+            return response()->json([
+                'status' => false,
+                'message' => 'The project backlog module can only contain the backlog sprint.',
+            ], 422);
+        }
+
+        return null;
     }
 
     private function ensureAgileProject(Project $project): void

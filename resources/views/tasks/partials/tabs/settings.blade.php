@@ -1,8 +1,23 @@
 @php
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
+    $taskPlacementOptions = [
+        'modules' => $projectModules
+            ->map(fn($projectModule) => [
+                'value' => (string) $projectModule->id,
+                'text' => $projectModule->name,
+            ])
+            ->values(),
+        'sprints' => $projectSprints
+            ->map(fn($projectSprint) => [
+                'value' => (string) $projectSprint->id,
+                'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
+                'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+            ])
+            ->values(),
+    ];
 @endphp
 
-<form method="POST" action="{{ route('tasks.update', $task) }}" class="space-y-8" data-task-settings-form data-can-edit="{{ $canEditTask ? 'true' : 'false' }}" data-parent-task-url="{{ route('tasks.parent-options', $task) }}">
+<form method="POST" action="{{ route('tasks.update', $task) }}" class="space-y-8" data-task-settings-form data-can-edit="{{ $canEditTask ? 'true' : 'false' }}" data-parent-task-url="{{ route('tasks.parent-options', $task) }}" data-task-placement='@json($taskPlacementOptions)'>
     @csrf
     @method('PUT')
 
@@ -55,18 +70,34 @@
             @unless ($isLinearFlow)
                 <div>
                     <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
+                        Module
+                    </label>
+                    <select name="project_module_id" class="tom-select w-full" data-sort="0" data-task-settings-module-select>
+                        <option value="">Select module or leave empty for backlog</option>
+                        @foreach ($projectModules as $projectModule)
+                            <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
+                                {{ $projectModule->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="project_module_id"></p>
+                </div>
+
+                <div>
+                    <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
                         Sprint
                     </label>
                     <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-task-settings-sprint-select>
-                        <option value="">Select sprint</option>
+                        <option value="">Select sprint or leave empty for backlog</option>
                         @foreach ($projectSprints as $projectSprint)
-                            <option value="{{ $projectSprint->id }}" data-module-name="{{ $projectSprint->projectModule?->name ?? '--' }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
+                            <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_module_id }}" data-module-name="{{ $projectSprint->projectModule?->name ?? '--' }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
                                 {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
                                     - {{ $projectSprint->projectModule->name }}
                                 @endif
                             </option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-task-settings-placement-hint></p>
                     <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="project_sprint_id"></p>
                 </div>
             @endunless

@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class TaskUpdateRequest extends FormRequest
 {
+    use ValidatesAgileTaskPlacement;
+
     public function authorize(): bool
     {
         return true;
@@ -27,6 +31,13 @@ class TaskUpdateRequest extends FormRequest
                 'integer',
                 Rule::exists('task_statuses', 'id')->where(
                     fn ($query) => $query->where('flow_type', $project?->project_flow)->where('is_active', true)
+                ),
+            ],
+            'project_module_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('project_modules', 'id')->where(
+                    fn ($query) => $query->where('project_id', $projectId)
                 ),
             ],
             'project_sprint_id' => [
@@ -72,6 +83,7 @@ class TaskUpdateRequest extends FormRequest
         return [
             'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
+            'project_module_id.exists' => 'The selected module is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
             'parent_task_id.not_in' => 'A task cannot be its own parent.',
@@ -85,5 +97,27 @@ class TaskUpdateRequest extends FormRequest
             'sort_order.min' => 'Sort order must be at least 1.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $project = $this->resolveProject();
+
+                $this->validateAgileTaskPlacement(
+                    $validator,
+                    $project,
+                    $project?->id,
+                    $this->nullableIntegerInput('project_module_id'),
+                    $this->nullableIntegerInput('project_sprint_id')
+                );
+            },
+        ];
+    }
+
+    private function resolveProject(): ?Project
+    {
+        return $this->route('task')?->project;
     }
 }

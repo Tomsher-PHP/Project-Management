@@ -1,11 +1,14 @@
 <div class="space-y-6" data-project-module-section>
     @php
+        $editableProjectModules = ($editableProjectModules ?? $projectModules)
+            ->reject(fn ($module) => (bool) ($module->is_backlog || $module->is_system))
+            ->values();
         $projectSprintCount = $projectModules->sum(fn ($module) => (int) ($module->project_sprints_count ?? 0));
         $canEditProjectModules = auth()->user()->can('project_module.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.modules.reorder', $project) : null;
         $trashedCount = $trashedProjectModules->count();
         $trashedProjectSprintsByModule = $trashedProjectSprintsByModule ?? collect();
-        $projectModuleBuilderSource = $projectModules->map(fn ($module) => [
+        $projectModuleBuilderSource = $editableProjectModules->map(fn ($module) => [
             'id' => $module->id,
             'name' => $module->name,
             'color' => $module->color,
@@ -76,15 +79,26 @@
 
         <div x-data="{ activeModuleId: @js($openModuleId ?? null) }" class="space-y-5 overflow-y-auto px-4 py-4 pr-3 min-h-[42rem] max-h-[42rem]" data-project-module-list @if ($projectModuleReorderUrl) data-reorder-url="{{ $projectModuleReorderUrl }}" @endif>
             @forelse ($projectModules as $module)
+                @php
+                    $isProtectedModule = (bool) ($module->is_backlog || $module->is_system);
+                @endphp
                 <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-none border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-module-card data-module-id="{{ $module->id }}" draggable="false" style="border-color: {{ $module->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-module-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
-                                <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-drag-handle>
-                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
-                                    </svg>
-                                </button>
+                                @if ($isProtectedModule)
+                                    <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-400 opacity-70 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400" title="System module">
+                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                                        </svg>
+                                    </span>
+                                @else
+                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-drag-handle>
+                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+                                        </svg>
+                                    </button>
+                                @endif
 
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-3">
@@ -107,7 +121,7 @@
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $module->color ?: '#E5E7EB' }}"></span>
                                                 <h5 title="{{ $module->name }}" class="text-lg font-semibold text-bgray-900 dark:text-white">{{ \Illuminate\Support\Str::limit($module->name, 20) }}</h5>
-                                                <span title="Module sort order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-module-order-badge>{{ $module->sort_order }}</span>
+                                                <span title="Module display order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-module-order-badge>{{ $loop->iteration }}</span>
                                                 <span title="Estimated Time: {{ $formatDuration($estimatedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Estimate <span class="ml-1">{{ $formatDuration($estimatedSeconds) }}</span></span>
                                                 <span title="Derived Time: {{ $formatDuration($derivedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Derived <span class="ml-1">{{ $formatDuration($derivedSeconds) }}</span></span>
                                                 <span title="Actual Time: {{ $formatDuration($actualSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Actual <span class="ml-1">{{ $formatDuration($actualSeconds) }}</span></span>
@@ -153,40 +167,47 @@
                                 @php
                                     $trashedSprints = $trashedProjectSprintsByModule->get($module->id, collect());
                                     $trashedSprintCount = $trashedSprints->count();
+                                    $canManageAdditionalSprints = ! $module->is_backlog;
                                 @endphp
-                                @can('project_sprint.create')
-                                    <button type="button" data-project-module-id="{{ $module->id }}" data-project-module-name="{{ $module->name }}"
-                                        data-project-sprint-load-url="{{ route('projects.modules.sprints.index', [$project, $module]) }}"
-                                        class="project-sprint-builder-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
-                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        <span>Sprints</span>
-                                    </button>
-                                @endcan
+                                @if ($canManageAdditionalSprints)
+                                    @can('project_sprint.create')
+                                        <button type="button" data-project-module-id="{{ $module->id }}" data-project-module-name="{{ $module->name }}"
+                                            data-project-sprint-load-url="{{ route('projects.modules.sprints.index', [$project, $module]) }}"
+                                            class="project-sprint-builder-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            <span>Sprints</span>
+                                        </button>
+                                    @endcan
+                                @endif
 
-                                @can('project_sprint.delete')
-                                    <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
-                                        data-project-sprint-restore-open="{{ $module->id }}" @disabled($trashedSprintCount === 0)>
-                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                        <span>Restore</span>
-                                        <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-50">{{ $trashedSprintCount }}</span>
-                                    </button>
-                                @endcan
+                                @if ($canManageAdditionalSprints)
+                                    @can('project_sprint.delete')
+                                        <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                                            data-project-sprint-restore-open="{{ $module->id }}" @disabled($trashedSprintCount === 0)>
+                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span>Restore</span>
+                                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-50">{{ $trashedSprintCount }}</span>
+                                        </button>
+                                    @endcan
+                                @endif
 
-                                @can('project_module.edit')
-                                    <button type="button" class="project-module-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-module-id="{{ $module->id }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                        </svg>
-                                    </button>
-                                @endcan
+                                @if (! $isProtectedModule)
+                                    @can('project_module.edit')
+                                        <button type="button" class="project-module-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-module-id="{{ $module->id }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
+                                            </svg>
+                                        </button>
+                                    @endcan
 
-                                @can('project_module.delete')
-                                    <x-delete-form :action="route('projects.modules.destroy', [$project, $module])" ajax render-target="[data-project-module-section]" render-mode="replace_outer" />
-                                @endcan
+                                    @can('project_module.delete')
+                                        <x-delete-form :action="route('projects.modules.destroy', [$project, $module])" ajax render-target="[data-project-module-section]" render-mode="replace_outer" />
+                                    @endcan
+                                @endif
 
                                 <button type="button" @click="activeModuleId = activeModuleId === {{ $module->id }} ? null : {{ $module->id }}" data-project-module-toggle data-module-id="{{ $module->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                     <svg class="h-5 w-5 transition duration-200" :style="{ transform: activeModuleId === {{ $module->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">

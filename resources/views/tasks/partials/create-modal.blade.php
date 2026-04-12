@@ -30,12 +30,7 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
-                                Module
-                                <span class="hidden" data-task-create-required-star="project_module_id">
-                                    <x-red-star />
-                                </span>
-                            </label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Module</label>
                             <select name="project_module_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
@@ -52,6 +47,7 @@
                             <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
+                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300" data-task-create-placement-hint></p>
                             <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_sprint_id"></p>
                         </div>
 

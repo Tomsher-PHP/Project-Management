@@ -34,4 +34,9 @@ class TaskPolicy
     {
         return $user->can('task.delete') && $this->view($user, $task);
     }
+
+    public function move(User $user, Task $task): bool
+    {
+        return $user->can('task.move') && $this->view($user, $task);
+    }
 }

@@ -2,17 +2,28 @@
 
 namespace App\Services;
 
+use App\Models\AgileModuleStatus;
+use App\Models\AgileSprintStatus;
 use App\Models\Project;
+use App\Models\ProjectModule;
 use App\Models\ProjectNote;
+use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
+use App\Models\Task;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class ProjectServices
 {
+    private const BACKLOG_MODULE_NAME = 'Unplanned Work';
+    private const BACKLOG_SPRINT_NAME = 'Backlog';
+    private const BACKLOG_MODULE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
+    private const BACKLOG_SPRINT_DESCRIPTION = 'Contains pending tasks waiting to be scheduled into an active sprint.';
+
     protected $attachmentService;
 
     public function __construct(AttachmentService $attachmentService)
@@ -221,6 +232,219 @@ class ProjectServices
         });
     }
 
+    public function findOrCreateUnplannedWorkModule(Project $project): ProjectModule
+    {
+        $this->ensureAgileProject($project);
+
+        return DB::transaction(function () use ($project) {
+            Project::query()
+                ->whereKey($project->id)
+                ->lockForUpdate()
+                ->first();
+
+            $projectModule = ProjectModule::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->orderBy('id')
+                ->first();
+
+            if (! $projectModule) {
+                $projectModule = ProjectModule::onlyTrashed()
+                    ->where('project_id', $project->id)
+                    ->where('is_backlog', true)
+                    ->orderBy('id')
+                    ->first();
+            }
+
+            if (! $projectModule) {
+                return $project->projectModules()->create([
+                    'name' => self::BACKLOG_MODULE_NAME,
+                    'description' => self::BACKLOG_MODULE_DESCRIPTION,
+                    'status_id' => $this->defaultAgileModuleStatusId(),
+                    'sort_order' => $this->nextProjectModuleOrder($project),
+                    'is_backlog' => true,
+                    'is_system' => true,
+                ]);
+            }
+
+            if ($projectModule->trashed()) {
+                $projectModule->restore();
+                $projectModule->sort_order = $this->nextProjectModuleOrder($project);
+            }
+
+            $projectModule->fill([
+                'name' => self::BACKLOG_MODULE_NAME,
+                'description' => self::BACKLOG_MODULE_DESCRIPTION,
+                'is_backlog' => true,
+                'is_system' => true,
+            ]);
+
+            if (! $projectModule->status_id) {
+                $projectModule->status_id = $this->defaultAgileModuleStatusId();
+            }
+
+            if ($projectModule->isDirty()) {
+                $projectModule->save();
+            }
+
+            return $projectModule->fresh();
+        });
+    }
+
+    public function findOrCreateBacklogSprint(Project $project, ProjectModule $module): ProjectSprint
+    {
+        $this->ensureAgileProject($project);
+        $this->ensureProjectModuleBelongsToProject($project, $module);
+
+        if (! $module->is_backlog) {
+            throw new InvalidArgumentException('Backlog sprint must belong to a backlog project module.');
+        }
+
+        return DB::transaction(function () use ($project, $module) {
+            Project::query()
+                ->whereKey($project->id)
+                ->lockForUpdate()
+                ->first();
+
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->orderBy('id')
+                ->first();
+
+            if (! $projectSprint) {
+                $projectSprint = ProjectSprint::onlyTrashed()
+                    ->where('project_id', $project->id)
+                    ->where('is_backlog', true)
+                    ->orderBy('id')
+                    ->first();
+            }
+
+            if (! $projectSprint) {
+                return $module->projectSprints()->create([
+                    'project_id' => $project->id,
+                    'name' => self::BACKLOG_SPRINT_NAME,
+                    'description' => self::BACKLOG_SPRINT_DESCRIPTION,
+                    'status_id' => $this->defaultAgileSprintStatusId(),
+                    'sort_order' => $this->nextProjectSprintOrder($module),
+                    'is_backlog' => true,
+                    'is_system' => true,
+                ]);
+            }
+
+            if ($projectSprint->trashed()) {
+                $projectSprint->restore();
+                $projectSprint->sort_order = $this->nextProjectSprintOrder($module);
+            }
+
+            $projectSprint->fill([
+                'project_id' => $project->id,
+                'project_module_id' => $module->id,
+                'name' => self::BACKLOG_SPRINT_NAME,
+                'description' => self::BACKLOG_SPRINT_DESCRIPTION,
+                'is_backlog' => true,
+                'is_system' => true,
+            ]);
+
+            if (! $projectSprint->status_id) {
+                $projectSprint->status_id = $this->defaultAgileSprintStatusId();
+            }
+
+            if ($projectSprint->isDirty()) {
+                $projectSprint->save();
+            }
+
+            return $projectSprint->fresh();
+        });
+    }
+
+    public function finalizeTaskPlacement(
+        Project $project,
+        ?int $projectModuleId = null,
+        ?int $projectSprintId = null
+    ): array {
+        if ($project->is_linear) {
+            return [
+                'project_module' => null,
+                'project_sprint' => null,
+                'project_module_id' => null,
+                'project_sprint_id' => null,
+            ];
+        }
+
+        if ($projectSprintId) {
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprintId);
+
+            if (! $projectSprint) {
+                throw new InvalidArgumentException('The selected sprint is invalid.');
+            }
+
+            $projectModule = ProjectModule::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprint->project_module_id);
+
+            return [
+                'project_module' => $projectModule,
+                'project_sprint' => $projectSprint,
+                'project_module_id' => $projectSprint->project_module_id,
+                'project_sprint_id' => $projectSprint->id,
+            ];
+        }
+
+        if ($projectModuleId) {
+            throw new InvalidArgumentException('The selected module requires a sprint.');
+        }
+
+        $projectModule = $this->findOrCreateUnplannedWorkModule($project);
+        $projectSprint = $this->findOrCreateBacklogSprint($project, $projectModule);
+
+        return [
+            'project_module' => $projectModule,
+            'project_sprint' => $projectSprint,
+            'project_module_id' => $projectModule->id,
+            'project_sprint_id' => $projectSprint->id,
+        ];
+    }
+
+    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null): Task
+    {
+        if ((int) $task->project_id !== (int) $project->id) {
+            throw new InvalidArgumentException('The provided task does not belong to the given project.');
+        }
+
+        if (! $projectSprintId) {
+            throw new InvalidArgumentException('A target sprint is required to move this task.');
+        }
+
+        $projectSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->find($projectSprintId);
+
+        if (! $projectSprint) {
+            throw new InvalidArgumentException('The selected sprint is invalid.');
+        }
+
+        if ($task->parent_task_id !== null) {
+            throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+        }
+
+        if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
+            throw new InvalidArgumentException('Please choose a different sprint.');
+        }
+
+        DB::transaction(function () use ($project, $task, $projectSprint) {
+            $task->update([
+                'project_sprint_id' => $projectSprint->id,
+                'project_module_id' => $projectSprint->project_module_id,
+                'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
+            ]);
+        });
+
+        return $task->fresh();
+    }
+
     private function buildTimeline($startDate, $targetDate): array
     {
         $dateFormat = config('constants.date_format');
@@ -289,5 +513,43 @@ class ProjectServices
         }
 
         return Carbon::parse($date)->setTimeFrom(now());
+    }
+
+    private function defaultAgileModuleStatusId(): ?int
+    {
+        return AgileModuleStatus::query()
+            ->where('is_default', true)
+            ->value('id');
+    }
+
+    private function defaultAgileSprintStatusId(): ?int
+    {
+        return AgileSprintStatus::query()
+            ->where('is_default', true)
+            ->value('id');
+    }
+
+    private function nextProjectModuleOrder(Project $project): int
+    {
+        return ((int) $project->projectModules()->max('sort_order')) + 1;
+    }
+
+    private function nextProjectSprintOrder(ProjectModule $module): int
+    {
+        return ((int) $module->projectSprints()->max('sort_order')) + 1;
+    }
+
+    private function ensureAgileProject(Project $project): void
+    {
+        if (! $project->is_agile) {
+            throw new InvalidArgumentException('Backlog records are only available for agile projects.');
+        }
+    }
+
+    private function ensureProjectModuleBelongsToProject(Project $project, ProjectModule $module): void
+    {
+        if ((int) $module->project_id !== (int) $project->id) {
+            throw new InvalidArgumentException('The provided project module does not belong to the given project.');
+        }
     }
 }

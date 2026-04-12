@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProjectModule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -39,5 +40,41 @@ class ProjectModuleRequest extends FormRequest
         $project = $this->route('project');
 
         return is_object($project) ? $project->id : $project;
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $projectModule = $this->route('projectModule');
+
+                if (! $projectModule instanceof ProjectModule) {
+                    return;
+                }
+
+                if (! $this->isProtectedProjectModule($projectModule)) {
+                    return;
+                }
+
+                $incomingName = trim((string) $this->input('name', ''));
+                $currentName = trim((string) $projectModule->name);
+
+                if ($incomingName !== '' && $incomingName !== $currentName) {
+                    $validator->errors()->add('name', $this->protectedModuleRenameMessage($projectModule));
+                }
+            },
+        ];
+    }
+
+    private function isProtectedProjectModule(ProjectModule $projectModule): bool
+    {
+        return (bool) ($projectModule->is_backlog || $projectModule->is_system);
+    }
+
+    private function protectedModuleRenameMessage(ProjectModule $projectModule): string
+    {
+        return $projectModule->is_backlog
+            ? 'The project backlog module name cannot be changed.'
+            : 'System project modules cannot be renamed.';
     }
 }

@@ -14,6 +14,10 @@ class Task extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
+    protected ?int $previousProjectModuleIdForMetrics = null;
+
+    protected ?int $previousProjectSprintIdForMetrics = null;
+
     protected $fillable = [
         'project_id',
         'project_module_id',
@@ -101,22 +105,64 @@ class Task extends Model
 
         static::updating(function (Task $task) {
             $task->updated_by = Auth::id();
+            $task->previousProjectModuleIdForMetrics = $task->getOriginal('project_module_id')
+                ? (int) $task->getOriginal('project_module_id')
+                : null;
+            $task->previousProjectSprintIdForMetrics = $task->getOriginal('project_sprint_id')
+                ? (int) $task->getOriginal('project_sprint_id')
+                : null;
         });
 
         static::saved(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
 
         static::deleted(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
 
         static::restored(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
+    }
+
+    public function refreshPlacementMetrics(): void
+    {
+        $sprintIds = collect([
+            $this->project_sprint_id ? (int) $this->project_sprint_id : null,
+            $this->previousProjectSprintIdForMetrics,
+        ])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $moduleIds = collect([
+            $this->project_module_id ? (int) $this->project_module_id : null,
+            $this->previousProjectModuleIdForMetrics,
+        ]);
+
+        if ($sprintIds->isNotEmpty()) {
+            $sprints = ProjectSprint::query()
+                ->whereIn('id', $sprintIds->all())
+                ->get();
+
+            foreach ($sprints as $projectSprint) {
+                $projectSprint->refreshDerivedTimeSeconds();
+                $moduleIds->push($projectSprint->project_module_id ? (int) $projectSprint->project_module_id : null);
+            }
+        }
+
+        $moduleIds
+            ->filter()
+            ->unique()
+            ->values()
+            ->whenNotEmpty(fn ($ids) => ProjectModule::query()
+                ->whereIn('id', $ids->all())
+                ->get()
+                ->each(fn (ProjectModule $projectModule) => $projectModule->refreshTrackedTimeMetrics()));
+
+        $this->previousProjectModuleIdForMetrics = null;
+        $this->previousProjectSprintIdForMetrics = null;
     }
 
     public static function generateTaskCode(?Project $project = null): string
@@ -340,8 +386,8 @@ class Task extends Model
     {
         return match ($attribute) {
             'project_id' => $this->project?->name ?? $value,
-            'project_module_id' => $this->projectModule?->name ?? $value,
-            'project_sprint_id' => $this->projectSprint?->name ?? $value,
+            'project_module_id' => ProjectModule::withTrashed()->find($value)?->name ?? $value,
+            'project_sprint_id' => ProjectSprint::withTrashed()->find($value)?->name ?? $value,
             'parent_task_id' => Task::find($value)?->name ?? $value,
             'status_id' => TaskStatus::find($value)?->name ?? $value,
             'task_type_id' => TaskType::find($value)?->name ?? $value,

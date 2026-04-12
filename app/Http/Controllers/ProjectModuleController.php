@@ -66,6 +66,23 @@ class ProjectModuleController extends Controller
         $this->ensureAgileProject($project);
         abort_unless($projectModule->project_id === $project->id, 404);
 
+        if ($this->isProtectedProjectModule($projectModule)) {
+            $message = $projectModule->is_backlog
+                ? 'The project backlog module cannot be deleted.'
+                : 'System project modules cannot be deleted.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()
+                ->route('projects.edit', $project)
+                ->with('error', $message);
+        }
+
         if ($this->moduleHasSprints($projectModule)) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -108,16 +125,28 @@ class ProjectModuleController extends Controller
             'module_ids.*' => ['integer'],
         ])['module_ids'];
 
-        $modules = $project->projectModules()
+        $submittedModuleIds = array_values(array_map('intval', $moduleIds));
+        $uniqueSubmittedModuleIds = array_values(array_unique($submittedModuleIds));
+        $allModuleIds = $project->projectModules()
             ->whereIn('id', $moduleIds)
             ->pluck('id')
             ->all();
+        $reorderableModuleIds = $project->projectModules()
+            ->where('is_backlog', false)
+            ->where('is_system', false)
+            ->pluck('id')
+            ->all();
 
-        abort_unless(count($modules) === $project->projectModules()->count(), 422);
-        abort_unless(count(array_unique($moduleIds)) === count($moduleIds), 422);
+        abort_unless(count($allModuleIds) === count($submittedModuleIds), 422);
+        abort_unless(count($uniqueSubmittedModuleIds) === count($submittedModuleIds), 422);
 
-        DB::transaction(function () use ($project, $moduleIds) {
-            foreach ($moduleIds as $index => $moduleId) {
+        $matchesAllModules = $this->hasSameOrderedIds($submittedModuleIds, $allModuleIds);
+        $matchesReorderableModules = $this->hasSameOrderedIds($submittedModuleIds, $reorderableModuleIds);
+
+        abort_unless($matchesAllModules || $matchesReorderableModules, 422);
+
+        DB::transaction(function () use ($project, $submittedModuleIds) {
+            foreach ($submittedModuleIds as $index => $moduleId) {
                 $project->projectModules()
                     ->whereKey($moduleId)
                     ->update(['sort_order' => $index + 1]);
@@ -215,8 +244,7 @@ class ProjectModuleController extends Controller
                     'owner',
                 ])
                 ->withCount('projectSprints')
-                ->orderBy('sort_order')
-                ->orderBy('id'),
+                ->orderForDisplay(),
         ]);
 
         return view('projects.partials.module.section', [
@@ -257,6 +285,11 @@ class ProjectModuleController extends Controller
         return $query->exists();
     }
 
+    private function isProtectedProjectModule(ProjectModule $projectModule): bool
+    {
+        return (bool) ($projectModule->is_backlog || $projectModule->is_system);
+    }
+
     private function resolveRestoredName(Project $project, string $originalName, int $restoringModuleId): string
     {
         $candidate = $originalName;
@@ -274,6 +307,15 @@ class ProjectModuleController extends Controller
         }
 
         return $candidate;
+    }
+
+    private function hasSameOrderedIds(array $submittedIds, array $expectedIds): bool
+    {
+        $normalizedExpectedIds = array_values(array_map('intval', $expectedIds));
+        sort($submittedIds);
+        sort($normalizedExpectedIds);
+
+        return $submittedIds === $normalizedExpectedIds;
     }
 
     private function serializeModule(ProjectModule $projectModule): array

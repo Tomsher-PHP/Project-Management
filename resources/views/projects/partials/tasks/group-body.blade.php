@@ -4,6 +4,7 @@
         'next_page' => null,
         'has_more_pages' => false,
     ];
+    $showTaskActionColumn = $showTaskActionColumn ?? ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
 @endphp
 
 <div class="overflow-hidden rounded-[20px] border border-bgray-200 dark:border-darkblack-400" data-project-task-group-task-list data-current-page="{{ $pagination['page'] }}" data-next-page="{{ $pagination['next_page'] ?? '' }}" data-has-more-pages="{{ $pagination['has_more_pages'] ? 'true' : 'false' }}">
@@ -19,6 +20,9 @@
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task Mode</th>
                     <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Estimate Time</th>
                     <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Due Date</th>
+                    @if ($showTaskActionColumn)
+                        <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Actions</th>
+                    @endif
                 </tr>
             </thead>
 
@@ -28,6 +32,7 @@
                         'group' => $group,
                         'tasks' => $tasks,
                         'showEmptyState' => true,
+                        'showTaskActionColumn' => $showTaskActionColumn,
                     ])
                 </tbody>
             </table>

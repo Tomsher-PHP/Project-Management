@@ -1,4 +1,7 @@
 @php
+    $editableProjectModules = ($editableProjectModules ?? $projectModules)
+        ->reject(fn ($module) => (bool) ($module->is_backlog || $module->is_system))
+        ->values();
     $projectModuleBuilderConfig = [
         'storeUrl' => route('projects.modules.store', $project),
         'updateUrlTemplate' => route('projects.modules.update', ['project' => $project, 'projectModule' => '__MODULE__']),
@@ -40,7 +43,7 @@
 
                         <div class="flex items-center gap-3">
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
-                                Selected: <span data-project-module-builder-count>{{ $projectModules->count() }}</span>
+                                Selected: <span data-project-module-builder-count>{{ $editableProjectModules->count() }}</span>
                             </div>
 
                             <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-builder-close>
@@ -69,7 +72,7 @@
 
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                     <div class="space-y-4" data-project-module-builder-workspace>
-                                    @forelse ($projectModules as $module)
+                                    @forelse ($editableProjectModules as $module)
                                         <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $module->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -162,7 +165,7 @@
                                             </p>
                                         </div>
                                     @endforelse
-                                        @if ($projectModules->isNotEmpty())
+                                        @if ($editableProjectModules->isNotEmpty())
                                             <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-module-builder-helper>
                                                 <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                                                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
