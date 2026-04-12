@@ -73,6 +73,11 @@
                                                                 System
                                                             </span>
                                                         @endif
+                                                        @if ($projectStage->is_default)
+                                                            <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
+                                                                Default
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                     <p class="text-sm text-bgray-500 dark:text-bgray-300">
                                                         {{ $projectStage->code ?: '--' }}
@@ -93,7 +98,7 @@
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
                                                 @can('project_stage.edit')
-                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage">
+                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                                         </svg>
@@ -142,9 +147,34 @@
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+                <span>Sort Order <x-red-star /></span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-56 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        Lower numbers appear earlier in project stage lists and stage menus.
+                    </span>
+                </span>
+            </label>
             <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
+
+        <label for="is_default" class="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                <span>Is Default</span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        The default project stage is preselected when a new project is created.
+                    </span>
+                </span>
+            </span>
+        </label>
 
     </x-form-modal>
 

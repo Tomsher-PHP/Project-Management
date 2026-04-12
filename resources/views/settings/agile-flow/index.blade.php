@@ -15,6 +15,9 @@
             'permission' => 'agile_sprint.view',
         ],
     ];
+    $sortOrderInfo = $currentTab === 'modules'
+        ? 'Lower numbers appear earlier in agile module lists and selection menus.'
+        : 'Lower numbers appear earlier in agile sprint lists and selection menus.';
 @endphp
 
 @section('page-content')
@@ -164,7 +167,17 @@
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+                <span>Sort Order <x-red-star /></span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-56 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        {{ $sortOrderInfo }}
+                    </span>
+                </span>
+            </label>
             <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
         </div>
     </x-form-modal>
