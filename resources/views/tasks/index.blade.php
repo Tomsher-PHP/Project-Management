@@ -17,16 +17,16 @@
         </div>
 
         @php
-            $typeOptions = collect($types)->map(
+            $typeOptions = collect($taskTypeOptions)->map(
                 fn($type) => (object) [
-                    'id' => $type->code,
+                    'id' => $type->id,
                     'name' => $type->name,
                 ],
             );
 
-            $modeOptions = collect($modes)->map(
+            $modeOptions = collect($taskModeOptions)->map(
                 fn($mode) => (object) [
-                    'id' => $mode->code,
+                    'id' => $mode->id,
                     'name' => $mode->name,
                 ],
             );
@@ -116,8 +116,8 @@
         <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" />
         <x-filters.multi-select name="status_id" label="Status" :options="$statuses" />
         <x-filters.multi-select name="priority" label="Priority" :options="$priorityOptions" />
-        <x-filters.multi-select name="task_type" label="Type" :options="$typeOptions" />
-        <x-filters.multi-select name="task_mode" label="Task Mode" :options="$modeOptions" />
+        <x-filters.multi-select name="task_type_id" label="Type" :options="$typeOptions" />
+        <x-filters.multi-select name="task_mode_id" label="Task Mode" :options="$modeOptions" />
     </x-filters.drawer>
 
     <script id="task-filter-dependencies" type="application/json">

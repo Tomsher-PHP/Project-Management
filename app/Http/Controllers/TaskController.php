@@ -13,7 +13,6 @@ use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskComment;
 use App\Models\TaskMode;
-use App\Models\TaskStatusHistory;
 use App\Models\TaskStatus;
 use App\Models\TaskType;
 use App\Models\Tag;
@@ -22,7 +21,6 @@ use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
-use App\Services\ProjectServices;
 use App\Services\TaskServices;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -146,16 +144,6 @@ class TaskController extends Controller
             ->orderBy('name', 'asc')
             ->get(['id', 'name']);
 
-        $types = TaskType::query()
-            ->active()
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('name', 'asc')
-            ->get(['name', 'code']);
-        $modes = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('id', 'asc')
-            ->get(['name', 'code']);
         $priorities = config('project_constants.task_priorities', []);
         $taskCreateProjects = Project::query()
             ->accessibleBy($user)
@@ -199,8 +187,6 @@ class TaskController extends Controller
             'projectSprints',
             'statuses',
             'assignees',
-            'types',
-            'modes',
             'priorities',
             'taskCreateProjects',
             'taskTypeOptions',

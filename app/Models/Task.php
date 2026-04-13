@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
@@ -60,8 +61,6 @@ class Task extends Model
         'name',
         'code',
         'description',
-        'task_type',
-        'task_mode',
     ];
 
     protected $casts = [
@@ -231,6 +230,87 @@ class Task extends Model
     public function currentAssignmentLog()
     {
         return $this->hasOne(TaskAssignmentLog::class)->where('is_current', true);
+    }
+
+    protected function applyFilterSearchExtensions(Builder $query, string $search, string $condition): void
+    {
+        if ($condition === 'not_contains') {
+            return;
+        }
+
+        $matchingAncestorIds = $this->getMatchingAncestorTaskIds($search, $condition);
+
+        if ($matchingAncestorIds === []) {
+            return;
+        }
+
+        $query->orWhereIn($this->qualifyColumn('id'), $matchingAncestorIds);
+    }
+
+    protected function applySearchCondition(Builder $query, string $column, string $search, string $condition): void
+    {
+        switch ($condition) {
+            case 'starts_with':
+                $query->where($column, 'like', $search . '%');
+                break;
+
+            case 'ends_with':
+                $query->where($column, 'like', '%' . $search);
+                break;
+
+            default:
+                $query->where($column, 'like', '%' . $search . '%');
+                break;
+        }
+    }
+
+    protected function getMatchingAncestorTaskIds(string $search, string $condition): array
+    {
+        $matchingTasks = static::query()
+            ->select(['id', 'parent_task_id'])
+            ->whereNotNull('parent_task_id')
+            ->where(function (Builder $query) use ($search, $condition) {
+                $this->applySearchCondition($query, 'name', $search, $condition);
+            })
+            ->get();
+
+        if ($matchingTasks->isEmpty()) {
+            return [];
+        }
+
+        $topLevelAncestorIds = [];
+        $pendingIds = $matchingTasks
+            ->pluck('parent_task_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        while ($pendingIds !== []) {
+            $parentRows = static::query()
+                ->select(['id', 'parent_task_id'])
+                ->whereIn('id', $pendingIds)
+                ->get();
+
+            $nextPendingIds = [];
+
+            foreach ($parentRows as $parentRow) {
+                $parentId = (int) $parentRow->id;
+                $ancestorParentId = $parentRow->parent_task_id ? (int) $parentRow->parent_task_id : null;
+
+                if ($ancestorParentId === null) {
+                    $topLevelAncestorIds[] = $parentId;
+                    continue;
+                }
+
+                $nextPendingIds[] = $ancestorParentId;
+            }
+
+            $pendingIds = array_values(array_unique($nextPendingIds));
+        }
+
+        return array_values(array_unique($topLevelAncestorIds));
     }
 
     public function timeLogs()
