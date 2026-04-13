@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root>
+    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
             @can('task.create')
                 <button type="button" class="inline-flex items-center rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-create-open>
@@ -75,133 +75,15 @@
                             </tr>
                         </thead>
 
-                        <tbody class="bg-white dark:bg-darkblack-600">
+                        <tbody class="bg-white dark:bg-darkblack-600" data-task-subtasks-root>
                             @forelse ($tasks as $task)
-                                @php
-                                    $statusColor = $task->status?->color ?: '#CBD5E1';
-                                    $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
-                                    $typeColor = $task->taskType?->color ?: '#64748B';
-                                    $modeColor = $task->taskMode?->color ?: '#3B82F6';
-                                    $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
-                                    $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
-                                @endphp
+                                @include('tasks.partials.table-row', ['task' => $task])
 
-                                <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60">
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <div class="flex items-start gap-3">
-                                            <span class="mt-0.5 h-12 w-1.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
-
-                                            <div class="min-w-0">
-                                                <a href="{{ route('tasks.edit', $task) }}" class="block">
-                                                    <p class="text-lg font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300" title="{{ $task->name }}">
-                                                        {{ \Illuminate\Support\Str::limit($task->name, 20, '..') }}
-                                                    </p>
-                                                    <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
-                                                        {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
-                                                    </p>
-                                                </a>
-
-                                                @if ($task->project?->project_flow === 'agile')
-                                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-500 dark:text-bgray-300">
-                                                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectModule?->name ?? '--' }}">
-                                                            Module: {{ \Illuminate\Support\Str::limit($task->projectModule?->name ?? '--', 20, '..') }}
-                                                        </span>
-                                                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectSprint?->name ?? '--' }}">
-                                                            Sprint: {{ \Illuminate\Support\Str::limit($task->projectSprint?->name ?? '--', 20, '..') }}
-                                                        </span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <div class="min-w-0">
-                                            <p class="flex items-center gap-2 truncate text-sm font-semibold text-bgray-900 dark:text-white">
-                                                @if ($task->project)
-                                                    <a href="{{ route('projects.edit', $task->project) }}" class="inline-flex min-w-0 flex-col items-start gap-1 transition duration-200 hover:text-success-400 dark:hover:text-success-300">
-                                                        <span class="inline-flex min-w-0 items-center gap-2">
-                                                            <x-project-flow-icon :flow="$task->project->project_flow" size="sm" />
-                                                            <span class="truncate" title="{{ $task->project->name }}">{{ \Illuminate\Support\Str::limit($task->project->name, 20, '..') }}</span>
-                                                        </span>
-                                                        <span class="pl-6 text-xs font-normal text-[#7C97C1] dark:text-bgray-300">
-                                                            {{ $task->project->project_code ?: '--' }}
-                                                        </span>
-                                                    </a>
-                                                @else
-                                                    <span class="truncate">--</span>
-                                                @endif
-                                            </p>
-                                        </div>
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        @if ($task->currentAssignee)
-                                            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-100">
-                                                {{ $task->currentAssignee->name }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
-                                                Unassigned
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        @if ($task->status)
-                                            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
-                                                <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
-                                                {{ $task->status->name }}
-                                            </span>
-                                        @else
-                                            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
-                                                No status
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
-                                            <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $typeColor }}"></span>
-                                            {{ $typeLabel }}
-                                        </span>
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
-                                            <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $modeColor }}"></span>
-                                            {{ $modeLabel }}
-                                        </span>
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <div class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>
-                                        <div class="text-xs text-bgray-500 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        @if ($task->due_date)
-                                            <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDate($task->due_date)</div>
-                                        @else
-                                            <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
-                                        @endif
-                                    </td>
-
-                                    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-                                        <div class="flex items-center gap-2">
-                                            <a href="{{ route('tasks.edit', $task) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" title="Open task">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 3h7m0 0v7m0-7L10 14" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5v14h14v-5" />
-                                                </svg>
-                                            </a>
-
-                                            @can('delete', $task)
-                                                <x-delete-form :action="route('tasks.destroy', $task->id)" />
-                                            @endcan
-                                        </div>
-                                    </td>
-                                </tr>
+                                @include('tasks.partials.subtask-rows', [
+                                    'tasks' => $task->childTasks,
+                                    'parentTaskId' => $task->id,
+                                    'depth' => 1,
+                                ])
                             @empty
                                 <x-table-no-data col-span="9" message="No tasks found." sub-message="There are no tasks to display for the current filters." />
                             @endforelse
@@ -212,6 +94,14 @@
 
             <x-pagination :paginator="$tasks" :per-page="$perPage" />
         </section>
+
+        <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
+            </div>
+        </div>
 
         @can('task.create')
             @include('tasks.partials.create-modal')
@@ -244,8 +134,10 @@
     @endcan
 @endsection
 
+@push('scripts')
+    @vite('resources/js/modules/projects/project-tasks.js')
+    @vite('resources/js/modules/task-list-subtasks.js')
 @can('task.create')
-    @push('scripts')
         @vite('resources/js/modules/task-list-create.js')
-    @endpush
 @endcan
+@endpush

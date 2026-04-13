@@ -144,9 +144,9 @@ class TaskQuickStoreRequest extends FormRequest
                     return;
                 }
 
-                if (filled($parentTask->parent_task_id) && (int) $parentTask->parent_task_id > 0) {
-                    $validator->errors()->add('parent_task_id', 'Please choose a top-level parent task.');
-                }
+                // if (filled($parentTask->parent_task_id) && (int) $parentTask->parent_task_id > 0) {
+                //     $validator->errors()->add('parent_task_id', 'Please choose a top-level parent task.');
+                // }
 
                 if ($project?->project_flow === 'linear') {
                     if (! empty($parentTask->project_sprint_id)) {

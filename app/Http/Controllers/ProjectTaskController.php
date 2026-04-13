@@ -80,8 +80,23 @@ class ProjectTaskController extends Controller
     public function taskParentOptions(Request $request, Project $project): JsonResponse
     {
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
+        $currentTaskId = $request->filled('task_id') ? (int) $request->input('task_id') : null;
+        $selectedParentTaskId = $request->filled('parent_task_id') ? (int) $request->input('parent_task_id') : null;
+        $currentTask = null;
+
+        if ($currentTaskId) {
+            $currentTask = Task::query()
+                ->where('project_id', $project->id)
+                ->whereKey($currentTaskId)
+                ->first();
+
+            abort_unless($currentTask, Response::HTTP_NOT_FOUND);
+        }
+
+        $excludedTaskIds = $this->getExcludedParentTaskIds($currentTask);
         $query = Task::query()
             ->where('project_id', $project->id)
+            ->when($excludedTaskIds, fn ($builder) => $builder->whereNotIn('id', $excludedTaskIds))
             ->orderBy('name')
             ->orderBy('id');
 
@@ -98,15 +113,32 @@ class ProjectTaskController extends Controller
 
             $query->where('project_sprint_id', $sprintId);
         } else {
-            return response()->json([
-                'status' => true,
-                'options' => [],
-            ], Response::HTTP_OK);
+            $query->whereNull('project_sprint_id');
+        }
+
+        $tasks = $query->get(['id', 'name', 'code']);
+
+        if (
+            $selectedParentTaskId
+            && ! in_array($selectedParentTaskId, $excludedTaskIds, true)
+            && ! $tasks->contains('id', $selectedParentTaskId)
+        ) {
+            $selectedParentTask = Task::query()
+                ->where('project_id', $project->id)
+                ->whereKey($selectedParentTaskId)
+                ->first(['id', 'name', 'code']);
+
+            if ($selectedParentTask) {
+                $tasks->push($selectedParentTask);
+                $tasks = $tasks
+                    ->sortBy(fn(Task $task) => mb_strtolower($task->name) . '|' . str_pad((string) $task->id, 12, '0', STR_PAD_LEFT))
+                    ->values();
+            }
         }
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'name', 'code'])->map(function (Task $task) {
+            'options' => $tasks->map(function (Task $task) {
                 return [
                     'value' => (string) $task->id,
                     'text' => $task->name,
@@ -240,6 +272,8 @@ class ProjectTaskController extends Controller
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $previousStatusId = (int) ($task->status_id ?? 0);
         $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
+        $previousModuleId = filled($task->project_module_id) ? (int) $task->project_module_id : null;
+        $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
 
         DB::transaction(function () use (
             $validated,
@@ -248,6 +282,8 @@ class ProjectTaskController extends Controller
             $newAssigneeId,
             $previousStatusId,
             $previousAssigneeId,
+            $previousModuleId,
+            $previousSprintId,
             $project,
             $projectService
         ) {
@@ -276,6 +312,13 @@ class ProjectTaskController extends Controller
                 'is_billable' => (bool) ($validated['is_billable'] ?? false),
                 'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
             ]);
+
+            if (
+                $previousModuleId !== (filled($task->project_module_id) ? (int) $task->project_module_id : null)
+                || $previousSprintId !== (filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null)
+            ) {
+                $projectService->syncTaskPlacementToDescendants($task);
+            }
 
             if (array_key_exists('tag_ids', $validated)) {
                 $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
@@ -333,6 +376,13 @@ class ProjectTaskController extends Controller
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('delete', $task), Response::HTTP_FORBIDDEN);
+
+        if ($task->childTasks()->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Delete the subtasks first before removing this task.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         $preferredGroupKey = $this->resolveTaskGroupKey($project, $task);
         $task->delete();
@@ -800,17 +850,13 @@ class ProjectTaskController extends Controller
 
     private function buildTaskGroupTasksQuery(Project $project, string $groupKey)
     {
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
         $query = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy(auth()->user())
-            ->with([
-                'currentAssignee.primaryAttachment',
-                'status',
-                'taskType:id,name,code,color',
-                'taskMode:id,name,code,color',
-                'tags',
-                'parentTask:id,name',
-            ])
+            ->whereNull('parent_task_id')
+            ->with($taskRowRelations)
             ->withCount('childTasks')
             ->orderByDesc('created_at')
             ->orderByDesc('id');
@@ -837,7 +883,15 @@ class ProjectTaskController extends Controller
 
     private function getTaskGroupTasks(Project $project, string $groupKey): Collection
     {
-        return $this->buildTaskGroupTasksQuery($project, $groupKey)->get();
+        $query = $this->buildTaskGroupTasksQuery($project, $groupKey);
+        $tasks = $query->get();
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $tasks->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($task, $taskRowRelations);
+        });
+
+        return $tasks;
     }
 
     private function getTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage): array
@@ -849,10 +903,17 @@ class ProjectTaskController extends Controller
         $lastPage = max((int) ceil($total / $perPage), 1);
         $page = min($page, $lastPage);
 
+        $tasks = $query
+            ->forPage($page, $perPage)
+            ->get();
+        $taskRowRelations = $this->getProjectTaskRowRelations();
+
+        $tasks->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($task, $taskRowRelations);
+        });
+
         return [
-            'tasks' => $query
-                ->forPage($page, $perPage)
-                ->get(),
+            'tasks' => $tasks,
             'pagination' => [
                 'page' => $page,
                 'next_page' => $page < $lastPage ? $page + 1 : null,
@@ -860,6 +921,41 @@ class ProjectTaskController extends Controller
                 'total' => $total,
                 'per_page' => $perPage,
             ],
+        ];
+    }
+
+    private function loadTaskDescendantsForGroup(Task $task, array $taskRowRelations): void
+    {
+        if ((int) ($task->child_tasks_count ?? 0) <= 0) {
+            $task->setRelation('childTasks', collect());
+
+            return;
+        }
+
+        $task->load([
+            'childTasks' => fn($query) => $query
+                ->with($taskRowRelations)
+                ->withCount('childTasks')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id'),
+        ]);
+
+        $task->childTasks->each(function (Task $childTask) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForGroup($childTask, $taskRowRelations);
+        });
+    }
+
+    private function getProjectTaskRowRelations(): array
+    {
+        return [
+            'currentAssignee.primaryAttachment',
+            'status',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+            'tags',
+            'projectModule:id,name,is_backlog,is_system',
+            'projectSprint:id,name,project_module_id,is_backlog,is_system',
+            'parentTask:id,name',
         ];
     }
 
@@ -903,7 +999,7 @@ class ProjectTaskController extends Controller
             'parentTaskOptions' => Task::query()
                 ->where('project_id', $project->id)
                 ->accessibleBy(auth()->user())
-                ->when($task, fn($query) => $query->whereKeyNot($task->id))
+                ->when($task, fn($query) => $query->whereNotIn('id', $this->getExcludedParentTaskIds($task)))
                 ->orderBy('name')
                 ->get(['id', 'name']),
             'tagOptions' => Tag::query()
@@ -935,6 +1031,29 @@ class ProjectTaskController extends Controller
                 'is_current' => true,
             ]);
         }
+    }
+
+    private function getExcludedParentTaskIds(?Task $task): array
+    {
+        if (! $task) {
+            return [];
+        }
+
+        $excludedTaskIds = [(int) $task->id];
+        $pendingParentIds = [(int) $task->id];
+
+        while ($pendingParentIds !== []) {
+            $childIds = Task::query()
+                ->whereIn('parent_task_id', $pendingParentIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $pendingParentIds = array_values(array_diff($childIds, $excludedTaskIds));
+            $excludedTaskIds = [...$excludedTaskIds, ...$pendingParentIds];
+        }
+
+        return $excludedTaskIds;
     }
 
     private function resolveTaskGroupKey(Project $project, Task $task): string

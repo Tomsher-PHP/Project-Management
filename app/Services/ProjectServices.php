@@ -436,9 +436,38 @@ class ProjectServices
                 'project_module_id' => $projectSprint->project_module_id,
                 'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
             ]);
+
+            $this->syncTaskDescendantPlacement(
+                $task,
+                (int) $projectSprint->project_module_id,
+                (int) $projectSprint->id
+            );
         });
 
         return $task->fresh();
+    }
+
+    public function syncTaskPlacementToDescendants(Task $task): void
+    {
+        $this->syncTaskDescendantPlacement(
+            $task,
+            $task->project_module_id ? (int) $task->project_module_id : null,
+            $task->project_sprint_id ? (int) $task->project_sprint_id : null
+        );
+    }
+
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectModuleId, ?int $projectSprintId): void
+    {
+        $task->childTasks()
+            ->get()
+            ->each(function (Task $childTask) use ($projectModuleId, $projectSprintId) {
+                $childTask->update([
+                    'project_module_id' => $projectModuleId,
+                    'project_sprint_id' => $projectSprintId,
+                ]);
+
+                $this->syncTaskDescendantPlacement($childTask, $projectModuleId, $projectSprintId);
+            });
     }
 
     private function buildTimeline($startDate, $targetDate): array

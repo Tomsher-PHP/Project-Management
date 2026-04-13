@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
 use App\Services\ProjectServices;
+use App\Services\TaskServices;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
@@ -46,9 +47,6 @@ class TaskController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -74,20 +72,28 @@ class TaskController extends Controller
             ->pluck('project_sprint_id')
             ->filter();
 
+        $taskRowRelations = [
+            'project:id,name,project_code,project_flow',
+            'projectModule:id,name',
+            'projectSprint:id,name',
+            'currentAssignee:id,name',
+            'status:id,name,color',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+        ];
+
         $tasks = (clone $accessibleTasksQuery)
-            ->with([
-                'project:id,name,project_code,project_flow',
-                'projectModule:id,name',
-                'projectSprint:id,name',
-                'currentAssignee:id,name',
-                'status:id,name,color',
-                'taskType:id,name,code,color',
-                'taskMode:id,name,code,color',
-            ])
+            ->whereNull('parent_task_id')
+            ->with($taskRowRelations)
+            ->withCount('childTasks')
             ->filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)
             ->withQueryString();
+
+        $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForList($task, $taskRowRelations);
+        });
 
         $projects = $projectIds->isEmpty()
             ? collect()
@@ -207,80 +213,18 @@ class TaskController extends Controller
         ));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(
-        TaskQuickStoreRequest $request,
-        NotificationService $notificationService,
-        ProjectServices $projectService
-    ): JsonResponse
+    // Store newly created task with minimal required fields, used for quick create from various places in the app
+    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
     {
         $validated = $request->validated();
+
         $project = Project::query()
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
+
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $defaultStatusId = $this->getDefaultTaskStatusIdForFlow($project->project_flow);
-        $defaultTaskTypeId = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskModeId = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
 
-        $task = DB::transaction(function () use (
-            $project,
-            $validated,
-            $assigneeId,
-            $defaultStatusId,
-            $defaultTaskTypeId,
-            $defaultTaskModeId,
-            $defaultTaskPriority,
-            $defaultTaskEstimateSeconds,
-            $projectService
-        ) {
-            $placement = $projectService->finalizeTaskPlacement(
-                $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
-                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
-            );
-            $resolvedModuleId = $placement['project_module_id'];
-            $resolvedSprintId = $placement['project_sprint_id'];
-
-            $task = $project->tasks()->create([
-                'project_module_id' => $resolvedModuleId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
-                'task_type_id' => $validated['task_type_id'] ?? $defaultTaskTypeId,
-                'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskModeId,
-                'priority' => $validated['priority'] ?? $defaultTaskPriority,
-                'current_assignee_id' => $assigneeId,
-                'due_date' => $validated['due_date'] ?? null,
-                'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
-                    ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
-                    : $defaultTaskEstimateSeconds,
-                'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
-                'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
-            ]);
-
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            return $task;
-        });
+        $task = $taskServices->createQuickTask($project, $validated);
 
         $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
 
@@ -423,79 +367,22 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(
-        TaskUpdateRequest $request,
-        Task $task,
-        NotificationService $notificationService,
-        ProjectServices $projectService
-    ): JsonResponse
+    public function update(TaskUpdateRequest $request, Task $task, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);
-        $project = $task->project;
+
         $validated = $request->validated();
-        $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
+        $previousAssigneeId = $task->current_assignee_id ? (int) $task->current_assignee_id : null;
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $previousStatusId = (int) ($task->status_id ?? 0);
-        $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
 
-        DB::transaction(function () use (
-            $validated,
-            $task,
-            $newStatusId,
-            $newAssigneeId,
-            $previousStatusId,
-            $previousAssigneeId,
-            $project,
-            $projectService
-        ) {
-            $placement = $projectService->finalizeTaskPlacement(
-                $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
-                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
-            );
-            $resolvedModuleId = $placement['project_module_id'];
-            $resolvedSprintId = $placement['project_sprint_id'];
+        $task = $taskServices->updateTask($task, $validated);
 
-            $task->update([
-                'project_module_id' => $resolvedModuleId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => $newStatusId,
-                'task_type_id' => $validated['task_type_id'],
-                'task_mode_id' => $validated['task_mode_id'],
-                'priority' => $validated['priority'],
-                'current_assignee_id' => $newAssigneeId,
-                'due_date' => $validated['due_date'] ?? null,
-                'completed_at' => $validated['completed_at'] ?? null,
-                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
-                'is_billable' => (bool) ($validated['is_billable'] ?? false),
-                'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
-            ]);
-
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            if ($newStatusId && $newStatusId !== $previousStatusId) {
-                TaskStatusHistory::create([
-                    'task_id' => $task->id,
-                    'status_id' => $newStatusId,
-                ]);
-            }
-
-            if ($newAssigneeId !== ($previousAssigneeId ?: null)) {
-                $this->syncTaskAssignmentState($task, $newAssigneeId);
-            }
-        });
-
-        $task->refresh();
         $notificationService->sendTaskAssignmentIfNeeded(
             $task,
             $newAssigneeId,
-            $previousAssigneeId ?: null
+            $previousAssigneeId
         );
+
         $task = $this->loadTaskForDetail($task);
 
         return response()->json([
@@ -662,6 +549,25 @@ class TaskController extends Controller
         ]);
 
         return $task;
+    }
+
+    private function loadTaskDescendantsForList(Task $task, array $taskRowRelations): void
+    {
+        if ((int) ($task->child_tasks_count ?? 0) <= 0) {
+            $task->setRelation('childTasks', collect());
+
+            return;
+        }
+
+        $task->load([
+            'childTasks' => fn($query) => $query
+                ->with($taskRowRelations)
+                ->withCount('childTasks'),
+        ]);
+
+        $task->childTasks->each(function (Task $childTask) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForList($childTask, $taskRowRelations);
+        });
     }
 
     private function renderTaskTab(Task $task, string $tab): string

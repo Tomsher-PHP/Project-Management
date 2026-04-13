@@ -527,11 +527,11 @@ const applyTaskCreateErrors = (root, form, errors = {}) => {
 };
 
 const initializeTaskCreateRoot = (root, dependencies) => {
-    if (!root || root.dataset.initialized === 'true') {
+    if (!root || root.dataset.taskCreateInitialized === 'true') {
         return;
     }
 
-    root.dataset.initialized = 'true';
+    root.dataset.taskCreateInitialized = 'true';
     initTomSelect(root);
 
     root.addEventListener('click', async (event) => {

@@ -2,6 +2,7 @@
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
     $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
     $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
+    $isPlacementLockedForSubtask = $canEditTask && filled($task->parent_task_id);
     $taskPlacementOptions = [
         'modules' => $projectModules
             ->map(fn($projectModule) => [
@@ -33,21 +34,69 @@
         </button>
     </div>
 
-    <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]" data-project-task-detail-form action="{{ route('projects.tasks.update', [$project, $task]) }}" method="POST" data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}" data-task-placement='@json($taskPlacementOptions)'>
+    <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]" data-project-task-detail-form action="{{ route('projects.tasks.update', [$project, $task]) }}" method="POST" data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}" data-current-task-id="{{ $task->id }}" data-task-placement='@json($taskPlacementOptions)'>
         @csrf
         @method('PUT')
 
         <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
             <div class="grid gap-6 md:grid-cols-2">
-                <div>
+                @unless ($isLinearFlow)
+                    <div>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Module</label>
+                        <select name="project_module_id" class="tom-select w-full" data-sort="0" data-project-task-detail-module-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
+                            <option value="">Select module or leave empty for backlog</option>
+                            @foreach ($projectModules as $projectModule)
+                                <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
+                                    {{ $projectModule->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @if ($isPlacementLockedForSubtask)
+                            <input type="hidden" name="project_module_id" value="{{ $task->project_module_id ?? '' }}">
+                        @endif
+                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_module_id"></p>
+                    </div>
+
+                    <div>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sprint</label>
+                        <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-project-task-detail-sprint-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
+                            <option value="">Select sprint or leave empty for backlog</option>
+                            @foreach ($projectSprints as $projectSprint)
+                                <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_module_id }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
+                                    {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
+                                        - {{ $projectSprint->projectModule->name }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @if ($isPlacementLockedForSubtask)
+                            <input type="hidden" name="project_sprint_id" value="{{ $task->project_sprint_id ?? '' }}">
+                        @endif
+                        <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-project-task-detail-placement-hint></p>
+                        @if ($isPlacementLockedForSubtask)
+                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Subtasks inherit module and sprint from the parent task.</p>
+                        @endif
+                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_sprint_id"></p>
+                    </div>
+                @endunless
+
+                <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
+                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Parent Task</label>
+                    <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select @disabled(!$canEditTask)>
+                        <option value="">Select parent task</option>
+                        @foreach ($parentTaskOptions as $parentTaskOption)
+                            <option value="{{ $parentTaskOption->id }}" {{ (int) $task->parent_task_id === (int) $parentTaskOption->id ? 'selected' : '' }}>
+                                {{ $parentTaskOption->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="parent_task_id"></p>
+                </div>
+
+                <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Name <x-red-star /></label>
                     <input type="text" name="name" value="{{ $task->name }}" class="{{ $textInputClasses }}" @disabled(!$canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="name"></p>
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Code</label>
-                    <input type="text" value="{{ $task->code }}" class="w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200" readonly>
                 </div>
 
                 <div class="md:col-span-2">
@@ -82,37 +131,6 @@
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="current_assignee_id"></p>
                 </div>
 
-                @unless ($isLinearFlow)
-                    <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Module</label>
-                        <select name="project_module_id" class="tom-select w-full" data-sort="0" data-project-task-detail-module-select @disabled(!$canEditTask)>
-                            <option value="">Select module or leave empty for backlog</option>
-                            @foreach ($projectModules as $projectModule)
-                                <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
-                                    {{ $projectModule->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_module_id"></p>
-                    </div>
-
-                    <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sprint</label>
-                        <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-project-task-detail-sprint-select @disabled(!$canEditTask)>
-                            <option value="">Select sprint or leave empty for backlog</option>
-                            @foreach ($projectSprints as $projectSprint)
-                                <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_module_id }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
-                                    {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
-                                        - {{ $projectSprint->projectModule->name }}
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-project-task-detail-placement-hint></p>
-                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_sprint_id"></p>
-                    </div>
-                @endunless
-
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Type</label>
                     <select name="task_type_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
@@ -141,19 +159,6 @@
                         @endforeach
                     </select>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="priority"></p>
-                </div>
-
-                <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Parent Task</label>
-                    <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select @disabled(!$canEditTask)>
-                        <option value="">Select parent task</option>
-                        @foreach ($parentTaskOptions as $parentTaskOption)
-                            <option value="{{ $parentTaskOption->id }}" {{ (int) $task->parent_task_id === (int) $parentTaskOption->id ? 'selected' : '' }}>
-                                {{ $parentTaskOption->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="parent_task_id"></p>
                 </div>
 
                 <div>

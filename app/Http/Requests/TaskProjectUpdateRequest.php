@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
 use App\Models\Project;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -104,14 +105,34 @@ class TaskProjectUpdateRequest extends FormRequest
         return [
             function ($validator) {
                 $project = $this->resolveProject();
+                $task = $this->resolveTask();
+                $projectModuleId = $this->nullableIntegerInput('project_module_id');
+                $projectSprintId = $this->nullableIntegerInput('project_sprint_id');
+                $parentTaskId = $this->nullableIntegerInput('parent_task_id');
 
                 $this->validateAgileTaskPlacement(
                     $validator,
                     $project,
                     $project?->id,
-                    $this->nullableIntegerInput('project_module_id'),
-                    $this->nullableIntegerInput('project_sprint_id')
+                    $projectModuleId,
+                    $projectSprintId
                 );
+
+                if ($task && $parentTaskId && in_array($parentTaskId, $this->getDescendantTaskIds($task), true)) {
+                    $validator->errors()->add('parent_task_id', 'A task cannot be assigned to one of its subtasks.');
+                }
+
+                if (! $task || ! filled($task->parent_task_id)) {
+                    return;
+                }
+
+                if ($projectModuleId !== $this->normalizeNullableInt($task->project_module_id)) {
+                    $validator->errors()->add('project_module_id', 'Subtasks inherit the module from the parent task.');
+                }
+
+                if ($projectSprintId !== $this->normalizeNullableInt($task->project_sprint_id)) {
+                    $validator->errors()->add('project_sprint_id', 'Subtasks inherit the sprint from the parent task.');
+                }
             },
         ];
     }
@@ -129,5 +150,44 @@ class TaskProjectUpdateRequest extends FormRequest
         }
 
         return Project::query()->find($project);
+    }
+
+    private function resolveTask(): ?Task
+    {
+        $task = $this->route('task');
+
+        if ($task instanceof Task) {
+            return $task;
+        }
+
+        if (blank($task)) {
+            return null;
+        }
+
+        return Task::query()->find($task);
+    }
+
+    private function normalizeNullableInt($value): ?int
+    {
+        return filled($value) ? (int) $value : null;
+    }
+
+    private function getDescendantTaskIds(Task $task): array
+    {
+        $descendantTaskIds = [];
+        $pendingParentIds = [(int) $task->id];
+
+        while ($pendingParentIds !== []) {
+            $childIds = Task::query()
+                ->whereIn('parent_task_id', $pendingParentIds)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $pendingParentIds = array_values(array_diff($childIds, $descendantTaskIds));
+            $descendantTaskIds = [...$descendantTaskIds, ...$pendingParentIds];
+        }
+
+        return $descendantTaskIds;
     }
 }
