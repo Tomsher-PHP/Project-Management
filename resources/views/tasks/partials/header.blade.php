@@ -70,6 +70,17 @@
         </div>
 
         @php
+            $runningLog = $task->timeLogs()->where('is_running', 1)->latest()->first();
+            $timerStartedAt = $runningLog?->started_at->toISOString() ?? null;
+        @endphp
+
+        @if ($runningLog)
+            <div id="task-timer-display" class="flex items-center gap-2 text-sm font-semibold text-success-500" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}">
+                ⏱ <span id="timer-text">00:00:00</span>
+            </div>
+        @endif
+
+        @php
             $isRunning = $task->timeLogs()->where('is_running', 1)->exists();
         @endphp
 

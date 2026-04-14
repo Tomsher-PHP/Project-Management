@@ -225,16 +225,18 @@ class TaskController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Task $task)
+    public function edit(Task $task, TaskServices $taskServices)
     {
         $task = $this->loadTaskForDetail($task);
         $overviewData = $this->getTaskOverviewData($task);
+        $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, auth()->id());
 
         return view('tasks.detail-page', [
             'task' => $task,
             'project' => $task->project,
             'taskActivitiesCount' => $this->getTaskActivitiesQuery($task)->count(),
             'taskCommentsCount' => $task->comments()->count(),
+            'totalTrackedSeconds' => $totalSeconds,
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
         ] + $overviewData);
     }

@@ -17,6 +17,7 @@ use App\Models\TaskType;
 use App\Providers\AppServiceProvider;
 use App\Services\NotificationService;
 use App\Services\ProjectServices;
+use App\Services\TaskServices;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -152,7 +153,8 @@ class ProjectTaskController extends Controller
         TaskQuickStoreRequest $request,
         Project $project,
         NotificationService $notificationService,
-        ProjectServices $projectService
+        ProjectServices $projectService,
+        TaskServices $taskService
     ): JsonResponse {
         $validated = $request->validated();
         $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
@@ -183,7 +185,8 @@ class ProjectTaskController extends Controller
             $defaultTaskMode,
             $defaultTaskPriority,
             $defaultTaskEstimateSeconds,
-            $projectService
+            $projectService,
+            $taskService
         ) {
             $placement = $projectService->finalizeTaskPlacement(
                 $project,
@@ -215,6 +218,8 @@ class ProjectTaskController extends Controller
             if (array_key_exists('tag_ids', $validated)) {
                 $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
             }
+
+            $taskService->syncTaskAssignmentState($task, $assigneeId);
 
             return $task;
         });
@@ -262,7 +267,8 @@ class ProjectTaskController extends Controller
         Project $project,
         Task $task,
         NotificationService $notificationService,
-        ProjectServices $projectService
+        ProjectServices $projectService,
+        TaskServices $taskService
     ): JsonResponse {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
@@ -285,7 +291,8 @@ class ProjectTaskController extends Controller
             $previousModuleId,
             $previousSprintId,
             $project,
-            $projectService
+            $projectService,
+            $taskService
         ) {
             $placement = $projectService->finalizeTaskPlacement(
                 $project,
@@ -332,7 +339,7 @@ class ProjectTaskController extends Controller
             }
 
             if ($newAssigneeId !== ($previousAssigneeId ?: null)) {
-                $this->syncTaskAssignmentState($task, $newAssigneeId);
+                $taskService->syncTaskAssignmentState($task, $newAssigneeId);
             }
         });
 
@@ -437,7 +444,7 @@ class ProjectTaskController extends Controller
             ->get(['id', 'name', 'color']);
         $defaultTaskStatusId = $this->getDefaultTaskStatusId($project);
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
+        $defaultTaskDueDate = now()->addDay()->toDateString();
         $defaultTaskEstimateMinutes = $project->default_task_estimate_seconds !== null
             ? intdiv((int) $project->default_task_estimate_seconds, 60)
             : 0;
@@ -1012,26 +1019,26 @@ class ProjectTaskController extends Controller
         ];
     }
 
-    private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
-    {
-        $currentLog = $task->currentAssignmentLog()->first();
-        $now = now(config('constants.timezone'));
+    // private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
+    // {
+    //     $currentLog = $task->currentAssignmentLog()->first();
+    //     $now = now();
 
-        if ($currentLog) {
-            $currentLog->update([
-                'assigned_to' => $now,
-                'is_current' => false,
-            ]);
-        }
+    //     if ($currentLog) {
+    //         $currentLog->update([
+    //             'assigned_to' => $now,
+    //             'is_current' => false,
+    //         ]);
+    //     }
 
-        if ($newAssigneeId) {
-            $task->assignmentLogs()->create([
-                'user_id' => $newAssigneeId,
-                'assigned_from' => $now,
-                'is_current' => true,
-            ]);
-        }
-    }
+    //     if ($newAssigneeId) {
+    //         $task->assignmentLogs()->create([
+    //             'user_id' => $newAssigneeId,
+    //             'assigned_from' => $now,
+    //             'is_current' => true,
+    //         ]);
+    //     }
+    // }
 
     private function getExcludedParentTaskIds(?Task $task): array
     {

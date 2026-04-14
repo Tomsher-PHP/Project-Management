@@ -40,6 +40,10 @@ class TaskServices
 
             $task = $project->tasks()->create($payload);
 
+            if (!empty($task->current_assignee_id)) {
+                $this->syncTaskAssignmentState($task, $task->current_assignee_id);
+            }
+
             if (array_key_exists('tag_ids', $validated)) {
                 $this->syncTags($task, $validated['tag_ids'] ?? []);
             }
@@ -179,7 +183,7 @@ class TaskServices
     public function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
     {
         $currentLog = $task->currentAssignmentLog()->first();
-        $now = now(config('constants.timezone'));
+        $now = now();
 
         if ($currentLog) {
             $currentLog->update([
@@ -388,5 +392,29 @@ class TaskServices
         }
 
         return false;
+    }
+
+    public function getTotalTrackedSeconds(int $taskId, int $userId): int
+    {
+        // 1. Sum completed durations
+        $total = TaskTimeLog::where('task_id', $taskId)
+            ->where('user_id', $userId)
+            ->where('is_running', 0)
+            ->sum('duration_seconds');
+
+        return $total;
+
+        // 2. Add running session (if exists)
+        // $runningLog = TaskTimeLog::where('task_id', $taskId)
+        //     ->where('user_id', $userId)
+        //     ->where('is_running', 1)
+        //     ->latest()
+        //     ->first();
+
+        // if ($runningLog) {
+        //     $total += $runningLog->started_at->diffInSeconds(now());
+        // }
+
+        // return $total;
     }
 }
