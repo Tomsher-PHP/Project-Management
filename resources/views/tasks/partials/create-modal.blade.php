@@ -127,7 +127,7 @@
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
-                                <input type="date" name="due_date" value="{{ $defaultTaskDueDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
+                                <input type="text" name="due_date" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-open-to-date="{{ $defaultTaskDueDate }}" placeholder="Choose a due date" autocomplete="off">
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date"></p>
                             </div>
 

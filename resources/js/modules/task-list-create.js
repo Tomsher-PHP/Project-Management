@@ -411,7 +411,7 @@ const applyProjectDefaults = async (form, dependencies) => {
         }
     }
 
-    setFieldValue(dueDateField, dependencies.defaults?.due_date || '');
+    setFieldValue(dueDateField, '');
     setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
