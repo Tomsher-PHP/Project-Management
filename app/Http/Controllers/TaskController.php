@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 
@@ -849,89 +850,6 @@ class TaskController extends Controller
         return (string) (array_key_first($priorities) ?? 'medium');
     }
 
-    private function getDefaultTaskEstimateSeconds(Project $project): int
-    {
-        return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
-    }
-
-    private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
-    {
-        $currentLog = $task->currentAssignmentLog()->first();
-        $now = now(config('constants.timezone'));
-
-        if ($currentLog) {
-            $currentLog->update([
-                'assigned_to' => $now,
-                'is_current' => false,
-            ]);
-        }
-
-        if ($newAssigneeId) {
-            $task->assignmentLogs()->create([
-                'user_id' => $newAssigneeId,
-                'assigned_from' => $now,
-                'is_current' => true,
-            ]);
-        }
-    }
-
-    private function resolveTaskTagIds(array $submittedTags): array
-    {
-        return collect($submittedTags)
-            ->filter(fn($tag) => filled($tag))
-            ->map(function ($tag) {
-                if (is_numeric($tag)) {
-                    return (int) $tag;
-                }
-
-                return $this->firstOrCreateTaskTag((string) $tag)->id;
-            })
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function firstOrCreateTaskTag(string $name): Tag
-    {
-        $cleanName = trim($name);
-        $baseSlug = Str::slug($cleanName);
-        $slug = $baseSlug !== '' ? $baseSlug : Str::lower(Str::random(8));
-
-        $existingTag = Tag::withTrashed()
-            ->whereRaw('LOWER(name) = ?', [Str::lower($cleanName)])
-            ->orWhere('slug', $slug)
-            ->first();
-
-        if ($existingTag) {
-            if ($existingTag->trashed()) {
-                $existingTag->restore();
-            }
-
-            if (! $existingTag->is_active) {
-                $existingTag->is_active = true;
-                $existingTag->save();
-            }
-
-            return $existingTag;
-        }
-
-        $candidateSlug = $slug;
-        $suffix = 2;
-
-        while (Tag::withTrashed()->where('slug', $candidateSlug)->exists()) {
-            $candidateSlug = $slug . '-' . $suffix;
-            $suffix++;
-        }
-
-        return Tag::create([
-            'name' => $cleanName,
-            'slug' => $candidateSlug,
-            'type' => 'general',
-            'is_active' => true,
-            'is_system' => false,
-        ]);
-    }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -942,5 +860,33 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.index')
             ->with('success', 'Task deleted successfully.');
+    }
+
+    /** Task timer functions */
+
+    public function start(Task $task, TaskServices $taskServices): JsonResponse
+    {
+        if (! $taskServices->isAllowedToStart($task)) {
+            return response()->json(['message' => 'Not allowed to start timer for this task'], Response::HTTP_FORBIDDEN);
+        }
+        $taskServices->startTimer($task->id, auth()->id());
+
+        return response()->json(['message' => 'Timer started'], Response::HTTP_OK);
+    }
+
+    public function stop(Task $task, TaskServices $taskServices): JsonResponse
+    {
+        try {
+            if (! $taskServices->isAllowedToStop($task, auth()->user())) {
+                return response()->json(['message' => 'Not allowed to stop timer for this task'], Response::HTTP_FORBIDDEN);
+            }
+
+            $log = $taskServices->stopTimer($task);
+
+            return response()->json(['message' => 'Timer stopped', 'data' => $log], Response::HTTP_OK);
+        } catch (\RuntimeException $e) {
+
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        }
     }
 }

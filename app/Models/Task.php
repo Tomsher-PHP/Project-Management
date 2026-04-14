@@ -155,10 +155,10 @@ class Task extends Model
             ->filter()
             ->unique()
             ->values()
-            ->whenNotEmpty(fn ($ids) => ProjectModule::query()
+            ->whenNotEmpty(fn($ids) => ProjectModule::query()
                 ->whereIn('id', $ids->all())
                 ->get()
-                ->each(fn (ProjectModule $projectModule) => $projectModule->refreshTrackedTimeMetrics()));
+                ->each(fn(ProjectModule $projectModule) => $projectModule->refreshTrackedTimeMetrics()));
 
         $this->previousProjectModuleIdForMetrics = null;
         $this->previousProjectSprintIdForMetrics = null;
@@ -282,7 +282,7 @@ class Task extends Model
         $pendingIds = $matchingTasks
             ->pluck('parent_task_id')
             ->filter()
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -331,6 +331,11 @@ class Task extends Model
     public function activeTimeLog()
     {
         return $this->hasOne(TaskTimeLog::class)->where('is_running', true);
+    }
+
+    public function isRunningBy($userId)
+    {
+        return $this->timeLogs()->where('user_id', $userId)->where('is_running', 1)->exists();
     }
 
     public function tags()

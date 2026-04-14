@@ -287,7 +287,7 @@ Route::middleware(['auth'])->group(function () {
     // Task Routes
     Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->middleware(['permission.type:task.create'])->name('tasks.quick-create-parent-options');
 
-    Route::prefix('tasks/{task}')->middleware('can:view,task')->group(function () {
+    Route::prefix('tasks/{task}')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
         Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
 
@@ -299,6 +299,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
         Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
         Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+
+        // Task timer routes
+        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
+        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
         Route::put('/', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');

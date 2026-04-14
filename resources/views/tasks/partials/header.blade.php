@@ -69,6 +69,14 @@
             </div>
         </div>
 
+        @php
+            $isRunning = $task->timeLogs()->where('is_running', 1)->exists();
+        @endphp
+
+        <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" id="task-timer-btn" class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold text-white transition {{ $isRunning ? 'bg-error-300 hover:bg-red-500' : 'bg-success-400 hover:bg-success-300' }}">
+            {{ $isRunning ? 'Stop' : 'Start' }}
+        </button>
+
         <div class="flex flex-wrap items-center gap-3 xl:justify-end">
             <span class="whitespace-nowrap rounded-full px-4 py-1 text-sm font-semibold text-white" style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};">
                 {{ $task->status?->name ?? 'No Status' }}

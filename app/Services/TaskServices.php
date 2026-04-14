@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\Task;
+use App\Models\TaskAssignmentLog;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
+use App\Models\TaskTimeLog;
 use App\Models\TaskType;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -282,5 +284,109 @@ class TaskServices
     protected function getDefaultTaskEstimateSeconds(Project $project): int
     {
         return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
+    }
+
+    // Start/Stop Timer related methods
+    public function startTimer(int $taskId, int $userId)
+    {
+        return DB::transaction(function () use ($taskId, $userId) {
+
+            // Check if already running
+            $running = TaskTimeLog::where('task_id', $taskId)
+                ->where('user_id', $userId)
+                ->where('is_running', 1)
+                ->first();
+
+            if ($running) {
+                throw new \Exception('Timer already running');
+            }
+
+            $assignment = TaskAssignmentLog::where('task_id', $taskId)
+                ->where('user_id', $userId)
+                ->where('is_current', 1)
+                ->first();
+
+            if (!$assignment) {
+                throw new \Exception('Assignment not found');
+            }
+
+            return TaskTimeLog::create([
+                'task_id' => $taskId,
+                'user_id' => $userId,
+                'task_assignment_log_id' => $assignment->id,
+                'started_at' => now(),
+                'is_running' => 1,
+                'added_by' => $userId,
+            ]);
+        });
+    }
+
+    public function stopTimer(Task $task)
+    {
+        return DB::transaction(function () use ($task) {
+            $log = TaskTimeLog::where('task_id', $task->id)->where('is_running', 1)->latest()->first();
+
+            if (!$log) {
+                throw new \RuntimeException('Timer not found');
+            }
+
+            $duration = $log->started_at->diffInSeconds(now());
+
+            // Update time log
+            $log->update([
+                'ended_at' => now(),
+                'duration_seconds' => $duration,
+                'is_running' => 0,
+            ]);
+
+            // Update assignment log
+            TaskAssignmentLog::where('id', $log->task_assignment_log_id)->increment('worked_time_seconds', $duration);
+
+            // Update task total time
+            $task->increment('actual_time_seconds', $duration);
+
+            return $log;
+        });
+    }
+
+    // call this method to check if user can start timer for a task
+    public function isAllowedToStart(Task $task): bool
+    {
+        $user = auth()->user();
+        return $task->current_assignee_id === $user->id;
+    }
+
+    // call this method to check if user can stop timer for a task
+    public function isAllowedToStop(Task $task): bool
+    {
+        $user = auth()->user();
+        // Super admin
+        if ($user->is_super_admin) {
+            return true;
+        }
+
+        // Current assignee
+        if ($task->current_assignee_id === $user->id) {
+            return true;
+        }
+
+        // Load assignee details safely
+        $assignee = $task->currentAssignee?->loadMissing('details');
+
+        if (!$assignee || !$assignee->details) {
+            return false;
+        }
+
+        // Manager of assignee
+        if ($assignee->details->manager_id === $user->id) {
+            return true;
+        }
+
+        // Reporter of assignee (optional, if needed)
+        if ($assignee->details->reporter_id === $user->id) {
+            return true;
+        }
+
+        return false;
     }
 }
