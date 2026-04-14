@@ -80,15 +80,26 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CSCVF1rm.js",
+    "file": "assets/project-detail-C6ATu0BE.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
       "_datepicker-I9Bkd33q.js",
       "_flatpickr.min-BJdP9L7S.js",
+      "resources/js/modules/projects/project-tasks.js",
       "_timepicker-io5AL2NV.js",
       "_weekpicker-D6kr6shV.js"
+    ]
+  },
+  "resources/js/modules/projects/project-tasks.js": {
+    "file": "assets/project-tasks-B1tgxY_x.js",
+    "name": "project-tasks",
+    "src": "resources/js/modules/projects/project-tasks.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js"
     ]
   },
   "resources/js/modules/schedule-shift.js": {
@@ -101,6 +112,18 @@
       "_weekpicker-D6kr6shV.js"
     ]
   },
+  "resources/js/modules/task-detail.js": {
+    "file": "assets/task-detail-DGkBXt9i.js",
+    "name": "task-detail",
+    "src": "resources/js/modules/task-detail.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js",
+      "_timepicker-io5AL2NV.js",
+      "_weekpicker-D6kr6shV.js"
+    ]
+  },
   "resources/js/modules/task-list-create.js": {
     "file": "assets/task-list-create-ITHhDyKS.js",
     "name": "task-list-create",
@@ -110,6 +133,12 @@
       "_datepicker-I9Bkd33q.js",
       "_flatpickr.min-BJdP9L7S.js"
     ]
+  },
+  "resources/js/modules/task-list-subtasks.js": {
+    "file": "assets/task-list-subtasks-zO9FwpyV.js",
+    "name": "task-list-subtasks",
+    "src": "resources/js/modules/task-list-subtasks.js",
+    "isEntry": true
   },
   "resources/js/modules/team.js": {
     "file": "assets/team-BtdavKLX.js",

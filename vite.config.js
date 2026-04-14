@@ -16,6 +16,9 @@ export default defineConfig({
                 'resources/js/image-draggable.js',
                 'resources/js/modules/projects/project-detail.js',
                 'resources/js/modules/task-list-create.js',
+                'resources/js/modules/task-detail.js',
+                'resources/js/modules/projects/project-tasks.js',
+                'resources/js/modules/task-list-subtasks.js'
             ],
             refresh: true,
         }),
