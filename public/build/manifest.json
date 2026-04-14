@@ -32,7 +32,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-0_m54mzt.css",
+    "file": "assets/app-DkhHYZ1o.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -41,7 +41,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-sFL5CTQQ.js",
+    "file": "assets/app-B8UXxYp1.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -80,7 +80,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-DX4TS-Rh.js",
+    "file": "assets/project-detail-CSCVF1rm.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -102,7 +102,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-CuvZ6NLK.js",
+    "file": "assets/task-list-create-ITHhDyKS.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
