@@ -440,7 +440,7 @@ class Task extends Model
         $hours = floor($totalSeconds / 3600);
         $minutes = floor(($totalSeconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
     /*----------------Activity Log Customization----------------*/
