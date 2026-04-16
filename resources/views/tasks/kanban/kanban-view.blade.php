@@ -66,16 +66,16 @@
 
                         <!-- LOOP YOUR STATUSES HERE -->
                         @foreach ($boardStatuses as $status)
-                            <div class="flex flex-col flex-shrink-0 w-80 border rounded-md border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-darkblack-500">
+                            <div class="flex flex-col flex-shrink-0 w-80 border rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkblack-500 overflow-hidden">
 
                                 <!-- Column Header -->
-                                <h5 class="uppercase mb-4 rounded-md px-3 py-2 text-white" style="background-color: {{ $status->color }};">
+                                <h5 class="uppercase mb-0 w-full rounded-t-md px-4 py-3 text-white" style="background-color: {{ $status->color }};">
                                     {{ $status->name }}
                                     ({{ $tasksByStatus[$status->id]->count() ?? 0 }})
                                 </h5>
 
                                 <!-- Column Body -->
-                                <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full pr-1" data-status-id="{{ $status->id }}">
+                                <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full px-4 pb-4 pt-4" data-status-id="{{ $status->id }}">
 
                                     @foreach ($tasksByStatus[$status->id] ?? [] as $task)
                                         @include('tasks.kanban._card', ['task' => $task])

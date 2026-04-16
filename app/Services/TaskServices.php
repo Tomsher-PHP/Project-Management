@@ -51,7 +51,7 @@ class TaskServices
             ->apply($query, $filters)
             ->whereHas('project', fn($q) => $q->where('project_flow', $flowType))
             ->with($this->relations())
-            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+            // ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
             ->orderBy('sort_order')
             ->get();
 
@@ -508,7 +508,9 @@ class TaskServices
                 throw new \Exception('Task not found');
             }
 
-            if (! $this->isAllowedChangeStatus($movedTask, $user)) {
+            $isSameStatusReorder = $movedTask->status_id === $statusId;
+
+            if (! $isSameStatusReorder && ! $this->isAllowedChangeStatus($movedTask, $user)) {
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(
                     Response::HTTP_FORBIDDEN,
                     'Not allowed to change status for this task'
