@@ -54,8 +54,6 @@ export function initTaskTimer() {
     // START / STOP HANDLER
     // -----------------------------
     document.addEventListener('click', async (e) => {
-        console.log('click reach here');
-
         const btn = e.target.closest('.task-timer-btn');
         if (!btn) return;
 

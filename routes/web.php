@@ -304,10 +304,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
         Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
 
-        // Task status change route
-        // Route::patch('/update-status', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
-        // Route::patch('/sort-order', [TaskController::class, 'sortOrder'])->name('tasks.sort-order');
-
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
         Route::put('/', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     });
@@ -318,6 +314,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
 
     // Task status, order change route
+    Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
     Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
     // End Task Routes
 

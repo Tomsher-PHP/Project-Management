@@ -1,43 +1,35 @@
 import Sortable from "sortablejs";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const boards = document.querySelectorAll(".kanban-board");
 
-    boards.forEach((board) => {
-        new Sortable(board, {
-            group: {
-                name: "kanban",
-                pull: true,
-                put: true,
-            },
-            animation: 180,
-            easing: "cubic-bezier(0.2, 0, 0, 1)",
+    const container = document.getElementById('kanban-container');
+    const buttons = document.querySelectorAll('.flow-btn');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-            ghostClass: "kanban-ghost",
-            chosenClass: "kanban-chosen",
-            dragClass: "kanban-drag",
+    let currentFlow = localStorage.getItem('kanban_flow') || 'agile';
 
-            onEnd: handleDrop,
+        /** ================= FUNCTIONS ================= */
+
+    const initKanbanDrag = () => {
+        document.querySelectorAll(".kanban-board").forEach(board => {
+            new Sortable(board, sortableOptions);
         });
-    });
+    };
 
-    function handleDrop(evt) {
+    const handleDrop = (evt) => {
         const toColumn = evt.to;
         const statusId = toColumn.dataset.statusId;
+        const movedTaskId = evt.item.dataset.taskId;
 
-        // collect all task ids in this column (order matters)
         const taskIds = [...toColumn.querySelectorAll("[data-task-id]")]
             .map(el => el.dataset.taskId);
 
-        const movedTaskId = evt.item.dataset.taskId;
-
-        // optional: loading UI
-        evt.item.classList.add("opacity-50");
+        toggleLoading(evt.item, true);
 
         fetch(`/tasks/transition-status`, {
             method: "PATCH",
             headers: {
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                "X-CSRF-TOKEN": csrfToken,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -46,34 +38,83 @@ document.addEventListener("DOMContentLoaded", () => {
                 moved_task_id: movedTaskId,
             })
         })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(err => Promise.reject(err));
-                }
-                return res.json();
-            })
-            .then(data => {
-                evt.item.classList.remove("opacity-50");
-
-                if (!data.success) {
-                    rollback(evt);
-                    Alert.error(data.message);
-                }
-            })
+            .then(handleFetchError)
+            .then(() => toggleLoading(evt.item, false))
             .catch(err => {
-                evt.item.classList.remove("opacity-50");
+                toggleLoading(evt.item, false);
                 rollback(evt);
                 Alert.error(err.message || "Something went wrong");
             });
-    }
+    };
 
-    // rollback if API fails
-    function rollback(evt) {
-        console.log('rech here');
+    const loadKanban = (flow) => {
+        toggleLoading(container, true);
 
+        fetch(`/tasks/kanban?flow=${flow}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(res => res.text())
+            .then(html => {
+                container.innerHTML = html;
+                toggleLoading(container, false);
+                initKanbanDrag(); // re-init
+            })
+            .catch(() => {
+                toggleLoading(container, false);
+                Alert.error('Failed to load board');
+            });
+    };
+
+    const setActiveButton = (flow) => {
+        buttons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.flow === flow);
+        });
+    };
+
+    const toggleLoading = (el, state) => {
+        el.classList.toggle('opacity-50', state);
+    };
+
+    const rollback = (evt) => {
         if (evt.from) {
-            console.log('kkkkkkkkkkkkkkkkk');
             evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
         }
-    }
+    };
+
+    const handleFetchError = (res) => {
+        if (!res.ok) {
+            return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+    };
+
+    /** ================= COMMON SORTABLE CONFIG ================= */
+    const sortableOptions = {
+        group: { name: "kanban", pull: true, put: true },
+        animation: 180,
+        easing: "cubic-bezier(0.2, 0, 0, 1)",
+        ghostClass: "kanban-ghost",
+        chosenClass: "kanban-chosen",
+        dragClass: "kanban-drag",
+        onEnd: handleDrop,
+    };
+
+    /** ================= INIT ================= */
+    setActiveButton(currentFlow);
+    loadKanban(currentFlow);
+
+    /** ================= EVENTS ================= */
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const flow = btn.dataset.flow;
+            if (flow === currentFlow) return;
+
+            currentFlow = flow;
+            localStorage.setItem('kanban_flow', flow);
+
+            setActiveButton(flow);
+            loadKanban(flow);
+        });
+    });
+
 });

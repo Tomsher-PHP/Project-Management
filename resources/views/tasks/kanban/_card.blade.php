@@ -1,4 +1,4 @@
-<div class="card cursor-pointer bg-white dark:bg-darkblack-600 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition" data-task-id="{{ $task->id }}">
+<div class="card cursor-pointer bg-white dark:bg-darkblack-600 rounded-md shadow-sm hover:shadow-md transition" data-task-id="{{ $task->id }}">
     <div class="p-4 space-y-4">
         @php
             $priority = $task->priority ?? 'medium';
@@ -41,13 +41,13 @@
         </div>
 
         <div class="flex items-start justify-between gap-3">
-            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }}">
+            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }} @if($isDueOrPast) border border-b-alertsErrorBase p-1 @endif"">
                 {{ $dueDate?->format($globalDateFormat) }}
             </small>
         </div>
 
-        <div class="flex items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-700 pt-3">
-            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

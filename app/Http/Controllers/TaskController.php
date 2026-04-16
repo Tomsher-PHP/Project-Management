@@ -47,167 +47,13 @@ class TaskController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    // public function index(Request $request, TaskFilterService $filterService)
-    // {
-    //     $user = $request->user();
-    //     $perPage = $request->input('per_page', config('constants.per_page_count'));
-
-    //     $accessibleTasksQuery = Task::query()
-    //         ->accessibleBy($user);
-
-    //     $projectIds = (clone $accessibleTasksQuery)
-    //         ->distinct()
-    //         ->pluck('project_id')
-    //         ->filter();
-
-    //     $projectModuleIds = (clone $accessibleTasksQuery)
-    //         ->whereNotNull('project_module_id')
-    //         ->distinct()
-    //         ->pluck('project_module_id')
-    //         ->filter();
-
-    //     $projectSprintIds = (clone $accessibleTasksQuery)
-    //         ->whereNotNull('project_sprint_id')
-    //         ->distinct()
-    //         ->pluck('project_sprint_id')
-    //         ->filter();
-
-    //     $taskRowRelations = [
-    //         'project:id,name,project_code,project_flow',
-    //         'projectModule:id,name',
-    //         'projectSprint:id,name',
-    //         'currentAssignee:id,name',
-    //         'status:id,name,color',
-    //         'taskType:id,name,code,color',
-    //         'taskMode:id,name,code,color',
-    //     ];
-
-    //     $tasks = (clone $accessibleTasksQuery)
-    //         ->whereNull('parent_task_id')
-    //         ->with($taskRowRelations)
-    //         ->withCount('childTasks')
-    //         ->filter($request->all())
-    //         ->sort($request->all())
-    //         ->paginate($perPage)
-    //         ->withQueryString();
-
-    //     $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
-    //         $this->loadTaskDescendantsForList($task, $taskRowRelations);
-    //     });
-
-    //     $projects = $projectIds->isEmpty()
-    //         ? collect()
-    //         : Project::query()
-    //         ->whereIn('id', $projectIds)
-    //         ->orderBy('name', 'asc')
-    //         ->get(['id', 'name']);
-
-    //     $projectModules = $projectModuleIds->isEmpty()
-    //         ? collect()
-    //         : ProjectModule::query()
-    //         ->with('project:id,name')
-    //         ->whereIn('id', $projectModuleIds)
-    //         ->orderBy('name', 'asc')
-    //         ->get(['id', 'project_id', 'name'])
-    //         ->map(fn(ProjectModule $projectModule) => (object) [
-    //             'id' => $projectModule->id,
-    //             'project_id' => $projectModule->project_id,
-    //             'name' => $projectModule->project?->name
-    //                 ? $projectModule->project->name . ' / ' . $projectModule->name
-    //                 : $projectModule->name,
-    //         ]);
-
-    //     $projectSprints = $projectSprintIds->isEmpty()
-    //         ? collect()
-    //         : ProjectSprint::query()
-    //         ->with([
-    //             'project:id,name',
-    //             'projectModule:id,name',
-    //         ])
-    //         ->whereIn('id', $projectSprintIds)
-    //         ->orderBy('name', 'asc')
-    //         ->get(['id', 'project_id', 'project_module_id', 'name'])
-    //         ->map(fn(ProjectSprint $projectSprint) => (object) [
-    //             'id' => $projectSprint->id,
-    //             'project_id' => $projectSprint->project_id,
-    //             'project_module_id' => $projectSprint->project_module_id,
-    //             'name' => collect([
-    //                 $projectSprint->project?->name,
-    //                 $projectSprint->projectModule?->name,
-    //                 $projectSprint->name,
-    //             ])->filter()->implode(' / '),
-    //         ]);
-
-    //     $statuses = TaskStatus::active()
-    //         ->orderBy('sort_order', 'asc')
-    //         ->get(['id', 'name']);
-
-    //     $assignees = User::active()
-    //         ->orderBy('name', 'asc')
-    //         ->get(['id', 'name']);
-
-    //     $priorities = config('project_constants.task_priorities', []);
-    //     $taskCreateProjects = Project::query()
-    //         ->accessibleBy($user)
-    //         ->with([
-    //             'projectModules' => fn($query) => $query
-    //                 ->select('id', 'project_id', 'name', 'is_backlog', 'is_system'),
-    //             'projectSprints' => fn($query) => $query
-    //                 ->select('id', 'project_id', 'project_module_id', 'name', 'is_backlog', 'is_system'),
-    //             'activeMembers:id,name',
-    //         ])
-    //         ->orderBy('name', 'asc')
-    //         ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']);
-    //     $taskTypeOptions = TaskType::query()
-    //         ->active()
-    //         ->orderByDesc('is_default')
-    //         ->orderBy('sort_order')
-    //         ->orderBy('id')
-    //         ->get(['id', 'name', 'color']);
-    //     $taskModeOptions = TaskMode::query()
-    //         ->active()
-    //         ->orderByDesc('is_default')
-    //         ->orderBy('sort_order')
-    //         ->orderBy('id')
-    //         ->get(['id', 'name', 'color']);
-    //     $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
-    //         ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-    //         ->values();
-    //     $tagOptions = Tag::query()
-    //         ->active()
-    //         ->orderBy('name')
-    //         ->get(['id', 'name', 'color']);
-    //     $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
-    //     $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-    //     $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
-
-    //     return view('tasks.index', compact(
-    //         'tasks',
-    //         'perPage',
-    //         'projects',
-    //         'projectModules',
-    //         'projectSprints',
-    //         'statuses',
-    //         'assignees',
-    //         'priorities',
-    //         'taskCreateProjects',
-    //         'taskTypeOptions',
-    //         'taskModeOptions',
-    //         'taskPriorityOptions',
-    //         'tagOptions',
-    //         'taskCreateDependencies',
-    //         'defaultTaskPriority',
-    //         'defaultTaskDueDate'
-    //     ));
-    // }
-
-    public function index(Request $request, TaskServices $taskService, TaskFilterService $filterService, TaskFormService $taskFormService)
+    public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
         $user = $request->user();
 
         $baseQuery = app(TaskQueryService::class)->baseQuery($user);
 
-        $tasks = $taskService->getList(
+        $tasks = $taskServices->getList(
             $user,
             $request->all(),
             $request->input('per_page', config('constants.per_page_count'))
@@ -243,7 +89,7 @@ class TaskController extends Controller
     }
 
     // Kanban view for tasks.
-    public function kanbanView(Request $request, TaskServices $taskService, TaskFilterService $filterService, TaskFormService $taskFormService)
+    public function kanbanView(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
         $selectedFlowType = 'agile';
         $user = $request->user();
@@ -263,7 +109,7 @@ class TaskController extends Controller
                 fn($collection) => $collection->where('flow_type', $selectedFlowType)
             )->values();
 
-        $tasksByStatus = $taskService->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
+        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
 
         return view('tasks.kanban.kanban-view', array_merge([
             'tasksByStatus' => $tasksByStatus,
@@ -963,6 +809,28 @@ class TaskController extends Controller
 
             return response()->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
+    }
+
+    public function kanbanMode(Request $request, TaskServices $taskServices)
+    {
+        $selectedFlowType = $request->input('flow', 'agile');
+        $user = $request->user();
+
+        $boardStatuses = TaskStatus::active()
+            ->forFlow($selectedFlowType)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'color']);
+
+        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
+
+        $priorities = config('project_constants.task_priorities', []);
+
+        if ($request->ajax()) {
+            return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
+        }
+
+        return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
     }
 
     public function transitionStatus(Request $request, TaskServices $taskServices): JsonResponse

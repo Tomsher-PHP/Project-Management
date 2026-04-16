@@ -3,9 +3,17 @@
 @push('styles')
     <style>
         .kanban-ghost {
-            opacity: 0.4;
-        }
+            background: transparent !important;
+            border: 1px dashed rgba(166, 167, 168, 0.8);
+            /* border-radius: 12px; */
+            box-sizing: border-box;
 
+            /* IMPORTANT: remove inner content */
+            color: transparent !important;
+        }
+        .kanban-ghost * {
+            visibility: hidden !important;
+        }
         .kanban-chosen {
             transform: scale(1.02);
         }
@@ -29,7 +37,15 @@
             @endcan
 
             <x-filters.button />
-            <x-project-flow-indicator class="sm:ml-auto" />
+
+            <div id="flow-switcher" class="inline-flex rounded-lg border overflow-hidden">
+                <button data-flow="agile" class="flow-btn px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-darkblack-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-darkblack-500">
+                    Agile
+                </button>
+                <button data-flow="linear" class="flow-btn px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-darkblack-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-darkblack-500">
+                    Linear
+                </button>
+            </div>
         </div>
 
         @php
@@ -56,34 +72,16 @@
         @endphp
 
         <section>
-            <div class="rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <div class="rounded-[14px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
 
                 <!-- Horizontal Scroll Wrapper -->
                 <div class="overflow-x-auto custom-scroll">
 
                     <!-- Board Container -->
-                    <div class="flex gap-6 p-6 min-w-max h-[calc(100vh-220px)]">
+                    <div id="kanban-container" class="flex gap-6 p-6 min-w-max h-[calc(100vh-220px)]">
 
                         <!-- LOOP YOUR STATUSES HERE -->
-                        @foreach ($boardStatuses as $status)
-                            <div class="flex flex-col flex-shrink-0 w-80 border rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-darkblack-500 overflow-hidden">
-
-                                <!-- Column Header -->
-                                <h5 class="uppercase mb-0 w-full rounded-t-md px-4 py-3 text-white" style="background-color: {{ $status->color }};">
-                                    {{ $status->name }}
-                                    ({{ $tasksByStatus[$status->id]->count() ?? 0 }})
-                                </h5>
-
-                                <!-- Column Body -->
-                                <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full px-4 pb-4 pt-4" data-status-id="{{ $status->id }}">
-
-                                    @foreach ($tasksByStatus[$status->id] ?? [] as $task)
-                                        @include('tasks.kanban._card', ['task' => $task])
-                                    @endforeach
-
-                                </div>
-                            </div>
-                        @endforeach
+                        @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses])
 
                     </div>
                 </div>
