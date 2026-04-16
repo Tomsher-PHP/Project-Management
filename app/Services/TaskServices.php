@@ -11,16 +11,76 @@ use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\TaskType;
-use Illuminate\Support\Arr;
+use App\Models\User;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TaskServices
 {
+    // Initialize task service dependencies
     public function __construct(
-        protected ProjectServices $projectServices
+        protected ProjectServices $projectServices,
+        protected TaskQueryService $queryService,
+        protected TaskFilterService $filterService
     ) {}
 
+    // Get paginated task list for the current user
+    public function getList(User $user, array $filters, $perPage)
+    {
+        $query = $this->queryService->baseQuery($user);
+
+        return $this->filterService
+            ->sort(
+                $this->filterService->apply($query, $filters),
+                $filters
+            )
+            ->whereNull('parent_task_id')
+            ->with($this->relations())
+            ->withCount('childTasks')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    // Get kanban task groups by status for the current user
+    public function getKanban(User $user, array $filters, string $flowType, $statuses)
+    {
+        $query = $this->queryService->baseQuery($user);
+
+        $tasks = $this->filterService
+            ->apply($query, $filters)
+            ->whereHas('project', fn($q) => $q->where('project_flow', $flowType))
+            ->with($this->relations())
+            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+            ->orderBy('sort_order')
+            ->get();
+
+        // Group tasks
+        $tasksByStatus = $tasks->groupBy('status_id');
+
+        // Ensure all statuses exist (even empty)
+        return collect($statuses)->mapWithKeys(function ($status) use ($tasksByStatus) {
+            return [
+                $status->id => $tasksByStatus[$status->id] ?? collect()
+            ];
+        });
+    }
+
+    // Define related models to eager load for tasks
+    private function relations()
+    {
+        return [
+            'project:id,name,project_code,project_flow',
+            'projectModule:id,name',
+            'projectSprint:id,name',
+            'currentAssignee:id,name',
+            'status:id,name,color',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+        ];
+    }
+
+    // Create a simple task with default placement and tags
     public function createQuickTask(Project $project, array $validated): Task
     {
         return DB::transaction(function () use ($project, $validated) {
@@ -52,6 +112,7 @@ class TaskServices
         });
     }
 
+    // Update task data and record any status or assignment changes
     public function updateTask(Task $task, array $validated): Task
     {
         return DB::transaction(function () use ($task, $validated) {
@@ -87,11 +148,13 @@ class TaskServices
         });
     }
 
+    // Determine project module and sprint placement for a task
     public function finalizePlacement(Project $project, ?int $moduleId, ?int $sprintId): array
     {
         return $this->projectServices->finalizeTaskPlacement($project, $moduleId, $sprintId);
     }
 
+    // Resolve default task values based on project settings
     public function resolveDefaults(Project $project): array
     {
         return [
@@ -113,6 +176,7 @@ class TaskServices
         ];
     }
 
+    // Build payload used to create a new task
     protected function buildCreatePayload(Project $project, array $validated, array $defaults, array $placement): array
     {
         $resolvedSprintId = $placement['project_sprint_id'];
@@ -137,6 +201,7 @@ class TaskServices
         ];
     }
 
+    // Build payload used to update an existing task
     protected function buildUpdatePayload(Task $task, array $validated, array $placement): array
     {
         return [
@@ -158,11 +223,13 @@ class TaskServices
         ];
     }
 
+    // Sync task tag relationships from submitted tag IDs or names
     public function syncTags(Task $task, array $submittedTags): void
     {
         $task->tags()->sync($this->resolveTaskTagIds($submittedTags));
     }
 
+    // Record a task status change in history if it changed
     public function recordStatusHistoryIfChanged(Task $task, ?int $previousStatusId, ?int $newStatusId): void
     {
         if ($newStatusId && $newStatusId !== $previousStatusId) {
@@ -173,6 +240,7 @@ class TaskServices
         }
     }
 
+    // Sync assignment state only when the assignee changes
     public function syncAssignmentIfChanged(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): void
     {
         if ($newAssigneeId !== $previousAssigneeId) {
@@ -180,6 +248,7 @@ class TaskServices
         }
     }
 
+    // Update assignment logs when a task is reassigned
     public function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
     {
         $currentLog = $task->currentAssignmentLog()->first();
@@ -201,6 +270,7 @@ class TaskServices
         }
     }
 
+    // Convert submitted tags into task tag IDs
     public function resolveTaskTagIds(array $submittedTags): array
     {
         return collect($submittedTags)
@@ -217,6 +287,7 @@ class TaskServices
             ->all();
     }
 
+    // Get or create a tag record by name for task assignment
     protected function firstOrCreateTaskTag(string $name): Tag
     {
         $cleanName = trim($name);
@@ -258,6 +329,7 @@ class TaskServices
         ]);
     }
 
+    // Find the default task status id for a project flow
     protected function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
     {
         if (blank($flowType)) {
@@ -274,6 +346,7 @@ class TaskServices
             ->value('id');
     }
 
+    // Get the default task priority label from config
     protected function getDefaultTaskPriorityValue(): string
     {
         $priorities = config('project_constants.task_priorities', []);
@@ -285,12 +358,15 @@ class TaskServices
         return (string) (array_key_first($priorities) ?? 'medium');
     }
 
+    // Get the default estimated seconds for the task
     protected function getDefaultTaskEstimateSeconds(Project $project): int
     {
         return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
     }
 
     // Start/Stop Timer related methods
+
+    // Start a timer for the given task and user
     public function startTimer(int $taskId, int $userId)
     {
         return DB::transaction(function () use ($taskId, $userId) {
@@ -325,6 +401,7 @@ class TaskServices
         });
     }
 
+    // Stop the currently running timer and record duration
     public function stopTimer(Task $task)
     {
         return DB::transaction(function () use ($task) {
@@ -353,17 +430,29 @@ class TaskServices
         });
     }
 
-    // call this method to check if user can start timer for a task
+    // Check whether current user can start timer on this task
     public function isAllowedToStart(Task $task): bool
     {
         $user = auth()->user();
+
+        // if task is not assigned, no one can stop timer
+        if ($task->current_assignee_id === null) {
+            return false;
+        }
+
         return $task->current_assignee_id === $user->id;
     }
 
-    // call this method to check if user can stop timer for a task
+    // Check whether current user can stop timer on this task
     public function isAllowedToStop(Task $task): bool
     {
         $user = auth()->user();
+
+        // if task is not assigned, no one can stop timer
+        if ($task->current_assignee_id === null) {
+            return false;
+        }
+
         // Super admin
         if ($user->is_super_admin) {
             return true;
@@ -394,27 +483,61 @@ class TaskServices
         return false;
     }
 
+    public function isAllowedChangeStatus(Task $task, User $user): bool
+    {
+        return $this->isAllowedToStop($task);
+    }
+
+    // Calculate total completed tracked seconds for a user on a task
     public function getTotalTrackedSeconds(int $taskId, int $userId): int
     {
         // 1. Sum completed durations
-        $total = TaskTimeLog::where('task_id', $taskId)
+        return TaskTimeLog::where('task_id', $taskId)
             ->where('user_id', $userId)
             ->where('is_running', 0)
             ->sum('duration_seconds');
+    }
 
-        return $total;
+    public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): void
+    {
+        DB::transaction(function () use ($user, $movedTaskId, $taskIds, $statusId) {
 
-        // 2. Add running session (if exists)
-        // $runningLog = TaskTimeLog::where('task_id', $taskId)
-        //     ->where('user_id', $userId)
-        //     ->where('is_running', 1)
-        //     ->latest()
-        //     ->first();
+            $movedTask = Task::find($movedTaskId);
 
-        // if ($runningLog) {
-        //     $total += $runningLog->started_at->diffInSeconds(now());
-        // }
+            if (! $movedTask) {
+                throw new \Exception('Task not found');
+            }
 
-        // return $total;
+            if (! $this->isAllowedChangeStatus($movedTask, $user)) {
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(
+                    Response::HTTP_FORBIDDEN,
+                    'Not allowed to change status for this task'
+                );
+            }
+
+            // Bulk fetch
+            $tasks = Task::whereIn('id', $taskIds)->get()->keyBy('id');
+
+            foreach ($taskIds as $index => $taskId) {
+
+                $task = $tasks[$taskId] ?? null;
+                if (! $task) continue;
+
+                $previousStatusId = $task->status_id;
+
+                $task->update([
+                    'status_id' => $statusId,
+                    'sort_order' => $index
+                ]);
+
+                if ($task->id === $movedTask->id) {
+                    $this->recordStatusHistoryIfChanged(
+                        $task,
+                        $previousStatusId,
+                        $statusId
+                    );
+                }
+            }
+        });
     }
 }

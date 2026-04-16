@@ -53,8 +53,8 @@
                                 Actual <span class="ml-1">{{ $projectSprint->actual_time_formatted }}</span>
                             </span>
                             @if ($hasTimeDifference)
-                                <span title="{{ $timeDifferenceSeconds > 0 ? 'Exceeds estimate by' : 'Under estimate by' }} {{ sprintf('%02d h : %02d m', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $timeDifferenceClasses }}">
-                                    {{ $timeDifferencePrefix }}{{ sprintf('%02d h : %02d m', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}
+                                <span title="{{ $timeDifferenceSeconds > 0 ? 'Exceeds estimate by' : 'Under estimate by' }} {{ sprintf('%02dh : %02dm', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $timeDifferenceClasses }}">
+                                    {{ $timeDifferencePrefix }}{{ sprintf('%02dh : %02dm', floor(abs($timeDifferenceSeconds) / 3600), floor((abs($timeDifferenceSeconds) % 3600) / 60)) }}
                                 </span>
                             @endif
                             <span class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">

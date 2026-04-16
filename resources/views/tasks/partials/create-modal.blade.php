@@ -114,12 +114,12 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="task_mode_id"></p>
                             </div>
-
+                            
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Priority</label>
                                 <select name="priority" class="tom-select-no-search w-full">
                                     @foreach ($taskPriorityOptions as $option)
-                                        <option value="{{ $option['value'] }}" {{ $option['value'] === $defaultTaskPriority ? 'selected' : '' }}>{{ $option['label'] }}</option>
+                                        <option value="{{ $option->value }}" {{ $option->value === $defaultTaskPriority ? 'selected' : '' }}>{{ $option->label }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="priority"></p>
@@ -127,7 +127,7 @@
 
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
-                                <input type="text" name="due_date" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-open-to-date="{{ $defaultTaskDueDate }}" placeholder="Choose a due date" autocomplete="off">
+                                <input type="text" name="due_date" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-open-to-date="" placeholder="Choose a due date" autocomplete="off">
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date"></p>
                             </div>
 

@@ -1,5 +1,21 @@
 @extends('layouts.master')
 
+@push('styles')
+    <style>
+        .kanban-ghost {
+            opacity: 0.4;
+        }
+
+        .kanban-chosen {
+            transform: scale(1.02);
+        }
+
+        .kanban-drag {
+            transform: rotate(2deg);
+        }
+    </style>
+@endpush
+
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
@@ -40,59 +56,38 @@
         @endphp
 
         <section>
-            <div class="overflow-hidden rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border-separate border-spacing-0">
-                        <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
-                            <tr>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="name" label="Task" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="project.name" label="Project" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="currentAssignee.name" label="Assignee" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="status.name" label="Status" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="task_type" label="Type" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="task_mode" label="Task Mode" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate Time" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="due_date" label="Due Date" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
-                                </th>
-                            </tr>
-                        </thead>
+            <div class="rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
 
-                        <tbody class="bg-white dark:bg-darkblack-600" data-task-subtasks-root>
-                            @forelse ($tasks as $task)
-                                @include('tasks.partials.table-row', ['task' => $task])
+                <!-- Horizontal Scroll Wrapper -->
+                <div class="overflow-x-auto custom-scroll">
 
-                                @include('tasks.partials.subtask-rows', [
-                                    'tasks' => $task->childTasks,
-                                    'parentTaskId' => $task->id,
-                                    'depth' => 1,
-                                ])
-                            @empty
-                                <x-table-no-data col-span="9" message="No tasks found." sub-message="There are no tasks to display for the current filters." />
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <!-- Board Container -->
+                    <div class="flex gap-6 p-6 min-w-max h-[calc(100vh-220px)]">
+
+                        <!-- LOOP YOUR STATUSES HERE -->
+                        @foreach ($boardStatuses as $status)
+                            <div class="flex flex-col flex-shrink-0 w-80 border rounded-md border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-darkblack-500">
+
+                                <!-- Column Header -->
+                                <h5 class="uppercase mb-4 rounded-md px-3 py-2 text-white" style="background-color: {{ $status->color }};">
+                                    {{ $status->name }}
+                                    ({{ $tasksByStatus[$status->id]->count() ?? 0 }})
+                                </h5>
+
+                                <!-- Column Body -->
+                                <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full pr-1" data-status-id="{{ $status->id }}">
+
+                                    @foreach ($tasksByStatus[$status->id] ?? [] as $task)
+                                        @include('tasks.kanban._card', ['task' => $task])
+                                    @endforeach
+
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
                 </div>
             </div>
-
-            <x-pagination :paginator="$tasks" :per-page="$perPage" />
         </section>
 
         <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
@@ -102,7 +97,7 @@
                 <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
             </div>
         </div>
-        
+
         @can('task.create')
             @include('tasks.partials.create-modal')
         @endcan
@@ -137,7 +132,8 @@
 @push('scripts')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-subtasks.js')
-@can('task.create')
+    @can('task.create')
         @vite('resources/js/modules/task-list-create.js')
-@endcan
+    @endcan
+    @vite('resources/js/modules/tasks/kanban-board.js')
 @endpush
