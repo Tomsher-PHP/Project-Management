@@ -106,6 +106,30 @@ class User extends Authenticatable
         return $this->hasOne(UserDetail::class);
     }
 
+    public function reporter()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            UserDetail::class,
+            'user_id',      // Foreign key on UserDetail
+            'id',           // Foreign key on User (reporter)
+            'id',           // Local key on User
+            'reporter_id'   // Local key on UserDetail
+        );
+    }
+
+    public function manager()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            UserDetail::class,
+            'user_id',      // Foreign key on UserDetail
+            'id',           // Foreign key on User (reporter)
+            'id',           // Local key on User
+            'manager_id'    // Local key on UserDetail
+        );
+    }
+
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');

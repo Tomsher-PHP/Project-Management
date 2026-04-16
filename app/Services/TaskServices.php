@@ -532,14 +532,26 @@ class TaskServices
                     'sort_order' => $index
                 ]);
 
-                if ($task->id === $movedTask->id) {
+                if ($task->id === $movedTask->id && $previousStatusId !== $statusId) {
                     $this->recordStatusHistoryIfChanged(
                         $task,
                         $previousStatusId,
                         $statusId
                     );
+
+                    app(NotificationService::class)->notifyTaskStatusChanged(
+                        $task,
+                        $user,
+                        $this->getStatusName($previousStatusId),
+                        $this->getStatusName($statusId)
+                    );
                 }
             }
         });
+    }
+
+    private function getStatusName(int $statusId): string
+    {
+        return TaskStatus::find($statusId)?->name ?? 'Unknown';
     }
 }
