@@ -240,7 +240,7 @@ class ProjectTaskController extends Controller
     public function taskModal(Project $project, Task $task): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
-        abort_unless(auth()->user()->can('view', $task), Response::HTTP_FORBIDDEN);
+        abort_unless($this->canViewTaskModal($task), Response::HTTP_FORBIDDEN);
 
         $task->load([
             'projectModule:id,name',
@@ -271,7 +271,7 @@ class ProjectTaskController extends Controller
         TaskServices $taskService
     ): JsonResponse {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
-        abort_unless(auth()->user()->can('update', $task), Response::HTTP_FORBIDDEN);
+        abort_unless($this->canEditTaskModal($task), Response::HTTP_FORBIDDEN);
 
         $validated = $request->validated();
         $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
@@ -983,7 +983,7 @@ class ProjectTaskController extends Controller
             ->values();
 
         return [
-            'canEditTask' => auth()->user()->can('update', $task),
+            'canEditTask' => $task ? $this->canEditTaskModal($task) : false,
             'isLinearFlow' => $project->project_flow === 'linear',
             'taskStatuses' => TaskStatus::query()
                 ->active()
@@ -1017,6 +1017,29 @@ class ProjectTaskController extends Controller
             'taskModeOptions' => $taskModeOptions,
             'taskPriorityOptions' => $taskPriorityOptions,
         ];
+    }
+
+    private function canViewTaskModal(Task $task): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return $user->is_super_admin
+            || $user->can('task.view_all_tasks')
+            || $user->can('task.view')
+            || (int) ($task->current_assignee_id ?? 0) === (int) $user->id;
+    }
+
+    private function canEditTaskModal(Task $task): bool
+    {
+        $user = auth()->user();
+
+        return $user
+            && $this->canViewTaskModal($task)
+            && $user->can('task.edit');
     }
 
     // private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void

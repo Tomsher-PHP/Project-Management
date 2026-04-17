@@ -128,6 +128,7 @@
 @endsection
 
 @push('scripts')
+    @vite('resources/js/modules/projects/project-tasks.js')
     @can('task.create')
         @vite('resources/js/modules/task-list-create.js')
     @endcan

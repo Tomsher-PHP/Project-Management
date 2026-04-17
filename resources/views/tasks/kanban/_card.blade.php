@@ -1,4 +1,25 @@
-<div class="card cursor-pointer bg-white dark:bg-darkblack-600 rounded-md shadow-sm hover:shadow-md transition" data-task-id="{{ $task->id }}">
+@php
+    $authUser = auth()->user();
+    $canOpenTask = $task->project
+        && $authUser
+        && (
+            $authUser->is_super_admin
+            || $authUser->can('task.view_all_tasks')
+            || $authUser->can('task.view')
+            || (int) ($task->current_assignee_id ?? 0) === (int) $authUser->id
+        );
+@endphp
+
+<div
+    class="card {{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }} bg-white dark:bg-darkblack-600 rounded-md shadow-sm hover:shadow-md transition"
+    data-task-id="{{ $task->id }}"
+    @if ($canOpenTask)
+        data-project-task-detail-open
+        data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}"
+        data-project-task-group-key=""
+        title="Open task"
+    @endif
+>
     <div class="p-4 space-y-4">
         @php
             $isCompleted = $status->is_completed ?? false;
@@ -19,19 +40,19 @@
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <h5 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}">
-                    <a href="#" data-fc-type="modal" data-fc-target="task-detail-modal" class="block truncate">
+                    <span class="block truncate" title="{{ $task->name ?? $task->code ?? 'Untitled task' }}">
                         {{ $stringLimit($task->name ?? $task->code ?? 'Untitled task', 25, '...') }}
-                    </a>
+                    </span>
                 </h5>
 
                 <div class="mt-2 space-y-1 text-[11px] leading-snug">
                     @if ($task->project)
-                        <p class="truncate text-gray-500 dark:text-gray-400" title="{{ $task->project->name }}">
+                        <p class="truncate text-gray-500 dark:text-gray-400" title="Project: {{ $task->project->name }}">
                             {{ $stringLimit($task->project->name, 20, '...') }}
                         </p>
                     @endif
                     @if ($task->projectModule)
-                        <p class="truncate text-gray-500 dark:text-gray-400" title="{{ $task->projectModule->name }}">
+                        <p class="truncate text-gray-500 dark:text-gray-400" title="Module: {{ $task->projectModule->name }}">
                             {{ $stringLimit($task->projectModule->name, 20, '...') }}
                         </p>
                     @endif
