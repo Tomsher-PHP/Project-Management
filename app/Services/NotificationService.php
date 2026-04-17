@@ -94,7 +94,6 @@ class NotificationService
         $projectName = $task->project?->name ?? 'Project';
 
         $title = "Task Status Updated";
-        $message = "{$actor->name} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
         $url = url('tasks/' . $task->id . '/edit');
 
         User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $taskName, $projectName, $oldStatus, $newStatus, $title, $url) {
