@@ -32,7 +32,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DkhHYZ1o.css",
+    "file": "assets/app-DI2NqB7C.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -41,7 +41,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B8UXxYp1.js",
+    "file": "assets/app-aO_k5-p-.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -138,6 +138,12 @@
     "file": "assets/task-list-subtasks-zO9FwpyV.js",
     "name": "task-list-subtasks",
     "src": "resources/js/modules/task-list-subtasks.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/kanban-board.js": {
+    "file": "assets/kanban-board-BiMimLjJ.js",
+    "name": "kanban-board",
+    "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
   },
   "resources/js/modules/team.js": {
