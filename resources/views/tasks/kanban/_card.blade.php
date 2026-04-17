@@ -63,7 +63,7 @@
         </div>
 
         <div class="flex items-start justify-between gap-3">
-            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }} @if($isDueOrPast) border border-b-alertsErrorBase p-1 @endif">
+            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }} @if($isDueOrPast) border border-b-alertsErrorBase p-1 @endif" title="Due date">
                 {{ $dueDate?->format($globalDateFormat) }}
             </small>
         </div>
