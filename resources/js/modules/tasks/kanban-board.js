@@ -39,7 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
             })
         })
             .then(handleFetchError)
-            .then(() => toggleLoading(evt.item, false))
+            .then((response) => {
+                replaceMovedCard(evt.item, response.html);
+            })
             .catch(err => {
                 toggleLoading(evt.item, false);
                 rollback(evt);
@@ -79,6 +81,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (evt.from) {
             evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
         }
+    };
+
+    const replaceMovedCard = (item, html) => {
+        if (!html) {
+            toggleLoading(item, false);
+            return;
+        }
+
+        const template = document.createElement("template");
+        template.innerHTML = html.trim();
+
+        const nextItem = template.content.firstElementChild;
+
+        if (!nextItem) {
+            toggleLoading(item, false);
+            return;
+        }
+
+        item.replaceWith(nextItem);
     };
 
     const handleFetchError = (res) => {

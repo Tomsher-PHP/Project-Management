@@ -119,6 +119,29 @@ class TaskController extends Controller
         ], $filters, $formData));
     }
 
+    // Kanban board ajax loading
+    public function kanbanMode(Request $request, TaskServices $taskServices)
+    {
+        $selectedFlowType = $request->input('flow', 'agile');
+        $user = $request->user();
+
+        $boardStatuses = TaskStatus::active()
+            ->forFlow($selectedFlowType)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
+
+        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
+
+        $priorities = config('project_constants.task_priorities', []);
+
+        if ($request->ajax()) {
+            return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
+        }
+
+        return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
+    }
+
     // Store newly created task with minimal required fields, used for quick create from various places in the app
     public function store(TaskQuickStoreRequest $request, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
     {
@@ -811,34 +834,27 @@ class TaskController extends Controller
         }
     }
 
-    public function kanbanMode(Request $request, TaskServices $taskServices)
-    {
-        $selectedFlowType = $request->input('flow', 'agile');
-        $user = $request->user();
-
-        $boardStatuses = TaskStatus::active()
-            ->forFlow($selectedFlowType)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
-
-        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
-
-        $priorities = config('project_constants.task_priorities', []);
-
-        if ($request->ajax()) {
-            return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
-        }
-
-        return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
-    }
-
     public function transitionStatus(Request $request, TaskServices $taskServices): JsonResponse
     {
         try {
-            $taskServices->transitionStatus(auth()->user(), $request->moved_task_id, $request->task_ids, $request->status_id);
+            $statusId = (int) $request->status_id;
+            $task = $taskServices->transitionStatus(
+                auth()->user(),
+                $request->moved_task_id,
+                $request->task_ids,
+                $statusId
+            );
 
-            return response()->json(['success' => true]);
+            $status = TaskStatus::query()->findOrFail($statusId, ['id', 'name', 'color', 'is_completed']);
+
+            return response()->json([
+                'success' => true,
+                'html' => view('tasks.kanban._card', [
+                    'task' => $task,
+                    'status' => $status,
+                    'priorities' => config('project_constants.task_priorities', []),
+                ])->render(),
+            ]);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
 
             return response()->json([

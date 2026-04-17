@@ -1,6 +1,7 @@
 <div class="card cursor-pointer bg-white dark:bg-darkblack-600 rounded-md shadow-sm hover:shadow-md transition" data-task-id="{{ $task->id }}">
     <div class="p-4 space-y-4">
         @php
+            $isCompleted = $status->is_completed ?? false;
             $priority = $task->priority ?? 'medium';
             $priorityConfig = $priorities[$priority] ?? [];
             $priorityBgClass = $priorityConfig['bg_class'] ?? 'bg-gray-100';
@@ -9,7 +10,7 @@
 
             $estimatedTime = $task->estimatedTimeFormatted;
             $dueDate = $task->due_date;
-            $isDueOrPast = $dueDate ? $dueDate->lessThanOrEqualTo(today()) : false;
+            $isDueOrPast = $dueDate && !$isCompleted ? $dueDate->lessThanOrEqualTo(today()) : false;
             $dueDateTextClass = $isDueOrPast ? 'text-error-300 dark:text-error-200' : 'text-gray-500 dark:text-gray-400';
 
             $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
@@ -17,7 +18,7 @@
 
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-                <h5 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug">
+                <h5 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}">
                     <a href="#" data-fc-type="modal" data-fc-target="task-detail-modal" class="block truncate">
                         {{ $stringLimit($task->name ?? $task->code ?? 'Untitled task', 25, '...') }}
                     </a>
@@ -41,7 +42,7 @@
         </div>
 
         <div class="flex items-start justify-between gap-3">
-            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }} @if($isDueOrPast) border border-b-alertsErrorBase p-1 @endif"">
+            <small class="text-[11px] uppercase tracking-wide {{ $dueDateTextClass }} @if($isDueOrPast) border border-b-alertsErrorBase p-1 @endif">
                 {{ $dueDate?->format($globalDateFormat) }}
             </small>
         </div>
@@ -54,8 +55,8 @@
                 <span>{{ $estimatedTime }}</span>
             </div>
 
-            @if ($task->currentAssignee)
-                <div class="flex items-center gap-2" title="Assgnee: {{ $task->currentAssignee->name }}">
+            <div class="flex items-center gap-2" title="{{ $task->currentAssignee ? 'Assignee: ' . $task->currentAssignee->name : 'Not Assigned' }}">
+                @if ($task->currentAssignee)
                     @if (! empty($task->currentAssignee->profileImageUrl))
                         <img src="{{ $task->currentAssignee->profileImageUrl }}" alt="{{ $task->currentAssignee->name }}" class="h-8 w-8 rounded-full object-cover" />
                     @else
@@ -63,8 +64,12 @@
                             {{ strtoupper(substr($task->currentAssignee->name, 0, 1)) }}
                         </div>
                     @endif
-                </div>
-            @endif
+                @else
+                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold uppercase text-gray-600 dark:bg-darkblack-500 dark:text-gray-300">
+                        NA
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>

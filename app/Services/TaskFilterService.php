@@ -91,7 +91,7 @@ class TaskFilterService
     {
         return TaskStatus::active()
             ->orderBy('sort_order')
-            ->get(['id', 'name', 'flow_type', 'color']);
+            ->get(['id', 'name', 'flow_type', 'color', 'is_default', 'is_completed']);
     }
 
     private function getAssignees()

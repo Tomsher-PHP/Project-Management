@@ -498,11 +498,13 @@ class TaskServices
             ->sum('duration_seconds');
     }
 
-    public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): void
+    public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): Task
     {
-        DB::transaction(function () use ($user, $movedTaskId, $taskIds, $statusId) {
+        return DB::transaction(function () use ($user, $movedTaskId, $taskIds, $statusId) {
 
-            $movedTask = Task::find($movedTaskId);
+            $movedTask = Task::query()
+                ->accessibleBy($user)
+                ->find($movedTaskId);
 
             if (! $movedTask) {
                 throw new \Exception('Task not found');
@@ -518,7 +520,11 @@ class TaskServices
             }
 
             // Bulk fetch
-            $tasks = Task::whereIn('id', $taskIds)->get()->keyBy('id');
+            $tasks = Task::query()
+                ->accessibleBy($user)
+                ->whereIn('id', $taskIds)
+                ->get()
+                ->keyBy('id');
 
             foreach ($taskIds as $index => $taskId) {
 
@@ -547,6 +553,10 @@ class TaskServices
                     );
                 }
             }
+
+            return Task::query()
+                ->with($this->relations())
+                ->findOrFail($movedTaskId);
         });
     }
 
