@@ -37,6 +37,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class TaskController extends Controller
 {
+    private const KANBAN_STATUS_PAGE_SIZE = 5;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -109,7 +111,13 @@ class TaskController extends Controller
                 fn($collection) => $collection->where('flow_type', $selectedFlowType)
             )->values();
 
-        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
+        $tasksByStatus = $taskServices->getKanban(
+            $user,
+            $request->all(),
+            $selectedFlowType,
+            $boardStatuses,
+            self::KANBAN_STATUS_PAGE_SIZE
+        );
 
         return view('tasks.kanban.kanban-view', array_merge([
             'tasksByStatus' => $tasksByStatus,
@@ -131,13 +139,57 @@ class TaskController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
 
-        $tasksByStatus = $taskServices->getKanban($user, $request->all(), $selectedFlowType, $boardStatuses);
-
         $priorities = config('project_constants.task_priorities', []);
 
         if ($request->ajax()) {
+            if ($request->filled('status_id')) {
+                $statusId = (int) $request->input('status_id');
+                $page = max((int) $request->input('page', 1), 1);
+
+                $status = $boardStatuses->firstWhere('id', $statusId);
+                abort_unless($status, Response::HTTP_NOT_FOUND);
+
+                $column = $taskServices->getKanbanStatusData(
+                    $user,
+                    $request->all(),
+                    $selectedFlowType,
+                    $statusId,
+                    $page,
+                    self::KANBAN_STATUS_PAGE_SIZE
+                );
+
+                return response()->json([
+                    'status' => true,
+                    'html' => view('tasks.kanban._cards', [
+                        'tasks' => $column['tasks'],
+                        'status' => $status,
+                        'priorities' => $priorities,
+                    ])->render(),
+                    'hasMore' => $column['hasMore'],
+                    'nextPage' => $column['nextPage'],
+                    'taskIds' => $column['taskIds'],
+                    'total' => $column['total'],
+                ], Response::HTTP_OK);
+            }
+
+            $tasksByStatus = $taskServices->getKanban(
+                $user,
+                $request->all(),
+                $selectedFlowType,
+                $boardStatuses,
+                self::KANBAN_STATUS_PAGE_SIZE
+            );
+
             return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
         }
+
+        $tasksByStatus = $taskServices->getKanban(
+            $user,
+            $request->all(),
+            $selectedFlowType,
+            $boardStatuses,
+            self::KANBAN_STATUS_PAGE_SIZE
+        );
 
         return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
     }

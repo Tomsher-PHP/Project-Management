@@ -43,27 +43,56 @@ class TaskServices
     }
 
     // Get kanban task groups by status for the current user
-    public function getKanban(User $user, array $filters, string $flowType, $statuses)
+    public function getKanban(User $user, array $filters, string $flowType, $statuses, int $perPage = 5): array
     {
-        $query = $this->queryService->baseQuery($user);
+        return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage) {
+            return [
+                $status->id => $this->getKanbanStatusData($user, $filters, $flowType, (int) $status->id, 1, $perPage),
+            ];
+        })->all();
+    }
 
-        $tasks = $this->filterService
-            ->apply($query, $filters)
-            ->whereHas('project', fn($q) => $q->where('project_flow', $flowType))
+    public function getKanbanStatusData(
+        User $user,
+        array $filters,
+        string $flowType,
+        int $statusId,
+        int $page = 1,
+        int $perPage = 5
+    ): array {
+        $page = max($page, 1);
+        $perPage = max($perPage, 1);
+
+        $taskIds = $this->buildKanbanBaseQuery($user, $filters, $flowType)
+            ->where('status_id', $statusId)
+            ->orderBy('sort_order')
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->values();
+
+        $total = $taskIds->count();
+        $offset = ($page - 1) * $perPage;
+        $pageTaskIds = $taskIds->slice($offset, $perPage)->values();
+
+        $tasks = $pageTaskIds->isEmpty()
+            ? collect()
+            : $this->buildKanbanBaseQuery($user, $filters, $flowType)
+            ->whereIn('id', $pageTaskIds->all())
             ->with($this->relations())
-            // ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
             ->orderBy('sort_order')
             ->get();
 
-        // Group tasks
-        $tasksByStatus = $tasks->groupBy('status_id');
+        $hasMore = ($offset + $tasks->count()) < $total;
 
-        // Ensure all statuses exist (even empty)
-        return collect($statuses)->mapWithKeys(function ($status) use ($tasksByStatus) {
-            return [
-                $status->id => $tasksByStatus[$status->id] ?? collect()
-            ];
-        });
+        return [
+            'tasks' => $tasks,
+            'taskIds' => $taskIds->all(),
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'hasMore' => $hasMore,
+            'nextPage' => $hasMore ? ($page + 1) : null,
+        ];
     }
 
     // Define related models to eager load for tasks
@@ -78,6 +107,13 @@ class TaskServices
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+    }
+
+    private function buildKanbanBaseQuery(User $user, array $filters, string $flowType)
+    {
+        return $this->filterService
+            ->apply($this->queryService->baseQuery($user), $filters)
+            ->whereHas('project', fn($query) => $query->where('project_flow', $flowType));
     }
 
     // Create a simple task with default placement and tags
