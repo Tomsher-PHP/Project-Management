@@ -121,6 +121,10 @@ class TaskServices
     {
         return DB::transaction(function () use ($project, $validated) {
             $defaults = $this->resolveDefaults($project);
+            $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
+            $assigneeId = $requestType === 'self'
+                ? auth()->id()
+                : (! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null);
             $placement = $this->finalizePlacement(
                 $project,
                 ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
@@ -134,9 +138,18 @@ class TaskServices
                 placement: $placement
             );
 
+            $payload['current_assignee_id'] = $assigneeId;
+            $payload['request_type'] = $requestType;
+            $payload['request_status'] = $requestType === 'self' ? 'pending' : 'approved';
+            $payload['approved_by'] = $requestType === 'assigned' ? auth()->id() : null;
+            $payload['approved_at'] = $requestType === 'assigned' ? now() : null;
+            $payload['rejected_by'] = null;
+            $payload['rejected_at'] = null;
+            $payload['rejection_reason'] = null;
+
             $task = $project->tasks()->create($payload);
 
-            if (!empty($task->current_assignee_id)) {
+            if (! empty($task->current_assignee_id)) {
                 $this->syncTaskAssignmentState($task, $task->current_assignee_id);
             }
 

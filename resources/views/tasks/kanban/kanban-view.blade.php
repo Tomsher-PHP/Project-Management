@@ -36,6 +36,13 @@
                 </button>
             @endcan
 
+            <button type="button" class="inline-flex items-center rounded-md border border-bgray-200 bg-white px-4 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300" data-task-create-open data-task-create-request-type="self">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Request Task</span>
+            </button>
+
             <x-filters.button />
 
             <div id="flow-switcher" class="inline-flex rounded-lg border overflow-hidden sm:ml-auto">
@@ -96,9 +103,7 @@
             </div>
         </div>
 
-        @can('task.create')
-            @include('tasks.partials.create-modal')
-        @endcan
+        @include('tasks.partials.create-modal')
     </main>
 
     <x-filters.drawer>
@@ -120,17 +125,13 @@
         ])
     </script>
 
-    @can('task.create')
-        <script id="task-create-dependencies" type="application/json">
-            @json($taskCreateDependencies)
-        </script>
-    @endcan
+    <script id="task-create-dependencies" type="application/json">
+        @json($taskCreateDependencies)
+    </script>
 @endsection
 
 @push('scripts')
     @vite('resources/js/modules/projects/project-tasks.js')
-    @can('task.create')
-        @vite('resources/js/modules/task-list-create.js')
-    @endcan
+    @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
 @endpush

@@ -6,7 +6,9 @@
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
+                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-task-create-title data-default-title="Add Task" data-request-title="Request Task">
+                            Add Task
+                        </h3>
                     </div>
 
                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-create-close>
@@ -14,7 +16,9 @@
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-advanced="false">
+                <form class="space-y-4 overflow-y-auto px-5 py-5" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-advanced="false" data-self-assignee-id="{{ auth()->id() }}">
+                    <input type="hidden" name="request_type" value="assigned" data-task-create-request-type>
+
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Project <x-red-star /></label>
@@ -65,7 +69,7 @@
                             <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="name"></p>
                         </div>
 
-                        <div>
+                        <div data-task-create-assignee-field>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Assignee</label>
                             <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
@@ -114,7 +118,7 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="task_mode_id"></p>
                             </div>
-                            
+
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Priority</label>
                                 <select name="priority" class="tom-select-no-search w-full">

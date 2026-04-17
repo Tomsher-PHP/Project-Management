@@ -285,7 +285,7 @@ Route::middleware(['auth'])->group(function () {
     // End Project Routes
 
     // Task Routes
-    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->middleware(['permission.type:task.create'])->name('tasks.quick-create-parent-options');
+    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
     Route::prefix('tasks/{task}')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
@@ -309,6 +309,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
+    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');

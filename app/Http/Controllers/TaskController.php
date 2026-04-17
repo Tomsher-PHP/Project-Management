@@ -198,21 +198,29 @@ class TaskController extends Controller
     public function store(TaskQuickStoreRequest $request, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
     {
         $validated = $request->validated();
+        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
 
         $project = Project::query()
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
 
-        $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-
         $task = $taskServices->createQuickTask($project, $validated);
 
-        $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
+        if ($task->isApprovedRequest()) {
+            $notificationService->sendTaskAssignmentIfNeeded(
+                $task,
+                $task->current_assignee_id ? (int) $task->current_assignee_id : null
+            );
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Task added successfully.',
+            'message' => $requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.',
             'task_id' => $task->id,
+            'request_type' => $task->request_type,
+            'request_status' => $task->request_status,
         ], Response::HTTP_OK);
     }
 

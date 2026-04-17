@@ -9,17 +9,20 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $requestTypes = config('project_constants.task_request_types', []);
+        $requestStatuses = config('project_constants.request_statuses', []);
+
         if (! Schema::hasTable('tasks')) {
             return;
         }
 
-        Schema::table('tasks', function (Blueprint $table) {
+        Schema::table('tasks', function (Blueprint $table) use ($requestTypes, $requestStatuses) {
             if (! Schema::hasColumn('tasks', 'request_type')) {
-                $table->enum('request_type', ['self', 'assigned'])->default('assigned')->after('is_billable');
+                $table->enum('request_type', $requestTypes)->default('assigned')->after('is_billable');
             }
 
             if (! Schema::hasColumn('tasks', 'request_status')) {
-                $table->enum('request_status', ['pending', 'approved', 'rejected'])->default('approved')->after('request_type');
+                $table->enum('request_status', $requestStatuses)->default('approved')->after('request_type');
             }
 
             if (! Schema::hasColumn('tasks', 'approved_by')) {
