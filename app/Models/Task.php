@@ -38,6 +38,13 @@ class Task extends Model
         'derived_time_seconds',
         'actual_time_seconds',
         'is_billable',
+        'request_type',
+        'request_status',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
         'sort_order',
         'added_by',
         'updated_by',
@@ -76,6 +83,10 @@ class Task extends Model
         'derived_time_seconds' => 'integer',
         'actual_time_seconds' => 'integer',
         'is_billable' => 'boolean',
+        'approved_by' => 'integer',
+        'approved_at' => 'datetime',
+        'rejected_by' => 'integer',
+        'rejected_at' => 'datetime',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -230,6 +241,21 @@ class Task extends Model
     public function currentAssignmentLog()
     {
         return $this->hasOne(TaskAssignmentLog::class)->where('is_current', true);
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->request_status === 'pending';
+    }
+
+    public function isApprovedRequest(): bool
+    {
+        return $this->request_status === 'approved';
+    }
+
+    public function isRejectedRequest(): bool
+    {
+        return $this->request_status === 'rejected';
     }
 
     protected function applyFilterSearchExtensions(Builder $query, string $search, string $condition): void
