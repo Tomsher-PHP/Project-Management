@@ -233,6 +233,16 @@ class Task extends Model
         return $this->belongsTo(User::class, 'current_assignee_id');
     }
 
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
     public function assignmentLogs()
     {
         return $this->hasMany(TaskAssignmentLog::class)->latest('assigned_from');

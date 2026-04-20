@@ -89,28 +89,31 @@
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)
-                                            <div class="flex min-w-[320px] flex-wrap items-center gap-2">
-                                                <form method="POST" action="{{ route('tasks.requests.action', [$task, 'approve']) }}">
+                                            <div class="flex min-w-[180px] flex-wrap items-center gap-2">
+                                                <form method="POST" action="{{ route('tasks.requests.action', [$task, 'approve']) }}" data-task-request-action-form data-confirm-title="Approve task request?" data-confirm-text="This will approve the requested user's work logs for this task." data-confirm-text-button="Yes, approve">
                                                     @csrf
                                                     <button type="submit" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
                                                         Approve
                                                     </button>
                                                 </form>
 
-                                                <form method="POST" action="{{ route('tasks.requests.action', [$task, 'reject']) }}" class="flex items-center gap-2">
-                                                    @csrf
-                                                    <input type="text" name="reason" class="w-44 rounded-lg border border-bgray-200 px-3 py-2 text-xs focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Reject reason" required>
-                                                    <button type="submit" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400">
-                                                        Reject
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-task-request-reject-open data-action="{{ route('tasks.requests.action', [$task, 'reject']) }}" data-task-name="{{ $task->name }}">
+                                                    Reject
+                                                </button>
                                             </div>
                                         @elseif ($task->request_status === 'pending')
                                             <span class="text-xs text-bgray-500 dark:text-bgray-300">Waiting for approval</span>
                                         @elseif ($task->request_status === 'rejected')
-                                            <span class="text-xs text-bgray-500 dark:text-bgray-300" title="{{ $task->rejection_reason }}">{{ \Illuminate\Support\Str::limit($task->rejection_reason ?? '--', 60) }}</span>
+                                            <div class="min-w-[220px] text-xs text-bgray-500 dark:text-bgray-300">
+                                                <p class="font-semibold text-bgray-700 dark:text-bgray-100">Rejected by {{ $task->rejectedBy?->name ?? '--' }}</p>
+                                                <p>{{ $task->rejected_at?->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                                <p title="{{ $task->rejection_reason }}">Description: {{ \Illuminate\Support\Str::limit($task->rejection_reason ?? '--', 25) }}</p>
+                                            </div>
                                         @else
-                                            <span class="text-xs text-bgray-500 dark:text-bgray-300">No action needed</span>
+                                            <div class="min-w-[220px] text-xs text-bgray-500 dark:text-bgray-300">
+                                                <p class="font-semibold text-bgray-700 dark:text-bgray-100">Approved by {{ $task->approvedBy?->name ?? '--' }}</p>
+                                                <p>{{ $task->approved_at?->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>
@@ -131,5 +134,100 @@
             <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
             <x-filters.multi-select name="current_assignee_id" label="User" :options="$users" />
         </x-filters.drawer>
+
+        <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-task-request-reject-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-request-reject-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                        <div>
+                            <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Reject Task Request</h3>
+                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-task-request-reject-task-name></p>
+                        </div>
+
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-request-reject-close>
+                            ✕
+                        </button>
+                    </div>
+
+                    <form method="POST" action="#" class="space-y-4 px-5 py-5" data-task-request-reject-form>
+                        @csrf
+
+                        <div>
+                            <label for="task-request-rejection-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                                Description <x-red-star />
+                            </label>
+                            <textarea id="task-request-rejection-reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add rejection description"></textarea>
+                        </div>
+
+                        <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200" data-task-request-reject-close>
+                                Cancel
+                            </button>
+                            <button type="submit" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400">
+                                Reject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </main>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rejectModal = document.querySelector('[data-task-request-reject-modal]');
+            const rejectForm = document.querySelector('[data-task-request-reject-form]');
+            const rejectReason = document.getElementById('task-request-rejection-reason');
+            const rejectTaskName = document.querySelector('[data-task-request-reject-task-name]');
+
+            const openRejectModal = (button) => {
+                if (!rejectModal || !rejectForm) {
+                    return;
+                }
+
+                rejectForm.action = button.dataset.action || '#';
+                rejectForm.reset();
+
+                if (rejectTaskName) {
+                    rejectTaskName.textContent = button.dataset.taskName ? `Task: ${button.dataset.taskName}` : '';
+                }
+
+                rejectModal.classList.remove('hidden');
+                rejectReason?.focus();
+            };
+
+            const closeRejectModal = () => {
+                rejectModal?.classList.add('hidden');
+            };
+
+            document.querySelectorAll('[data-task-request-reject-open]').forEach((button) => {
+                button.addEventListener('click', () => openRejectModal(button));
+            });
+
+            document.querySelectorAll('[data-task-request-reject-close]').forEach((button) => {
+                button.addEventListener('click', closeRejectModal);
+            });
+
+            document.querySelectorAll('[data-task-request-action-form]').forEach((form) => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const result = await Alert.confirm({
+                        title: form.dataset.confirmTitle || 'Are you sure?',
+                        text: form.dataset.confirmText || 'Please confirm this action.',
+                        icon: form.dataset.confirmIcon || 'warning',
+                        confirmText: form.dataset.confirmTextButton || 'Yes',
+                    });
+
+                    if (result?.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

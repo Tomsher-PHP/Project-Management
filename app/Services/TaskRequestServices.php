@@ -25,6 +25,8 @@ class TaskRequestServices
                 'status:id,name,color',
                 'taskType:id,name,code,color',
                 'taskMode:id,name,code,color',
+                'approvedBy:id,name',
+                'rejectedBy:id,name',
             ])
             ->withExists([
                 'currentAssignee as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
