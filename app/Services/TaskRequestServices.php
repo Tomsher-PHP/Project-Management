@@ -14,7 +14,7 @@ class TaskRequestServices
 {
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending'): LengthAwarePaginator
     {
-        return $this->baseRequestQuery($user)
+        return $this->visibleRequestQuery($user)
             ->where('request_status', $status)
             ->with([
                 'project:id,name,project_code',
@@ -24,6 +24,9 @@ class TaskRequestServices
                 'status:id,name,color',
                 'taskType:id,name,code,color',
                 'taskMode:id,name,code,color',
+            ])
+            ->withExists([
+                'currentAssignee as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
             ])
             ->orderByRaw("CASE request_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END")
             ->latest()
@@ -48,28 +51,46 @@ class TaskRequestServices
 
     private function canHandleRequest(User $user, Task $task): bool
     {
-        return $this->baseRequestQuery($user)
+        return $this->accountableRequestQuery($user)
             ->whereKey($task->id)
             ->exists();
     }
 
-    private function baseRequestQuery(User $user): Builder
+    private function visibleRequestQuery(User $user): Builder
     {
         return Task::query()
             ->where('request_type', 'self')
             ->where(function (Builder $query) use ($user) {
                 $query
-                    ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
-                        $detailsQuery
-                            ->where('reporter_id', $user->id)
-                            ->orWhere('manager_id', $user->id);
-                    })
-                    ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                        $teamLeaderQuery->whereKey($user->id);
-                    })
-                    ->orWhereHas('projectModule', function (Builder $moduleQuery) use ($user) {
-                        $moduleQuery->where('owner_id', $user->id);
+                    ->where('current_assignee_id', $user->id)
+                    ->orWhere(function (Builder $accountableQuery) use ($user) {
+                        $this->applyAccountableUserScope($accountableQuery, $user);
                     });
+            });
+    }
+
+    private function accountableRequestQuery(User $user): Builder
+    {
+        return Task::query()
+            ->where('request_type', 'self')
+            ->where(function (Builder $query) use ($user) {
+                $this->applyAccountableUserScope($query, $user);
+            });
+    }
+
+    private function applyAccountableUserScope(Builder $query, User $user): void
+    {
+        $query
+            ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
+                $detailsQuery
+                    ->where('reporter_id', $user->id)
+                    ->orWhere('manager_id', $user->id);
+            })
+            ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
+                $teamLeaderQuery->whereKey($user->id);
+            })
+            ->orWhereHas('projectModule', function (Builder $moduleQuery) use ($user) {
+                $moduleQuery->where('owner_id', $user->id);
             });
     }
 

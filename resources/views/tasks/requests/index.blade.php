@@ -85,7 +85,7 @@
                                         <span class="text-sm text-bgray-600 dark:text-bgray-200">{{ $task->due_date?->format($globalDateFormat) ?? '--' }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        @if ($task->request_status === 'pending')
+                                        @if ($task->request_status === 'pending' && ! $task->is_self_requested)
                                             <div class="flex min-w-[320px] flex-wrap items-center gap-2">
                                                 <form method="POST" action="{{ route('tasks.requests.action', [$task, 'approve']) }}">
                                                     @csrf
@@ -102,6 +102,8 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                        @elseif ($task->request_status === 'pending')
+                                            <span class="text-xs text-bgray-500 dark:text-bgray-300">Waiting for approval</span>
                                         @elseif ($task->request_status === 'rejected')
                                             <span class="text-xs text-bgray-500 dark:text-bgray-300" title="{{ $task->rejection_reason }}">{{ \Illuminate\Support\Str::limit($task->rejection_reason ?? '--', 60) }}</span>
                                         @else
