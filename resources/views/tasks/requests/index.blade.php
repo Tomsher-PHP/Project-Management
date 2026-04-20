@@ -65,19 +65,19 @@
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[180px]">
                                             @if ($task->project && auth()->user()?->can('project.view'))
-                                                <a href="{{ route('projects.edit', $task->project_id) }}" class="text-sm font-medium text-bgray-700 transition hover:text-success-300 dark:text-bgray-100 dark:hover:text-success-300">
+                                                <a href="{{ route('projects.edit', $task->project_id) }}" class="text-sm font-medium text-bgray-700 transition hover:text-success-300 dark:text-bgray-300 dark:hover:text-success-300">
                                                     {{ $task->project->name }}
                                                 </a>
                                             @elseif ($task->project)
-                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">{{ $task->project->name }}</p>
+                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $task->project->name }}</p>
                                             @else
-                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">--</p>
+                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">--</p>
                                             @endif
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->projectModule?->name ?? 'No module' }}</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-100">{{ $task->currentAssignee?->name ?? '--' }}</span>
+                                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $task->currentAssignee?->name ?? '--' }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $task->request_status === 'pending' ? 'bg-warning-50 text-warning-300' : ($task->request_status === 'approved' ? 'bg-success-50 text-success-300' : 'bg-error-50 text-error-300') }}">
@@ -102,17 +102,17 @@
                                                 </button>
                                             </div>
                                         @elseif ($task->request_status === 'pending')
-                                            <span class="text-xs text-bgray-500 dark:text-bgray-300">Waiting for approval</span>
+                                            <span class="text-xs text-bgray-700 dark:text-bgray-300">Waiting for approval</span>
                                         @elseif ($task->request_status === 'rejected')
-                                            <div class="min-w-[220px] text-xs text-bgray-500 dark:text-bgray-300">
-                                                <p class="font-semibold text-bgray-700 dark:text-bgray-100">Rejected by {{ $task->rejectedBy?->name ?? '--' }}</p>
-                                                <p>{{ $task->rejected_at?->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
-                                                <p title="{{ $task->rejection_reason }}">Description: {{ \Illuminate\Support\Str::limit($task->rejection_reason ?? '--', 25) }}</p>
+                                            <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
+                                                <p class="font-semibold text-bgray-700 dark:text-white">Rejected by {{ $task->rejectedBy?->name ?? '--' }}</p>
+                                                <p>{{ $task->rejected_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                                <p title="{{ $task->rejection_reason }}">{{ \Illuminate\Support\Str::limit($task->rejection_reason ?? '--', 45) }}</p>
                                             </div>
                                         @else
-                                            <div class="min-w-[220px] text-xs text-bgray-500 dark:text-bgray-300">
-                                                <p class="font-semibold text-bgray-700 dark:text-bgray-100">Approved by {{ $task->approvedBy?->name ?? '--' }}</p>
-                                                <p>{{ $task->approved_at?->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                            <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
+                                                <p class="font-semibold text-bgray-700 dark:text-white">Approved by {{ $task->approvedBy?->name ?? '--' }}</p>
+                                                <p>{{ $task->approved_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
                                             </div>
                                         @endif
                                     </td>
