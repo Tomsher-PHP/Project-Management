@@ -418,8 +418,13 @@ class Task extends Model
 
         return $query->where(function ($taskQuery) use ($user) {
             $taskQuery
-                ->where('added_by', $user->id)
-                ->orWhere('current_assignee_id', $user->id);
+                ->where('current_assignee_id', $user->id)
+                ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectModule', function ($moduleQuery) use ($user) {
+                    $moduleQuery->where('owner_id', $user->id);
+                });
         });
     }
 
@@ -467,6 +472,30 @@ class Task extends Model
         $minutes = floor(($totalSeconds % 3600) / 60);
 
         return sprintf('%02dh : %02dm', $hours, $minutes);
+    }
+
+    // Get all related users for notifications (assignee, reporter, manager, project team leader, module owner)
+    public function getRelatedUsers()
+    {
+        $this->loadMissing([
+            'addedBy',
+            'currentAssignee.reporter',
+            'currentAssignee.manager',
+            'project.teamLeader',
+            'projectModule.owner',
+        ]);
+
+        return collect([
+            $this->addedBy,
+            $this->currentAssignee,
+            $this->currentAssignee?->reporter,
+            $this->currentAssignee?->manager,
+            $this->project?->teamLeader,
+            $this->projectModule?->owner,
+        ])
+            ->filter()
+            ->unique('id')
+            ->values();
     }
 
     /*----------------Activity Log Customization----------------*/

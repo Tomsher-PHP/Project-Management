@@ -257,6 +257,21 @@ class Project extends Model
             ->whereNotNull('removed_at');
     }
 
+    public function teamLeader()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ProjectMember::class,
+            'project_id',
+            'id',
+            'id',
+            'user_id'
+        )
+            ->where('project_members.project_role', 'team_leader')
+            ->where('project_members.is_active', true)
+            ->whereNull('project_members.removed_at');
+    }
+
     /*----------------Activity Log Customization----------------*/
 
     // Never show these fields in activity log details.

@@ -211,6 +211,8 @@ class TaskController extends Controller
                 $task,
                 $task->current_assignee_id ? (int) $task->current_assignee_id : null
             );
+        } else if ($requestType === 'self') {
+            $notificationService->notifyTaskRequestCreated($task);
         }
 
         return response()->json([

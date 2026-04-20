@@ -79,16 +79,13 @@ class NotificationService
     // Task status change notification to assignee, reporter, manager and super admins
     public function notifyTaskStatusChanged(Task $task, User $actor, string $oldStatus, string $newStatus): void
     {
-        $userIds = collect([
-            $task->current_assignee_id,
-            $task->currentAssignee?->reporter?->id,
-            $task->currentAssignee?->manager?->id,
-            $task->projectModule?->owner_id,
-        ])->filter()->unique();
-
-        // add super admins
-        $superAdmins = User::where('is_super_admin', 1)->pluck('id');
-        $userIds = $userIds->merge($superAdmins)->unique()->values();
+        $userIds = $task->getRelatedUsers()
+            ->pluck('id')
+            ->filter()
+            ->reject(fn($userId) => (int) $userId === (int) $task->current_assignee_id)
+            ->unique()
+            ->values()
+            ->all();
 
         $taskName = Str::limit($task->name ?? 'Task', 50, '...');
         $projectName = $task->project?->name ?? 'Project';
@@ -97,15 +94,43 @@ class NotificationService
         $url = url('tasks/' . $task->id . '/edit');
 
         User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $taskName, $projectName, $oldStatus, $newStatus, $title, $url) {
-
             foreach ($users as $user) {
-
                 $actorLabel = $user->id === $actor->id ? 'You' : $actor->name;
-
                 $message = "{$actorLabel} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
-
                 $this->send($user->id, $title, $message, $url);
             }
         });
+    }
+
+    // Notify related users when a task request is created
+    public function notifyTaskRequestCreated(Task $task): void
+    {
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $userIds = $task->getRelatedUsers()
+            ->pluck('id')
+            ->filter()
+            ->reject(fn($userId) => (int) $userId === (int) $task->current_assignee_id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $requesterName = $task->currentAssignee?->name ?? 'A team member';
+        $projectName = $task->project?->name ?? 'Project';
+
+        $this->sendToMany(
+            $userIds,
+            'Task Request Created',
+            "{$requesterName} requested task '{$taskName}' in '{$projectName}'.",
+            route('tasks.edit', $task)
+        );
     }
 }
