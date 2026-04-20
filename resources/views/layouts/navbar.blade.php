@@ -139,7 +139,7 @@
                                         <div class="noti-item">
                                             <p class="mb-1 text-sm font-medium text-bgray-600 dark:text-bgray-50">
                                                 <strong class="text-bgray-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</strong>
-                                                {!! $notification->data['message'] ?? '' !!}
+                                                {{ $notification->data['message'] ?? '' }}
                                             </p>
                                             <span class="text-xs font-medium text-bgray-500">{{ $notification->created_at->diffForHumans() }}</span>
                                         </div>

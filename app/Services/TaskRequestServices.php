@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRequestServices
 {
+    public function __construct(private readonly NotificationService $notificationService)
+    {
+    }
+
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
         $query = $this->visibleRequestQuery($user)
@@ -69,6 +73,37 @@ class TaskRequestServices
 
             $this->reject($user, $task, (string) $reason);
         });
+    }
+
+    public function handleBulkAction(User $user, array $taskIds, string $action, ?string $reason = null): int
+    {
+        $taskIds = collect($taskIds)
+            ->map(fn($taskId) => (int) $taskId)
+            ->unique()
+            ->values();
+
+        abort_if($taskIds->isEmpty(), Response::HTTP_UNPROCESSABLE_ENTITY, 'Please select at least one task request.');
+
+        $tasks = $this->accountableRequestQuery($user)
+            ->whereKey($taskIds)
+            ->where('request_status', 'pending')
+            ->get();
+
+        abort_unless($tasks->count() === $taskIds->count(), Response::HTTP_FORBIDDEN);
+
+        DB::transaction(function () use ($user, $tasks, $action, $reason) {
+            foreach ($tasks as $task) {
+                if ($action === 'approve') {
+                    $this->approve($user, $task);
+
+                    continue;
+                }
+
+                $this->reject($user, $task, (string) $reason);
+            }
+        });
+
+        return $tasks->count();
     }
 
     private function canHandleRequest(User $user, Task $task): bool
@@ -191,17 +226,23 @@ class TaskRequestServices
                 'approved_by' => $user->id,
                 'approved_at' => $approvedAt,
             ]);
+
+        $this->notificationService->notifyTaskRequestReviewed($task, $user, 'approve');
     }
 
     private function reject(User $user, Task $task, string $reason): void
     {
+        $reason = trim($reason);
+
         $task->update([
             'request_status' => 'rejected',
             'approved_by' => null,
             'approved_at' => null,
             'rejected_by' => $user->id,
             'rejected_at' => now(),
-            'rejection_reason' => trim($reason),
+            'rejection_reason' => $reason,
         ]);
+
+        $this->notificationService->notifyTaskRequestReviewed($task, $user, 'reject', $reason);
     }
 }

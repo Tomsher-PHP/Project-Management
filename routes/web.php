@@ -323,6 +323,9 @@ Route::middleware(['auth'])->group(function () {
     // Task request routes
     Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.bulk-action');
     Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
         ->whereIn('action', ['approve', 'reject'])
         ->name('tasks.requests.action');

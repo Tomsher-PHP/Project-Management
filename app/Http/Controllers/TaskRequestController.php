@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskRequestActionRequest;
+use App\Http\Requests\TaskRequestBulkActionRequest;
 use App\Models\Task;
 use App\Services\TaskRequestServices;
 use Illuminate\Http\RedirectResponse;
@@ -58,5 +59,23 @@ class TaskRequestController extends Controller
         return redirect()
             ->route('tasks.requests.index')
             ->with('success', $action === 'approve' ? 'Task request approved successfully.' : 'Task request rejected successfully.');
+    }
+
+    public function handleBulkAction(TaskRequestBulkActionRequest $request, string $action, TaskRequestServices $taskRequestServices): RedirectResponse
+    {
+        abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
+
+        $processedCount = $taskRequestServices->handleBulkAction(
+            $request->user(),
+            $request->validated('task_ids'),
+            $action,
+            $request->validated('reason')
+        );
+
+        return redirect()
+            ->route('tasks.requests.index')
+            ->with('success', $action === 'approve'
+                ? "{$processedCount} task request(s) approved successfully."
+                : "{$processedCount} task request(s) rejected successfully.");
     }
 }

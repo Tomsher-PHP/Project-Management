@@ -133,4 +133,36 @@ class NotificationService
             route('tasks.edit', $task)
         );
     }
+
+    // Notify only the requested user when their task request is approved or rejected
+    public function notifyTaskRequestReviewed(Task $task, User $reviewer, string $action, ?string $description = null): void
+    {
+        if (! $task->current_assignee_id) {
+            return;
+        }
+
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $isRejected = $action === 'reject';
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $reviewerName = $reviewer->name ?? 'A team member';
+        $reviewLabel = $isRejected ? 'rejected' : 'approved';
+
+        $message = "{$reviewerName} {$reviewLabel} your task request '{$taskName}' in '{$projectName}'.";
+
+        if ($isRejected && filled($description)) {
+            $message .= ' Description: ' . trim((string) $description);
+        }
+
+        $this->send(
+            (int) $task->current_assignee_id,
+            $isRejected ? 'Task Request Rejected' : 'Task Request Approved',
+            $message,
+            route('tasks.edit', $task)
+        );
+    }
 }
