@@ -5,10 +5,18 @@
         @method('PUT')
     @endif
 
+    @php
+        $permissionModules = $permissions->keys()->map(fn($module) => [
+            'key' => $module,
+            'id' => 'permission-module-' . \Illuminate\Support\Str::slug($module),
+            'label' => ucfirst(str_replace('_', ' ', $module)),
+        ]);
+    @endphp
+
     <!-- ================= BASIC ROLE INFORMATION ================= -->
     <div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
             <!-- Role Name -->
             <div class="flex flex-col gap-2">
@@ -28,6 +36,28 @@
                         {{ $message }}
                     </p>
                 @enderror
+            </div>
+
+            <!-- Permission Module Index -->
+            <div class="lg:col-span-2">
+                <div class="rounded-xl border border-dashed border-gray-500 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <h4 class="text-base font-semibold text-bgray-700 dark:text-bgray-50">
+                            Permission Modules
+                        </h4>
+                        <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                            Click to jump
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($permissionModules as $module)
+                            <a href="#{{ $module['id'] }}" class="rounded-full border border-bgray-200 px-3 py-1.5 text-xs font-semibold text-bgray-600 transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 focus:border-success-300 focus:outline-none focus:ring-2 focus:ring-success-100 dark:border-darkblack-400 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:bg-darkblack-600 dark:hover:text-success-300" data-permission-index-link data-target="{{ $module['id'] }}">
+                                {{ $module['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -66,3 +96,23 @@
     </div>
 
 </form>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-permission-index-link]').forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    const target = document.getElementById(link.dataset.target);
+
+                    if (!target) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    target.focus({ preventScroll: true });
+                });
+            });
+        });
+    </script>
+@endpush
