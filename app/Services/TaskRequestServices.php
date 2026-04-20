@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskTimeLog;
 use App\Models\User;
@@ -12,9 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRequestServices
 {
-    public function getRequestsForUser(User $user, int $perPage, string $status = 'pending'): LengthAwarePaginator
+    public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
-        return $this->visibleRequestQuery($user)
+        $query = $this->visibleRequestQuery($user)
             ->where('request_status', $status)
             ->with([
                 'project:id,name,project_code',
@@ -27,11 +28,30 @@ class TaskRequestServices
             ])
             ->withExists([
                 'currentAssignee as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
-            ])
-            ->orderByRaw("CASE request_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END")
-            ->latest()
+            ]);
+
+        $this->applyFilters($query, $filters);
+        $this->applySort($query, $filters);
+
+        return $query
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public function getFilterOptions(User $user): array
+    {
+        $query = $this->visibleRequestQuery($user);
+        $projectIds = (clone $query)->distinct()->pluck('project_id')->filter();
+        $userIds = (clone $query)->distinct()->pluck('current_assignee_id')->filter();
+
+        return [
+            'projects' => $projectIds->isEmpty()
+                ? collect()
+                : Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
+            'users' => $userIds->isEmpty()
+                ? collect()
+                : User::query()->whereIn('id', $userIds)->orderBy('name')->get(['id', 'name']),
+        ];
     }
 
     public function handleAction(User $user, Task $task, string $action, ?string $reason = null): void
@@ -58,24 +78,78 @@ class TaskRequestServices
 
     private function visibleRequestQuery(User $user): Builder
     {
-        return Task::query()
-            ->where('request_type', 'self')
-            ->where(function (Builder $query) use ($user) {
-                $query
-                    ->where('current_assignee_id', $user->id)
-                    ->orWhere(function (Builder $accountableQuery) use ($user) {
-                        $this->applyAccountableUserScope($accountableQuery, $user);
-                    });
-            });
+        $query = Task::query()->where('request_type', 'self');
+
+        if ($user->is_super_admin) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($user) {
+            $query
+                ->where('current_assignee_id', $user->id)
+                ->orWhere(function (Builder $accountableQuery) use ($user) {
+                    $this->applyAccountableUserScope($accountableQuery, $user);
+                });
+        });
+    }
+
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        $query
+            ->when($filters['project_id'] ?? null, fn(Builder $query, $projectIds) => $query->whereIn('project_id', (array) $projectIds))
+            ->when($filters['current_assignee_id'] ?? null, fn(Builder $query, $userIds) => $query->whereIn('current_assignee_id', (array) $userIds));
+
+        if (! blank($filters['search'] ?? null)) {
+            $this->applyNameFilter(
+                $query,
+                (string) $filters['search'],
+                (string) ($filters['search_condition'] ?? 'contains')
+            );
+        }
+    }
+
+    private function applyNameFilter(Builder $query, string $search, string $condition): void
+    {
+        match ($condition) {
+            'starts_with' => $query->where('tasks.name', 'like', $search . '%'),
+            'ends_with' => $query->where('tasks.name', 'like', '%' . $search),
+            'not_contains' => $query->where('tasks.name', 'not like', '%' . $search . '%'),
+            default => $query->where('tasks.name', 'like', '%' . $search . '%'),
+        };
+    }
+
+    private function applySort(Builder $query, array $filters): void
+    {
+        $direction = strtolower((string) ($filters['sort_dir'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        match ($filters['sort_by'] ?? null) {
+            'name' => $query->orderBy('tasks.name', $direction),
+            'project.name' => $query
+                ->leftJoin('projects as request_projects', 'request_projects.id', '=', 'tasks.project_id')
+                ->select('tasks.*')
+                ->orderBy('request_projects.name', $direction),
+            'currentAssignee.name' => $query
+                ->leftJoin('users as request_users', 'request_users.id', '=', 'tasks.current_assignee_id')
+                ->select('tasks.*')
+                ->orderBy('request_users.name', $direction),
+            'due_date' => $query->orderBy('tasks.due_date', $direction),
+            default => $query
+                ->orderByRaw("CASE tasks.request_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END")
+                ->latest(),
+        };
     }
 
     private function accountableRequestQuery(User $user): Builder
     {
-        return Task::query()
-            ->where('request_type', 'self')
-            ->where(function (Builder $query) use ($user) {
-                $this->applyAccountableUserScope($query, $user);
-            });
+        $query = Task::query()->where('request_type', 'self');
+
+        if ($user->is_super_admin) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $query) use ($user) {
+            $this->applyAccountableUserScope($query, $user);
+        });
     }
 
     private function applyAccountableUserScope(Builder $query, User $user): void

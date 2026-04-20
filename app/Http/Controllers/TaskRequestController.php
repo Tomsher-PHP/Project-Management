@@ -25,17 +25,21 @@ class TaskRequestController extends Controller
     {
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
-        $selectedStatus = in_array($request->input('status'), ['pending', 'approved', 'rejected'], true)
-            ? $request->input('status')
+        $selectedStatus = in_array($request->input('request_status'), ['pending', 'approved', 'rejected'], true)
+            ? $request->input('request_status')
             : 'pending';
+        $filterOptions = $taskRequestServices->getFilterOptions($request->user());
 
         return view('tasks.requests.index', [
             'tasks' => $taskRequestServices->getRequestsForUser(
                 $request->user(),
                 $perPage,
-                $selectedStatus
+                $selectedStatus,
+                $request->all()
             ),
             'selectedStatus' => $selectedStatus,
+            'projects' => $filterOptions['projects'],
+            'users' => $filterOptions['users'],
             'perPage' => $perPage,
         ]);
     }

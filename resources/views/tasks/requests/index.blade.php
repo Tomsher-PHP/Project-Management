@@ -11,14 +11,17 @@
         @endphp
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            
+            <x-filters.button />
 
             <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
                 @foreach ($tabs as $status => $label)
-                    <a href="{{ route('tasks.requests.index', ['status' => $status]) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
+                    <a href="{{ route('tasks.requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
                         {{ $label }}
                     </a>
                 @endforeach
             </div>
+
         </div>
 
         <section>
@@ -28,19 +31,19 @@
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Task</span>
+                                    <x-sorting.sortable-column column="name" label="Task" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project</span>
+                                    <x-sorting.sortable-column column="project.name" label="Project" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested By</span>
+                                    <x-sorting.sortable-column column="currentAssignee.name" label="Requested By" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Due Date</span>
+                                    <x-sorting.sortable-column column="due_date" label="Due Date" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
@@ -121,5 +124,12 @@
 
             <x-pagination :paginator="$tasks" :per-page="$perPage" />
         </section>
+
+        <x-filters.drawer>
+            <input type="hidden" name="request_status" value="{{ $selectedStatus }}">
+            <x-filters.input-search name="search" label="Task" />
+            <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
+            <x-filters.multi-select name="current_assignee_id" label="User" :options="$users" />
+        </x-filters.drawer>
     </main>
 @endsection

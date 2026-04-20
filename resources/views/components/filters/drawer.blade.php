@@ -11,12 +11,12 @@
             <button onclick="FilterDrawer.close()">✕</button>
         </div>
 
-        <form method="GET" class="flex flex-1 flex-col overflow-hidden p-6">
-            <div class="space-y-5 overflow-y-auto pr-2">
+        <form method="GET" class="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-6 pr-8">
                 {{ $slot }}
             </div>
 
-            <div class="mt-5 flex shrink-0 justify-between border-t pt-4">
+            <div class="sticky bottom-0 flex shrink-0 justify-between border-t bg-white px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] dark:bg-darkblack-600">
                 <a href="{{ url()->current() }}" class="px-4 py-2 text-sm border rounded-md">
                     Reset
                 </a>
