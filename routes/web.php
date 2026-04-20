@@ -212,6 +212,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
     // End Notification Routes
 
     // Customer Routes
