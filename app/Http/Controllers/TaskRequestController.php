@@ -11,6 +11,16 @@ use Illuminate\Http\Response;
 
 class TaskRequestController extends Controller
 {
+    protected $pageTitle;
+    protected $subTitle;
+
+    public function __construct()
+    {
+        $this->pageTitle = 'Task Requests Management';
+        $this->subTitle = 'Manage your task requests and approvals';
+        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+    }
+
     public function index(Request $request, TaskRequestServices $taskRequestServices)
     {
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));

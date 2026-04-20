@@ -88,6 +88,7 @@ class TaskRequestServices
 
         TaskTimeLog::query()
             ->where('task_id', $task->id)
+            ->where('user_id', $task->current_assignee_id)
             ->update([
                 'is_approved' => true,
                 'approved_by' => $user->id,

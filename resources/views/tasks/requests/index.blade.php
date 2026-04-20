@@ -11,17 +11,10 @@
         @endphp
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-bgray-900 dark:text-white">Task Requests</h1>
-                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Review task requests from your accountable users.</p>
-            </div>
 
             <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
                 @foreach ($tabs as $status => $label)
-                    <a
-                        href="{{ route('tasks.requests.index', ['status' => $status]) }}"
-                        class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}"
-                    >
+                    <a href="{{ route('tasks.requests.index', ['status' => $status]) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
                         {{ $label }}
                     </a>
                 @endforeach
@@ -60,13 +53,23 @@
                                 <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[220px]">
-                                            <p class="font-semibold text-bgray-900 dark:text-white">{{ $task->name }}</p>
+                                            <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-300 dark:text-white dark:hover:text-success-300">
+                                                {{ $task->name }}
+                                            </a>
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->code }}</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[180px]">
-                                            <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">{{ $task->project?->name ?? '--' }}</p>
+                                            @if ($task->project && auth()->user()?->can('project.view'))
+                                                <a href="{{ route('projects.edit', $task->project_id) }}" class="text-sm font-medium text-bgray-700 transition hover:text-success-300 dark:text-bgray-100 dark:hover:text-success-300">
+                                                    {{ $task->project->name }}
+                                                </a>
+                                            @elseif ($task->project)
+                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">{{ $task->project->name }}</p>
+                                            @else
+                                                <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">--</p>
+                                            @endif
                                             <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->projectModule?->name ?? 'No module' }}</p>
                                         </div>
                                     </td>

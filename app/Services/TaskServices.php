@@ -413,15 +413,15 @@ class TaskServices
         return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
     }
 
-    // Start/Stop Timer related methods
+    /**================= Start/Stop Timer related methods ================= */
 
     // Start a timer for the given task and user
-    public function startTimer(int $taskId, int $userId)
+    public function startTimer(Task $task, int $userId)
     {
-        return DB::transaction(function () use ($taskId, $userId) {
+        return DB::transaction(function () use ($task, $userId) {
 
             // Check if already running
-            $running = TaskTimeLog::where('task_id', $taskId)
+            $running = TaskTimeLog::where('task_id', $task->id)
                 ->where('user_id', $userId)
                 ->where('is_running', 1)
                 ->first();
@@ -430,7 +430,7 @@ class TaskServices
                 throw new \Exception('Timer already running');
             }
 
-            $assignment = TaskAssignmentLog::where('task_id', $taskId)
+            $assignment = TaskAssignmentLog::where('task_id', $task->id)
                 ->where('user_id', $userId)
                 ->where('is_current', 1)
                 ->first();
@@ -440,12 +440,12 @@ class TaskServices
             }
 
             return TaskTimeLog::create([
-                'task_id' => $taskId,
+                'task_id' => $task->id,
                 'user_id' => $userId,
                 'task_assignment_log_id' => $assignment->id,
                 'started_at' => now(),
                 'is_running' => 1,
-                'added_by' => $userId,
+                'is_approved' => ($task->request_status === 'approved'),
             ]);
         });
     }
@@ -489,7 +489,12 @@ class TaskServices
             return false;
         }
 
-        return $task->current_assignee_id === $user->id;
+        // Check any task running for this user. Only allow one timer running at a time across all tasks.
+        $hasRunningTimer = TaskTimeLog::where('user_id', $user->id)
+            ->where('is_running', 1)
+            ->exists();
+
+        return $task->current_assignee_id === $user->id && ! $hasRunningTimer;
     }
 
     // Check whether current user can stop timer on this task
