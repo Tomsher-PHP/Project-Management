@@ -52,13 +52,14 @@ class TaskController extends Controller
     public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
         $user = $request->user();
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
         $baseQuery = app(TaskQueryService::class)->baseQuery($user);
 
         $tasks = $taskServices->getList(
             $user,
             $request->all(),
-            $request->input('per_page', config('constants.per_page_count'))
+            $perPage
         );
 
         $filters = $filterService->getFilters($user, $baseQuery);
@@ -83,7 +84,7 @@ class TaskController extends Controller
 
         return view('tasks.index', [
             'tasks' => $tasks,
-            'perPage' => $request->input('per_page'),
+            'perPage' => $perPage,
             'taskCreateDependencies' => $taskCreateDependencies,
             ...$filters,
             ...$formData,
@@ -933,4 +934,5 @@ class TaskController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
 }

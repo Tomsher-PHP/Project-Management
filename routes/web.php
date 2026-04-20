@@ -27,6 +27,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -310,15 +311,22 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
-    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
-
+    
     // Task status, order change route
     Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
     Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
     // End Task Routes
+    
+    // Task request routes
+    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
+    Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.action');
+    // End Task request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
