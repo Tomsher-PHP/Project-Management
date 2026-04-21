@@ -16,6 +16,8 @@ class TaskFormService
 
             'taskTypeOptions' => $this->getTaskTypes(),
             'taskModeOptions' => $this->getTaskModes(),
+            'nextTaskTypeSortOrder' => ((int) TaskType::max('sort_order')) + 1,
+            'nextTaskModeSortOrder' => ((int) TaskMode::max('sort_order')) + 1,
             'tagOptions' => $this->getTags(),
 
             'taskPriorityOptions' => $this->getTaskPriorities(),
@@ -37,12 +39,20 @@ class TaskFormService
 
     private function getTaskTypes()
     {
-        return TaskType::active()->get();
+        return TaskType::active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 
     private function getTaskModes()
     {
-        return TaskMode::active()->get();
+        return TaskMode::active()
+            ->orderByDesc('is_default')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 
     private function getTags()

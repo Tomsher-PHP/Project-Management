@@ -709,6 +709,7 @@ class TaskController extends Controller
                 ->get(['id', 'name'])
                 ->map(fn(TaskType $taskType) => ['value' => (string) $taskType->id, 'label' => $taskType->name])
                 ->values(),
+            'nextTaskTypeSortOrder' => ((int) TaskType::max('sort_order')) + 1,
             'taskModeOptions' => TaskMode::query()
                 ->active()
                 ->orderByDesc('is_default')
@@ -716,6 +717,7 @@ class TaskController extends Controller
                 ->get(['id', 'name'])
                 ->map(fn(TaskMode $taskMode) => ['value' => (string) $taskMode->id, 'label' => $taskMode->name])
                 ->values(),
+            'nextTaskModeSortOrder' => ((int) TaskMode::max('sort_order')) + 1,
             'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
                 ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
                 ->values(),

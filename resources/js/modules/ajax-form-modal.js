@@ -47,7 +47,19 @@ $(document).ready(function () {
                 text: optionLabel,
             });
             field.tomselect.refreshOptions(false);
-            field.tomselect.setValue(normalizedValue, true);
+
+            if (field.multiple) {
+                const currentValues = Array.isArray(field.tomselect.getValue())
+                    ? field.tomselect.getValue()
+                    : [field.tomselect.getValue()].filter(Boolean);
+                const nextValues = currentValues.includes(normalizedValue)
+                    ? currentValues
+                    : [...currentValues, normalizedValue];
+
+                field.tomselect.setValue(nextValues, true);
+            } else {
+                field.tomselect.setValue(normalizedValue, true);
+            }
         } else {
             let option = Array.from(field.options).find((item) => item.value === normalizedValue);
 
@@ -58,7 +70,11 @@ $(document).ready(function () {
                 field.appendChild(option);
             }
 
-            field.value = normalizedValue;
+            if (field.multiple) {
+                option.selected = true;
+            } else {
+                field.value = normalizedValue;
+            }
         }
 
         field.dispatchEvent(new Event('change', { bubbles: true }));
@@ -190,6 +206,17 @@ $(document).ready(function () {
         clearFormErrors(modal.find('.ajax-form'));
     };
 
+    const focusModalNameField = (modal) => {
+        window.setTimeout(() => {
+            const field = modal.find('[name="name"]:visible:not([disabled])').first()[0];
+
+            if (field) {
+                field.focus();
+                field.select?.();
+            }
+        }, 0);
+    };
+
     const replaceRenderedSection = (response) => {
         if (!response.html || !response.render_target) {
             return false;
@@ -283,6 +310,7 @@ $(document).ready(function () {
         modal.find('.submit-btn').text(`Create ${module}`);
 
         modal.removeClass('hidden');
+        focusModalNameField(modal);
     });
 
     // OPEN EDIT
@@ -317,6 +345,7 @@ $(document).ready(function () {
         refreshDescriptionCounter(modal);
 
         modal.removeClass('hidden');
+        focusModalNameField(modal);
     });
 
     // CLOSE MODAL

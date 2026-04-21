@@ -9,7 +9,7 @@ $(document).ready(function () {
     contactIndex = $('#extraContactsContainer .contact-item').length;
 
     // OPEN CREATE
-    $('.modal-open').on('click', function () {
+    $('.modal-open[data-target="#multi-step-modal"]').on('click', function () {
         editingIndex = null;
         editingCard = null;
 

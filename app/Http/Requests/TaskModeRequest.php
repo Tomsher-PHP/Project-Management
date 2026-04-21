@@ -42,6 +42,7 @@ class TaskModeRequest extends FormRequest
             'code' => ['required', 'string', 'max:50', Rule::unique('task_modes', 'code')->ignore($modeId)],
             'description' => ['nullable', 'string'],
             'color' => ['nullable', 'string', 'max:50'],
+            'sort_order' => ['required', 'integer', 'min:0'],
             'is_rework' => ['boolean'],
             'is_productive' => ['boolean'],
             'track_performance' => ['boolean'],

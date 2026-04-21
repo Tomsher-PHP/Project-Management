@@ -32,7 +32,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-upny8DK2.css",
+    "file": "assets/app-DbXJwTmB.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -41,7 +41,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-aO_k5-p-.js",
+    "file": "assets/app-AIJQgwFH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -74,7 +74,7 @@
     "isEntry": true
   },
   "resources/js/modules/customer-contact.js": {
-    "file": "assets/customer-contact-BweAcp3w.js",
+    "file": "assets/customer-contact-DTWoFvT6.js",
     "name": "customer-contact",
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
@@ -125,7 +125,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-gVj4ZMQS.js",
+    "file": "assets/task-list-create-BBe4kau8.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
