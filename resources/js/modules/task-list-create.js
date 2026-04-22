@@ -329,17 +329,6 @@ const openTaskCreateModal = (modal) => {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-
-    window.requestAnimationFrame(() => {
-        const projectField = modal.querySelector('[name="project_id"]');
-
-        if (projectField?.tomselect) {
-            projectField.tomselect.focus();
-            return;
-        }
-
-        projectField?.focus();
-    });
 };
 
 const closeTaskCreateModal = (modal) => {
@@ -532,6 +521,8 @@ const loadParentTaskOptions = async (form, dependencies) => {
     if (sprintField?.value) {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
+    console.log(requestUrl);
+    
 
     const response = await fetch(requestUrl.toString(), {
         headers: {

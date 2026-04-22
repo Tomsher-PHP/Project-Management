@@ -29,8 +29,8 @@ class TaskFormService
         return Project::query()
             ->accessibleBy($user)
             ->with([
-                'projectModules:id,project_id,name',
-                'projectSprints:id,project_id,name',
+                'projectModules:id,project_id,name,is_backlog,is_system',
+                'projectSprints:id,project_id,project_module_id,name,is_backlog,is_system',
                 'activeMembers:id,name',
             ])
             ->orderBy('name')
