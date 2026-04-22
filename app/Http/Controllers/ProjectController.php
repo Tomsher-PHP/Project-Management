@@ -461,8 +461,7 @@ class ProjectController extends Controller
     {
         $statusHistory = $project->statusHistories()
             ->with(['status', 'fromStatus', 'addedBy:id,name'])
-            ->reorder('added_at')
-            ->orderBy('id')
+            ->orderByDesc('added_at')
             ->get()
             ->map(function ($history) {
                 return [
@@ -479,8 +478,7 @@ class ProjectController extends Controller
 
         $stageHistory = $project->stageHistories()
             ->with(['stage', 'fromStage', 'addedBy:id,name'])
-            ->reorder('added_at')
-            ->orderBy('id')
+            ->orderByDesc('added_at')
             ->get()
             ->map(function ($history) {
                 return [
