@@ -262,7 +262,7 @@ class TaskController extends Controller
 
     public function tab(Request $request, Task $task, string $tab): JsonResponse
     {
-        $allowedTabs = ['overview', 'activity', 'notes', 'settings'];
+        $allowedTabs = ['overview', 'notes', 'history', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         $task = $this->loadTaskForDetail($task);
@@ -532,6 +532,7 @@ class TaskController extends Controller
             'projectSprint.projectModule:id,name',
             'parentTask:id,name,code',
             'currentAssignee:id,name',
+            'currentAssignee.primaryAttachment',
             'status:id,name,color',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
@@ -571,15 +572,15 @@ class TaskController extends Controller
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskOverviewData($task))->render(),
-            'activity' => view('tasks.partials.tabs.activity', [
-                'task' => $task,
-                'project' => $task->project,
-            ] + $this->getTaskActivityData($task))->render(),
             'notes' => view('tasks.partials.tabs.notes', [
                 'task' => $task,
                 'project' => $task->project,
                 'taskNotes' => $this->getPaginatedTaskNotes($task, (int) request()->input('notes_page', 1)),
             ])->render(),
+            'history' => view('tasks.partials.tabs.history', [
+                'task' => $task,
+                'project' => $task->project,
+            ] + $this->getTaskHistoryData($task))->render(),
             'settings' => view('tasks.partials.tabs.settings', [
                 'task' => $task,
                 'project' => $task->project,
@@ -612,10 +613,76 @@ class TaskController extends Controller
         ];
     }
 
-    private function getTaskActivityData(Task $task): array
+    private function getTaskHistoryData(Task $task): array
     {
+        $statusRows = $task->statusHistories()
+            ->with([
+                'status:id,name,color',
+                'addedBy:id,name',
+            ])
+            ->reorder('added_at')
+            ->orderBy('id')
+            ->get();
+
+        $previousStatus = null;
+        $statusHistory = $statusRows
+            ->map(function ($history) use (&$previousStatus) {
+                $currentStatus = [
+                    'label' => $history->status?->name ?? 'No Status',
+                    'color' => $history->status?->color ?: '#CBD5E1',
+                ];
+
+                $entry = [
+                    'from_label' => $previousStatus['label'] ?? 'Start',
+                    'from_color' => $previousStatus['color'] ?? '#CBD5E1',
+                    'to_label' => $currentStatus['label'],
+                    'to_color' => $currentStatus['color'],
+                    'changed_at' => $history->added_at,
+                    'changed_by' => $history->addedBy?->name ?? 'System',
+                    'remarks' => $history->remarks,
+                ];
+
+                $previousStatus = $currentStatus;
+
+                return $entry;
+            })
+            ->reverse()
+            ->values();
+
+        $timeLogs = $task->timeLogs()
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'assignmentLog.user:id,name',
+                'assignmentLog.user.primaryAttachment',
+            ])
+            ->reorder('started_at', 'desc')
+            ->orderByDesc('id')
+            ->get();
+
+        $assignmentHistory = $task->assignmentLogs()
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'addedBy:id,name',
+                'addedBy.primaryAttachment',
+                'updatedBy:id,name',
+            ])
+            ->reorder('assigned_from', 'desc')
+            ->orderByDesc('id')
+            ->get();
+
         return [
-            'taskActivities' => $this->getRecentTaskActivities($task),
+            'statusHistory' => $statusHistory,
+            'timeLogs' => $timeLogs,
+            'assignmentHistory' => $assignmentHistory,
+            'currentStatus' => [
+                'label' => $task->status?->name ?? 'No Status',
+                'color' => $task->status?->color ?: '#CBD5E1',
+            ],
+            'currentAssignee' => $task->currentAssignee?->name ?? 'Unassigned',
+            'currentAssigneeUser' => $task->currentAssignee,
+            'totalLoggedSeconds' => (int) $timeLogs->sum('duration_seconds'),
         ];
     }
 
@@ -936,5 +1003,4 @@ class TaskController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 }

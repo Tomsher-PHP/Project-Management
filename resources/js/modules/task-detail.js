@@ -416,7 +416,7 @@ const initializeTaskSettings = (root = document) => {
             const tabsRoot = document.querySelector('[data-task-tabs]');
             const overviewPanel = tabsRoot?.querySelector('[data-task-tab-panel="overview"]');
             const settingsPanel = tabsRoot?.querySelector('[data-task-tab-panel="settings"]');
-            const activityPanel = tabsRoot?.querySelector('[data-task-tab-panel="activity"]');
+            const historyPanel = tabsRoot?.querySelector('[data-task-tab-panel="history"]');
 
             if (header && result.header_html) {
                 header.innerHTML = result.header_html;
@@ -433,9 +433,9 @@ const initializeTaskSettings = (root = document) => {
                 initializeInjectedContent(settingsPanel, 'settings');
             }
 
-            if (activityPanel) {
-                activityPanel.dataset.loaded = 'false';
-                activityPanel.innerHTML = '';
+            if (historyPanel) {
+                historyPanel.dataset.loaded = 'false';
+                historyPanel.innerHTML = '';
             }
 
             dirty = false;
@@ -586,6 +586,20 @@ document.addEventListener('DOMContentLoaded', function () {
         trigger.addEventListener('click', function () {
             loadTab(this.dataset.taskTabTrigger);
         });
+    });
+
+    document.addEventListener('task-history:changed', () => {
+        const historyPanel = getPanel('history');
+
+        if (!historyPanel) {
+            return;
+        }
+
+        historyPanel.dataset.loaded = 'false';
+
+        if (historyPanel.classList.contains('hidden')) {
+            historyPanel.innerHTML = '';
+        }
     });
 
     const savedTab = localStorage.getItem(storageKey);

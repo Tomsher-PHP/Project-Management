@@ -103,6 +103,9 @@ export function initTaskTimer() {
                 if (timerContainer) timerContainer.remove();
 
                 Alert.success(data.message || 'Timer stopped');
+                document.dispatchEvent(new CustomEvent('task-history:changed', {
+                    detail: { taskId },
+                }));
 
             } else {
                 // START
@@ -131,6 +134,9 @@ export function initTaskTimer() {
                 startLiveTimer(now.toISOString());
 
                 Alert.success(data.message || 'Timer started');
+                document.dispatchEvent(new CustomEvent('task-history:changed', {
+                    detail: { taskId },
+                }));
             }
 
         } catch (error) {

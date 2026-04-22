@@ -15,14 +15,12 @@
                                 Overview
                             </button>
 
-                            @can('activity_log.view')
-                                <button type="button" data-task-tab-trigger="activity" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
-                                    Activity
-                                </button>
-                            @endcan
-
                             <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 Notes & Files
+                            </button>
+
+                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                History
                             </button>
 
                             <button type="button" data-task-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
@@ -78,11 +76,8 @@
                         @include('tasks.partials.tabs.overview')
                     </div>
 
-                    @can('activity_log.view')
-                        <div class="hidden" data-task-tab-panel="activity" data-loaded="false"></div>
-                    @endcan
-
                     <div class="hidden" data-task-tab-panel="notes" data-loaded="false"></div>
+                    <div class="hidden" data-task-tab-panel="history" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="settings" data-loaded="false"></div>
                 </div>
             </div>
