@@ -80,7 +80,9 @@
                                                 </div>
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $user->name }}
+                                                        <a href="{{ route('users.show', $user->id) }}" class="transition hover:text-success-400">
+                                                            {{ $user->name }}
+                                                        </a>
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Role: {{ $user->role_name }}</span>

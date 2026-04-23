@@ -179,7 +179,7 @@
                         <div>
                             <ul>
                                 <li class="w-full">
-                                    <a href="#">
+                                    <a href="{{ route('users.show', auth()->id()) }}">
                                         <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 hover:dark:bg-darkblack-500">
                                             <div class="w-[20px]">
                                                 <span>

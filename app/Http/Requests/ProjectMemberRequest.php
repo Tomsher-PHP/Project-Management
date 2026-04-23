@@ -17,6 +17,8 @@ class ProjectMemberRequest extends FormRequest
 
     public function rules(): array
     {
+        $projectRoles = array_keys(config('project_constants.project_roles'));
+
         return [
             'user_id' => ['required', 'array', 'min:1'],
             'user_id.*' => [
@@ -29,7 +31,7 @@ class ProjectMemberRequest extends FormRequest
 
             'project_role' => [
                 'required',
-                'in:team_leader,coordinator,member',
+                Rule::in($projectRoles),
             ],
         ];
     }

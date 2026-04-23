@@ -5,6 +5,7 @@ return [
         'team_leader' => 'Team Leader',
         'coordinator' => 'Coordinator',
         'member' => 'Member',
+        'qa' => 'Quality Assurance',
     ],
 
     'project_priorities' => [
