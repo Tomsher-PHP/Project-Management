@@ -74,7 +74,7 @@ class Customer extends Model
 
     public function industry()
     {
-        return $this->belongsTo(Industry::class);
+        return $this->belongsTo(Industry::class)->withTrashed();
     }
 
     public function country()

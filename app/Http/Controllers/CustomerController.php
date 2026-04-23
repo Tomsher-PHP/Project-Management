@@ -26,12 +26,13 @@ class CustomerController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $customers = Customer::filter($request->all())
+        $customers = Customer::with(['industry', 'country'])
+            ->filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)
             ->withQueryString();
 
-        $industries = Industry::active()->get();
+        $industries = Industry::withTrashed()->orderBy('sort_order', 'asc')->get();
 
         return view('customers.index', compact('customers', 'perPage', 'industries'));
     }
@@ -59,7 +60,18 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
-        $industries = Industry::active()->orderBy('sort_order', 'asc')->get();
+        $industries = Industry::withTrashed()
+            ->where(function ($query) use ($customer) {
+                $query->where(function ($query) {
+                    $query->active()->whereNull('deleted_at');
+                });
+
+                if (filled($customer->industry_id)) {
+                    $query->orWhere('id', $customer->industry_id);
+                }
+            })
+            ->orderBy('sort_order', 'asc')
+            ->get();
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');

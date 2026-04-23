@@ -37,7 +37,6 @@ class CustomerServices
     public function update(Customer $customer, array $data)
     {
         return DB::transaction(function () use ($customer, $data) {
-
             // 1. Update Customer
             $customer->update([
                 'name' => $data['name'],
