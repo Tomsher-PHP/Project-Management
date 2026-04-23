@@ -35,7 +35,6 @@ class UserDetail extends Model
             'designation_id' => 'integer',
             'reporter_id' => 'integer',
             'manager_id' => 'integer',
-            'employee_id' => 'integer',
             'joining_date' => 'datetime',
             'leaving_date' => 'datetime',
             'dob' => 'datetime',
@@ -49,12 +48,12 @@ class UserDetail extends Model
 
     public function department()
     {
-        return $this->belongsTo(Department::class, 'department_id', 'id');
+        return $this->belongsTo(Department::class, 'department_id', 'id')->withTrashed();
     }
 
     public function designation()
     {
-        return $this->belongsTo(Designation::class, 'designation_id', 'id');
+        return $this->belongsTo(Designation::class, 'designation_id', 'id')->withTrashed();
     }
 
     public function reporter()

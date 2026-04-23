@@ -113,20 +113,9 @@
             @endcan
 
             <!-- Estimated Time -->
-            <x-forms.estimated-time-input
-                label="Estimated Time"
-                name="estimated_time_minutes"
-                :total-minutes="old('estimated_time_minutes', $project->estimated_time_seconds !== null ? intdiv($project->estimated_time_seconds, 60) : 0)"
-                input-action="markDirty()"
-            />
+            <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="old('estimated_time_minutes', $project->estimated_time_seconds !== null ? intdiv($project->estimated_time_seconds, 60) : 0)" input-action="markDirty()" />
 
-            <x-forms.estimated-time-input
-                label="Default Task Estimate"
-                name="default_task_estimate_minutes"
-                :total-minutes="old('default_task_estimate_minutes', $project->default_task_estimate_seconds !== null ? intdiv($project->default_task_estimate_seconds, 60) : 0)"
-                input-action="markDirty()"
-                help-text="Used as the default estimated time when creating new tasks in this project."
-            />
+            <x-forms.estimated-time-input label="Default Task Estimate" name="default_task_estimate_minutes" :total-minutes="old('default_task_estimate_minutes', $project->default_task_estimate_seconds !== null ? intdiv($project->default_task_estimate_seconds, 60) : 0)" input-action="markDirty()" help-text="Used as the default estimated time when creating new tasks in this project." />
 
         </div>
     </div>

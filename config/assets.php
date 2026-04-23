@@ -6,6 +6,7 @@ return [
         'logo' => 'assets/images/logo/logo.png',
         'logo_white' => 'assets/images/logo/logo.png',
         'logo_short' => 'assets/images/logo/logo-short.png',
+        'profile' => 'assets/images/avatar/profile-52x52.png',
     ],
 
     'images' => [

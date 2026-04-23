@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected $fillable = [
         'project_code',
@@ -96,17 +97,17 @@ class Project extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function projectStatus()
     {
-        return $this->belongsTo(ProjectStatus::class, 'status_id');
+        return $this->belongsTo(ProjectStatus::class, 'status_id')->withTrashed();
     }
 
     public function projectStage()
     {
-        return $this->belongsTo(ProjectStage::class);
+        return $this->belongsTo(ProjectStage::class)->withTrashed();
     }
 
     public function salesPerson()
@@ -126,7 +127,7 @@ class Project extends Model
 
     public function technologies()
     {
-        return $this->belongsToMany(Technology::class, 'project_technology');
+        return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
     }
 
     public function statusHistories()

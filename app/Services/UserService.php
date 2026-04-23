@@ -195,7 +195,14 @@ class UserService
             : null;
     }
 
-    // Get the list of accessable users for the authenticated user
+    /**
+     * Get users accessible to the given user, with options to exclude or include specific user IDs.
+     *
+     * @param User $authUser The user for whom to retrieve accessible users.
+     * @param array $excludeIds Optional array of user IDs to exclude from the results.
+     * @param array $includeIds Optional array of user IDs to include in the results (even if not accessible).
+     * @return \Illuminate\Support\Collection Collection of User models.
+     */
     public function getAccessibleUsers(User $authUser, array $excludeIds = [], array $includeIds = [])
     {
         $excludeIds = collect($excludeIds)
@@ -215,6 +222,7 @@ class UserService
         $accessibleIds = User::accessibleBy($authUser)->select('id');
 
         return User::query()
+            ->when(!empty($includeIds), fn ($query) => $query->withTrashed())
             ->select('id', 'name', 'email', 'is_active')
             ->with('primaryAttachment')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
@@ -225,7 +233,11 @@ class UserService
                 }
             })
             ->where(function ($q) use ($includeIds) {
-                $q->where('is_active', true);
+                $q->where(function ($q) {
+                    $q->where('is_active', true)
+                        ->where('delete_status', false)
+                        ->whereNull('deleted_at');
+                });
 
                 if (!empty($includeIds)) {
                     $q->orWhereIn('id', $includeIds);

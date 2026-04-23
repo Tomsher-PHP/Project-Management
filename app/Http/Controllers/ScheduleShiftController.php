@@ -4,17 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ScheduleShiftRequest;
 use App\Models\Shift;
+use App\Models\Team;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
 use App\Services\ScheduleShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ScheduleShiftController extends Controller
 {
+    private const TEAM_FILTER_NOT_IN_TEAM = 'not_in_team';
 
     protected $pageTitle;
     protected $subTitle;
@@ -28,6 +31,13 @@ class ScheduleShiftController extends Controller
 
     public function index(Request $request, ScheduleShiftService $scheduleService)
     {
+        $selectedTeamFilter = $request->input('team_id');
+        $selectedTeamFilter = filled($selectedTeamFilter) ? (string) $selectedTeamFilter : null;
+        $notInTeamFilter = self::TEAM_FILTER_NOT_IN_TEAM;
+        $perPage = max((int) $request->input('per_page', config('constants.per_page_count')), 1);
+        $page = max((int) $request->input('page', 1), 1);
+        $todayDate = now(config('constants.timezone'))->toDateString();
+
         // Get start/end of week
         [$startOfWeek, $endOfWeek] = $scheduleService->getWeekRange($request->week);
 
@@ -35,10 +45,24 @@ class ScheduleShiftController extends Controller
         $weekDates = $scheduleService->getWeekDates($startOfWeek);
 
         // Get users and shifts
-        [$users, $shifts] = $scheduleService->getUsersAndShifts();
+        [$allUsers, $shifts] = $scheduleService->getUsersAndShifts($selectedTeamFilter);
+        $users = new LengthAwarePaginator(
+            $allUsers->forPage($page, $perPage)->values(),
+            $allUsers->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+        $teams = Team::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         // Get assignments and build calendar
-        $assignments = $scheduleService->getAssignments($startOfWeek, $endOfWeek);
+        $assignments = $scheduleService->getAssignments($startOfWeek, $endOfWeek, $users->getCollection()->pluck('id')->all());
         $calendar = $scheduleService->buildCalendar($users, $assignments, $startOfWeek, $endOfWeek);
 
         // Handle AJAX request for week navigation
@@ -47,17 +71,18 @@ class ScheduleShiftController extends Controller
                 'users',
                 'shifts',
                 'calendar',
-                'weekDates'
+                'weekDates',
+                'perPage',
+                'todayDate'
             ))->render();
 
-            $timezone = config('constants.timezone');
             $dateFormat = config('constants.date_format');
 
             return response()->json([
                 'html' => $tableHtml,
-                'weekRange' => $startOfWeek->copy()->timezone($timezone)->format($dateFormat)
+                'weekRange' => $startOfWeek->copy()->format($dateFormat)
                     . ' - ' .
-                    $endOfWeek->copy()->timezone($timezone)->format($dateFormat),
+                    $endOfWeek->copy()->format($dateFormat),
             ], Response::HTTP_OK);
         }
 
@@ -69,7 +94,12 @@ class ScheduleShiftController extends Controller
             'calendar',
             'weekDates',
             'startOfWeek',
-            'endOfWeek'
+            'endOfWeek',
+            'teams',
+            'selectedTeamFilter',
+            'notInTeamFilter',
+            'perPage',
+            'todayDate'
         ));
     }
 

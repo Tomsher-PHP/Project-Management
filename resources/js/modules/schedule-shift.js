@@ -2,8 +2,29 @@ import { autoTomSelect } from '../components/tom-select';
 import { initWeekPicker } from '../components/weekpicker';
 import { Loader } from '../helpers/loader';
 
+const getSelectedTeamId = () => document.getElementById("teamFilterSelect")?.value || "";
+const getSelectedPerPage = () => document.querySelector("#schedule-table select[name='per_page']")?.value || "";
+
+const syncWeekPickerInput = (date) => {
+    const input = document.querySelector(".weekPicker");
+    if (!input || !date) return;
+
+    input.value = date;
+
+    if (input._flatpickr) {
+        input._flatpickr.setDate(date, false, "Y-m-d");
+        input._flatpickr.jumpToDate(date);
+    }
+};
+
+const updateScheduleUrl = (params) => {
+    const url = new URL(window.location.href);
+    url.search = params.toString();
+    window.history.pushState({}, "", url);
+};
+
 // Load week via AJAX
-const loadWeek = async (date) => {
+const loadWeek = async (date, extraParams = {}) => {
     if (!date) return;
 
     // If date is a Date object
@@ -19,7 +40,23 @@ const loadWeek = async (date) => {
     Loader.show();
 
     try {
-        const res = await fetch(`/schedule-shift?week=${date}`, {
+        const params = new URLSearchParams(extraParams);
+        params.set("week", date);
+
+        const teamId = getSelectedTeamId();
+        const perPage = getSelectedPerPage();
+
+        if (teamId) {
+            params.set("team_id", teamId);
+        } else {
+            params.delete("team_id");
+        }
+
+        if (perPage && !params.has("per_page")) {
+            params.set("per_page", perPage);
+        }
+
+        const res = await fetch(`/schedule-shift?${params.toString()}`, {
             headers: { "X-Requested-With": "XMLHttpRequest" }
         });
 
@@ -29,8 +66,12 @@ const loadWeek = async (date) => {
 
         document.querySelector("#schedule-table").innerHTML = data.html;
         document.getElementById("week-date-range").innerText = data.weekRange;
+        const selectAllUsers = document.getElementById("select-all-users");
+        if (selectAllUsers) selectAllUsers.checked = false;
 
         currentWeek = date;
+        syncWeekPickerInput(date);
+        updateScheduleUrl(params);
 
     } catch (err) {
         console.error("Failed to load schedule:", err);
@@ -58,9 +99,18 @@ export function initScheduleShift(startOfWeek) {
             loadWeek(prev.toISOString().split('T')[0]);
         });
 
+        document.getElementById("todayWeek")?.addEventListener("click", (event) => {
+            const today = event.currentTarget.dataset.today;
+            loadWeek(today, { page: 1 });
+        });
+
         document.getElementById("weekPickerBtn").addEventListener("click", () => {
             const picker = document.querySelector(".weekPicker")?._flatpickr;
             if (picker) picker.open();
+        });
+
+        document.getElementById("teamFilterSelect")?.addEventListener("change", () => {
+            loadWeek(currentWeek, { page: 1 });
         });
 
         window.scheduleShiftNavListeners = true;
@@ -74,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input) return;
 
     initWeekPicker(".weekPicker", loadWeek);
+    syncWeekPickerInput(input.value);
     initScheduleShift(input.value);
 
     // Get selected users and redirect to schedule shift create page
@@ -109,6 +160,35 @@ document.addEventListener("DOMContentLoaded", () => {
         window.userRowToggleListener = true;
     }
 
+    if (!window.scheduleShiftPaginationListener) {
+        document.addEventListener("click", (event) => {
+            const link = event.target.closest("#schedule-table a[href]");
+            if (!link) return;
+
+            const url = new URL(link.href);
+            if (!url.searchParams.has("page")) return;
+
+            event.preventDefault();
+
+            loadWeek(currentWeek, Object.fromEntries(url.searchParams));
+        });
+
+        document.addEventListener("change", (event) => {
+            const perPageSelect = event.target.closest("#schedule-table select[name='per_page']");
+            if (!perPageSelect) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            loadWeek(currentWeek, {
+                page: 1,
+                per_page: perPageSelect.value,
+            });
+        }, true);
+
+        window.scheduleShiftPaginationListener = true;
+    }
+
     // SHIFT EDIT MODAL EVENTS
     if (!window.shiftModalListener) {
         const modal = document.getElementById("shiftModal");
@@ -118,6 +198,53 @@ document.addEventListener("DOMContentLoaded", () => {
         let currentDate = null;
         let currentUserName = null;
         let formattedDate = null;
+        const injectedShiftOptionIds = new Set();
+
+        const removeInjectedShiftOptions = (currentShiftId) => {
+            injectedShiftOptionIds.forEach((shiftId) => {
+                if (shiftId === currentShiftId) return;
+
+                if (modalSelect.tomselect) {
+                    modalSelect.tomselect.removeOption(shiftId);
+                } else {
+                    Array.from(modalSelect.options)
+                        .find((option) => option.value === shiftId)
+                        ?.remove();
+                }
+
+                injectedShiftOptionIds.delete(shiftId);
+            });
+        };
+
+        const ensureShiftOption = (shiftId, shiftName, shiftTime) => {
+            if (!shiftId || !shiftName) return;
+
+            const shiftOption = {
+                value: shiftId,
+                text: shiftName,
+                subtype: shiftTime || '',
+            };
+
+            if (modalSelect.tomselect) {
+                if (!modalSelect.tomselect.options[shiftId]) {
+                    modalSelect.tomselect.addOption(shiftOption);
+                    injectedShiftOptionIds.add(shiftId);
+                    modalSelect.tomselect.refreshOptions(false);
+                }
+
+                return;
+            }
+
+            const exists = Array.from(modalSelect.options)
+                .some((option) => option.value === shiftId);
+
+            if (!exists) {
+                const option = new Option(shiftName, shiftId);
+                option.dataset.subtype = shiftTime || '';
+                modalSelect.add(option);
+                injectedShiftOptionIds.add(shiftId);
+            }
+        };
 
         // Event delegation with jQuery
         $(document).on("click", ".open-shift-modal", function () {
@@ -125,24 +252,22 @@ document.addEventListener("DOMContentLoaded", () => {
             currentDate = $(this).data("date");
             currentUserName = $(this).data("username");
             formattedDate = formatDate(currentDate);
+            const currentShiftId = this.getAttribute("data-shift-id") || "";
+            const currentShiftName = this.getAttribute("data-shift-name") || "";
+            const currentShiftTime = this.getAttribute("data-shift-time") || "";
+            removeInjectedShiftOptions(currentShiftId);
 
             // Display existing details
             $("#modalUserName").text(currentUserName);
             $("#modalDate").text(formattedDate);
 
-            // Detect current shift in cell
-            const currentShift = $(this)
-                .closest("td")
-                .find(".shift-view div span")
-                .first()
-                .text()
-                .trim();
+            ensureShiftOption(currentShiftId, currentShiftName, currentShiftTime);
 
-            const option = $("#modalShiftSelect option").filter(function () {
-                return $(this).text().trim() === currentShift;
-            }).val() || "";
-
-            autoTomSelect("modalShiftSelect", option);
+            if (modalSelect.tomselect) {
+                autoTomSelect("modalShiftSelect", currentShiftId);
+            } else {
+                modalSelect.value = currentShiftId;
+            }
 
             $("#shiftModal").removeClass("hidden").addClass("flex");
         });
@@ -155,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Save modal
         $(document).on("click", "#modalSave", function () {
-            const shiftId = modalSelect.value;
+            const shiftId = modalSelect.tomselect ? modalSelect.tomselect.getValue() : modalSelect.value;
             if (!shiftId) return;
 
             const dateObj = new Date(currentDate);
