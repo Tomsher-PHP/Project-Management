@@ -195,7 +195,14 @@ class UserService
             : null;
     }
 
-    // Get the list of accessable users for the authenticated user
+    /**
+     * Get users accessible to the given user, with options to exclude or include specific user IDs.
+     *
+     * @param User $authUser The user for whom to retrieve accessible users.
+     * @param array $excludeIds Optional array of user IDs to exclude from the results.
+     * @param array $includeIds Optional array of user IDs to include in the results (even if not accessible).
+     * @return \Illuminate\Support\Collection Collection of User models.
+     */
     public function getAccessibleUsers(User $authUser, array $excludeIds = [], array $includeIds = [])
     {
         $excludeIds = collect($excludeIds)

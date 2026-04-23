@@ -516,31 +516,38 @@ class ProjectController extends Controller
     private function renderSettingsTab(Project $project): string
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
+        $selectedCustomerId = $project->customer_id;
+        $selectedCategoryId = $project->project_category_id;
+        $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
+
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load('technologies');
 
-        $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
-        $projectCategories = ProjectCategory::active()->orderBy('sort_order', 'asc')->get();
+        $customers = Customer::forForm($selectedCustomerId)->get();
+        $projectCategories = ProjectCategory::forForm($selectedCategoryId, 'sort_order')->get();
+        $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
+
         $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
-        $projectTechnologies = Technology::active()->orderBy('sort_order', 'asc')->get();
         $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
-        $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
+
         $priorities = config('project_constants.project_priorities');
+        // $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
+        // $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
 
         return view('projects.partials.tabs.settings', compact(
             'project',
             'users',
             'customers',
-            'statuses',
             'projectCategories',
             'nextProjectCategorySortOrder',
             'projectTechnologies',
             'nextProjectTechnologySortOrder',
-            'projectStages',
             'priorities'
+            // 'statuses',
+            // 'projectStages',
         ))->render();
     }
+
     private function getProjectHeaderData(Project $project, ProjectServices $service): array
     {
         $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
