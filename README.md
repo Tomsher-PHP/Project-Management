@@ -32,5 +32,9 @@ php artisan db:seed DummyDataSeeder
 # Start Laravel development server
 php artisan serve
 
-# Start Vite development server (frontend assets)
+# Start Vite development server
+npm install
 npm run dev
+
+# Create storage system link for uploaded files
+php artisan storage:link

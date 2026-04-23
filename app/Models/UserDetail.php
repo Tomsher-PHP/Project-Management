@@ -35,7 +35,6 @@ class UserDetail extends Model
             'designation_id' => 'integer',
             'reporter_id' => 'integer',
             'manager_id' => 'integer',
-            'employee_id' => 'integer',
             'joining_date' => 'datetime',
             'leaving_date' => 'datetime',
             'dob' => 'datetime',

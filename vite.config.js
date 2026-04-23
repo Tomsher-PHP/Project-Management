@@ -18,7 +18,10 @@ export default defineConfig({
                 'resources/js/modules/task-list-create.js',
                 'resources/js/modules/task-detail.js',
                 'resources/js/modules/projects/project-tasks.js',
-                'resources/js/modules/task-list-subtasks.js'
+                'resources/js/modules/task-list-subtasks.js',
+                'resources/js/modules/users/user-notification-settings.js',
+                'resources/js/modules/users/general-settings.js',
+                'resources/js/modules/users/change-password.js',
             ],
             refresh: true,
         }),

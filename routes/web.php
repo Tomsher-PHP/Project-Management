@@ -77,9 +77,22 @@ Route::middleware(['auth'])->group(function () {
     // End of Role & Permission Routes
 
     // User Management Routes
+    Route::post('/users/notification-settings', 
+        [UserController::class, 'updateNotificationSettings']
+    )->name('users.notification.settings');
+    Route::post(
+        '/users/general-settings',
+        [UserController::class, 'updateGeneralSettings']
+    )->name('users.general.settings');
+
+    Route::post('/users/change-password', 
+        [UserController::class, 'changePassword']
+    )->name('users.change.password');
+
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
+    Route::resource('users', UserController::class)->only(['show']); 
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
     // End of User Management Routes
