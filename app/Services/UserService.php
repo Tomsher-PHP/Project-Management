@@ -215,6 +215,7 @@ class UserService
         $accessibleIds = User::accessibleBy($authUser)->select('id');
 
         return User::query()
+            ->when(!empty($includeIds), fn ($query) => $query->withTrashed())
             ->select('id', 'name', 'email', 'is_active')
             ->with('primaryAttachment')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
@@ -225,7 +226,11 @@ class UserService
                 }
             })
             ->where(function ($q) use ($includeIds) {
-                $q->where('is_active', true);
+                $q->where(function ($q) {
+                    $q->where('is_active', true)
+                        ->where('delete_status', false)
+                        ->whereNull('deleted_at');
+                });
 
                 if (!empty($includeIds)) {
                     $q->orWhereIn('id', $includeIds);

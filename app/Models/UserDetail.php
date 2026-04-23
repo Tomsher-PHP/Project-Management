@@ -49,12 +49,12 @@ class UserDetail extends Model
 
     public function department()
     {
-        return $this->belongsTo(Department::class, 'department_id', 'id');
+        return $this->belongsTo(Department::class, 'department_id', 'id')->withTrashed();
     }
 
     public function designation()
     {
-        return $this->belongsTo(Designation::class, 'designation_id', 'id');
+        return $this->belongsTo(Designation::class, 'designation_id', 'id')->withTrashed();
     }
 
     public function reporter()

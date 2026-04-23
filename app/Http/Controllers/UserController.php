@@ -43,8 +43,8 @@ class UserController extends Controller
             ->withQueryString();
 
         $roles = Role::get();
-        $departments = Department::orderBy('sort_order', 'asc')->get();
-        $designations = Designation::orderBy('sort_order', 'asc')->get();
+        $departments = Department::withTrashed()->orderBy('sort_order', 'asc')->get();
+        $designations = Designation::withTrashed()->orderBy('sort_order', 'asc')->get();
 
         return view('users.index', compact('users', 'perPage', 'roles', 'departments', 'designations'));
     }
@@ -83,9 +83,48 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::active()->get();
-        $departments = Department::active()->orderBy('sort_order', 'asc')->get();
-        $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
+        $user->loadMissing('details');
+
+        $selectedRoleId = $user->role_id;
+        $selectedDepartmentId = $user->details?->department_id;
+        $selectedDesignationId = $user->details?->designation_id;
+
+        $roles = Role::query()
+            ->where(function ($query) use ($selectedRoleId) {
+                $query->active();
+
+                if (filled($selectedRoleId)) {
+                    $query->orWhere('id', $selectedRoleId);
+                }
+            })
+            ->get();
+
+        $departments = Department::withTrashed()
+            ->where(function ($query) use ($selectedDepartmentId) {
+                $query->where(function ($query) {
+                    $query->active()->whereNull('deleted_at');
+                });
+
+                if (filled($selectedDepartmentId)) {
+                    $query->orWhere('id', $selectedDepartmentId);
+                }
+            })
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
+        $designations = Designation::withTrashed()
+            ->where(function ($query) use ($selectedDesignationId) {
+                $query->where(function ($query) {
+                    $query->active()->whereNull('deleted_at');
+                });
+
+                if (filled($selectedDesignationId)) {
+                    $query->orWhere('id', $selectedDesignationId);
+                }
+            })
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
         $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
         $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
         $managerIds = collect([
