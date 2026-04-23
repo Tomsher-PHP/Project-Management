@@ -60,18 +60,9 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer)
     {
-        $industries = Industry::withTrashed()
-            ->where(function ($query) use ($customer) {
-                $query->where(function ($query) {
-                    $query->active()->whereNull('deleted_at');
-                });
-
-                if (filled($customer->industry_id)) {
-                    $query->orWhere('id', $customer->industry_id);
-                }
-            })
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        $selectedIndustryId = $customer->industry_id;
+        
+        $industries = Industry::forForm($selectedIndustryId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');

@@ -103,31 +103,8 @@ class UserController extends Controller
             })
             ->get();
 
-        $departments = Department::withTrashed()
-            ->where(function ($query) use ($selectedDepartmentId) {
-                $query->where(function ($query) {
-                    $query->active()->whereNull('deleted_at');
-                });
-
-                if (filled($selectedDepartmentId)) {
-                    $query->orWhere('id', $selectedDepartmentId);
-                }
-            })
-            ->orderBy('sort_order', 'asc')
-            ->get();
-
-        $designations = Designation::withTrashed()
-            ->where(function ($query) use ($selectedDesignationId) {
-                $query->where(function ($query) {
-                    $query->active()->whereNull('deleted_at');
-                });
-
-                if (filled($selectedDesignationId)) {
-                    $query->orWhere('id', $selectedDesignationId);
-                }
-            })
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        $departments = Department::forForm($selectedDepartmentId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
+        $designations = Designation::forForm($selectedDesignationId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
 
         $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
         $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
