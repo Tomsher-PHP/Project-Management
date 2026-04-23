@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/modules/users/user-notification-settings.js',
                 'resources/js/modules/users/general-settings.js',
                 'resources/js/modules/users/change-password.js',
+                'resources/js/modules/tasks/kanban-board.js',
             ],
             refresh: true,
         }),

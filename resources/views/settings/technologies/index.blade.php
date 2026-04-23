@@ -116,7 +116,7 @@
     <!-- Page ends -->
 
     <!-- Modal content start -->
-    <x-form-modal modalId="multi-step-modal" module="Project Category" formId="projectCategoryForm" action="{{ route('settings.project-categories.store') }}" button="Create Project Category">
+    <x-form-modal modalId="multi-step-modal" module="Technology" formId="technologyForm" action="{{ route('settings.technologies.store') }}" button="Create Technology">
 
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>

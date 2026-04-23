@@ -1,4 +1,8 @@
 @php
+    $authUser = auth()->user();
+    $canOpenTaskDetailPage = $authUser
+        && $authUser->can('task.view')
+        && $authUser->can('view', $task);
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
     $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
     $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
@@ -29,9 +33,21 @@
             </p>
         </div>
 
-        <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-detail-close>
-            ✕
-        </button>
+        <div class="flex items-center gap-3">
+            @if ($canOpenTaskDetailPage)
+                <a href="{{ route('tasks.edit', $task) }}" class="inline-flex items-center gap-2 rounded-lg border bg-bgray-100 px-4 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:text-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-900/40 dark:hover:bg-darkblack-400 dark:hover:text-success-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
+                    </svg>
+                    <span>Task Details</span>
+                </a>
+            @endif
+
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-detail-close>
+                ✕
+            </button>
+        </div>
     </div>
 
     <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]" data-project-task-detail-form action="{{ route('projects.tasks.update', [$project, $task]) }}" method="POST" data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}" data-current-task-id="{{ $task->id }}" data-task-placement='@json($taskPlacementOptions)'>

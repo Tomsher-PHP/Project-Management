@@ -18,11 +18,20 @@ class TaskPolicy
             return true;
         }
 
-        if ((int) $task->added_by === (int) $user->id) {
+        if ((int) ($task->current_assignee_id ?? 0) === (int) $user->id) {
             return true;
         }
 
-        return (int) ($task->current_assignee_id ?? 0) === (int) $user->id;
+        $task->loadMissing([
+            'project.teamLeader',
+            'projectModule:id,owner_id',
+        ]);
+
+        if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        return (int) ($task->projectModule?->owner_id ?? 0) === (int) $user->id;
     }
 
     public function update(User $user, Task $task): bool

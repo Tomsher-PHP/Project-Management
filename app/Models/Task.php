@@ -38,6 +38,13 @@ class Task extends Model
         'derived_time_seconds',
         'actual_time_seconds',
         'is_billable',
+        'request_type',
+        'request_status',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
         'sort_order',
         'added_by',
         'updated_by',
@@ -76,6 +83,10 @@ class Task extends Model
         'derived_time_seconds' => 'integer',
         'actual_time_seconds' => 'integer',
         'is_billable' => 'boolean',
+        'approved_by' => 'integer',
+        'approved_at' => 'datetime',
+        'rejected_by' => 'integer',
+        'rejected_at' => 'datetime',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -222,6 +233,16 @@ class Task extends Model
         return $this->belongsTo(User::class, 'current_assignee_id');
     }
 
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
     public function assignmentLogs()
     {
         return $this->hasMany(TaskAssignmentLog::class)->latest('assigned_from');
@@ -230,6 +251,21 @@ class Task extends Model
     public function currentAssignmentLog()
     {
         return $this->hasOne(TaskAssignmentLog::class)->where('is_current', true);
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->request_status === 'pending';
+    }
+
+    public function isApprovedRequest(): bool
+    {
+        return $this->request_status === 'approved';
+    }
+
+    public function isRejectedRequest(): bool
+    {
+        return $this->request_status === 'rejected';
     }
 
     protected function applyFilterSearchExtensions(Builder $query, string $search, string $condition): void
@@ -392,8 +428,13 @@ class Task extends Model
 
         return $query->where(function ($taskQuery) use ($user) {
             $taskQuery
-                ->where('added_by', $user->id)
-                ->orWhere('current_assignee_id', $user->id);
+                ->where('current_assignee_id', $user->id)
+                ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectModule', function ($moduleQuery) use ($user) {
+                    $moduleQuery->where('owner_id', $user->id);
+                });
         });
     }
 
@@ -440,7 +481,31 @@ class Task extends Model
         $hours = floor($totalSeconds / 3600);
         $minutes = floor(($totalSeconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
+    }
+
+    // Get all related users for notifications (assignee, reporter, manager, project team leader, module owner)
+    public function getRelatedUsers()
+    {
+        $this->loadMissing([
+            'addedBy',
+            'currentAssignee.reporter',
+            'currentAssignee.manager',
+            'project.teamLeader',
+            'projectModule.owner',
+        ]);
+
+        return collect([
+            $this->addedBy,
+            $this->currentAssignee,
+            $this->currentAssignee?->reporter,
+            $this->currentAssignee?->manager,
+            $this->project?->teamLeader,
+            $this->projectModule?->owner,
+        ])
+            ->filter()
+            ->unique('id')
+            ->values();
     }
 
     /*----------------Activity Log Customization----------------*/

@@ -254,6 +254,74 @@ const getProjectMeta = (dependencies, projectId) => {
     return dependencies.projects?.[String(projectId)] || null;
 };
 
+const getTaskCreateMode = (root) => root?.dataset.taskCreateMode === 'request' ? 'request' : 'create';
+
+const setTaskCreateMode = (root, mode = 'create') => {
+    if (!root) {
+        return;
+    }
+
+    const normalizedMode = mode === 'request' ? 'request' : 'create';
+    const form = root.querySelector('[data-task-create-form]');
+    const titleNode = root.querySelector('[data-task-create-title]');
+    const assigneeFieldWrapper = root.querySelector('[data-task-create-assignee-field]');
+    const requestTypeField = form?.querySelector('[data-task-create-request-type]');
+    const submitButton = form?.querySelector('[data-task-create-submit]');
+
+    root.dataset.taskCreateMode = normalizedMode;
+
+    if (form) {
+        form.dataset.storeUrl = normalizedMode === 'request'
+            ? (form.dataset.requestStoreUrl || form.dataset.defaultStoreUrl || form.dataset.storeUrl || '')
+            : (form.dataset.defaultStoreUrl || form.dataset.storeUrl || '');
+    }
+
+    if (titleNode) {
+        titleNode.textContent = normalizedMode === 'request'
+            ? (titleNode.dataset.requestTitle || 'Request Task')
+            : (titleNode.dataset.defaultTitle || 'Add Task');
+    }
+
+    if (assigneeFieldWrapper) {
+        assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    if (requestTypeField) {
+        requestTypeField.value = normalizedMode === 'request' ? 'self' : 'assigned';
+    }
+
+    if (submitButton) {
+        submitButton.textContent = normalizedMode === 'request' ? 'Request Task' : 'Save Task';
+    }
+};
+
+const syncSelfAssignee = (form, options = []) => {
+    if (!form || getTaskCreateMode(form.closest('[data-task-create-root]')) !== 'request') {
+        return;
+    }
+
+    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const selfAssigneeId = String(form.dataset.selfAssigneeId || '');
+
+    if (!assigneeField || !selfAssigneeId) {
+        return;
+    }
+
+    const hasSelfOption = options.some((option) => String(option.value) === selfAssigneeId)
+        || Array.from(assigneeField.options).some((option) => String(option.value) === selfAssigneeId);
+
+    if (!hasSelfOption) {
+        return;
+    }
+
+    if (assigneeField.tomselect) {
+        assigneeField.tomselect.setValue(selfAssigneeId, true);
+        return;
+    }
+
+    assigneeField.value = selfAssigneeId;
+};
+
 const openTaskCreateModal = (modal) => {
     if (!modal) {
         return;
@@ -261,17 +329,6 @@ const openTaskCreateModal = (modal) => {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-
-    window.requestAnimationFrame(() => {
-        const projectField = modal.querySelector('[name="project_id"]');
-
-        if (projectField?.tomselect) {
-            projectField.tomselect.focus();
-            return;
-        }
-
-        projectField?.focus();
-    });
 };
 
 const closeTaskCreateModal = (modal) => {
@@ -394,6 +451,7 @@ const applyProjectDefaults = async (form, dependencies) => {
         placeholder: 'Select assignee',
         disabled: false,
     });
+    syncSelfAssignee(form, projectMeta.assignees || []);
 
     setSelectOptions(statusField, dependencies.status_options_by_flow?.[projectMeta.flow] || [], {
         placeholder: 'Select status',
@@ -463,6 +521,8 @@ const loadParentTaskOptions = async (form, dependencies) => {
     if (sprintField?.value) {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
+    console.log(requestUrl);
+    
 
     const response = await fetch(requestUrl.toString(), {
         headers: {
@@ -495,6 +555,7 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     form.reset();
     clearTaskCreateErrors(form);
     setTaskCreateAdvancedState(root, false);
+    setTaskCreateMode(root, getTaskCreateMode(root));
     syncTaskCreateSelectState(form);
     setEmptyProjectState(form);
 
@@ -538,6 +599,7 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         const openButton = event.target.closest('[data-task-create-open]');
 
         if (openButton) {
+            setTaskCreateMode(root, openButton.dataset.taskCreateRequestType === 'self' ? 'request' : 'create');
             openTaskCreateModal(root.querySelector('[data-task-create-modal]'));
 
             try {
@@ -683,7 +745,7 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             submitButton?.removeAttribute('disabled');
 
             if (submitButton) {
-                submitButton.textContent = 'Save Task';
+                submitButton.textContent = getTaskCreateMode(root) === 'request' ? 'Request Task' : 'Save Task';
             }
         }
     });

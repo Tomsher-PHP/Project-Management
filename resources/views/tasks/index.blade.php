@@ -102,7 +102,7 @@
                 <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
             </div>
         </div>
-
+        
         @can('task.create')
             @include('tasks.partials.create-modal')
         @endcan

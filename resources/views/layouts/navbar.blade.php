@@ -135,11 +135,11 @@
                         <ul class="scroll-style-1 h-[335px] w-full overflow-y-scroll">
                             @forelse($notifications as $notification)
                                 <li class="border-b border-bgray-200 py-4 pl-6 pr-[50px] hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500">
-                                    <a href="{{ $notification->data['url'] ?? '#' }}">
+                                    <a href="{{ route('notifications.markRead', $notification->id) }}">
                                         <div class="noti-item">
                                             <p class="mb-1 text-sm font-medium text-bgray-600 dark:text-bgray-50">
                                                 <strong class="text-bgray-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</strong>
-                                                {!! $notification->data['message'] ?? '' !!}
+                                                {{ $notification->data['message'] ?? '' }}
                                             </p>
                                             <span class="text-xs font-medium text-bgray-500">{{ $notification->created_at->diffForHumans() }}</span>
                                         </div>

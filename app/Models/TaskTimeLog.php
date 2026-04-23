@@ -19,6 +19,9 @@ class TaskTimeLog extends Model
         'duration_seconds',
         'is_running',
         'note',
+        'is_approved',
+        'approved_by',
+        'approved_at',
         'added_by',
         'updated_by',
     ];
@@ -31,6 +34,9 @@ class TaskTimeLog extends Model
         'ended_at' => 'datetime',
         'duration_seconds' => 'integer',
         'is_running' => 'boolean',
+        'is_approved' => 'boolean',
+        'approved_by' => 'integer',
+        'approved_at' => 'datetime',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];

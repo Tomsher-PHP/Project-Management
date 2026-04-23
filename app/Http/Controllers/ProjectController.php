@@ -522,7 +522,9 @@ class ProjectController extends Controller
         $customers = Customer::active()->get();
         $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $projectCategories = ProjectCategory::active()->orderBy('sort_order', 'asc')->get();
+        $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
         $projectTechnologies = Technology::active()->orderBy('sort_order', 'asc')->get();
+        $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
         $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('project_constants.project_priorities');
 
@@ -532,7 +534,9 @@ class ProjectController extends Controller
             'customers',
             'statuses',
             'projectCategories',
+            'nextProjectCategorySortOrder',
             'projectTechnologies',
+            'nextProjectTechnologySortOrder',
             'projectStages',
             'priorities'
         ))->render();

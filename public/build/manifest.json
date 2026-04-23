@@ -32,7 +32,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DkhHYZ1o.css",
+    "file": "assets/app-D5ThAFS6.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -41,7 +41,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B8UXxYp1.js",
+    "file": "assets/app-BrPJdbMR.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -74,7 +74,7 @@
     "isEntry": true
   },
   "resources/js/modules/customer-contact.js": {
-    "file": "assets/customer-contact-BweAcp3w.js",
+    "file": "assets/customer-contact-DTWoFvT6.js",
     "name": "customer-contact",
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
@@ -113,7 +113,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DGkBXt9i.js",
+    "file": "assets/task-detail-CLIaXV2k.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -125,7 +125,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-ITHhDyKS.js",
+    "file": "assets/task-list-create-C65DEMHM.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -138,6 +138,12 @@
     "file": "assets/task-list-subtasks-zO9FwpyV.js",
     "name": "task-list-subtasks",
     "src": "resources/js/modules/task-list-subtasks.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/kanban-board.js": {
+    "file": "assets/kanban-board-BdFS9mhO.js",
+    "name": "kanban-board",
+    "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
   },
   "resources/js/modules/team.js": {

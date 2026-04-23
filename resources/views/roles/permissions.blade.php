@@ -20,7 +20,7 @@
 
                 <!-- Module Header with Module Select All -->
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl dark:bg-darkblack-600 dark:border-darkblack-400 flex justify-between items-center">
-                    <h3 class="text-sm font-semibold text-gray-800 tracking-wide uppercase dark:text-white">
+                    <h3 id="permission-module-{{ \Illuminate\Support\Str::slug($module) }}" tabindex="-1" class="scroll-mt-28 rounded text-sm font-semibold text-gray-800 tracking-wide uppercase outline-none transition focus:ring-2 focus:ring-success-200 dark:text-white dark:focus:ring-success-900/50">
                         {{ ucfirst(str_replace('_', ' ', $module)) }}
                     </h3>
 

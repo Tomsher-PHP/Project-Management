@@ -80,4 +80,15 @@ return [
             'text_class' => 'text-success-400',
         ],
     ],
+
+    'task_request_types' => [
+        'self',
+        'assigned'
+    ],
+
+    'request_statuses' => [
+        'pending',
+        'approved',
+        'rejected'
+    ],
 ];

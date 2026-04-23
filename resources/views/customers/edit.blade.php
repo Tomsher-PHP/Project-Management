@@ -37,13 +37,7 @@
             </div>
 
             <!-- Email -->
-            <x-forms.email-input
-                label="Email"
-                name="email"
-                id="extra_contact_email"
-                placeholder="Enter email address"
-                domain-suffix="@gmail.com"
-            />
+            <x-forms.email-input label="Email" name="email" id="extra_contact_email" placeholder="Enter email address" domain-suffix="@gmail.com" />
 
             <!-- Designation -->
             <div class="flex flex-col gap-2">

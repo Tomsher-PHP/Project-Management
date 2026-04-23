@@ -80,7 +80,7 @@
                             </div>
 
                             <div class="text-left sm:text-right">
-                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ sprintf('%02d:%02d', $durationHours, $durationMinutes) }}</p>
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ sprintf('%02dh : %02dm', $durationHours, $durationMinutes) }}</p>
                                 <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $timeLog->note ?: 'No note' }}</p>
                             </div>
                         </div>

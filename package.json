@@ -18,6 +18,7 @@
         "alpinejs": "^3.15.8",
         "flatpickr": "^4.6.13",
         "quill": "^2.0.3",
+        "sortablejs": "^1.15.7",
         "sweetalert2": "^11.26.20",
         "tom-select": "^2.5.2"
     }

@@ -22,6 +22,7 @@ class TaskQuickStoreRequest extends FormRequest
         $project = $this->resolveProject();
         $projectId = $project?->id;
         $routeProject = $this->route('project');
+        $requestTypes = config('project_constants.task_request_types', []);
 
         return [
             'project_id' => [
@@ -30,6 +31,7 @@ class TaskQuickStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('projects', 'id'),
             ],
+            'request_type' => ['nullable', Rule::in($requestTypes)],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status_id' => [
@@ -86,6 +88,7 @@ class TaskQuickStoreRequest extends FormRequest
         return [
             'project_id.required' => 'Please choose a project.',
             'project_id.exists' => 'The selected project is invalid.',
+            'request_type.in' => 'The selected request type is invalid.',
             'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
             'project_module_id.exists' => 'The selected module is invalid.',
@@ -108,6 +111,7 @@ class TaskQuickStoreRequest extends FormRequest
                 $parentTaskId = $this->nullableIntegerInput('parent_task_id');
                 $projectModuleId = $this->nullableIntegerInput('project_module_id');
                 $selectedSprintId = $this->nullableIntegerInput('project_sprint_id');
+                $requestType = $this->input('request_type', 'assigned');
 
                 if (! $project || ! $projectId) {
                     return;
@@ -132,6 +136,18 @@ class TaskQuickStoreRequest extends FormRequest
                     $selectedSprintId
                 );
 
+                if ($requestType === 'self' && $this->user()?->id) {
+                    $isProjectMember = $project->activeMembers()
+                        ->whereKey($this->user()->id)
+                        ->exists();
+
+                    if (! $isProjectMember) {
+                        $validator->errors()->add('project_id', 'You are not allowed to request a task for the selected project.');
+
+                        return;
+                    }
+                }
+
                 if (! $parentTaskId) {
                     return;
                 }
@@ -143,10 +159,6 @@ class TaskQuickStoreRequest extends FormRequest
                 if (! $parentTask) {
                     return;
                 }
-
-                // if (filled($parentTask->parent_task_id) && (int) $parentTask->parent_task_id > 0) {
-                //     $validator->errors()->add('parent_task_id', 'Please choose a top-level parent task.');
-                // }
 
                 if ($project?->project_flow === 'linear') {
                     if (! empty($parentTask->project_sprint_id)) {

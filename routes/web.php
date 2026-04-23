@@ -27,6 +27,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -225,6 +226,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
     // End Notification Routes
 
     // Customer Routes
@@ -247,9 +249,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
-        Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->middleware(['permission.type:project.view', 'can:view,task'])->name('projects.tasks.modal');
+        Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
-        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');
+        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit'])->name('projects.tasks.update');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
         Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
 
@@ -298,7 +300,7 @@ Route::middleware(['auth'])->group(function () {
     // End Project Routes
 
     // Task Routes
-    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->middleware(['permission.type:task.create'])->name('tasks.quick-create-parent-options');
+    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
     Route::prefix('tasks/{task}')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
@@ -324,7 +326,23 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
+    Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
+    
+    // Task status, order change route
+    Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
+    Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
     // End Task Routes
+    
+    // Task request routes
+    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
+    Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.bulk-action');
+    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.action');
+    // End Task request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

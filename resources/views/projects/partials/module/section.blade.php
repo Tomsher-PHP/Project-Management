@@ -24,7 +24,7 @@
             $hours = intdiv($totalSeconds, 3600);
             $minutes = intdiv($totalSeconds % 3600, 60);
 
-            return sprintf('%02d h : %02d m', $hours, $minutes);
+            return sprintf('%02dh : %02dm', $hours, $minutes);
         };
         $formatDate = function ($date): string {
             return \App\Providers\AppServiceProvider::formatAppDate($date);
