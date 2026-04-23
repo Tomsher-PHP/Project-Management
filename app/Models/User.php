@@ -258,4 +258,50 @@ class User extends Authenticatable
             default => $value,
         };
     }
+
+    /**
+     * Function to get the profile completion percentage.
+     *
+     * @return array
+     */
+    public function profileCompletion()
+    {
+        $userFields = [
+            'name' => $this->name,
+            'email' => $this->email,
+            'profile_photo' => $this->profileImageUrl,
+        ];
+
+        $detailsFields = collect($this->details ?? [])->except([
+            'id',
+            'user_id',
+            'created_at',
+            'updated_at',
+            'leaving_date',
+            'deleted_at',
+        ])->toArray();
+
+        $allFields = array_merge($userFields, $detailsFields);
+
+        $total = count($allFields);
+
+        $filled = count(array_filter($allFields));
+
+        return [
+            'percentage' => $total ? round(($filled / $total) * 100) : 0,
+            'filled' => $filled,
+            'total' => $total,
+            'missing' => array_keys(array_filter($allFields, fn($v) => empty($v)))
+        ];
+    }
+
+    public function notificationSettings()
+    {
+        return $this->hasMany(UserNotificationSetting::class);
+    }
+
+    public function generalSettings()
+    {
+        return $this->hasOne(UserGeneralSetting::class, 'user_id');
+    }
 }

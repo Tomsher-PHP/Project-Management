@@ -11,15 +11,15 @@
             </button>
             <div>
                 <a href="/">
-                    <img src="./assets/images/logo/logo-color.svg" class="block dark:hidden" alt="logo" />
-                    <img src="./assets/images/logo/logo-white.svg" class="hidden dark:block" alt="logo" />
+                    <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
+                    <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
                 </a>
             </div>
         </div>
         <div class="mr-2">
             <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">
                 <div class="h-[52px] w-[52px] overflow-hidden rounded-xl border border-bgray-300">
-                    <img class="object-cover" src="./assets/images/avatar/profile-52x52.png" alt="avater" />
+                    <img class="object-cover" src="{{ asset(config('assets.icons.profile')) }}" alt="avater" />
                 </div>
                 <div class="hidden 2xl:block">
                     <div class="flex items-center space-x-2.5">
