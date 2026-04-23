@@ -555,12 +555,15 @@ class ProjectController extends Controller
         $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
         $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
 
+        $selectedStatusId = $project->status_id;
+        $selectedStageId = $project->project_stage_id;
+
         return [
             'priority' => config('project_constants.project_priorities')[$project->priority] ?? null,
             'projectTimeline' => $timelines['projectTimeline'],
             'customerTimeline' => $timelines['customerTimeline'],
-            'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
-            'projectStages' => ProjectStage::active()->orderBy('sort_order', 'asc')->get(),
+            'projectStatuses' => ProjectStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])->get(),
+            'projectStages' => ProjectStage::forForm($selectedStageId, ['order_by' => 'sort_order'])->get(),
             'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
             'statusChangeMinDateLabel' => $statusChangeMinDate ? AppServiceProvider::formatAppDate($statusChangeMinDate) : null,
             'stageChangeMinDate' => $stageChangeMinDate?->toDateString(),
