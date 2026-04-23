@@ -44,7 +44,7 @@ class UserShiftAssignment extends Model
 
     public function shift()
     {
-        return $this->belongsTo(Shift::class);
+        return $this->belongsTo(Shift::class)->withTrashed();
     }
 
     public function weekends()

@@ -7,11 +7,12 @@ use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
-    use Filterable, Sortable;
+    use Filterable, Sortable, SoftDeletes;
 
     protected $fillable = [
         'name',
