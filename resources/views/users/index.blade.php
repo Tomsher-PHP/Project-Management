@@ -111,6 +111,9 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
+                                                @can('user.view')
+                                                    <x-view-button :action="route('users.show', $user->id)" />
+                                                @endcan
                                                 @can('user.edit')
                                                     <x-edit-button :action="route('users.edit', $user->id)" />
                                                 @endcan
