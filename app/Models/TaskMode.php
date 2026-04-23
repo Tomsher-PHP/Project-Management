@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TaskMode extends Model
 {
-    use Filterable, Sortable;
+    use Filterable, Sortable, SoftDeletes, HasFormOptions;
 
     public $timestamps = false;
 

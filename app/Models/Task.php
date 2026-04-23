@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Traits\HasFormOptions;
 
 class Task extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected ?int $previousProjectModuleIdForMetrics = null;
 
@@ -136,6 +137,24 @@ class Task extends Model
         });
     }
 
+    public function scopeAccessibleBy($query, User $user)
+    {
+        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
+            return $query;
+        }
+
+        return $query->where(function ($taskQuery) use ($user) {
+            $taskQuery
+                ->where('current_assignee_id', $user->id)
+                ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectModule', function ($moduleQuery) use ($user) {
+                    $moduleQuery->where('owner_id', $user->id);
+                });
+        });
+    }
+
     public function refreshPlacementMetrics(): void
     {
         $sprintIds = collect([
@@ -215,17 +234,17 @@ class Task extends Model
 
     public function status()
     {
-        return $this->belongsTo(TaskStatus::class, 'status_id');
+        return $this->belongsTo(TaskStatus::class, 'status_id')->withTrashed();
     }
 
     public function taskType()
     {
-        return $this->belongsTo(TaskType::class, 'task_type_id');
+        return $this->belongsTo(TaskType::class, 'task_type_id')->withTrashed();
     }
 
     public function taskMode()
     {
-        return $this->belongsTo(TaskMode::class, 'task_mode_id');
+        return $this->belongsTo(TaskMode::class, 'task_mode_id')->withTrashed();
     }
 
     public function currentAssignee()
@@ -418,24 +437,6 @@ class Task extends Model
     public function getActualTimeFormattedAttribute(): string
     {
         return $this->formatSeconds($this->actual_time_seconds);
-    }
-
-    public function scopeAccessibleBy($query, User $user)
-    {
-        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
-            return $query;
-        }
-
-        return $query->where(function ($taskQuery) use ($user) {
-            $taskQuery
-                ->where('current_assignee_id', $user->id)
-                ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
-                    $teamLeaderQuery->whereKey($user->id);
-                })
-                ->orWhereHas('projectModule', function ($moduleQuery) use ($user) {
-                    $moduleQuery->where('owner_id', $user->id);
-                });
-        });
     }
 
     public static function nextSortOrder(int $projectId, ?int $projectSprintId = null): int

@@ -129,8 +129,8 @@
                 <div class="flex items-center gap-2">
                     <select name="task_type_id" class="tom-select-no-search w-full">
                         @foreach ($taskTypeOptions as $option)
-                            <option value="{{ $option['value'] }}" {{ (string) $task->task_type_id === (string) $option['value'] ? 'selected' : '' }}>
-                                {{ $option['label'] }}
+                            <option value="{{ $option->id }}" {{ (string) $task->task_type_id === (string) $option->id ? 'selected' : '' }}>
+                                {{ $option->name }}
                             </option>
                         @endforeach
                     </select>
@@ -157,8 +157,8 @@
                 <div class="flex items-center gap-2">
                     <select name="task_mode_id" class="tom-select-no-search w-full">
                         @foreach ($taskModeOptions as $option)
-                            <option value="{{ $option['value'] }}" {{ (string) $task->task_mode_id === (string) $option['value'] ? 'selected' : '' }}>
-                                {{ $option['label'] }}
+                            <option value="{{ $option->id }}" {{ (string) $task->task_mode_id === (string) $option->id ? 'selected' : '' }}>
+                                {{ $option->name }}
                             </option>
                         @endforeach
                     </select>

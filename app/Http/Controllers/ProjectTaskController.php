@@ -97,7 +97,7 @@ class ProjectTaskController extends Controller
         $excludedTaskIds = $this->getExcludedParentTaskIds($currentTask);
         $query = Task::query()
             ->where('project_id', $project->id)
-            ->when($excludedTaskIds, fn ($builder) => $builder->whereNotIn('id', $excludedTaskIds))
+            ->when($excludedTaskIds, fn($builder) => $builder->whereNotIn('id', $excludedTaskIds))
             ->orderBy('name')
             ->orderBy('id');
 
@@ -968,16 +968,17 @@ class ProjectTaskController extends Controller
 
     private function getTaskModalData(Project $project, ?Task $task = null): array
     {
-        $taskTypeOptions = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
-        $taskModeOptions = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'color']);
+        $selectedStatusId = $task->status_id ?: $this->getDefaultTaskStatusIdForFlow($project->project_flow);
+        $selectedtypeId = $task->task_type_id ?: TaskType::query()->active()->where('is_default', true)->value('id');
+        $selectedModeId = $task->task_mode_id ?: TaskMode::query()->active()->where('is_default', true)->value('id');
+
+        $taskStatuses = TaskStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])
+            ->forFlow($project->project_flow)
+            ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
+        $taskTypeOptions = TaskType::forForm($selectedtypeId, ['order_by' => 'sort_order'])
+            ->get(['id', 'name', 'color', 'is_default']);
+        $taskModeOptions = TaskMode::forForm($selectedModeId, ['order_by' => 'sort_order'])
+            ->get(['id', 'name', 'color', 'is_default']);
         $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
             ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
             ->values();
@@ -985,12 +986,6 @@ class ProjectTaskController extends Controller
         return [
             'canEditTask' => $task ? $this->canEditTaskModal($task) : false,
             'isLinearFlow' => $project->project_flow === 'linear',
-            'taskStatuses' => TaskStatus::query()
-                ->active()
-                ->forFlow($project->project_flow)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']),
             'projectModules' => ProjectModule::query()
                 ->where('project_id', $project->id)
                 ->orderForDisplay()
@@ -1013,6 +1008,7 @@ class ProjectTaskController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'color']),
+            'taskStatuses' => $taskStatuses,
             'taskTypeOptions' => $taskTypeOptions,
             'taskModeOptions' => $taskModeOptions,
             'taskPriorityOptions' => $taskPriorityOptions,
@@ -1076,7 +1072,7 @@ class ProjectTaskController extends Controller
             $childIds = Task::query()
                 ->whereIn('parent_task_id', $pendingParentIds)
                 ->pluck('id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->all();
 
             $pendingParentIds = array_values(array_diff($childIds, $excludedTaskIds));

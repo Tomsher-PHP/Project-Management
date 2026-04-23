@@ -738,6 +738,18 @@ class TaskController extends Controller
     {
         $project = $task->project;
 
+        $selectedStatusId = $task->status_id ?: $this->getDefaultTaskStatusIdForFlow($project->project_flow);
+        $selectedtypeId = $task->task_type_id ?: TaskType::query()->active()->where('is_default', true)->value('id');
+        $selectedModeId = $task->task_mode_id ?: TaskMode::query()->active()->where('is_default', true)->value('id');
+
+        $taskStatuses = TaskStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])
+            ->forFlow($project->project_flow)
+            ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
+        $taskTypeOptions = TaskType::forForm($selectedtypeId, ['order_by' => 'sort_order'])
+            ->get(['id', 'name', 'color', 'is_default']);
+        $taskModeOptions = TaskMode::forForm($selectedModeId, ['order_by' => 'sort_order'])
+            ->get(['id', 'name', 'color', 'is_default']);
+
         return [
             'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
@@ -745,12 +757,6 @@ class TaskController extends Controller
                 ->where('project_id', $project->id)
                 ->orderForDisplay()
                 ->get(['id', 'name']),
-            'taskStatuses' => TaskStatus::query()
-                ->active()
-                ->forFlow($project->project_flow)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']),
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
                 ->with(['projectModule:id,name'])
@@ -769,21 +775,10 @@ class TaskController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name', 'color']),
-            'taskTypeOptions' => TaskType::query()
-                ->active()
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(fn(TaskType $taskType) => ['value' => (string) $taskType->id, 'label' => $taskType->name])
-                ->values(),
+            'taskStatuses' => $taskStatuses,
+            'taskTypeOptions' => $taskTypeOptions,
+            'taskModeOptions' => $taskModeOptions,
             'nextTaskTypeSortOrder' => ((int) TaskType::max('sort_order')) + 1,
-            'taskModeOptions' => TaskMode::query()
-                ->active()
-                ->orderByDesc('is_default')
-                ->orderBy('id')
-                ->get(['id', 'name'])
-                ->map(fn(TaskMode $taskMode) => ['value' => (string) $taskMode->id, 'label' => $taskMode->name])
-                ->values(),
             'nextTaskModeSortOrder' => ((int) TaskMode::max('sort_order')) + 1,
             'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
                 ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
