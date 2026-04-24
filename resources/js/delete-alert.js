@@ -84,11 +84,20 @@ $(document).on('click', '.delete-form', function (e) {
     };
 
     const confirmDelete = (message = 'Delete record?') => {
+        const requiresDeleteTextConfirmation = [
+            /\/users\/\d+(?:\/)?$/,
+            /\/teams\/\d+(?:\/)?$/,
+            /\/customers\/\d+(?:\/)?$/,
+            /\/projects\/\d+(?:\/)?$/,
+            /\/tasks\/\d+(?:\/)?$/,
+        ].some((pattern) => pattern.test(form.action));
+
         Alert.confirm({
             title: 'Confirm Delete',
             text: message,
             confirmText: 'Yes, delete it',
-            cancelText: 'Cancel'
+            cancelText: 'Cancel',
+            requireText: requiresDeleteTextConfirmation ? 'DELETE' : null,
         }).then(result => {
             if (result.isConfirmed) {
                 submitDelete();

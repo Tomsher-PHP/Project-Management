@@ -568,6 +568,7 @@ const deleteProjectTask = async (root, triggerButton) => {
         text: `Delete ${taskName}?`,
         confirmText: 'Yes, delete it',
         cancelText: 'Cancel',
+        requireText: 'DELETE',
     });
 
     if (!confirmation?.isConfirmed) {

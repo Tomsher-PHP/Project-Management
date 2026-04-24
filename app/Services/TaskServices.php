@@ -22,7 +22,8 @@ class TaskServices
     public function __construct(
         protected ProjectServices $projectServices,
         protected TaskQueryService $queryService,
-        protected TaskFilterService $filterService
+        protected TaskFilterService $filterService,
+        protected NotificationService $notificationService
     ) {}
 
     // Get paginated task list for the current user
@@ -451,9 +452,15 @@ class TaskServices
     }
 
     // Stop the currently running timer and record duration
-    public function stopTimer(Task $task)
+    public function stopTimer(Task $task, User $actor)
     {
-        return DB::transaction(function () use ($task) {
+        return DB::transaction(function () use ($task, $actor) {
+            $task->loadMissing([
+                'project:id,name',
+                'currentAssignee:id,name',
+            ]);
+
+            $stoppedByNonAssignee = $this->requiresNonAssigneeStopConfirmation($task, $actor);
             $log = TaskTimeLog::where('task_id', $task->id)->where('is_running', 1)->latest()->first();
 
             if (!$log) {
@@ -474,6 +481,10 @@ class TaskServices
 
             // Update task total time
             $task->increment('actual_time_seconds', $duration);
+
+            if ($stoppedByNonAssignee) {
+                $this->notificationService->notifyTaskTimerStoppedByOtherUser($task, $actor);
+            }
 
             return $log;
         });
@@ -498,9 +509,13 @@ class TaskServices
     }
 
     // Check whether current user can stop timer on this task
-    public function isAllowedToStop(Task $task): bool
+    public function isAllowedToStop(Task $task, ?User $user = null): bool
     {
-        $user = auth()->user();
+        $user = $user ?: auth()->user();
+
+        if (! $user) {
+            return false;
+        }
 
         // if task is not assigned, no one can stop timer
         if ($task->current_assignee_id === null) {
@@ -534,7 +549,21 @@ class TaskServices
             return true;
         }
 
+        // Allow if project team leader
+        if ($task->project->teamLeader->id === $user->id) {
+            return true;
+        }
+
         return false;
+    }
+
+    public function requiresNonAssigneeStopConfirmation(Task $task, User $user): bool
+    {
+        if ($task->current_assignee_id === null) {
+            return false;
+        }
+
+        return (int) $task->current_assignee_id !== (int) $user->id;
     }
 
     public function isAllowedChangeStatus(Task $task, User $user): bool

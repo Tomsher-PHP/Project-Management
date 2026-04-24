@@ -84,7 +84,15 @@
             $isRunning = $task->timeLogs()->where('is_running', 1)->exists();
         @endphp
 
-        <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" id="task-timer-btn" class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold text-white transition {{ $isRunning ? 'bg-error-300 hover:bg-red-500' : 'bg-success-400 hover:bg-success-300' }}">
+        <button type="button"
+            data-task-id="{{ $task->id }}"
+            data-running="{{ $isRunning ? 1 : 0 }}"
+            data-current-user-id="{{ auth()->id() ?? '' }}"
+            data-assignee-id="{{ $task->current_assignee_id ?? '' }}"
+            data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}"
+            data-task-name="{{ $task->name }}"
+            id="task-timer-btn"
+            class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold text-white transition {{ $isRunning ? 'bg-error-300 hover:bg-red-500' : 'bg-success-400 hover:bg-success-300' }}">
             {{ $isRunning ? 'Stop' : 'Start' }}
         </button>
 

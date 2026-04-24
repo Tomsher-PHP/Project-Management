@@ -945,14 +945,30 @@ class TaskController extends Controller
         return response()->json(['message' => 'Timer started'], Response::HTTP_OK);
     }
 
-    public function stop(Task $task, TaskServices $taskServices): JsonResponse
+    public function stop(Request $request, Task $task, TaskServices $taskServices): JsonResponse
     {
         try {
-            if (! $taskServices->isAllowedToStop($task, auth()->user())) {
+            $user = $request->user();
+
+            if (! $taskServices->isAllowedToStop($task, $user)) {
                 return response()->json(['message' => 'Not allowed to stop timer for this task'], Response::HTTP_FORBIDDEN);
             }
 
-            $log = $taskServices->stopTimer($task);
+            if (
+                $user
+                && $taskServices->requiresNonAssigneeStopConfirmation($task, $user)
+                && ! $request->boolean('confirmed_non_assignee_stop')
+            ) {
+                $task->loadMissing('currentAssignee:id,name');
+
+                return response()->json([
+                    'message' => 'Please confirm before stopping another assignee\'s timer.',
+                    'requires_confirmation' => true,
+                    'assignee_name' => $task->currentAssignee?->name,
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $log = $taskServices->stopTimer($task, $user);
 
             return response()->json(['message' => 'Timer stopped', 'data' => $log], Response::HTTP_OK);
         } catch (\RuntimeException $e) {

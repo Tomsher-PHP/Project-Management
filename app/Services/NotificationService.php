@@ -165,4 +165,29 @@ class NotificationService
             route('tasks.edit', $task)
         );
     }
+
+    public function notifyTaskTimerStoppedByOtherUser(Task $task, User $actor): void
+    {
+        $assigneeId = (int) ($task->current_assignee_id ?? 0);
+
+        if (! $assigneeId || $assigneeId === (int) $actor->id) {
+            return;
+        }
+
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+
+        $this->send(
+            $assigneeId,
+            'Task Timer Stopped',
+            "{$actorName} stopped your running timer for task '{$taskName}' in project '{$projectName}'.",
+            route('tasks.edit', $task)
+        );
+    }
 }
