@@ -23,7 +23,7 @@
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                     <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Due Date</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->due_date_time ? $task->due_date_time->format($globalDateFormat) : '--' }}</p>
+                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">@appDateTime($task->due_date_time)</p>
                 </div>
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
