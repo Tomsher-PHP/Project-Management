@@ -65,7 +65,7 @@
                 @endif
                 <span><strong>Type:</strong> {{ $taskTypeLabel }}</span>
                 <span><strong>Mode:</strong> {{ $taskModeLabel }}</span>
-                <span><strong>Due Date:</strong> {{ $task->due_date_time ? $task->due_date_time->format($globalDateFormat) : '--' }}</span>
+                <span><strong>Due Date:</strong> {{ \App\Providers\AppServiceProvider::formatAppDateTime($task->due_date_time) }}</span>
             </div>
         </div>
 

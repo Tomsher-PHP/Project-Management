@@ -18,7 +18,10 @@
 
             $estimatedTime = $task->estimatedTimeFormatted;
             $dueDate = $task->due_date_time;
-            $isDueOrPast = $dueDate && !$isCompleted ? $dueDate->lessThanOrEqualTo(today()) : false;
+            $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
+            $isDueOrPast = $dueDate && ! $isCompleted
+                ? $dueDate->copy()->timezone(config('constants.timezone'))->lessThanOrEqualTo(now(config('constants.timezone')))
+                : false;
             $dueDateTextClass = $isDueOrPast ? 'text-error-300 dark:text-error-200' : 'text-gray-500 dark:text-gray-400';
 
             $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
@@ -61,7 +64,7 @@
                         <path d="M12.6758 15.8186V18.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
                     <small class="truncate text-xs uppercase leading-5 tracking-wide" title="Due date">
-                        {{ $dueDate->format($globalDateFormat) }}
+                        {{ $dueDateDisplay }}
                     </small>
                 </span>
             </div>

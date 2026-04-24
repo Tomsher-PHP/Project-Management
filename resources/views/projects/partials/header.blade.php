@@ -133,7 +133,6 @@
                                     <li>
                                         <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage"
                                             data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
-                                            {{-- <span @if ((int) ($project->project_stage_id ?? 0) === (int) $stageOption->id) class="text-success-400 dark:text-success-300" @endif>{{ $stageOption->name }}</span> --}}
                                             <span class="flex items-center gap-2 @if ((int) $project->project_stage_id === (int) $stageOption->id) text-success-400 dark:text-success-300 @endif">
                                                 <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $stageOption->color ?: '#9CA3AF' }}"></span>
                                                 <span>{{ $stageOption->name }}</span>

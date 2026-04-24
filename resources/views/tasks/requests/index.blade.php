@@ -113,7 +113,7 @@
                                         </span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm text-bgray-600 dark:text-bgray-200">{{ $task->due_date_time?->format($globalDateFormat) ?? '--' }}</span>
+                                        <span class="text-sm text-bgray-600 dark:text-bgray-200">{{ \App\Providers\AppServiceProvider::formatAppDateTime($task->due_date_time) }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)

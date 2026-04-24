@@ -200,7 +200,7 @@
                 <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
                     Due Date
                 </label>
-                <input type="date" name="due_date_time" value="{{ $task->due_date_time?->format('Y-m-d') }}" class="datepicker w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                <input type="text" name="due_date_time" value="{{ $task->due_date_time?->format('Y-m-d H:i') }}" class="datepicker w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off">
                 <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="due_date_time"></p>
             </div>
 

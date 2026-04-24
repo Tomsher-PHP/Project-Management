@@ -113,7 +113,7 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->due_date_time)
-            <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDate($task->due_date_time)</div>
+            <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDateTime($task->due_date_time)</div>
         @else
             <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
         @endif
