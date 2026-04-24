@@ -29,7 +29,7 @@ return new class extends Migration
 
             $table->foreignId('current_assignee_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->date('due_date')->nullable();
+            $table->timestamp('due_date_time')->nullable();
             $table->timestamp('completed_at')->nullable();
 
             $table->unsignedBigInteger('estimated_time_seconds')->default(0);
@@ -52,8 +52,6 @@ return new class extends Migration
             $table->index('task_type_id');
             $table->index('task_mode_id');
             $table->index('current_assignee_id');
-            $table->index('due_date');
-            $table->index('sort_order');
         });
     }
 

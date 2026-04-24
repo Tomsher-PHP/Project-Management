@@ -9,7 +9,7 @@ const ADVANCED_TASK_FIELDS = new Set([
     'task_type_id',
     'task_mode_id',
     'priority',
-    'due_date',
+    'due_date_time',
     'tag_ids',
     'is_billable',
 ]);
@@ -429,7 +429,7 @@ const applyProjectDefaults = async (form, dependencies) => {
     const assigneeField = form.querySelector('[name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
-    const dueDateField = form.querySelector('[name="due_date"]');
+    const dueDateField = form.querySelector('[name="due_date_time"]');
     const billableField = form.querySelector('[name="is_billable"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 

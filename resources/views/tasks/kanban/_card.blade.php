@@ -17,7 +17,7 @@
             $priorityLabel = $priorityConfig['label'] ?? ucfirst($priority);
 
             $estimatedTime = $task->estimatedTimeFormatted;
-            $dueDate = $task->due_date;
+            $dueDate = $task->due_date_time;
             $isDueOrPast = $dueDate && !$isCompleted ? $dueDate->lessThanOrEqualTo(today()) : false;
             $dueDateTextClass = $isDueOrPast ? 'text-error-300 dark:text-error-200' : 'text-gray-500 dark:text-gray-400';
 

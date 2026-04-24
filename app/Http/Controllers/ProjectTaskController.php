@@ -207,7 +207,7 @@ class ProjectTaskController extends Controller
                 'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskMode,
                 'priority' => $validated['priority'] ?? $defaultTaskPriority,
                 'current_assignee_id' => $assigneeId,
-                'due_date' => $validated['due_date'] ?? null,
+                'due_date_time' => $validated['due_date_time'] ?? null,
                 'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
                     ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
                     : $defaultTaskEstimateSeconds,
@@ -313,7 +313,7 @@ class ProjectTaskController extends Controller
                 'task_mode_id' => $validated['task_mode_id'] ?? null,
                 'priority' => $validated['priority'],
                 'current_assignee_id' => $newAssigneeId,
-                'due_date' => $validated['due_date'] ?? null,
+                'due_date_time' => $validated['due_date_time'] ?? null,
                 'completed_at' => $validated['completed_at'] ?? $task->completed_at,
                 'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
                 'is_billable' => (bool) ($validated['is_billable'] ?? false),

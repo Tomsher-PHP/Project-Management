@@ -67,7 +67,7 @@
                                     <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate Time" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="due_date" label="Due Date" />
+                                    <x-sorting.sortable-column column="due_date_time" label="Due Date" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>

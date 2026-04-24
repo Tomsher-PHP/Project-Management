@@ -169,7 +169,7 @@ class TaskRequestServices
                 ->leftJoin('users as request_users', 'request_users.id', '=', 'tasks.current_assignee_id')
                 ->select('tasks.*')
                 ->orderBy('request_users.name', $direction),
-            'due_date' => $query->orderBy('tasks.due_date', $direction),
+            'due_date_time' => $query->orderBy('tasks.due_date_time', $direction),
             default => $query
                 ->orderByRaw("CASE tasks.request_status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END")
                 ->latest(),

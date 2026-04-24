@@ -64,7 +64,7 @@
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="due_date" label="Due Date" />
+                                    <x-sorting.sortable-column column="due_date_time" label="Due Date" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
@@ -113,7 +113,7 @@
                                         </span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm text-bgray-600 dark:text-bgray-200">{{ $task->due_date?->format($globalDateFormat) ?? '--' }}</span>
+                                        <span class="text-sm text-bgray-600 dark:text-bgray-200">{{ $task->due_date_time?->format($globalDateFormat) ?? '--' }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)

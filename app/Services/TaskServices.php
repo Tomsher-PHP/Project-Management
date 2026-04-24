@@ -241,7 +241,7 @@ class TaskServices
             'task_mode_id' => $validated['task_mode_id'] ?? $defaults['task_mode_id'],
             'priority' => $validated['priority'] ?? $defaults['priority'],
             'current_assignee_id' => ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null,
-            'due_date' => $validated['due_date'] ?? null,
+            'due_date_time' => $validated['due_date_time'] ?? null,
             'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
                 ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
                 : $defaults['estimated_time_seconds'],
@@ -264,7 +264,7 @@ class TaskServices
             'task_mode_id' => $validated['task_mode_id'],
             'priority' => $validated['priority'],
             'current_assignee_id' => ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null,
-            'due_date' => $validated['due_date'] ?? null,
+            'due_date_time' => $validated['due_date_time'] ?? null,
             'completed_at' => $validated['completed_at'] ?? null,
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
             'is_billable' => (bool) ($validated['is_billable'] ?? false),

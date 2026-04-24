@@ -866,7 +866,7 @@ class TaskController extends Controller
             'defaults' => [
                 'project_id' => $projects->firstWhere('id', $this->resolveDefaultTaskCreateProjectId($projects))?->id,
                 'priority' => $this->getDefaultTaskPriorityValue(),
-                'due_date' => now(config('constants.timezone'))->addDay()->toDateString(),
+                'due_date_time' => now(config('constants.timezone'))->addDay()->toDateString(),
             ],
             'parent_options_url' => route('tasks.quick-create-parent-options'),
         ];

@@ -68,7 +68,7 @@ class TaskUpdateRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
-            'due_date' => ['nullable', 'date'],
+            'due_date_time' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
