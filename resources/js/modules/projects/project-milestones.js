@@ -1282,7 +1282,7 @@ const initializeProjectModuleBuilderModal = () => {
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
-            const result = await requestJson(config.updateUrlTemplate.replace('__MODULE__', milestoneId), 'PUT', payload);
+            const result = await requestJson(config.updateUrlTemplate.replace('__MILESTONE__', milestoneId), 'PUT', payload);
             hydrateCardFromModule(card, result.milestone || payload);
             replaceRenderedSection(result);
         } catch (error) {
@@ -1318,7 +1318,7 @@ const initializeProjectModuleBuilderModal = () => {
         setCardStatus(card, 'Deleting...', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
 
         try {
-            const result = await requestJson(config.destroyUrlTemplate.replace('__MODULE__', milestoneId), 'DELETE', {});
+            const result = await requestJson(config.destroyUrlTemplate.replace('__MILESTONE__', milestoneId), 'DELETE', {});
             card.remove();
             ensureEmptyState();
             replaceRenderedSection(result);
@@ -1794,7 +1794,8 @@ const initializeProjectSprintBuilderModal = () => {
     const searchInput = modal.querySelector('[data-project-sprint-builder-library-search]');
     const resetSearchButton = modal.querySelector('[data-project-sprint-builder-reset-search]');
     const countBadge = modal.querySelector('[data-project-sprint-builder-count]');
-    const milestoneNameNode = modal.querySelector('[data-project-sprint-builder-milestone-name]');
+    const milestoneNameNode = modal.querySelector('[data-project-sprint-builder-milestone-name]')
+        || modal.querySelector('[data-project-sprint-builder-module-name]');
     const libraryCreateModal = document.getElementById('project-sprint-library-create-modal');
     const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-sprint-library-create-form]') || null;
     const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-sprint-library-create-submit]') || null;
@@ -2342,7 +2343,7 @@ const initializeProjectSprintBuilderModal = () => {
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
-            const result = await requestJson(config.storeUrlTemplate.replace('__MODULE__', activeMilestoneId), 'POST', payload);
+            const result = await requestJson(config.storeUrlTemplate.replace('__MILESTONE__', activeMilestoneId), 'POST', payload);
             hydrateCardFromSprint(card, {
                 ...payload,
                 ...(result.sprint || result.data || {}),
@@ -2437,7 +2438,7 @@ const initializeProjectSprintBuilderModal = () => {
         }
 
         try {
-            await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeMilestoneId), 'PATCH', { sprint_ids: sprintIds });
+            await requestJson(config.reorderUrlTemplate.replace('__MILESTONE__', activeMilestoneId), 'PATCH', { sprint_ids: sprintIds });
             syncOrderBadges();
             clearProjectModuleSprintCache(activeMilestoneId);
             fetchProjectModuleSprints(activeMilestoneId, { force: true, all: true }).catch(() => {});
@@ -2466,7 +2467,7 @@ const initializeProjectSprintBuilderModal = () => {
         if (createTrigger) {
             openModal({
                 milestoneId: createTrigger.dataset.projectMilestoneId,
-                milestoneName: createTrigger.dataset.projectModuleName,
+                milestoneName: createTrigger.dataset.projectMilestoneName || createTrigger.dataset.projectModuleName,
                 loadUrl: createTrigger.dataset.projectSprintLoadUrl,
             });
             return;
@@ -2477,7 +2478,7 @@ const initializeProjectSprintBuilderModal = () => {
         if (editTrigger) {
             openModal({
                 milestoneId: editTrigger.dataset.projectMilestoneId,
-                milestoneName: editTrigger.dataset.projectModuleName,
+                milestoneName: editTrigger.dataset.projectMilestoneName || editTrigger.dataset.projectModuleName,
                 sprintId: editTrigger.dataset.projectSprintId,
                 loadUrl: editTrigger.dataset.projectSprintLoadUrl,
             });

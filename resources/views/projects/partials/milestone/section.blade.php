@@ -39,9 +39,6 @@
             <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <div class="min-w-0">
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Milestone -> Sprint Planner</h4>
-                    <p class="mt-0.5 max-w-2xl text-xs leading-5 text-bgray-600 dark:text-bgray-300">
-                        Compact builder view focused on milestone items with their nested sprint structure.
-                    </p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 lg:justify-end">
@@ -82,7 +79,7 @@
                 @php
                     $isProtectedModule = (bool) ($milestone->is_backlog || $milestone->is_system);
                 @endphp
-                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-none border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-milestone-card data-module-id="{{ $milestone->id }}" draggable="false" style="border-color: {{ $milestone->color ?: '#D1D5DB' }}">
+                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-none border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-milestone-card data-milestone-id="{{ $milestone->id }}" draggable="false" style="border-color: {{ $milestone->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-milestone-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
@@ -197,7 +194,7 @@
 
                                 @if (! $isProtectedModule)
                                     @can('project_milestone.edit')
-                                        <button type="button" class="project-milestone-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-module-id="{{ $milestone->id }}">
+                                        <button type="button" class="project-milestone-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-milestone-id="{{ $milestone->id }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                             </svg>
@@ -209,7 +206,7 @@
                                     @endcan
                                 @endif
 
-                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-module-id="{{ $milestone->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-milestone-id="{{ $milestone->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                     <svg class="h-5 w-5 transition duration-200" :style="{ transform: activeModuleId === {{ $milestone->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -220,7 +217,7 @@
 
                     <div x-show="activeModuleId === {{ $milestone->id }}" x-transition class="px-4 py-5 sm:px-5">
                         <div data-project-milestone-sprints-panel
-                            data-module-id="{{ $milestone->id }}"
+                            data-milestone-id="{{ $milestone->id }}"
                             data-load-url="{{ route('projects.milestones.sprints.index', [$project, $milestone]) }}"
                             data-loaded="false"
                             data-autoload="{{ ($openModuleId ?? null) === $milestone->id ? 'true' : 'false' }}">

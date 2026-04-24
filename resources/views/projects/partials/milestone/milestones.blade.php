@@ -73,7 +73,7 @@
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                     <div class="space-y-4" data-project-milestone-builder-workspace>
                                     @forelse ($editableProjectModules as $milestone)
-                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-milestone-builder-card data-module-id="{{ $milestone->id }}" data-module-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
+                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-milestone-builder-card data-milestone-id="{{ $milestone->id }}" data-milestone-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $milestone->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
@@ -207,7 +207,7 @@
                             <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-milestone-builder-library-scroll>
                                 <div class="space-y-3" data-project-milestone-builder-library>
                                     @foreach ($agileMilestones as $libraryModule)
-                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-milestone-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
+                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-milestone-library-item data-library-milestone-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">
@@ -339,7 +339,7 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
                                         <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
-                                            Milestone: <span class="ml-1" data-project-sprint-builder-module-name>Select a milestone</span>
+                                            Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
                                         </span>
                                     </div>
                                     <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
