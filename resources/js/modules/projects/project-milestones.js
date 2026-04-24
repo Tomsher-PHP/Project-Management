@@ -261,25 +261,25 @@ const projectModuleSprintPayloadCache = new Map();
 const projectModuleSprintRequestCache = new Map();
 const projectModuleSprintPaginationObservers = new WeakMap();
 
-const getProjectModuleSectionRoot = () => document.querySelector('[data-project-module-section]');
+const getProjectModuleSectionRoot = () => document.querySelector('[data-project-milestone-section]');
 
-const getProjectModuleSprintsPanel = (moduleId, root = getProjectModuleSectionRoot()) => {
-    if (!root || !moduleId) {
+const getProjectModuleSprintsPanel = (milestoneId, root = getProjectModuleSectionRoot()) => {
+    if (!root || !milestoneId) {
         return null;
     }
 
-    return root.querySelector(`[data-project-module-sprints-panel][data-module-id="${moduleId}"]`);
+    return root.querySelector(`[data-project-milestone-sprints-panel][data-milestone-id="${milestoneId}"]`);
 };
 
 const getProjectModuleDeepLinkState = () => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    const moduleId = Number(params.get('module') || 0) || null;
+    const milestoneId = Number(params.get('milestone') || 0) || null;
     const sprintId = Number(params.get('sprint') || 0) || null;
 
     return {
         tab,
-        moduleId,
+        milestoneId,
         sprintId,
     };
 };
@@ -293,23 +293,23 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
         return;
     }
 
-    const { tab, moduleId, sprintId } = getProjectModuleDeepLinkState();
+    const { tab, milestoneId, sprintId } = getProjectModuleDeepLinkState();
 
-    if (tab !== 'modules' || !moduleId) {
+    if (tab !== 'milestones' || !milestoneId) {
         return;
     }
 
-    const deepLinkKey = `${moduleId}:${sprintId || ''}`;
+    const deepLinkKey = `${milestoneId}:${sprintId || ''}`;
 
     if (section.dataset.deepLinkHandled === deepLinkKey) {
         return;
     }
 
-    const moduleCard = section.querySelector(`[data-project-module-card][data-module-id="${moduleId}"]`);
-    const moduleToggle = section.querySelector(`[data-project-module-toggle][data-module-id="${moduleId}"]`);
-    const sprintPanel = getProjectModuleSprintsPanel(moduleId, section);
+    const milestoneCard = section.querySelector(`[data-project-milestone-card][data-milestone-id="${milestoneId}"]`);
+    const milestoneToggle = section.querySelector(`[data-project-milestone-toggle][data-milestone-id="${milestoneId}"]`);
+    const sprintPanel = getProjectModuleSprintsPanel(milestoneId, section);
 
-    if (!moduleCard || !moduleToggle || !sprintPanel) {
+    if (!milestoneCard || !milestoneToggle || !sprintPanel) {
         return;
     }
 
@@ -319,12 +319,12 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
     const isExpanded = Boolean(panelContainer && panelContainer.offsetParent !== null);
 
     if (!isExpanded) {
-        moduleToggle.click();
+        milestoneToggle.click();
         await waitForNextFrame();
         await waitForNextFrame();
     }
 
-    moduleCard.scrollIntoView({
+    milestoneCard.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
     });
@@ -334,7 +334,7 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
     }
 
     try {
-        await fetchProjectModuleSprints(moduleId, {
+        await fetchProjectModuleSprints(milestoneId, {
             root: section,
             all: true,
         });
@@ -354,21 +354,21 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
 };
 
 const renderProjectModuleSprintsState = (message, extraClasses = '') => `
-    <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-module-sprints-state>
+    <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">${escapeHtml(message)}</p>
     </div>
 `;
 
-const getProjectModuleSprintCacheKey = (moduleId, { page = 1, all = false } = {}) => `${Number(moduleId)}:${all ? 'all' : `page-${Number(page) || 1}`}`;
+const getProjectModuleSprintCacheKey = (milestoneId, { page = 1, all = false } = {}) => `${Number(milestoneId)}:${all ? 'all' : `page-${Number(page) || 1}`}`;
 
-const clearProjectModuleSprintCache = (moduleId = null) => {
-    if (moduleId == null) {
+const clearProjectModuleSprintCache = (milestoneId = null) => {
+    if (milestoneId == null) {
         projectModuleSprintPayloadCache.clear();
         projectModuleSprintRequestCache.clear();
         return;
     }
 
-    const cachePrefix = `${Number(moduleId)}:`;
+    const cachePrefix = `${Number(milestoneId)}:`;
 
     Array.from(projectModuleSprintPayloadCache.keys()).forEach((key) => {
         if (key.startsWith(cachePrefix)) {
@@ -405,10 +405,10 @@ const syncProjectSprintListReorderState = (sprintList) => {
     });
 };
 
-const updateProjectModuleSprintCount = (moduleId, count, root = getProjectModuleSectionRoot()) => {
-    const card = root?.querySelector(`[data-project-module-card][data-module-id="${moduleId}"]`);
+const updateProjectModuleSprintCount = (milestoneId, count, root = getProjectModuleSectionRoot()) => {
+    const card = root?.querySelector(`[data-project-milestone-card][data-milestone-id="${milestoneId}"]`);
 
-    card?.querySelector('[data-project-module-sprint-count]')?.replaceChildren(document.createTextNode(String(count)));
+    card?.querySelector('[data-project-milestone-sprint-count]')?.replaceChildren(document.createTextNode(String(count)));
 };
 
 const initializeProjectModuleSprintPagination = (panel, root = getProjectModuleSectionRoot()) => {
@@ -437,13 +437,13 @@ const initializeProjectModuleSprintPagination = (panel, root = getProjectModuleS
         }
 
         const nextPage = Number(panel.dataset.nextPage || 0);
-        const moduleId = Number(panel.dataset.moduleId || 0);
+        const milestoneId = Number(panel.dataset.milestoneId || 0);
 
-        if (!nextPage || !moduleId) {
+        if (!nextPage || !milestoneId) {
             return;
         }
 
-        fetchProjectModuleSprints(moduleId, {
+        fetchProjectModuleSprints(milestoneId, {
             page: nextPage,
             append: true,
             root,
@@ -458,15 +458,15 @@ const initializeProjectModuleSprintPagination = (panel, root = getProjectModuleS
     projectModuleSprintPaginationObservers.set(panel, observer);
 };
 
-const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectModuleSectionRoot(), { append = false } = {}) => {
-    const panel = getProjectModuleSprintsPanel(moduleId, root);
+const applyProjectModuleSprintsPayload = (milestoneId, payload, root = getProjectModuleSectionRoot(), { append = false } = {}) => {
+    const panel = getProjectModuleSprintsPanel(milestoneId, root);
 
     if (!panel) {
         return;
     }
 
     if (!append) {
-        panel.innerHTML = payload.html || renderProjectModuleSprintsState('No sprints added under this module yet.');
+        panel.innerHTML = payload.html || renderProjectModuleSprintsState('No sprints added under this milestone yet.');
     } else {
         const sprintList = panel.querySelector('[data-project-sprint-list]');
 
@@ -487,7 +487,7 @@ const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectMo
     delete panel.dataset.loadingMore;
 
     if (typeof payload.count === 'number') {
-        updateProjectModuleSprintCount(moduleId, payload.count, root);
+        updateProjectModuleSprintCount(milestoneId, payload.count, root);
     }
 
     const sprintList = panel.querySelector('[data-project-sprint-list]');
@@ -514,27 +514,27 @@ const applyProjectModuleSprintsPayload = (moduleId, payload, root = getProjectMo
     initializeProjectModuleSprintPagination(panel, root);
 };
 
-const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = '', root = getProjectModuleSectionRoot(), page = 1, append = false, all = false } = {}) => {
-    const normalizedModuleId = Number(moduleId) || null;
+const fetchProjectModuleSprints = async (milestoneId, { force = false, loadUrl = '', root = getProjectModuleSectionRoot(), page = 1, append = false, all = false } = {}) => {
+    const normalizedMilestoneId = Number(milestoneId) || null;
 
-    if (!normalizedModuleId) {
-        throw new Error('Unable to determine which module should load sprints.');
+    if (!normalizedMilestoneId) {
+        throw new Error('Unable to determine which milestone should load sprints.');
     }
 
-    const panel = getProjectModuleSprintsPanel(normalizedModuleId, root);
+    const panel = getProjectModuleSprintsPanel(normalizedMilestoneId, root);
     const resolvedLoadUrl = loadUrl || panel?.dataset.loadUrl || '';
 
     if (!resolvedLoadUrl) {
-        throw new Error('Unable to load sprints for this module.');
+        throw new Error('Unable to load sprints for this milestone.');
     }
 
-    const cacheKey = getProjectModuleSprintCacheKey(normalizedModuleId, { page, all });
+    const cacheKey = getProjectModuleSprintCacheKey(normalizedMilestoneId, { page, all });
 
     if (!force && projectModuleSprintPayloadCache.has(cacheKey)) {
         const cachedPayload = projectModuleSprintPayloadCache.get(cacheKey);
 
         if (!append) {
-            applyProjectModuleSprintsPayload(normalizedModuleId, cachedPayload, root);
+            applyProjectModuleSprintsPayload(normalizedMilestoneId, cachedPayload, root);
         }
 
         return cachedPayload;
@@ -575,7 +575,7 @@ const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = ''
         }
 
         projectModuleSprintPayloadCache.set(cacheKey, result);
-        applyProjectModuleSprintsPayload(normalizedModuleId, result, root, { append });
+        applyProjectModuleSprintsPayload(normalizedMilestoneId, result, root, { append });
 
         return result;
     }).catch((error) => {
@@ -598,12 +598,12 @@ const fetchProjectModuleSprints = async (moduleId, { force = false, loadUrl = ''
     return request;
 };
 
-const renderModuleBuilderCard = (module, config, extraClass = '') => `
-    <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(module.color || '#E5E7EB')};" data-project-module-builder-card data-module-id="${module.id ?? ''}" data-module-name="${escapeHtml(module.name || '')}" data-expanded="false" draggable="false">
-        <input type="hidden" name="color" value="${escapeHtml(module.color || '#22C55E')}">
+const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
+    <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600 ${extraClass}" style="border-color: ${escapeHtml(milestone.color || '#E5E7EB')};" data-project-milestone-builder-card data-milestone-id="${milestone.id ?? ''}" data-milestone-name="${escapeHtml(milestone.name || '')}" data-expanded="false" draggable="false">
+        <input type="hidden" name="color" value="${escapeHtml(milestone.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
-                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-builder-drag-handle>
+                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                     </svg>
@@ -611,59 +611,59 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
 
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" data-project-module-builder-color-dot style="background-color: ${escapeHtml(module.color || '#22C55E')}"></span>
-                        <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-module-builder-title>${escapeHtml(module.name || 'New Module')}</h5>
-                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-module-builder-order>${escapeHtml(module.sort_order || '')}</span>
+                        <span class="inline-flex h-3.5 w-3.5 rounded-sm" data-project-milestone-builder-color-dot style="background-color: ${escapeHtml(milestone.color || '#22C55E')}"></span>
+                        <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-milestone-builder-title>${escapeHtml(milestone.name || 'New Module')}</h5>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-milestone-builder-order>${escapeHtml(milestone.sort_order || '')}</span>
                     </div>
-                    <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-module-builder-status>Saved</p>
+                    <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-milestone-builder-status>Saved</p>
                 </div>
             </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete module" title="Delete module">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
-                <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
+                <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-milestone-builder-toggle-icon>
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
     </div>
 
-        <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
+        <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-milestone-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
-                <input type="text" name="name" value="${escapeHtml(module.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                <input type="text" name="name" value="${escapeHtml(milestone.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
             </div>
 
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Owner</label>
                 <select name="owner_id" class="tom-select w-full" data-sort="0">
-                    ${renderSelectOptions(config.owners || [], module.owner_id, 'Select owner')}
+                    ${renderSelectOptions(config.owners || [], milestone.owner_id, 'Select owner')}
                 </select>
             </div>
 
             <div>
-                ${renderEstimatedTimeInput(module.estimated_time_minutes ?? 0)}
+                ${renderEstimatedTimeInput(milestone.estimated_time_minutes ?? 0)}
             </div>
 
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                <input type="text" value="${escapeHtml([module.start_date, module.end_date].filter(Boolean).join(' to '))}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(module.start_date, module.end_date))}" data-project-module-builder-date-range>
-                <input type="hidden" name="start_date" value="${escapeHtml(module.start_date || '')}">
-                <input type="hidden" name="end_date" value="${escapeHtml(module.end_date || '')}">
+                <input type="text" value="${escapeHtml([milestone.start_date, milestone.end_date].filter(Boolean).join(' to '))}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(milestone.start_date, milestone.end_date))}" data-project-milestone-builder-date-range>
+                <input type="hidden" name="start_date" value="${escapeHtml(milestone.start_date || '')}">
+                <input type="hidden" name="end_date" value="${escapeHtml(milestone.end_date || '')}">
             </div>
 
             <div class="xl:col-span-2">
                 <div class="mb-2 flex items-center justify-between gap-3">
                     <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
-                    <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-builder-description-count>${escapeHtml(String((module.description || '').length))}</span>/100</span>
+                    <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>${escapeHtml(String((milestone.description || '').length))}</span>/100</span>
                 </div>
-                <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(module.description || '')}</textarea>
+                <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(milestone.description || '')}</textarea>
             </div>
             </div>
         </div>
@@ -671,7 +671,7 @@ const renderModuleBuilderCard = (module, config, extraClass = '') => `
 `;
 
 const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
-    <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-module-library-item data-library-module-id="${escapeHtml(libraryModule.id ?? '')}" data-name="${escapeHtml(libraryModule.name || '')}" data-color="${escapeHtml(libraryModule.color || '#22C55E')}" data-description="${escapeHtml(libraryModule.description || '')}" data-sort-order="${escapeHtml(libraryModule.sort_order ?? '')}">
+    <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300 ${extraClass}" draggable="true" data-project-milestone-library-item data-library-milestone-id="${escapeHtml(libraryModule.id ?? '')}" data-name="${escapeHtml(libraryModule.name || '')}" data-color="${escapeHtml(libraryModule.color || '#22C55E')}" data-description="${escapeHtml(libraryModule.description || '')}" data-sort-order="${escapeHtml(libraryModule.sort_order ?? '')}">
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <div class="flex items-center gap-2">
@@ -695,22 +695,22 @@ const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
 `;
 
 const initializeProjectModuleBuilderModal = () => {
-    const modal = document.getElementById('project-module-modal');
+    const modal = document.getElementById('project-milestone-modal');
 
     if (!modal || modal.dataset.projectModuleBuilderInitialized === 'true') {
         return;
     }
 
-    const configNode = document.getElementById('project-module-builder-config');
-    const workspace = modal.querySelector('[data-project-module-builder-workspace]');
-    const library = modal.querySelector('[data-project-module-builder-library]');
-    const libraryScrollContainer = modal.querySelector('[data-project-module-builder-library-scroll]');
-    const searchInput = modal.querySelector('[data-project-module-builder-library-search]');
-    const resetSearchButton = modal.querySelector('[data-project-module-builder-reset-search]');
-    const countBadge = modal.querySelector('[data-project-module-builder-count]');
-    const libraryCreateModal = document.getElementById('project-module-library-create-modal');
-    const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-module-library-create-form]') || null;
-    const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-module-library-create-submit]') || null;
+    const configNode = document.getElementById('project-milestone-builder-config');
+    const workspace = modal.querySelector('[data-project-milestone-builder-workspace]');
+    const library = modal.querySelector('[data-project-milestone-builder-library]');
+    const libraryScrollContainer = modal.querySelector('[data-project-milestone-builder-library-scroll]');
+    const searchInput = modal.querySelector('[data-project-milestone-builder-library-search]');
+    const resetSearchButton = modal.querySelector('[data-project-milestone-builder-reset-search]');
+    const countBadge = modal.querySelector('[data-project-milestone-builder-count]');
+    const libraryCreateModal = document.getElementById('project-milestone-library-create-modal');
+    const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-milestone-library-create-form]') || null;
+    const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-milestone-library-create-submit]') || null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     if (!configNode || !workspace || !library || !csrfToken) {
@@ -726,7 +726,7 @@ const initializeProjectModuleBuilderModal = () => {
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
 
-    const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-module-library-item]'))
+    const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-milestone-library-item]'))
         .map((item) => Number(item.dataset.sortOrder) || 0);
 
     const getNextLibrarySortOrder = () => Math.max(
@@ -741,7 +741,7 @@ const initializeProjectModuleBuilderModal = () => {
         }
 
         const textarea = libraryCreateForm.querySelector('textarea[name="description"]');
-        const countNode = libraryCreateForm.querySelector('[data-project-module-library-description-count]');
+        const countNode = libraryCreateForm.querySelector('[data-project-milestone-library-description-count]');
 
         if (!textarea || !countNode) {
             return;
@@ -769,7 +769,7 @@ const initializeProjectModuleBuilderModal = () => {
             sortOrderInput.value = String(getNextLibrarySortOrder());
         }
 
-        clearInlineFormErrors(libraryCreateForm, 'data-project-module-library-create-error');
+        clearInlineFormErrors(libraryCreateForm, 'data-project-milestone-library-create-error');
         syncLibraryDescriptionCount();
     };
 
@@ -818,7 +818,7 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const syncCardDateRange = (card) => {
-        const rangeInput = card.querySelector('[data-project-module-builder-date-range]');
+        const rangeInput = card.querySelector('[data-project-milestone-builder-date-range]');
         const startInput = card.querySelector('[name="start_date"]');
         const endInput = card.querySelector('[name="end_date"]');
 
@@ -840,13 +840,13 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const initializeCardDatepicker = (card) => {
-        const rangeInput = card.querySelector('[data-project-module-builder-date-range]');
+        const rangeInput = card.querySelector('[data-project-milestone-builder-date-range]');
         const startDate = card.querySelector('[name="start_date"]')?.value || '';
         const endDate = card.querySelector('[name="end_date"]')?.value || '';
 
         syncRangeInputValue(rangeInput, startDate, endDate);
         applyMinDateToRangeInput(rangeInput, startDate, endDate);
-        initDatepicker('.project-module-date-range', {}, card);
+        initDatepicker('.project-milestone-date-range', {}, card);
         syncRangeInputValue(rangeInput, startDate, endDate);
     };
 
@@ -859,7 +859,7 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const getSectionModuleSource = () => {
-        const sourceNode = document.querySelector('[data-project-module-section] [data-project-module-builder-source]');
+        const sourceNode = document.querySelector('[data-project-milestone-section] [data-project-milestone-builder-source]');
 
         if (!sourceNode) {
             return null;
@@ -889,24 +889,24 @@ const initializeProjectModuleBuilderModal = () => {
         document.body.classList.remove('overflow-hidden');
     };
 
-    const getCards = () => Array.from(workspace.querySelectorAll('[data-project-module-builder-card]'));
-    const getHelper = () => workspace.querySelector('[data-project-module-builder-helper]');
-    const getDropzone = () => workspace.querySelector('[data-project-module-builder-dropzone]');
+    const getCards = () => Array.from(workspace.querySelectorAll('[data-project-milestone-builder-card]'));
+    const getHelper = () => workspace.querySelector('[data-project-milestone-builder-helper]');
+    const getDropzone = () => workspace.querySelector('[data-project-milestone-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-module-builder-helper>
+        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
             </span>
             <div>
-                <p class="text-sm font-semibold">Drag here for more modules</p>
+                <p class="text-sm font-semibold">Drag here for more milestones</p>
                 <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
             </div>
         </div>
     `;
     const dropzoneMarkup = `
-        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-module-builder-dropzone></div>
+        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
     `;
 
     const createWorkspaceGuide = (markup) => {
@@ -938,12 +938,12 @@ const initializeProjectModuleBuilderModal = () => {
         workspace.appendChild(dropzone);
     };
 
-    const renderWorkspaceFromModules = (modules) => {
+    const renderWorkspaceFromModules = (milestones) => {
         workspace.innerHTML = '';
 
-        modules.forEach((module) => {
+        milestones.forEach((milestone) => {
             const cardWrapper = document.createElement('div');
-            cardWrapper.innerHTML = renderModuleBuilderCard(module, config);
+            cardWrapper.innerHTML = renderModuleBuilderCard(milestone, config);
             const card = cardWrapper.firstElementChild;
 
             if (!card) {
@@ -981,7 +981,7 @@ const initializeProjectModuleBuilderModal = () => {
 
     const ensureEmptyState = () => {
         const cards = getCards();
-        const emptyState = workspace.querySelector('[data-project-module-builder-empty]');
+        const emptyState = workspace.querySelector('[data-project-milestone-builder-empty]');
 
         if (cards.length && emptyState) {
             emptyState.remove();
@@ -989,7 +989,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         if (!cards.length && !emptyState) {
             workspace.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-module-builder-empty>
+                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
                     <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -997,7 +997,7 @@ const initializeProjectModuleBuilderModal = () => {
                     </span>
                     <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Modules Selected Yet</h5>
                     <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
-                        Drag one or more items from the module library to start building this project workspace.
+                        Drag one or more items from the milestone library to start building this project workspace.
                     </p>
                 </div>
             `;
@@ -1009,7 +1009,7 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const setCardStatus = (card, status, classes = '') => {
-        const statusNode = card.querySelector('[data-project-module-builder-status]');
+        const statusNode = card.querySelector('[data-project-milestone-builder-status]');
 
         if (!statusNode) {
             return;
@@ -1020,18 +1020,18 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const syncCardTitle = (card) => {
-        const title = card.querySelector('[data-project-module-builder-title]');
+        const title = card.querySelector('[data-project-milestone-builder-title]');
         const nameInput = card.querySelector('[name="name"]');
 
         if (title && nameInput) {
             const nextTitle = nameInput.value.trim() || 'Untitled Module';
             title.textContent = nextTitle;
-            card.dataset.moduleName = nextTitle;
+            card.dataset.milestoneName = nextTitle;
         }
     };
 
     const syncDescriptionCount = (card) => {
-        const countNode = card.querySelector('[data-project-module-builder-description-count]');
+        const countNode = card.querySelector('[data-project-milestone-builder-description-count]');
         const textarea = card.querySelector('[name="description"]');
 
         if (!countNode || !textarea) {
@@ -1043,7 +1043,7 @@ const initializeProjectModuleBuilderModal = () => {
 
     const syncOrderBadges = () => {
         getCards().forEach((card, index) => {
-            const badge = card.querySelector('[data-project-module-builder-order]');
+            const badge = card.querySelector('[data-project-milestone-builder-order]');
 
             if (badge) {
                 badge.textContent = String(index + 1);
@@ -1052,18 +1052,18 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const setCardExpanded = (card, expanded) => {
-        const body = card.querySelector('[data-project-module-builder-body]');
-        const icon = card.querySelector('[data-project-module-builder-toggle-icon]');
-        const toggleButton = card.querySelector('[data-project-module-builder-toggle]');
+        const body = card.querySelector('[data-project-milestone-builder-body]');
+        const icon = card.querySelector('[data-project-milestone-builder-toggle-icon]');
+        const toggleButton = card.querySelector('[data-project-milestone-builder-toggle]');
 
         if (expanded) {
             getCards().forEach((item) => {
                 if (item !== card) {
                     item.dataset.expanded = 'false';
-                    item.querySelector('[data-project-module-builder-body]')?.classList.add('hidden');
-                    item.querySelector('[data-project-module-builder-toggle-icon]')?.classList.add('rotate-180');
-                    item.querySelector('[data-project-module-builder-toggle]')?.setAttribute('aria-label', 'Expand module');
-                    item.querySelector('[data-project-module-builder-toggle]')?.setAttribute('title', 'Expand module');
+                    item.querySelector('[data-project-milestone-builder-body]')?.classList.add('hidden');
+                    item.querySelector('[data-project-milestone-builder-toggle-icon]')?.classList.add('rotate-180');
+                    item.querySelector('[data-project-milestone-builder-toggle]')?.setAttribute('aria-label', 'Expand milestone');
+                    item.querySelector('[data-project-milestone-builder-toggle]')?.setAttribute('title', 'Expand milestone');
                 }
             });
         }
@@ -1079,7 +1079,7 @@ const initializeProjectModuleBuilderModal = () => {
         }
 
         if (toggleButton) {
-            const label = expanded ? 'Collapse module' : 'Expand module';
+            const label = expanded ? 'Collapse milestone' : 'Expand milestone';
             toggleButton.setAttribute('aria-label', label);
             toggleButton.setAttribute('title', label);
         }
@@ -1144,7 +1144,7 @@ const initializeProjectModuleBuilderModal = () => {
         const result = await response.json();
 
         if (!response.ok || result.status === false || result.success === false) {
-            const error = new Error(result.message || 'Unable to save the project module.');
+            const error = new Error(result.message || 'Unable to save the project milestone.');
             error.payload = result;
             throw error;
         }
@@ -1173,42 +1173,42 @@ const initializeProjectModuleBuilderModal = () => {
         return candidate;
     };
 
-    const hydrateCardFromModule = (card, module) => {
-        card.dataset.moduleId = String(module.id);
-        card.dataset.moduleName = module.name || '';
-        card.querySelector('[name="name"]').value = module.name || '';
+    const hydrateCardFromModule = (card, milestone) => {
+        card.dataset.milestoneId = String(milestone.id);
+        card.dataset.milestoneName = milestone.name || '';
+        card.querySelector('[name="name"]').value = milestone.name || '';
         const ownerSelect = card.querySelector('[name="owner_id"]');
         if (ownerSelect?.tomselect) {
-            ownerSelect.tomselect.setValue(module.owner_id || '', true);
+            ownerSelect.tomselect.setValue(milestone.owner_id || '', true);
         } else if (ownerSelect) {
-            ownerSelect.value = module.owner_id || '';
+            ownerSelect.value = milestone.owner_id || '';
         }
         const estimatedTimeInput = card.querySelector('[name="estimated_time_minutes"]');
         const estimatedTimeWrapper = card.querySelector('[data-estimated-time]');
 
         if (estimatedTimeInput) {
-            estimatedTimeInput.value = module.estimated_time_minutes ?? 0;
+            estimatedTimeInput.value = milestone.estimated_time_minutes ?? 0;
         }
 
         estimatedTimeWrapper?.dispatchEvent(new CustomEvent('estimated-time:refresh'));
-        card.querySelector('[name="description"]').value = module.description || '';
-        card.querySelector('[name="start_date"]').value = module.start_date || '';
-        card.querySelector('[name="end_date"]').value = module.end_date || '';
-        const rangeInput = card.querySelector('[data-project-module-builder-date-range]');
-        const colorDot = card.querySelector('[data-project-module-builder-color-dot]');
+        card.querySelector('[name="description"]').value = milestone.description || '';
+        card.querySelector('[name="start_date"]').value = milestone.start_date || '';
+        card.querySelector('[name="end_date"]').value = milestone.end_date || '';
+        const rangeInput = card.querySelector('[data-project-milestone-builder-date-range]');
+        const colorDot = card.querySelector('[data-project-milestone-builder-color-dot]');
 
         if (rangeInput) {
-            syncRangeInputValue(rangeInput, module.start_date || '', module.end_date || '');
+            syncRangeInputValue(rangeInput, milestone.start_date || '', milestone.end_date || '');
         }
 
         if (colorDot) {
-            colorDot.style.backgroundColor = module.color || '#22C55E';
+            colorDot.style.backgroundColor = milestone.color || '#22C55E';
         }
 
         const colorInput = card.querySelector('[name="color"]');
 
         if (colorInput) {
-            colorInput.value = module.color || '#22C55E';
+            colorInput.value = milestone.color || '#22C55E';
         }
 
         syncCardTitle(card);
@@ -1254,20 +1254,20 @@ const initializeProjectModuleBuilderModal = () => {
 
         try {
             const result = await requestJson(config.storeUrl, 'POST', payload);
-            hydrateCardFromModule(card, result.module || payload);
+            hydrateCardFromModule(card, result.milestone || payload);
             card.classList.remove('ring-2', 'ring-success-200', 'dark:ring-success-900/30');
             replaceRenderedSection(result);
         } catch (error) {
             card.remove();
             ensureEmptyState();
-            showModalError(error.message || 'Unable to create the project module.');
+            showModalError(error.message || 'Unable to create the project milestone.');
         }
     };
 
     const saveModuleCard = async (card) => {
-        const moduleId = card.dataset.moduleId;
+        const milestoneId = card.dataset.milestoneId;
 
-        if (!moduleId) {
+        if (!milestoneId) {
             return;
         }
 
@@ -1282,12 +1282,12 @@ const initializeProjectModuleBuilderModal = () => {
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
-            const result = await requestJson(config.updateUrlTemplate.replace('__MODULE__', moduleId), 'PUT', payload);
-            hydrateCardFromModule(card, result.module || payload);
+            const result = await requestJson(config.updateUrlTemplate.replace('__MODULE__', milestoneId), 'PUT', payload);
+            hydrateCardFromModule(card, result.milestone || payload);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            showModalError(error.message || 'Unable to update the project module.');
+            showModalError(error.message || 'Unable to update the project milestone.');
         }
     };
 
@@ -1307,9 +1307,9 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     const deleteModuleCard = async (card) => {
-        const moduleId = card.dataset.moduleId;
+        const milestoneId = card.dataset.milestoneId;
 
-        if (!moduleId) {
+        if (!milestoneId) {
             card.remove();
             ensureEmptyState();
             return;
@@ -1318,31 +1318,31 @@ const initializeProjectModuleBuilderModal = () => {
         setCardStatus(card, 'Deleting...', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
 
         try {
-            const result = await requestJson(config.destroyUrlTemplate.replace('__MODULE__', moduleId), 'DELETE', {});
+            const result = await requestJson(config.destroyUrlTemplate.replace('__MODULE__', milestoneId), 'DELETE', {});
             card.remove();
             ensureEmptyState();
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            showModalError(error.message || 'Unable to delete the project module.');
+            showModalError(error.message || 'Unable to delete the project milestone.');
         }
     };
 
     const persistWorkspaceOrder = async () => {
-        const moduleIds = getCards()
-            .map((card) => Number(card.dataset.moduleId))
+        const milestoneIds = getCards()
+            .map((card) => Number(card.dataset.milestoneId))
             .filter(Boolean);
 
-        if (!moduleIds.length) {
+        if (!milestoneIds.length) {
             return;
         }
 
         try {
-            const result = await requestJson(config.reorderUrl, 'PATCH', { module_ids: moduleIds });
+            const result = await requestJson(config.reorderUrl, 'PATCH', { milestone_ids: milestoneIds });
             syncOrderBadges();
             replaceRenderedSection(result);
         } catch (error) {
-            showModalError(error.message || 'Unable to reorder project modules.');
+            showModalError(error.message || 'Unable to reorder project milestones.');
         }
     };
 
@@ -1356,23 +1356,23 @@ const initializeProjectModuleBuilderModal = () => {
     };
 
     document.addEventListener('click', function (event) {
-        if (event.target.closest('[data-project-module-library-create-open]')) {
+        if (event.target.closest('[data-project-milestone-library-create-open]')) {
             openLibraryCreateModal();
             return;
         }
 
-        if (event.target.closest('.project-module-builder-open')) {
+        if (event.target.closest('.project-milestone-builder-open')) {
             openModal();
             return;
         }
 
-        const editTrigger = event.target.closest('.project-module-builder-edit');
+        const editTrigger = event.target.closest('.project-milestone-builder-edit');
 
         if (editTrigger) {
             openModal();
 
-            const moduleId = editTrigger.dataset.moduleId;
-            const card = workspace.querySelector(`[data-project-module-builder-card][data-module-id="${moduleId}"]`);
+            const milestoneId = editTrigger.dataset.milestoneId;
+            const card = workspace.querySelector(`[data-project-milestone-builder-card][data-milestone-id="${milestoneId}"]`);
 
             if (card) {
                 setCardExpanded(card, true);
@@ -1382,19 +1382,19 @@ const initializeProjectModuleBuilderModal = () => {
             return;
         }
 
-        if (event.target.closest('[data-project-module-builder-close]')) {
+        if (event.target.closest('[data-project-milestone-builder-close]')) {
             closeModal();
         }
     });
 
     modal.addEventListener('click', function (event) {
-        if (event.target.closest('[data-project-module-builder-close]')) {
+        if (event.target.closest('[data-project-milestone-builder-close]')) {
             closeModal();
         }
     });
 
     libraryCreateModal?.addEventListener('click', function (event) {
-        if (event.target.closest('[data-project-module-library-create-close]')) {
+        if (event.target.closest('[data-project-milestone-library-create-close]')) {
             closeLibraryCreateModal();
         }
     });
@@ -1413,7 +1413,7 @@ const initializeProjectModuleBuilderModal = () => {
     libraryCreateForm?.addEventListener('submit', async function (event) {
         event.preventDefault();
 
-        clearInlineFormErrors(libraryCreateForm, 'data-project-module-library-create-error');
+        clearInlineFormErrors(libraryCreateForm, 'data-project-milestone-library-create-error');
         libraryCreateSubmitButton?.setAttribute('disabled', 'disabled');
 
         try {
@@ -1425,16 +1425,16 @@ const initializeProjectModuleBuilderModal = () => {
 
             appendLibraryModuleItem(result.data || {});
             closeLibraryCreateModal();
-            showModalSuccess(result.message || 'Agile module created successfully.');
+            showModalSuccess(result.message || 'Agile milestone created successfully.');
         } catch (error) {
             if (error.payload?.errors) {
                 applyInlineFormErrors(
                     libraryCreateForm,
                     error.payload.errors,
-                    'data-project-module-library-create-error'
+                    'data-project-milestone-library-create-error'
                 );
             } else {
-                showModalError(error.message || 'Unable to create the agile module.');
+                showModalError(error.message || 'Unable to create the agile milestone.');
             }
         } finally {
             libraryCreateSubmitButton?.removeAttribute('disabled');
@@ -1444,14 +1444,14 @@ const initializeProjectModuleBuilderModal = () => {
     libraryCreateForm?.querySelector('textarea[name="description"]')?.addEventListener('input', syncLibraryDescriptionCount);
 
     library.addEventListener('dragstart', function (event) {
-        const item = event.target.closest('[data-project-module-library-item]');
+        const item = event.target.closest('[data-project-milestone-library-item]');
 
         if (!item) {
             return;
         }
 
         draggedLibraryModule = {
-            id: item.dataset.libraryModuleId,
+            id: item.dataset.libraryMilestoneId,
             name: item.dataset.name || '',
             color: item.dataset.color || '#22C55E',
             description: item.dataset.description || '',
@@ -1471,8 +1471,8 @@ const initializeProjectModuleBuilderModal = () => {
             event.preventDefault();
         }
 
-        const targetCard = event.target.closest('[data-project-module-builder-card]');
-        const dropzone = event.target.closest('[data-project-module-builder-dropzone]');
+        const targetCard = event.target.closest('[data-project-milestone-builder-card]');
+        const dropzone = event.target.closest('[data-project-milestone-builder-dropzone]');
 
         if (!draggedWorkspaceCard || !targetCard || targetCard === draggedWorkspaceCard) {
             if (draggedWorkspaceCard && dropzone) {
@@ -1510,13 +1510,13 @@ const initializeProjectModuleBuilderModal = () => {
     });
 
     workspace.addEventListener('mousedown', function (event) {
-        const handle = event.target.closest('[data-project-module-builder-drag-handle]');
+        const handle = event.target.closest('[data-project-milestone-builder-drag-handle]');
 
         if (!handle) {
             return;
         }
 
-        const card = handle.closest('[data-project-module-builder-card]');
+        const card = handle.closest('[data-project-milestone-builder-card]');
 
         if (!card) {
             return;
@@ -1527,7 +1527,7 @@ const initializeProjectModuleBuilderModal = () => {
     });
 
     workspace.addEventListener('dragstart', function (event) {
-        const card = event.target.closest('[data-project-module-builder-card]');
+        const card = event.target.closest('[data-project-milestone-builder-card]');
 
         if (!card || handleCard !== card) {
             event.preventDefault();
@@ -1556,7 +1556,7 @@ const initializeProjectModuleBuilderModal = () => {
     });
 
     workspace.addEventListener('input', function (event) {
-        const card = event.target.closest('[data-project-module-builder-card]');
+        const card = event.target.closest('[data-project-milestone-builder-card]');
 
         if (!card) {
             return;
@@ -1566,7 +1566,7 @@ const initializeProjectModuleBuilderModal = () => {
             syncCardTitle(card);
         }
 
-        if (event.target.matches('[data-project-module-builder-date-range]')) {
+        if (event.target.matches('[data-project-milestone-builder-date-range]')) {
             syncCardDateRange(card);
         }
 
@@ -1578,17 +1578,17 @@ const initializeProjectModuleBuilderModal = () => {
     });
 
     workspace.addEventListener('change', function (event) {
-        const card = event.target.closest('[data-project-module-builder-card]');
+        const card = event.target.closest('[data-project-milestone-builder-card]');
 
         if (!card) {
             return;
         }
 
-        if (event.target.closest('[data-project-module-builder-toggle]')) {
+        if (event.target.closest('[data-project-milestone-builder-toggle]')) {
             return;
         }
 
-        if (event.target.matches('[data-project-module-builder-date-range]')) {
+        if (event.target.matches('[data-project-milestone-builder-date-range]')) {
             syncCardDateRange(card);
         }
 
@@ -1597,16 +1597,16 @@ const initializeProjectModuleBuilderModal = () => {
     });
 
     workspace.addEventListener('click', function (event) {
-        const toggleButton = event.target.closest('[data-project-module-builder-toggle]');
+        const toggleButton = event.target.closest('[data-project-milestone-builder-toggle]');
 
         if (!toggleButton) {
-            const deleteButton = event.target.closest('[data-project-module-builder-delete]');
+            const deleteButton = event.target.closest('[data-project-milestone-builder-delete]');
 
             if (!deleteButton) {
                 return;
             }
 
-            const card = deleteButton.closest('[data-project-module-builder-card]');
+            const card = deleteButton.closest('[data-project-milestone-builder-card]');
 
             if (!card) {
                 return;
@@ -1616,7 +1616,7 @@ const initializeProjectModuleBuilderModal = () => {
             return;
         }
 
-        const card = toggleButton.closest('[data-project-module-builder-card]');
+        const card = toggleButton.closest('[data-project-milestone-builder-card]');
 
         if (!card) {
             return;
@@ -1628,7 +1628,7 @@ const initializeProjectModuleBuilderModal = () => {
     searchInput?.addEventListener('input', function () {
         const query = this.value.trim().toLowerCase();
 
-        library.querySelectorAll('[data-project-module-library-item]').forEach((item) => {
+        library.querySelectorAll('[data-project-milestone-library-item]').forEach((item) => {
             const haystack = `${item.dataset.name || ''} ${item.dataset.description || ''}`.toLowerCase();
             item.classList.toggle('hidden', !haystack.includes(query));
         });
@@ -1794,19 +1794,19 @@ const initializeProjectSprintBuilderModal = () => {
     const searchInput = modal.querySelector('[data-project-sprint-builder-library-search]');
     const resetSearchButton = modal.querySelector('[data-project-sprint-builder-reset-search]');
     const countBadge = modal.querySelector('[data-project-sprint-builder-count]');
-    const moduleNameNode = modal.querySelector('[data-project-sprint-builder-module-name]');
+    const milestoneNameNode = modal.querySelector('[data-project-sprint-builder-milestone-name]');
     const libraryCreateModal = document.getElementById('project-sprint-library-create-modal');
     const libraryCreateForm = libraryCreateModal?.querySelector('[data-project-sprint-library-create-form]') || null;
     const libraryCreateSubmitButton = libraryCreateModal?.querySelector('[data-project-sprint-library-create-submit]') || null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    if (!configNode || !workspace || !library || !moduleNameNode || !csrfToken) {
+    if (!configNode || !workspace || !library || !milestoneNameNode || !csrfToken) {
         modal.dataset.projectSprintBuilderInitialized = 'true';
         return;
     }
 
     const config = JSON.parse(configNode.textContent || '{}');
-    let activeModuleId = null;
+    let activeMilestoneId = null;
     let activeModuleName = '';
     let draggedLibrarySprint = null;
     let draggedWorkspaceCard = null;
@@ -1918,7 +1918,7 @@ const initializeProjectSprintBuilderModal = () => {
             </span>
             <div>
                 <p class="text-sm font-semibold">Drag here for more sprints</p>
-                <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected module.</p>
+                <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected milestone.</p>
             </div>
         </div>
     `;
@@ -1933,7 +1933,7 @@ const initializeProjectSprintBuilderModal = () => {
     };
 
     const updateModuleContext = () => {
-        moduleNameNode.textContent = activeModuleName || 'Select a module';
+        milestoneNameNode.textContent = activeModuleName || 'Select a milestone';
     };
 
     const renderWorkspaceLoadingState = () => {
@@ -1946,22 +1946,22 @@ const initializeProjectSprintBuilderModal = () => {
                 </span>
                 <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">Loading Sprints</h5>
                 <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
-                    Fetching the latest sprint list for this module work area.
+                    Fetching the latest sprint list for this milestone work area.
                 </p>
             </div>
         `;
         updateCount();
     };
 
-    const openModal = async ({ moduleId, moduleName = '', sprintId = null, loadUrl = '' } = {}) => {
-        activeModuleId = Number(moduleId) || null;
-        activeModuleName = moduleName || '';
+    const openModal = async ({ milestoneId, milestoneName = '', sprintId = null, loadUrl = '' } = {}) => {
+        activeMilestoneId = Number(milestoneId) || null;
+        activeModuleName = milestoneName || '';
         updateModuleContext();
 
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
 
-        if (!activeModuleId) {
+        if (!activeMilestoneId) {
             renderWorkspaceFromSprints([]);
             return;
         }
@@ -1969,8 +1969,8 @@ const initializeProjectSprintBuilderModal = () => {
         renderWorkspaceLoadingState();
 
         try {
-            const payload = await fetchProjectModuleSprints(activeModuleId, { loadUrl, all: true });
-            activeModuleName = moduleName || payload.module?.name || activeModuleName;
+            const payload = await fetchProjectModuleSprints(activeMilestoneId, { loadUrl, all: true });
+            activeModuleName = milestoneName || payload.milestone?.name || activeModuleName;
             updateModuleContext();
             renderWorkspaceFromSprints(payload.sprints || []);
         } catch (error) {
@@ -2054,7 +2054,7 @@ const initializeProjectSprintBuilderModal = () => {
                     </span>
                     <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Sprints Selected Yet</h5>
                     <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
-                        Drag one or more items from the sprint library to start building this module workspace.
+                        Drag one or more items from the sprint library to start building this milestone workspace.
                     </p>
                 </div>
             `;
@@ -2181,7 +2181,7 @@ const initializeProjectSprintBuilderModal = () => {
     };
 
     const collectCardPayload = (card) => ({
-        project_module_id: activeModuleId,
+        project_milestone_id: activeMilestoneId,
         name: card.querySelector('[name="name"]')?.value.trim() || '',
         estimated_time_minutes: card.querySelector('[name="estimated_time_minutes"]')?.value || 0,
         color: card.querySelector('[name="color"]')?.value || '',
@@ -2193,8 +2193,8 @@ const initializeProjectSprintBuilderModal = () => {
     const normalizePayload = (payload) => {
         const normalized = { ...payload };
 
-        if ('project_module_id' in normalized) {
-            normalized.project_module_id = Number(normalized.project_module_id) || null;
+        if ('project_milestone_id' in normalized) {
+            normalized.project_milestone_id = Number(normalized.project_milestone_id) || null;
         }
 
         if ('estimated_time_minutes' in normalized) {
@@ -2303,14 +2303,14 @@ const initializeProjectSprintBuilderModal = () => {
     };
 
     const createLibrarySprintCard = async (librarySprint) => {
-        if (!activeModuleId) {
-            showModalError('Select a project module before adding sprints.');
+        if (!activeMilestoneId) {
+            showModalError('Select a project milestone before adding sprints.');
             return;
         }
 
         const currentWeekRange = getCurrentWeekRange();
         const payload = normalizePayload({
-            project_module_id: activeModuleId,
+            project_milestone_id: activeMilestoneId,
             name: buildUniqueSprintName(librarySprint.name || 'New Sprint'),
             color: librarySprint.color || '#22C55E',
             description: librarySprint.description || '',
@@ -2342,14 +2342,14 @@ const initializeProjectSprintBuilderModal = () => {
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
-            const result = await requestJson(config.storeUrlTemplate.replace('__MODULE__', activeModuleId), 'POST', payload);
+            const result = await requestJson(config.storeUrlTemplate.replace('__MODULE__', activeMilestoneId), 'POST', payload);
             hydrateCardFromSprint(card, {
                 ...payload,
                 ...(result.sprint || result.data || {}),
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
             card.classList.remove('ring-2', 'ring-success-200', 'dark:ring-success-900/30');
-            clearProjectModuleSprintCache(activeModuleId);
+            clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
         } catch (error) {
             card.remove();
@@ -2381,7 +2381,7 @@ const initializeProjectSprintBuilderModal = () => {
                 ...(result.sprint || result.data || {}),
                 estimated_time_minutes: result.sprint?.estimated_time_minutes ?? result.data?.estimated_time_minutes ?? payload.estimated_time_minutes,
             });
-            clearProjectModuleSprintCache(activeModuleId);
+            clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
@@ -2419,7 +2419,7 @@ const initializeProjectSprintBuilderModal = () => {
             const result = await requestJson(config.destroyUrlTemplate.replace('__SPRINT__', sprintId), 'DELETE', {});
             card.remove();
             ensureEmptyState();
-            clearProjectModuleSprintCache(activeModuleId);
+            clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
@@ -2432,15 +2432,15 @@ const initializeProjectSprintBuilderModal = () => {
             .map((card) => Number(card.dataset.sprintId))
             .filter(Boolean);
 
-        if (!activeModuleId || !sprintIds.length) {
+        if (!activeMilestoneId || !sprintIds.length) {
             return;
         }
 
         try {
-            await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeModuleId), 'PATCH', { sprint_ids: sprintIds });
+            await requestJson(config.reorderUrlTemplate.replace('__MODULE__', activeMilestoneId), 'PATCH', { sprint_ids: sprintIds });
             syncOrderBadges();
-            clearProjectModuleSprintCache(activeModuleId);
-            fetchProjectModuleSprints(activeModuleId, { force: true, all: true }).catch(() => {});
+            clearProjectModuleSprintCache(activeMilestoneId);
+            fetchProjectModuleSprints(activeMilestoneId, { force: true, all: true }).catch(() => {});
         } catch (error) {
             showModalError(error.message || 'Unable to reorder project sprints.');
         }
@@ -2465,8 +2465,8 @@ const initializeProjectSprintBuilderModal = () => {
 
         if (createTrigger) {
             openModal({
-                moduleId: createTrigger.dataset.projectModuleId,
-                moduleName: createTrigger.dataset.projectModuleName,
+                milestoneId: createTrigger.dataset.projectMilestoneId,
+                milestoneName: createTrigger.dataset.projectModuleName,
                 loadUrl: createTrigger.dataset.projectSprintLoadUrl,
             });
             return;
@@ -2476,8 +2476,8 @@ const initializeProjectSprintBuilderModal = () => {
 
         if (editTrigger) {
             openModal({
-                moduleId: editTrigger.dataset.projectModuleId,
-                moduleName: editTrigger.dataset.projectModuleName,
+                milestoneId: editTrigger.dataset.projectMilestoneId,
+                milestoneName: editTrigger.dataset.projectModuleName,
                 sprintId: editTrigger.dataset.projectSprintId,
                 loadUrl: editTrigger.dataset.projectSprintLoadUrl,
             });
@@ -2830,7 +2830,7 @@ const initializeProjectSprintList = (sprintList) => {
                 throw new Error(result.message || 'Unable to save the new sprint order.');
             }
 
-            clearProjectModuleSprintCache(Number(sprintList.closest('[data-project-module-sprints-panel]')?.dataset.moduleId));
+            clearProjectModuleSprintCache(Number(sprintList.closest('[data-project-milestone-sprints-panel]')?.dataset.milestoneId));
             Alert.success(result.message || 'Sprint order updated successfully.');
         } catch (error) {
             Alert.error(error.message || 'Unable to save the new sprint order.');
@@ -2982,14 +2982,14 @@ const initializeProjectSprintList = (sprintList) => {
     sprintList.dataset.projectSprintListInitialized = 'true';
 };
 
-const initializeProjectModuleSection = (section = document.querySelector('[data-project-module-section]')) => {
+const initializeProjectModuleSection = (section = document.querySelector('[data-project-milestone-section]')) => {
     if (!section || section.dataset.projectModuleSectionInitialized === 'true') {
         return;
     }
 
-    const moduleList = section.querySelector('[data-project-module-list]');
-    const restoreModal = section.querySelector('[data-project-module-restore-modal]');
-    const restoreOpenButton = section.querySelector('[data-project-module-restore-open]');
+    const milestoneList = section.querySelector('[data-project-milestone-list]');
+    const restoreModal = section.querySelector('[data-project-milestone-restore-modal]');
+    const restoreOpenButton = section.querySelector('[data-project-milestone-restore-open]');
     const sprintRestoreOpenButtons = section.querySelectorAll('[data-project-sprint-restore-open]');
     const sprintRestoreModals = section.querySelectorAll('[data-project-sprint-restore-modal]');
     const csrfToken = getCsrfToken();
@@ -2997,8 +2997,8 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     let dragHandleCard = null;
     let dragStartOrder = [];
 
-    const getModuleCards = () => Array.from(moduleList.querySelectorAll('[data-project-module-card]'));
-    const getModuleIds = () => getModuleCards().map((card) => Number(card.dataset.moduleId));
+    const getModuleCards = () => Array.from(milestoneList.querySelectorAll('[data-project-milestone-card]'));
+    const getMilestoneIds = () => getModuleCards().map((card) => Number(card.dataset.milestoneId));
 
     const openRestoreModal = () => {
         if (restoreModal) {
@@ -3015,24 +3015,24 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     if (restoreOpenButton && restoreModal) {
         restoreOpenButton.addEventListener('click', openRestoreModal);
 
-        restoreModal.querySelectorAll('[data-project-module-restore-close]').forEach((button) => {
+        restoreModal.querySelectorAll('[data-project-milestone-restore-close]').forEach((button) => {
             button.addEventListener('click', closeRestoreModal);
         });
 
         restoreModal.addEventListener('click', async function (event) {
-            const restoreButton = event.target.closest('[data-project-module-restore-action]');
+            const restoreButton = event.target.closest('[data-project-milestone-restore-action]');
 
             if (!restoreButton) {
                 return;
             }
 
-            const moduleName = restoreButton.dataset.moduleName || 'this module';
+            const milestoneName = restoreButton.dataset.milestoneName || 'this milestone';
             const restoreUrl = restoreButton.dataset.restoreUrl;
 
             const result = await Alert.confirm({
                 target: restoreModal,
                 title: 'Restore Module',
-                text: `Restore ${moduleName}?`,
+                text: `Restore ${milestoneName}?`,
                 confirmText: 'Yes, restore',
                 cancelText: 'Cancel',
             });
@@ -3055,26 +3055,26 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
                 const payload = await response.json();
 
                 if (!response.ok || !payload.status) {
-                    throw new Error(payload.message || 'Unable to restore this module.');
+                    throw new Error(payload.message || 'Unable to restore this milestone.');
                 }
 
                 closeRestoreModal();
-                Alert.success(payload.message || 'Project module restored successfully.');
+                Alert.success(payload.message || 'Project milestone restored successfully.');
 
                 if (!replaceRenderedSection(payload)) {
                     window.location.reload();
                 }
             } catch (error) {
                 restoreButton.disabled = false;
-                Alert.error(error.message || 'Unable to restore this module.');
+                Alert.error(error.message || 'Unable to restore this milestone.');
             }
         });
     }
 
     sprintRestoreOpenButtons.forEach((button) => {
         button.addEventListener('click', function () {
-            const moduleId = button.dataset.projectSprintRestoreOpen;
-            const modal = section.querySelector(`[data-project-sprint-restore-modal="${moduleId}"]`);
+            const milestoneId = button.dataset.projectSprintRestoreOpen;
+            const modal = section.querySelector(`[data-project-sprint-restore-modal="${milestoneId}"]`);
 
             if (modal) {
                 modal.classList.remove('hidden');
@@ -3148,38 +3148,38 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     });
 
     section.addEventListener('click', function (event) {
-        const toggleButton = event.target.closest('[data-project-module-toggle]');
+        const toggleButton = event.target.closest('[data-project-milestone-toggle]');
 
         if (!toggleButton) {
             return;
         }
 
-        const moduleId = Number(toggleButton.dataset.moduleId);
-        const panel = getProjectModuleSprintsPanel(moduleId, section);
+        const milestoneId = Number(toggleButton.dataset.milestoneId);
+        const panel = getProjectModuleSprintsPanel(milestoneId, section);
 
         if (!panel || panel.dataset.loaded === 'true') {
             return;
         }
 
-        fetchProjectModuleSprints(moduleId, { root: section }).catch((error) => {
+        fetchProjectModuleSprints(milestoneId, { root: section }).catch((error) => {
             Alert.error(error.message || 'Unable to load project sprints.');
         });
     });
 
-    section.querySelectorAll('[data-project-module-sprints-panel][data-autoload="true"]').forEach((panel) => {
-        const moduleId = Number(panel.dataset.moduleId);
+    section.querySelectorAll('[data-project-milestone-sprints-panel][data-autoload="true"]').forEach((panel) => {
+        const milestoneId = Number(panel.dataset.milestoneId);
 
-        fetchProjectModuleSprints(moduleId, { root: section }).catch(() => {});
+        fetchProjectModuleSprints(milestoneId, { root: section }).catch(() => {});
     });
 
     handleProjectModuleDeepLink(section).catch((error) => {
         Alert.error(error.message || 'Unable to open the requested sprint.');
     });
 
-    if (moduleList && moduleList.dataset.reorderUrl && csrfToken) {
+    if (milestoneList && milestoneList.dataset.reorderUrl && csrfToken) {
         const syncVisibleOrderBadges = () => {
             getModuleCards().forEach((card, index) => {
-                const badge = card.querySelector('[data-project-module-order-badge]');
+                const badge = card.querySelector('[data-project-milestone-order-badge]');
 
                 if (badge) {
                     badge.textContent = String(index + 1);
@@ -3188,30 +3188,30 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
         };
 
         const persistModuleOrder = async () => {
-            const moduleIds = getModuleIds();
+            const milestoneIds = getMilestoneIds();
 
             try {
-                const response = await fetch(moduleList.dataset.reorderUrl, {
+                const response = await fetch(milestoneList.dataset.reorderUrl, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
                     },
-                    body: JSON.stringify({ module_ids: moduleIds }),
+                    body: JSON.stringify({ milestone_ids: milestoneIds }),
                 });
 
                 const result = await response.json();
 
                 if (!response.ok || !result.status) {
-                    throw new Error(result.message || 'Unable to save the new module order.');
+                    throw new Error(result.message || 'Unable to save the new milestone order.');
                 }
 
                 syncVisibleOrderBadges();
                 replaceRenderedSection(result);
                 Alert.success(result.message || 'Module order updated successfully.');
             } catch (error) {
-                Alert.error(error.message || 'Unable to save the new module order.');
+                Alert.error(error.message || 'Unable to save the new milestone order.');
                 window.location.reload();
             }
         };
@@ -3231,14 +3231,14 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             dragHandleCard = null;
         };
 
-        moduleList.addEventListener('mousedown', function (event) {
-            const handle = event.target.closest('[data-project-module-drag-handle]');
+        milestoneList.addEventListener('mousedown', function (event) {
+            const handle = event.target.closest('[data-project-milestone-drag-handle]');
 
             if (!handle) {
                 return;
             }
 
-            const card = handle.closest('[data-project-module-card]');
+            const card = handle.closest('[data-project-milestone-card]');
 
             if (!card) {
                 return;
@@ -3248,22 +3248,22 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             card.setAttribute('draggable', 'true');
         });
 
-        moduleList.addEventListener('mouseup', function () {
+        milestoneList.addEventListener('mouseup', function () {
             if (!draggedModuleCard && dragHandleCard) {
                 dragHandleCard.setAttribute('draggable', 'false');
                 dragHandleCard = null;
             }
         });
 
-        moduleList.addEventListener('mouseleave', function () {
+        milestoneList.addEventListener('mouseleave', function () {
             if (!draggedModuleCard && dragHandleCard) {
                 dragHandleCard.setAttribute('draggable', 'false');
                 dragHandleCard = null;
             }
         });
 
-        moduleList.addEventListener('dragstart', function (event) {
-            const card = event.target.closest('[data-project-module-card]');
+        milestoneList.addEventListener('dragstart', function (event) {
+            const card = event.target.closest('[data-project-milestone-card]');
 
             if (!card || card !== dragHandleCard) {
                 event.preventDefault();
@@ -3271,22 +3271,22 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             }
 
             draggedModuleCard = card;
-            dragStartOrder = getModuleIds();
+            dragStartOrder = getMilestoneIds();
             card.classList.add('opacity-60', 'scale-[0.99]');
             card.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
 
             if (event.dataTransfer) {
                 event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', card.dataset.moduleId || '');
+                event.dataTransfer.setData('text/plain', card.dataset.milestoneId || '');
             }
         });
 
-        moduleList.addEventListener('dragover', function (event) {
+        milestoneList.addEventListener('dragover', function (event) {
             if (draggedModuleCard) {
                 event.preventDefault();
             }
 
-            const targetCard = event.target.closest('[data-project-module-card]');
+            const targetCard = event.target.closest('[data-project-milestone-card]');
 
             if (!draggedModuleCard || !targetCard || targetCard === draggedModuleCard) {
                 return;
@@ -3296,21 +3296,21 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             const insertAfterTarget = event.clientY > targetBounds.top + (targetBounds.height / 2);
 
             if (insertAfterTarget) {
-                moduleList.insertBefore(draggedModuleCard, targetCard.nextElementSibling);
+                milestoneList.insertBefore(draggedModuleCard, targetCard.nextElementSibling);
                 return;
             }
 
-            moduleList.insertBefore(draggedModuleCard, targetCard);
+            milestoneList.insertBefore(draggedModuleCard, targetCard);
         });
 
-        moduleList.addEventListener('drop', async function (event) {
+        milestoneList.addEventListener('drop', async function (event) {
             if (!draggedModuleCard) {
                 return;
             }
 
             event.preventDefault();
 
-            const currentOrder = getModuleIds();
+            const currentOrder = getMilestoneIds();
 
             if (JSON.stringify(currentOrder) === JSON.stringify(dragStartOrder)) {
                 resetDraggedCardState();
@@ -3321,7 +3321,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
             await persistModuleOrder();
         });
 
-        moduleList.addEventListener('dragend', function () {
+        milestoneList.addEventListener('dragend', function () {
             resetDraggedCardState();
             dragStartOrder = [];
         });
@@ -3337,18 +3337,18 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('project-tab:loaded', function (event) {
-    if (event.detail?.tab !== 'modules') {
+    if (event.detail?.tab !== 'milestones') {
         return;
     }
 
     clearProjectModuleSprintCache();
     initializeProjectModuleBuilderModal();
     initializeProjectSprintBuilderModal();
-    initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-module-section]'));
+    initializeProjectModuleSection(event.detail.panel.querySelector('[data-project-milestone-section]'));
 });
 
 document.addEventListener('ajax-form:rendered', function (event) {
-    if (event.detail?.selector !== '[data-project-module-section]') {
+    if (event.detail?.selector !== '[data-project-milestone-section]') {
         return;
     }
 

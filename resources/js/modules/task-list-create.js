@@ -147,7 +147,7 @@ const setTaskCreateRequiredIndicators = (form, isAgile, hasSelectedModule = fals
     });
 };
 
-const setTaskCreatePlacementHint = (form, projectMeta, { selectedModuleId = '', selectedSprintId = '' } = {}) => {
+const setTaskCreatePlacementHint = (form, projectMeta, { selectedMilestoneId = '', selectedSprintId = '' } = {}) => {
     const hintNode = form?.querySelector('[data-task-create-placement-hint]');
 
     if (!hintNode) {
@@ -160,12 +160,12 @@ const setTaskCreatePlacementHint = (form, projectMeta, { selectedModuleId = '', 
         return;
     }
 
-    let message = 'Leave both module and sprint empty to place this task in the project backlog.';
+    let message = 'Leave both milestone and sprint empty to place this task in the project backlog.';
 
-    if (selectedModuleId && !selectedSprintId) {
-        message = 'Select a sprint for the chosen module, or clear the module to use the project backlog.';
-    } else if (selectedSprintId && !selectedModuleId) {
-        message = 'This sprint can be saved without choosing a module. The backend will match the module automatically.';
+    if (selectedMilestoneId && !selectedSprintId) {
+        message = 'Select a sprint for the chosen milestone, or clear the milestone to use the project backlog.';
+    } else if (selectedSprintId && !selectedMilestoneId) {
+        message = 'This sprint can be saved without choosing a milestone. The backend will match the milestone automatically.';
     } else if (selectedSprintId) {
         message = '';
     }
@@ -340,11 +340,11 @@ const closeTaskCreateModal = (modal) => {
     modal.classList.remove('flex');
 };
 
-const updateSprintOptions = (form, dependencies, { selectedSprintId = '', selectedModuleId = '' } = {}) => {
+const updateSprintOptions = (form, dependencies, { selectedSprintId = '', selectedMilestoneId = '' } = {}) => {
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectField = form.querySelector('[name="project_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
-    const normalizedModuleId = String(selectedModuleId || form.querySelector('[name="project_module_id"]')?.value || '');
+    const normalizedMilestoneId = String(selectedMilestoneId || form.querySelector('[name="project_milestone_id"]')?.value || '');
     const normalizedSprintId = String(selectedSprintId || sprintField?.value || '');
 
     if (!sprintField) {
@@ -370,27 +370,27 @@ const updateSprintOptions = (form, dependencies, { selectedSprintId = '', select
     }
 
     const availableSprints = (projectMeta.sprints || []).filter((sprint) => {
-        if (!normalizedModuleId) {
+        if (!normalizedMilestoneId) {
             return true;
         }
 
-        return String(sprint.project_module_id || '') === normalizedModuleId;
+        return String(sprint.project_milestone_id || '') === normalizedMilestoneId;
     });
     const resolvedSprintId = availableSprints.some((option) => option.value === normalizedSprintId)
         ? normalizedSprintId
         : '';
 
     setSelectOptions(sprintField, availableSprints, {
-        placeholder: normalizedModuleId
-            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected module')
+        placeholder: normalizedMilestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
             : (availableSprints.length ? 'Select sprint or leave empty for backlog' : 'No sprints available'),
         disabled: false,
         value: resolvedSprintId,
     });
 
-    setTaskCreateRequiredIndicators(form, true, Boolean(normalizedModuleId));
+    setTaskCreateRequiredIndicators(form, true, Boolean(normalizedMilestoneId));
     setTaskCreatePlacementHint(form, projectMeta, {
-        selectedModuleId: normalizedModuleId,
+        selectedMilestoneId: normalizedMilestoneId,
         selectedSprintId: resolvedSprintId,
     });
 };
@@ -399,7 +399,7 @@ const setEmptyProjectState = (form) => {
     setTaskCreateRequiredIndicators(form, false);
     setTaskCreatePlacementHint(form, null);
 
-    setSelectOptions(form.querySelector('[name="project_module_id"]'), [], {
+    setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
     });
@@ -425,7 +425,7 @@ const setEmptyProjectState = (form) => {
 
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
-    const moduleField = form.querySelector('[name="project_module_id"]');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const assigneeField = form.querySelector('[name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
@@ -440,8 +440,8 @@ const applyProjectDefaults = async (form, dependencies) => {
 
     const isAgile = projectMeta.flow === 'agile';
 
-    setSelectOptions(moduleField, projectMeta.modules || [], {
-        placeholder: isAgile ? 'Select module or leave empty for backlog' : 'Not used for linear projects',
+    setSelectOptions(milestoneField, projectMeta.milestones || [], {
+        placeholder: isAgile ? 'Select milestone or leave empty for backlog' : 'Not used for linear projects',
         disabled: !isAgile,
     });
 
@@ -644,11 +644,11 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        const moduleField = event.target.closest('[name="project_module_id"]');
+        const milestoneField = event.target.closest('[name="project_milestone_id"]');
 
-        if (moduleField && root.contains(moduleField)) {
+        if (milestoneField && root.contains(milestoneField)) {
             updateSprintOptions(form, dependencies, {
-                selectedModuleId: moduleField.value || '',
+                selectedMilestoneId: milestoneField.value || '',
                 selectedSprintId: form.querySelector('[name="project_sprint_id"]')?.value || '',
             });
 
@@ -666,18 +666,18 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         if (sprintField && root.contains(sprintField)) {
             const projectMeta = getProjectMeta(dependencies, form.querySelector('[name="project_id"]')?.value || '');
             const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === String(sprintField.value || ''));
-            const moduleFieldInForm = form.querySelector('[name="project_module_id"]');
+            const milestoneFieldInForm = form.querySelector('[name="project_milestone_id"]');
 
-            if (selectedSprint && !moduleFieldInForm?.value) {
-                if (moduleFieldInForm?.tomselect) {
-                    moduleFieldInForm.tomselect.setValue(String(selectedSprint.project_module_id || ''), true);
-                } else if (moduleFieldInForm) {
-                    moduleFieldInForm.value = String(selectedSprint.project_module_id || '');
+            if (selectedSprint && !milestoneFieldInForm?.value) {
+                if (milestoneFieldInForm?.tomselect) {
+                    milestoneFieldInForm.tomselect.setValue(String(selectedSprint.project_milestone_id || ''), true);
+                } else if (milestoneFieldInForm) {
+                    milestoneFieldInForm.value = String(selectedSprint.project_milestone_id || '');
                 }
             }
 
             updateSprintOptions(form, dependencies, {
-                selectedModuleId: moduleFieldInForm?.value || '',
+                selectedMilestoneId: milestoneFieldInForm?.value || '',
                 selectedSprintId: sprintField.value || '',
             });
 

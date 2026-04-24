@@ -73,7 +73,7 @@ const syncTaskFormSelectState = (form) => {
 const parseTaskPlacementOptions = (form) => {
     if (!form?.dataset.taskPlacement) {
         return {
-            modules: [],
+            milestones: [],
             sprints: [],
         };
     }
@@ -82,7 +82,7 @@ const parseTaskPlacementOptions = (form) => {
         return JSON.parse(form.dataset.taskPlacement);
     } catch (error) {
         return {
-            modules: [],
+            milestones: [],
             sprints: [],
         };
     }
@@ -91,7 +91,7 @@ const parseTaskPlacementOptions = (form) => {
 const parseTaskMovePlacementOptions = (form) => {
     if (!form?.dataset.taskMovePlacement) {
         return {
-            modules: [],
+            milestones: [],
             sprints: [],
         };
     }
@@ -100,7 +100,7 @@ const parseTaskMovePlacementOptions = (form) => {
         return JSON.parse(form.dataset.taskMovePlacement);
     } catch (error) {
         return {
-            modules: [],
+            milestones: [],
             sprints: [],
         };
     }
@@ -180,19 +180,19 @@ const setPlacementSelectOptions = (field, options = [], { placeholder = 'Select 
     field.value = normalizedValue;
 };
 
-const setTaskPlacementHint = (form, selector, { selectedModuleId = '', selectedSprintId = '' } = {}) => {
+const setTaskPlacementHint = (form, selector, { selectedMilestoneId = '', selectedSprintId = '' } = {}) => {
     const hintNode = form?.querySelector(selector);
 
     if (!hintNode) {
         return;
     }
 
-    let message = 'Leave both module and sprint empty to use the project backlog.';
+    let message = 'Leave both milestone and sprint empty to use the project backlog.';
 
-    if (selectedModuleId && !selectedSprintId) {
-        message = 'Select a sprint for the chosen module, or clear the module to use the project backlog.';
-    } else if (selectedSprintId && !selectedModuleId) {
-        message = 'This sprint can be saved without choosing a module. The backend will match the module automatically.';
+    if (selectedMilestoneId && !selectedSprintId) {
+        message = 'Select a sprint for the chosen milestone, or clear the milestone to use the project backlog.';
+    } else if (selectedSprintId && !selectedMilestoneId) {
+        message = 'This sprint can be saved without choosing a milestone. The backend will match the milestone automatically.';
     } else if (selectedSprintId) {
         message = '';
     }
@@ -218,45 +218,45 @@ const getTaskPlacementHintSelector = (form) => (
 
 const syncProjectTaskPlacement = (
     form,
-    { selectedModuleId = null, selectedSprintId = null, syncModuleFromSprint = false } = {}
+    { selectedMilestoneId = null, selectedSprintId = null, syncModuleFromSprint = false } = {}
 ) => {
-    const moduleField = form?.querySelector('[name="project_module_id"]');
+    const milestoneField = form?.querySelector('[name="project_milestone_id"]');
     const sprintField = form?.querySelector('[name="project_sprint_id"]');
 
-    if (!form || !moduleField || !sprintField) {
+    if (!form || !milestoneField || !sprintField) {
         return;
     }
 
     const placement = parseTaskPlacementOptions(form);
-    let moduleId = selectedModuleId === null ? String(moduleField.value || '') : String(selectedModuleId || '');
+    let milestoneId = selectedMilestoneId === null ? String(milestoneField.value || '') : String(selectedMilestoneId || '');
     let sprintId = selectedSprintId === null ? String(sprintField.value || '') : String(selectedSprintId || '');
     const selectedSprint = placement.sprints.find((option) => option.value === sprintId);
 
-    if (syncModuleFromSprint && selectedSprint && !moduleId) {
-        moduleId = String(selectedSprint.project_module_id || '');
-        setSelectValue(moduleField, moduleId);
+    if (syncModuleFromSprint && selectedSprint && !milestoneId) {
+        milestoneId = String(selectedSprint.project_milestone_id || '');
+        setSelectValue(milestoneField, milestoneId);
     }
 
     const availableSprints = placement.sprints.filter((option) => {
-        if (!moduleId) {
+        if (!milestoneId) {
             return true;
         }
 
-        return String(option.project_module_id || '') === moduleId;
+        return String(option.project_milestone_id || '') === milestoneId;
     });
     const resolvedSprintId = availableSprints.some((option) => option.value === sprintId) ? sprintId : '';
 
     setPlacementSelectOptions(sprintField, availableSprints, {
-        placeholder: moduleId
-            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected module')
+        placeholder: milestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
             : (placement.sprints.length ? 'Select sprint or leave empty for backlog' : 'No sprints available'),
         disabled: false,
         value: resolvedSprintId,
     });
 
-    setTaskRequiredIndicators(form, moduleId);
+    setTaskRequiredIndicators(form, milestoneId);
     setTaskPlacementHint(form, getTaskPlacementHintSelector(form), {
-        selectedModuleId: moduleId,
+        selectedMilestoneId: milestoneId,
         selectedSprintId: resolvedSprintId,
     });
 };
@@ -307,7 +307,7 @@ const setTaskFormSprint = (form, sprintId) => {
 
 const prepareTaskModal = async (root, {
     sprintId = '',
-    moduleId = '',
+    milestoneId = '',
     parentTaskId = '',
 } = {}) => {
     const form = root.querySelector('[data-project-task-form]');
@@ -323,17 +323,17 @@ const prepareTaskModal = async (root, {
     setTaskModalAdvancedState(root, false);
     syncTaskFormSelectState(form);
 
-    const shouldUseDefaultSprint = !sprintId && !moduleId && !parentTaskId;
+    const shouldUseDefaultSprint = !sprintId && !milestoneId && !parentTaskId;
     const resolvedSprintId = sprintId || (shouldUseDefaultSprint ? (root.dataset.defaultSprintId || '') : '');
-    const moduleField = form.querySelector('[name="project_module_id"]');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const parentTaskField = form.querySelector('[name="parent_task_id"]');
 
-    if (moduleField) {
-        setSelectValue(moduleField, moduleId || '');
+    if (milestoneField) {
+        setSelectValue(milestoneField, milestoneId || '');
     }
 
     syncProjectTaskPlacement(form, {
-        selectedModuleId: moduleId || '',
+        selectedMilestoneId: milestoneId || '',
         selectedSprintId: resolvedSprintId,
         syncModuleFromSprint: true,
     });
@@ -491,30 +491,30 @@ const closeTaskMoveModal = (modal) => {
 
 const syncTaskMovePlacement = (
     form,
-    { selectedModuleId = null, selectedSprintId = null } = {}
+    { selectedMilestoneId = null, selectedSprintId = null } = {}
 ) => {
-    const moduleField = form?.querySelector('[name="project_module_id"]');
+    const milestoneField = form?.querySelector('[name="project_milestone_id"]');
     const sprintField = form?.querySelector('[name="project_sprint_id"]');
 
-    if (!form || !moduleField || !sprintField) {
+    if (!form || !milestoneField || !sprintField) {
         return;
     }
 
     const placement = parseTaskMovePlacementOptions(form);
-    const moduleId = selectedModuleId === null ? String(moduleField.value || '') : String(selectedModuleId || '');
+    const milestoneId = selectedMilestoneId === null ? String(milestoneField.value || '') : String(selectedMilestoneId || '');
     const sprintId = selectedSprintId === null ? String(sprintField.value || '') : String(selectedSprintId || '');
     const availableSprints = placement.sprints.filter((option) => {
-        if (!moduleId) {
+        if (!milestoneId) {
             return true;
         }
 
-        return String(option.project_module_id || '') === moduleId;
+        return String(option.project_milestone_id || '') === milestoneId;
     });
     const resolvedSprintId = availableSprints.some((option) => option.value === sprintId) ? sprintId : '';
 
     setPlacementSelectOptions(sprintField, availableSprints, {
-        placeholder: moduleId
-            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected module')
+        placeholder: milestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
             : (placement.sprints.length ? 'Select sprint' : 'No sprints available'),
         disabled: false,
         value: resolvedSprintId,
@@ -545,9 +545,9 @@ const prepareTaskMoveModal = (root, triggerButton) => {
         currentSprintNode.textContent = triggerButton.dataset.projectTaskCurrentSprint || '--';
     }
 
-    setSelectValue(form.querySelector('[name="project_module_id"]'), '');
+    setSelectValue(form.querySelector('[name="project_milestone_id"]'), '');
     syncTaskMovePlacement(form, {
-        selectedModuleId: '',
+        selectedMilestoneId: '',
         selectedSprintId: '',
     });
 
@@ -1324,7 +1324,7 @@ const initializeTasksRoot = (root) => {
 
             await prepareTaskModal(root, {
                 sprintId: openButton.dataset.projectTaskSprintId || '',
-                moduleId: openButton.dataset.projectTaskModuleId || '',
+                milestoneId: openButton.dataset.projectTaskMilestoneId || '',
                 parentTaskId: openButton.dataset.projectTaskParentTaskId || '',
             });
             openTaskModal(root.querySelector('[data-project-task-modal]'));
@@ -1377,27 +1377,27 @@ const initializeTasksRoot = (root) => {
     });
 
     root.addEventListener('change', (event) => {
-        const moduleField = event.target.closest('[name="project_module_id"]');
+        const milestoneField = event.target.closest('[name="project_milestone_id"]');
 
-        if (moduleField && root.contains(moduleField)) {
-            const moveForm = moduleField.closest('[data-project-task-move-form]');
+        if (milestoneField && root.contains(milestoneField)) {
+            const moveForm = milestoneField.closest('[data-project-task-move-form]');
 
             if (moveForm) {
                 syncTaskMovePlacement(moveForm, {
-                    selectedModuleId: moduleField.value || '',
+                    selectedMilestoneId: milestoneField.value || '',
                     selectedSprintId: moveForm.querySelector('[name="project_sprint_id"]')?.value || '',
                 });
                 return;
             }
 
-            const form = moduleField.closest('[data-project-task-form], [data-project-task-detail-form]');
+            const form = milestoneField.closest('[data-project-task-form], [data-project-task-detail-form]');
 
             if (!form) {
                 return;
             }
 
             syncProjectTaskPlacement(form, {
-                selectedModuleId: moduleField.value || '',
+                selectedMilestoneId: milestoneField.value || '',
                 selectedSprintId: form.querySelector('[name="project_sprint_id"]')?.value || '',
             });
 
@@ -1417,7 +1417,7 @@ const initializeTasksRoot = (root) => {
 
         if (moveForm) {
             syncTaskMovePlacement(moveForm, {
-                selectedModuleId: moveForm.querySelector('[name="project_module_id"]')?.value || '',
+                selectedMilestoneId: moveForm.querySelector('[name="project_milestone_id"]')?.value || '',
                 selectedSprintId: sprintField.value || '',
             });
             return;
@@ -1430,7 +1430,7 @@ const initializeTasksRoot = (root) => {
         }
 
         syncProjectTaskPlacement(form, {
-            selectedModuleId: form.querySelector('[name="project_module_id"]')?.value || '',
+            selectedMilestoneId: form.querySelector('[name="project_milestone_id"]')?.value || '',
             selectedSprintId: sprintField.value || '',
             syncModuleFromSprint: true,
         });

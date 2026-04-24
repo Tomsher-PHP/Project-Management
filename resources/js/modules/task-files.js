@@ -26,7 +26,7 @@ const initializeTaskFiles = (root = document) => {
             theme: 'snow',
             readOnly: false,
             placeholder: 'Write a task note...',
-            modules: {
+            milestones: {
                 toolbar: [
                     ['bold', 'italic', 'underline'],
                     [{ list: 'ordered' }, { list: 'bullet' }],
