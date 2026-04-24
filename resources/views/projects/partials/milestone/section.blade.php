@@ -6,7 +6,7 @@
         $projectSprintCount = $projectMilestones->sum(fn ($milestone) => (int) ($milestone->project_sprints_count ?? 0));
         $canEditProjectModules = auth()->user()->can('project_milestone.edit');
         $projectModuleReorderUrl = $canEditProjectModules ? route('projects.milestones.reorder', $project) : null;
-        $trashedCount = $trashedProjectModules->count();
+        $trashedCount = $trashedProjectMilestones->count();
         $trashedProjectSprintsByModule = $trashedProjectSprintsByModule ?? collect();
         $projectModuleBuilderSource = $editableProjectModules->map(fn ($milestone) => [
             'id' => $milestone->id,
@@ -340,13 +340,13 @@
                         </div>
 
                         <div class="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-7">
-                            @if ($trashedProjectModules->isEmpty())
+                            @if ($trashedProjectMilestones->isEmpty())
                                 <div class="rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-10 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
                                     <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">No deleted milestones available to restore.</p>
                                 </div>
                             @else
                                 <div class="space-y-4">
-                                    @foreach ($trashedProjectModules as $trashedModule)
+                                    @foreach ($trashedProjectMilestones as $trashedModule)
                                         <div class="flex flex-col gap-4 rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/70 sm:flex-row sm:items-center sm:justify-between">
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex flex-wrap items-center gap-2">

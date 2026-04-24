@@ -8,9 +8,9 @@
 @endphp
 
 <div class="space-y-3 border-l-2 border-dashed border-bgray-200 pl-4 transition duration-200 dark:border-darkblack-400 md:pl-6" data-project-sprint-list data-all-pages-loaded="{{ $pagination['all_pages_loaded'] ? 'true' : 'false' }}" data-current-page="{{ $pagination['page'] }}" @can('project_sprint.edit') data-reorder-url="{{ route('projects.milestones.sprints.reorder', [$project, $milestone]) }}" @endcan>
-    @include('projects.partials.module.sprint-cards', [
+    @include('projects.partials.milestone.sprint-cards', [
         'project' => $project,
-        'module' => $milestone,
+        'milestone' => $milestone,
         'projectSprints' => $projectSprints,
         'allPagesLoaded' => $pagination['all_pages_loaded'],
         'showEmptyState' => true,

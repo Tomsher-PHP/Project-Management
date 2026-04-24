@@ -35,7 +35,7 @@
                     <span>
                         <strong>Milestone:</strong>
                         @if ($project)
-                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'module' => $task->projectMilestone->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'milestone' => $task->projectMilestone->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                 {{ $task->projectMilestone->name }}
                             </a>
                         @else
@@ -47,7 +47,7 @@
                     <span>
                         <strong>Sprint:</strong>
                         @if ($project)
-                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'module' => $task->projectSprint->project_milestone_id ?: $task->project_milestone_id, 'sprint' => $task->projectSprint->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'milestone' => $task->projectSprint->project_milestone_id ?: $task->project_milestone_id, 'sprint' => $task->projectSprint->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                 {{ $task->projectSprint->name }}
                             </a>
                         @else
