@@ -43,10 +43,10 @@
 
                         <div class="flex items-center gap-3">
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
-                                Selected: <span data-project-module-builder-count>{{ $editableProjectModules->count() }}</span>
+                                Selected: <span data-project-milestone-builder-count>{{ $editableProjectModules->count() }}</span>
                             </div>
 
-                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-builder-close>
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-milestone-builder-close>
                                 ✕
                             </button>
                         </div>
@@ -62,7 +62,7 @@
                                     </p>
                                 </div>
 
-                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-reset-search>
+                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-reset-search>
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M3 10a7 7 0 1112.95 3.95l1.55 1.55a1 1 0 01-1.414 1.414l-1.55-1.55A7 7 0 013 10zm7-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                                     </svg>
@@ -71,13 +71,13 @@
                             </div>
 
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
-                                    <div class="space-y-4" data-project-module-builder-workspace>
+                                    <div class="space-y-4" data-project-milestone-builder-workspace>
                                     @forelse ($editableProjectModules as $milestone)
-                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $milestone->id }}" data-module-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
+                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-milestone-builder-card data-module-id="{{ $milestone->id }}" data-module-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $milestone->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
-                                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-builder-drag-handle>
+                                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
                                                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                                         </svg>
@@ -85,31 +85,31 @@
 
                                                     <div>
                                                         <div class="flex flex-wrap items-center gap-2">
-                                                            <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $milestone->color ?: '#22C55E' }}" data-project-module-builder-color-dot></span>
-                                                            <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-module-builder-title>{{ $milestone->name }}</h5>
-                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-module-builder-order>{{ $milestone->sort_order }}</span>
+                                                            <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $milestone->color ?: '#22C55E' }}" data-project-milestone-builder-color-dot></span>
+                                                            <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-milestone-builder-title>{{ $milestone->name }}</h5>
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-milestone-builder-order>{{ $milestone->sort_order }}</span>
                                                         </div>
-                                                        <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-module-builder-status>
+                                                        <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-milestone-builder-status>
                                                             Saved
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div class="flex items-center gap-2">
-                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete milestone" title="Delete milestone">
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
                                                     </button>
-                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand milestone" title="Expand milestone">
-                                                        <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
+                                                        <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-milestone-builder-toggle-icon>
                                                             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                                                         </svg>
                                                     </button>
                                                 </div>
                                             </div>
 
-                                            <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-module-builder-body>
+                                            <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-milestone-builder-body>
                                                 <div class="grid gap-4 xl:grid-cols-2">
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <x-red-star /></label>
@@ -137,7 +137,7 @@
 
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                                                    <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-module-builder-date-range>
+                                                    <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-milestone-builder-date-range>
                                                     <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
                                                     <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
                                                 </div>
@@ -145,7 +145,7 @@
                                                 <div class="xl:col-span-2">
                                                     <div class="mb-2 flex items-center justify-between gap-3">
                                                         <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
-                                                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
+                                                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
                                                     </div>
                                                     <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
                                                 </div>
@@ -153,7 +153,7 @@
                                             </div>
                                         </article>
                                     @empty
-                                        <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-module-builder-empty>
+                                        <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
                                             <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -166,7 +166,7 @@
                                         </div>
                                     @endforelse
                                         @if ($editableProjectModules->isNotEmpty())
-                                            <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-module-builder-helper>
+                                            <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
                                                 <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                                                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
@@ -178,7 +178,7 @@
                                                 </div>
                                             </div>
                                         @endif
-                                        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-module-builder-dropzone></div>
+                                        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
                                     </div>
                             </div>
                         </div>
@@ -187,7 +187,7 @@
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
                                 @can('agile_milestone.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-module-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
@@ -201,13 +201,13 @@
                                         <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 013.93 9.35l3.61 3.61a1 1 0 01-1.414 1.414l-3.61-3.61A5.5 5.5 0 118.5 3zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" clip-rule="evenodd" />
                                     </svg>
                                 </span>
-                                <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search milestone library..." data-project-module-builder-library-search>
+                                <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search milestone library..." data-project-milestone-builder-library-search>
                             </label>
 
-                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-module-builder-library-scroll>
-                                <div class="space-y-3" data-project-module-builder-library>
+                            <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-milestone-builder-library-scroll>
+                                <div class="space-y-3" data-project-milestone-builder-library>
                                     @foreach ($agileMilestones as $libraryModule)
-                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
+                                        <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-milestone-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
                                                     <div class="flex items-center gap-2">
@@ -237,14 +237,14 @@
             </div>
         </div>
 
-        <script type="application/json" id="project-module-builder-config">
+        <script type="application/json" id="project-milestone-builder-config">
             {!! json_encode($projectModuleBuilderConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
     </div>
 
     @can('agile_milestone.create')
-        <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-module-library-create-modal" data-project-module-library-create-modal>
-            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-module-library-create-close></div>
+        <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-milestone-library-create-modal" data-project-milestone-library-create-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-milestone-library-create-close></div>
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
@@ -252,49 +252,49 @@
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Milestone</h3>
 
-                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-library-create-close>
+                            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-milestone-library-create-close>
                                 ✕
                             </button>
                         </div>
 
-                        <form class="flex max-h-[80vh] flex-col" data-project-module-library-create-form>
+                        <form class="flex max-h-[80vh] flex-col" data-project-milestone-library-create-form>
                             <div class="overflow-y-auto px-6 py-6 sm:px-7">
                                 <div class="grid gap-6 md:grid-cols-2">
                                     <div>
                                         <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
                                         <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="name"></p>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="name"></p>
                                     </div>
 
                                     <div>
                                         <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
                                         <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
-                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="color"></p>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="color"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
                                         <div class="mb-2.5 flex items-center justify-between gap-3">
                                             <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
-                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-library-description-count>0</span>/100</span>
+                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-library-description-count>0</span>/100</span>
                                         </div>
                                         <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
-                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="description"></p>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="description"></p>
                                     </div>
 
                                     <div>
                                         <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
                                         <input type="number" name="sort_order" min="1" step="1" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                        <p class="mt-1 hidden text-sm text-red-500" data-project-module-library-create-error="sort_order"></p>
+                                        <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="sort_order"></p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="flex flex-wrap justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-module-library-create-close>
+                                <button type="button" class="rounded-lg border border-bgray-300 bg-white px-6 py-3 text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-milestone-library-create-close>
                                     Cancel
                                 </button>
 
-                                <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-module-library-create-submit>
+                                <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-milestone-library-create-submit>
                                     Create Milestone
                                 </button>
                             </div>
