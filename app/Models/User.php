@@ -241,7 +241,7 @@ class User extends Authenticatable
     public function getActivityAttributeLabels(): array
     {
         return [
-            'project_module_id' => 'Module',
+            'project_milestone_id' => 'Milestone',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
             'estimated_time_seconds' => 'Estimated Time',

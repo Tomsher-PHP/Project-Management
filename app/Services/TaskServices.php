@@ -100,7 +100,7 @@ class TaskServices
     {
         return [
             'project:id,name,project_code,project_flow',
-            'projectModule:id,name',
+            'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
             'status:id,name,color',
@@ -127,7 +127,7 @@ class TaskServices
                 : (! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null);
             $placement = $this->finalizePlacement(
                 $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
                 ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
             );
 
@@ -171,7 +171,7 @@ class TaskServices
 
             $placement = $this->finalizePlacement(
                 $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
                 ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
             );
 
@@ -197,10 +197,10 @@ class TaskServices
         });
     }
 
-    // Determine project module and sprint placement for a task
-    public function finalizePlacement(Project $project, ?int $moduleId, ?int $sprintId): array
+    // Determine project milestone and sprint placement for a task
+    public function finalizePlacement(Project $project, ?int $milestoneId, ?int $sprintId): array
     {
-        return $this->projectServices->finalizeTaskPlacement($project, $moduleId, $sprintId);
+        return $this->projectServices->finalizeTaskPlacement($project, $milestoneId, $sprintId);
     }
 
     // Resolve default task values based on project settings
@@ -231,7 +231,7 @@ class TaskServices
         $resolvedSprintId = $placement['project_sprint_id'];
 
         return [
-            'project_module_id' => $placement['project_module_id'],
+            'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
             'name' => $validated['name'],
@@ -254,7 +254,7 @@ class TaskServices
     protected function buildUpdatePayload(Task $task, array $validated, array $placement): array
     {
         return [
-            'project_module_id' => $placement['project_module_id'],
+            'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $placement['project_sprint_id'],
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
             'name' => $validated['name'],

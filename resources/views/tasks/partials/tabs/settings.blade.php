@@ -1,11 +1,11 @@
 @php
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
     $taskPlacementOptions = [
-        'modules' => $projectModules
+        'milestones' => $projectMilestones
             ->map(
-                fn($projectModule) => [
-                    'value' => (string) $projectModule->id,
-                    'text' => $projectModule->name,
+                fn($projectMilestone) => [
+                    'value' => (string) $projectMilestone->id,
+                    'text' => $projectMilestone->name,
                 ],
             )
             ->values(),
@@ -13,8 +13,8 @@
             ->map(
                 fn($projectSprint) => [
                     'value' => (string) $projectSprint->id,
-                    'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
-                    'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                    'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
+                    'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
                 ],
             )
             ->values(),
@@ -74,17 +74,17 @@
             @unless ($isLinearFlow)
                 <div>
                     <label class="mb-2.5 block text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                        Module
+                        Milestone
                     </label>
-                    <select name="project_module_id" class="tom-select w-full" data-sort="0" data-task-settings-module-select>
-                        <option value="">Select module or leave empty for backlog</option>
-                        @foreach ($projectModules as $projectModule)
-                            <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
-                                {{ $projectModule->name }}
+                    <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-task-settings-module-select>
+                        <option value="">Select milestone or leave empty for backlog</option>
+                        @foreach ($projectMilestones as $projectMilestone)
+                            <option value="{{ $projectMilestone->id }}" {{ (int) $task->project_milestone_id === (int) $projectMilestone->id ? 'selected' : '' }}>
+                                {{ $projectMilestone->name }}
                             </option>
                         @endforeach
                     </select>
-                    <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="project_module_id"></p>
+                    <p class="mt-1 hidden text-sm text-error-300" data-task-settings-error="project_milestone_id"></p>
                 </div>
 
                 <div>
@@ -94,9 +94,9 @@
                     <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-task-settings-sprint-select>
                         <option value="">Select sprint or leave empty for backlog</option>
                         @foreach ($projectSprints as $projectSprint)
-                            <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_module_id }}" data-module-name="{{ $projectSprint->projectModule?->name ?? '--' }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
-                                {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
-                                    - {{ $projectSprint->projectModule->name }}
+                            <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}" data-module-name="{{ $projectSprint->projectMilestone?->name ?? '--' }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
+                                {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
+                                    - {{ $projectSprint->projectMilestone->name }}
                                 @endif
                             </option>
                         @endforeach

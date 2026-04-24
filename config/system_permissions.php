@@ -41,11 +41,11 @@ return [
     ['name' => 'project.status_change', 'sort_order' => 34],
     ['name' => 'project.customer_end_date', 'sort_order' => 35],
 
-    ['name' => 'project_module.view', 'sort_order' => 36],
-    ['name' => 'project_module.create', 'sort_order' => 37],
-    ['name' => 'project_module.edit', 'sort_order' => 38],
-    ['name' => 'project_module.delete', 'sort_order' => 39],
-    ['name' => 'project_module.restore', 'sort_order' => 40],
+    ['name' => 'project_milestone.view', 'sort_order' => 36],
+    ['name' => 'project_milestone.create', 'sort_order' => 37],
+    ['name' => 'project_milestone.edit', 'sort_order' => 38],
+    ['name' => 'project_milestone.delete', 'sort_order' => 39],
+    ['name' => 'project_milestone.restore', 'sort_order' => 40],
 
     ['name' => 'project_sprint.view', 'sort_order' => 41],
     ['name' => 'project_sprint.create', 'sort_order' => 42],
@@ -117,10 +117,10 @@ return [
     ['name' => 'activity_log.view', 'sort_order' => 95],
     ['name' => 'activity_log.delete', 'sort_order' => 96],
 
-    ['name' => 'agile_module.view', 'sort_order' => 97],
-    ['name' => 'agile_module.create', 'sort_order' => 98],
-    ['name' => 'agile_module.edit', 'sort_order' => 99],
-    ['name' => 'agile_module.delete', 'sort_order' => 100],
+    ['name' => 'agile_milestone.view', 'sort_order' => 97],
+    ['name' => 'agile_milestone.create', 'sort_order' => 98],
+    ['name' => 'agile_milestone.edit', 'sort_order' => 99],
+    ['name' => 'agile_milestone.delete', 'sort_order' => 100],
 
     ['name' => 'agile_sprint.view', 'sort_order' => 101],
     ['name' => 'agile_sprint.create', 'sort_order' => 102],

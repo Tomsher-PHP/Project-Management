@@ -8,7 +8,7 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AgileModuleStatus extends Model
+class AgileMilestoneStatus extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity;
 
@@ -57,8 +57,8 @@ class AgileModuleStatus extends Model
         return $query->where('is_active', true);
     }
 
-    public function projectModules()
+    public function projectMilestones()
     {
-        return $this->hasMany(ProjectModule::class, 'status_id');
+        return $this->hasMany(ProjectMilestone::class, 'status_id');
     }
 }

@@ -23,7 +23,7 @@ class TaskRequestServices
             ->where('request_status', $status)
             ->with([
                 'project:id,name,project_code',
-                'projectModule:id,name,owner_id',
+                'projectMilestone:id,name,owner_id',
                 'projectSprint:id,name',
                 'currentAssignee:id,name',
                 'status:id,name,color',
@@ -200,8 +200,8 @@ class TaskRequestServices
             ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
                 $teamLeaderQuery->whereKey($user->id);
             })
-            ->orWhereHas('projectModule', function (Builder $moduleQuery) use ($user) {
-                $moduleQuery->where('owner_id', $user->id);
+            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
+                $milestoneQuery->where('owner_id', $user->id);
             });
     }
 

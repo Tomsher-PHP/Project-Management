@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\AgileModuleStatus;
+use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprintStatus;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
@@ -19,9 +19,9 @@ use InvalidArgumentException;
 
 class ProjectServices
 {
-    private const BACKLOG_MODULE_NAME = 'Unplanned Work';
+    private const BACKLOG_MILESTONE_NAME = 'Unplanned Work';
     private const BACKLOG_SPRINT_NAME = 'Backlog';
-    private const BACKLOG_MODULE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
+    private const BACKLOG_MILESTONE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
     private const BACKLOG_SPRINT_DESCRIPTION = 'Contains pending tasks waiting to be scheduled into an active sprint.';
 
     protected $attachmentService;
@@ -232,7 +232,7 @@ class ProjectServices
         });
     }
 
-    public function findOrCreateUnplannedWorkModule(Project $project): ProjectModule
+    public function findOrCreateUnplannedWorkMilestone(Project $project): ProjectMilestone
     {
         $this->ensureAgileProject($project);
 
@@ -242,65 +242,65 @@ class ProjectServices
                 ->lockForUpdate()
                 ->first();
 
-            $projectModule = ProjectModule::query()
+            $projectMilestone = ProjectMilestone::query()
                 ->where('project_id', $project->id)
                 ->where('is_backlog', true)
                 ->orderBy('id')
                 ->first();
 
-            if (! $projectModule) {
-                $projectModule = ProjectModule::onlyTrashed()
+            if (! $projectMilestone) {
+                $projectMilestone = ProjectMilestone::onlyTrashed()
                     ->where('project_id', $project->id)
                     ->where('is_backlog', true)
                     ->orderBy('id')
                     ->first();
             }
 
-            if (! $projectModule) {
-                return $project->projectModules()->create([
-                    'name' => self::BACKLOG_MODULE_NAME,
-                    'description' => self::BACKLOG_MODULE_DESCRIPTION,
-                    'status_id' => $this->defaultAgileModuleStatusId(),
-                    'sort_order' => $this->nextProjectModuleOrder($project),
+            if (! $projectMilestone) {
+                return $project->projectMilestones()->create([
+                    'name' => self::BACKLOG_MILESTONE_NAME,
+                    'description' => self::BACKLOG_MILESTONE_DESCRIPTION,
+                    'status_id' => $this->defaultAgileMilestoneStatusId(),
+                    'sort_order' => $this->nextProjectMilestoneOrder($project),
                     'is_backlog' => true,
                     'is_system' => true,
                 ]);
             }
 
-            if ($projectModule->trashed()) {
-                $projectModule->restore();
-                $projectModule->sort_order = $this->nextProjectModuleOrder($project);
+            if ($projectMilestone->trashed()) {
+                $projectMilestone->restore();
+                $projectMilestone->sort_order = $this->nextProjectMilestoneOrder($project);
             }
 
-            $projectModule->fill([
-                'name' => self::BACKLOG_MODULE_NAME,
-                'description' => self::BACKLOG_MODULE_DESCRIPTION,
+            $projectMilestone->fill([
+                'name' => self::BACKLOG_MILESTONE_NAME,
+                'description' => self::BACKLOG_MILESTONE_DESCRIPTION,
                 'is_backlog' => true,
                 'is_system' => true,
             ]);
 
-            if (! $projectModule->status_id) {
-                $projectModule->status_id = $this->defaultAgileModuleStatusId();
+            if (! $projectMilestone->status_id) {
+                $projectMilestone->status_id = $this->defaultAgileMilestoneStatusId();
             }
 
-            if ($projectModule->isDirty()) {
-                $projectModule->save();
+            if ($projectMilestone->isDirty()) {
+                $projectMilestone->save();
             }
 
-            return $projectModule->fresh();
+            return $projectMilestone->fresh();
         });
     }
 
-    public function findOrCreateBacklogSprint(Project $project, ProjectModule $module): ProjectSprint
+    public function findOrCreateBacklogSprint(Project $project, ProjectMilestone $milestone): ProjectSprint
     {
         $this->ensureAgileProject($project);
-        $this->ensureProjectModuleBelongsToProject($project, $module);
+        $this->ensureProjectMilestoneBelongsToProject($project, $milestone);
 
-        if (! $module->is_backlog) {
-            throw new InvalidArgumentException('Backlog sprint must belong to a backlog project module.');
+        if (! $milestone->is_backlog) {
+            throw new InvalidArgumentException('Backlog sprint must belong to a backlog project milestone.');
         }
 
-        return DB::transaction(function () use ($project, $module) {
+        return DB::transaction(function () use ($project, $milestone) {
             Project::query()
                 ->whereKey($project->id)
                 ->lockForUpdate()
@@ -321,12 +321,12 @@ class ProjectServices
             }
 
             if (! $projectSprint) {
-                return $module->projectSprints()->create([
+                return $milestone->projectSprints()->create([
                     'project_id' => $project->id,
                     'name' => self::BACKLOG_SPRINT_NAME,
                     'description' => self::BACKLOG_SPRINT_DESCRIPTION,
                     'status_id' => $this->defaultAgileSprintStatusId(),
-                    'sort_order' => $this->nextProjectSprintOrder($module),
+                    'sort_order' => $this->nextProjectSprintOrder($milestone),
                     'is_backlog' => true,
                     'is_system' => true,
                 ]);
@@ -334,12 +334,12 @@ class ProjectServices
 
             if ($projectSprint->trashed()) {
                 $projectSprint->restore();
-                $projectSprint->sort_order = $this->nextProjectSprintOrder($module);
+                $projectSprint->sort_order = $this->nextProjectSprintOrder($milestone);
             }
 
             $projectSprint->fill([
                 'project_id' => $project->id,
-                'project_module_id' => $module->id,
+                'project_milestone_id' => $milestone->id,
                 'name' => self::BACKLOG_SPRINT_NAME,
                 'description' => self::BACKLOG_SPRINT_DESCRIPTION,
                 'is_backlog' => true,
@@ -360,14 +360,14 @@ class ProjectServices
 
     public function finalizeTaskPlacement(
         Project $project,
-        ?int $projectModuleId = null,
+        ?int $projectMilestoneId = null,
         ?int $projectSprintId = null
     ): array {
         if ($project->is_linear) {
             return [
-                'project_module' => null,
+                'project_milestone' => null,
                 'project_sprint' => null,
-                'project_module_id' => null,
+                'project_milestone_id' => null,
                 'project_sprint_id' => null,
             ];
         }
@@ -381,25 +381,25 @@ class ProjectServices
                 throw new InvalidArgumentException('The selected sprint is invalid.');
             }
 
-            $projectModule = ProjectModule::query()
+            $projectMilestone = ProjectMilestone::query()
                 ->where('project_id', $project->id)
-                ->find($projectSprint->project_module_id);
+                ->find($projectSprint->project_milestone_id);
 
             return [
-                'project_module' => $projectModule,
+                'project_milestone' => $projectMilestone,
                 'project_sprint' => $projectSprint,
-                'project_module_id' => $projectSprint->project_module_id,
+                'project_milestone_id' => $projectSprint->project_milestone_id,
                 'project_sprint_id' => $projectSprint->id,
             ];
         }
 
-        $projectModule = $this->findOrCreateUnplannedWorkModule($project);
-        $projectSprint = $this->findOrCreateBacklogSprint($project, $projectModule);
+        $projectMilestone = $this->findOrCreateUnplannedWorkMilestone($project);
+        $projectSprint = $this->findOrCreateBacklogSprint($project, $projectMilestone);
 
         return [
-            'project_module' => $projectModule,
+            'project_milestone' => $projectMilestone,
             'project_sprint' => $projectSprint,
-            'project_module_id' => $projectModule->id,
+            'project_milestone_id' => $projectMilestone->id,
             'project_sprint_id' => $projectSprint->id,
         ];
     }
@@ -433,13 +433,13 @@ class ProjectServices
         DB::transaction(function () use ($project, $task, $projectSprint) {
             $task->update([
                 'project_sprint_id' => $projectSprint->id,
-                'project_module_id' => $projectSprint->project_module_id,
+                'project_milestone_id' => $projectSprint->project_milestone_id,
                 'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
             ]);
 
             $this->syncTaskDescendantPlacement(
                 $task,
-                (int) $projectSprint->project_module_id,
+                (int) $projectSprint->project_milestone_id,
                 (int) $projectSprint->id
             );
         });
@@ -451,22 +451,22 @@ class ProjectServices
     {
         $this->syncTaskDescendantPlacement(
             $task,
-            $task->project_module_id ? (int) $task->project_module_id : null,
+            $task->project_milestone_id ? (int) $task->project_milestone_id : null,
             $task->project_sprint_id ? (int) $task->project_sprint_id : null
         );
     }
 
-    private function syncTaskDescendantPlacement(Task $task, ?int $projectModuleId, ?int $projectSprintId): void
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId): void
     {
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectModuleId, $projectSprintId) {
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId) {
                 $childTask->update([
-                    'project_module_id' => $projectModuleId,
+                    'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
                 ]);
 
-                $this->syncTaskDescendantPlacement($childTask, $projectModuleId, $projectSprintId);
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId);
             });
     }
 
@@ -540,9 +540,9 @@ class ProjectServices
         return Carbon::parse($date)->setTimeFrom(now());
     }
 
-    private function defaultAgileModuleStatusId(): ?int
+    private function defaultAgileMilestoneStatusId(): ?int
     {
-        return AgileModuleStatus::query()
+        return AgileMilestoneStatus::query()
             ->where('is_default', true)
             ->value('id');
     }
@@ -554,14 +554,14 @@ class ProjectServices
             ->value('id');
     }
 
-    private function nextProjectModuleOrder(Project $project): int
+    private function nextProjectMilestoneOrder(Project $project): int
     {
-        return ((int) $project->projectModules()->max('sort_order')) + 1;
+        return ((int) $project->projectMilestones()->max('sort_order')) + 1;
     }
 
-    private function nextProjectSprintOrder(ProjectModule $module): int
+    private function nextProjectSprintOrder(ProjectMilestone $milestone): int
     {
-        return ((int) $module->projectSprints()->max('sort_order')) + 1;
+        return ((int) $milestone->projectSprints()->max('sort_order')) + 1;
     }
 
     private function ensureAgileProject(Project $project): void
@@ -571,10 +571,10 @@ class ProjectServices
         }
     }
 
-    private function ensureProjectModuleBelongsToProject(Project $project, ProjectModule $module): void
+    private function ensureProjectMilestoneBelongsToProject(Project $project, ProjectMilestone $milestone): void
     {
-        if ((int) $module->project_id !== (int) $project->id) {
-            throw new InvalidArgumentException('The provided project module does not belong to the given project.');
+        if ((int) $milestone->project_id !== (int) $project->id) {
+            throw new InvalidArgumentException('The provided project milestone does not belong to the given project.');
         }
     }
 }

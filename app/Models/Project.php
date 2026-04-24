@@ -150,9 +150,9 @@ class Project extends Model
         return $this->hasMany(ProjectNote::class)->orderBy('created_at', 'desc');
     }
 
-    public function projectModules()
+    public function projectMilestones()
     {
-        return $this->hasMany(ProjectModule::class)->orderForDisplay();
+        return $this->hasMany(ProjectMilestone::class)->orderForDisplay();
     }
 
     public function projectSprints()

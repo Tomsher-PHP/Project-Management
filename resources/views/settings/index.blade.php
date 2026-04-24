@@ -4,7 +4,7 @@
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         @php
-            $hasSettingsAccess = auth()->user()->can('department.view') || auth()->user()->can('designation.view') || auth()->user()->can('shift.view') || auth()->user()->can('technology.view') || auth()->user()->can('project_category.view') || auth()->user()->can('industry.view') || auth()->user()->can('project_status.view') || auth()->user()->can('project_stage.view') || auth()->user()->can('configuration.view') || auth()->user()->can('agile_module.view') || auth()->user()->can('agile_sprint.view') || auth()->user()->can('task_settings.view');
+            $hasSettingsAccess = auth()->user()->can('department.view') || auth()->user()->can('designation.view') || auth()->user()->can('shift.view') || auth()->user()->can('technology.view') || auth()->user()->can('project_category.view') || auth()->user()->can('industry.view') || auth()->user()->can('project_status.view') || auth()->user()->can('project_stage.view') || auth()->user()->can('configuration.view') || auth()->user()->can('agile_milestone.view') || auth()->user()->can('agile_sprint.view') || auth()->user()->can('task_settings.view');
         @endphp
 
         <!-- write your code here-->
@@ -295,8 +295,8 @@
                     </a>
                 @endcan
 
-                @canany(['agile_module.view', 'agile_sprint.view'])
-                    <a href="{{ auth()->user()->can('agile_module.view') ? route('settings.agile-modules.index') : route('settings.agile-sprints.index') }}" class="block group transition duration-300">
+                @canany(['agile_milestone.view', 'agile_sprint.view'])
+                    <a href="{{ auth()->user()->can('agile_milestone.view') ? route('settings.agile-milestones.index') : route('settings.agile-sprints.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
                                 <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -323,7 +323,7 @@
                                 </div>
                             </div>
                             <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
-                                Manage reusable agile modules and sprint templates for planning.
+                                Manage reusable agile milestones and sprint templates for planning.
                             </p>
                         </div>
                     </a>

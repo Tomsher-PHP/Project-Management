@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('agile_modules', function (Blueprint $table) {
+        Schema::create('agile_milestones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('color')->nullable();
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('agile_modules');
+        Schema::dropIfExists('agile_milestones');
     }
 };

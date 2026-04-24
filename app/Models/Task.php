@@ -16,13 +16,13 @@ class Task extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
-    protected ?int $previousProjectModuleIdForMetrics = null;
+    protected ?int $previousProjectMilestoneIdForMetrics = null;
 
     protected ?int $previousProjectSprintIdForMetrics = null;
 
     protected $fillable = [
         'project_id',
-        'project_module_id',
+        'project_milestone_id',
         'project_sprint_id',
         'parent_task_id',
         'name',
@@ -73,7 +73,7 @@ class Task extends Model
 
     protected $casts = [
         'project_id' => 'integer',
-        'project_module_id' => 'integer',
+        'project_milestone_id' => 'integer',
         'project_sprint_id' => 'integer',
         'parent_task_id' => 'integer',
         'status_id' => 'integer',
@@ -116,8 +116,8 @@ class Task extends Model
 
         static::updating(function (Task $task) {
             $task->updated_by = Auth::id();
-            $task->previousProjectModuleIdForMetrics = $task->getOriginal('project_module_id')
-                ? (int) $task->getOriginal('project_module_id')
+            $task->previousProjectMilestoneIdForMetrics = $task->getOriginal('project_milestone_id')
+                ? (int) $task->getOriginal('project_milestone_id')
                 : null;
             $task->previousProjectSprintIdForMetrics = $task->getOriginal('project_sprint_id')
                 ? (int) $task->getOriginal('project_sprint_id')
@@ -149,7 +149,7 @@ class Task extends Model
                 ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
                     $teamLeaderQuery->whereKey($user->id);
                 })
-                ->orWhereHas('projectModule', function ($moduleQuery) use ($user) {
+                ->orWhereHas('projectMilestone', function ($moduleQuery) use ($user) {
                     $moduleQuery->where('owner_id', $user->id);
                 });
         });
@@ -166,8 +166,8 @@ class Task extends Model
             ->values();
 
         $moduleIds = collect([
-            $this->project_module_id ? (int) $this->project_module_id : null,
-            $this->previousProjectModuleIdForMetrics,
+            $this->project_milestone_id ? (int) $this->project_milestone_id : null,
+            $this->previousProjectMilestoneIdForMetrics,
         ]);
 
         if ($sprintIds->isNotEmpty()) {
@@ -177,7 +177,7 @@ class Task extends Model
 
             foreach ($sprints as $projectSprint) {
                 $projectSprint->refreshDerivedTimeSeconds();
-                $moduleIds->push($projectSprint->project_module_id ? (int) $projectSprint->project_module_id : null);
+                $moduleIds->push($projectSprint->project_milestone_id ? (int) $projectSprint->project_milestone_id : null);
             }
         }
 
@@ -185,12 +185,12 @@ class Task extends Model
             ->filter()
             ->unique()
             ->values()
-            ->whenNotEmpty(fn($ids) => ProjectModule::query()
+            ->whenNotEmpty(fn($ids) => ProjectMilestone::query()
                 ->whereIn('id', $ids->all())
                 ->get()
-                ->each(fn(ProjectModule $projectModule) => $projectModule->refreshTrackedTimeMetrics()));
+                ->each(fn(ProjectMilestone $projectMilestone) => $projectMilestone->refreshTrackedTimeMetrics()));
 
-        $this->previousProjectModuleIdForMetrics = null;
+        $this->previousProjectMilestoneIdForMetrics = null;
         $this->previousProjectSprintIdForMetrics = null;
     }
 
@@ -212,9 +212,9 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function projectModule()
+    public function projectMilestone()
     {
-        return $this->belongsTo(ProjectModule::class);
+        return $this->belongsTo(ProjectMilestone::class);
     }
 
     public function projectSprint()
@@ -493,7 +493,7 @@ class Task extends Model
             'currentAssignee.reporter',
             'currentAssignee.manager',
             'project.teamLeader',
-            'projectModule.owner',
+            'projectMilestone.owner',
         ]);
 
         return collect([
@@ -502,7 +502,7 @@ class Task extends Model
             $this->currentAssignee?->reporter,
             $this->currentAssignee?->manager,
             $this->project?->teamLeader,
-            $this->projectModule?->owner,
+            $this->projectMilestone?->owner,
         ])
             ->filter()
             ->unique('id')
@@ -525,7 +525,7 @@ class Task extends Model
     public function getActivityAttributeLabels(): array
     {
         return [
-            'project_module_id' => 'Module',
+            'project_milestone_id' => 'Milestone',
             'project_sprint_id' => 'Sprint',
             'parent_task_id' => 'Parent Task',
             'estimated_time_seconds' => 'Estimated Time',
@@ -537,7 +537,7 @@ class Task extends Model
     {
         return match ($attribute) {
             'project_id' => $this->project?->name ?? $value,
-            'project_module_id' => ProjectModule::withTrashed()->find($value)?->name ?? $value,
+            'project_milestone_id' => ProjectMilestone::withTrashed()->find($value)?->name ?? $value,
             'project_sprint_id' => ProjectSprint::withTrashed()->find($value)?->name ?? $value,
             'parent_task_id' => Task::find($value)?->name ?? $value,
             'status_id' => TaskStatus::find($value)?->name ?? $value,

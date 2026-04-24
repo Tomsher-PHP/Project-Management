@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class ProjectModule extends Model
+class ProjectMilestone extends Model
 {
     use SoftDeletes, LogsModelActivity;
 
@@ -52,12 +52,12 @@ class ProjectModule extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (ProjectModule $projectModule) {
-            $projectModule->added_by = Auth::id();
+        static::creating(function (ProjectMilestone $projectMilestone) {
+            $projectMilestone->added_by = Auth::id();
         });
 
-        static::updating(function (ProjectModule $projectModule) {
-            $projectModule->updated_by = Auth::id();
+        static::updating(function (ProjectMilestone $projectMilestone) {
+            $projectMilestone->updated_by = Auth::id();
         });
     }
 
@@ -68,7 +68,7 @@ class ProjectModule extends Model
 
     public function status()
     {
-        return $this->belongsTo(AgileModuleStatus::class, 'status_id');
+        return $this->belongsTo(AgileMilestoneStatus::class, 'status_id');
     }
 
     public function owner()
@@ -143,7 +143,7 @@ class ProjectModule extends Model
 
         $query = DB::table('tasks')
             ->join('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
-            ->where('project_sprints.project_module_id', $this->id);
+            ->where('project_sprints.project_milestone_id', $this->id);
 
         if (Schema::hasColumn('tasks', 'deleted_at')) {
             $query->whereNull('tasks.deleted_at');
@@ -178,7 +178,7 @@ class ProjectModule extends Model
         ) {
             $query = DB::table('tasks')
                 ->join('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
-                ->where('project_sprints.project_module_id', $this->id);
+                ->where('project_sprints.project_milestone_id', $this->id);
 
             if (Schema::hasColumn('tasks', 'deleted_at')) {
                 $query->whereNull('tasks.deleted_at');

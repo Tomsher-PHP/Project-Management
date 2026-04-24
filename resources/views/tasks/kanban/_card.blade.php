@@ -38,9 +38,9 @@
                             {{ $stringLimit($task->project->name, 20, '...') }}
                         </p>
                     @endif
-                    @if ($task->projectModule)
-                        <p class="truncate text-gray-500 dark:text-gray-400" title="Module: {{ $task->projectModule->name }}">
-                            {{ $stringLimit($task->projectModule->name, 20, '...') }}
+                    @if ($task->projectMilestone)
+                        <p class="truncate text-gray-500 dark:text-gray-400" title="Milestone: {{ $task->projectMilestone->name }}">
+                            {{ $stringLimit($task->projectMilestone->name, 20, '...') }}
                         </p>
                     @endif
                 </div>

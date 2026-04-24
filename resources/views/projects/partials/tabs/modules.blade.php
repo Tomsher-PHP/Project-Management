@@ -1,1 +1,1 @@
-@include('projects.partials.module.modules')
+@include('projects.partials.module.milestones')

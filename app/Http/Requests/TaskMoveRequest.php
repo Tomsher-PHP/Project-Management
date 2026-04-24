@@ -20,10 +20,10 @@ class TaskMoveRequest extends FormRequest
         $projectId = $project?->id;
 
         return [
-            'project_module_id' => [
+            'project_milestone_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_modules', 'id')->where(
+                Rule::exists('project_milestones', 'id')->where(
                     fn ($query) => $query->where('project_id', $projectId)
                 ),
             ],
@@ -40,8 +40,8 @@ class TaskMoveRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'project_module_id.integer' => 'The selected module is invalid.',
-            'project_module_id.exists' => 'The selected module is invalid.',
+            'project_milestone_id.integer' => 'The selected milestone is invalid.',
+            'project_milestone_id.exists' => 'The selected milestone is invalid.',
             'project_sprint_id.required' => 'Please choose a sprint to move this task to.',
             'project_sprint_id.integer' => 'The selected sprint is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',

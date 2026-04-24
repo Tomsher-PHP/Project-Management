@@ -6,7 +6,7 @@ use App\Http\Requests\TaskProjectUpdateRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
 use App\Http\Requests\TaskMoveRequest;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Tag;
 use App\Models\Task;
@@ -190,14 +190,14 @@ class ProjectTaskController extends Controller
         ) {
             $placement = $projectService->finalizeTaskPlacement(
                 $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
                 ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
             );
-            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedMilestoneId = $placement['project_milestone_id'];
             $resolvedSprintId = $placement['project_sprint_id'];
 
             $task = $project->tasks()->create([
-                'project_module_id' => $resolvedModuleId,
+                'project_milestone_id' => $resolvedMilestoneId,
                 'project_sprint_id' => $resolvedSprintId,
                 'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
                 'name' => $validated['name'],
@@ -243,8 +243,8 @@ class ProjectTaskController extends Controller
         abort_unless($this->canViewTaskModal($task), Response::HTTP_FORBIDDEN);
 
         $task->load([
-            'projectModule:id,name',
-            'projectSprint:id,name,project_module_id',
+            'projectMilestone:id,name',
+            'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name',
             'currentAssignee.primaryAttachment',
             'status:id,name,color',
@@ -278,7 +278,7 @@ class ProjectTaskController extends Controller
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
         $previousStatusId = (int) ($task->status_id ?? 0);
         $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
-        $previousModuleId = filled($task->project_module_id) ? (int) $task->project_module_id : null;
+        $previousMilestoneId = filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null;
         $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
 
         DB::transaction(function () use (
@@ -288,7 +288,7 @@ class ProjectTaskController extends Controller
             $newAssigneeId,
             $previousStatusId,
             $previousAssigneeId,
-            $previousModuleId,
+            $previousMilestoneId,
             $previousSprintId,
             $project,
             $projectService,
@@ -296,14 +296,14 @@ class ProjectTaskController extends Controller
         ) {
             $placement = $projectService->finalizeTaskPlacement(
                 $project,
-                ! empty($validated['project_module_id']) ? (int) $validated['project_module_id'] : null,
+                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
                 ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
             );
-            $resolvedModuleId = $placement['project_module_id'];
+            $resolvedMilestoneId = $placement['project_milestone_id'];
             $resolvedSprintId = $placement['project_sprint_id'];
 
             $task->update([
-                'project_module_id' => $resolvedModuleId,
+                'project_milestone_id' => $resolvedMilestoneId,
                 'project_sprint_id' => $resolvedSprintId,
                 'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
                 'name' => $validated['name'],
@@ -321,7 +321,7 @@ class ProjectTaskController extends Controller
             ]);
 
             if (
-                $previousModuleId !== (filled($task->project_module_id) ? (int) $task->project_module_id : null)
+                $previousMilestoneId !== (filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null)
                 || $previousSprintId !== (filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null)
             ) {
                 $projectService->syncTaskPlacementToDescendants($task);
@@ -406,15 +406,15 @@ class ProjectTaskController extends Controller
         $isLinearFlow = $project->project_flow === 'linear';
         $taskGroupViewData = $this->getInitialTaskGroupViewData($project, $preferredGroupKey);
         $taskGroups = $taskGroupViewData['taskGroups'];
-        $projectModules = $isLinearFlow ? collect() : ProjectModule::query()
+        $projectMilestones = $isLinearFlow ? collect() : ProjectMilestone::query()
             ->where('project_id', $project->id)
             ->orderForDisplay()
             ->get(['id', 'name', 'is_backlog', 'is_system']);
         $projectSprints = $isLinearFlow ? collect() : ProjectSprint::query()
             ->where('project_id', $project->id)
-            ->with(['projectModule:id,name'])
+            ->with(['projectMilestone:id,name'])
             ->orderForDisplay()
-            ->get(['id', 'project_module_id', 'name', 'is_backlog', 'is_system']);
+            ->get(['id', 'project_milestone_id', 'name', 'is_backlog', 'is_system']);
         $defaultSprintId = $projectSprints->first()?->id;
         $initialGroupKey = $taskGroupViewData['initialGroupKey'];
         $initialTaskPage = $initialGroupKey
@@ -463,7 +463,7 @@ class ProjectTaskController extends Controller
             'sprintCount' => $taskGroupViewData['sprintCount'],
             'isLinearFlow' => $isLinearFlow,
             'assignableUsers' => $assignableUsers,
-            'projectModules' => $projectModules,
+            'projectMilestones' => $projectMilestones,
             'projectSprints' => $projectSprints,
             'defaultSprintId' => $defaultSprintId,
             'taskGroupsPagination' => $taskGroupViewData['pagination'],
@@ -519,7 +519,7 @@ class ProjectTaskController extends Controller
         $loadedSprintLimit = max($loadedPages * $perPage, $perPage);
         $taskGroups = ProjectSprint::query()
             ->where('project_id', $project->id)
-            ->with(['projectModule:id,name'])
+            ->with(['projectMilestone:id,name'])
             ->withCount([
                 'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
             ])
@@ -585,7 +585,7 @@ class ProjectTaskController extends Controller
 
         $taskGroups = ProjectSprint::query()
             ->where('project_id', $project->id)
-            ->with(['projectModule:id,name'])
+            ->with(['projectMilestone:id,name'])
             ->withCount([
                 'tasks' => fn($query) => $query->accessibleBy($authUser),
             ])
@@ -645,7 +645,7 @@ class ProjectTaskController extends Controller
         $projectSprintId = (int) str_replace('sprint-', '', $groupKey);
         $projectSprint = ProjectSprint::query()
             ->where('project_id', $project->id)
-            ->with(['projectModule:id,name'])
+            ->with(['projectMilestone:id,name'])
             ->withCount([
                 'tasks' => fn($query) => $query->accessibleBy(auth()->user()),
             ])
@@ -747,7 +747,7 @@ class ProjectTaskController extends Controller
             'key' => 'sprint-' . $projectSprint->id,
             'sprint_id' => $projectSprint->id,
             'name' => $projectSprint->name,
-            'subtitle' => $projectSprint->projectModule?->name,
+            'subtitle' => $projectSprint->projectMilestone?->name,
             'accent_color' => $projectSprint->color ?: '#D1D5DB',
             'task_count' => (int) $projectSprint->tasks_count,
             'estimated_seconds' => $sprintEstimatedSeconds,
@@ -960,8 +960,8 @@ class ProjectTaskController extends Controller
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
             'tags',
-            'projectModule:id,name,is_backlog,is_system',
-            'projectSprint:id,name,project_module_id,is_backlog,is_system',
+            'projectMilestone:id,name,is_backlog,is_system',
+            'projectSprint:id,name,project_milestone_id,is_backlog,is_system',
             'parentTask:id,name',
         ];
     }
@@ -986,15 +986,15 @@ class ProjectTaskController extends Controller
         return [
             'canEditTask' => $task ? $this->canEditTaskModal($task) : false,
             'isLinearFlow' => $project->project_flow === 'linear',
-            'projectModules' => ProjectModule::query()
+            'projectMilestones' => ProjectMilestone::query()
                 ->where('project_id', $project->id)
                 ->orderForDisplay()
                 ->get(['id', 'name']),
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
-                ->with(['projectModule:id,name'])
+                ->with(['projectMilestone:id,name'])
                 ->orderForDisplay()
-                ->get(['id', 'project_module_id', 'name']),
+                ->get(['id', 'project_milestone_id', 'name']),
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')
                 ->get(['users.id', 'users.name']),

@@ -16,14 +16,14 @@ class ProjectSprintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_module_id' => ['required', 'integer', 'exists:project_modules,id'],
+            'project_milestone_id' => ['required', 'integer', 'exists:project_milestones,id'],
             'name' => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('project_sprints', 'name')->ignore($this->projectSprintId())->where(
                     fn ($query) => $query
-                        ->where('project_module_id', $this->projectModuleId())
+                        ->where('project_milestone_id', $this->projectMilestoneId())
                         ->whereNull('deleted_at')
                 ),
             ],
@@ -35,11 +35,11 @@ class ProjectSprintRequest extends FormRequest
         ];
     }
 
-    public function projectModuleId(): int|string|null
+    public function projectMilestoneId(): int|string|null
     {
-        $projectModule = $this->input('project_module_id', $this->route('projectModule'));
+        $projectMilestone = $this->input('project_milestone_id', $this->route('projectMilestone'));
 
-        return is_object($projectModule) ? $projectModule->id : $projectModule;
+        return is_object($projectMilestone) ? $projectMilestone->id : $projectMilestone;
     }
 
     public function projectSprintId(): int|string|null

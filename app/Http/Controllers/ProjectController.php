@@ -8,12 +8,12 @@ use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
-use App\Models\AgileModule;
-use App\Models\AgileModuleStatus;
+use App\Models\AgileMilestone;
+use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
 use App\Models\Customer;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
@@ -155,7 +155,7 @@ class ProjectController extends Controller
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
-        $allowedTabs = ['modules', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
+        $allowedTabs = ['milestones', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         return response()->json([
@@ -360,7 +360,7 @@ class ProjectController extends Controller
     private function renderTab(Project $project, string $tab, ProjectServices $service, Request $request): string
     {
         return match ($tab) {
-            'modules' => $this->renderModulesTab($project),
+            'milestones' => $this->renderMilestonesTab($project),
             'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
@@ -382,9 +382,9 @@ class ProjectController extends Controller
             ->values();
     }
 
-    private function renderModulesTab(Project $project): string
+    private function renderMilestonesTab(Project $project): string
     {
-        $projectModules = $project->projectModules()
+        $projectMilestones = $project->projectMilestones()
             ->with([
                 'addedBy',
                 'updatedBy',
@@ -395,31 +395,31 @@ class ProjectController extends Controller
             ->orderForDisplay()
             ->get();
 
-        $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();
+        $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
-        $agileModuleStatuses = AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get();
+        $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
             ->get(['users.id', 'users.name']);
-        $trashedProjectModules = ProjectModule::onlyTrashed()
+        $trashedProjectMilestones = ProjectMilestone::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
             ->get();
-        $trashedProjectSprintsByModule = ProjectSprint::onlyTrashed()
+        $trashedProjectSprintsByMilestone = ProjectSprint::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
             ->get()
-            ->groupBy('project_module_id');
+            ->groupBy('project_milestone_id');
 
-        return view('projects.partials.tabs.modules', compact(
+        return view('projects.partials.tabs.milestones', compact(
             'project',
-            'projectModules',
-            'agileModules',
+            'projectMilestones',
+            'agileMilestones',
             'agileSprints',
-            'agileModuleStatuses',
+            'agileMilestoneStatuses',
             'assignableUsers',
-            'trashedProjectModules',
-            'trashedProjectSprintsByModule'
+            'trashedProjectMilestones',
+            'trashedProjectSprintsByMilestone'
         ))->render();
     }
 

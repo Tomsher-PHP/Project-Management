@@ -4,7 +4,7 @@
     $depth = $depth ?? 0;
     $isBacklogPlacement = $project->project_flow !== 'linear' && ! $task->project_sprint_id;
     $shouldPrefillPlacement = ! $isBacklogPlacement
-        && ! ($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectModule?->is_backlog || $task->projectModule?->is_system);
+        && ! ($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectMilestone?->is_backlog || $task->projectMilestone?->is_system);
     $statusColor = $task->status?->color ?: '#CBD5E1';
     $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
     $typeColor = $task->taskType?->color ?: '#64748B';
@@ -131,7 +131,7 @@
 
                     <div class="hidden min-w-[148px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-row-menu>
                         @can('task.create')
-                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? ($task->project_module_id ?? '') : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? ($task->project_sprint_id ?? '') : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
+                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? ($task->project_milestone_id ?? '') : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? ($task->project_sprint_id ?? '') : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 4a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 0110 4z" clip-rule="evenodd" />
                                 </svg>
@@ -140,7 +140,7 @@
                         @endcan
 
                         @if ($canMoveTask)
-                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-move-open data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}" data-project-task-name="{{ $task->name }}" data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}" data-project-task-current-module="{{ $task->projectModule?->name ?? 'None' }}">
+                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-move-open data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}" data-project-task-name="{{ $task->name }}" data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}" data-project-task-current-module="{{ $task->projectMilestone?->name ?? 'None' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10.25 3a.75.75 0 01.75.75v8.69l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06L9.5 12.44V3.75A.75.75 0 0110.25 3z" clip-rule="evenodd" />
                                 </svg>

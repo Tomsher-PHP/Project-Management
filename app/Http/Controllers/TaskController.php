@@ -8,7 +8,7 @@ use App\Http\Requests\TaskQuickStoreRequest;
 use App\Http\Requests\TaskUpdateRequest;
 use App\Models\Attachment;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskComment;
@@ -71,7 +71,7 @@ class TaskController extends Controller
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
         $taskRowRelations = [
             'project:id,name,project_code,project_flow',
-            'projectModule:id,name',
+            'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
             'status:id,name,color',
@@ -527,9 +527,9 @@ class TaskController extends Controller
         $task->load([
             'project:id,name,project_code,project_flow,customer_id',
             'project.customer:id,name',
-            'projectModule:id,name',
-            'projectSprint:id,name,project_module_id',
-            'projectSprint.projectModule:id,name',
+            'projectMilestone:id,name',
+            'projectSprint:id,name,project_milestone_id',
+            'projectSprint.projectMilestone:id,name',
             'parentTask:id,name,code',
             'currentAssignee:id,name',
             'currentAssignee.primaryAttachment',
@@ -753,15 +753,15 @@ class TaskController extends Controller
         return [
             'canEditTask' => auth()->user()->can('update', $task),
             'isLinearFlow' => $project->project_flow === 'linear',
-            'projectModules' => ProjectModule::query()
+            'projectMilestones' => ProjectMilestone::query()
                 ->where('project_id', $project->id)
                 ->orderForDisplay()
                 ->get(['id', 'name']),
             'projectSprints' => ProjectSprint::query()
                 ->where('project_id', $project->id)
-                ->with(['projectModule:id,name'])
+                ->with(['projectMilestone:id,name'])
                 ->orderForDisplay()
-                ->get(['id', 'project_module_id', 'name']),
+                ->get(['id', 'project_milestone_id', 'name']),
             'assignableUsers' => $project->activeMembers()
                 ->orderBy('users.name')
                 ->get(['users.id', 'users.name']),
@@ -838,11 +838,11 @@ class TaskController extends Controller
                     'default_task_estimate_minutes' => $project->default_task_estimate_seconds !== null
                         ? intdiv((int) $project->default_task_estimate_seconds, 60)
                         : 0,
-                    'modules' => $project->projectModules
-                        ->reject(fn(ProjectModule $projectModule) => (bool) ($projectModule->is_backlog || $projectModule->is_system))
-                        ->map(fn(ProjectModule $projectModule) => [
-                            'value' => (string) $projectModule->id,
-                            'text' => $projectModule->name,
+                    'milestones' => $project->projectMilestones
+                        ->reject(fn(ProjectMilestone $projectMilestone) => (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system))
+                        ->map(fn(ProjectMilestone $projectMilestone) => [
+                            'value' => (string) $projectMilestone->id,
+                            'text' => $projectMilestone->name,
                         ])
                         ->values(),
                     'sprints' => $project->projectSprints
@@ -850,7 +850,7 @@ class TaskController extends Controller
                         ->map(fn(ProjectSprint $projectSprint) => [
                             'value' => (string) $projectSprint->id,
                             'text' => $projectSprint->name,
-                            'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                            'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
                         ])
                         ->values(),
                     'assignees' => $project->activeMembers

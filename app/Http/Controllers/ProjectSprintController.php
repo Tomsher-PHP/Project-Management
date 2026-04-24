@@ -6,7 +6,7 @@ use App\Http\Requests\ProjectSprintRequest;
 use App\Models\AgileSprint;
 use App\Models\AgileSprintStatus;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
 use App\Services\UserService;
@@ -20,15 +20,15 @@ class ProjectSprintController extends Controller
 {
     private const SPRINTS_PER_PAGE = 5;
 
-    public function index(Project $project, ProjectModule $projectModule): JsonResponse
+    public function index(Project $project, ProjectMilestone $projectMilestone): JsonResponse
     {
         $this->ensureAgileProject($project);
-        abort_unless($projectModule->project_id === $project->id, 404);
+        abort_unless($projectMilestone->project_id === $project->id, 404);
 
         $loadAll = request()->boolean('all');
         $page = max((int) request()->integer('page', 1), 1);
         $perPage = self::SPRINTS_PER_PAGE;
-        $sprintsQuery = $projectModule->projectSprints()
+        $sprintsQuery = $projectMilestone->projectSprints()
             ->with(['addedBy', 'updatedBy', 'status'])
             ->orderForDisplay();
         $totalCount = (clone $sprintsQuery)->count();
@@ -58,24 +58,24 @@ class ProjectSprintController extends Controller
 
         return response()->json([
             'status' => true,
-            'module' => [
-                'id' => $projectModule->id,
-                'name' => $projectModule->name,
+            'milestone' => [
+                'id' => $projectMilestone->id,
+                'name' => $projectMilestone->name,
             ],
             'count' => $totalCount,
             'sprints' => $projectSprints
                 ->map(fn (ProjectSprint $projectSprint) => $this->serializeSprint($projectSprint))
                 ->values(),
             'pagination' => $pagination,
-            'html' => view('projects.partials.module.sprints', [
+            'html' => view('projects.partials.milestone.sprints', [
                 'project' => $project,
-                'module' => $projectModule,
+                'milestone' => $projectMilestone,
                 'projectSprints' => $projectSprints,
                 'pagination' => $pagination,
             ])->render(),
-            'items_html' => view('projects.partials.module.sprint-cards', [
+            'items_html' => view('projects.partials.milestone.sprint-cards', [
                 'project' => $project,
-                'module' => $projectModule,
+                'milestone' => $projectMilestone,
                 'projectSprints' => $projectSprints,
                 'allPagesLoaded' => $pagination['all_pages_loaded'],
                 'showEmptyState' => false,
@@ -83,20 +83,20 @@ class ProjectSprintController extends Controller
         ]);
     }
 
-    public function store(ProjectSprintRequest $request, Project $project, ProjectModule $projectModule): JsonResponse
+    public function store(ProjectSprintRequest $request, Project $project, ProjectMilestone $projectMilestone): JsonResponse
     {
         $this->ensureAgileProject($project);
-        abort_unless($projectModule->project_id === $project->id, 404);
+        abort_unless($projectMilestone->project_id === $project->id, 404);
 
-        if ($response = $this->validateBacklogModulePlacement(null, $projectModule)) {
+        if ($response = $this->validateBacklogMilestonePlacement(null, $projectMilestone)) {
             return $response;
         }
 
-        $projectSprint = DB::transaction(function () use ($request, $project, $projectModule) {
-            return $projectModule->projectSprints()->create($this->prepareData($request, [
+        $projectSprint = DB::transaction(function () use ($request, $project, $projectMilestone) {
+            return $projectMilestone->projectSprints()->create($this->prepareData($request, [
                 'project_id' => $project->id,
-                'project_module_id' => $projectModule->id,
-                'sort_order' => $this->nextOrder($projectModule),
+                'project_milestone_id' => $projectMilestone->id,
+                'sort_order' => $this->nextOrder($projectMilestone),
             ], true));
         });
 
@@ -105,8 +105,8 @@ class ProjectSprintController extends Controller
             'message' => 'Project sprint created successfully.',
             'data' => $projectSprint,
             'sprint' => $this->serializeSprint($projectSprint),
-            'html' => $this->renderSection($project, $projectModule->id, $projectSprint->id),
-            'render_target' => '[data-project-module-section]',
+            'html' => $this->renderSection($project, $projectMilestone->id, $projectSprint->id),
+            'render_target' => '[data-project-milestone-section]',
             'render_mode' => 'replace_outer',
         ]);
     }
@@ -116,36 +116,36 @@ class ProjectSprintController extends Controller
         $this->ensureAgileProject($project);
         abort_unless($projectSprint->project_id === $project->id, 404);
 
-        $targetProjectModule = ProjectModule::query()
+        $targetProjectMilestone = ProjectMilestone::query()
             ->where('project_id', $project->id)
-            ->findOrFail($request->integer('project_module_id'));
+            ->findOrFail($request->integer('project_milestone_id'));
 
-        if ($response = $this->validateBacklogModulePlacement($projectSprint, $targetProjectModule)) {
+        if ($response = $this->validateBacklogMilestonePlacement($projectSprint, $targetProjectMilestone)) {
             return $response;
         }
 
-        $originalProjectModule = $projectSprint->projectModule;
-        $moduleChanged = (int) $projectSprint->project_module_id !== (int) $targetProjectModule->id;
+        $originalProjectMilestone = $projectSprint->projectMilestone;
+        $milestoneChanged = (int) $projectSprint->project_milestone_id !== (int) $targetProjectMilestone->id;
 
-        DB::transaction(function () use ($request, $projectSprint, $targetProjectModule, $originalProjectModule, $moduleChanged) {
+        DB::transaction(function () use ($request, $projectSprint, $targetProjectMilestone, $originalProjectMilestone, $milestoneChanged) {
             $updateData = $this->prepareData($request, [
                 'project_id' => $projectSprint->project_id,
-                'project_module_id' => $targetProjectModule->id,
+                'project_milestone_id' => $targetProjectMilestone->id,
             ]);
 
-            if ($moduleChanged) {
-                $updateData['sort_order'] = $this->nextOrder($targetProjectModule);
+            if ($milestoneChanged) {
+                $updateData['sort_order'] = $this->nextOrder($targetProjectMilestone);
             }
 
             $projectSprint->update($updateData);
 
-            if ($moduleChanged && $originalProjectModule) {
-                $this->normalizeOrder($originalProjectModule);
-                $originalProjectModule->refreshTrackedTimeMetrics();
+            if ($milestoneChanged && $originalProjectMilestone) {
+                $this->normalizeOrder($originalProjectMilestone);
+                $originalProjectMilestone->refreshTrackedTimeMetrics();
             }
 
-            $this->normalizeOrder($targetProjectModule);
-            $targetProjectModule->refreshTrackedTimeMetrics();
+            $this->normalizeOrder($targetProjectMilestone);
+            $targetProjectMilestone->refreshTrackedTimeMetrics();
         });
 
         $projectSprint->refresh();
@@ -155,8 +155,8 @@ class ProjectSprintController extends Controller
             'message' => 'Project sprint updated successfully.',
             'data' => $projectSprint,
             'sprint' => $this->serializeSprint($projectSprint),
-            'html' => $this->renderSection($project, $projectSprint->project_module_id, $projectSprint->id),
-            'render_target' => '[data-project-module-section]',
+            'html' => $this->renderSection($project, $projectSprint->project_milestone_id, $projectSprint->id),
+            'render_target' => '[data-project-milestone-section]',
             'render_mode' => 'replace_outer',
         ]);
     }
@@ -196,14 +196,14 @@ class ProjectSprintController extends Controller
                 ->with('error', 'This sprint cannot be deleted because it already has tasks.');
         }
 
-        $projectModule = $projectSprint->projectModule;
+        $projectMilestone = $projectSprint->projectMilestone;
 
-        DB::transaction(function () use ($projectSprint, $projectModule) {
+        DB::transaction(function () use ($projectSprint, $projectMilestone) {
             $projectSprint->delete();
 
-            if ($projectModule) {
-                $this->normalizeOrder($projectModule);
-                $projectModule->refreshTrackedTimeMetrics();
+            if ($projectMilestone) {
+                $this->normalizeOrder($projectMilestone);
+                $projectMilestone->refreshTrackedTimeMetrics();
             }
         });
 
@@ -211,8 +211,8 @@ class ProjectSprintController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Project sprint deleted successfully.',
-                'html' => $this->renderSection($project, $projectModule?->id),
-                'render_target' => '[data-project-module-section]',
+                'html' => $this->renderSection($project, $projectMilestone?->id),
+                'render_target' => '[data-project-milestone-section]',
                 'render_mode' => 'replace_outer',
             ]);
         }
@@ -230,19 +230,19 @@ class ProjectSprintController extends Controller
             ->where('project_id', $project->id)
             ->findOrFail($projectSprint);
 
-        $projectModule = ProjectModule::query()
+        $projectMilestone = ProjectMilestone::query()
             ->where('project_id', $project->id)
-            ->findOrFail($trashedSprint->project_module_id);
+            ->findOrFail($trashedSprint->project_milestone_id);
 
-        if ($response = $this->validateBacklogModulePlacement($trashedSprint, $projectModule)) {
+        if ($response = $this->validateBacklogMilestonePlacement($trashedSprint, $projectMilestone)) {
             return $response;
         }
 
-        $restoredName = $this->resolveRestoredName($projectModule, $trashedSprint->name, $trashedSprint->id);
+        $restoredName = $this->resolveRestoredName($projectMilestone, $trashedSprint->name, $trashedSprint->id);
 
-        DB::transaction(function () use ($trashedSprint, $projectModule, $restoredName) {
+        DB::transaction(function () use ($trashedSprint, $projectMilestone, $restoredName) {
             $trashedSprint->name = $restoredName;
-            $trashedSprint->sort_order = $this->nextOrder($projectModule);
+            $trashedSprint->sort_order = $this->nextOrder($projectMilestone);
             $trashedSprint->updated_by = Auth::id();
             $trashedSprint->restore();
             $trashedSprint->saveQuietly();
@@ -255,33 +255,33 @@ class ProjectSprintController extends Controller
         return response()->json([
             'status' => true,
             'message' => $message,
-            'html' => $this->renderSection($project, $projectModule->id, $trashedSprint->id),
-            'render_target' => '[data-project-module-section]',
+            'html' => $this->renderSection($project, $projectMilestone->id, $trashedSprint->id),
+            'render_target' => '[data-project-milestone-section]',
             'render_mode' => 'replace_outer',
         ]);
     }
 
-    public function reorder(Project $project, ProjectModule $projectModule, Request $request): JsonResponse
+    public function reorder(Project $project, ProjectMilestone $projectMilestone, Request $request): JsonResponse
     {
         $this->ensureAgileProject($project);
-        abort_unless($projectModule->project_id === $project->id, 404);
+        abort_unless($projectMilestone->project_id === $project->id, 404);
 
         $sprintIds = $request->validate([
             'sprint_ids' => ['required', 'array', 'min:1'],
             'sprint_ids.*' => ['integer'],
         ])['sprint_ids'];
 
-        $sprints = $projectModule->projectSprints()
+        $sprints = $projectMilestone->projectSprints()
             ->whereIn('id', $sprintIds)
             ->pluck('id')
             ->all();
 
-        abort_unless(count($sprints) === $projectModule->projectSprints()->count(), 422);
+        abort_unless(count($sprints) === $projectMilestone->projectSprints()->count(), 422);
         abort_unless(count(array_unique($sprintIds)) === count($sprintIds), 422);
 
-        DB::transaction(function () use ($projectModule, $sprintIds) {
+        DB::transaction(function () use ($projectMilestone, $sprintIds) {
             foreach ($sprintIds as $index => $sprintId) {
-                $projectModule->projectSprints()
+                $projectMilestone->projectSprints()
                     ->whereKey($sprintId)
                     ->update(['sort_order' => $index + 1]);
             }
@@ -317,19 +317,19 @@ class ProjectSprintController extends Controller
         return (bool) ($projectSprint->is_backlog || $projectSprint->is_system);
     }
 
-    private function validateBacklogModulePlacement(?ProjectSprint $projectSprint, ProjectModule $targetProjectModule): ?JsonResponse
+    private function validateBacklogMilestonePlacement(?ProjectSprint $projectSprint, ProjectMilestone $targetProjectMilestone): ?JsonResponse
     {
-        if ($projectSprint?->is_backlog && (int) $projectSprint->project_module_id !== (int) $targetProjectModule->id) {
+        if ($projectSprint?->is_backlog && (int) $projectSprint->project_milestone_id !== (int) $targetProjectMilestone->id) {
             return response()->json([
                 'status' => false,
-                'message' => 'The project backlog sprint must remain in the project backlog module.',
+                'message' => 'The project backlog sprint must remain in the project backlog milestone.',
             ], 422);
         }
 
-        if ($targetProjectModule->is_backlog && ! $projectSprint?->is_backlog) {
+        if ($targetProjectMilestone->is_backlog && ! $projectSprint?->is_backlog) {
             return response()->json([
                 'status' => false,
-                'message' => 'The project backlog module can only contain the backlog sprint.',
+                'message' => 'The project backlog milestone can only contain the backlog sprint.',
             ], 422);
         }
 
@@ -341,14 +341,14 @@ class ProjectSprintController extends Controller
         abort_unless($project->is_agile, 404);
     }
 
-    private function nextOrder(ProjectModule $projectModule): int
+    private function nextOrder(ProjectMilestone $projectMilestone): int
     {
-        return ((int) $projectModule->projectSprints()->max('sort_order')) + 1;
+        return ((int) $projectMilestone->projectSprints()->max('sort_order')) + 1;
     }
 
-    private function normalizeOrder(ProjectModule $projectModule): void
+    private function normalizeOrder(ProjectMilestone $projectMilestone): void
     {
-        $projectModule->projectSprints()
+        $projectMilestone->projectSprints()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get(['id'])
@@ -379,7 +379,7 @@ class ProjectSprintController extends Controller
     {
         return [
             'id' => $projectSprint->id,
-            'project_module_id' => $projectSprint->project_module_id,
+            'project_milestone_id' => $projectSprint->project_milestone_id,
             'name' => $projectSprint->name,
             'color' => $projectSprint->color,
             'description' => $projectSprint->description,
@@ -392,12 +392,12 @@ class ProjectSprintController extends Controller
         ];
     }
 
-    private function resolveRestoredName(ProjectModule $projectModule, string $originalName, int $restoringSprintId): string
+    private function resolveRestoredName(ProjectMilestone $projectMilestone, string $originalName, int $restoringSprintId): string
     {
         $candidate = $originalName;
         $suffix = 1;
 
-        while ($projectModule->projectSprints()
+        while ($projectMilestone->projectSprints()
             ->where('name', $candidate)
             ->whereKeyNot($restoringSprintId)
             ->exists()) {
@@ -411,10 +411,10 @@ class ProjectSprintController extends Controller
         return $candidate;
     }
 
-    private function renderSection(Project $project, ?int $openModuleId = null, ?int $openSprintId = null): string
+    private function renderSection(Project $project, ?int $openMilestoneId = null, ?int $openSprintId = null): string
     {
         $project->load([
-            'projectModules' => fn ($query) => $query
+            'projectMilestones' => fn ($query) => $query
                 ->with([
                     'addedBy',
                     'updatedBy',
@@ -426,23 +426,23 @@ class ProjectSprintController extends Controller
                 ->orderBy('id'),
         ]);
 
-        return view('projects.partials.module.section', [
+        return view('projects.partials.milestone.section', [
             'project' => $project,
-            'projectModules' => $project->projectModules,
+            'projectMilestones' => $project->projectMilestones,
             'agileSprints' => AgileSprint::active()->orderBy('sort_order', 'asc')->get(),
             'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
             'assignableUsers' => app(UserService::class)->getAccessibleUsers(auth()->user()),
-            'openModuleId' => $openModuleId,
+            'openMilestoneId' => $openMilestoneId,
             'openSprintId' => $openSprintId,
-            'trashedProjectModules' => ProjectModule::onlyTrashed()
+            'trashedProjectMilestones' => ProjectMilestone::onlyTrashed()
                 ->where('project_id', $project->id)
                 ->orderByDesc('deleted_at')
                 ->get(),
-            'trashedProjectSprintsByModule' => ProjectSprint::onlyTrashed()
+            'trashedProjectSprintsByMilestone' => ProjectSprint::onlyTrashed()
                 ->where('project_id', $project->id)
                 ->orderByDesc('deleted_at')
                 ->get()
-                ->groupBy('project_module_id'),
+                ->groupBy('project_milestone_id'),
         ])->render();
     }
 }

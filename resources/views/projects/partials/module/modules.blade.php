@@ -1,35 +1,35 @@
 @php
-    $editableProjectModules = ($editableProjectModules ?? $projectModules)
-        ->reject(fn ($module) => (bool) ($module->is_backlog || $module->is_system))
+    $editableProjectModules = ($editableProjectModules ?? $projectMilestones)
+        ->reject(fn ($milestone) => (bool) ($milestone->is_backlog || $milestone->is_system))
         ->values();
     $projectModuleBuilderConfig = [
-        'storeUrl' => route('projects.modules.store', $project),
-        'updateUrlTemplate' => route('projects.modules.update', ['project' => $project, 'projectModule' => '__MODULE__']),
-        'destroyUrlTemplate' => route('projects.modules.destroy', ['project' => $project, 'projectModule' => '__MODULE__']),
-        'reorderUrl' => route('projects.modules.reorder', $project),
-        'libraryStoreUrl' => route('settings.agile-modules.store'),
-        'nextLibrarySortOrder' => ((int) $agileModules->max('sort_order')) + 1,
+        'storeUrl' => route('projects.milestones.store', $project),
+        'updateUrlTemplate' => route('projects.milestones.update', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
+        'destroyUrlTemplate' => route('projects.milestones.destroy', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
+        'reorderUrl' => route('projects.milestones.reorder', $project),
+        'libraryStoreUrl' => route('settings.agile-milestones.store'),
+        'nextLibrarySortOrder' => ((int) $agileMilestones->max('sort_order')) + 1,
         'owners' => $assignableUsers->map(fn ($user) => [
             'id' => $user->id,
             'name' => $user->name,
         ])->values(),
     ];
     $projectSprintBuilderConfig = [
-        'storeUrlTemplate' => route('projects.modules.sprints.store', ['project' => $project, 'projectModule' => '__MODULE__']),
+        'storeUrlTemplate' => route('projects.milestones.sprints.store', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
         'updateUrlTemplate' => route('projects.sprints.update', ['project' => $project, 'projectSprint' => '__SPRINT__']),
         'destroyUrlTemplate' => route('projects.sprints.destroy', ['project' => $project, 'projectSprint' => '__SPRINT__']),
-        'reorderUrlTemplate' => route('projects.modules.sprints.reorder', ['project' => $project, 'projectModule' => '__MODULE__']),
+        'reorderUrlTemplate' => route('projects.milestones.sprints.reorder', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
         'libraryStoreUrl' => route('settings.agile-sprints.store'),
         'nextLibrarySortOrder' => ((int) $agileSprints->max('sort_order')) + 1,
         'canDelete' => auth()->user()->can('project_sprint.delete'),
     ];
 @endphp
 
-@include('projects.partials.module.section')
+@include('projects.partials.milestone.section')
 
-@canany(['project_module.create', 'project_module.edit'])
-    <div class="modal fixed inset-0 z-50 hidden overflow-y-auto modal-form" id="project-module-modal" data-project-module-builder-modal>
-        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-module-builder-close></div>
+@canany(['project_milestone.create', 'project_milestone.edit'])
+    <div class="modal fixed inset-0 z-50 hidden overflow-y-auto modal-form" id="project-milestone-modal" data-project-milestone-builder-modal>
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-milestone-builder-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-7xl">
@@ -37,7 +37,7 @@
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                                Build Project Modules
+                                Build Project Milestones
                             </h3>
                         </div>
 
@@ -58,7 +58,7 @@
                                 <div>
                                     <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
                                     <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                        Drop needed modules here, then adjust only the working details your team needs right now.
+                                        Drop needed milestones here, then adjust only the working details your team needs right now.
                                     </p>
                                 </div>
 
@@ -72,9 +72,9 @@
 
                             <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                     <div class="space-y-4" data-project-module-builder-workspace>
-                                    @forelse ($editableProjectModules as $module)
-                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $module->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $module->id }}" data-module-name="{{ $module->name }}" data-expanded="false" draggable="false">
-                                            <input type="hidden" name="color" value="{{ $module->color ?: '#22C55E' }}">
+                                    @forelse ($editableProjectModules as $milestone)
+                                        <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-module-builder-card data-module-id="{{ $milestone->id }}" data-module-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
+                                            <input type="hidden" name="color" value="{{ $milestone->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
                                                     <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-module-builder-drag-handle>
@@ -85,9 +85,9 @@
 
                                                     <div>
                                                         <div class="flex flex-wrap items-center gap-2">
-                                                            <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $module->color ?: '#22C55E' }}" data-project-module-builder-color-dot></span>
-                                                            <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-module-builder-title>{{ $module->name }}</h5>
-                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-module-builder-order>{{ $module->sort_order }}</span>
+                                                            <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $milestone->color ?: '#22C55E' }}" data-project-module-builder-color-dot></span>
+                                                            <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-module-builder-title>{{ $milestone->name }}</h5>
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-module-builder-order>{{ $milestone->sort_order }}</span>
                                                         </div>
                                                         <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-module-builder-status>
                                                             Saved
@@ -96,12 +96,12 @@
                                                 </div>
 
                                                 <div class="flex items-center gap-2">
-                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete module" title="Delete module">
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-module-builder-delete aria-label="Delete milestone" title="Delete milestone">
                                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
                                                     </button>
-                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand module" title="Expand module">
+                                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-module-builder-toggle aria-label="Expand milestone" title="Expand milestone">
                                                         <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-module-builder-toggle-icon>
                                                             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                                                         </svg>
@@ -113,7 +113,7 @@
                                                 <div class="grid gap-4 xl:grid-cols-2">
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <x-red-star /></label>
-                                                    <input type="text" name="name" value="{{ $module->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                                    <input type="text" name="name" value="{{ $milestone->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                                 </div>
 
                                                 <div>
@@ -121,7 +121,7 @@
                                                     <select name="owner_id" class="tom-select w-full" data-sort="0">
                                                         <option value="">Select owner</option>
                                                         @foreach ($assignableUsers as $assignableUser)
-                                                            <option value="{{ $assignableUser->id }}" @selected((int) $module->owner_id === (int) $assignableUser->id)>{{ $assignableUser->name }}</option>
+                                                            <option value="{{ $assignableUser->id }}" @selected((int) $milestone->owner_id === (int) $assignableUser->id)>{{ $assignableUser->name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -130,24 +130,24 @@
                                                     <x-forms.estimated-time-input
                                                         label="Estimated Time"
                                                         name="estimated_time_minutes"
-                                                        :total-minutes="$module->estimated_time_minutes ?? 0"
+                                                        :total-minutes="$milestone->estimated_time_minutes ?? 0"
                                                         :show-label="false"
                                                     />
                                                 </div>
 
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
-                                                    <input type="text" value="{{ $module->start_date?->format('Y-m-d') }}{{ $module->start_date && $module->end_date ? ' to ' : '' }}{{ $module->end_date?->format('Y-m-d') }}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$module->start_date?->format('Y-m-d'), $module->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-module-builder-date-range>
-                                                    <input type="hidden" name="start_date" value="{{ $module->start_date?->format('Y-m-d') }}">
-                                                    <input type="hidden" name="end_date" value="{{ $module->end_date?->format('Y-m-d') }}">
+                                                    <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-module-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-module-builder-date-range>
+                                                    <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
+                                                    <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
                                                 </div>
 
                                                 <div class="xl:col-span-2">
                                                     <div class="mb-2 flex items-center justify-between gap-3">
                                                         <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
-                                                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-builder-description-count>{{ strlen($module->description ?? '') }}</span>/100</span>
+                                                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-module-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
                                                     </div>
-                                                    <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $module->description }}</textarea>
+                                                    <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
                                                 </div>
                                                 </div>
                                             </div>
@@ -159,9 +159,9 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                 </svg>
                                             </span>
-                                            <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Modules Selected Yet</h5>
+                                            <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Milestones Selected Yet</h5>
                                             <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
-                                                Drag one or more items from the module library to start building this project workspace.
+                                                Drag one or more items from the milestone library to start building this project workspace.
                                             </p>
                                         </div>
                                     @endforelse
@@ -173,7 +173,7 @@
                                                     </svg>
                                                 </span>
                                                 <div>
-                                                    <p class="text-sm font-semibold">Drag here for more modules</p>
+                                                    <p class="text-sm font-semibold">Drag here for more milestones</p>
                                                     <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
                                                 </div>
                                             </div>
@@ -185,9 +185,9 @@
 
                         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                             <div class="mb-5 flex items-center justify-between gap-3">
-                                <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Module Library</h4>
-                                @can('agile_module.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-module-library-create-open aria-label="Add module library item" title="Add module library item">
+                                <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
+                                @can('agile_milestone.create')
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-module-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
@@ -201,12 +201,12 @@
                                         <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 013.93 9.35l3.61 3.61a1 1 0 01-1.414 1.414l-3.61-3.61A5.5 5.5 0 118.5 3zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" clip-rule="evenodd" />
                                     </svg>
                                 </span>
-                                <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search module library..." data-project-module-builder-library-search>
+                                <input type="text" class="w-full rounded-xl border border-bgray-200 bg-white py-3 pl-11 pr-4 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Search milestone library..." data-project-module-builder-library-search>
                             </label>
 
                             <div class="min-h-0 flex-1 overflow-y-scroll pr-1 [scrollbar-gutter:stable]" data-project-module-builder-library-scroll>
                                 <div class="space-y-3" data-project-module-builder-library>
-                                    @foreach ($agileModules as $libraryModule)
+                                    @foreach ($agileMilestones as $libraryModule)
                                         <article class="cursor-grab rounded-none border border-bgray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300" draggable="true" data-project-module-library-item data-library-module-id="{{ $libraryModule->id }}" data-name="{{ $libraryModule->name }}" data-color="{{ $libraryModule->color ?: '#22C55E' }}" data-description="{{ $libraryModule->description }}" data-sort-order="{{ $libraryModule->sort_order }}">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="min-w-0">
@@ -242,7 +242,7 @@
         </script>
     </div>
 
-    @can('agile_module.create')
+    @can('agile_milestone.create')
         <div class="modal fixed inset-0 z-[60] hidden overflow-y-auto" id="project-module-library-create-modal" data-project-module-library-create-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-module-library-create-close></div>
 
@@ -250,7 +250,7 @@
                 <div class="relative z-10 w-full max-w-3xl">
                     <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
-                            <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Module</h3>
+                            <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Milestone</h3>
 
                             <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-module-library-create-close>
                                 ✕
@@ -295,7 +295,7 @@
                                 </button>
 
                                 <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-module-library-create-submit>
-                                    Create Module
+                                    Create Milestone
                                 </button>
                             </div>
                         </form>
@@ -317,7 +317,7 @@
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Build Project Sprints</h3>
                             <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                Add library sprints into a module work area, then adjust the live sprint details your team needs.
+                                Add library sprints into a milestone work area, then adjust the live sprint details your team needs.
                             </p>
                         </div>
 
@@ -339,11 +339,11 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
                                         <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
-                                            Module: <span class="ml-1" data-project-sprint-builder-module-name>Select a module</span>
+                                            Milestone: <span class="ml-1" data-project-sprint-builder-module-name>Select a milestone</span>
                                         </span>
                                     </div>
                                     <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                        Drag needed sprints here, then fine-tune each sprint directly inside this module workspace.
+                                        Drag needed sprints here, then fine-tune each sprint directly inside this milestone workspace.
                                     </p>
                                 </div>
 

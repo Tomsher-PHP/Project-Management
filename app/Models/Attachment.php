@@ -55,15 +55,15 @@ class Attachment extends Model
 
     protected function getActivityLogName(): string
     {
-        $module = $this->resolveActivityModuleName();
+        $milestone = $this->resolveActivityMilestoneName();
         $category = $this->resolveActivityCategoryName();
 
         return $category !== null
-            ? "{$module}_{$category}"
-            : "{$module}_attachments";
+            ? "{$milestone}_{$category}"
+            : "{$milestone}_attachments";
     }
 
-    protected function resolveActivityModuleName(): string
+    protected function resolveActivityMilestoneName(): string
     {
         return match ($this->link_type) {
             ProjectNote::class => 'project',

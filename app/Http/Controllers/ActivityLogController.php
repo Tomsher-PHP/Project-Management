@@ -30,7 +30,7 @@ class ActivityLogController extends Controller
     public function __construct()
     {
         $this->pageTitle = 'Activity Log';
-        $this->subTitle = 'Track changes across all modules';
+        $this->subTitle = 'Track changes across all milestones';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
@@ -260,7 +260,7 @@ class ActivityLogController extends Controller
         return [
             'can_view' => in_array($event, ['created', 'updated', 'deleted', 'restored'], true) && $rows->isNotEmpty(),
             'event' => $event,
-            'module' => Str::headline($activity->log_name ?? 'activity'),
+            'milestone' => Str::headline($activity->log_name ?? 'activity'),
             'subject' => $this->resolveSubjectLabel($activity),
             'subject_type' => $activity->subject_type ? Str::headline(class_basename($activity->subject_type)) : '--',
             'description' => Str::headline(str_replace('.', ' ', $activity->description)),

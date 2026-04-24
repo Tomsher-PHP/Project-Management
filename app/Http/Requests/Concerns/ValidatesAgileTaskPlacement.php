@@ -12,7 +12,7 @@ trait ValidatesAgileTaskPlacement
         Validator $validator,
         ?Project $project,
         ?int $projectId,
-        ?int $projectModuleId,
+        ?int $projectMilestoneId,
         ?int $projectSprintId
     ): void {
         if (! $project || ! $projectId || $project->project_flow === 'linear') {
@@ -27,8 +27,8 @@ trait ValidatesAgileTaskPlacement
             ->where('project_id', $projectId)
             ->find($projectSprintId);
 
-        if ($selectedSprint && $projectModuleId && (int) $selectedSprint->project_module_id !== $projectModuleId) {
-            $validator->errors()->add('project_sprint_id', 'Please choose a sprint from the selected module.');
+        if ($selectedSprint && $projectMilestoneId && (int) $selectedSprint->project_milestone_id !== $projectMilestoneId) {
+            $validator->errors()->add('project_sprint_id', 'Please choose a sprint from the selected milestone.');
         }
     }
 

@@ -2,19 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\AgileModule;
+use App\Models\AgileMilestone;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class AgileModuleSeeder extends Seeder
+class AgileMilestoneSeeder extends Seeder
 {
     public function run(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        AgileModule::truncate();
+        AgileMilestone::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $modules = [
+        $milestones = [
             ['Design', '#9B59B6', 'UX/UI design (Figma, Photoshop)'],
             ['Frontend', '#3498DB', 'HTML, CSS, UI development'],
             ['Backend', '#E74C3C', 'Server-side development'],
@@ -25,8 +25,8 @@ class AgileModuleSeeder extends Seeder
         ];
 
         $sortOrder = 1;
-        foreach ($modules as  [$name, $color, $description]) {
-            AgileModule::create([
+        foreach ($milestones as  [$name, $color, $description]) {
+            AgileMilestone::create([
                 'name' => $name,
                 'color' => $color,
                 'description' => $description,

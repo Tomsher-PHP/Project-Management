@@ -34,10 +34,10 @@ class TaskProjectUpdateRequest extends FormRequest
                     fn ($query) => $query->where('flow_type', $project->project_flow)->where('is_active', true)
                 ),
             ],
-            'project_module_id' => [
+            'project_milestone_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_modules', 'id')->where(
+                Rule::exists('project_milestones', 'id')->where(
                     fn ($query) => $query->where('project_id', $projectId)
                 ),
             ],
@@ -84,7 +84,7 @@ class TaskProjectUpdateRequest extends FormRequest
         return [
             'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
-            'project_module_id.exists' => 'The selected module is invalid.',
+            'project_milestone_id.exists' => 'The selected milestone is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
             'parent_task_id.not_in' => 'A task cannot be its own parent.',
@@ -106,7 +106,7 @@ class TaskProjectUpdateRequest extends FormRequest
             function ($validator) {
                 $project = $this->resolveProject();
                 $task = $this->resolveTask();
-                $projectModuleId = $this->nullableIntegerInput('project_module_id');
+                $projectMilestoneId = $this->nullableIntegerInput('project_milestone_id');
                 $projectSprintId = $this->nullableIntegerInput('project_sprint_id');
                 $parentTaskId = $this->nullableIntegerInput('parent_task_id');
 
@@ -114,7 +114,7 @@ class TaskProjectUpdateRequest extends FormRequest
                     $validator,
                     $project,
                     $project?->id,
-                    $projectModuleId,
+                    $projectMilestoneId,
                     $projectSprintId
                 );
 
@@ -126,8 +126,8 @@ class TaskProjectUpdateRequest extends FormRequest
                     return;
                 }
 
-                if ($projectModuleId !== $this->normalizeNullableInt($task->project_module_id)) {
-                    $validator->errors()->add('project_module_id', 'Subtasks inherit the module from the parent task.');
+                if ($projectMilestoneId !== $this->normalizeNullableInt($task->project_milestone_id)) {
+                    $validator->errors()->add('project_milestone_id', 'Subtasks inherit the milestone from the parent task.');
                 }
 
                 if ($projectSprintId !== $this->normalizeNullableInt($task->project_sprint_id)) {

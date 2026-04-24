@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\AgileModuleController;
+use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommonController;
@@ -14,7 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
-use App\Http\Controllers\ProjectModuleController;
+use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectStageController;
@@ -170,13 +170,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
         // End Configuration Routes
 
-        // Agile module Routes
-        Route::patch('/agile-modules/toggle-status', [AgileModuleController::class, 'toggleStatus'])->middleware('permission.type:agile_module.edit')->name('agile_module.toggleStatus');
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.view')->only(['index']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.create')->only(['store']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.edit')->only(['update']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.delete')->only(['destroy']);
-        // End Agile module Routes
+        // Agile milestone Routes
+        Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:agile_milestone.edit')->name('agile_milestone.toggleStatus');
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.view')->only(['index']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.create')->only(['store']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.edit')->only(['update']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.delete')->only(['destroy']);
+        // End Agile milestone Routes
 
         // Agile sprint Routes
         Route::patch('/agile-sprints/toggle-status', [AgileSprintController::class, 'toggleStatus'])->middleware('permission.type:agile_sprint.edit')->name('agile_sprint.toggleStatus');
@@ -268,18 +268,18 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
-        // Project module and sprint routes
-        Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
-        Route::get('modules/{projectModule}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.modules.sprints.index');
-        Route::post('modules/{projectModule}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.modules.sprints.store');
+        // Project milestone and sprint routes
+        Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');
+        Route::get('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.milestones.sprints.index');
+        Route::post('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.milestones.sprints.store');
         Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
         Route::delete('sprints/{projectSprint}', [ProjectSprintController::class, 'destroy'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.destroy');
         Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.restore');
-        Route::patch('modules/{projectModule}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.modules.sprints.reorder');
-        Route::patch('modules/reorder', [ProjectModuleController::class, 'reorder'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.reorder');
-        Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.update');
-        Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project_module.delete', 'can:update,project'])->name('projects.modules.destroy');
-        Route::post('modules/{projectModule}/restore', [ProjectModuleController::class, 'restore'])->middleware(['permission.type:project_module.restore', 'can:update,project'])->name('projects.modules.restore');
+        Route::patch('milestones/{projectMilestone}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.milestones.sprints.reorder');
+        Route::patch('milestones/reorder', [ProjectMilestoneController::class, 'reorder'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.reorder');
+        Route::put('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'update'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.update');
+        Route::delete('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'destroy'])->middleware(['permission.type:project_milestone.delete', 'can:update,project'])->name('projects.milestones.destroy');
+        Route::post('milestones/{projectMilestone}/restore', [ProjectMilestoneController::class, 'restore'])->middleware(['permission.type:project_milestone.restore', 'can:update,project'])->name('projects.milestones.restore');
 
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');

@@ -125,8 +125,8 @@
                     <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $project?->name ?? '--' }}</dd>
                 </div>
                 <div class="flex items-start justify-between gap-3">
-                    <dt class="text-bgray-500 dark:text-bgray-300">Module</dt>
-                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectModule?->name ?? '--' }}</dd>
+                    <dt class="text-bgray-500 dark:text-bgray-300">Milestone</dt>
+                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
                 </div>
                 <div class="flex items-start justify-between gap-3">
                     <dt class="text-bgray-500 dark:text-bgray-300">Sprint</dt>

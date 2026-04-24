@@ -31,15 +31,15 @@
                         <span>--</span>
                     @endif
                 </span>
-                @if ($task->projectModule)
+                @if ($task->projectMilestone)
                     <span>
-                        <strong>Module:</strong>
+                        <strong>Milestone:</strong>
                         @if ($project)
-                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectModule->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
-                                {{ $task->projectModule->name }}
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'module' => $task->projectMilestone->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
+                                {{ $task->projectMilestone->name }}
                             </a>
                         @else
-                            {{ $task->projectModule->name }}
+                            {{ $task->projectMilestone->name }}
                         @endif
                     </span>
                 @endif
@@ -47,7 +47,7 @@
                     <span>
                         <strong>Sprint:</strong>
                         @if ($project)
-                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'modules', 'module' => $task->projectSprint->project_module_id ?: $task->project_module_id, 'sprint' => $task->projectSprint->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
+                            <a href="{{ route('projects.edit', ['project' => $project, 'tab' => 'milestones', 'module' => $task->projectSprint->project_milestone_id ?: $task->project_milestone_id, 'sprint' => $task->projectSprint->id]) }}" class="transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                                 {{ $task->projectSprint->name }}
                             </a>
                         @else

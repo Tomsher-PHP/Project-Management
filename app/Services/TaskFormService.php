@@ -29,8 +29,8 @@ class TaskFormService
         return Project::query()
             ->accessibleBy($user)
             ->with([
-                'projectModules:id,project_id,name,is_backlog,is_system',
-                'projectSprints:id,project_id,project_module_id,name,is_backlog,is_system',
+                'projectMilestones:id,project_id,name,is_backlog,is_system',
+                'projectSprints:id,project_id,project_milestone_id,name,is_backlog,is_system',
                 'activeMembers:id,name',
             ])
             ->orderBy('name')
@@ -87,7 +87,7 @@ class TaskFormService
     //         'taskCreateProjects' => Project::query()
     //             ->accessibleBy($user)
     //             ->with([
-    //                 'projectModules' => fn($q) => $q->select(...),
+    //                 'projectMilestones' => fn($q) => $q->select(...),
     //                 'projectSprints' => fn($q) => $q->select(...),
     //                 'activeMembers:id,name',
     //             ])

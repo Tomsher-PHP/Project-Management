@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ProjectModuleRequest extends FormRequest
+class ProjectMilestoneRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,16 +15,16 @@ class ProjectModuleRequest extends FormRequest
 
     public function rules(): array
     {
-        $projectModule = $this->route('projectModule');
-        $projectModuleId = is_object($projectModule) ? $projectModule->id : $projectModule;
+        $projectMilestone = $this->route('projectMilestone');
+        $projectMilestoneId = is_object($projectMilestone) ? $projectMilestone->id : $projectMilestone;
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('project_modules', 'name')
-                ->ignore($projectModuleId)
+            'name' => ['required', 'string', 'max:255', Rule::unique('project_milestones', 'name')
+                ->ignore($projectMilestoneId)
                 ->where(fn ($query) => $query
                     ->where('project_id', $this->projectId())
                     ->whereNull('deleted_at'))],
-            'status_id' => ['nullable', 'integer', 'exists:agile_module_statuses,id'],
+            'status_id' => ['nullable', 'integer', 'exists:agile_milestone_statuses,id'],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'description' => ['nullable', 'string', 'max:100'],
@@ -46,35 +46,35 @@ class ProjectModuleRequest extends FormRequest
     {
         return [
             function ($validator) {
-                $projectModule = $this->route('projectModule');
+                $projectMilestone = $this->route('projectMilestone');
 
-                if (! $projectModule instanceof ProjectModule) {
+                if (! $projectMilestone instanceof ProjectMilestone) {
                     return;
                 }
 
-                if (! $this->isProtectedProjectModule($projectModule)) {
+                if (! $this->isProtectedProjectMilestone($projectMilestone)) {
                     return;
                 }
 
                 $incomingName = trim((string) $this->input('name', ''));
-                $currentName = trim((string) $projectModule->name);
+                $currentName = trim((string) $projectMilestone->name);
 
                 if ($incomingName !== '' && $incomingName !== $currentName) {
-                    $validator->errors()->add('name', $this->protectedModuleRenameMessage($projectModule));
+                    $validator->errors()->add('name', $this->protectedMilestoneRenameMessage($projectMilestone));
                 }
             },
         ];
     }
 
-    private function isProtectedProjectModule(ProjectModule $projectModule): bool
+    private function isProtectedProjectMilestone(ProjectMilestone $projectMilestone): bool
     {
-        return (bool) ($projectModule->is_backlog || $projectModule->is_system);
+        return (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system);
     }
 
-    private function protectedModuleRenameMessage(ProjectModule $projectModule): string
+    private function protectedMilestoneRenameMessage(ProjectMilestone $projectMilestone): string
     {
-        return $projectModule->is_backlog
-            ? 'The project backlog module name cannot be changed.'
-            : 'System project modules cannot be renamed.';
+        return $projectMilestone->is_backlog
+            ? 'The project backlog milestone name cannot be changed.'
+            : 'System project milestones cannot be renamed.';
     }
 }

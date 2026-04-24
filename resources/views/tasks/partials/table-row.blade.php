@@ -44,8 +44,8 @@
 
                 @if ($task->project?->project_flow === 'agile')
                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-500 dark:text-bgray-300">
-                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectModule?->name ?? '--' }}">
-                            Module: {{ \Illuminate\Support\Str::limit($task->projectModule?->name ?? '--', 20, '..') }}
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectMilestone?->name ?? '--' }}">
+                            Milestone: {{ \Illuminate\Support\Str::limit($task->projectMilestone?->name ?? '--', 20, '..') }}
                         </span>
                         <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectSprint?->name ?? '--' }}">
                             Sprint: {{ \Illuminate\Support\Str::limit($task->projectSprint?->name ?? '--', 20, '..') }}

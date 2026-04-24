@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('project_modules')) {
-            $addModuleBacklog = !Schema::hasColumn('project_modules', 'is_backlog');
-            $addModuleSystem = !Schema::hasColumn('project_modules', 'is_system');
+        if (Schema::hasTable('project_milestones')) {
+            $addMilestoneBacklog = !Schema::hasColumn('project_milestones', 'is_backlog');
+            $addMilestoneSystem = !Schema::hasColumn('project_milestones', 'is_system');
 
-            if ($addModuleBacklog || $addModuleSystem) {
-                Schema::table('project_modules', function (Blueprint $table) use ($addModuleBacklog, $addModuleSystem) {
-                    if ($addModuleBacklog) {
+            if ($addMilestoneBacklog || $addMilestoneSystem) {
+                Schema::table('project_milestones', function (Blueprint $table) use ($addMilestoneBacklog, $addMilestoneSystem) {
+                    if ($addMilestoneBacklog) {
                         $table->boolean('is_backlog')->default(false)->after('actual_time_seconds');
                     }
 
-                    if ($addModuleSystem) {
+                    if ($addMilestoneSystem) {
                         $table->boolean('is_system')->default(false)->after('is_backlog');
                     }
                 });
@@ -45,17 +45,17 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasTable('project_modules')) {
-            $dropModuleBacklog = Schema::hasColumn('project_modules', 'is_backlog');
-            $dropModuleSystem = Schema::hasColumn('project_modules', 'is_system');
+        if (Schema::hasTable('project_milestones')) {
+            $dropMilestoneBacklog = Schema::hasColumn('project_milestones', 'is_backlog');
+            $dropMilestoneSystem = Schema::hasColumn('project_milestones', 'is_system');
 
-            if ($dropModuleBacklog || $dropModuleSystem) {
-                Schema::table('project_modules', function (Blueprint $table) use ($dropModuleBacklog, $dropModuleSystem) {
-                    if ($dropModuleBacklog) {
+            if ($dropMilestoneBacklog || $dropMilestoneSystem) {
+                Schema::table('project_milestones', function (Blueprint $table) use ($dropMilestoneBacklog, $dropMilestoneSystem) {
+                    if ($dropMilestoneBacklog) {
                         $table->dropColumn('is_backlog');
                     }
 
-                    if ($dropModuleSystem) {
+                    if ($dropMilestoneSystem) {
                         $table->dropColumn('is_system');
                     }
                 });

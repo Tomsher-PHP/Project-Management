@@ -34,11 +34,11 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Module</label>
-                            <select name="project_module_id" class="tom-select w-full" data-sort="0">
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                            <select name="project_milestone_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_module_id"></p>
+                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_milestone_id"></p>
                         </div>
 
                         <div>

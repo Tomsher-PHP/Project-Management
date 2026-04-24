@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\AgileModuleStatus;
+use App\Models\AgileMilestoneStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class AgileModuleStatusSeeder extends Seeder
+class AgileMilestoneStatusSeeder extends Seeder
 {
     public function run(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        AgileModuleStatus::truncate();
+        AgileMilestoneStatus::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $statuses = [
@@ -22,7 +22,7 @@ class AgileModuleStatusSeeder extends Seeder
         ];
 
         foreach ($statuses as $status) {
-            AgileModuleStatus::create($status + ['is_active' => 1]);
+            AgileMilestoneStatus::create($status + ['is_active' => 1]);
         }
     }
 }

@@ -7,7 +7,7 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AgileModule extends Model
+class AgileMilestone extends Model
 {
     use SoftDeletes, Filterable, Sortable;
 

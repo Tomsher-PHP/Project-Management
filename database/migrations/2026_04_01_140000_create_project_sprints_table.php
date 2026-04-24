@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('project_sprints', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->foreignId('project_module_id')->constrained('project_modules')->cascadeOnDelete();
+            $table->foreignId('project_milestone_id')->constrained('project_milestones')->cascadeOnDelete();
             $table->string('name');
             $table->string('color')->nullable();
             $table->text('description')->nullable();

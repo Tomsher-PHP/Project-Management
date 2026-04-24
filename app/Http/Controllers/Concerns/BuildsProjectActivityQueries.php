@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Concerns;
 use App\Models\Project;
 use App\Models\ProjectComment;
 use App\Models\ProjectMember;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
 use App\Models\ProjectSprint;
 use App\Models\ProjectTechnology;
@@ -51,7 +51,7 @@ trait BuildsProjectActivityQueries
     protected function getProjectActivitySubjectQueries(Project $project): array
     {
         return [
-            ProjectModule::class => ProjectModule::query()
+            ProjectMilestone::class => ProjectMilestone::query()
                 ->where('project_id', $project->id)
                 ->select('id'),
             ProjectSprint::class => ProjectSprint::query()

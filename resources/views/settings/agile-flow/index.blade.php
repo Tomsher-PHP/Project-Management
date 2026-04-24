@@ -3,10 +3,10 @@
 @php
     $tabs = [
         [
-            'key' => 'modules',
-            'label' => 'Modules',
-            'url' => route('settings.agile-modules.index'),
-            'permission' => 'agile_module.view',
+            'key' => 'milestones',
+            'label' => 'Milestones',
+            'url' => route('settings.agile-milestones.index'),
+            'permission' => 'agile_milestone.view',
         ],
         [
             'key' => 'sprints',
@@ -15,8 +15,8 @@
             'permission' => 'agile_sprint.view',
         ],
     ];
-    $sortOrderInfo = $currentTab === 'modules'
-        ? 'Lower numbers appear earlier in agile module lists and selection menus.'
+    $sortOrderInfo = $currentTab === 'milestones'
+        ? 'Lower numbers appear earlier in agile milestone lists and selection menus.'
         : 'Lower numbers appear earlier in agile sprint lists and selection menus.';
 @endphp
 

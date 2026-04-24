@@ -41,10 +41,10 @@ class TaskQuickStoreRequest extends FormRequest
                     fn($query) => $query->where('flow_type', $project?->project_flow)->where('is_active', true)
                 ),
             ],
-            'project_module_id' => [
+            'project_milestone_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_modules', 'id')->where(
+                Rule::exists('project_milestones', 'id')->where(
                     fn($query) => $query->where('project_id', $projectId)
                 ),
             ],
@@ -91,7 +91,7 @@ class TaskQuickStoreRequest extends FormRequest
             'request_type.in' => 'The selected request type is invalid.',
             'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
-            'project_module_id.exists' => 'The selected module is invalid.',
+            'project_milestone_id.exists' => 'The selected milestone is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
             'task_type_id.exists' => 'The selected task type is invalid.',
@@ -109,7 +109,7 @@ class TaskQuickStoreRequest extends FormRequest
                 $project = $this->resolveProject();
                 $projectId = $project?->id;
                 $parentTaskId = $this->nullableIntegerInput('parent_task_id');
-                $projectModuleId = $this->nullableIntegerInput('project_module_id');
+                $projectMilestoneId = $this->nullableIntegerInput('project_milestone_id');
                 $selectedSprintId = $this->nullableIntegerInput('project_sprint_id');
                 $requestType = $this->input('request_type', 'assigned');
 
@@ -132,7 +132,7 @@ class TaskQuickStoreRequest extends FormRequest
                     $validator,
                     $project,
                     $projectId,
-                    $projectModuleId,
+                    $projectMilestoneId,
                     $selectedSprintId
                 );
 

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
@@ -17,10 +17,10 @@ class TaskFilterService
     {
         $projectIds = (clone $baseQuery)->distinct()->pluck('project_id')->filter();
 
-        $projectModuleIds = (clone $baseQuery)
-            ->whereNotNull('project_module_id')
+        $projectMilestoneIds = (clone $baseQuery)
+            ->whereNotNull('project_milestone_id')
             ->distinct()
-            ->pluck('project_module_id')
+            ->pluck('project_milestone_id')
             ->filter();
 
         $projectSprintIds = (clone $baseQuery)
@@ -31,7 +31,7 @@ class TaskFilterService
 
         return [
             'projects' => $this->getProjects($projectIds),
-            'projectModules' => $this->getModules($projectModuleIds),
+            'projectMilestones' => $this->getMilestones($projectMilestoneIds),
             'projectSprints' => $this->getSprints($projectSprintIds),
             'statuses' => $this->getStatuses(),
             'assignees' => $this->getAssignees(),
@@ -50,11 +50,11 @@ class TaskFilterService
             ->get(['id', 'name']);
     }
 
-    private function getModules($ids)
+    private function getMilestones($ids)
     {
         return $ids->isEmpty()
             ? collect()
-            : ProjectModule::with('project:id,name')
+            : ProjectMilestone::with('project:id,name')
             ->whereIn('id', $ids)
             ->orderBy('name')
             ->get(['id', 'project_id', 'name'])
@@ -71,17 +71,17 @@ class TaskFilterService
     {
         return $ids->isEmpty()
             ? collect()
-            : ProjectSprint::with(['project:id,name', 'projectModule:id,name'])
+            : ProjectSprint::with(['project:id,name', 'projectMilestone:id,name'])
             ->whereIn('id', $ids)
             ->orderBy('name')
-            ->get(['id', 'project_id', 'project_module_id', 'name'])
+            ->get(['id', 'project_id', 'project_milestone_id', 'name'])
             ->map(fn($s) => (object)[
                 'id' => $s->id,
                 'project_id' => $s->project_id,
-                'project_module_id' => $s->project_module_id,
+                'project_milestone_id' => $s->project_milestone_id,
                 'name' => collect([
                     $s->project?->name,
-                    $s->projectModule?->name,
+                    $s->projectMilestone?->name,
                     $s->name,
                 ])->filter()->implode(' / '),
             ]);

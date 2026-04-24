@@ -8,17 +8,17 @@
     $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
     $isPlacementLockedForSubtask = $canEditTask && filled($task->parent_task_id);
     $taskPlacementOptions = [
-        'modules' => $projectModules
-            ->map(fn($projectModule) => [
-                'value' => (string) $projectModule->id,
-                'text' => $projectModule->name,
+        'milestones' => $projectMilestones
+            ->map(fn($projectMilestone) => [
+                'value' => (string) $projectMilestone->id,
+                'text' => $projectMilestone->name,
             ])
             ->values(),
         'sprints' => $projectSprints
             ->map(fn($projectSprint) => [
                 'value' => (string) $projectSprint->id,
-                'text' => $projectSprint->name . ($projectSprint->projectModule?->name ? ' - ' . $projectSprint->projectModule->name : ''),
-                'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
+                'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
             ])
             ->values(),
     ];
@@ -58,19 +58,19 @@
             <div class="grid gap-6 md:grid-cols-2">
                 @unless ($isLinearFlow)
                     <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Module</label>
-                        <select name="project_module_id" class="tom-select w-full" data-sort="0" data-project-task-detail-module-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
-                            <option value="">Select module or leave empty for backlog</option>
-                            @foreach ($projectModules as $projectModule)
-                                <option value="{{ $projectModule->id }}" {{ (int) $task->project_module_id === (int) $projectModule->id ? 'selected' : '' }}>
-                                    {{ $projectModule->name }}
+                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Milestone</label>
+                        <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-detail-module-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
+                            <option value="">Select milestone or leave empty for backlog</option>
+                            @foreach ($projectMilestones as $projectMilestone)
+                                <option value="{{ $projectMilestone->id }}" {{ (int) $task->project_milestone_id === (int) $projectMilestone->id ? 'selected' : '' }}>
+                                    {{ $projectMilestone->name }}
                                 </option>
                             @endforeach
                         </select>
                         @if ($isPlacementLockedForSubtask)
-                            <input type="hidden" name="project_module_id" value="{{ $task->project_module_id ?? '' }}">
+                            <input type="hidden" name="project_milestone_id" value="{{ $task->project_milestone_id ?? '' }}">
                         @endif
-                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_module_id"></p>
+                        <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_milestone_id"></p>
                     </div>
 
                     <div>
@@ -78,9 +78,9 @@
                         <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-project-task-detail-sprint-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
                             <option value="">Select sprint or leave empty for backlog</option>
                             @foreach ($projectSprints as $projectSprint)
-                                <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_module_id }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
-                                    {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
-                                        - {{ $projectSprint->projectModule->name }}
+                                <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}" {{ (int) $task->project_sprint_id === (int) $projectSprint->id ? 'selected' : '' }}>
+                                    {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
+                                        - {{ $projectSprint->projectMilestone->name }}
                                     @endif
                                 </option>
                             @endforeach
@@ -90,7 +90,7 @@
                         @endif
                         <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-project-task-detail-placement-hint></p>
                         @if ($isPlacementLockedForSubtask)
-                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Subtasks inherit module and sprint from the parent task.</p>
+                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Subtasks inherit milestone and sprint from the parent task.</p>
                         @endif
                         <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_sprint_id"></p>
                     </div>
@@ -240,8 +240,8 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-400 dark:text-bgray-300">Context</p>
                         <dl class="mt-4 space-y-3 text-sm">
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Module</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectModule?->name ?? '--' }}</dd>
+                                <dt class="text-bgray-500 dark:text-bgray-300">Milestone</dt>
+                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-bgray-500 dark:text-bgray-300">Sprint</dt>

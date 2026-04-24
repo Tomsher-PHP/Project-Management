@@ -101,7 +101,7 @@
                                             @else
                                                 <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">--</p>
                                             @endif
-                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->projectModule?->name ?? 'No module' }}</p>
+                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->projectMilestone?->name ?? 'No milestone' }}</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">

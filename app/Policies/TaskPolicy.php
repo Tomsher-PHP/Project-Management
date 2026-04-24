@@ -24,14 +24,14 @@ class TaskPolicy
 
         $task->loadMissing([
             'project.teamLeader',
-            'projectModule:id,owner_id',
+            'projectMilestone:id,owner_id',
         ]);
 
         if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {
             return true;
         }
 
-        return (int) ($task->projectModule?->owner_id ?? 0) === (int) $user->id;
+        return (int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id;
     }
 
     public function update(User $user, Task $task): bool

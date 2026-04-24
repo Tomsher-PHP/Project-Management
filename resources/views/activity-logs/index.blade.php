@@ -137,8 +137,8 @@
                                         $parentModuleLabel = $resolvedParentType
                                             ? \Illuminate\Support\Str::headline(class_basename($resolvedParentType))
                                             : null;
-                                        $moduleLabel = $parentModuleLabel ?: $currentModuleLabel;
-                                        $moduleSubtitle = $parentModuleLabel && $parentModuleLabel !== $currentModuleLabel
+                                        $milestoneLabel = $parentModuleLabel ?: $currentModuleLabel;
+                                        $milestoneSubtitle = $parentModuleLabel && $parentModuleLabel !== $currentModuleLabel
                                             ? $currentModuleLabel
                                             : null;
                                         $changeSummary = match ($event) {
@@ -164,12 +164,12 @@
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex flex-col rounded-md px-4 py-1.5">
                                                 <span class="text-sm font-semibold leading-[22px] text-bgray-700 dark:text-bgray-50">
-                                                    {{ $moduleLabel }}
+                                                    {{ $milestoneLabel }}
                                                 </span>
 
-                                                @if ($moduleSubtitle)
+                                                @if ($milestoneSubtitle)
                                                     <span class="mt-1 text-xs font-medium text-bgray-500 dark:text-bgray-300">
-                                                        {{ $moduleSubtitle }}
+                                                        {{ $milestoneSubtitle }}
                                                     </span>
                                                 @endif
                                             </div>

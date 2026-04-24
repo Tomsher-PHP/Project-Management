@@ -111,7 +111,7 @@
     <x-filters.drawer>
         <x-filters.input-search name="search" label="Task" />
         <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
-        <x-filters.multi-select name="project_module_id" label="Module" :options="$projectModules" />
+        <x-filters.multi-select name="project_milestone_id" label="Milestone" :options="$projectMilestones" />
         <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
         <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" />
         <x-filters.multi-select name="status_id" label="Status" :options="$statuses" />
@@ -122,7 +122,7 @@
 
     <script id="task-filter-dependencies" type="application/json">
         @json([
-            'modules' => $projectModules->values(),
+            'milestones' => $projectMilestones->values(),
             'sprints' => $projectSprints->values(),
         ])
     </script>

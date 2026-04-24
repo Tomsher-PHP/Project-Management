@@ -15,7 +15,7 @@ class ProjectSprint extends Model
 
     protected $fillable = [
         'project_id',
-        'project_module_id',
+        'project_milestone_id',
         'name',
         'color',
         'description',
@@ -34,7 +34,7 @@ class ProjectSprint extends Model
 
     protected $casts = [
         'project_id' => 'integer',
-        'project_module_id' => 'integer',
+        'project_milestone_id' => 'integer',
         'status_id' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
@@ -60,16 +60,16 @@ class ProjectSprint extends Model
 
         static::saved(function (ProjectSprint $projectSprint) {
             $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
 
         static::deleted(function (ProjectSprint $projectSprint) {
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
 
         static::restored(function (ProjectSprint $projectSprint) {
             $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
     }
 
@@ -78,9 +78,9 @@ class ProjectSprint extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function projectModule()
+    public function projectMilestone()
     {
-        return $this->belongsTo(ProjectModule::class);
+        return $this->belongsTo(ProjectMilestone::class);
     }
 
     public function status()
@@ -214,7 +214,7 @@ class ProjectSprint extends Model
     public function getActivityAttributeLabels(): array
     {
         return [
-            'project_module_id' => 'Module',
+            'project_milestone_id' => 'Milestone',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
             'estimated_time_seconds' => 'Estimated Time',
@@ -227,7 +227,7 @@ class ProjectSprint extends Model
     {
         return match ($attribute) {
             'project_id' => $this->project?->name ?? $value,
-            'project_module_id' => $this->projectModule?->name ?? $value,
+            'project_milestone_id' => $this->projectMilestone?->name ?? $value,
             'estimated_time_seconds' => $this->secondsToReadable($value),
             default => $value,
         };
