@@ -80,6 +80,7 @@
         @php
             $runningLog = $task->timeLogs()->where('is_running', 1)->latest()->first();
             $timerStartedAt = $runningLog?->started_at->toISOString() ?? null;
+            $canStartTimerFromStatus = ($task->status?->type ?? null) === 'active';
         @endphp
 
         @if ($runningLog)
@@ -90,6 +91,7 @@
 
         @php
             $isRunning = $task->timeLogs()->where('is_running', 1)->exists();
+            $isStartDisabled = ! $isRunning && ! $canStartTimerFromStatus;
         @endphp
 
         <button type="button"
@@ -100,7 +102,11 @@
             data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}"
             data-task-name="{{ $task->name }}"
             id="task-timer-btn"
-            class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold text-white transition {{ $isRunning ? 'bg-error-300 hover:bg-red-500' : 'bg-success-400 hover:bg-success-300' }}">
+            @disabled($isStartDisabled)
+            @if ($isStartDisabled)
+                title="Move this task to an active status before starting the timer."
+            @endif
+            class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold transition {{ $isRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isStartDisabled ? 'cursor-not-allowed bg-bgray-300 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }}">
             {{ $isRunning ? 'Stop' : 'Start' }}
         </button>
 

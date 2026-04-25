@@ -503,7 +503,7 @@ class TaskController extends Controller
             'parentTask:id,name,code',
             'currentAssignee:id,name',
             'currentAssignee.primaryAttachment',
-            'status:id,name,color',
+            'status:id,name,color,type',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
             'tags:id,name,color',

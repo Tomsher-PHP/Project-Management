@@ -104,7 +104,7 @@ class TaskServices
             'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
-            'status:id,name,color',
+            'status:id,name,color,type',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
@@ -150,6 +150,7 @@ class TaskServices
             $payload['rejection_reason'] = null;
 
             $task = $project->tasks()->create($payload);
+            $this->recordStatusHistoryIfChanged($task, null, $task->status_id ? (int) $task->status_id : null);
 
             if (! empty($task->current_assignee_id)) {
                 $this->syncTaskAssignmentState($task, $task->current_assignee_id);
@@ -200,8 +201,15 @@ class TaskServices
 
             $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
             $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
+            $newStatus = $this->findTaskStatus($newStatusId);
 
             $this->recordStatusHistoryIfChanged($task, $previousStatusId, $newStatusId);
+            $this->stopRunningTimersIfStatusInactive(
+                $task,
+                $previousStatusId,
+                $newStatus,
+                auth()->user()
+            );
             $this->syncAssignmentIfChanged($task, $previousAssigneeId, $newAssigneeId);
 
             return $task->fresh();
@@ -525,6 +533,13 @@ class TaskServices
             );
         }
 
+        if (! $this->isTimerAllowedForTaskStatus($task)) {
+            return $this->buildTaskStartRestriction(
+                'Move this task to an active status before starting the timer.',
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
+        }
+
         if ($task->current_assignee_id === null) {
             return $this->buildTaskStartRestriction(
                 'Assign this task before starting the timer.',
@@ -710,6 +725,12 @@ class TaskServices
                         $previousStatusId,
                         $newStatus->id
                     );
+                    $this->stopRunningTimersIfStatusInactive(
+                        $task,
+                        $previousStatusId,
+                        $newStatus,
+                        $user
+                    );
 
                     app(NotificationService::class)->notifyTaskStatusChanged(
                         $task,
@@ -729,5 +750,86 @@ class TaskServices
     private function getStatusName(int $statusId): string
     {
         return TaskStatus::find($statusId)?->name ?? 'Unknown';
+    }
+
+    public function isTimerAllowedForTaskStatus(Task $task): bool
+    {
+        return $this->getTaskStatusType($task) === 'active';
+    }
+
+    private function getTaskStatusType(Task $task): ?string
+    {
+        if (! filled($task->status_id)) {
+            return null;
+        }
+
+        return TaskStatus::query()
+            ->whereKey($task->status_id)
+            ->value('type');
+    }
+
+    private function findTaskStatus(?int $statusId): ?TaskStatus
+    {
+        if (! $statusId) {
+            return null;
+        }
+
+        return TaskStatus::query()
+            ->whereKey($statusId)
+            ->first(['id', 'name', 'type']);
+    }
+
+    private function stopRunningTimersIfStatusInactive(Task $task, ?int $previousStatusId, ?TaskStatus $newStatus, ?User $actor = null): void
+    {
+        if (! $newStatus || $newStatus->type === 'active' || $previousStatusId === (int) $newStatus->id) {
+            return;
+        }
+
+        if (! $this->stopAllRunningTimers($task)) {
+            return;
+        }
+
+        if ($actor) {
+            $this->notificationService->notifyTaskTimerStoppedBecauseStatusChanged($task, $actor, $newStatus->name ?? 'the updated status');
+        }
+    }
+
+    private function stopAllRunningTimers(Task $task): bool
+    {
+        $runningLogs = TaskTimeLog::query()
+            ->where('task_id', $task->id)
+            ->where('is_running', true)
+            ->get();
+
+        if ($runningLogs->isEmpty()) {
+            return false;
+        }
+
+        $now = now();
+        $totalDuration = 0;
+
+        foreach ($runningLogs as $log) {
+            $duration = max(0, $log->started_at?->diffInSeconds($now) ?? 0);
+
+            $log->update([
+                'ended_at' => $now,
+                'duration_seconds' => $duration,
+                'is_running' => false,
+            ]);
+
+            if ($log->task_assignment_log_id) {
+                TaskAssignmentLog::query()
+                    ->whereKey($log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
+
+            $totalDuration += $duration;
+        }
+
+        if ($totalDuration > 0) {
+            $task->increment('actual_time_seconds', $totalDuration);
+        }
+
+        return true;
     }
 }

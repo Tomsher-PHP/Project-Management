@@ -3,12 +3,7 @@ export function initTaskTimer() {
     // -----------------------------
     // LIVE TIMER DISPLAY
     // -----------------------------
-    const timerEl = document.getElementById('task-timer-display');
-    const timerText = document.getElementById('timer-text');
-
     let interval = null;
-    let baseSeconds = 0;
-    let startedAt = null;
 
     function formatTime(seconds) {
         const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -41,6 +36,23 @@ export function initTaskTimer() {
         }
     }
 
+    function syncTimerFromDom() {
+        stopLiveTimer();
+
+        const timerEl = document.getElementById('task-timer-display');
+        const timerText = document.getElementById('timer-text');
+
+        if (!timerEl || !timerText) {
+            return;
+        }
+
+        const baseSeconds = parseInt(timerEl.dataset.totalSeconds || 0, 10);
+        const startedAt = timerEl.dataset.startedAt;
+
+        timerText.innerText = formatTime(baseSeconds);
+        startLiveTimer(startedAt, baseSeconds, timerText);
+    }
+
     const requiresNonAssigneeConfirmation = (button) => {
         const currentUserId = String(button?.dataset.currentUserId || '').trim();
         const assigneeId = String(button?.dataset.assigneeId || '').trim();
@@ -62,14 +74,8 @@ export function initTaskTimer() {
         });
     };
 
-    // Initialize timer ONLY if exists
-    if (timerEl && timerText) {
-        baseSeconds = parseInt(timerEl.dataset.totalSeconds || 0);
-        startedAt = timerEl.dataset.startedAt;
-
-        timerText.innerText = formatTime(baseSeconds);
-        startLiveTimer(startedAt, baseSeconds, timerText);
-    }
+    syncTimerFromDom();
+    document.addEventListener('task-timer:refresh', syncTimerFromDom);
 
     // -----------------------------
     // START / STOP HANDLER

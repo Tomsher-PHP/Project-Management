@@ -612,6 +612,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (header && result.header_html) {
             header.innerHTML = result.header_html;
+            document.dispatchEvent(new CustomEvent('task-timer:refresh'));
         }
 
         if (overviewPanel && result.overview_html) {

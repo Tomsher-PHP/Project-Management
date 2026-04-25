@@ -22,7 +22,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProjectTaskController extends Controller
@@ -153,86 +152,31 @@ class ProjectTaskController extends Controller
         TaskQuickStoreRequest $request,
         Project $project,
         NotificationService $notificationService,
-        ProjectServices $projectService,
         TaskServices $taskService
     ): JsonResponse {
         $validated = $request->validated();
-        $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $isLinearFlow = $project->project_flow === 'linear';
+        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
+        $task = $taskService->createQuickTask($project, $validated);
 
-        $defaultStatusId = $this->getDefaultTaskStatusId($project);
-        $defaultTaskType = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskMode = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
-
-        $task = DB::transaction(function () use (
-            $project,
-            $validated,
-            $assigneeId,
-            $defaultStatusId,
-            $defaultTaskType,
-            $defaultTaskMode,
-            $defaultTaskPriority,
-            $defaultTaskEstimateSeconds,
-            $projectService,
-            $taskService
-        ) {
-            $placement = $projectService->finalizeTaskPlacement(
-                $project,
-                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
-                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
+        if ($task->isApprovedRequest()) {
+            $notificationService->sendTaskAssignmentIfNeeded(
+                $task,
+                $task->current_assignee_id ? (int) $task->current_assignee_id : null
             );
-            $resolvedMilestoneId = $placement['project_milestone_id'];
-            $resolvedSprintId = $placement['project_sprint_id'];
+        } elseif ($requestType === 'self') {
+            $notificationService->notifyTaskRequestCreated($task);
+        }
 
-            $task = $project->tasks()->create([
-                'project_milestone_id' => $resolvedMilestoneId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
-                'task_type_id' => $validated['task_type_id'] ?? $defaultTaskType,
-                'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskMode,
-                'priority' => $validated['priority'] ?? $defaultTaskPriority,
-                'current_assignee_id' => $assigneeId,
-                'due_date_time' => $validated['due_date_time'] ?? null,
-                'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
-                    ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
-                    : $defaultTaskEstimateSeconds,
-                'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
-                'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
-            ]);
-
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            $taskService->syncTaskAssignmentState($task, $assigneeId);
-
-            return $task;
-        });
-
-        $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
         $project->refresh();
 
         return response()->json([
             'status' => true,
-            'message' => 'Task added successfully.',
+            'message' => $requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.',
             'html' => $this->renderTasksTab(
                 $project,
-                $isLinearFlow ? 'all-tasks' : ($task->project_sprint_id ? 'sprint-' . $task->project_sprint_id : 'ungrouped')
+                $this->resolveTaskGroupKey($project, $task)
             ),
         ], Response::HTTP_OK);
     }
