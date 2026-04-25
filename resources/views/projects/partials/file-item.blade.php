@@ -1,4 +1,7 @@
 <div class="file-item flex h-24 w-24 flex-col items-center lg:h-44 lg:w-44">
+    @php
+        $showDelete = $showDelete ?? true;
+    @endphp
 
     <!-- File Icon -->
     <div class="flex w-full justify-center">
@@ -47,11 +50,11 @@
         </a>
 
         <!-- Delete -->
-        @can('project.remove_scope')
+        @if ($showDelete && auth()->user()->can('project.remove_scope'))
             <button type="button" class="text-xs text-red-500 delete-file" data-id="{{ $file->id }}">
                 Delete
             </button>
-        @endcan
+        @endif
     </div>
 
 </div>

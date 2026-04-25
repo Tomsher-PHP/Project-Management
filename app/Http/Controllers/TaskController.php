@@ -262,7 +262,7 @@ class TaskController extends Controller
 
     public function tab(Request $request, Task $task, string $tab): JsonResponse
     {
-        $allowedTabs = ['overview', 'notes', 'history', 'settings'];
+        $allowedTabs = ['overview', 'scope', 'notes', 'history', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         $task = $this->loadTaskForDetail($task);
@@ -572,6 +572,7 @@ class TaskController extends Controller
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskOverviewData($task))->render(),
+            'scope' => $this->renderTaskScopeTab($task),
             'notes' => view('tasks.partials.tabs.notes', [
                 'task' => $task,
                 'project' => $task->project,
@@ -587,6 +588,16 @@ class TaskController extends Controller
             ] + $this->getTaskSettingsData($task))->render(),
             default => '',
         };
+    }
+
+    private function renderTaskScopeTab(Task $task): string
+    {
+        $task->loadMissing('project.scopeFiles.addedBy');
+
+        return view('tasks.partials.tabs.scope', [
+            'task' => $task,
+            'project' => $task->project,
+        ])->render();
     }
 
     private function getTaskOverviewData(Task $task): array

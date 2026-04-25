@@ -15,6 +15,10 @@
                                 Overview
                             </button>
 
+                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                Project Scope
+                            </button>
+
                             <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 Notes & Files
                             </button>
@@ -76,6 +80,7 @@
                         @include('tasks.partials.tabs.overview')
                     </div>
 
+                    <div class="hidden" data-task-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="notes" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="history" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="settings" data-loaded="false"></div>
