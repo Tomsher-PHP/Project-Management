@@ -14,6 +14,7 @@ use App\Models\TaskMode;
 use App\Models\TaskStatus;
 use App\Models\TaskStatusHistory;
 use App\Models\TaskType;
+use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\NotificationService;
 use App\Services\ProjectServices;
@@ -971,6 +972,7 @@ class ProjectTaskController extends Controller
         $selectedStatusId = $task->status_id ?: $this->getDefaultTaskStatusIdForFlow($project->project_flow);
         $selectedtypeId = $task->task_type_id ?: TaskType::query()->active()->where('is_default', true)->value('id');
         $selectedModeId = $task->task_mode_id ?: TaskMode::query()->active()->where('is_default', true)->value('id');
+        $currentAssigneeId = $task->current_assignee_id ?? null;
 
         $taskStatuses = TaskStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])
             ->forFlow($project->project_flow)
@@ -982,6 +984,22 @@ class ProjectTaskController extends Controller
         $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
             ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
             ->values();
+
+        // Base assignable users on project members with access to the task, ordered by name
+        $assignableUsers = $project->activeMembers()
+            ->orderBy('users.name')
+            ->get(['users.id', 'users.name']);
+
+        // Include current assignee if missing
+        if ($currentAssigneeId && !$assignableUsers->contains('id', $currentAssigneeId)) {
+            $currentAssignee = User::query()
+                ->where('id', $currentAssigneeId)
+                ->first(['id', 'name']);
+
+            if ($currentAssignee) {
+                $assignableUsers->push($currentAssignee);
+            }
+        }
 
         return [
             'canEditTask' => $task ? $this->canEditTaskModal($task) : false,
@@ -995,9 +1013,7 @@ class ProjectTaskController extends Controller
                 ->with(['projectMilestone:id,name'])
                 ->orderForDisplay()
                 ->get(['id', 'project_milestone_id', 'name']),
-            'assignableUsers' => $project->activeMembers()
-                ->orderBy('users.name')
-                ->get(['users.id', 'users.name']),
+            'assignableUsers' => $assignableUsers,
             'parentTaskOptions' => Task::query()
                 ->where('project_id', $project->id)
                 ->accessibleBy(auth()->user())

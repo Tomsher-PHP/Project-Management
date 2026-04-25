@@ -2,7 +2,7 @@
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
-        <section class="space-y-6" data-task-tabs data-task-id="{{ $task->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
+        <section class="space-y-6" data-task-tabs data-task-id="{{ $task->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}" data-project-tasks-root data-project-task-response-mode="reload">
             <div id="task-detail-header">
                 @include('tasks.partials.header')
             </div>
@@ -25,10 +25,6 @@
 
                             <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 History
-                            </button>
-
-                            <button type="button" data-task-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
-                                Settings
                             </button>
                         </div>
                     </div>
@@ -83,7 +79,14 @@
                     <div class="hidden" data-task-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="notes" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="history" data-loaded="false"></div>
-                    <div class="hidden" data-task-tab-panel="settings" data-loaded="false"></div>
+                </div>
+            </div>
+
+            <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
+                <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
+
+                <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                    <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
                 </div>
             </div>
         </section>

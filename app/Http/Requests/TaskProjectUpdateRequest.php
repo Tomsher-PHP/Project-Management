@@ -6,6 +6,7 @@ use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class TaskProjectUpdateRequest extends FormRequest
@@ -62,12 +63,24 @@ class TaskProjectUpdateRequest extends FormRequest
             'current_assignee_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_members', 'user_id')->where(
-                    fn ($query) => $query
+                function (string $attribute, mixed $value, \Closure $fail) use ($projectId, $task) {
+                    if (! filled($value) || ! $projectId) {
+                        return;
+                    }
+
+                    $assigneeId = (int) $value;
+                    $isCurrentAssignee = $task && (int) ($task->current_assignee_id ?? 0) === $assigneeId;
+                    $isActiveProjectMember = DB::table('project_members')
                         ->where('project_id', $projectId)
+                        ->where('user_id', $assigneeId)
                         ->whereNull('removed_at')
                         ->where('is_active', true)
-                ),
+                        ->exists();
+
+                    if (! $isActiveProjectMember && ! $isCurrentAssignee) {
+                        $fail('The selected assignee is invalid.');
+                    }
+                },
             ],
             'due_date_time' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],

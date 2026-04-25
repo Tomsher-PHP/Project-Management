@@ -97,6 +97,15 @@
         </button>
 
         <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+            @if ($project && auth()->user()->can('view', $project) && auth()->user()->can('task.edit'))
+                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-4 py-1 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M14.166 2.5C14.385 2.28103 14.645 2.10732 14.9311 1.98879C15.2173 1.87026 15.524 1.8092 15.8338 1.8092C16.1435 1.8092 16.4503 1.87026 16.7364 1.98879C17.0225 2.10732 17.2823 2.28103 17.5013 2.5C17.7202 2.71897 17.8939 2.97874 18.0125 3.26487C18.131 3.551 18.1921 3.85768 18.1921 4.16746C18.1921 4.47723 18.131 4.78391 18.0125 5.07004C17.8939 5.35617 17.7202 5.61594 17.5013 5.83491L6.25033 17.0858L1.66602 18.3341L2.91435 13.7498L14.166 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span>Edit Task</span>
+                </button>
+            @endif
+
             <span class="whitespace-nowrap rounded-full px-4 py-1 text-sm font-semibold text-white" style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};">
                 {{ $task->status?->name ?? 'No Status' }}
             </span>

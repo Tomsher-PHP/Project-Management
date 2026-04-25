@@ -262,7 +262,7 @@ class TaskController extends Controller
 
     public function tab(Request $request, Task $task, string $tab): JsonResponse
     {
-        $allowedTabs = ['overview', 'scope', 'notes', 'history', 'settings'];
+        $allowedTabs = ['overview', 'scope', 'notes', 'history'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         $task = $this->loadTaskForDetail($task);
@@ -582,10 +582,6 @@ class TaskController extends Controller
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskHistoryData($task))->render(),
-            'settings' => view('tasks.partials.tabs.settings', [
-                'task' => $task,
-                'project' => $task->project,
-            ] + $this->getTaskSettingsData($task))->render(),
             default => '',
         };
     }
@@ -743,58 +739,6 @@ class TaskController extends Controller
             ->latest()
             ->limit($limit)
             ->get();
-    }
-
-    private function getTaskSettingsData(Task $task): array
-    {
-        $project = $task->project;
-
-        $selectedStatusId = $task->status_id ?: $this->getDefaultTaskStatusIdForFlow($project->project_flow);
-        $selectedtypeId = $task->task_type_id ?: TaskType::query()->active()->where('is_default', true)->value('id');
-        $selectedModeId = $task->task_mode_id ?: TaskMode::query()->active()->where('is_default', true)->value('id');
-
-        $taskStatuses = TaskStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])
-            ->forFlow($project->project_flow)
-            ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
-        $taskTypeOptions = TaskType::forForm($selectedtypeId, ['order_by' => 'sort_order'])
-            ->get(['id', 'name', 'color', 'is_default']);
-        $taskModeOptions = TaskMode::forForm($selectedModeId, ['order_by' => 'sort_order'])
-            ->get(['id', 'name', 'color', 'is_default']);
-
-        return [
-            'canEditTask' => auth()->user()->can('update', $task),
-            'isLinearFlow' => $project->project_flow === 'linear',
-            'projectMilestones' => ProjectMilestone::query()
-                ->where('project_id', $project->id)
-                ->orderForDisplay()
-                ->get(['id', 'name']),
-            'projectSprints' => ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->with(['projectMilestone:id,name'])
-                ->orderForDisplay()
-                ->get(['id', 'project_milestone_id', 'name']),
-            'assignableUsers' => $project->activeMembers()
-                ->orderBy('users.name')
-                ->get(['users.id', 'users.name']),
-            'parentTaskOptions' => Task::query()
-                ->where('project_id', $project->id)
-                ->accessibleBy(auth()->user())
-                ->whereKeyNot($task->id)
-                ->orderBy('name')
-                ->get(['id', 'name', 'project_sprint_id']),
-            'tagOptions' => Tag::query()
-                ->active()
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']),
-            'taskStatuses' => $taskStatuses,
-            'taskTypeOptions' => $taskTypeOptions,
-            'taskModeOptions' => $taskModeOptions,
-            'nextTaskTypeSortOrder' => ((int) TaskType::max('sort_order')) + 1,
-            'nextTaskModeSortOrder' => ((int) TaskMode::max('sort_order')) + 1,
-            'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
-                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-                ->values(),
-        ];
     }
 
     private function getPaginatedTaskNotes(Task $task, int $page)

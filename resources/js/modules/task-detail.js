@@ -7,6 +7,7 @@ import { initializeEstimatedTimeInputs } from '../components/estimated-time-inpu
 import './task-insights-modal';
 import './task-comments';
 import './task-files';
+import './projects/project-tasks';
 
 const TASK_DETAIL_LOADING_HTML = (tab) => `
     <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
