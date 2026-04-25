@@ -1,5 +1,6 @@
 @php
     $isRejectedTask = $task->isRejectedRequest();
+    $rejectionReason = $task->rejection_reason ?? 'No reason provided';
     $authUser = auth()->user();
     $canOpenTaskDetailPage = $authUser
         && $authUser->can('task.view')
@@ -58,7 +59,7 @@
         <div class="min-h-0 overflow-y-auto border-b border-bgray-200 px-6 py-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r sm:px-7">
             @if ($isRejectedTask)
                 <div class="mb-6 rounded-xl border border-error-300/30 bg-red-50 px-4 py-3 text-sm font-medium text-error-300 dark:border-error-300/20 dark:bg-darkblack-500">
-                    This task request has been rejected. All fields are locked.
+                    Rejection Reason: {{ $rejectionReason }}
                 </div>
             @endif
 
@@ -229,16 +230,8 @@
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
                             </div>
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Derived</p>
-                                <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->derived_time_formatted }}</p>
-                            </div>
-                            <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                                 <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Actual</p>
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->actual_time_formatted }}</p>
-                            </div>
-                            <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Completed</p>
-                                <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->completed_at ? \App\Providers\AppServiceProvider::formatAppDateTime($task->completed_at) : '--' }}</p>
                             </div>
                         </div>
                     </div>

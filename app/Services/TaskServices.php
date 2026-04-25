@@ -114,7 +114,8 @@ class TaskServices
     {
         return $this->filterService
             ->apply($this->queryService->baseQuery($user), $filters)
-            ->whereHas('project', fn($query) => $query->where('project_flow', $flowType));
+            ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
+            ->where('request_status', '!=', 'rejected');
     }
 
     // Create a simple task with default placement and tags

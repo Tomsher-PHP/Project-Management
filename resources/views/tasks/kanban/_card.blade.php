@@ -35,7 +35,7 @@
                         :request-type="$task->request_type"
                         :request-status="$task->request_status"
                         :limit="25"
-                        text-class="text-sm font-semibold {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}"
+                        text-class="text-sm font-semibold {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}"
                         name-class="block"
                         class="max-w-full"
                     />
