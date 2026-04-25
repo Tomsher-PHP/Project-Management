@@ -19,10 +19,18 @@
 
             <div class="min-w-0">
                 <a href="{{ route('tasks.edit', $task) }}" class="block">
-                    <p class="flex items-center gap-2 font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300 {{ $isSubtask ? 'text-base' : 'text-lg' }}" title="{{ $task->name }}">
-                        <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
-                        {{ \Illuminate\Support\Str::limit($task->name, 20, '..') }}
-                    </p>
+                    <x-task-name-status
+                        :name="$task->name"
+                        :request-type="$task->request_type"
+                        :request-status="$task->request_status"
+                        :limit="20"
+                        limit-end=".."
+                        show-priority-indicator
+                        priority-indicator="line"
+                        :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'"
+                        :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'"
+                        class="max-w-full"
+                    />
                     <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
                     </p>

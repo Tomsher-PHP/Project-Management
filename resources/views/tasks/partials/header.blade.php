@@ -10,8 +10,17 @@
                 <div class="mt-1 h-12 w-1.5 rounded {{ $priorityBarClass }}"></div>
 
                 <div class="min-w-0">
-                    <h2 class="truncate text-xl font-bold text-bgray-900 dark:text-white">
-                        {{ $task->name }}
+                    <h2 class="min-w-0">
+                        <x-task-name-status
+                            :name="$task->name"
+                            :request-type="$task->request_type"
+                            :request-status="$task->request_status"
+                            :truncate="false"
+                            display="flex"
+                            text-class="text-xl font-bold text-bgray-900 dark:text-white"
+                            name-class="break-words"
+                            class="max-w-full"
+                        />
                     </h2>
                     <p class="text-sm text-bgray-500">
                         Code: {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}

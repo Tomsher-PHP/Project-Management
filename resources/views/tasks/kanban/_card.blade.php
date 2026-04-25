@@ -29,10 +29,16 @@
 
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-                <h5 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}">
-                    <span class="block truncate" title="{{ $task->name ?? ($task->code ?? 'Untitled task') }}">
-                        {{ $stringLimit($task->name ?? ($task->code ?? 'Untitled task'), 25, '...') }}
-                    </span>
+                <h5 class="leading-snug">
+                    <x-task-name-status
+                        :name="$task->name ?? ($task->code ?? 'Untitled task')"
+                        :request-type="$task->request_type"
+                        :request-status="$task->request_status"
+                        :limit="25"
+                        text-class="text-sm font-semibold {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' }}"
+                        name-class="block"
+                        class="max-w-full"
+                    />
                 </h5>
 
                 <div class="mt-2 space-y-1 text-[11px] leading-snug">

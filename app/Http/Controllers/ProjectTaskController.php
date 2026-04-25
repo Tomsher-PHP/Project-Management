@@ -12,7 +12,6 @@ use App\Models\Tag;
 use App\Models\Task;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
-use App\Models\TaskStatusHistory;
 use App\Models\TaskType;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
@@ -268,83 +267,15 @@ class ProjectTaskController extends Controller
         Project $project,
         Task $task,
         NotificationService $notificationService,
-        ProjectServices $projectService,
         TaskServices $taskService
     ): JsonResponse {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($this->canEditTaskModal($task), Response::HTTP_FORBIDDEN);
 
         $validated = $request->validated();
-        $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
         $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $previousStatusId = (int) ($task->status_id ?? 0);
         $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
-        $previousMilestoneId = filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null;
-        $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
-
-        DB::transaction(function () use (
-            $validated,
-            $task,
-            $newStatusId,
-            $newAssigneeId,
-            $previousStatusId,
-            $previousAssigneeId,
-            $previousMilestoneId,
-            $previousSprintId,
-            $project,
-            $projectService,
-            $taskService
-        ) {
-            $placement = $projectService->finalizeTaskPlacement(
-                $project,
-                ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
-                ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
-            );
-            $resolvedMilestoneId = $placement['project_milestone_id'];
-            $resolvedSprintId = $placement['project_sprint_id'];
-
-            $task->update([
-                'project_milestone_id' => $resolvedMilestoneId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'name' => $validated['name'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => $newStatusId,
-                'task_type_id' => $validated['task_type_id'] ?? null,
-                'task_mode_id' => $validated['task_mode_id'] ?? null,
-                'priority' => $validated['priority'],
-                'current_assignee_id' => $newAssigneeId,
-                'due_date_time' => $validated['due_date_time'] ?? null,
-                'completed_at' => $validated['completed_at'] ?? $task->completed_at,
-                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
-                'is_billable' => (bool) ($validated['is_billable'] ?? false),
-                'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
-            ]);
-
-            if (
-                $previousMilestoneId !== (filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null)
-                || $previousSprintId !== (filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null)
-            ) {
-                $projectService->syncTaskPlacementToDescendants($task);
-            }
-
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            if ($newStatusId && $newStatusId !== $previousStatusId) {
-                TaskStatusHistory::create([
-                    'task_id' => $task->id,
-                    'status_id' => $newStatusId,
-                ]);
-            }
-
-            if ($newAssigneeId !== ($previousAssigneeId ?: null)) {
-                $taskService->syncTaskAssignmentState($task, $newAssigneeId);
-            }
-        });
-
-        $task->refresh();
+        $task = $taskService->updateTask($task, $validated);
         $notificationService->sendTaskAssignmentIfNeeded(
             $task,
             $newAssigneeId,
@@ -483,17 +414,6 @@ class ProjectTaskController extends Controller
     private function getDefaultTaskEstimateSeconds(Project $project): int
     {
         return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
-    }
-
-    private function buildTaskGroups(Project $project): Collection
-    {
-        if ($project->project_flow === 'linear') {
-            return collect([$this->buildLinearTaskGroup($project)]);
-        }
-
-        $pageData = $this->getTaskGroupPage($project, 1, max($this->getSprintCount($project), 1));
-
-        return $pageData['taskGroups'];
     }
 
     private function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null): array
@@ -1051,6 +971,7 @@ class ProjectTaskController extends Controller
 
         return $user
             && $this->canViewTaskModal($task)
+            && ! $task->isRejectedRequest()
             && $user->can('task.edit');
     }
 

@@ -123,6 +123,12 @@ class TaskProjectUpdateRequest extends FormRequest
                 $projectSprintId = $this->nullableIntegerInput('project_sprint_id');
                 $parentTaskId = $this->nullableIntegerInput('parent_task_id');
 
+                if ($task?->isRejectedRequest()) {
+                    $validator->errors()->add('task', 'Rejected tasks cannot be updated.');
+
+                    return;
+                }
+
                 $this->validateAgileTaskPlacement(
                     $validator,
                     $project,

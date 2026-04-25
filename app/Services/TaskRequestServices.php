@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskAssignmentLog;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -233,6 +234,7 @@ class TaskRequestServices
     private function reject(User $user, Task $task, string $reason): void
     {
         $reason = trim($reason);
+        $this->stopRunningTimersForRejectedTask($task);
 
         $task->update([
             'request_status' => 'rejected',
@@ -244,5 +246,43 @@ class TaskRequestServices
         ]);
 
         $this->notificationService->notifyTaskRequestReviewed($task, $user, 'reject', $reason);
+    }
+
+    // Force stop any running timers for the task when it's rejected, and log the time until rejection
+    private function stopRunningTimersForRejectedTask(Task $task): void
+    {
+        $runningLogs = TaskTimeLog::query()
+            ->where('task_id', $task->id)
+            ->where('is_running', true)
+            ->get();
+
+        if ($runningLogs->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $totalDuration = 0;
+
+        foreach ($runningLogs as $log) {
+            $duration = max(0, $log->started_at?->diffInSeconds($now) ?? 0);
+
+            $log->update([
+                'ended_at' => $now,
+                'duration_seconds' => $duration,
+                'is_running' => false,
+            ]);
+
+            if ($log->task_assignment_log_id) {
+                TaskAssignmentLog::query()
+                    ->whereKey($log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
+
+            $totalDuration += $duration;
+        }
+
+        if ($totalDuration > 0) {
+            $task->increment('actual_time_seconds', $totalDuration);
+        }
     }
 }

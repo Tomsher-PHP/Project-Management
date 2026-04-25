@@ -361,36 +361,6 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function update(TaskUpdateRequest $request, Task $task, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
-    {
-        $task = $this->loadTaskForDetail($task);
-
-        $validated = $request->validated();
-        $previousAssigneeId = $task->current_assignee_id ? (int) $task->current_assignee_id : null;
-        $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-
-        $task = $taskServices->updateTask($task, $validated);
-
-        $notificationService->sendTaskAssignmentIfNeeded(
-            $task,
-            $newAssigneeId,
-            $previousAssigneeId
-        );
-
-        $task = $this->loadTaskForDetail($task);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Task updated successfully.',
-            'header_html' => view('tasks.partials.header', [
-                'task' => $task,
-                'project' => $task->project,
-            ] + $this->getTaskOverviewData($task))->render(),
-            'overview_html' => $this->renderTaskTab($task, 'overview'),
-            'settings_html' => $this->renderTaskTab($task, 'settings'),
-        ], Response::HTTP_OK);
-    }
-
     public function commentsModal(Task $task): JsonResponse
     {
         $task = $this->loadTaskForDetail($task);

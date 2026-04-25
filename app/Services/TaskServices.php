@@ -169,6 +169,8 @@ class TaskServices
             $project = $task->project;
             $previousStatusId = $task->status_id ? (int) $task->status_id : null;
             $previousAssigneeId = $task->current_assignee_id ? (int) $task->current_assignee_id : null;
+            $previousMilestoneId = filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null;
+            $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
 
             $placement = $this->finalizePlacement(
                 $project,
@@ -183,6 +185,13 @@ class TaskServices
             );
 
             $task->update($payload);
+
+            if (
+                $previousMilestoneId !== (filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null)
+                || $previousSprintId !== (filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null)
+            ) {
+                $this->projectServices->syncTaskPlacementToDescendants($task);
+            }
 
             if (array_key_exists('tag_ids', $validated)) {
                 $this->syncTags($task, $validated['tag_ids'] ?? []);
@@ -266,7 +275,7 @@ class TaskServices
             'priority' => $validated['priority'],
             'current_assignee_id' => ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null,
             'due_date_time' => $validated['due_date_time'] ?? null,
-            'completed_at' => $validated['completed_at'] ?? null,
+            'completed_at' => array_key_exists('completed_at', $validated) ? ($validated['completed_at'] ?? null) : $task->completed_at,
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
             'is_billable' => (bool) ($validated['is_billable'] ?? false),
             'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
@@ -496,29 +505,37 @@ class TaskServices
         return $this->getStartRestriction($task) === null;
     }
 
+    // Get restriction message and status if user cannot start timer on this task, otherwise return null
     public function getStartRestriction(Task $task, ?User $user = null): ?array
     {
-        $user = $user ?: auth()->user();
+        $user ??= auth()->user();
 
         if (! $user) {
-            return [
-                'message' => 'Not allowed to start timer for this task.',
-                'status' => Response::HTTP_FORBIDDEN,
-            ];
+            return $this->buildTaskStartRestriction(
+                'Not allowed to start timer for this task.',
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        if ($task->isRejectedRequest()) {
+            return $this->buildTaskStartRestriction(
+                'Cannot start timer for rejected task request.',
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         if ($task->current_assignee_id === null) {
-            return [
-                'message' => 'Assign this task before starting the timer.',
-                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
-            ];
+            return $this->buildTaskStartRestriction(
+                'Assign this task before starting the timer.',
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         if ((int) $task->current_assignee_id !== (int) $user->id) {
-            return [
-                'message' => 'Only the current assignee can start the timer for this task.',
-                'status' => Response::HTTP_FORBIDDEN,
-            ];
+            return $this->buildTaskStartRestriction(
+                'Only the current assignee can start the timer for this task.',
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         $runningTimer = TaskTimeLog::query()
@@ -533,18 +550,26 @@ class TaskServices
         }
 
         if ((int) $runningTimer->task_id === (int) $task->id) {
-            return [
-                'message' => 'Timer already running for this task.',
-                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
-            ];
+            return $this->buildTaskStartRestriction(
+                'Timer already running for this task.',
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         $runningTaskLabel = $runningTimer->task?->name
             ?: ($runningTimer->task?->code ?: ('task #' . $runningTimer->task_id));
 
+        return $this->buildTaskStartRestriction(
+            "Please stop the timer for '{$runningTaskLabel}' before starting another task.",
+            Response::HTTP_UNPROCESSABLE_ENTITY
+        );
+    }
+
+    private function buildTaskStartRestriction(string $message, int $status): array
+    {
         return [
-            'message' => "Please stop the timer for '{$runningTaskLabel}' before starting another task.",
-            'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+            'message' => $message,
+            'status' => $status,
         ];
     }
 
