@@ -1,6 +1,5 @@
 @php
     $priorityBarClass = $taskPriorityConfig['bg_class'] ?? 'bg-primary';
-    $statusColor = $task->status?->color ?: '#94A3B8';
 @endphp
 
 <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">
@@ -115,9 +114,15 @@
                 </button>
             @endif
 
-            <span class="whitespace-nowrap rounded-full px-4 py-1 text-sm font-semibold text-white" style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};">
-                {{ $task->status?->name ?? 'No Status' }}
-            </span>
+            <div class="flex items-center gap-2.5">
+                <x-task-status-dropdown
+                    :task="$task"
+                    :statuses="$taskStatusOptions ?? collect()"
+                    :can-change="$canChangeTaskStatus ?? false"
+                    :transition-url="$taskStatusTransitionUrl ?? null"
+                    :include-task-detail="true"
+                />
+            </div>
 
             <span class="whitespace-nowrap rounded-full border border-bgray-200 bg-bgray-100 px-4 py-1 text-sm font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
                 {{ $task->currentAssignee?->name ?? 'Unassigned' }}

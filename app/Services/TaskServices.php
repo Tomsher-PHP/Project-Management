@@ -634,7 +634,7 @@ class TaskServices
 
     public function isAllowedChangeStatus(Task $task, User $user): bool
     {
-        return $this->isAllowedToStop($task);
+        return ! $task->isRejectedRequest() && $this->isAllowedToStop($task, $user);
     }
 
     // Calculate total completed tracked seconds for a user on a task
@@ -650,7 +650,6 @@ class TaskServices
     public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): Task
     {
         return DB::transaction(function () use ($user, $movedTaskId, $taskIds, $statusId) {
-
             $movedTask = Task::query()
                 ->accessibleBy($user)
                 ->find($movedTaskId);
@@ -665,6 +664,24 @@ class TaskServices
                 throw new \Symfony\Component\HttpKernel\Exception\HttpException(
                     Response::HTTP_FORBIDDEN,
                     'Not allowed to change status for this task'
+                );
+            }
+
+            $movedTask->loadMissing('project:id,project_flow');
+
+            $newStatus = TaskStatus::query()
+                ->active()
+                ->whereKey($statusId)
+                ->when(
+                    filled($movedTask->project?->project_flow),
+                    fn($query) => $query->forFlow($movedTask->project->project_flow)
+                )
+                ->first();
+
+            if (! $newStatus) {
+                throw new \Symfony\Component\HttpKernel\Exception\HttpException(
+                    Response::HTTP_UNPROCESSABLE_ENTITY,
+                    'The selected task status is invalid.'
                 );
             }
 
@@ -683,22 +700,22 @@ class TaskServices
                 $previousStatusId = $task->status_id;
 
                 $task->update([
-                    'status_id' => $statusId,
+                    'status_id' => $newStatus->id,
                     'sort_order' => $index
                 ]);
 
-                if ($task->id === $movedTask->id && $previousStatusId !== $statusId) {
+                if ($task->id === $movedTask->id && $previousStatusId !== $newStatus->id) {
                     $this->recordStatusHistoryIfChanged(
                         $task,
                         $previousStatusId,
-                        $statusId
+                        $newStatus->id
                     );
 
                     app(NotificationService::class)->notifyTaskStatusChanged(
                         $task,
                         $user,
                         $this->getStatusName($previousStatusId),
-                        $this->getStatusName($statusId)
+                        $newStatus->name
                     );
                 }
             }

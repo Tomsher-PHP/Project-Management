@@ -243,7 +243,7 @@ class TaskController extends Controller
             'taskCommentsCount' => $task->comments()->count(),
             'totalTrackedSeconds' => $totalSeconds,
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
-        ] + $overviewData);
+        ] + $overviewData + $this->getTaskHeaderData($task, $taskServices));
     }
 
     public function activityModal(Task $task): JsonResponse
@@ -590,6 +590,25 @@ class TaskController extends Controller
         ];
     }
 
+    private function getTaskHeaderData(Task $task, TaskServices $taskServices): array
+    {
+        $flowType = $task->project?->project_flow;
+        $user = auth()->user();
+
+        return [
+            'taskStatusOptions' => blank($flowType)
+                ? collect()
+                : TaskStatus::query()
+                    ->active()
+                    ->forFlow($flowType)
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'color', 'is_completed']),
+            'canChangeTaskStatus' => $user && $taskServices->isAllowedChangeStatus($task, $user),
+            'taskStatusTransitionUrl' => route('tasks.transition-status'),
+        ];
+    }
+
     private function getTaskHistoryData(Task $task): array
     {
         $statusRows = $task->statusHistories()
@@ -910,25 +929,68 @@ class TaskController extends Controller
 
     public function transitionStatus(Request $request, TaskServices $taskServices): JsonResponse
     {
+        $validator = validator($request->all(), [
+            'status_id' => ['required', 'integer'],
+            'moved_task_id' => ['required', 'integer'],
+            'task_ids' => ['required', 'array', 'min:1'],
+            'task_ids.*' => ['integer'],
+            'include_task_detail' => ['nullable', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first() ?: 'The given data was invalid.',
+                'errors' => $validator->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validated = $validator->validated();
+
         try {
-            $statusId = (int) $request->status_id;
+            $statusId = (int) $validated['status_id'];
             $task = $taskServices->transitionStatus(
                 auth()->user(),
-                $request->moved_task_id,
-                $request->task_ids,
+                (int) $validated['moved_task_id'],
+                collect($validated['task_ids'])->map(fn($taskId) => (int) $taskId)->all(),
                 $statusId
             );
 
-            $status = TaskStatus::query()->findOrFail($statusId, ['id', 'name', 'color', 'is_completed']);
-
-            return response()->json([
+            $task = $this->loadTaskForDetail($task);
+            $response = [
                 'success' => true,
+                'message' => 'Task status updated successfully.',
                 'html' => view('tasks.kanban._card', [
                     'task' => $task,
-                    'status' => $status,
+                    'status' => $task->status,
                     'priorities' => config('project_constants.task_priorities', []),
                 ])->render(),
-            ]);
+            ];
+
+            if (! empty($validated['include_task_detail'])) {
+                $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());
+                $overviewData = $this->getTaskOverviewData($task);
+                $historyData = $this->getTaskHistoryData($task);
+                $headerData = $this->getTaskHeaderData($task, $taskServices);
+
+                $response['header_html'] = view('tasks.partials.header', [
+                    'task' => $task,
+                    'project' => $task->project,
+                    'totalTrackedSeconds' => $totalSeconds,
+                ] + $overviewData + $headerData)->render();
+
+                $response['overview_html'] = view('tasks.partials.tabs.overview', [
+                    'task' => $task,
+                    'project' => $task->project,
+                ] + $overviewData)->render();
+
+                $response['history_html'] = view('tasks.partials.tabs.history', [
+                    'task' => $task,
+                    'project' => $task->project,
+                ] + $historyData)->render();
+            }
+
+            return response()->json($response);
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
 
             return response()->json([

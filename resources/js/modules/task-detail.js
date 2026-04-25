@@ -7,6 +7,7 @@ import { initializeEstimatedTimeInputs } from '../components/estimated-time-inpu
 import './task-insights-modal';
 import './task-comments';
 import './task-files';
+import './tasks/task-status-dropdown';
 import './projects/project-tasks';
 
 const TASK_DETAIL_LOADING_HTML = (tab) => `
@@ -600,6 +601,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (historyPanel.classList.contains('hidden')) {
             historyPanel.innerHTML = '';
+        }
+    });
+
+    document.addEventListener('task-status:changed', (event) => {
+        const result = event.detail?.response || {};
+        const header = document.getElementById('task-detail-header');
+        const overviewPanel = getPanel('overview');
+        const historyPanel = getPanel('history');
+
+        if (header && result.header_html) {
+            header.innerHTML = result.header_html;
+        }
+
+        if (overviewPanel && result.overview_html) {
+            overviewPanel.innerHTML = result.overview_html;
+            overviewPanel.dataset.loaded = 'true';
+            initializeInjectedContent(overviewPanel, 'overview');
+        }
+
+        if (historyPanel && result.history_html) {
+            historyPanel.innerHTML = result.history_html;
+            historyPanel.dataset.loaded = 'true';
+            initializeInjectedContent(historyPanel, 'history');
         }
     });
 
