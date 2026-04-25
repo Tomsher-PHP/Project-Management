@@ -31,7 +31,14 @@ class TaskPolicy
             return true;
         }
 
-        return (int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id;
+        if ((int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        return $task->assignmentLogs()
+            ->where('user_id', $user->id)
+            ->where('worked_time_seconds', '>', 0)
+            ->exists();
     }
 
     public function update(User $user, Task $task): bool

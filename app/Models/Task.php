@@ -151,6 +151,13 @@ class Task extends Model
                 })
                 ->orWhereHas('projectMilestone', function ($moduleQuery) use ($user) {
                     $moduleQuery->where('owner_id', $user->id);
+                })
+                ->orWhereExists(function ($sub) use ($user) {
+                    $sub->selectRaw(1)
+                        ->from('task_assignment_logs')
+                        ->whereColumn('task_assignment_logs.task_id', 'tasks.id')
+                        ->where('task_assignment_logs.user_id', $user->id)
+                        ->where('task_assignment_logs.worked_time_seconds', '>', 0);
                 });
         });
     }
