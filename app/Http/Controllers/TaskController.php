@@ -892,9 +892,15 @@ class TaskController extends Controller
 
     public function start(Task $task, TaskServices $taskServices): JsonResponse
     {
-        if (! $taskServices->isAllowedToStart($task)) {
-            return response()->json(['message' => 'Not allowed to start timer for this task'], Response::HTTP_FORBIDDEN);
+        $startRestriction = $taskServices->getStartRestriction($task);
+
+        if ($startRestriction) {
+            return response()->json(
+                ['message' => $startRestriction['message']],
+                $startRestriction['status']
+            );
         }
+
         $taskServices->startTimer($task, auth()->id());
 
         return response()->json(['message' => 'Timer started'], Response::HTTP_OK);

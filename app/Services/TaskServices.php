@@ -493,19 +493,59 @@ class TaskServices
     // Check whether current user can start timer on this task
     public function isAllowedToStart(Task $task): bool
     {
-        $user = auth()->user();
+        return $this->getStartRestriction($task) === null;
+    }
 
-        // if task is not assigned, no one can stop timer
-        if ($task->current_assignee_id === null) {
-            return false;
+    public function getStartRestriction(Task $task, ?User $user = null): ?array
+    {
+        $user = $user ?: auth()->user();
+
+        if (! $user) {
+            return [
+                'message' => 'Not allowed to start timer for this task.',
+                'status' => Response::HTTP_FORBIDDEN,
+            ];
         }
 
-        // Check any task running for this user. Only allow one timer running at a time across all tasks.
-        $hasRunningTimer = TaskTimeLog::where('user_id', $user->id)
-            ->where('is_running', 1)
-            ->exists();
+        if ($task->current_assignee_id === null) {
+            return [
+                'message' => 'Assign this task before starting the timer.',
+                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+            ];
+        }
 
-        return $task->current_assignee_id === $user->id && ! $hasRunningTimer;
+        if ((int) $task->current_assignee_id !== (int) $user->id) {
+            return [
+                'message' => 'Only the current assignee can start the timer for this task.',
+                'status' => Response::HTTP_FORBIDDEN,
+            ];
+        }
+
+        $runningTimer = TaskTimeLog::query()
+            ->with('task:id,name,code')
+            ->where('user_id', $user->id)
+            ->where('is_running', 1)
+            ->latest('started_at')
+            ->first();
+
+        if (! $runningTimer) {
+            return null;
+        }
+
+        if ((int) $runningTimer->task_id === (int) $task->id) {
+            return [
+                'message' => 'Timer already running for this task.',
+                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+            ];
+        }
+
+        $runningTaskLabel = $runningTimer->task?->name
+            ?: ($runningTimer->task?->code ?: ('task #' . $runningTimer->task_id));
+
+        return [
+            'message' => "Please stop the timer for '{$runningTaskLabel}' before starting another task.",
+            'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+        ];
     }
 
     // Check whether current user can stop timer on this task
