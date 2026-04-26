@@ -8,6 +8,7 @@ import './task-insights-modal';
 import './task-comments';
 import './task-files';
 import './tasks/task-status-dropdown';
+import './tasks/time-log-change-request';
 import './projects/project-tasks';
 
 const TASK_DETAIL_LOADING_HTML = (tab) => `

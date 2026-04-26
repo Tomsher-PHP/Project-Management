@@ -27,6 +27,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -78,7 +79,8 @@ Route::middleware(['auth'])->group(function () {
     // End of Role & Permission Routes
 
     // User Management Routes
-    Route::post('/users/notification-settings', 
+    Route::post(
+        '/users/notification-settings',
         [UserController::class, 'updateNotificationSettings']
     )->name('users.notification.settings');
     Route::post(
@@ -86,14 +88,15 @@ Route::middleware(['auth'])->group(function () {
         [UserController::class, 'updateGeneralSettings']
     )->name('users.general.settings');
 
-    Route::post('/users/change-password', 
+    Route::post(
+        '/users/change-password',
         [UserController::class, 'changePassword']
     )->name('users.change.password');
 
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
-    Route::resource('users', UserController::class)->only(['show']); 
+    Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
     // End of User Management Routes
@@ -320,19 +323,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
 
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
-        // Route::put('/', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
-    
+
     // Task status, order change route
     Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
     Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
     // End Task Routes
-    
+
     // Task request routes
     Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
@@ -343,6 +345,17 @@ Route::middleware(['auth'])->group(function () {
         ->whereIn('action', ['approve', 'reject'])
         ->name('tasks.requests.action');
     // End Task request routes
+
+    // Task time log change request routes
+    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
+    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
+    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.bulk-action');
+    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.action');
+    // End Task time log change request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

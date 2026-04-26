@@ -5,17 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskCommentRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
-use App\Http\Requests\TaskUpdateRequest;
 use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskComment;
-use App\Models\TaskMode;
 use App\Models\TaskStatus;
-use App\Models\TaskType;
-use App\Models\Tag;
 use App\Models\TaskNote;
 use App\Models\TaskTimeLog;
 use App\Models\User;
@@ -651,6 +647,9 @@ class TaskController extends Controller
                 'user.primaryAttachment',
                 'assignmentLog.user:id,name',
                 'assignmentLog.user.primaryAttachment',
+            ])
+            ->withExists([
+                'changeRequests as has_pending_change_request' => fn($query) => $query->where('status', 'pending'),
             ])
             ->reorder('started_at', 'desc')
             ->orderByDesc('id')

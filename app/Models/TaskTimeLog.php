@@ -76,4 +76,9 @@ class TaskTimeLog extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function changeRequests()
+    {
+        return $this->hasMany(TaskTimeLogChangeRequest::class);
+    }
 }

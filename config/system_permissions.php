@@ -131,4 +131,6 @@ return [
     ['name' => 'task_settings.create', 'sort_order' => 106],
     ['name' => 'task_settings.edit', 'sort_order' => 107],
     ['name' => 'task_settings.delete', 'sort_order' => 108],
+
+    ['name' => 'task_time_log_change_request.approve_reject', 'sort_order' => 109],
 ];
