@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskTimeLogChangeRequestActionRequest;
+use App\Http\Requests\TaskTimeLogChangeRequestBulkActionRequest;
 use App\Http\Requests\StoreTaskTimeLogChangeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Services\TaskTimeLogChangeRequestService;
@@ -27,10 +28,15 @@ class TaskTimeLogChangeRequestController extends Controller
     public function index(Request $request, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService)
     {
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $selectedStatus = in_array($request->input('request_status'), ['pending', 'approved', 'rejected'], true)
+            ? $request->input('request_status')
+            : 'pending';
 
         return view('tasks.time-log-change-requests.index', [
-            'changeRequests' => $taskTimeLogChangeRequestService->getRequestsForUser($request->user(), $perPage),
+            'changeRequests' => $taskTimeLogChangeRequestService->getRequestsForUser($request->user(), $perPage, $selectedStatus, $request->all()),
+            'users' => $taskTimeLogChangeRequestService->getFilterOptions($request->user())['users'],
             'perPage' => $perPage,
+            'selectedStatus' => $selectedStatus,
         ]);
     }
 
@@ -94,5 +100,39 @@ class TaskTimeLogChangeRequestController extends Controller
             ->with('success', $action === 'approve'
                 ? 'Time log change request approved successfully.'
                 : 'Time log change request rejected successfully.');
+    }
+
+    public function handleBulkAction(
+        TaskTimeLogChangeRequestBulkActionRequest $request,
+        string $action,
+        TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService
+    ): RedirectResponse {
+        abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
+
+        try {
+            $processedCount = $taskTimeLogChangeRequestService->handleBulkAction(
+                $request->user(),
+                $request->validated('change_request_ids'),
+                $action,
+                $request->validated('reason')
+            );
+        } catch (ValidationException $exception) {
+            $firstMessage = collect($exception->errors())
+                ->flatten()
+                ->filter()
+                ->first();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $firstMessage ?: 'Unable to process the time log change requests.')
+                ->withErrors($exception->errors());
+        }
+
+        return redirect()
+            ->route('tasks.time-log-change-requests.index')
+            ->with('success', $action === 'approve'
+                ? "{$processedCount} time log change request(s) approved successfully."
+                : "{$processedCount} time log change request(s) rejected successfully.");
     }
 }

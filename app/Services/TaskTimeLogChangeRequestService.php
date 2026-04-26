@@ -13,9 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class TaskTimeLogChangeRequestService
 {
-    public function getRequestsForUser(User $user, int $perPage): LengthAwarePaginator
+    public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
-        return $this->visibleRequestQuery($user)
+        $query = $this->visibleRequestQuery($user)
+            ->where('status', $status)
             ->with([
                 'user:id,name',
                 'user.primaryAttachment',
@@ -23,10 +24,26 @@ class TaskTimeLogChangeRequestService
                 'timeLog.task:id,name',
                 'approver:id,name',
                 'rejector:id,name',
-            ])
+            ]);
+
+        $this->applyFilters($query, $filters);
+
+        return $query
             ->latest('id')
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    public function getFilterOptions(User $user): array
+    {
+        $query = $this->visibleRequestQuery($user);
+        $userIds = (clone $query)->distinct()->pluck('user_id')->filter();
+
+        return [
+            'users' => $userIds->isEmpty()
+                ? collect()
+                : User::query()->whereIn('id', $userIds)->orderBy('name')->get(['id', 'name']),
+        ];
     }
 
     public function create(User $user, TaskTimeLog $timeLog, array $payload): TaskTimeLogChangeRequest
@@ -64,6 +81,37 @@ class TaskTimeLogChangeRequestService
         });
     }
 
+    public function handleBulkAction(User $user, array $changeRequestIds, string $action, ?string $reason = null): int
+    {
+        $changeRequestIds = collect($changeRequestIds)
+            ->map(fn($changeRequestId) => (int) $changeRequestId)
+            ->unique()
+            ->values();
+
+        abort_if($changeRequestIds->isEmpty(), Response::HTTP_UNPROCESSABLE_ENTITY, 'Please select at least one time log change request.');
+
+        $changeRequests = $this->visibleRequestQuery($user)
+            ->whereIn('id', $changeRequestIds)
+            ->where('status', 'pending')
+            ->get();
+
+        abort_unless($changeRequests->count() === $changeRequestIds->count(), Response::HTTP_FORBIDDEN);
+
+        DB::transaction(function () use ($user, $changeRequests, $action, $reason) {
+            foreach ($changeRequests as $changeRequest) {
+                if ($action === 'approve') {
+                    $this->approve($user, $changeRequest);
+
+                    continue;
+                }
+
+                $this->reject($user, $changeRequest, (string) $reason);
+            }
+        });
+
+        return $changeRequests->count();
+    }
+
     private function visibleRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
@@ -76,6 +124,14 @@ class TaskTimeLogChangeRequestService
 
         return TaskTimeLogChangeRequest::query()
             ->whereIn('user_id', $accessibleUserIds);
+    }
+
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        $query->when(
+            $filters['user_id'] ?? null,
+            fn(Builder $builder, $userIds) => $builder->whereIn('user_id', (array) $userIds)
+        );
     }
 
     private function canHandleRequest(User $user, TaskTimeLogChangeRequest $changeRequest): bool

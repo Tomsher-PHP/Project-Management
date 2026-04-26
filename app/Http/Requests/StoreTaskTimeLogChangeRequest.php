@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Configuration;
 use App\Models\TaskTimeLog;
 use App\Services\CompanyService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Can;
+
+use function Symfony\Component\Clock\now;
 
 class StoreTaskTimeLogChangeRequest extends FormRequest
 {
@@ -40,6 +40,7 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
             'new_ended_at.required' => 'Please select a new end date and time.',
             'new_ended_at.date' => 'The new end date and time is invalid.',
             'new_ended_at.after' => 'The new end date and time must be later than the new start date and time.',
+            'new_ended_at.before_or_equal' => 'The new end date and time cannot be in the future.',
             'reason.required' => 'Please enter a reason for this change request.',
             'reason.max' => 'The reason may not be greater than 1000 characters.',
         ];
@@ -88,33 +89,48 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     return;
                 }
 
-                if (! $newEndedAt->greaterThan($newStartedAt)) {
-                    $validator->errors()->add('new_ended_at', 'The new end date and time must be later than the new start date and time.');
+                if ($newEndedAt->greaterThan(now())) {
+                    $validator->errors()->add('new_ended_at', 'The new end date and time cannot be in the future.');
 
                     return;
                 }
 
-                $hasOverlap = TaskTimeLog::query()
+                $applyTimeRangeOverlapScope = function ($query) use ($newStartedAt, $newEndedAt) {
+                    $query
+                        ->where(function ($endedQuery) use ($newStartedAt, $newEndedAt) {
+                            $endedQuery
+                                ->whereNotNull('ended_at')
+                                ->where('started_at', '<', $newEndedAt)
+                                ->where('ended_at', '>', $newStartedAt);
+                        })
+                        ->orWhere(function ($runningQuery) use ($newEndedAt) {
+                            $runningQuery
+                                ->whereNull('ended_at')
+                                ->where('started_at', '<', $newEndedAt);
+                        });
+                };
+
+                $hasUserOverlapAcrossAnyTask = TaskTimeLog::query()
                     ->where('user_id', $timeLog->user_id)
                     ->whereKeyNot($timeLog->id)
-                    ->where(function ($query) use ($newStartedAt, $newEndedAt) {
-                        $query
-                            ->where(function ($endedQuery) use ($newStartedAt, $newEndedAt) {
-                                $endedQuery
-                                    ->whereNotNull('ended_at')
-                                    ->where('started_at', '<', $newEndedAt)
-                                    ->where('ended_at', '>', $newStartedAt);
-                            })
-                            ->orWhere(function ($runningQuery) use ($newEndedAt) {
-                                $runningQuery
-                                    ->whereNull('ended_at')
-                                    ->where('started_at', '<', $newEndedAt);
-                            });
-                    })
+                    ->where($applyTimeRangeOverlapScope)
                     ->exists();
 
-                if ($hasOverlap) {
-                    $message = 'The requested time overlaps with another time log.';
+                if ($hasUserOverlapAcrossAnyTask) {
+                    $message = 'You already have another time log in the requested time range.';
+
+                    $validator->errors()->add('new_started_at', $message);
+                    $validator->errors()->add('new_ended_at', $message);
+                }
+
+                $hasTaskOverlapByAnyUser = TaskTimeLog::query()
+                    ->where('task_id', $timeLog->task_id)
+                    ->whereKeyNot($timeLog->id)
+                    ->where($applyTimeRangeOverlapScope)
+                    ->exists();
+
+                if ($hasTaskOverlapByAnyUser) {
+                    $message = 'Another user already has a time log in this task for the requested time range.';
 
                     $validator->errors()->add('new_started_at', $message);
                     $validator->errors()->add('new_ended_at', $message);

@@ -212,6 +212,9 @@
                                             New Ended At <x-red-star />
                                         </label>
                                         <input type="text" id="timeLogChangeRequestNewEndedAt" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" data-time-log-change-request-ended-at placeholder="Select end date and time" autocomplete="off">
+                                        <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300" data-time-log-change-request-duration>
+                                            Duration: --
+                                        </p>
                                         <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-error-for="new_ended_at"></p>
                                     </div>
                                 </div>

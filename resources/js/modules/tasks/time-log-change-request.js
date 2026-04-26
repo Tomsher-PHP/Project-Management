@@ -25,9 +25,59 @@ const fieldSelectors = {
     originalEndedAt: '#timeLogChangeRequestOriginalEndedAt',
     newStartedAt: '#timeLogChangeRequestNewStartedAt',
     newEndedAt: '#timeLogChangeRequestNewEndedAt',
+    duration: '[data-time-log-change-request-duration]',
     reason: '#timeLogChangeRequestReason',
     userName: '#timeLogChangeRequestUserName',
     submit: '#timeLogChangeRequestSubmitButton',
+};
+
+const formatDuration = (totalSeconds) => {
+    const seconds = Math.max(0, Number(totalSeconds) || 0);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (hours > 0) {
+        return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+    }
+
+    if (minutes > 0) {
+        return `${minutes}m ${String(remainingSeconds).padStart(2, '0')}s`;
+    }
+
+    return `${remainingSeconds}s`;
+};
+
+const parseDateTimeValue = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    const normalizedValue = String(value).trim().replace(' ', 'T');
+    const date = new Date(normalizedValue);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const syncDurationDisplay = () => {
+    const durationNode = document.querySelector(fieldSelectors.duration);
+    const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
+    const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
+
+    if (!durationNode || !newStartedAtField || !newEndedAtField) {
+        return;
+    }
+
+    const startedAt = parseDateTimeValue(newStartedAtField.value);
+    const endedAt = parseDateTimeValue(newEndedAtField.value);
+
+    if (!startedAt || !endedAt || endedAt <= startedAt) {
+        durationNode.textContent = 'Duration: --';
+        return;
+    }
+
+    const totalSeconds = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
+    durationNode.textContent = `Duration: ${formatDuration(totalSeconds)}`;
 };
 
 const setFieldValue = (field, value = '') => {
@@ -128,6 +178,7 @@ const populateFromTrigger = (trigger) => {
     setFieldValue(newStartedAtField, readTriggerData(trigger, 'new_started_at'));
     setFieldValue(newEndedAtField, readTriggerData(trigger, 'new_ended_at'));
     setFieldValue(reasonField, '');
+    syncDurationDisplay();
 };
 
 const setSubmittingState = (isSubmitting) => {
@@ -157,6 +208,7 @@ const rejectListModal = {
     modal: '[data-time-log-change-request-reject-modal]',
     form: '[data-time-log-change-request-reject-form]',
     taskName: '[data-time-log-change-request-reject-task-name]',
+    hiddenInputs: '[data-time-log-change-request-reject-hidden-inputs]',
     close: '[data-time-log-change-request-reject-close]',
     reason: '#time-log-change-request-rejection-reason',
 };
@@ -164,10 +216,58 @@ const rejectListModal = {
 const getRejectListModal = () => document.querySelector(rejectListModal.modal);
 const getRejectListForm = () => document.querySelector(rejectListModal.form);
 
-const openRejectListModal = (button) => {
+const bulkSelectors = {
+    selectAll: '[data-time-log-change-request-bulk-select-all]',
+    checkbox: '[data-time-log-change-request-bulk-checkbox]',
+    approveButton: '[data-time-log-change-request-bulk-approve]',
+    approveForm: '[data-time-log-change-request-bulk-approve-form]',
+    approveHiddenInputs: '[data-time-log-change-request-bulk-approve-hidden-inputs]',
+    rejectButton: '[data-time-log-change-request-bulk-reject]',
+};
+
+const getBulkCheckboxes = () => Array.from(document.querySelectorAll(bulkSelectors.checkbox));
+
+const getSelectedChangeRequestIds = () => getBulkCheckboxes()
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.value);
+
+const setHiddenChangeRequestIds = (container, changeRequestIds = []) => {
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+
+    changeRequestIds.forEach((changeRequestId) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'change_request_ids[]';
+        input.value = changeRequestId;
+        container.appendChild(input);
+    });
+};
+
+const syncBulkActions = () => {
+    const bulkCheckboxes = getBulkCheckboxes();
+    const selectedCount = getSelectedChangeRequestIds().length;
+    const selectAll = document.querySelector(bulkSelectors.selectAll);
+    const approveButton = document.querySelector(bulkSelectors.approveButton);
+    const rejectButton = document.querySelector(bulkSelectors.rejectButton);
+
+    approveButton?.toggleAttribute('disabled', selectedCount === 0);
+    rejectButton?.toggleAttribute('disabled', selectedCount === 0);
+
+    if (selectAll) {
+        selectAll.checked = bulkCheckboxes.length > 0 && selectedCount === bulkCheckboxes.length;
+        selectAll.indeterminate = selectedCount > 0 && selectedCount < bulkCheckboxes.length;
+    }
+};
+
+const openRejectListModal = (button, changeRequestIds = []) => {
     const modal = getRejectListModal();
     const form = getRejectListForm();
     const taskName = document.querySelector(rejectListModal.taskName);
+    const hiddenInputs = document.querySelector(rejectListModal.hiddenInputs);
     const reason = document.querySelector(rejectListModal.reason);
 
     if (!modal || !form || !button) {
@@ -176,12 +276,15 @@ const openRejectListModal = (button) => {
 
     form.action = button.dataset.action || '#';
     form.reset();
+    setHiddenChangeRequestIds(hiddenInputs, changeRequestIds);
 
     if (taskName) {
         const requestUserName = button.dataset.requestUserName ? ` by ${button.dataset.requestUserName}` : '';
-        taskName.textContent = button.dataset.taskName
-            ? `Task: ${button.dataset.taskName}${requestUserName}`
-            : '';
+        taskName.textContent = changeRequestIds.length > 0
+            ? `${changeRequestIds.length} selected time log change request(s)`
+            : (button.dataset.taskName
+                ? `Task: ${button.dataset.taskName}${requestUserName}`
+                : '');
     }
 
     modal.classList.remove('hidden');
@@ -257,12 +360,54 @@ document.addEventListener('click', (event) => {
     const rejectButton = event.target.closest('[data-time-log-change-request-reject-open]');
 
     if (rejectButton) {
-        openRejectListModal(rejectButton);
+        openRejectListModal(rejectButton, []);
         return;
     }
 
     if (event.target.closest(rejectListModal.close)) {
         closeRejectListModal();
+        return;
+    }
+
+    const bulkApproveButton = event.target.closest(bulkSelectors.approveButton);
+
+    if (bulkApproveButton) {
+        const selectedChangeRequestIds = getSelectedChangeRequestIds();
+
+        if (selectedChangeRequestIds.length === 0) {
+            return;
+        }
+
+        Alert.confirm({
+            title: 'Approve selected time log change requests?',
+            text: `This will approve ${selectedChangeRequestIds.length} selected time log change request(s).`,
+            icon: 'warning',
+            confirmText: 'Yes, approve',
+        }).then((result) => {
+            if (!result?.isConfirmed) {
+                return;
+            }
+
+            const approveForm = document.querySelector(bulkSelectors.approveForm);
+            const hiddenInputs = document.querySelector(bulkSelectors.approveHiddenInputs);
+
+            setHiddenChangeRequestIds(hiddenInputs, selectedChangeRequestIds);
+            approveForm?.submit();
+        });
+
+        return;
+    }
+
+    const bulkRejectButton = event.target.closest(bulkSelectors.rejectButton);
+
+    if (bulkRejectButton) {
+        const selectedChangeRequestIds = getSelectedChangeRequestIds();
+
+        if (selectedChangeRequestIds.length === 0) {
+            return;
+        }
+
+        openRejectListModal(bulkRejectButton, selectedChangeRequestIds);
     }
 });
 
@@ -283,4 +428,39 @@ document.addEventListener('submit', async (event) => {
             approvalForm.submit();
         }
     }
+});
+
+document.addEventListener('change', (event) => {
+    const selectAll = event.target.closest(bulkSelectors.selectAll);
+
+    if (selectAll) {
+        getBulkCheckboxes().forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
+        });
+        syncBulkActions();
+        return;
+    }
+
+    if (event.target.closest(bulkSelectors.checkbox)) {
+        syncBulkActions();
+        return;
+    }
+
+    if (
+        event.target.matches(fieldSelectors.newStartedAt)
+        || event.target.matches(fieldSelectors.newEndedAt)
+    ) {
+        syncDurationDisplay();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    syncBulkActions();
+    syncDurationDisplay();
+
+    const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
+    const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
+
+    newStartedAtField?.addEventListener('input', syncDurationDisplay);
+    newEndedAtField?.addEventListener('input', syncDurationDisplay);
 });

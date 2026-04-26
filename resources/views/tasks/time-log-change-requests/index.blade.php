@@ -2,12 +2,71 @@
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
+        @php
+            $formatDuration = function (?int $seconds): string {
+                $totalSeconds = max(0, (int) ($seconds ?? 0));
+                $hours = intdiv($totalSeconds, 3600);
+                $minutes = intdiv($totalSeconds % 3600, 60);
+                $remainingSeconds = $totalSeconds % 60;
+
+                if ($hours > 0) {
+                    return sprintf('%dh %02dm', $hours, $minutes);
+                }
+
+                if ($minutes > 0) {
+                    return sprintf('%dm %02ds', $minutes, $remainingSeconds);
+                }
+
+                return sprintf('%ds', $remainingSeconds);
+            };
+
+            $tabs = [
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+            ];
+        @endphp
+
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <x-filters.button />
+
+                @if ($selectedStatus === 'pending')
+                    <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-time-log-change-request-bulk-approve disabled>
+                        Bulk Approve
+                    </button>
+
+                    <button type="button" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400 disabled:cursor-not-allowed disabled:opacity-50" data-time-log-change-request-bulk-reject data-action="{{ route('tasks.time-log-change-requests.bulk-action', 'reject') }}" disabled>
+                        Bulk Reject
+                    </button>
+
+                    <form method="POST" action="{{ route('tasks.time-log-change-requests.bulk-action', 'approve') }}" class="hidden" data-time-log-change-request-bulk-approve-form>
+                        @csrf
+                        <div data-time-log-change-request-bulk-approve-hidden-inputs></div>
+                    </form>
+                @endif
+            </div>
+
+            <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
+                @foreach ($tabs as $status => $label)
+                    <a href="{{ route('tasks.time-log-change-requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
+                        {{ $label }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
         <section>
             <div class="overflow-hidden rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-separate border-spacing-0">
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
+                                @if ($selectedStatus === 'pending')
+                                    <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                        <input type="checkbox" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-select-all>
+                                    </th>
+                                @endif
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested By</span>
                                 </th>
@@ -24,9 +83,6 @@
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reason</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Action</span>
                                 </th>
                             </tr>
@@ -38,9 +94,16 @@
                                     $requestUser = $changeRequest->user;
                                     $timeLog = $changeRequest->timeLog;
                                     $task = $timeLog?->task;
+                                    $isStartChanged = optional($changeRequest->old_started_at)?->equalTo($changeRequest->new_started_at) === false;
+                                    $isEndChanged = optional($changeRequest->old_ended_at)?->equalTo($changeRequest->new_ended_at) === false;
                                     $statusClasses = $changeRequest->status === 'approved' ? 'bg-success-50 text-success-300' : ($changeRequest->status === 'rejected' ? 'bg-error-50 text-error-300' : 'bg-warning-50 text-warning-300');
                                 @endphp
                                 <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                    @if ($selectedStatus === 'pending')
+                                        <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                            <input type="checkbox" value="{{ $changeRequest->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-checkbox>
+                                        </td>
+                                    @endif
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="flex min-w-[180px] items-center gap-3">
                                             <img src="{{ $requestUser?->profile_image_url ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $requestUser?->name ?? 'Unknown User' }}" class="h-9 w-9 rounded-full object-cover">
@@ -64,23 +127,30 @@
                                         <div class="min-w-[220px] text-sm text-bgray-600 dark:text-bgray-200">
                                             <p><span class="font-medium text-bgray-700 dark:text-bgray-50">Start:</span> @appDateTime($changeRequest->old_started_at)</p>
                                             <p class="mt-1"><span class="font-medium text-bgray-700 dark:text-bgray-50">End:</span> @appDateTime($changeRequest->old_ended_at)</p>
+                                            <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                Duration: {{ $formatDuration($timeLog?->duration_seconds) }}
+                                            </p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[220px] text-sm text-bgray-600 dark:text-bgray-200">
-                                            <p><span class="font-medium text-bgray-700 dark:text-bgray-50">Start:</span> @appDateTime($changeRequest->new_started_at)</p>
-                                            <p class="mt-1"><span class="font-medium text-bgray-700 dark:text-bgray-50">End:</span> @appDateTime($changeRequest->new_ended_at)</p>
+                                            <p>
+                                                <span class="font-medium text-bgray-700 dark:text-bgray-50">Start:</span>
+                                                <span class="{{ $isStartChanged ? 'font-semibold text-bgray-900 dark:text-white' : '' }}">@appDateTime($changeRequest->new_started_at)</span>
+                                            </p>
+                                            <p class="mt-1">
+                                                <span class="font-medium text-bgray-700 dark:text-bgray-50">End:</span>
+                                                <span class="{{ $isEndChanged ? 'font-semibold text-bgray-900 dark:text-white' : '' }}">@appDateTime($changeRequest->new_ended_at)</span>
+                                            </p>
+                                            <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                Duration: {{ $formatDuration($changeRequest->new_duration) }}
+                                            </p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[240px] text-sm text-bgray-600 dark:text-bgray-200">
                                             {{ \Illuminate\Support\Str::limit($changeRequest->reason ?? '--', 90) }}
                                         </div>
-                                    </td>
-                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClasses }}">
-                                            {{ ucfirst($changeRequest->status) }}
-                                        </span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($changeRequest->isPending())
@@ -111,7 +181,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data col-span="7" message="No time log change requests found." sub-message="There are no requests available for your access level." />
+                                <x-table-no-data :col-span="$selectedStatus === 'pending' ? 8 : 7" message="No {{ strtolower($tabs[$selectedStatus]) }} time log change requests found." sub-message="There are no requests available for your access level." />
                             @endforelse
                         </tbody>
                     </table>
@@ -120,6 +190,11 @@
 
             <x-pagination :paginator="$changeRequests" :per-page="$perPage" />
         </section>
+
+        <x-filters.drawer>
+            <input type="hidden" name="request_status" value="{{ $selectedStatus }}">
+            <x-filters.multi-select name="user_id" label="Users" :options="$users" />
+        </x-filters.drawer>
 
         <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-time-log-change-request-reject-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-time-log-change-request-reject-close></div>
@@ -139,6 +214,7 @@
 
                     <form method="POST" action="#" class="space-y-4 px-5 py-5" data-time-log-change-request-reject-form>
                         @csrf
+                        <div data-time-log-change-request-reject-hidden-inputs></div>
 
                         <div>
                             <label for="time-log-change-request-rejection-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
