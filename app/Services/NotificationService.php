@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Task;
+use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
 use Illuminate\Support\Facades\Notification;
@@ -161,6 +162,88 @@ class NotificationService
         $this->send(
             (int) $task->current_assignee_id,
             $isRejected ? 'Task Request Rejected' : 'Task Request Approved',
+            $message,
+            route('tasks.edit', $task)
+        );
+    }
+
+    public function notifyTaskTimeLogChangeRequestCreated(TaskTimeLogChangeRequest $changeRequest): void
+    {
+        $changeRequest->loadMissing([
+            'timeLog.task.project:id,name',
+            'user:id,name',
+            'user.reporter' => fn($query) => $query->select('users.id', 'users.name'),
+            'user.manager' => fn($query) => $query->select('users.id', 'users.name'),
+        ]);
+
+        $task = $changeRequest->timeLog?->task;
+
+        if (! $task) {
+            return;
+        }
+
+        $recipientIds = collect([
+            $changeRequest->user?->reporter?->id,
+            $changeRequest->user?->manager?->id,
+        ])
+            ->filter()
+            ->reject(fn($userId) => (int) $userId === (int) $changeRequest->user_id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $requesterName = $changeRequest->user?->name ?? 'A team member';
+
+        $this->sendToMany(
+            $recipientIds,
+            'Task Time Log Change Request Created',
+            "{$requesterName} requested a time log change for task '{$taskName}' in '{$projectName}'.",
+            route('tasks.edit', $task)
+        );
+    }
+
+    public function notifyTaskTimeLogChangeRequestReviewed(
+        TaskTimeLogChangeRequest $changeRequest,
+        User $reviewer,
+        string $action,
+        ?string $description = null
+    ): void {
+        if (! $changeRequest->user_id) {
+            return;
+        }
+
+        $changeRequest->loadMissing([
+            'timeLog.task.project:id,name',
+            'user:id,name',
+        ]);
+
+        $task = $changeRequest->timeLog?->task;
+
+        if (! $task) {
+            return;
+        }
+
+        $isRejected = $action === 'reject';
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $reviewerName = $reviewer->name ?? 'A team member';
+        $reviewLabel = $isRejected ? 'rejected' : 'approved';
+
+        $message = "{$reviewerName} {$reviewLabel} your time log change request for task '{$taskName}' in '{$projectName}'.";
+
+        if ($isRejected && filled($description)) {
+            $message .= ' Description: ' . trim((string) $description);
+        }
+
+        $this->send(
+            (int) $changeRequest->user_id,
+            $isRejected ? 'Task Time Log Change Request Rejected' : 'Task Time Log Change Request Approved',
             $message,
             route('tasks.edit', $task)
         );

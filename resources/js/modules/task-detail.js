@@ -602,7 +602,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (historyPanel.classList.contains('hidden')) {
             historyPanel.innerHTML = '';
+
+            return;
         }
+
+        loadTab('history');
     });
 
     document.addEventListener('task-status:changed', (event) => {

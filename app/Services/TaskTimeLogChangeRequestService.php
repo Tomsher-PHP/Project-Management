@@ -13,6 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class TaskTimeLogChangeRequestService
 {
+    public function __construct(private readonly NotificationService $notificationService)
+    {
+    }
+
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
         $query = $this->visibleRequestQuery($user)
@@ -48,7 +52,7 @@ class TaskTimeLogChangeRequestService
 
     public function create(User $user, TaskTimeLog $timeLog, array $payload): TaskTimeLogChangeRequest
     {
-        return TaskTimeLogChangeRequest::query()->create([
+        $changeRequest = TaskTimeLogChangeRequest::query()->create([
             'task_time_log_id' => $timeLog->id,
             'user_id' => $user->id,
             'old_started_at' => $timeLog->started_at,
@@ -58,6 +62,10 @@ class TaskTimeLogChangeRequestService
             'reason' => trim((string) ($payload['reason'] ?? '')),
             'status' => 'pending',
         ]);
+
+        $this->notificationService->notifyTaskTimeLogChangeRequestCreated($changeRequest);
+
+        return $changeRequest;
     }
 
     public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null): void
@@ -188,18 +196,24 @@ class TaskTimeLogChangeRequestService
             'rejected_at' => null,
             'rejection_reason' => null,
         ]);
+
+        $this->notificationService->notifyTaskTimeLogChangeRequestReviewed($changeRequest, $user, 'approve');
     }
 
     private function reject(User $user, TaskTimeLogChangeRequest $changeRequest, string $reason): void
     {
+        $reason = trim($reason);
+
         $changeRequest->update([
             'status' => 'rejected',
             'approved_by' => null,
             'approved_at' => null,
             'rejected_by' => $user->id,
             'rejected_at' => now(),
-            'rejection_reason' => trim($reason),
+            'rejection_reason' => $reason,
         ]);
+
+        $this->notificationService->notifyTaskTimeLogChangeRequestReviewed($changeRequest, $user, 'reject', $reason);
     }
 
     private function hasOverlappingLog(TaskTimeLog $timeLog, $newStartedAt, $newEndedAt): bool
