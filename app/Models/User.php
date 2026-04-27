@@ -106,6 +106,30 @@ class User extends Authenticatable
         return $this->hasOne(UserDetail::class);
     }
 
+    public function reporter()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            UserDetail::class,
+            'user_id',      // Foreign key on UserDetail
+            'id',           // Foreign key on User (reporter)
+            'id',           // Local key on User
+            'reporter_id'   // Local key on UserDetail
+        );
+    }
+
+    public function manager()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            UserDetail::class,
+            'user_id',      // Foreign key on UserDetail
+            'id',           // Foreign key on User (reporter)
+            'id',           // Local key on User
+            'manager_id'    // Local key on UserDetail
+        );
+    }
+
     public function attachments()
     {
         return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');
@@ -198,5 +222,86 @@ class User extends Authenticatable
     public function taskStatusHistories()
     {
         return $this->hasMany(TaskStatusHistory::class, 'added_by');
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'email_verified_at',
+        'remember_token',
+        'password_otp',
+        'password_otp_expires_at',
+        'is_super_admin',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_milestone_id' => 'Milestone',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'estimated_time_seconds' => 'Estimated Time',
+            'sort_order' => 'Sort Order',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'is_active' => $value ? 'Active' : 'Inactive',
+            'delete_status' => $value ? 'Deleted' : 'Not Deleted',
+            default => $value,
+        };
+    }
+
+    /**
+     * Function to get the profile completion percentage.
+     *
+     * @return array
+     */
+    public function profileCompletion()
+    {
+        $userFields = [
+            'name' => $this->name,
+            'email' => $this->email,
+            'profile_photo' => $this->profileImageUrl,
+        ];
+
+        $detailsFields = collect($this->details ?? [])->except([
+            'id',
+            'user_id',
+            'created_at',
+            'updated_at',
+            'leaving_date',
+            'deleted_at',
+        ])->toArray();
+
+        $allFields = array_merge($userFields, $detailsFields);
+
+        $total = count($allFields);
+
+        $filled = count(array_filter($allFields));
+
+        return [
+            'percentage' => $total ? round(($filled / $total) * 100) : 0,
+            'filled' => $filled,
+            'total' => $total,
+            'missing' => array_keys(array_filter($allFields, fn($v) => empty($v)))
+        ];
+    }
+
+    public function notificationSettings()
+    {
+        return $this->hasMany(UserNotificationSetting::class);
+    }
+
+    public function generalSettings()
+    {
+        return $this->hasOne(UserGeneralSetting::class, 'user_id');
     }
 }

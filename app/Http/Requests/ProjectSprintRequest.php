@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ProjectSprint;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,14 +16,14 @@ class ProjectSprintRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_module_id' => ['required', 'integer', 'exists:project_modules,id'],
+            'project_milestone_id' => ['required', 'integer', 'exists:project_milestones,id'],
             'name' => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('project_sprints', 'name')->ignore($this->projectSprintId())->where(
                     fn ($query) => $query
-                        ->where('project_module_id', $this->projectModuleId())
+                        ->where('project_milestone_id', $this->projectMilestoneId())
                         ->whereNull('deleted_at')
                 ),
             ],
@@ -34,11 +35,11 @@ class ProjectSprintRequest extends FormRequest
         ];
     }
 
-    public function projectModuleId(): int|string|null
+    public function projectMilestoneId(): int|string|null
     {
-        $projectModule = $this->input('project_module_id', $this->route('projectModule'));
+        $projectMilestone = $this->input('project_milestone_id', $this->route('projectMilestone'));
 
-        return is_object($projectModule) ? $projectModule->id : $projectModule;
+        return is_object($projectMilestone) ? $projectMilestone->id : $projectMilestone;
     }
 
     public function projectSprintId(): int|string|null
@@ -46,5 +47,41 @@ class ProjectSprintRequest extends FormRequest
         $projectSprint = $this->route('projectSprint');
 
         return is_object($projectSprint) ? $projectSprint->id : $projectSprint;
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $projectSprint = $this->route('projectSprint');
+
+                if (! $projectSprint instanceof ProjectSprint) {
+                    return;
+                }
+
+                if (! $this->isProtectedProjectSprint($projectSprint)) {
+                    return;
+                }
+
+                $incomingName = trim((string) $this->input('name', ''));
+                $currentName = trim((string) $projectSprint->name);
+
+                if ($incomingName !== '' && $incomingName !== $currentName) {
+                    $validator->errors()->add('name', $this->protectedSprintRenameMessage($projectSprint));
+                }
+            },
+        ];
+    }
+
+    private function isProtectedProjectSprint(ProjectSprint $projectSprint): bool
+    {
+        return (bool) ($projectSprint->is_backlog || $projectSprint->is_system);
+    }
+
+    private function protectedSprintRenameMessage(ProjectSprint $projectSprint): string
+    {
+        return $projectSprint->is_backlog
+            ? 'The project backlog sprint name cannot be changed.'
+            : 'System project sprints cannot be renamed.';
     }
 }

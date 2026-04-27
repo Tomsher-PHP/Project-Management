@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class UserService
 {
@@ -20,7 +21,7 @@ class UserService
 
     public function createUser(array $data)
     {
-        return DB::transaction(function () use ($data) {
+        return $this->runInActivityBatch(function () use ($data) {
 
             // Get user type from role
             $role = isset($data['role'])
@@ -35,7 +36,9 @@ class UserService
 
             // Assign role to user
             if ($role) {
+                $oldRoles = [];
                 $user->assignRole($role->name);
+                $this->logRoleActivity($user, $oldRoles, $this->getRoleNames($user));
             }
 
             // 3. Create user details
@@ -54,12 +57,13 @@ class UserService
 
     public function updateUser(User $user, array $data)
     {
-        return DB::transaction(function () use ($user, $data) {
+        return $this->runInActivityBatch(function () use ($user, $data) {
 
             // Resolve Role (if provided)
             $role = !empty($data['role'])
                 ? Role::select('id', 'name')->find($data['role'])
                 : null;
+            $oldRoles = $this->getRoleNames($user);
 
             // Prepare & Update User Data
             $userData = collect($data)
@@ -75,6 +79,7 @@ class UserService
             // Assign role to user
             if ($role) {
                 $user->syncRoles($role->name);
+                $this->logRoleActivity($user, $oldRoles, $this->getRoleNames($user));
             }
 
             // Update or Create User Details (hasOne)
@@ -112,7 +117,92 @@ class UserService
         );
     }
 
-    // Get the list of accessable users for the authenticated user
+    private function runInActivityBatch(callable $callback)
+    {
+        return DB::transaction(function () use ($callback) {
+            LogBatch::startBatch();
+
+            try {
+                return $callback();
+            } finally {
+                LogBatch::endBatch();
+            }
+        });
+    }
+
+    private function getRoleNames(User $user): array
+    {
+        return $user->roles()
+            ->pluck('name')
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    private function logRoleActivity(User $user, array $oldRoles, array $newRoles): void
+    {
+        $oldRoles = collect($oldRoles)
+            ->filter()
+            ->sort()
+            ->values()
+            ->all();
+
+        $newRoles = collect($newRoles)
+            ->filter()
+            ->sort()
+            ->values()
+            ->all();
+
+        if ($oldRoles === $newRoles) {
+            return;
+        }
+
+        $oldRole = $this->formatRoleNames($oldRoles);
+        $newRole = $this->formatRoleNames($newRoles);
+
+        activity('users')
+            ->performedOn($user)
+            ->causedBy(auth()->user())
+            ->event('updated')
+            ->withProperties([
+                'old' => [
+                    'role' => $oldRole,
+                ],
+                'attributes' => [
+                    'role' => $newRole,
+                ],
+                'labels' => [
+                    'role' => 'Role',
+                ],
+                'display_old' => [
+                    'role' => $oldRole,
+                ],
+                'display_attributes' => [
+                    'role' => $newRole,
+                ],
+            ])
+            ->log('users.role_updated');
+    }
+
+    private function formatRoleNames(array $roles): ?string
+    {
+        $roles = collect($roles)
+            ->filter()
+            ->values();
+
+        return $roles->isNotEmpty()
+            ? $roles->implode(', ')
+            : null;
+    }
+
+    /**
+     * Get users accessible to the given user, with options to exclude or include specific user IDs.
+     *
+     * @param User $authUser The user for whom to retrieve accessible users.
+     * @param array $excludeIds Optional array of user IDs to exclude from the results.
+     * @param array $includeIds Optional array of user IDs to include in the results (even if not accessible).
+     * @return \Illuminate\Support\Collection Collection of User models.
+     */
     public function getAccessibleUsers(User $authUser, array $excludeIds = [], array $includeIds = [])
     {
         $excludeIds = collect($excludeIds)
@@ -132,6 +222,7 @@ class UserService
         $accessibleIds = User::accessibleBy($authUser)->select('id');
 
         return User::query()
+            ->when(!empty($includeIds), fn ($query) => $query->withTrashed())
             ->select('id', 'name', 'email', 'is_active')
             ->with('primaryAttachment')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
@@ -142,7 +233,11 @@ class UserService
                 }
             })
             ->where(function ($q) use ($includeIds) {
-                $q->where('is_active', true);
+                $q->where(function ($q) {
+                    $q->where('is_active', true)
+                        ->where('delete_status', false)
+                        ->whereNull('deleted_at');
+                });
 
                 if (!empty($includeIds)) {
                     $q->orWhereIn('id', $includeIds);

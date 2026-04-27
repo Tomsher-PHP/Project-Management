@@ -5,21 +5,28 @@ namespace App\Models;
 use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Traits\HasFormOptions;
 
 class Task extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+
+    protected ?int $previousProjectMilestoneIdForMetrics = null;
+
+    protected ?int $previousProjectSprintIdForMetrics = null;
 
     protected $fillable = [
         'project_id',
-        'project_module_id',
+        'project_milestone_id',
         'project_sprint_id',
         'parent_task_id',
-        'title',
+        'name',
         'code',
         'description',
         'status_id',
@@ -27,55 +34,61 @@ class Task extends Model
         'task_mode_id',
         'priority',
         'current_assignee_id',
-        'start_date',
-        'due_date',
+        'due_date_time',
         'completed_at',
         'estimated_time_seconds',
         'derived_time_seconds',
         'actual_time_seconds',
         'is_billable',
+        'request_type',
+        'request_status',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'rejection_reason',
         'sort_order',
         'added_by',
         'updated_by',
     ];
 
     protected $sortable = [
-        'title',
+        'name',
         'code',
         'project.name',
         'currentAssignee.name',
         'status.name',
         'priority',
-        'start_date',
         'estimated_time_seconds',
         'actual_time_seconds',
-        'due_date',
+        'due_date_time',
         'sort_order',
         'created_at',
     ];
 
     protected $searchable = [
-        'title',
+        'name',
         'code',
         'description',
-        'task_type',
-        'task_mode',
     ];
 
     protected $casts = [
         'project_id' => 'integer',
-        'project_module_id' => 'integer',
+        'project_milestone_id' => 'integer',
         'project_sprint_id' => 'integer',
         'parent_task_id' => 'integer',
         'status_id' => 'integer',
         'current_assignee_id' => 'integer',
-        'start_date' => 'date',
-        'due_date' => 'date',
+        'due_date_time' => 'datetime',
         'completed_at' => 'datetime',
         'estimated_time_seconds' => 'integer',
         'derived_time_seconds' => 'integer',
         'actual_time_seconds' => 'integer',
         'is_billable' => 'boolean',
+        'approved_by' => 'integer',
+        'approved_at' => 'datetime',
+        'rejected_by' => 'integer',
+        'rejected_at' => 'datetime',
         'sort_order' => 'integer',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -85,10 +98,6 @@ class Task extends Model
     {
         static::creating(function (Task $task) {
             $task->added_by = Auth::id();
-
-            if (blank($task->start_date)) {
-                $task->start_date = now(config('constants.timezone'))->toDateString();
-            }
 
             if (blank($task->code)) {
                 $project = $task->relationLoaded('project')
@@ -108,22 +117,103 @@ class Task extends Model
 
         static::updating(function (Task $task) {
             $task->updated_by = Auth::id();
+            $task->previousProjectMilestoneIdForMetrics = $task->getOriginal('project_milestone_id')
+                ? (int) $task->getOriginal('project_milestone_id')
+                : null;
+            $task->previousProjectSprintIdForMetrics = $task->getOriginal('project_sprint_id')
+                ? (int) $task->getOriginal('project_sprint_id')
+                : null;
         });
 
         static::saved(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
 
         static::deleted(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
 
         static::restored(function (Task $task) {
-            $task->projectSprint?->refreshDerivedTimeSeconds();
-            $task->projectSprint?->projectModule?->refreshTrackedTimeMetrics();
+            $task->refreshPlacementMetrics();
         });
+    }
+
+    public static function normalizeTaskDueDateTime(mixed $value): ?string
+    {
+        if (! filled($value)) {
+            return null;
+        }
+
+        return Carbon::parse(
+            (string) $value,
+            (string) config('constants.timezone', config('app.timezone'))
+        )
+            ->timezone((string) config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+    }
+
+    public function scopeAccessibleBy($query, User $user)
+    {
+        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
+            return $query;
+        }
+
+        return $query->where(function ($taskQuery) use ($user) {
+            $taskQuery
+                ->where('current_assignee_id', $user->id)
+                ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectMilestone', function ($moduleQuery) use ($user) {
+                    $moduleQuery->where('owner_id', $user->id);
+                })
+                ->orWhereExists(function ($sub) use ($user) {
+                    $sub->selectRaw(1)
+                        ->from('task_assignment_logs')
+                        ->whereColumn('task_assignment_logs.task_id', 'tasks.id')
+                        ->where('task_assignment_logs.user_id', $user->id)
+                        ->where('task_assignment_logs.worked_time_seconds', '>', 0);
+                });
+        });
+    }
+
+    public function refreshPlacementMetrics(): void
+    {
+        $sprintIds = collect([
+            $this->project_sprint_id ? (int) $this->project_sprint_id : null,
+            $this->previousProjectSprintIdForMetrics,
+        ])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $moduleIds = collect([
+            $this->project_milestone_id ? (int) $this->project_milestone_id : null,
+            $this->previousProjectMilestoneIdForMetrics,
+        ]);
+
+        if ($sprintIds->isNotEmpty()) {
+            $sprints = ProjectSprint::query()
+                ->whereIn('id', $sprintIds->all())
+                ->get();
+
+            foreach ($sprints as $projectSprint) {
+                $projectSprint->refreshDerivedTimeSeconds();
+                $moduleIds->push($projectSprint->project_milestone_id ? (int) $projectSprint->project_milestone_id : null);
+            }
+        }
+
+        $moduleIds
+            ->filter()
+            ->unique()
+            ->values()
+            ->whenNotEmpty(fn($ids) => ProjectMilestone::query()
+                ->whereIn('id', $ids->all())
+                ->get()
+                ->each(fn(ProjectMilestone $projectMilestone) => $projectMilestone->refreshTrackedTimeMetrics()));
+
+        $this->previousProjectMilestoneIdForMetrics = null;
+        $this->previousProjectSprintIdForMetrics = null;
     }
 
     public static function generateTaskCode(?Project $project = null): string
@@ -144,9 +234,9 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function projectModule()
+    public function projectMilestone()
     {
-        return $this->belongsTo(ProjectModule::class);
+        return $this->belongsTo(ProjectMilestone::class);
     }
 
     public function projectSprint()
@@ -166,22 +256,32 @@ class Task extends Model
 
     public function status()
     {
-        return $this->belongsTo(TaskStatus::class, 'status_id');
+        return $this->belongsTo(TaskStatus::class, 'status_id')->withTrashed();
     }
 
     public function taskType()
     {
-        return $this->belongsTo(TaskType::class, 'task_type_id');
+        return $this->belongsTo(TaskType::class, 'task_type_id')->withTrashed();
     }
 
     public function taskMode()
     {
-        return $this->belongsTo(TaskMode::class, 'task_mode_id');
+        return $this->belongsTo(TaskMode::class, 'task_mode_id')->withTrashed();
     }
 
     public function currentAssignee()
     {
         return $this->belongsTo(User::class, 'current_assignee_id');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     public function assignmentLogs()
@@ -192,6 +292,102 @@ class Task extends Model
     public function currentAssignmentLog()
     {
         return $this->hasOne(TaskAssignmentLog::class)->where('is_current', true);
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return $this->request_status === 'pending';
+    }
+
+    public function isApprovedRequest(): bool
+    {
+        return $this->request_status === 'approved';
+    }
+
+    public function isRejectedRequest(): bool
+    {
+        return $this->request_status === 'rejected';
+    }
+
+    protected function applyFilterSearchExtensions(Builder $query, string $search, string $condition): void
+    {
+        if ($condition === 'not_contains') {
+            return;
+        }
+
+        $matchingAncestorIds = $this->getMatchingAncestorTaskIds($search, $condition);
+
+        if ($matchingAncestorIds === []) {
+            return;
+        }
+
+        $query->orWhereIn($this->qualifyColumn('id'), $matchingAncestorIds);
+    }
+
+    protected function applySearchCondition(Builder $query, string $column, string $search, string $condition): void
+    {
+        switch ($condition) {
+            case 'starts_with':
+                $query->where($column, 'like', $search . '%');
+                break;
+
+            case 'ends_with':
+                $query->where($column, 'like', '%' . $search);
+                break;
+
+            default:
+                $query->where($column, 'like', '%' . $search . '%');
+                break;
+        }
+    }
+
+    protected function getMatchingAncestorTaskIds(string $search, string $condition): array
+    {
+        $matchingTasks = static::query()
+            ->select(['id', 'parent_task_id'])
+            ->whereNotNull('parent_task_id')
+            ->where(function (Builder $query) use ($search, $condition) {
+                $this->applySearchCondition($query, 'name', $search, $condition);
+            })
+            ->get();
+
+        if ($matchingTasks->isEmpty()) {
+            return [];
+        }
+
+        $topLevelAncestorIds = [];
+        $pendingIds = $matchingTasks
+            ->pluck('parent_task_id')
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        while ($pendingIds !== []) {
+            $parentRows = static::query()
+                ->select(['id', 'parent_task_id'])
+                ->whereIn('id', $pendingIds)
+                ->get();
+
+            $nextPendingIds = [];
+
+            foreach ($parentRows as $parentRow) {
+                $parentId = (int) $parentRow->id;
+                $ancestorParentId = $parentRow->parent_task_id ? (int) $parentRow->parent_task_id : null;
+
+                if ($ancestorParentId === null) {
+                    $topLevelAncestorIds[] = $parentId;
+                    continue;
+                }
+
+                $nextPendingIds[] = $ancestorParentId;
+            }
+
+            $pendingIds = array_values(array_unique($nextPendingIds));
+        }
+
+        return array_values(array_unique($topLevelAncestorIds));
     }
 
     public function timeLogs()
@@ -212,6 +408,11 @@ class Task extends Model
     public function activeTimeLog()
     {
         return $this->hasOne(TaskTimeLog::class)->where('is_running', true);
+    }
+
+    public function isRunningBy($userId)
+    {
+        return $this->timeLogs()->where('user_id', $userId)->where('is_running', 1)->exists();
     }
 
     public function tags()
@@ -260,19 +461,6 @@ class Task extends Model
         return $this->formatSeconds($this->actual_time_seconds);
     }
 
-    public function scopeAccessibleBy($query, User $user)
-    {
-        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
-            return $query;
-        }
-
-        return $query->where(function ($taskQuery) use ($user) {
-            $taskQuery
-                ->where('added_by', $user->id)
-                ->orWhere('current_assignee_id', $user->id);
-        });
-    }
-
     public static function nextSortOrder(int $projectId, ?int $projectSprintId = null): int
     {
         $query = self::query()
@@ -316,6 +504,78 @@ class Task extends Model
         $hours = floor($totalSeconds / 3600);
         $minutes = floor(($totalSeconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
+    }
+
+    // Get all related users for notifications (assignee, reporter, manager, project team leader, module owner)
+    public function getRelatedUsers()
+    {
+        $this->loadMissing([
+            'addedBy',
+            'currentAssignee.reporter',
+            'currentAssignee.manager',
+            'project.teamLeader',
+            'projectMilestone.owner',
+        ]);
+
+        return collect([
+            $this->addedBy,
+            $this->currentAssignee,
+            $this->currentAssignee?->reporter,
+            $this->currentAssignee?->manager,
+            $this->project?->teamLeader,
+            $this->projectMilestone?->owner,
+        ])
+            ->filter()
+            ->unique('id')
+            ->values();
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'code',
+        'description',
+        'derived_time_seconds',
+        'actual_time_seconds',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_milestone_id' => 'Milestone',
+            'project_sprint_id' => 'Sprint',
+            'parent_task_id' => 'Parent Task',
+            'estimated_time_seconds' => 'Estimated Time',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => $this->project?->name ?? $value,
+            'project_milestone_id' => ProjectMilestone::withTrashed()->find($value)?->name ?? $value,
+            'project_sprint_id' => ProjectSprint::withTrashed()->find($value)?->name ?? $value,
+            'parent_task_id' => Task::find($value)?->name ?? $value,
+            'status_id' => TaskStatus::find($value)?->name ?? $value,
+            'task_type_id' => TaskType::find($value)?->name ?? $value,
+            'task_mode_id' => TaskMode::find($value)?->name ?? $value,
+            'current_assignee_id' => User::find($value)?->name ?? $value,
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => Project::class,
+            'id' => $this->project_id,
+        ];
     }
 }

@@ -98,8 +98,16 @@
 
                                 <!-- Email Suffix -->
                                 <div class="flex flex-col gap-2">
-                                    <label for="email_suffix" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Email Suffix
+                                    <label for="email_suffix" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        <span>Email Suffix</span>
+                                        <span class="group relative inline-flex cursor-help">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                            </svg>
+                                            <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                                Use this to guide company email validation or suggest the preferred company domain, such as @example.com.
+                                            </span>
+                                        </span>
                                     </label>
                                     <input type="text" id="email_suffix" name="email_suffix" value="{{ old('email_suffix', $config->email_suffix ?? '') }}" placeholder="Enter email suffix" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
                                         bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
@@ -149,8 +157,16 @@
                             <div class="flex flex-col gap-6 xl:flex-row xl:items-start">
                                 <!-- Timezone -->
                                 <div class="flex-1 min-w-0">
-                                    <label for="timezone" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Timezone
+                                    <label for="timezone" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        <span>Timezone</span>
+                                        <span class="group relative inline-flex cursor-help">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                            </svg>
+                                            <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                                This timezone is used when displaying dates and times across the application.
+                                            </span>
+                                        </span>
                                     </label>
                                     <select name="timezone" id="timezone" class="tom-select w-full">
                                         <option value="">Select Timezone</option>
@@ -167,14 +183,22 @@
 
                                 <!-- Date Format -->
                                 <div class="flex-1 min-w-0">
-                                    <label for="date_format" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Date Format
+                                    <label for="date_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        <span>Date Format</span>
+                                        <span class="group relative inline-flex cursor-help">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                            </svg>
+                                            <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                                Choose how calendar dates appear throughout the system, reports, and forms.
+                                            </span>
+                                        </span>
                                     </label>
-                                    <select name="date_format" id="date_format" class="tom-select-no-search w-full">
+                                    <select name="date_format" id="date_format" class="tom-select-no-search w-full" data-render-subtype="true">
                                         <option value="">Select Date Format</option>
                                         @foreach ($dateFormats as $format)
-                                            <option value="{{ $format }}" {{ old('date_format', $config->date_format ?? '') == $format ? 'selected' : '' }}>
-                                                {{ $format }} ({{ date($format) }})
+                                            <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('date_format', $config->date_format ?? '') == $format ? 'selected' : '' }}>
+                                                {{ $format }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -185,14 +209,22 @@
 
                                 <!-- Time Format -->
                                 <div class="flex-1 min-w-0">
-                                    <label for="time_format" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Time Format
+                                    <label for="time_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        <span>Time Format</span>
+                                        <span class="group relative inline-flex cursor-help">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                            </svg>
+                                            <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                                Choose whether times are shown in 12-hour or 24-hour format across the system.
+                                            </span>
+                                        </span>
                                     </label>
-                                    <select name="time_format" id="time_format" class="tom-select-no-search w-full">
+                                    <select name="time_format" id="time_format" class="tom-select-no-search w-full" data-render-subtype="true">
                                         <option value="">Select Time Format</option>
                                         @foreach ($timeFormats as $format)
-                                            <option value="{{ $format }}" {{ old('time_format', $config->time_format ?? '') == $format ? 'selected' : '' }}>
-                                                {{ $format }} ({{ date($format) }})
+                                            <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('time_format', $config->time_format ?? '') == $format ? 'selected' : '' }}>
+                                                {{ $format }} ({{ str_contains($format, 'H') ? '24 hours' : '12 hours' }})
                                             </option>
                                         @endforeach
                                     </select>

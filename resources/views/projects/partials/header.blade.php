@@ -90,7 +90,8 @@
                             <ul class="max-h-72 overflow-y-auto">
                                 @foreach ($projectStatuses as $statusOption)
                                     <li>
-                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-item-name="{{ $statusOption->name }}" data-item-color="{{ $statusOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->status_id }}" data-modal-title="Change Project Status" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Status" data-min-date="{{ $statusChangeMinDate ?? '' }}" data-min-date-label="{{ $statusChangeMinDateLabel ?? '' }}">
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStatusUpdateUrl }}" data-field="status_id" data-value="{{ $statusOption->id }}" data-item-name="{{ $statusOption->name }}" data-item-color="{{ $statusOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->status_id }}" data-modal-title="Change Project Status"
+                                            data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Status" data-min-date="{{ $statusChangeMinDate ?? '' }}" data-min-date-label="{{ $statusChangeMinDateLabel ?? '' }}">
                                             <span class="flex items-center gap-2 @if ((int) $project->status_id === (int) $statusOption->id) text-success-400 dark:text-success-300 @endif">
                                                 <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
                                                 <span>{{ $statusOption->name }}</span>
@@ -123,15 +124,21 @@
                         <div class="absolute right-0 top-14 z-20 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500" data-project-header-menu>
                             <ul class="max-h-72 overflow-y-auto">
                                 <li>
-                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-item-name="No Stage" data-item-color="#9CA3AF" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
+                                    <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="" data-item-name="No Stage" data-item-color="#9CA3AF" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change."
+                                        data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
                                         <span @if (blank($project->project_stage_id)) class="text-success-400 dark:text-success-300" @endif>No Stage</span>
                                     </button>
                                 </li>
                                 @foreach ($projectStages as $stageOption)
                                     <li>
-                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage" data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
-                                            <span @if ((int) ($project->project_stage_id ?? 0) === (int) $stageOption->id) class="text-success-400 dark:text-success-300" @endif>{{ $stageOption->name }}</span>
+                                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-project-change-option data-url="{{ $projectStageUpdateUrl }}" data-field="project_stage_id" data-value="{{ $stageOption->id }}" data-item-name="{{ $stageOption->name }}" data-item-color="{{ $stageOption->color ?: '#9CA3AF' }}" data-current-value="{{ $project->project_stage_id ?? '' }}" data-modal-title="Change Project Stage"
+                                            data-modal-description="Add the effective date and an optional remark for this change." data-submit-label="Update Stage" data-min-date="{{ $stageChangeMinDate ?? '' }}" data-min-date-label="{{ $stageChangeMinDateLabel ?? '' }}">
+                                            <span class="flex items-center gap-2 @if ((int) $project->project_stage_id === (int) $stageOption->id) text-success-400 dark:text-success-300 @endif">
+                                                <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $stageOption->color ?: '#9CA3AF' }}"></span>
+                                                <span>{{ $stageOption->name }}</span>
+                                            </span>
                                         </button>
+
                                     </li>
                                 @endforeach
                             </ul>

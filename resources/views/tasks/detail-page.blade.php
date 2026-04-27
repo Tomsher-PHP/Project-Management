@@ -2,7 +2,7 @@
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
-        <section class="space-y-6" data-task-tabs data-task-id="{{ $task->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
+        <section class="space-y-6" data-task-tabs data-task-id="{{ $task->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}" data-project-tasks-root data-project-task-response-mode="reload">
             <div id="task-detail-header">
                 @include('tasks.partials.header')
             </div>
@@ -15,23 +15,36 @@
                                 Overview
                             </button>
 
-                            @can('activity_log.view')
-                                <button type="button" data-task-tab-trigger="activity" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
-                                    Activity
-                                </button>
-                            @endcan
+                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                Project Scope
+                            </button>
 
                             <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 Notes & Files
                             </button>
 
-                            <button type="button" data-task-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
-                                Settings
+                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                History
                             </button>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        @can('activity_log.view')
+                            <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.activity.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
+                                    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M15.75 9C15.75 12.7279 12.7279 15.75 9 15.75C5.27208 15.75 2.25 12.7279 2.25 9C2.25 5.27208 5.27208 2.25 9 2.25C12.7279 2.25 15.75 5.27208 15.75 9Z" stroke="currentColor" stroke-width="1.6" />
+                                    </svg>
+                                </span>
+                                <span>Activity</span>
+                                <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                                    {{ $taskActivitiesCount }}
+                                </span>
+                            </button>
+                        @endcan
+
                         <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
                             <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,12 +76,17 @@
                         @include('tasks.partials.tabs.overview')
                     </div>
 
-                    @can('activity_log.view')
-                        <div class="hidden" data-task-tab-panel="activity" data-loaded="false"></div>
-                    @endcan
-
+                    <div class="hidden" data-task-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="notes" data-loaded="false"></div>
-                    <div class="hidden" data-task-tab-panel="settings" data-loaded="false"></div>
+                    <div class="hidden" data-task-tab-panel="history" data-loaded="false"></div>
+                </div>
+            </div>
+
+            <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
+                <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
+
+                <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                    <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
                 </div>
             </div>
         </section>

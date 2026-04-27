@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected $fillable = [
         'customer_code',
@@ -74,7 +75,7 @@ class Customer extends Model
 
     public function industry()
     {
-        return $this->belongsTo(Industry::class);
+        return $this->belongsTo(Industry::class)->withTrashed();
     }
 
     public function country()

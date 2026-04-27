@@ -1,4 +1,48 @@
-<div class="space-y-3" data-project-tasks-root data-default-sprint-id="{{ $defaultSprintId ?? '' }}">
+@php
+    $taskCreateProjectModules = $projectMilestones->reject(fn($projectMilestone) => (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system))->values();
+    $taskCreateProjectSprints = $projectSprints->reject(fn($projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))->values();
+    $taskCreateDefaultSprintId = $taskCreateProjectSprints->first()?->id;
+    $taskPlacementOptions = [
+        'milestones' => $taskCreateProjectModules
+            ->map(
+                fn($projectMilestone) => [
+                    'value' => (string) $projectMilestone->id,
+                    'text' => $projectMilestone->name,
+                ],
+            )
+            ->values(),
+        'sprints' => $taskCreateProjectSprints
+            ->map(
+                fn($projectSprint) => [
+                    'value' => (string) $projectSprint->id,
+                    'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
+                    'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
+                ],
+            )
+            ->values(),
+    ];
+    $taskMovePlacementOptions = [
+        'milestones' => $projectMilestones
+            ->map(
+                fn($projectMilestone) => [
+                    'value' => (string) $projectMilestone->id,
+                    'text' => $projectMilestone->name,
+                ],
+            )
+            ->values(),
+        'sprints' => $projectSprints
+            ->map(
+                fn($projectSprint) => [
+                    'value' => (string) $projectSprint->id,
+                    'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
+                    'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
+                ],
+            )
+            ->values(),
+    ];
+@endphp
+
+<div class="space-y-3" data-project-tasks-root data-default-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
     <div class="flex flex-col gap-2 rounded-[20px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
@@ -19,7 +63,7 @@
             @endunless
 
             @can('task.create')
-                <button type="button" class="inline-flex items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $defaultSprintId ?? '' }}">
+                <button type="button" class="inline-flex items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
                     + Task
                 </button>
             @endcan
@@ -34,7 +78,7 @@
             </p>
         </div>
     @else
-        <div class="space-y-4" data-project-task-group-list @unless($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
+        <div class="space-y-4" data-project-task-group-list @unless ($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
             @include('projects.partials.tasks.group-cards', [
                 'project' => $project,
                 'taskGroups' => $taskGroups,
@@ -71,21 +115,36 @@
                             </button>
                         </div>
 
-                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-advanced="false">
+                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-advanced="false" data-task-placement='@json($taskPlacementOptions)'>
                             <div class="grid gap-4 md:grid-cols-2">
                                 @unless ($isLinearFlow)
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint <x-red-star /></label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                                        <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-module-select>
+                                            <option value="">Select milestone or leave empty for backlog</option>
+                                            @foreach ($taskCreateProjectModules as $projectMilestone)
+                                                <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_milestone_id"></p>
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                                            Sprint
+                                            <span class="hidden" data-project-task-required-star="project_sprint_id"></span>
+                                        </label>
                                         <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
-                                            <option value="">Select sprint</option>
-                                            @foreach ($projectSprints as $projectSprint)
-                                                <option value="{{ $projectSprint->id }}">
-                                                    {{ $projectSprint->name }}@if ($projectSprint->projectModule?->name)
-                                                        - {{ $projectSprint->projectModule->name }}
+                                            <option value="">Select sprint or leave empty for backlog</option>
+                                            @foreach ($taskCreateProjectSprints as $projectSprint)
+                                                <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}">
+                                                    {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
+                                                        - {{ $projectSprint->projectMilestone->name }}
                                                     @endif
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300" data-project-task-placement-hint></p>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
                                     </div>
                                 @endunless
@@ -100,8 +159,8 @@
 
                                 <div class="md:col-span-2">
                                     <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Name <x-red-star /></label>
-                                    <input type="text" name="title" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
-                                    <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="title"></p>
+                                    <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
+                                    <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
                                 </div>
 
                                 <div>
@@ -116,13 +175,7 @@
                                 </div>
 
                                 <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
-                                    <x-forms.estimated-time-input
-                                        label="Estimated Time"
-                                        name="estimated_time_minutes"
-                                        :total-minutes="$defaultTaskEstimateMinutes ?? 0"
-                                        help-text="Enter time naturally. We’ll convert it automatically for calculation."
-                                        :show-label="false"
-                                    />
+                                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" help-text="Enter time naturally. We’ll convert it automatically for calculation." :show-label="false" />
                                     <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
                                 </div>
                             </div>
@@ -177,15 +230,9 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Start Date</label>
-                                        <input type="date" name="start_date" value="{{ $defaultTaskStartDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="start_date"></p>
-                                    </div>
-
-                                    <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
-                                        <input type="date" name="due_date" value="{{ $defaultTaskDueDate }}" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Select a date">
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date"></p>
+                                        <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
+                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
@@ -228,6 +275,85 @@
             </div>
         </div>
     @endcan
+
+    @if (!$isLinearFlow && auth()->user()?->can('task.move'))
+        <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
+
+            <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
+                <div class="relative z-10 w-full max-w-md transition-all duration-200">
+                    <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+                        <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                            <div>
+                                <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
+                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                    Move <span class="font-medium text-bgray-700 dark:text-bgray-100" data-project-task-move-task-name>this task</span>
+                                    to another sprint.
+                                </p>
+                            </div>
+
+                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-move-close>
+                                ✕
+                            </button>
+                        </div>
+
+                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)'>
+                            <input type="hidden" name="_method" value="PATCH">
+
+                            <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-200">
+                                <p>
+                                    Current sprint:
+                                    <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                                <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-move-module-select>
+                                    <option value="">All milestones</option>
+                                    @foreach ($projectMilestones as $projectMilestone)
+                                        <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
+                                    Optional. Choose a milestone to narrow the sprint list.
+                                </p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_milestone_id"></p>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                                    Sprint
+                                    <x-red-star />
+                                </label>
+                                <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
+                                    <option value="">Select sprint</option>
+                                    @foreach ($projectSprints as $projectSprint)
+                                        <option value="{{ $projectSprint->id }}" data-module-id="{{ $projectSprint->project_milestone_id }}">
+                                            {{ $projectSprint->name }}@if ($projectSprint->projectMilestone?->name)
+                                                - {{ $projectSprint->projectMilestone->name }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_sprint_id"></p>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-3 pt-1">
+                                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300" data-project-task-move-close>
+                                    Cancel
+                                </button>
+
+                                <button type="submit" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400" data-project-task-move-submit>
+                                    Move
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>

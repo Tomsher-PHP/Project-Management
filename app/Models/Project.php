@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity;
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected $fillable = [
         'project_code',
@@ -96,17 +97,17 @@ class Project extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     public function projectStatus()
     {
-        return $this->belongsTo(ProjectStatus::class, 'status_id');
+        return $this->belongsTo(ProjectStatus::class, 'status_id')->withTrashed();
     }
 
     public function projectStage()
     {
-        return $this->belongsTo(ProjectStage::class);
+        return $this->belongsTo(ProjectStage::class)->withTrashed();
     }
 
     public function salesPerson()
@@ -126,7 +127,7 @@ class Project extends Model
 
     public function technologies()
     {
-        return $this->belongsToMany(Technology::class, 'project_technology');
+        return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
     }
 
     public function statusHistories()
@@ -149,14 +150,14 @@ class Project extends Model
         return $this->hasMany(ProjectNote::class)->orderBy('created_at', 'desc');
     }
 
-    public function projectModules()
+    public function projectMilestones()
     {
-        return $this->hasMany(ProjectModule::class)->orderBy('sort_order');
+        return $this->hasMany(ProjectMilestone::class)->orderForDisplay();
     }
 
     public function projectSprints()
     {
-        return $this->hasMany(ProjectSprint::class)->orderBy('sort_order');
+        return $this->hasMany(ProjectSprint::class)->orderForDisplay();
     }
 
     public function tasks()
@@ -257,13 +258,35 @@ class Project extends Model
             ->whereNotNull('removed_at');
     }
 
+    public function teamLeader()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ProjectMember::class,
+            'project_id',
+            'id',
+            'id',
+            'user_id'
+        )
+            ->where('project_members.project_role', 'team_leader')
+            ->where('project_members.is_active', true)
+            ->whereNull('project_members.removed_at');
+    }
+
     /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'added_by',
+        'updated_by',
+        'actual_time_seconds',
+    ];
 
     // For activity log attribute labels
     public function getActivityAttributeLabels(): array
     {
         return [
-            'customer_id' => 'Customer Name',
+            'customer_id' => 'Customer',
             'project_flow' => 'Project Flow',
             'status_id' => 'Status',
             'project_stage_id' => 'Project Stage',
@@ -291,17 +314,5 @@ class Project extends Model
             'default_task_estimate_seconds' => $this->secondsToReadable($value),
             default => $value,
         };
-    }
-
-    protected function secondsToReadable(?int $seconds): ?string
-    {
-        if ($seconds === null) {
-            return null;
-        }
-
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
-
-        return trim("{$hours}h {$minutes}m");
     }
 }

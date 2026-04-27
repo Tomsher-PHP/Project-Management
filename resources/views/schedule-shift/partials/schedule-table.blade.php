@@ -8,7 +8,10 @@
                 <th class="border border-gray-300 px-4 py-2 text-left">Users</th>
 
                 @foreach ($weekDates as $date)
-                    <th class="border border-gray-300 px-4 py-2 text-center">
+                    @php
+                        $isToday = $date->toDateString() === $todayDate;
+                    @endphp
+                    <th class="border px-4 py-2 text-center {{ $isToday ? 'border-success-300 bg-success-50 text-success-500 dark:border-success-400 dark:bg-success-900/20 dark:text-success-300' : 'border-gray-300' }}">
                         {{ $date->format('D') }} <br>
                         {{ $date->format('d M') }}
                     </th>
@@ -26,3 +29,5 @@
 
     </table>
 </div>
+
+<x-pagination :paginator="$users" :per-page="$perPage" />

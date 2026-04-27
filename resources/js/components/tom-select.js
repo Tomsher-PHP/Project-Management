@@ -25,12 +25,70 @@ export function initTomSelect(root = document) {
 
         if (el.tomselect) return; // Prevent double init
 
-        const instance = new TomSelect(el, {
+        const config = {
             create: false,
             persist: false,
             hideDropdownArrow: false,
             plugins: ['clear_button'],
-        });
+        };
+
+        if (el.dataset.renderSubtype === 'true') {
+            config.render = {
+                option: function (data, escape) {
+                    return `
+                        <div>
+                            <div class="font-medium">${escape(data.text)}</div>
+                            <div class="text-sm text-gray-600">${escape(data.subtype || '')}</div>
+                        </div>
+                    `;
+                },
+                item: function (data, escape) {
+                    return `
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${escape(data.text)}</span>
+                            <span class="text-sm text-gray-600 ml-2">${escape(data.subtype || '')}</span>
+                        </div>
+                    `;
+                }
+            };
+        }
+
+        const instance = new TomSelect(el, config);
+
+        if (el.dataset.renderSubtype === 'true' && el.tagName === 'SELECT') {
+            Array.from(el.options).forEach((option) => {
+                const optionValue = String(option.value ?? '');
+
+                if (!Object.prototype.hasOwnProperty.call(instance.options, optionValue)) {
+                    return;
+                }
+
+                let subtype = option.dataset.subtype || '';
+
+                if (!subtype && option.dataset.data) {
+                    try {
+                        const parsedData = JSON.parse(option.dataset.data);
+                        subtype = parsedData?.subtype || '';
+                    } catch (error) {
+                        subtype = '';
+                    }
+                }
+
+                instance.options[optionValue] = {
+                    ...instance.options[optionValue],
+                    subtype,
+                };
+            });
+
+            instance.clearCache();
+            instance.refreshOptions(false);
+
+            const currentValue = instance.getValue();
+
+            if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
+                instance.setValue(currentValue, true);
+            }
+        }
 
         applyDisabledStyles(instance, el);
     });

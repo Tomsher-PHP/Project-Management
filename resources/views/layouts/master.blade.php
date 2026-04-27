@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <title>Tomsher Pmt | {{ $pageTitle ?? 'Dashboard' }}</title>
+    <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher Pmt</title>
 
     {{-- Vite Assets --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])

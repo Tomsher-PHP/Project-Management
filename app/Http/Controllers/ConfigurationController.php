@@ -6,6 +6,7 @@ use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
 use App\Models\CountryTimezones;
 use App\Services\AttachmentService;
+use Illuminate\Support\Facades\Cache;
 
 class ConfigurationController extends Controller
 {
@@ -45,6 +46,8 @@ class ConfigurationController extends Controller
     {
         $config = $this->getConfiguration();
         activity()->withoutLogs(function () use ($config, $request, $attachmentService) {
+            $oldTimezone = $config->timezone;
+
             $config->update($request->only([
                 'company_name',
                 'company_email',
@@ -56,6 +59,11 @@ class ConfigurationController extends Controller
                 'date_format',
                 'time_format',
             ]));
+
+            // clear cache only if timezone changed
+            if ($oldTimezone !== $config->timezone) {
+                Cache::forget('company_timezone');
+            }
 
             if ($request->hasFile('logo')) {
                 $this->replaceLogo($config, $request->file('logo'), $attachmentService);
@@ -87,6 +95,6 @@ class ConfigurationController extends Controller
 
     private function getConfiguration(): Configuration
     {
-        return activity()->withoutLogs(fn () => Configuration::firstOrCreate([]));
+        return activity()->withoutLogs(fn() => Configuration::firstOrCreate([]));
     }
 }

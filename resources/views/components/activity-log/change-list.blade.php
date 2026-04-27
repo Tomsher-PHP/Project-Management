@@ -5,20 +5,19 @@
 
 @php
     $rows = collect($rows);
-
-    $singleValueLabel = match ($event) {
-        'created' => 'New Value',
-        'deleted' => 'Previous Value',
-        'restored' => 'Current Value',
-        default => 'Value',
+    $dotClasses = match ($event) {
+        'created' => 'bg-success-300',
+        'deleted' => 'bg-red-400',
+        'restored' => 'bg-warning-400',
+        default => 'bg-sky-400',
     };
 @endphp
 
 @if ($rows->isNotEmpty())
-    <div class="space-y-2.5">
+    <div class="space-y-4">
         @foreach ($rows as $row)
             @php
-                $label = $row['label'] ?? $row['field'] ?? '--';
+                $label = $row['label'] ?? ($row['field'] ?? '--');
                 $oldValue = $row['old']['value'] ?? null;
                 $oldType = $row['old']['type'] ?? null;
                 $newValue = $row['new']['value'] ?? null;
@@ -35,40 +34,31 @@
                 };
             @endphp
 
-            <div class="rounded-xl border border-bgray-200 p-3.5 dark:border-darkblack-400">
-                <p class="mb-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">
-                    {{ $label }}
-                </p>
+            <article class="flex items-start gap-3 rounded-xl bg-white dark:bg-darkblack-500 border-b pb-4 dark:border-darkblack-400">
+                <span class="mt-2 inline-flex h-2.5 w-2.5 shrink-0 rounded-full {{ $dotClasses }}"></span>
 
-                @if ($event === 'updated')
-                    <div class="grid gap-2.5 md:grid-cols-2">
-                        <div class="rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-2.5 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">
-                                Old Value
-                            </p>
-                            <div class="text-sm font-medium text-bgray-900 dark:text-white">
+                <div class="min-w-0 flex-1">
+                    <p class="text-base font-semibold text-bgray-900 dark:text-white">
+                        {{ $label }}
+                    </p>
+
+                    @if ($event === 'updated')
+                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-bgray-700 dark:text-bgray-100">
+                            <span class="inline-flex items-center rounded bg-white px-2 py-0.5 dark:bg-darkblack-600 text-bgray-600 dark:text-white">
                                 <x-activity-log.value :value="$oldValue" :type="$oldType" />
-                            </div>
-                        </div>
-
-                        <div class="rounded-lg border border-success-200 bg-success-50 px-3 py-2.5 dark:border-success-900/30 dark:bg-success-900/10">
-                            <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-success-400">
-                                New Value
-                            </p>
-                            <div class="text-sm font-medium text-bgray-900 dark:text-white">
+                            </span>
+                            <span class="text-bgray-400 dark:text-bgray-500">&rarr;</span>
+                            <span class="inline-flex items-center rounded bg-success-50 px-2 py-0.5 dark:bg-success-900/10">
                                 <x-activity-log.value :value="$newValue" :type="$newType" />
-                            </div>
+                            </span>
                         </div>
-                    </div>
-                @else
-                    <div class="rounded-lg bg-bgray-50 px-3 py-2.5 text-sm font-medium text-bgray-900 dark:bg-darkblack-500 dark:text-white">
-                        <p class="mb-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">
-                            {{ $singleValueLabel }}
-                        </p>
-                        <x-activity-log.value :value="$singleValue" :type="$singleType" />
-                    </div>
-                @endif
-            </div>
+                    @else
+                        <div class="mt-2 inline-flex items-center rounded bg-white px-2 py-0.5 text-sm text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                            <x-activity-log.value :value="$singleValue" :type="$singleType" />
+                        </div>
+                    @endif
+                </div>
+            </article>
         @endforeach
     </div>
 @endif

@@ -14,9 +14,9 @@ trait Filterable
             $columns = $this->searchable ?? ['name']; // default to 'name'
 
             $query->where(function ($q) use ($columns, $filters, $condition) {
-                foreach ((array)$columns as $column) {
-                    $search = $filters['search'];
+                $search = $filters['search'];
 
+                foreach ((array)$columns as $column) {
                     switch ($condition) {
                         case 'starts_with':
                             $q->orWhere($column, 'like', $search . '%');
@@ -34,6 +34,10 @@ trait Filterable
                             $q->orWhere($column, 'like', '%' . $search . '%');
                             break;
                     }
+                }
+
+                if (method_exists($this, 'applyFilterSearchExtensions')) {
+                    $this->applyFilterSearchExtensions($q, $search, $condition);
                 }
             });
         }
@@ -64,7 +68,6 @@ trait Filterable
             ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id']);
 
         foreach ($dynamicFilters as $field => $value) {
-
             if (!Schema::hasColumn($query->getModel()->getTable(), $field) || $value === null || $value === '') {
                 continue;
             }

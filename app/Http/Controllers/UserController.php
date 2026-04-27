@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\UserGeneralSetting;
+use App\Models\UserNotificationSetting;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -43,8 +47,8 @@ class UserController extends Controller
             ->withQueryString();
 
         $roles = Role::get();
-        $departments = Department::orderBy('sort_order', 'asc')->get();
-        $designations = Designation::orderBy('sort_order', 'asc')->get();
+        $departments = Department::withTrashed()->orderBy('sort_order', 'asc')->get();
+        $designations = Designation::withTrashed()->orderBy('sort_order', 'asc')->get();
 
         return view('users.index', compact('users', 'perPage', 'roles', 'departments', 'designations'));
     }
@@ -83,9 +87,25 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::active()->get();
-        $departments = Department::active()->orderBy('sort_order', 'asc')->get();
-        $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
+        $user->loadMissing('details');
+
+        $selectedRoleId = $user->role_id;
+        $selectedDepartmentId = $user->details?->department_id;
+        $selectedDesignationId = $user->details?->designation_id;
+
+        $roles = Role::query()
+            ->where(function ($query) use ($selectedRoleId) {
+                $query->active();
+
+                if (filled($selectedRoleId)) {
+                    $query->orWhere('id', $selectedRoleId);
+                }
+            })
+            ->get();
+
+        $departments = Department::forForm($selectedDepartmentId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
+        $designations = Designation::forForm($selectedDesignationId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
+
         $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
         $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
         $managerIds = collect([
@@ -145,5 +165,91 @@ class UserController extends Controller
             'is_active' => $user->is_active,
             'message' => 'Status updated successfully'
         ], Response::HTTP_OK);
+    }
+
+    /**
+     * Function to view user details.
+     * 
+     * @param User $user
+     */
+    public function show(User $user)
+    {
+        $user->load([
+            'details',
+            'details.department',
+            'details.designation',
+            'roles',
+            'primaryAttachment',
+            'generalSettings',
+        ]);
+
+        $userNotificationSettings = config('notification_settings');
+
+        $generalSettings = $user->generalSettings;
+
+        return view('users.show', compact('user','userNotificationSettings', 'generalSettings'));
+    }
+
+    public function updateNotificationSettings(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'action' => 'required|string',
+            'field' => 'required|in:in_app,mail',
+            'value' => 'required|boolean',
+        ]);
+
+        $setting = UserNotificationSetting::firstOrCreate([
+            'user_id' => $request->user_id,
+            'action' => $request->action,
+        ]);
+
+        $setting->{$request->field} = $request->value;
+        $setting->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification settings updated successfully'
+        ], Response::HTTP_OK);
+    }
+
+    public function updateGeneralSettings(Request $request)
+    {
+        $request->validate([
+            'field' => 'required|in:kanban_view,theme',
+            'value' => 'required|string'
+        ]);
+
+        UserGeneralSetting::updateOrCreate(
+            ['user_id' => $request->user_id],
+            [
+                $request->field => $request->value
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'General settings updated successfully'
+        ]);
+    }
+
+    /**
+     * Function to change password for a user. Only super admin can change password of other users.
+     */
+   public function changePassword(ChangePasswordRequest $request)
+    {
+        $user = User::findOrFail($request->user_id);
+
+        if (!auth()->user()->is_super_admin) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return redirect()->back()->with('error', 'Current password is incorrect.');
+            }
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return redirect()->back()->with('success', 'Password updated successfully.');
     }
 }

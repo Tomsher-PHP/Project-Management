@@ -18,17 +18,12 @@
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                     <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Parent Task</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->parentTask?->title ?? '--' }}</p>
-                </div>
-
-                <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                    <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Start Date</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->start_date ? $task->start_date->format($globalDateFormat) : '--' }}</p>
+                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->parentTask?->name ?? '--' }}</p>
                 </div>
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                     <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Due Date</p>
-                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->due_date ? $task->due_date->format($globalDateFormat) : '--' }}</p>
+                    <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">@appDateTime($task->due_date_time)</p>
                 </div>
 
                 <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
@@ -85,7 +80,7 @@
                             </div>
 
                             <div class="text-left sm:text-right">
-                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ sprintf('%02d:%02d', $durationHours, $durationMinutes) }}</p>
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ sprintf('%02dh : %02dm', $durationHours, $durationMinutes) }}</p>
                                 <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $timeLog->note ?: 'No note' }}</p>
                             </div>
                         </div>
@@ -130,8 +125,8 @@
                     <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $project?->name ?? '--' }}</dd>
                 </div>
                 <div class="flex items-start justify-between gap-3">
-                    <dt class="text-bgray-500 dark:text-bgray-300">Module</dt>
-                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectModule?->name ?? '--' }}</dd>
+                    <dt class="text-bgray-500 dark:text-bgray-300">Milestone</dt>
+                    <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
                 </div>
                 <div class="flex items-start justify-between gap-3">
                     <dt class="text-bgray-500 dark:text-bgray-300">Sprint</dt>

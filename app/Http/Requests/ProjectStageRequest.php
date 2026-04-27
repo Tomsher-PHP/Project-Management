@@ -49,6 +49,7 @@ class ProjectStageRequest extends FormRequest
             'code' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9_]+$/', Rule::unique('project_stages', 'code')->ignore($id)],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'sort_order' => ['required', 'numeric'],
+            'is_default' => ['boolean'],
         ];
     }
 }

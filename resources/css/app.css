@@ -12,3 +12,11 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.flow-btn {
+    @apply px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-gray-200 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-200;
+}
+
+.flow-btn.active {
+    @apply bg-emerald-500 text-white dark:bg-emerald-600;
+}

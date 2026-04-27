@@ -17,6 +17,7 @@ const ERROR_HTML = `
 
 const taskGroupPaginationObservers = new WeakMap();
 const taskListPaginationObservers = new WeakMap();
+let taskRowMenuDocumentListenerBound = false;
 
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
@@ -28,14 +29,15 @@ const ADVANCED_TASK_FIELDS = new Set([
     'description',
     'status_id',
     'parent_task_id',
-    'task_type',
-    'task_mode',
+    'task_type_id',
+    'task_mode_id',
     'priority',
-    'start_date',
-    'due_date',
+    'due_date_time',
     'tag_ids',
     'is_billable',
 ]);
+
+const getFieldErrorTarget = (field) => field?.tomselect?.control || field;
 
 const clearTaskFormErrors = (form) => {
     form.querySelectorAll('[data-project-task-error]').forEach((node) => {
@@ -44,7 +46,7 @@ const clearTaskFormErrors = (form) => {
     });
 
     form.querySelectorAll('input, select, textarea').forEach((field) => {
-        field.classList.remove('border-red-500');
+        getFieldErrorTarget(field)?.classList.remove('border-red-500');
     });
 };
 
@@ -65,6 +67,197 @@ const syncTaskFormSelectState = (form) => {
         }
 
         field.tomselect.setValue(field.value || '', true);
+    });
+};
+
+const parseTaskPlacementOptions = (form) => {
+    if (!form?.dataset.taskPlacement) {
+        return {
+            milestones: [],
+            sprints: [],
+        };
+    }
+
+    try {
+        return JSON.parse(form.dataset.taskPlacement);
+    } catch (error) {
+        return {
+            milestones: [],
+            sprints: [],
+        };
+    }
+};
+
+const parseTaskMovePlacementOptions = (form) => {
+    if (!form?.dataset.taskMovePlacement) {
+        return {
+            milestones: [],
+            sprints: [],
+        };
+    }
+
+    try {
+        return JSON.parse(form.dataset.taskMovePlacement);
+    } catch (error) {
+        return {
+            milestones: [],
+            sprints: [],
+        };
+    }
+};
+
+const setSelectValue = (field, value = '') => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value === null || value === undefined ? '' : String(value);
+
+    if (field.tomselect) {
+        if (normalizedValue) {
+            field.tomselect.setValue(normalizedValue, true);
+            return;
+        }
+
+        field.tomselect.clear(true);
+        return;
+    }
+
+    field.value = normalizedValue;
+};
+
+const setPlacementSelectOptions = (field, options = [], { placeholder = 'Select option', disabled = false, value = '' } = {}) => {
+    if (!field) {
+        return;
+    }
+
+    const normalizedValue = value === null || value === undefined ? '' : String(value);
+    const shouldDisable = disabled || field.disabled;
+
+    if (field.tomselect) {
+        field.disabled = shouldDisable;
+        field.tomselect.clear(true);
+        field.tomselect.clearOptions();
+        field.tomselect.settings.placeholder = placeholder;
+
+        if (options.length) {
+            field.tomselect.addOption(options);
+        }
+
+        field.tomselect.refreshOptions(false);
+        field.tomselect.inputState();
+
+        if (shouldDisable) {
+            field.tomselect.disable();
+        } else {
+            field.tomselect.enable();
+        }
+
+        if (normalizedValue) {
+            field.tomselect.setValue(normalizedValue, true);
+            return;
+        }
+
+        field.tomselect.clear(true);
+        return;
+    }
+
+    field.innerHTML = '';
+
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = placeholder;
+    field.appendChild(placeholderOption);
+
+    options.forEach((option) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.value;
+        optionElement.textContent = option.text;
+        field.appendChild(optionElement);
+    });
+
+    field.disabled = shouldDisable;
+    field.value = normalizedValue;
+};
+
+const setTaskPlacementHint = (form, selector, { selectedMilestoneId = '', selectedSprintId = '' } = {}) => {
+    const hintNode = form?.querySelector(selector);
+
+    if (!hintNode) {
+        return;
+    }
+
+    let message = 'Leave both milestone and sprint empty to use the project backlog.';
+
+    if (selectedMilestoneId && !selectedSprintId) {
+        message = 'Select a sprint for the chosen milestone, or clear the milestone to use the project backlog.';
+    } else if (selectedSprintId && !selectedMilestoneId) {
+        message = 'This sprint can be saved without choosing a milestone. The backend will match the milestone automatically.';
+    } else if (selectedSprintId) {
+        message = '';
+    }
+
+    hintNode.textContent = message;
+    hintNode.classList.toggle('hidden', !message);
+};
+
+const setTaskRequiredIndicators = (form, hasSelectedModule) => {
+    form?.querySelectorAll('[data-project-task-required-star]').forEach((node) => {
+        const fieldName = node.dataset.projectTaskRequiredStar || '';
+        const shouldShow = fieldName === 'project_sprint_id' && Boolean(hasSelectedModule);
+
+        node.classList.toggle('hidden', !shouldShow);
+    });
+};
+
+const getTaskPlacementHintSelector = (form) => (
+    form?.matches('[data-project-task-detail-form]')
+        ? '[data-project-task-detail-placement-hint]'
+        : '[data-project-task-placement-hint]'
+);
+
+const syncProjectTaskPlacement = (
+    form,
+    { selectedMilestoneId = null, selectedSprintId = null, syncModuleFromSprint = false } = {}
+) => {
+    const milestoneField = form?.querySelector('[name="project_milestone_id"]');
+    const sprintField = form?.querySelector('[name="project_sprint_id"]');
+
+    if (!form || !milestoneField || !sprintField) {
+        return;
+    }
+
+    const placement = parseTaskPlacementOptions(form);
+    let milestoneId = selectedMilestoneId === null ? String(milestoneField.value || '') : String(selectedMilestoneId || '');
+    let sprintId = selectedSprintId === null ? String(sprintField.value || '') : String(selectedSprintId || '');
+    const selectedSprint = placement.sprints.find((option) => option.value === sprintId);
+
+    if (syncModuleFromSprint && selectedSprint && !milestoneId) {
+        milestoneId = String(selectedSprint.project_milestone_id || '');
+        setSelectValue(milestoneField, milestoneId);
+    }
+
+    const availableSprints = placement.sprints.filter((option) => {
+        if (!milestoneId) {
+            return true;
+        }
+
+        return String(option.project_milestone_id || '') === milestoneId;
+    });
+    const resolvedSprintId = availableSprints.some((option) => option.value === sprintId) ? sprintId : '';
+
+    setPlacementSelectOptions(sprintField, availableSprints, {
+        placeholder: milestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
+            : (placement.sprints.length ? 'Select sprint or leave empty for backlog' : 'No sprints available'),
+        disabled: false,
+        value: resolvedSprintId,
+    });
+
+    setTaskRequiredIndicators(form, milestoneId);
+    setTaskPlacementHint(form, getTaskPlacementHintSelector(form), {
+        selectedMilestoneId: milestoneId,
+        selectedSprintId: resolvedSprintId,
     });
 };
 
@@ -93,22 +286,30 @@ const setTaskFormSprint = (form, sprintId) => {
 
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const normalizedSprintId = sprintId ? String(sprintId) : '';
+    const hasSprintOption = normalizedSprintId
+        ? Array.from(sprintField?.options || []).some((option) => String(option.value) === normalizedSprintId)
+        : false;
+    const resolvedSprintId = hasSprintOption ? normalizedSprintId : '';
 
     if (!sprintField) {
         return;
     }
 
     if (sprintField.tomselect) {
-        sprintField.tomselect.setValue(normalizedSprintId, true);
+        sprintField.tomselect.setValue(resolvedSprintId, true);
         sprintField.dispatchEvent(new Event('change', { bubbles: true }));
         return;
     }
 
-    sprintField.value = normalizedSprintId;
+    sprintField.value = resolvedSprintId;
     sprintField.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
-const prepareTaskModal = (root, sprintId = '') => {
+const prepareTaskModal = async (root, {
+    sprintId = '',
+    milestoneId = '',
+    parentTaskId = '',
+} = {}) => {
     const form = root.querySelector('[data-project-task-form]');
 
     if (!form) {
@@ -121,11 +322,34 @@ const prepareTaskModal = (root, sprintId = '') => {
     clearTaskFormErrors(form);
     setTaskModalAdvancedState(root, false);
     syncTaskFormSelectState(form);
-    setTaskFormSprint(form, sprintId || root.dataset.defaultSprintId || '');
 
-    if (!form.querySelector('[name="project_sprint_id"]')) {
-        loadParentTaskOptions(form).catch(() => {});
+    const shouldUseDefaultSprint = !sprintId && !milestoneId && !parentTaskId;
+    const resolvedSprintId = sprintId || (shouldUseDefaultSprint ? (root.dataset.defaultSprintId || '') : '');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
+    const parentTaskField = form.querySelector('[name="parent_task_id"]');
+
+    if (milestoneField) {
+        setSelectValue(milestoneField, milestoneId || '');
     }
+
+    syncProjectTaskPlacement(form, {
+        selectedMilestoneId: milestoneId || '',
+        selectedSprintId: resolvedSprintId,
+        syncModuleFromSprint: true,
+    });
+
+    if (resolvedSprintId) {
+        setTaskFormSprint(form, resolvedSprintId);
+    }
+
+    if (parentTaskField) {
+        setSelectValue(parentTaskField, '');
+    }
+
+    await loadParentTaskOptions(form, {
+        sprintId: resolvedSprintId,
+        selectedParentTaskId: parentTaskId || '',
+    }).catch(() => {});
 };
 
 const applyTaskFormErrors = (form, errors = {}) => {
@@ -141,7 +365,7 @@ const applyTaskFormErrors = (form, errors = {}) => {
         const field = form.querySelector(`[name="${normalizedFieldName}"], [name="${normalizedFieldName}[]"]`);
         const errorNode = form.querySelector(`[data-project-task-error="${normalizedFieldName}"]`);
 
-        field?.classList.add('border-red-500');
+        getFieldErrorTarget(field)?.classList.add('border-red-500');
 
         if (errorNode) {
             errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
@@ -150,7 +374,234 @@ const applyTaskFormErrors = (form, errors = {}) => {
     });
 };
 
-const setParentTaskOptions = (selectField, options = [], { placeholder = 'Select parent task', disabled = false } = {}) => {
+const clearTaskMoveFormErrors = (form) => {
+    form?.querySelectorAll('[data-project-task-move-error]').forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+
+    form?.querySelectorAll('input, select, textarea').forEach((field) => {
+        getFieldErrorTarget(field)?.classList.remove('border-red-500');
+    });
+};
+
+const applyTaskMoveFormErrors = (form, errors = {}) => {
+    clearTaskMoveFormErrors(form);
+
+    Object.entries(errors).forEach(([fieldName, messages]) => {
+        const normalizedFieldName = fieldName.split('.')[0];
+        const field = form.querySelector(`[name="${normalizedFieldName}"], [name="${normalizedFieldName}[]"]`);
+        const errorNode = form.querySelector(`[data-project-task-move-error="${normalizedFieldName}"]`);
+
+        getFieldErrorTarget(field)?.classList.add('border-red-500');
+
+        if (errorNode) {
+            errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
+            errorNode.classList.remove('hidden');
+        }
+    });
+};
+
+const closeAllTaskRowMenus = (exceptDropdown = null) => {
+    document.querySelectorAll('[data-project-task-row-dropdown]').forEach((dropdown) => {
+        if (exceptDropdown && dropdown === exceptDropdown) {
+            return;
+        }
+
+        const menu = dropdown.querySelector('[data-project-task-row-menu]');
+
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.right = '';
+            menu.style.bottom = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.visibility = '';
+        }
+
+        dropdown.querySelector('[data-project-task-row-menu-trigger]')?.setAttribute('aria-expanded', 'false');
+    });
+};
+
+const positionTaskRowMenu = (trigger, menu) => {
+    if (!trigger || !menu) {
+        return;
+    }
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const gutter = 8;
+    menu.style.position = 'fixed';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.top = '0px';
+    menu.style.left = '0px';
+    menu.style.minWidth = `${Math.round(Math.max(148, triggerRect.width + 100))}px`;
+    menu.style.width = 'max-content';
+
+    const measuredRect = menu.getBoundingClientRect();
+    const menuWidth = Math.max(measuredRect.width || 0, 148);
+    const menuHeight = measuredRect.height || 0;
+
+    let left = triggerRect.right - menuWidth;
+    let top = triggerRect.top + triggerRect.height - 2;
+
+    if (left < gutter) {
+        left = gutter;
+    }
+
+    if ((left + menuWidth) > (viewportWidth - gutter)) {
+        left = Math.max(gutter, viewportWidth - menuWidth - gutter);
+    }
+
+    if ((top + menuHeight) > (viewportHeight - gutter)) {
+        top = Math.max(gutter, triggerRect.top - menuHeight - gutter);
+    }
+
+    menu.style.left = `${Math.round(left)}px`;
+    menu.style.top = `${Math.round(top)}px`;
+};
+
+const openTaskMoveModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    window.requestAnimationFrame(() => {
+        modal.querySelector('[name="project_sprint_id"]')?.tomselect?.focus();
+        modal.querySelector('[name="project_sprint_id"]')?.focus();
+    });
+};
+
+const closeTaskMoveModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+};
+
+const syncTaskMovePlacement = (
+    form,
+    { selectedMilestoneId = null, selectedSprintId = null } = {}
+) => {
+    const milestoneField = form?.querySelector('[name="project_milestone_id"]');
+    const sprintField = form?.querySelector('[name="project_sprint_id"]');
+
+    if (!form || !milestoneField || !sprintField) {
+        return;
+    }
+
+    const placement = parseTaskMovePlacementOptions(form);
+    const milestoneId = selectedMilestoneId === null ? String(milestoneField.value || '') : String(selectedMilestoneId || '');
+    const sprintId = selectedSprintId === null ? String(sprintField.value || '') : String(selectedSprintId || '');
+    const availableSprints = placement.sprints.filter((option) => {
+        if (!milestoneId) {
+            return true;
+        }
+
+        return String(option.project_milestone_id || '') === milestoneId;
+    });
+    const resolvedSprintId = availableSprints.some((option) => option.value === sprintId) ? sprintId : '';
+
+    setPlacementSelectOptions(sprintField, availableSprints, {
+        placeholder: milestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
+            : (placement.sprints.length ? 'Select sprint' : 'No sprints available'),
+        disabled: false,
+        value: resolvedSprintId,
+    });
+};
+
+const prepareTaskMoveModal = (root, triggerButton) => {
+    const modal = root?.querySelector('[data-project-task-move-modal]');
+    const form = modal?.querySelector('[data-project-task-move-form]');
+
+    if (!modal || !form || !triggerButton) {
+        return null;
+    }
+
+    form.reset();
+    clearTaskMoveFormErrors(form);
+    syncTaskFormSelectState(form);
+    form.setAttribute('action', triggerButton.dataset.projectTaskMoveUrl || '');
+
+    const taskNameNode = modal.querySelector('[data-project-task-move-task-name]');
+    const currentSprintNode = modal.querySelector('[data-project-task-move-current-sprint]');
+
+    if (taskNameNode) {
+        taskNameNode.textContent = triggerButton.dataset.projectTaskName || 'this task';
+    }
+
+    if (currentSprintNode) {
+        currentSprintNode.textContent = triggerButton.dataset.projectTaskCurrentSprint || '--';
+    }
+
+    setSelectValue(form.querySelector('[name="project_milestone_id"]'), '');
+    syncTaskMovePlacement(form, {
+        selectedMilestoneId: '',
+        selectedSprintId: '',
+    });
+
+    return modal;
+};
+
+const deleteProjectTask = async (root, triggerButton) => {
+    const actionUrl = triggerButton?.dataset.projectTaskDeleteUrl || '';
+
+    if (!root || !actionUrl) {
+        Alert.errorModal('Unable to delete the task right now.');
+        return;
+    }
+
+    const taskName = triggerButton.dataset.projectTaskName || 'this task';
+    const confirmation = await Alert.confirm({
+        title: 'Confirm Delete',
+        text: `Delete ${taskName}?`,
+        confirmText: 'Yes, delete it',
+        cancelText: 'Cancel',
+        requireText: 'DELETE',
+    });
+
+    if (!confirmation?.isConfirmed) {
+        return;
+    }
+
+    const payload = new FormData();
+    payload.append('_method', 'DELETE');
+
+    const response = await fetch(actionUrl, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: payload,
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.status) {
+        throw new Error(result.message || 'Unable to delete the task.');
+    }
+
+    const newRoot = replaceTasksRoot(root, result.html);
+    Alert.success(result.message || 'Task deleted successfully.');
+
+    if (newRoot) {
+        initializeTasksRoot(newRoot);
+    }
+};
+
+const setParentTaskOptions = (selectField, options = [], selectedValue = '', { placeholder = 'Select parent task', disabled = false } = {}) => {
     if (!selectField) {
         return;
     }
@@ -164,8 +615,14 @@ const setParentTaskOptions = (selectField, options = [], { placeholder = 'Select
             selectField.tomselect.addOption(options);
         }
 
+        selectField.tomselect.clearCache();
         selectField.tomselect.refreshOptions(false);
         selectField.tomselect.enable();
+
+        if (selectedValue) {
+            selectField.tomselect.setValue(String(selectedValue), true);
+            selectField.tomselect.refreshOptions(false);
+        }
 
         if (disabled) {
             selectField.tomselect.disable();
@@ -184,13 +641,17 @@ const setParentTaskOptions = (selectField, options = [], { placeholder = 'Select
         const optionElement = document.createElement('option');
         optionElement.value = option.value;
         optionElement.textContent = option.text;
+        optionElement.selected = String(selectedValue) === String(option.value);
         selectField.appendChild(optionElement);
     });
 
     selectField.disabled = disabled;
 };
 
-const loadParentTaskOptions = async (form) => {
+const loadParentTaskOptions = async (form, {
+    sprintId: sprintIdOverride = null,
+    selectedParentTaskId: selectedParentTaskIdOverride = null,
+} = {}) => {
     if (!form) {
         return;
     }
@@ -202,23 +663,21 @@ const loadParentTaskOptions = async (form) => {
     }
 
     const sprintField = form.querySelector('[name="project_sprint_id"]');
-    const loadUrl = parentTaskField.dataset.parentTaskUrl || '';
-    const sprintId = sprintField?.value || '';
+    const loadUrl = parentTaskField.dataset.parentTaskUrl || form.dataset.parentTaskUrl || '';
+    const currentTaskId = form.dataset.currentTaskId || '';
+    const selectedParentTaskId = selectedParentTaskIdOverride === null
+        ? (parentTaskField.value || '')
+        : String(selectedParentTaskIdOverride || '');
+    const sprintId = sprintIdOverride === null
+        ? (sprintField?.value || '')
+        : String(sprintIdOverride || '');
     const isLinearFlow = !sprintField;
 
     if (!loadUrl) {
         return;
     }
 
-    if (!isLinearFlow && !sprintId) {
-        setParentTaskOptions(parentTaskField, [], {
-            placeholder: 'Select sprint first',
-            disabled: true,
-        });
-        return;
-    }
-
-    setParentTaskOptions(parentTaskField, [], {
+    setParentTaskOptions(parentTaskField, [], selectedParentTaskId, {
         placeholder: 'Loading parent tasks...',
         disabled: true,
     });
@@ -227,6 +686,14 @@ const loadParentTaskOptions = async (form) => {
 
     if (sprintId) {
         requestUrl.searchParams.set('project_sprint_id', sprintId);
+    }
+
+    if (currentTaskId) {
+        requestUrl.searchParams.set('task_id', currentTaskId);
+    }
+
+    if (selectedParentTaskId) {
+        requestUrl.searchParams.set('parent_task_id', selectedParentTaskId);
     }
 
     const response = await fetch(requestUrl.toString(), {
@@ -241,8 +708,10 @@ const loadParentTaskOptions = async (form) => {
         throw new Error(result.message || 'Unable to load parent tasks.');
     }
 
-    setParentTaskOptions(parentTaskField, result.options || [], {
-        placeholder: (result.options || []).length ? 'Select parent task' : 'No parent tasks available',
+    setParentTaskOptions(parentTaskField, result.options || [], selectedParentTaskId, {
+        placeholder: (result.options || []).length
+            ? 'Select parent task'
+            : (isLinearFlow || sprintId ? 'No parent tasks available' : 'No backlog parent tasks available'),
         disabled: false,
     });
 };
@@ -254,20 +723,18 @@ const clearTaskDetailFormErrors = (form) => {
     });
 
     form.querySelectorAll('input, select, textarea').forEach((field) => {
-        field.classList.remove('border-red-500');
+        getFieldErrorTarget(field)?.classList.remove('border-red-500');
     });
 };
 
 const applyTaskDetailFormErrors = (form, errors = {}) => {
-    console.log('laksdlkasl');
-    
     clearTaskDetailFormErrors(form);
 
     Object.entries(errors).forEach(([fieldName, messages]) => {
         const field = form.querySelector(`[name="${fieldName}"], [name="${fieldName}[]"]`);
         const errorNode = form.querySelector(`[data-project-task-detail-error="${fieldName}"]`);
 
-        field?.classList.add('border-red-500');
+        getFieldErrorTarget(field)?.classList.add('border-red-500');
 
         if (errorNode) {
             errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
@@ -294,7 +761,7 @@ const openTaskModal = (modal) => {
     modal.classList.add('flex');
 
     window.requestAnimationFrame(() => {
-        modal.querySelector('[name="title"]')?.focus();
+        modal.querySelector('[name="name"]')?.focus();
     });
 };
 
@@ -373,6 +840,8 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
 
         if (form) {
             form.dataset.groupKey = groupKey || '';
+            syncProjectTaskPlacement(form);
+            loadParentTaskOptions(form).catch(() => {});
         }
     } catch (error) {
         closeTaskDetailModal(modal);
@@ -394,6 +863,75 @@ const replaceTasksRoot = (currentRoot, html) => {
 
     if (window.Alpine && typeof window.Alpine.initTree === 'function') {
         window.Alpine.initTree(newRoot);
+    }
+
+    return newRoot;
+};
+
+const setProjectTaskSubtaskToggleState = (root, taskId, expanded) => {
+    const toggle = root.querySelector(`[data-project-task-subtasks-parent="${taskId}"]`);
+    const icon = toggle?.querySelector('[data-project-task-subtasks-icon]');
+
+    toggle?.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    icon?.classList.toggle('rotate-90', expanded);
+};
+
+const getProjectTaskDirectChildRows = (root, parentId) => root.querySelectorAll(`[data-project-task-parent-id="${parentId}"]`);
+
+const collapseProjectTaskBranch = (root, parentId) => {
+    if (!root || !parentId) {
+        return;
+    }
+
+    getProjectTaskDirectChildRows(root, parentId).forEach((row) => {
+        const childTaskId = row.dataset.projectTaskId || '';
+
+        row.hidden = true;
+        row.classList.add('hidden');
+        setProjectTaskSubtaskToggleState(root, childTaskId, false);
+
+        if (childTaskId) {
+            collapseProjectTaskBranch(root, childTaskId);
+        }
+    });
+};
+
+const setProjectTaskSubtaskGroupState = (root, parentId, expanded) => {
+    if (!root || !parentId) {
+        return;
+    }
+
+    setProjectTaskSubtaskToggleState(root, parentId, expanded);
+
+    if (!expanded) {
+        collapseProjectTaskBranch(root, parentId);
+        return;
+    }
+
+    getProjectTaskDirectChildRows(root, parentId).forEach((row) => {
+        row.hidden = false;
+        row.classList.remove('hidden');
+    });
+};
+
+const handleTaskRootSuccess = (root, result, {
+    successMessage = 'Task updated successfully.',
+    closeModal = null,
+} = {}) => {
+    const responseMode = root?.dataset.projectTaskResponseMode || 'replace';
+
+    closeModal?.();
+
+    if (responseMode === 'reload') {
+        window.location.reload();
+        return null;
+    }
+
+    const newRoot = replaceTasksRoot(root, result.html);
+    Alert.success(result.message || successMessage);
+
+    if (newRoot) {
+        initializeTasksRoot(newRoot);
     }
 
     return newRoot;
@@ -669,15 +1207,106 @@ const loadGroupTasks = async (group) => {
 };
 
 const initializeTasksRoot = (root) => {
-    if (!root || root.dataset.initialized === 'true') {
+    if (!root || root.dataset.projectTasksInitialized === 'true') {
         return;
     }
 
-    root.dataset.initialized = 'true';
+    root.dataset.projectTasksInitialized = 'true';
     initTomSelect(root);
     initializeTaskGroupPagination(root);
 
+    if (!taskRowMenuDocumentListenerBound) {
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('[data-project-task-row-dropdown]')) {
+                return;
+            }
+
+            closeAllTaskRowMenus();
+        });
+        window.addEventListener('resize', () => {
+            closeAllTaskRowMenus();
+        });
+        window.addEventListener('scroll', () => {
+            closeAllTaskRowMenus();
+        }, true);
+        taskRowMenuDocumentListenerBound = true;
+    }
+
     root.addEventListener('click', async (event) => {
+        const rowMenuTrigger = event.target.closest('[data-project-task-row-menu-trigger]');
+
+        if (rowMenuTrigger && root.contains(rowMenuTrigger)) {
+            const dropdown = rowMenuTrigger.closest('[data-project-task-row-dropdown]');
+            const menu = dropdown?.querySelector('[data-project-task-row-menu]');
+
+            if (!dropdown || !menu) {
+                return;
+            }
+
+            const shouldOpen = menu.classList.contains('hidden');
+            closeAllTaskRowMenus(dropdown);
+
+            if (shouldOpen) {
+                menu.style.position = 'fixed';
+                menu.style.top = '0px';
+                menu.style.left = '0px';
+                menu.style.right = 'auto';
+                menu.style.bottom = 'auto';
+                menu.style.visibility = 'hidden';
+                menu.classList.remove('hidden');
+
+                window.requestAnimationFrame(() => {
+                    positionTaskRowMenu(rowMenuTrigger, menu);
+                    menu.style.visibility = '';
+                });
+            } else {
+                menu.classList.add('hidden');
+            }
+
+            rowMenuTrigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            return;
+        }
+
+        const moveOpenButton = event.target.closest('[data-project-task-move-open]');
+
+        if (moveOpenButton && root.contains(moveOpenButton)) {
+            closeAllTaskRowMenus();
+            const modal = prepareTaskMoveModal(root, moveOpenButton);
+            openTaskMoveModal(modal);
+            return;
+        }
+
+        const deleteButton = event.target.closest('[data-project-task-delete]');
+
+        if (deleteButton && root.contains(deleteButton)) {
+            closeAllTaskRowMenus();
+
+            try {
+                await deleteProjectTask(root, deleteButton);
+            } catch (error) {
+                Alert.errorModal(error.message || 'Unable to delete the task.');
+            }
+
+            return;
+        }
+
+        const subtaskToggle = event.target.closest('[data-project-task-subtasks-toggle]');
+
+        if (subtaskToggle && root.contains(subtaskToggle)) {
+            const parentId = subtaskToggle.dataset.projectTaskSubtasksParent || '';
+            const isExpanded = subtaskToggle.getAttribute('aria-expanded') === 'true';
+
+            setProjectTaskSubtaskGroupState(root, parentId, !isExpanded);
+            return;
+        }
+
+        const moveCloseButton = event.target.closest('[data-project-task-move-close]');
+
+        if (moveCloseButton && root.contains(moveCloseButton)) {
+            closeTaskMoveModal(root.querySelector('[data-project-task-move-modal]'));
+            return;
+        }
+
         const detailOpenButton = event.target.closest('[data-project-task-detail-open]');
 
         if (detailOpenButton && root.contains(detailOpenButton)) {
@@ -692,7 +1321,13 @@ const initializeTasksRoot = (root) => {
         const openButton = event.target.closest('[data-project-task-modal-open]');
 
         if (openButton && root.contains(openButton)) {
-            prepareTaskModal(root, openButton.dataset.projectTaskSprintId || '');
+            closeAllTaskRowMenus();
+
+            await prepareTaskModal(root, {
+                sprintId: openButton.dataset.projectTaskSprintId || '',
+                milestoneId: openButton.dataset.projectTaskMilestoneId || '',
+                parentTaskId: openButton.dataset.projectTaskParentTaskId || '',
+            });
             openTaskModal(root.querySelector('[data-project-task-modal]'));
             return;
         }
@@ -743,17 +1378,63 @@ const initializeTasksRoot = (root) => {
     });
 
     root.addEventListener('change', (event) => {
+        const milestoneField = event.target.closest('[name="project_milestone_id"]');
+
+        if (milestoneField && root.contains(milestoneField)) {
+            const moveForm = milestoneField.closest('[data-project-task-move-form]');
+
+            if (moveForm) {
+                syncTaskMovePlacement(moveForm, {
+                    selectedMilestoneId: milestoneField.value || '',
+                    selectedSprintId: moveForm.querySelector('[name="project_sprint_id"]')?.value || '',
+                });
+                return;
+            }
+
+            const form = milestoneField.closest('[data-project-task-form], [data-project-task-detail-form]');
+
+            if (!form) {
+                return;
+            }
+
+            syncProjectTaskPlacement(form, {
+                selectedMilestoneId: milestoneField.value || '',
+                selectedSprintId: form.querySelector('[name="project_sprint_id"]')?.value || '',
+            });
+
+            loadParentTaskOptions(form).catch((error) => {
+                Alert.errorModal(error.message || 'Unable to load parent tasks.');
+            });
+            return;
+        }
+
         const sprintField = event.target.closest('[name="project_sprint_id"]');
 
         if (!sprintField || !root.contains(sprintField)) {
             return;
         }
 
-        const form = sprintField.closest('[data-project-task-form]');
+        const moveForm = sprintField.closest('[data-project-task-move-form]');
+
+        if (moveForm) {
+            syncTaskMovePlacement(moveForm, {
+                selectedMilestoneId: moveForm.querySelector('[name="project_milestone_id"]')?.value || '',
+                selectedSprintId: sprintField.value || '',
+            });
+            return;
+        }
+
+        const form = sprintField.closest('[data-project-task-form], [data-project-task-detail-form]');
 
         if (!form) {
             return;
         }
+
+        syncProjectTaskPlacement(form, {
+            selectedMilestoneId: form.querySelector('[name="project_milestone_id"]')?.value || '',
+            selectedSprintId: sprintField.value || '',
+            syncModuleFromSprint: true,
+        });
 
         loadParentTaskOptions(form).catch((error) => {
             Alert.errorModal(error.message || 'Unable to load parent tasks.');
@@ -816,14 +1497,10 @@ const initializeTasksRoot = (root) => {
                     throw new Error(result.message || 'Unable to save the task.');
                 }
 
-                const newRoot = replaceTasksRoot(root, result.html);
-
-                closeTaskModal(modal);
-                Alert.success(result.message || 'Task added successfully.');
-
-                if (newRoot) {
-                    initializeTasksRoot(newRoot);
-                }
+                handleTaskRootSuccess(root, result, {
+                    successMessage: 'Task added successfully.',
+                    closeModal: () => closeTaskModal(modal),
+                });
             } catch (error) {
                 if (!(error.message || '').includes('highlighted fields')) {
                     Alert.errorModal(error.message || 'Unable to save the task.');
@@ -839,6 +1516,67 @@ const initializeTasksRoot = (root) => {
     }
 
     root.addEventListener('submit', async (event) => {
+        const moveForm = event.target.closest('[data-project-task-move-form]');
+
+        if (moveForm && root.contains(moveForm)) {
+            event.preventDefault();
+            clearTaskMoveFormErrors(moveForm);
+
+            const submitButton = moveForm.querySelector('[data-project-task-move-submit]');
+            const modal = root.querySelector('[data-project-task-move-modal]');
+            const actionUrl = moveForm.getAttribute('action');
+
+            if (!actionUrl) {
+                Alert.errorModal('Unable to move the task right now.');
+                return;
+            }
+
+            submitButton?.setAttribute('disabled', 'disabled');
+
+            if (submitButton) {
+                submitButton.textContent = 'Moving...';
+            }
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: new FormData(moveForm),
+                });
+                const result = await response.json();
+
+                if (response.status === 422 && result.errors) {
+                    applyTaskMoveFormErrors(moveForm, result.errors);
+                    throw new Error(result.message || 'Please correct the highlighted fields.');
+                }
+
+                if (!response.ok || !result.status) {
+                    throw new Error(result.message || 'Unable to move the task.');
+                }
+
+                handleTaskRootSuccess(root, result, {
+                    successMessage: 'Task moved successfully.',
+                    closeModal: () => closeTaskMoveModal(modal),
+                });
+            } catch (error) {
+                if (!(error.message || '').includes('highlighted fields')) {
+                    Alert.errorModal(error.message || 'Unable to move the task.');
+                }
+            } finally {
+                submitButton?.removeAttribute('disabled');
+
+                if (submitButton) {
+                    submitButton.textContent = 'Move';
+                }
+            }
+
+            return;
+        }
+
         const detailForm = event.target.closest('[data-project-task-detail-form]');
         
         if (!detailForm || !root.contains(detailForm)) {
@@ -884,14 +1622,10 @@ const initializeTasksRoot = (root) => {
                 throw new Error(result.message || 'Unable to update the task.');
             }
 
-            const newRoot = replaceTasksRoot(root, result.html);
-
-            closeTaskDetailModal(modal);
-            Alert.success(result.message || 'Task updated successfully.');
-
-            if (newRoot) {
-                initializeTasksRoot(newRoot);
-            }
+            handleTaskRootSuccess(root, result, {
+                successMessage: 'Task updated successfully.',
+                closeModal: () => closeTaskDetailModal(modal),
+            });
         } catch (error) {
             if (!(error.message || '').includes('highlighted fields')) {
                 Alert.errorModal(error.message || 'Unable to update the task.');

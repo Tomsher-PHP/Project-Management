@@ -7,11 +7,12 @@ use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Shift extends Model
 {
-    use Filterable, Sortable;
+    use Filterable, Sortable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -79,7 +80,7 @@ class Shift extends Model
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
     public function setBreakDurationAttribute($value)

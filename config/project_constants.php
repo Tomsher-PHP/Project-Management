@@ -5,6 +5,7 @@ return [
         'team_leader' => 'Team Leader',
         'coordinator' => 'Coordinator',
         'member' => 'Member',
+        'qa' => 'Quality Assurance',
     ],
 
     'project_priorities' => [
@@ -79,5 +80,16 @@ return [
             'bg_text' => 'text-white',
             'text_class' => 'text-success-400',
         ],
+    ],
+
+    'task_request_types' => [
+        'self',
+        'assigned'
+    ],
+
+    'request_statuses' => [
+        'pending',
+        'approved',
+        'rejected'
     ],
 ];

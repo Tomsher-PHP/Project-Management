@@ -23,6 +23,7 @@ import { initTomSelect } from './components/tom-select';
 import { initDatepicker } from './components/datepicker';
 import { initTimepicker } from './components/timepicker';
 import { initWeekPicker } from './components/weekpicker';
+import { initTaskTimer } from './modules/task-timer';
 
 window.Swal = Swal;
 window.Alert = Alert;
@@ -37,4 +38,5 @@ document.addEventListener('DOMContentLoaded', function () {
     initDatepicker();
     initTimepicker();
     initWeekPicker();
+    initTaskTimer();
 });

@@ -1,6 +1,4 @@
 <div>
-    <h3 class="mb-4 text-lg font-bold text-bgray-900 dark:text-white">Project Team</h3>
-
     @can('project.add_team', $project)
         @include('projects.partials.teams-form')
     @endcan

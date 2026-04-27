@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('agile_module_statuses', function (Blueprint $table) {
+        Schema::create('agile_milestone_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('code')->unique();
@@ -28,6 +28,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('agile_module_statuses');
+        Schema::dropIfExists('agile_milestone_statuses');
     }
 };

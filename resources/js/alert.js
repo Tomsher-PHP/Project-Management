@@ -17,16 +17,66 @@ const normalizeToastArgs = (titleOrOptions, maybeOptions = {}) => {
 const Alert = {
 
     confirm(options) {
+        const requireText = typeof options.requireText === 'string' && options.requireText.length
+            ? options.requireText
+            : null;
+
         return Swal.fire({
             target: options.target || document.body,
             title: options.title || 'Are you sure?',
             text: options.text || 'This action cannot be undone.',
             icon: options.icon || 'warning',
+            input: requireText ? 'text' : undefined,
+            inputPlaceholder: requireText ? `Type "${requireText}" to confirm` : undefined,
             showCancelButton: true,
             confirmButtonText: options.confirmText || 'Yes',
             cancelButtonText: options.cancelText || 'Cancel',
             confirmButtonColor: options.confirmColor || '#22c55e',
             cancelButtonColor: options.cancelColor || '#ef4444',
+            didOpen: () => {
+                if (!requireText) {
+                    return;
+                }
+
+                const popup = Swal.getPopup();
+                const input = Swal.getInput();
+                const confirmButton = Swal.getConfirmButton();
+
+                if (!popup || !input || !confirmButton) {
+                    return;
+                }
+
+                confirmButton.disabled = true;
+
+                const syncValidationState = () => {
+                    const value = input.value ?? '';
+                    const isValid = value === requireText;
+
+                    confirmButton.disabled = !isValid;
+
+                    if (isValid || value === '') {
+                        Swal.resetValidationMessage();
+                        return;
+                    }
+
+                    Swal.showValidationMessage(`You must type "${requireText}" to confirm`);
+                };
+
+                input.addEventListener('input', syncValidationState);
+                syncValidationState();
+            },
+            preConfirm: (value) => {
+                if (!requireText) {
+                    return value;
+                }
+
+                if (value !== requireText) {
+                    Swal.showValidationMessage(`You must type "${requireText}" to confirm`);
+                    return false;
+                }
+
+                return value;
+            },
             customClass: {
                 confirmButton: 'bg-success-300 hover:bg-success-400 text-white',
                 cancelButton: 'bg-error-50 hover:bg-error-100 text-error-200 hover:text-white'

@@ -1,133 +1,163 @@
 <?php
 
 return [
-    ['name' => 'role.view', 'sort_order' => 1],
-    ['name' => 'role.create', 'sort_order' => 2],
-    ['name' => 'role.edit', 'sort_order' => 3],
-    ['name' => 'role.delete', 'sort_order' => 4],
 
-    ['name' => 'user.view_all_users', 'sort_order' => 5],
-    ['name' => 'user.view', 'sort_order' => 6],
-    ['name' => 'user.create', 'sort_order' => 7],
-    ['name' => 'user.edit', 'sort_order' => 8],
-    ['name' => 'user.delete', 'sort_order' => 9],
-    ['name' => 'user.restore', 'sort_order' => 10],
+    // ROLE (1000)
+    ['name' => 'role.view',   'sort_order' => 1000],
+    ['name' => 'role.create', 'sort_order' => 1020],
+    ['name' => 'role.edit',   'sort_order' => 1040],
+    ['name' => 'role.delete', 'sort_order' => 1060],
 
-    ['name' => 'team.view_all_teams', 'sort_order' => 11],
-    ['name' => 'team.view', 'sort_order' => 12],
-    ['name' => 'team.create', 'sort_order' => 13],
-    ['name' => 'team.edit', 'sort_order' => 14],
-    ['name' => 'team.delete', 'sort_order' => 15],
-    ['name' => 'team.restore', 'sort_order' => 16],
+    // USER (2000)
+    ['name' => 'user.view_all_users', 'sort_order' => 2000],
+    ['name' => 'user.view',           'sort_order' => 2020],
+    ['name' => 'user.create',         'sort_order' => 2040],
+    ['name' => 'user.edit',           'sort_order' => 2060],
+    ['name' => 'user.delete',         'sort_order' => 2080],
+    ['name' => 'user.restore',        'sort_order' => 2100],
+    ['name' => 'user.tree_view',      'sort_order' => 2120],
 
-    ['name' => 'customer.view', 'sort_order' => 17],
-    ['name' => 'customer.create', 'sort_order' => 18],
-    ['name' => 'customer.edit', 'sort_order' => 19],
-    ['name' => 'customer.delete', 'sort_order' => 20],
-    ['name' => 'customer.restore', 'sort_order' => 21],
+    // TEAM (3000)
+    ['name' => 'team.view_all_teams', 'sort_order' => 3000],
+    ['name' => 'team.view',           'sort_order' => 3020],
+    ['name' => 'team.create',         'sort_order' => 3040],
+    ['name' => 'team.edit',           'sort_order' => 3060],
+    ['name' => 'team.delete',         'sort_order' => 3080],
+    ['name' => 'team.restore',        'sort_order' => 3100],
 
-    ['name' => 'project.view_all_projects', 'sort_order' => 22],
-    ['name' => 'project.view', 'sort_order' => 23],
-    ['name' => 'project.create', 'sort_order' => 24],
-    ['name' => 'project.edit', 'sort_order' => 25],
-    ['name' => 'project.delete', 'sort_order' => 26],
-    ['name' => 'project.restore', 'sort_order' => 27],
-    ['name' => 'project.add_team', 'sort_order' => 28],
-    ['name' => 'project.remove_team', 'sort_order' => 29],
-    ['name' => 'project.add_scope', 'sort_order' => 30],
-    ['name' => 'project.remove_scope', 'sort_order' => 31],
-    ['name' => 'project.add_notes_files', 'sort_order' => 32],
-    ['name' => 'project.remove_notes_files', 'sort_order' => 33],
-    ['name' => 'project.status_change', 'sort_order' => 34],
-    ['name' => 'project.customer_end_date', 'sort_order' => 35],
+    // CUSTOMER (4000)
+    ['name' => 'customer.view',    'sort_order' => 4000],
+    ['name' => 'customer.create',  'sort_order' => 4020],
+    ['name' => 'customer.edit',    'sort_order' => 4040],
+    ['name' => 'customer.delete',  'sort_order' => 4060],
+    ['name' => 'customer.restore', 'sort_order' => 4080],
 
-    ['name' => 'project_module.view', 'sort_order' => 36],
-    ['name' => 'project_module.create', 'sort_order' => 37],
-    ['name' => 'project_module.edit', 'sort_order' => 38],
-    ['name' => 'project_module.delete', 'sort_order' => 39],
-    ['name' => 'project_module.restore', 'sort_order' => 40],
+    // PROJECT (5000)
+    ['name' => 'project.view_all_projects', 'sort_order' => 5000],
+    ['name' => 'project.view',              'sort_order' => 5020],
+    ['name' => 'project.create',            'sort_order' => 5040],
+    ['name' => 'project.edit',              'sort_order' => 5060],
+    ['name' => 'project.delete',            'sort_order' => 5080],
+    ['name' => 'project.restore',           'sort_order' => 5100],
+    ['name' => 'project.add_team',          'sort_order' => 5120],
+    ['name' => 'project.remove_team',       'sort_order' => 5140],
+    ['name' => 'project.add_scope',         'sort_order' => 5160],
+    ['name' => 'project.remove_scope',      'sort_order' => 5180],
+    ['name' => 'project.add_notes_files',   'sort_order' => 5200],
+    ['name' => 'project.remove_notes_files', 'sort_order' => 5220],
+    ['name' => 'project.status_change',     'sort_order' => 5240],
+    ['name' => 'project.customer_end_date', 'sort_order' => 5260],
 
-    ['name' => 'project_sprint.view', 'sort_order' => 41],
-    ['name' => 'project_sprint.create', 'sort_order' => 42],
-    ['name' => 'project_sprint.edit', 'sort_order' => 43],
-    ['name' => 'project_sprint.delete', 'sort_order' => 44],
-    ['name' => 'project_sprint.restore', 'sort_order' => 45],
+    // PROJECT MILESTONE (6000)
+    ['name' => 'project_milestone.view',    'sort_order' => 6000],
+    ['name' => 'project_milestone.create',  'sort_order' => 6020],
+    ['name' => 'project_milestone.edit',    'sort_order' => 6040],
+    ['name' => 'project_milestone.delete',  'sort_order' => 6060],
+    ['name' => 'project_milestone.restore', 'sort_order' => 6080],
 
-    ['name' => 'task.view_all_tasks', 'sort_order' => 46],
-    ['name' => 'task.view', 'sort_order' => 47],
-    ['name' => 'task.create', 'sort_order' => 48],
-    ['name' => 'task.edit', 'sort_order' => 49],
-    ['name' => 'task.delete', 'sort_order' => 50],
-    ['name' => 'task.restore', 'sort_order' => 51],
-    ['name' => 'task.add_notes_files', 'sort_order' => 52],
-    ['name' => 'task.remove_notes_files', 'sort_order' => 53],
+    // PROJECT SPRINT (7000)
+    ['name' => 'project_sprint.view',    'sort_order' => 7000],
+    ['name' => 'project_sprint.create',  'sort_order' => 7020],
+    ['name' => 'project_sprint.edit',    'sort_order' => 7040],
+    ['name' => 'project_sprint.delete',  'sort_order' => 7060],
+    ['name' => 'project_sprint.restore', 'sort_order' => 7080],
 
-    ['name' => 'shift.view', 'sort_order' => 54],
-    ['name' => 'shift.create', 'sort_order' => 55],
-    ['name' => 'shift.edit', 'sort_order' => 56],
-    ['name' => 'shift.delete', 'sort_order' => 57],
+    // TASK (8000)
+    ['name' => 'task.view_all_tasks',     'sort_order' => 8000],
+    ['name' => 'task.view',               'sort_order' => 8020],
+    ['name' => 'task.create',             'sort_order' => 8040],
+    ['name' => 'task.edit',               'sort_order' => 8060],
+    ['name' => 'task.delete',             'sort_order' => 8080],
+    ['name' => 'task.restore',            'sort_order' => 8100],
+    ['name' => 'task.add_notes_files',    'sort_order' => 8120],
+    ['name' => 'task.remove_notes_files', 'sort_order' => 8140],
+    ['name' => 'task.move',               'sort_order' => 8160],
 
-    ['name' => 'schedule_shift.view', 'sort_order' => 58],
-    ['name' => 'schedule_shift.create', 'sort_order' => 59],
-    ['name' => 'schedule_shift.edit', 'sort_order' => 60],
-    ['name' => 'schedule_shift.delete', 'sort_order' => 61],
+    // SHIFT (9000)
+    ['name' => 'shift.view',   'sort_order' => 9000],
+    ['name' => 'shift.create', 'sort_order' => 9020],
+    ['name' => 'shift.edit',   'sort_order' => 9040],
+    ['name' => 'shift.delete', 'sort_order' => 9060],
 
-    ['name' => 'department.view', 'sort_order' => 62],
-    ['name' => 'department.create', 'sort_order' => 63],
-    ['name' => 'department.edit', 'sort_order' => 64],
-    ['name' => 'department.delete', 'sort_order' => 65],
+    // SCHEDULE SHIFT (10000)
+    ['name' => 'schedule_shift.view',   'sort_order' => 10000],
+    ['name' => 'schedule_shift.create', 'sort_order' => 10020],
+    ['name' => 'schedule_shift.edit',   'sort_order' => 10040],
+    ['name' => 'schedule_shift.delete', 'sort_order' => 10060],
 
-    ['name' => 'designation.view', 'sort_order' => 66],
-    ['name' => 'designation.create', 'sort_order' => 67],
-    ['name' => 'designation.edit', 'sort_order' => 68],
-    ['name' => 'designation.delete', 'sort_order' => 69],
+    // DEPARTMENT (11000)
+    ['name' => 'department.view',   'sort_order' => 11000],
+    ['name' => 'department.create', 'sort_order' => 11020],
+    ['name' => 'department.edit',   'sort_order' => 11040],
+    ['name' => 'department.delete', 'sort_order' => 11060],
 
-    ['name' => 'technology.view', 'sort_order' => 70],
-    ['name' => 'technology.create', 'sort_order' => 71],
-    ['name' => 'technology.edit', 'sort_order' => 72],
-    ['name' => 'technology.delete', 'sort_order' => 73],
+    // DESIGNATION (12000)
+    ['name' => 'designation.view',   'sort_order' => 12000],
+    ['name' => 'designation.create', 'sort_order' => 12020],
+    ['name' => 'designation.edit',   'sort_order' => 12040],
+    ['name' => 'designation.delete', 'sort_order' => 12060],
 
-    ['name' => 'project_category.view', 'sort_order' => 74],
-    ['name' => 'project_category.create', 'sort_order' => 75],
-    ['name' => 'project_category.edit', 'sort_order' => 76],
-    ['name' => 'project_category.delete', 'sort_order' => 77],
+    // TECHNOLOGY (13000)
+    ['name' => 'technology.view',   'sort_order' => 13000],
+    ['name' => 'technology.create', 'sort_order' => 13020],
+    ['name' => 'technology.edit',   'sort_order' => 13040],
+    ['name' => 'technology.delete', 'sort_order' => 13060],
 
-    ['name' => 'industry.view', 'sort_order' => 78],
-    ['name' => 'industry.create', 'sort_order' => 79],
-    ['name' => 'industry.edit', 'sort_order' => 80],
-    ['name' => 'industry.delete', 'sort_order' => 81],
+    // PROJECT CATEGORY (14000)
+    ['name' => 'project_category.view',   'sort_order' => 14000],
+    ['name' => 'project_category.create', 'sort_order' => 14020],
+    ['name' => 'project_category.edit',   'sort_order' => 14040],
+    ['name' => 'project_category.delete', 'sort_order' => 14060],
 
-    ['name' => 'project_status.view', 'sort_order' => 82],
-    ['name' => 'project_status.create', 'sort_order' => 83],
-    ['name' => 'project_status.edit', 'sort_order' => 84],
-    ['name' => 'project_status.delete', 'sort_order' => 85],
+    // INDUSTRY (15000)
+    ['name' => 'industry.view',   'sort_order' => 15000],
+    ['name' => 'industry.create', 'sort_order' => 15020],
+    ['name' => 'industry.edit',   'sort_order' => 15040],
+    ['name' => 'industry.delete', 'sort_order' => 15060],
 
-    ['name' => 'project_stage.view', 'sort_order' => 86],
-    ['name' => 'project_stage.create', 'sort_order' => 87],
-    ['name' => 'project_stage.edit', 'sort_order' => 88],
-    ['name' => 'project_stage.delete', 'sort_order' => 89],
+    // PROJECT STATUS (16000)
+    ['name' => 'project_status.view',   'sort_order' => 16000],
+    ['name' => 'project_status.create', 'sort_order' => 16020],
+    ['name' => 'project_status.edit',   'sort_order' => 16040],
+    ['name' => 'project_status.delete', 'sort_order' => 16060],
 
-    ['name' => 'configuration.view', 'sort_order' => 90],
-    ['name' => 'configuration.edit', 'sort_order' => 91],
+    // PROJECT STAGE (17000)
+    ['name' => 'project_stage.view',   'sort_order' => 17000],
+    ['name' => 'project_stage.create', 'sort_order' => 17020],
+    ['name' => 'project_stage.edit',   'sort_order' => 17040],
+    ['name' => 'project_stage.delete', 'sort_order' => 17060],
 
-    ['name' => 'reports.view', 'sort_order' => 92],
-    ['name' => 'reports.download', 'sort_order' => 93],
+    // CONFIGURATION (18000)
+    ['name' => 'configuration.view', 'sort_order' => 18000],
+    ['name' => 'configuration.edit', 'sort_order' => 18020],
 
-    ['name' => 'activity_log.view', 'sort_order' => 94],
-    ['name' => 'activity_log.delete', 'sort_order' => 95],
+    // REPORTS (19000)
+    ['name' => 'reports.view',     'sort_order' => 19000],
+    ['name' => 'reports.download', 'sort_order' => 19020],
 
-    ['name' => 'agile_module.view', 'sort_order' => 96],
-    ['name' => 'agile_module.create', 'sort_order' => 97],
-    ['name' => 'agile_module.edit', 'sort_order' => 98],
-    ['name' => 'agile_module.delete', 'sort_order' => 99],
+    // ACTIVITY LOG (20000)
+    ['name' => 'activity_log.view',   'sort_order' => 20000],
+    ['name' => 'activity_log.delete', 'sort_order' => 20020],
 
-    ['name' => 'agile_sprint.view', 'sort_order' => 100],
-    ['name' => 'agile_sprint.create', 'sort_order' => 101],
-    ['name' => 'agile_sprint.edit', 'sort_order' => 102],
-    ['name' => 'agile_sprint.delete', 'sort_order' => 103],
+    // AGILE MILESTONE (21000)
+    ['name' => 'agile_milestone.view',   'sort_order' => 21000],
+    ['name' => 'agile_milestone.create', 'sort_order' => 21020],
+    ['name' => 'agile_milestone.edit',   'sort_order' => 21040],
+    ['name' => 'agile_milestone.delete', 'sort_order' => 21060],
 
-    ['name' => 'task_settings.view', 'sort_order' => 104],
-    ['name' => 'task_settings.create', 'sort_order' => 105],
-    ['name' => 'task_settings.edit', 'sort_order' => 106],
-    ['name' => 'task_settings.delete', 'sort_order' => 107],
+    // AGILE SPRINT (22000)
+    ['name' => 'agile_sprint.view',   'sort_order' => 22000],
+    ['name' => 'agile_sprint.create', 'sort_order' => 22020],
+    ['name' => 'agile_sprint.edit',   'sort_order' => 22040],
+    ['name' => 'agile_sprint.delete', 'sort_order' => 22060],
+
+    // TASK SETTINGS (23000)
+    ['name' => 'task_settings.view',   'sort_order' => 23000],
+    ['name' => 'task_settings.create', 'sort_order' => 23020],
+    ['name' => 'task_settings.edit',   'sort_order' => 23040],
+    ['name' => 'task_settings.delete', 'sort_order' => 23060],
+
+    // TASK TIME LOG CHANGE REQUEST (24000)
+    ['name' => 'task_time_log_change_request.approve_reject', 'sort_order' => 24000],
+
 ];

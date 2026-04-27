@@ -16,7 +16,7 @@
 
                 @if ($group['is_unscheduled'] && empty($group['is_linear_group']))
                     <span class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
-                        Backlog
+                        Unscheduled
                     </span>
                 @endif
 

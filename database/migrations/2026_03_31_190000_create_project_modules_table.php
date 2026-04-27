@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('project_modules', function (Blueprint $table) {
+        Schema::create('project_milestones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('name');
             $table->string('color')->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('status_id')->nullable()->constrained('agile_module_statuses')->nullOnDelete();
+            $table->foreignId('status_id')->nullable()->constrained('agile_milestone_statuses')->nullOnDelete();
             $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
@@ -36,6 +36,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('project_modules');
+        Schema::dropIfExists('project_milestones');
     }
 };

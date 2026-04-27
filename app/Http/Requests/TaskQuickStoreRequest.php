@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
 use App\Models\Project;
-use App\Models\ProjectSprint;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class TaskQuickStoreRequest extends FormRequest
 {
+    use ValidatesAgileTaskPlacement;
+
     public function authorize(): bool
     {
         return true;
@@ -20,6 +22,7 @@ class TaskQuickStoreRequest extends FormRequest
         $project = $this->resolveProject();
         $projectId = $project?->id;
         $routeProject = $this->route('project');
+        $requestTypes = config('project_constants.task_request_types', []);
 
         return [
             'project_id' => [
@@ -28,7 +31,8 @@ class TaskQuickStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('projects', 'id'),
             ],
-            'title' => ['required', 'string', 'max:255'],
+            'request_type' => ['nullable', Rule::in($requestTypes)],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status_id' => [
                 'nullable',
@@ -37,18 +41,16 @@ class TaskQuickStoreRequest extends FormRequest
                     fn($query) => $query->where('flow_type', $project?->project_flow)->where('is_active', true)
                 ),
             ],
-            'project_module_id' => [
-                // Rule::requiredIf($project?->project_flow === 'agile'),
+            'project_milestone_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_modules', 'id')->where(
+                Rule::exists('project_milestones', 'id')->where(
                     fn($query) => $query->where('project_id', $projectId)
                 ),
             ],
             'project_sprint_id' => [
                 'nullable',
                 'integer',
-                Rule::requiredIf($project?->project_flow === 'agile'),
                 Rule::exists('project_sprints', 'id')->where(
                     fn($query) => $query->where('project_id', $projectId)
                 ),
@@ -73,8 +75,8 @@ class TaskQuickStoreRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
-            'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'due_date_time' => ['nullable', 'date'],
+            'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
             'tag_ids' => ['nullable', 'array'],
@@ -87,17 +89,15 @@ class TaskQuickStoreRequest extends FormRequest
         return [
             'project_id.required' => 'Please choose a project.',
             'project_id.exists' => 'The selected project is invalid.',
-            'title.required' => 'Please enter a task name.',
+            'request_type.in' => 'The selected request type is invalid.',
+            'name.required' => 'Please enter a task name.',
             'status_id.exists' => 'The selected task status is invalid.',
-            'project_module_id.required' => 'The module is required.',
-            'project_module_id.exists' => 'The selected module is invalid.',
+            'project_milestone_id.exists' => 'The selected milestone is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
-            'project_sprint_id.required' => 'The sprint is required.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
             'task_type_id.exists' => 'The selected task type is invalid.',
             'task_mode_id.exists' => 'The selected task mode is invalid.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
-            'due_date.after_or_equal' => 'The due date must be the same as or after the start date.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];
@@ -109,9 +109,10 @@ class TaskQuickStoreRequest extends FormRequest
             function ($validator) {
                 $project = $this->resolveProject();
                 $projectId = $project?->id;
-                $parentTaskId = $this->filled('parent_task_id') ? (int) $this->input('parent_task_id') : null;
-                $projectModuleId = $this->filled('project_module_id') ? (int) $this->input('project_module_id') : null;
-                $selectedSprintId = $this->filled('project_sprint_id') ? (int) $this->input('project_sprint_id') : null;
+                $parentTaskId = $this->nullableIntegerInput('parent_task_id');
+                $projectMilestoneId = $this->nullableIntegerInput('project_milestone_id');
+                $selectedSprintId = $this->nullableIntegerInput('project_sprint_id');
+                $requestType = $this->input('request_type', 'assigned');
 
                 if (! $project || ! $projectId) {
                     return;
@@ -128,13 +129,23 @@ class TaskQuickStoreRequest extends FormRequest
                     return;
                 }
 
-                if ($selectedSprintId) {
-                    $selectedSprint = ProjectSprint::query()
-                        ->where('project_id', $projectId)
-                        ->find($selectedSprintId);
+                $this->validateAgileTaskPlacement(
+                    $validator,
+                    $project,
+                    $projectId,
+                    $projectMilestoneId,
+                    $selectedSprintId
+                );
 
-                    if ($selectedSprint && $projectModuleId && (int) $selectedSprint->project_module_id !== $projectModuleId) {
-                        $validator->errors()->add('project_sprint_id', 'Please choose a sprint from the selected module.');
+                if ($requestType === 'self' && $this->user()?->id) {
+                    $isProjectMember = $project->activeMembers()
+                        ->whereKey($this->user()->id)
+                        ->exists();
+
+                    if (! $isProjectMember) {
+                        $validator->errors()->add('project_id', 'You are not allowed to request a task for the selected project.');
+
+                        return;
                     }
                 }
 
@@ -148,10 +159,6 @@ class TaskQuickStoreRequest extends FormRequest
 
                 if (! $parentTask) {
                     return;
-                }
-
-                if (filled($parentTask->parent_task_id) && (int) $parentTask->parent_task_id > 0) {
-                    $validator->errors()->add('parent_task_id', 'Please choose a top-level parent task.');
                 }
 
                 if ($project?->project_flow === 'linear') {

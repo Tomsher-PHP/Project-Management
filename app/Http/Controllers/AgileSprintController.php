@@ -15,7 +15,7 @@ class AgileSprintController extends Controller
     public function __construct()
     {
         $this->pageTitle = 'Agile Flow';
-        $this->subTitle = 'Manage reusable agile modules and sprints for your project workflow';
+        $this->subTitle = 'Manage reusable agile milestones and sprints for your project workflow';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 

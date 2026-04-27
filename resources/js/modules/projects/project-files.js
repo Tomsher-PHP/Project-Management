@@ -26,7 +26,7 @@ const initializeProjectFiles = (root = document) => {
             theme: 'snow',
             readOnly: !canCreateNotesFiles,
             placeholder: canCreateNotesFiles ? 'Write a project note...' : 'No note editor available.',
-            modules: {
+            milestones: {
                 toolbar: canCreateNotesFiles ? [
                     ['bold', 'italic', 'underline'],
                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],

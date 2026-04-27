@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
-use App\Models\AgileModule;
-use App\Models\AgileModuleStatus;
+use App\Models\AgileMilestone;
+use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
 use App\Models\Customer;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
@@ -24,6 +25,7 @@ use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
 use App\Services\ProjectServices;
 use App\Services\UserService;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,6 +35,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller
 {
+    use BuildsProjectActivityQueries;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -82,15 +86,22 @@ class ProjectController extends Controller
     {
         return view('projects.detail-page', array_merge([
             'project' => $project,
-            'projectActivitiesCount' => $project->activities()->count(),
+            'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
         ], $this->getProjectHeaderData($project, $service)));
     }
 
     public function activityModal(Project $project): JsonResponse
     {
-        $activities = $project->activities()
-            ->with('causer')
+        $activities = $this->getProjectActivitiesQuery($project)
+            ->with([
+                'subject',
+                'causer' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        User::class => ['primaryAttachment'],
+                    ]);
+                },
+            ])
             ->latest()
             ->limit(20)
             ->get();
@@ -100,6 +111,7 @@ class ProjectController extends Controller
             'html' => view('projects.partials.modals.activity-content', [
                 'project' => $project,
                 'activities' => $activities,
+                'viewAllUrl' => route('activity.log', ['project_id' => $project->id]),
             ])->render(),
         ], Response::HTTP_OK);
     }
@@ -143,7 +155,7 @@ class ProjectController extends Controller
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
-        $allowedTabs = ['modules', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
+        $allowedTabs = ['milestones', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         return response()->json([
@@ -348,7 +360,7 @@ class ProjectController extends Controller
     private function renderTab(Project $project, string $tab, ProjectServices $service, Request $request): string
     {
         return match ($tab) {
-            'modules' => $this->renderModulesTab($project),
+            'milestones' => $this->renderMilestonesTab($project),
             'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
@@ -370,9 +382,9 @@ class ProjectController extends Controller
             ->values();
     }
 
-    private function renderModulesTab(Project $project): string
+    private function renderMilestonesTab(Project $project): string
     {
-        $projectModules = $project->projectModules()
+        $projectMilestones = $project->projectMilestones()
             ->with([
                 'addedBy',
                 'updatedBy',
@@ -380,35 +392,34 @@ class ProjectController extends Controller
                 'owner',
             ])
             ->withCount('projectSprints')
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->orderForDisplay()
             ->get();
 
-        $agileModules = AgileModule::active()->orderBy('sort_order', 'asc')->get();
+        $agileMilestones = AgileMilestone::active()->orderBy('sort_order', 'asc')->get();
         $agileSprints = AgileSprint::active()->orderBy('sort_order', 'asc')->get();
-        $agileModuleStatuses = AgileModuleStatus::active()->orderBy('sort_order', 'asc')->get();
+        $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
             ->get(['users.id', 'users.name']);
-        $trashedProjectModules = ProjectModule::onlyTrashed()
+        $trashedProjectMilestones = ProjectMilestone::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
             ->get();
-        $trashedProjectSprintsByModule = ProjectSprint::onlyTrashed()
+        $trashedProjectSprintsByMilestone = ProjectSprint::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
             ->get()
-            ->groupBy('project_module_id');
+            ->groupBy('project_milestone_id');
 
-        return view('projects.partials.tabs.modules', compact(
+        return view('projects.partials.tabs.milestones', compact(
             'project',
-            'projectModules',
-            'agileModules',
+            'projectMilestones',
+            'agileMilestones',
             'agileSprints',
-            'agileModuleStatuses',
+            'agileMilestoneStatuses',
             'assignableUsers',
-            'trashedProjectModules',
-            'trashedProjectSprintsByModule'
+            'trashedProjectMilestones',
+            'trashedProjectSprintsByMilestone'
         ))->render();
     }
 
@@ -450,8 +461,7 @@ class ProjectController extends Controller
     {
         $statusHistory = $project->statusHistories()
             ->with(['status', 'fromStatus', 'addedBy:id,name'])
-            ->reorder('added_at')
-            ->orderBy('id')
+            ->orderByDesc('added_at')
             ->get()
             ->map(function ($history) {
                 return [
@@ -468,8 +478,7 @@ class ProjectController extends Controller
 
         $stageHistory = $project->stageHistories()
             ->with(['stage', 'fromStage', 'addedBy:id,name'])
-            ->reorder('added_at')
-            ->orderBy('id')
+            ->orderByDesc('added_at')
             ->get()
             ->map(function ($history) {
                 return [
@@ -505,27 +514,38 @@ class ProjectController extends Controller
     private function renderSettingsTab(Project $project): string
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
+        $selectedCustomerId = $project->customer_id;
+        $selectedCategoryId = $project->project_category_id;
+        $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
+
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load('technologies');
 
-        $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
-        $projectCategories = ProjectCategory::active()->orderBy('sort_order', 'asc')->get();
-        $projectTechnologies = Technology::active()->orderBy('sort_order', 'asc')->get();
-        $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
+        $customers = Customer::forForm($selectedCustomerId)->get();
+        $projectCategories = ProjectCategory::forForm($selectedCategoryId, 'sort_order')->get();
+        $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
+
+        $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
+        $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
+
         $priorities = config('project_constants.project_priorities');
+        // $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
+        // $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
 
         return view('projects.partials.tabs.settings', compact(
             'project',
             'users',
             'customers',
-            'statuses',
             'projectCategories',
+            'nextProjectCategorySortOrder',
             'projectTechnologies',
-            'projectStages',
+            'nextProjectTechnologySortOrder',
             'priorities'
+            // 'statuses',
+            // 'projectStages',
         ))->render();
     }
+
     private function getProjectHeaderData(Project $project, ProjectServices $service): array
     {
         $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
@@ -533,12 +553,15 @@ class ProjectController extends Controller
         $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
         $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
 
+        $selectedStatusId = $project->status_id;
+        $selectedStageId = $project->project_stage_id;
+
         return [
             'priority' => config('project_constants.project_priorities')[$project->priority] ?? null,
             'projectTimeline' => $timelines['projectTimeline'],
             'customerTimeline' => $timelines['customerTimeline'],
-            'projectStatuses' => ProjectStatus::active()->orderBy('sort_order', 'asc')->get(),
-            'projectStages' => ProjectStage::active()->orderBy('sort_order', 'asc')->get(),
+            'projectStatuses' => ProjectStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])->get(),
+            'projectStages' => ProjectStage::forForm($selectedStageId, ['order_by' => 'sort_order'])->get(),
             'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
             'statusChangeMinDateLabel' => $statusChangeMinDate ? AppServiceProvider::formatAppDate($statusChangeMinDate) : null,
             'stageChangeMinDate' => $stageChangeMinDate?->toDateString(),

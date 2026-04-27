@@ -9,8 +9,7 @@ const ADVANCED_TASK_FIELDS = new Set([
     'task_type_id',
     'task_mode_id',
     'priority',
-    'start_date',
-    'due_date',
+    'due_date_time',
     'tag_ids',
     'is_billable',
 ]);
@@ -135,17 +134,44 @@ const setEstimatedTimeValue = (form, totalMinutes = 0) => {
     totalMinutesInput.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
-const setTaskCreateRequiredIndicators = (form, isAgile) => {
+const setTaskCreateRequiredIndicators = (form, isAgile, hasSelectedModule = false) => {
     if (!form) {
         return;
     }
 
     form.querySelectorAll('[data-task-create-required-star]').forEach((node) => {
         const fieldName = node.dataset.taskCreateRequiredStar || '';
-        const shouldShow = isAgile && fieldName === 'project_sprint_id';
+        const shouldShow = isAgile && hasSelectedModule && fieldName === 'project_sprint_id';
 
         node.classList.toggle('hidden', !shouldShow);
     });
+};
+
+const setTaskCreatePlacementHint = (form, projectMeta, { selectedMilestoneId = '', selectedSprintId = '' } = {}) => {
+    const hintNode = form?.querySelector('[data-task-create-placement-hint]');
+
+    if (!hintNode) {
+        return;
+    }
+
+    if (!projectMeta || projectMeta.flow !== 'agile') {
+        hintNode.textContent = '';
+        hintNode.classList.add('hidden');
+        return;
+    }
+
+    let message = 'Leave both milestone and sprint empty to place this task in the project backlog.';
+
+    if (selectedMilestoneId && !selectedSprintId) {
+        message = 'Select a sprint for the chosen milestone, or clear the milestone to use the project backlog.';
+    } else if (selectedSprintId && !selectedMilestoneId) {
+        message = 'This sprint can be saved without choosing a milestone. The backend will match the milestone automatically.';
+    } else if (selectedSprintId) {
+        message = '';
+    }
+
+    hintNode.textContent = message;
+    hintNode.classList.toggle('hidden', !message);
 };
 
 const setSelectOptions = (field, options = [], { placeholder = 'Select option', disabled = false, value = '' } = {}) => {
@@ -228,6 +254,74 @@ const getProjectMeta = (dependencies, projectId) => {
     return dependencies.projects?.[String(projectId)] || null;
 };
 
+const getTaskCreateMode = (root) => root?.dataset.taskCreateMode === 'request' ? 'request' : 'create';
+
+const setTaskCreateMode = (root, mode = 'create') => {
+    if (!root) {
+        return;
+    }
+
+    const normalizedMode = mode === 'request' ? 'request' : 'create';
+    const form = root.querySelector('[data-task-create-form]');
+    const titleNode = root.querySelector('[data-task-create-title]');
+    const assigneeFieldWrapper = root.querySelector('[data-task-create-assignee-field]');
+    const requestTypeField = form?.querySelector('[data-task-create-request-type]');
+    const submitButton = form?.querySelector('[data-task-create-submit]');
+
+    root.dataset.taskCreateMode = normalizedMode;
+
+    if (form) {
+        form.dataset.storeUrl = normalizedMode === 'request'
+            ? (form.dataset.requestStoreUrl || form.dataset.defaultStoreUrl || form.dataset.storeUrl || '')
+            : (form.dataset.defaultStoreUrl || form.dataset.storeUrl || '');
+    }
+
+    if (titleNode) {
+        titleNode.textContent = normalizedMode === 'request'
+            ? (titleNode.dataset.requestTitle || 'Request Task')
+            : (titleNode.dataset.defaultTitle || 'Add Task');
+    }
+
+    if (assigneeFieldWrapper) {
+        assigneeFieldWrapper.hidden = normalizedMode === 'request';
+    }
+
+    if (requestTypeField) {
+        requestTypeField.value = normalizedMode === 'request' ? 'self' : 'assigned';
+    }
+
+    if (submitButton) {
+        submitButton.textContent = normalizedMode === 'request' ? 'Request Task' : 'Save Task';
+    }
+};
+
+const syncSelfAssignee = (form, options = []) => {
+    if (!form || getTaskCreateMode(form.closest('[data-task-create-root]')) !== 'request') {
+        return;
+    }
+
+    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const selfAssigneeId = String(form.dataset.selfAssigneeId || '');
+
+    if (!assigneeField || !selfAssigneeId) {
+        return;
+    }
+
+    const hasSelfOption = options.some((option) => String(option.value) === selfAssigneeId)
+        || Array.from(assigneeField.options).some((option) => String(option.value) === selfAssigneeId);
+
+    if (!hasSelfOption) {
+        return;
+    }
+
+    if (assigneeField.tomselect) {
+        assigneeField.tomselect.setValue(selfAssigneeId, true);
+        return;
+    }
+
+    assigneeField.value = selfAssigneeId;
+};
+
 const openTaskCreateModal = (modal) => {
     if (!modal) {
         return;
@@ -235,17 +329,6 @@ const openTaskCreateModal = (modal) => {
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-
-    window.requestAnimationFrame(() => {
-        const projectField = modal.querySelector('[name="project_id"]');
-
-        if (projectField?.tomselect) {
-            projectField.tomselect.focus();
-            return;
-        }
-
-        projectField?.focus();
-    });
 };
 
 const closeTaskCreateModal = (modal) => {
@@ -257,10 +340,12 @@ const closeTaskCreateModal = (modal) => {
     modal.classList.remove('flex');
 };
 
-const updateSprintOptions = (form, dependencies, { selectedSprintId = '', selectedModuleId = '' } = {}) => {
+const updateSprintOptions = (form, dependencies, { selectedSprintId = '', selectedMilestoneId = '' } = {}) => {
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectField = form.querySelector('[name="project_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
+    const normalizedMilestoneId = String(selectedMilestoneId || form.querySelector('[name="project_milestone_id"]')?.value || '');
+    const normalizedSprintId = String(selectedSprintId || sprintField?.value || '');
 
     if (!sprintField) {
         return;
@@ -279,28 +364,42 @@ const updateSprintOptions = (form, dependencies, { selectedSprintId = '', select
             placeholder: 'Not used for linear projects',
             disabled: true,
         });
+        setTaskCreateRequiredIndicators(form, false);
+        setTaskCreatePlacementHint(form, projectMeta);
         return;
     }
 
     const availableSprints = (projectMeta.sprints || []).filter((sprint) => {
-        if (!selectedModuleId) {
+        if (!normalizedMilestoneId) {
             return true;
         }
 
-        return String(sprint.project_module_id || '') === String(selectedModuleId);
+        return String(sprint.project_milestone_id || '') === normalizedMilestoneId;
     });
+    const resolvedSprintId = availableSprints.some((option) => option.value === normalizedSprintId)
+        ? normalizedSprintId
+        : '';
 
     setSelectOptions(sprintField, availableSprints, {
-        placeholder: availableSprints.length ? 'Select sprint' : 'No sprints available',
+        placeholder: normalizedMilestoneId
+            ? (availableSprints.length ? 'Select sprint' : 'No sprints in selected milestone')
+            : (availableSprints.length ? 'Select sprint or leave empty for backlog' : 'No sprints available'),
         disabled: false,
-        value: availableSprints.some((option) => option.value === String(selectedSprintId)) ? selectedSprintId : '',
+        value: resolvedSprintId,
+    });
+
+    setTaskCreateRequiredIndicators(form, true, Boolean(normalizedMilestoneId));
+    setTaskCreatePlacementHint(form, projectMeta, {
+        selectedMilestoneId: normalizedMilestoneId,
+        selectedSprintId: resolvedSprintId,
     });
 };
 
 const setEmptyProjectState = (form) => {
     setTaskCreateRequiredIndicators(form, false);
+    setTaskCreatePlacementHint(form, null);
 
-    setSelectOptions(form.querySelector('[name="project_module_id"]'), [], {
+    setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
     });
@@ -326,12 +425,11 @@ const setEmptyProjectState = (form) => {
 
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
-    const moduleField = form.querySelector('[name="project_module_id"]');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const assigneeField = form.querySelector('[name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
-    const startDateField = form.querySelector('[name="start_date"]');
-    const dueDateField = form.querySelector('[name="due_date"]');
+    const dueDateField = form.querySelector('[name="due_date_time"]');
     const billableField = form.querySelector('[name="is_billable"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 
@@ -342,10 +440,8 @@ const applyProjectDefaults = async (form, dependencies) => {
 
     const isAgile = projectMeta.flow === 'agile';
 
-    setTaskCreateRequiredIndicators(form, isAgile);
-
-    setSelectOptions(moduleField, projectMeta.modules || [], {
-        placeholder: isAgile ? 'Select module' : 'Not used for linear projects',
+    setSelectOptions(milestoneField, projectMeta.milestones || [], {
+        placeholder: isAgile ? 'Select milestone or leave empty for backlog' : 'Not used for linear projects',
         disabled: !isAgile,
     });
 
@@ -355,6 +451,7 @@ const applyProjectDefaults = async (form, dependencies) => {
         placeholder: 'Select assignee',
         disabled: false,
     });
+    syncSelfAssignee(form, projectMeta.assignees || []);
 
     setSelectOptions(statusField, dependencies.status_options_by_flow?.[projectMeta.flow] || [], {
         placeholder: 'Select status',
@@ -372,8 +469,7 @@ const applyProjectDefaults = async (form, dependencies) => {
         }
     }
 
-    setFieldValue(startDateField, dependencies.defaults?.start_date || '');
-    setFieldValue(dueDateField, dependencies.defaults?.due_date || '');
+    setFieldValue(dueDateField, '');
     setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
@@ -425,6 +521,8 @@ const loadParentTaskOptions = async (form, dependencies) => {
     if (sprintField?.value) {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
+    console.log(requestUrl);
+    
 
     const response = await fetch(requestUrl.toString(), {
         headers: {
@@ -457,6 +555,7 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     form.reset();
     clearTaskCreateErrors(form);
     setTaskCreateAdvancedState(root, false);
+    setTaskCreateMode(root, getTaskCreateMode(root));
     syncTaskCreateSelectState(form);
     setEmptyProjectState(form);
 
@@ -489,17 +588,18 @@ const applyTaskCreateErrors = (root, form, errors = {}) => {
 };
 
 const initializeTaskCreateRoot = (root, dependencies) => {
-    if (!root || root.dataset.initialized === 'true') {
+    if (!root || root.dataset.taskCreateInitialized === 'true') {
         return;
     }
 
-    root.dataset.initialized = 'true';
+    root.dataset.taskCreateInitialized = 'true';
     initTomSelect(root);
 
     root.addEventListener('click', async (event) => {
         const openButton = event.target.closest('[data-task-create-open]');
 
         if (openButton) {
+            setTaskCreateMode(root, openButton.dataset.taskCreateRequestType === 'self' ? 'request' : 'create');
             openTaskCreateModal(root.querySelector('[data-task-create-modal]'));
 
             try {
@@ -544,11 +644,12 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        const moduleField = event.target.closest('[name="project_module_id"]');
+        const milestoneField = event.target.closest('[name="project_milestone_id"]');
 
-        if (moduleField && root.contains(moduleField)) {
+        if (milestoneField && root.contains(milestoneField)) {
             updateSprintOptions(form, dependencies, {
-                selectedModuleId: moduleField.value || '',
+                selectedMilestoneId: milestoneField.value || '',
+                selectedSprintId: form.querySelector('[name="project_sprint_id"]')?.value || '',
             });
 
             try {
@@ -565,13 +666,20 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         if (sprintField && root.contains(sprintField)) {
             const projectMeta = getProjectMeta(dependencies, form.querySelector('[name="project_id"]')?.value || '');
             const selectedSprint = (projectMeta?.sprints || []).find((option) => option.value === String(sprintField.value || ''));
-            const moduleFieldInForm = form.querySelector('[name="project_module_id"]');
+            const milestoneFieldInForm = form.querySelector('[name="project_milestone_id"]');
 
-            if (selectedSprint && moduleFieldInForm?.tomselect) {
-                moduleFieldInForm.tomselect.setValue(String(selectedSprint.project_module_id || ''), true);
-            } else if (selectedSprint && moduleFieldInForm) {
-                moduleFieldInForm.value = String(selectedSprint.project_module_id || '');
+            if (selectedSprint && !milestoneFieldInForm?.value) {
+                if (milestoneFieldInForm?.tomselect) {
+                    milestoneFieldInForm.tomselect.setValue(String(selectedSprint.project_milestone_id || ''), true);
+                } else if (milestoneFieldInForm) {
+                    milestoneFieldInForm.value = String(selectedSprint.project_milestone_id || '');
+                }
             }
+
+            updateSprintOptions(form, dependencies, {
+                selectedMilestoneId: milestoneFieldInForm?.value || '',
+                selectedSprintId: sprintField.value || '',
+            });
 
             try {
                 await loadParentTaskOptions(form, dependencies);
@@ -637,7 +745,7 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             submitButton?.removeAttribute('disabled');
 
             if (submitButton) {
-                submitButton.textContent = 'Save Task';
+                submitButton.textContent = getTaskCreateMode(root) === 'request' ? 'Request Task' : 'Save Task';
             }
         }
     });

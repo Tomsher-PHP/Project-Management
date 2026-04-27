@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TaskMode extends Model
 {
-    use Filterable, Sortable;
+    use Filterable, Sortable, SoftDeletes, HasFormOptions;
 
     public $timestamps = false;
 
@@ -20,6 +22,7 @@ class TaskMode extends Model
         'is_productive',
         'is_rework',
         'track_performance',
+        'customer_request',
         'sort_order',
         'is_default',
         'is_system',
@@ -42,9 +45,11 @@ class TaskMode extends Model
     protected function casts(): array
     {
         return [
+            'sort_order' => 'integer',
             'is_rework' => 'boolean',
             'is_productive' => 'boolean',
             'track_performance' => 'boolean',
+            'customer_request' => 'boolean',
             'is_active' => 'boolean',
             'is_system' => 'boolean',
             'is_default' => 'boolean',

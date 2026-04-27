@@ -1,14 +1,36 @@
 /* Main control */
 .ts-wrapper .ts-control {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    overflow: hidden;
     padding-right: 3rem;
     padding-left: 1.25rem;
     border-width: 1px;
     border-color: #e5e7eb;
     border-radius: 0.5rem;
-    /* min-height: 3.5rem; */
     font-size: 1rem;
     line-height: 1.5rem;
     cursor: pointer;
+}
+
+.ts-wrapper .ts-control .item,
+.ts-wrapper .ts-control .item *,
+.ts-wrapper .ts-control > div {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ts-wrapper .ts-control > input {
+    min-width: 0 !important;
+    height: 24px;
+    line-height: 24px;
 }
 
 /* Focus state */
@@ -58,6 +80,23 @@
 .ts-dropdown .ts-option {
     font-size: 1rem;
     line-height: 1.5rem;
+}
+
+.ts-dropdown .option,
+.ts-dropdown .ts-option {
+    min-height: 42px;
+    max-height: 42px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ts-dropdown .option *,
+.ts-dropdown .ts-option * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ts-wrapper .ts-control::after {

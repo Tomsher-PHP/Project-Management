@@ -76,14 +76,14 @@ const initializeTaskFilters = () => {
     }
 
     const projectSelect = document.querySelector('select[name="project_id[]"]');
-    const moduleSelect = document.querySelector('select[name="project_module_id[]"]');
+    const milestoneSelect = document.querySelector('select[name="project_milestone_id[]"]');
     const sprintSelect = document.querySelector('select[name="project_sprint_id[]"]');
 
-    if (!projectSelect || !moduleSelect || !sprintSelect) {
+    if (!projectSelect || !milestoneSelect || !sprintSelect) {
         return;
     }
 
-    let dependencies = { modules: [], sprints: [] };
+    let dependencies = { milestones: [], sprints: [] };
 
     try {
         dependencies = JSON.parse(dataNode.textContent || '{}');
@@ -91,22 +91,22 @@ const initializeTaskFilters = () => {
         return;
     }
 
-    const allModules = Array.isArray(dependencies.modules) ? dependencies.modules : [];
+    const allModules = Array.isArray(dependencies.milestones) ? dependencies.milestones : [];
     const allSprints = Array.isArray(dependencies.sprints) ? dependencies.sprints : [];
 
     const syncDependentFilters = () => {
         const selectedProjectIds = getSelectedValues(projectSelect);
-        const currentModuleIds = getSelectedValues(moduleSelect);
+        const currentMilestoneIds = getSelectedValues(milestoneSelect);
         const currentSprintIds = getSelectedValues(sprintSelect);
 
         const filteredModules = selectedProjectIds.length
-            ? allModules.filter((module) => selectedProjectIds.includes(String(module.project_id)))
+            ? allModules.filter((milestone) => selectedProjectIds.includes(String(milestone.project_id)))
             : allModules;
 
-        const nextModuleIds = rebuildSelectOptions(moduleSelect, filteredModules, currentModuleIds);
+        const nextMilestoneIds = rebuildSelectOptions(milestoneSelect, filteredModules, currentMilestoneIds);
 
-        const filteredSprints = nextModuleIds.length
-            ? allSprints.filter((sprint) => nextModuleIds.includes(String(sprint.project_module_id)))
+        const filteredSprints = nextMilestoneIds.length
+            ? allSprints.filter((sprint) => nextMilestoneIds.includes(String(sprint.project_milestone_id)))
             : selectedProjectIds.length
                 ? allSprints.filter((sprint) => selectedProjectIds.includes(String(sprint.project_id)))
                 : allSprints;
@@ -115,7 +115,7 @@ const initializeTaskFilters = () => {
     };
 
     projectSelect.addEventListener('change', syncDependentFilters);
-    moduleSelect.addEventListener('change', syncDependentFilters);
+    milestoneSelect.addEventListener('change', syncDependentFilters);
 
     dataNode.dataset.initialized = 'true';
     syncDependentFilters();

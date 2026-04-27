@@ -5,31 +5,36 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TaskNoteRequest;
 use App\Http\Requests\TaskCommentRequest;
 use App\Http\Requests\TaskQuickStoreRequest;
-use App\Http\Requests\TaskUpdateRequest;
 use App\Models\Attachment;
 use App\Models\Project;
-use App\Models\ProjectModule;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
-use App\Models\TaskMode;
-use App\Models\TaskStatusHistory;
+use App\Models\TaskComment;
 use App\Models\TaskStatus;
-use App\Models\TaskType;
-use App\Models\Tag;
 use App\Models\TaskNote;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
+use App\Services\TaskFilterService;
+use App\Services\TaskFormService;
+use App\Services\TaskQueryService;
+use App\Services\TaskServices;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 
 class TaskController extends Controller
 {
+    private const KANBAN_STATUS_PAGE_SIZE = 5;
+
     protected $pageTitle;
     protected $subTitle;
 
@@ -40,279 +45,220 @@ class TaskController extends Controller
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
         $user = $request->user();
-        $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
-        $accessibleTasksQuery = Task::query()
-            ->accessibleBy($user);
+        $baseQuery = app(TaskQueryService::class)->baseQuery($user);
 
-        $projectIds = (clone $accessibleTasksQuery)
-            ->distinct()
-            ->pluck('project_id')
-            ->filter();
+        $tasks = $taskServices->getList(
+            $user,
+            $request->all(),
+            $perPage
+        );
 
-        $projectModuleIds = (clone $accessibleTasksQuery)
-            ->whereNotNull('project_module_id')
-            ->distinct()
-            ->pluck('project_module_id')
-            ->filter();
+        $filters = $filterService->getFilters($user, $baseQuery);
 
-        $projectSprintIds = (clone $accessibleTasksQuery)
-            ->whereNotNull('project_sprint_id')
-            ->distinct()
-            ->pluck('project_sprint_id')
-            ->filter();
-
-        $tasks = (clone $accessibleTasksQuery)
-            ->with([
-                'project:id,name,project_code,project_flow',
-                'projectModule:id,name',
-                'projectSprint:id,name',
-                'currentAssignee:id,name',
-                'status:id,name,color',
-                'taskType:id,name,code,color',
-                'taskMode:id,name,code,color',
-            ])
-            ->filter($request->all())
-            ->sort($request->all())
-            ->paginate($perPage)
-            ->withQueryString();
-
-        $projects = $projectIds->isEmpty()
-            ? collect()
-            : Project::query()
-            ->whereIn('id', $projectIds)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'name']);
-
-        $projectModules = $projectModuleIds->isEmpty()
-            ? collect()
-            : ProjectModule::query()
-            ->with('project:id,name')
-            ->whereIn('id', $projectModuleIds)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'project_id', 'name'])
-            ->map(fn(ProjectModule $projectModule) => (object) [
-                'id' => $projectModule->id,
-                'project_id' => $projectModule->project_id,
-                'name' => $projectModule->project?->name
-                    ? $projectModule->project->name . ' / ' . $projectModule->name
-                    : $projectModule->name,
-            ]);
-
-        $projectSprints = $projectSprintIds->isEmpty()
-            ? collect()
-            : ProjectSprint::query()
-            ->with([
-                'project:id,name',
-                'projectModule:id,name',
-            ])
-            ->whereIn('id', $projectSprintIds)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'project_id', 'project_module_id', 'name'])
-            ->map(fn(ProjectSprint $projectSprint) => (object) [
-                'id' => $projectSprint->id,
-                'project_id' => $projectSprint->project_id,
-                'project_module_id' => $projectSprint->project_module_id,
-                'name' => collect([
-                    $projectSprint->project?->name,
-                    $projectSprint->projectModule?->name,
-                    $projectSprint->name,
-                ])->filter()->implode(' / '),
-            ]);
-
-        $statuses = TaskStatus::active()
-            ->orderBy('sort_order', 'asc')
-            ->get(['id', 'name']);
-
-        $assignees = User::active()
-            ->orderBy('name', 'asc')
-            ->get(['id', 'name']);
-
-        $types = TaskType::query()
-            ->active()
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('name', 'asc')
-            ->get(['name', 'code']);
-        $modes = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('id', 'asc')
-            ->get(['name', 'code']);
-        $priorities = config('project_constants.task_priorities', []);
-        $taskCreateProjects = Project::query()
-            ->accessibleBy($user)
-            ->with([
-                'projectModules' => fn($query) => $query
-                    ->select('id', 'project_id', 'name')
-                    ->orderBy('sort_order')
-                    ->orderBy('name'),
-                'projectSprints' => fn($query) => $query
-                    ->select('id', 'project_id', 'project_module_id', 'name')
-                    ->orderBy('sort_order')
-                    ->orderBy('name'),
-                'activeMembers:id,name',
-            ])
-            ->orderBy('name', 'asc')
-            ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']);
-        $taskTypeOptions = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get(['id', 'name', 'color']);
-        $taskModeOptions = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get(['id', 'name', 'color']);
-        $taskPriorityOptions = collect(config('project_constants.task_priorities', []))
-            ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-            ->values();
-        $tagOptions = Tag::query()
-            ->active()
-            ->orderBy('name')
-            ->get(['id', 'name', 'color']);
+        $formData = $taskFormService->getCreateData($user);
+        $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
         $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskStartDate = now(config('constants.timezone'))->toDateString();
-        $defaultTaskDueDate = now(config('constants.timezone'))->addDay()->toDateString();
 
-        return view('tasks.index', compact(
-            'tasks',
-            'perPage',
-            'projects',
-            'projectModules',
-            'projectSprints',
-            'statuses',
-            'assignees',
-            'types',
-            'modes',
-            'priorities',
-            'taskCreateProjects',
-            'taskTypeOptions',
-            'taskModeOptions',
-            'taskPriorityOptions',
-            'tagOptions',
-            'taskCreateDependencies',
-            'defaultTaskPriority',
-            'defaultTaskStartDate',
-            'defaultTaskDueDate'
-        ));
+        // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
+        $taskRowRelations = [
+            'project:id,name,project_code,project_flow',
+            'projectMilestone:id,name',
+            'projectSprint:id,name',
+            'currentAssignee:id,name',
+            'status:id,name,color',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+        ];
+        $tasks->getCollection()->each(function (Task $task) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForList($task, $taskRowRelations);
+        });
+
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'perPage' => $perPage,
+            'taskCreateDependencies' => $taskCreateDependencies,
+            ...$filters,
+            ...$formData,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService): JsonResponse
+    // Kanban view for tasks.
+    public function kanbanView(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
+    {
+        $selectedFlowType = 'agile';
+        $user = $request->user();
+
+        $baseQuery = app(TaskQueryService::class)->baseQuery($user);
+
+        $filters = $filterService->getFilters($user, $baseQuery);
+
+        $formData = $taskFormService->getCreateData($user);
+
+        $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
+        $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
+
+        $boardStatuses = collect($filters['statuses'] ?? [])
+            ->when(
+                fn($collection) => $collection->isNotEmpty(),
+                fn($collection) => $collection->where('flow_type', $selectedFlowType)
+            )->values();
+
+        $tasksByStatus = $taskServices->getKanban(
+            $user,
+            $request->all(),
+            $selectedFlowType,
+            $boardStatuses,
+            self::KANBAN_STATUS_PAGE_SIZE
+        );
+
+        return view('tasks.kanban.kanban-view', array_merge([
+            'tasksByStatus' => $tasksByStatus,
+            'perPage' => $request->input('per_page'),
+            'taskCreateDependencies' => $taskCreateDependencies,
+            'boardStatuses' => $boardStatuses,
+        ], $filters, $formData));
+    }
+
+    // Kanban board ajax loading
+    public function kanbanMode(Request $request, TaskServices $taskServices)
+    {
+        $selectedFlowType = $request->input('flow', 'agile');
+        $user = $request->user();
+
+        $boardStatuses = TaskStatus::active()
+            ->forFlow($selectedFlowType)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
+
+        $priorities = config('project_constants.task_priorities', []);
+
+        if ($request->ajax()) {
+            if ($request->filled('status_id')) {
+                $statusId = (int) $request->input('status_id');
+                $page = max((int) $request->input('page', 1), 1);
+
+                $status = $boardStatuses->firstWhere('id', $statusId);
+                abort_unless($status, Response::HTTP_NOT_FOUND);
+
+                $column = $taskServices->getKanbanStatusData(
+                    $user,
+                    $request->all(),
+                    $selectedFlowType,
+                    $statusId,
+                    $page,
+                    self::KANBAN_STATUS_PAGE_SIZE
+                );
+
+                return response()->json([
+                    'status' => true,
+                    'html' => view('tasks.kanban._cards', [
+                        'tasks' => $column['tasks'],
+                        'status' => $status,
+                        'priorities' => $priorities,
+                    ])->render(),
+                    'hasMore' => $column['hasMore'],
+                    'nextPage' => $column['nextPage'],
+                    'taskIds' => $column['taskIds'],
+                    'total' => $column['total'],
+                ], Response::HTTP_OK);
+            }
+
+            $tasksByStatus = $taskServices->getKanban(
+                $user,
+                $request->all(),
+                $selectedFlowType,
+                $boardStatuses,
+                self::KANBAN_STATUS_PAGE_SIZE
+            );
+
+            return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
+        }
+
+        $tasksByStatus = $taskServices->getKanban(
+            $user,
+            $request->all(),
+            $selectedFlowType,
+            $boardStatuses,
+            self::KANBAN_STATUS_PAGE_SIZE
+        );
+
+        return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
+    }
+
+    // Store newly created task with minimal required fields, used for quick create from various places in the app
+    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
     {
         $validated = $request->validated();
+        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
+
         $project = Project::query()
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
-        $assigneeId = isset($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $isLinearFlow = $project->project_flow === 'linear';
-        $selectedModule = $isLinearFlow || empty($validated['project_module_id'])
-            ? null
-            : ProjectModule::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_module_id']);
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? $selectedModule?->id);
-        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
-        $defaultStatusId = $this->getDefaultTaskStatusIdForFlow($project->project_flow);
-        $defaultTaskTypeId = TaskType::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskModeId = TaskMode::query()
-            ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->value('id');
-        $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskEstimateSeconds = $this->getDefaultTaskEstimateSeconds($project);
 
-        $task = DB::transaction(function () use (
-            $project,
-            $validated,
-            $assigneeId,
-            $resolvedModuleId,
-            $resolvedSprintId,
-            $defaultStatusId,
-            $defaultTaskTypeId,
-            $defaultTaskModeId,
-            $defaultTaskPriority,
-            $defaultTaskEstimateSeconds
-        ) {
-            $task = $project->tasks()->create([
-                'project_module_id' => $resolvedModuleId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'title' => $validated['title'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaultStatusId,
-                'task_type_id' => $validated['task_type_id'] ?? $defaultTaskTypeId,
-                'task_mode_id' => $validated['task_mode_id'] ?? $defaultTaskModeId,
-                'priority' => $validated['priority'] ?? $defaultTaskPriority,
-                'current_assignee_id' => $assigneeId,
-                'start_date' => $validated['start_date'] ?? now(config('constants.timezone'))->toDateString(),
-                'due_date' => $validated['due_date'] ?? null,
-                'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
-                    ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
-                    : $defaultTaskEstimateSeconds,
-                'is_billable' => (bool) ($validated['is_billable'] ?? $project->default_billable),
-                'sort_order' => Task::nextSortOrder($project->id, $resolvedSprintId),
-            ]);
+        $task = $taskServices->createQuickTask($project, $validated);
 
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            return $task;
-        });
-
-        $notificationService->sendTaskAssignmentIfNeeded($task, $assigneeId);
+        if ($task->isApprovedRequest()) {
+            $notificationService->sendTaskAssignmentIfNeeded(
+                $task,
+                $task->current_assignee_id ? (int) $task->current_assignee_id : null
+            );
+        } else if ($requestType === 'self') {
+            $notificationService->notifyTaskRequestCreated($task);
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Task added successfully.',
+            'message' => $requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.',
             'task_id' => $task->id,
+            'request_type' => $task->request_type,
+            'request_status' => $task->request_status,
         ], Response::HTTP_OK);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Task $task)
+    public function edit(Task $task, TaskServices $taskServices)
     {
         $task = $this->loadTaskForDetail($task);
         $overviewData = $this->getTaskOverviewData($task);
+        $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, auth()->id());
 
         return view('tasks.detail-page', [
             'task' => $task,
             'project' => $task->project,
+            'taskActivitiesCount' => $this->getTaskActivitiesQuery($task)->count(),
             'taskCommentsCount' => $task->comments()->count(),
+            'totalTrackedSeconds' => $totalSeconds,
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
-        ] + $overviewData);
+        ] + $overviewData + $this->getTaskHeaderData($task, $taskServices));
+    }
+
+    public function activityModal(Task $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+
+        return response()->json([
+            'success' => true,
+            'html' => view('tasks.partials.modals.activity-content', [
+                'task' => $task,
+                'activities' => $this->getRecentTaskActivities($task),
+                'viewAllUrl' => route('activity.log', ['task_id' => $task->id]),
+            ])->render(),
+        ], Response::HTTP_OK);
     }
 
     public function tab(Request $request, Task $task, string $tab): JsonResponse
     {
-        $allowedTabs = ['overview', 'activity', 'notes', 'settings'];
+        $allowedTabs = ['overview', 'scope', 'notes', 'history'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         $task = $this->loadTaskForDetail($task);
@@ -334,7 +280,7 @@ class TaskController extends Controller
             ->where('project_id', $project->id)
             ->accessibleBy($request->user())
             ->whereKeyNot($task->id)
-            ->orderBy('title')
+            ->orderBy('name')
             ->orderBy('id');
 
         if ($project->project_flow === 'linear' || ! $sprintId) {
@@ -353,10 +299,10 @@ class TaskController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
+            'options' => $query->get(['id', 'name', 'code'])->map(function (Task $parentTask) {
                 return [
                     'value' => (string) $parentTask->id,
-                    'text' => $parentTask->title,
+                    'text' => $parentTask->name,
                     'subtype' => $parentTask->code ?: 'Parent task',
                 ];
             })->values(),
@@ -377,7 +323,7 @@ class TaskController extends Controller
         $query = Task::query()
             ->where('project_id', $project->id)
             ->accessibleBy($request->user())
-            ->orderBy('title')
+            ->orderBy('name')
             ->orderBy('id');
 
         if ($project->project_flow === 'linear') {
@@ -401,96 +347,13 @@ class TaskController extends Controller
 
         return response()->json([
             'status' => true,
-            'options' => $query->get(['id', 'title', 'code'])->map(function (Task $parentTask) {
+            'options' => $query->get(['id', 'name', 'code'])->map(function (Task $parentTask) {
                 return [
                     'value' => (string) $parentTask->id,
-                    'text' => $parentTask->title,
+                    'text' => $parentTask->name,
                     'subtype' => $parentTask->code ?: 'Parent task',
                 ];
             })->values(),
-        ], Response::HTTP_OK);
-    }
-
-    public function update(TaskUpdateRequest $request, Task $task, NotificationService $notificationService): JsonResponse
-    {
-        $task = $this->loadTaskForDetail($task);
-        $project = $task->project;
-        $validated = $request->validated();
-        $isLinearFlow = $project->project_flow === 'linear';
-        $selectedSprint = $isLinearFlow || empty($validated['project_sprint_id'])
-            ? null
-            : ProjectSprint::query()
-            ->where('project_id', $project->id)
-            ->find($validated['project_sprint_id']);
-        $resolvedModuleId = $isLinearFlow ? null : ($selectedSprint?->project_module_id ?? null);
-        $resolvedSprintId = $isLinearFlow ? null : $selectedSprint?->id;
-        $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
-        $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
-        $previousStatusId = (int) ($task->status_id ?? 0);
-        $previousAssigneeId = (int) ($task->current_assignee_id ?? 0);
-
-        DB::transaction(function () use (
-            $validated,
-            $task,
-            $resolvedModuleId,
-            $resolvedSprintId,
-            $newStatusId,
-            $newAssigneeId,
-            $previousStatusId,
-            $previousAssigneeId
-        ) {
-            $task->update([
-                'project_module_id' => $resolvedModuleId,
-                'project_sprint_id' => $resolvedSprintId,
-                'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
-                'title' => $validated['title'],
-                'description' => $validated['description'] ?? null,
-                'status_id' => $newStatusId,
-                'task_type' => $validated['task_type'],
-                'task_mode' => $validated['task_mode'],
-                'priority' => $validated['priority'],
-                'current_assignee_id' => $newAssigneeId,
-                'start_date' => $validated['start_date'] ?? null,
-                'due_date' => $validated['due_date'] ?? null,
-                'completed_at' => $validated['completed_at'] ?? null,
-                'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
-                'is_billable' => (bool) ($validated['is_billable'] ?? false),
-                'sort_order' => ! empty($validated['sort_order']) ? (int) $validated['sort_order'] : $task->sort_order,
-            ]);
-
-            if (array_key_exists('tag_ids', $validated)) {
-                $task->tags()->sync($this->resolveTaskTagIds($validated['tag_ids'] ?? []));
-            }
-
-            if ($newStatusId && $newStatusId !== $previousStatusId) {
-                TaskStatusHistory::create([
-                    'task_id' => $task->id,
-                    'status_id' => $newStatusId,
-                ]);
-            }
-
-            if ($newAssigneeId !== ($previousAssigneeId ?: null)) {
-                $this->syncTaskAssignmentState($task, $newAssigneeId);
-            }
-        });
-
-        $task->refresh();
-        $notificationService->sendTaskAssignmentIfNeeded(
-            $task,
-            $newAssigneeId,
-            $previousAssigneeId ?: null
-        );
-        $task = $this->loadTaskForDetail($task);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Task updated successfully.',
-            'header_html' => view('tasks.partials.header', [
-                'task' => $task,
-                'project' => $task->project,
-            ] + $this->getTaskOverviewData($task))->render(),
-            'overview_html' => $this->renderTaskTab($task, 'overview'),
-            'settings_html' => $this->renderTaskTab($task, 'settings'),
         ], Response::HTTP_OK);
     }
 
@@ -630,12 +493,13 @@ class TaskController extends Controller
         $task->load([
             'project:id,name,project_code,project_flow,customer_id',
             'project.customer:id,name',
-            'projectModule:id,name',
-            'projectSprint:id,name,project_module_id',
-            'projectSprint.projectModule:id,name',
-            'parentTask:id,title,code',
+            'projectMilestone:id,name',
+            'projectSprint:id,name,project_milestone_id',
+            'projectSprint.projectMilestone:id,name',
+            'parentTask:id,name,code',
             'currentAssignee:id,name',
-            'status:id,name,color',
+            'currentAssignee.primaryAttachment',
+            'status:id,name,color,type',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
             'tags:id,name,color',
@@ -648,6 +512,25 @@ class TaskController extends Controller
         return $task;
     }
 
+    private function loadTaskDescendantsForList(Task $task, array $taskRowRelations): void
+    {
+        if ((int) ($task->child_tasks_count ?? 0) <= 0) {
+            $task->setRelation('childTasks', collect());
+
+            return;
+        }
+
+        $task->load([
+            'childTasks' => fn($query) => $query
+                ->with($taskRowRelations)
+                ->withCount('childTasks'),
+        ]);
+
+        $task->childTasks->each(function (Task $childTask) use ($taskRowRelations) {
+            $this->loadTaskDescendantsForList($childTask, $taskRowRelations);
+        });
+    }
+
     private function renderTaskTab(Task $task, string $tab): string
     {
         return match ($tab) {
@@ -655,21 +538,28 @@ class TaskController extends Controller
                 'task' => $task,
                 'project' => $task->project,
             ] + $this->getTaskOverviewData($task))->render(),
-            'activity' => view('tasks.partials.tabs.activity', [
-                'task' => $task,
-                'project' => $task->project,
-            ] + $this->getTaskActivityData($task))->render(),
+            'scope' => $this->renderTaskScopeTab($task),
             'notes' => view('tasks.partials.tabs.notes', [
                 'task' => $task,
                 'project' => $task->project,
                 'taskNotes' => $this->getPaginatedTaskNotes($task, (int) request()->input('notes_page', 1)),
             ])->render(),
-            'settings' => view('tasks.partials.tabs.settings', [
+            'history' => view('tasks.partials.tabs.history', [
                 'task' => $task,
                 'project' => $task->project,
-            ] + $this->getTaskSettingsData($task))->render(),
+            ] + $this->getTaskHistoryData($task))->render(),
             default => '',
         };
+    }
+
+    private function renderTaskScopeTab(Task $task): string
+    {
+        $task->loadMissing('project.scopeFiles.addedBy');
+
+        return view('tasks.partials.tabs.scope', [
+            'task' => $task,
+            'project' => $task->project,
+        ])->render();
     }
 
     private function getTaskOverviewData(Task $task): array
@@ -696,67 +586,147 @@ class TaskController extends Controller
         ];
     }
 
-    private function getTaskActivityData(Task $task): array
+    private function getTaskHeaderData(Task $task, TaskServices $taskServices): array
     {
+        $flowType = $task->project?->project_flow;
+        $user = auth()->user();
+
         return [
-            'taskActivities' => $task->activities()
-                ->with('causer')
-                ->latest()
-                ->limit(20)
-                ->get(),
+            'taskStatusOptions' => blank($flowType)
+                ? collect()
+                : TaskStatus::query()
+                    ->active()
+                    ->forFlow($flowType)
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'color', 'is_completed']),
+            'canChangeTaskStatus' => $user && $taskServices->isAllowedChangeStatus($task, $user),
+            'taskStatusTransitionUrl' => route('tasks.transition-status'),
         ];
     }
 
-    private function getTaskSettingsData(Task $task): array
+    private function getTaskHistoryData(Task $task): array
     {
-        $project = $task->project;
+        $statusRows = $task->statusHistories()
+            ->with([
+                'status:id,name,color',
+                'addedBy:id,name',
+            ])
+            ->reorder('added_at')
+            ->orderBy('id')
+            ->get();
+
+        $previousStatus = null;
+        $statusHistory = $statusRows
+            ->map(function ($history) use (&$previousStatus) {
+                $currentStatus = [
+                    'label' => $history->status?->name ?? 'No Status',
+                    'color' => $history->status?->color ?: '#CBD5E1',
+                ];
+
+                $entry = [
+                    'from_label' => $previousStatus['label'] ?? 'Start',
+                    'from_color' => $previousStatus['color'] ?? '#CBD5E1',
+                    'to_label' => $currentStatus['label'],
+                    'to_color' => $currentStatus['color'],
+                    'changed_at' => $history->added_at,
+                    'changed_by' => $history->addedBy?->name ?? 'System',
+                    'remarks' => $history->remarks,
+                ];
+
+                $previousStatus = $currentStatus;
+
+                return $entry;
+            })
+            ->reverse()
+            ->values();
+
+        $timeLogs = $task->timeLogs()
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'assignmentLog.user:id,name',
+                'assignmentLog.user.primaryAttachment',
+            ])
+            ->withExists([
+                'changeRequests as has_pending_change_request' => fn($query) => $query->where('status', 'pending'),
+            ])
+            ->reorder('started_at', 'desc')
+            ->orderByDesc('id')
+            ->get();
+
+        $assignmentHistory = $task->assignmentLogs()
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'addedBy:id,name',
+                'addedBy.primaryAttachment',
+                'updatedBy:id,name',
+            ])
+            ->reorder('assigned_from', 'desc')
+            ->orderByDesc('id')
+            ->get();
 
         return [
-            'canEditTask' => auth()->user()->can('update', $task),
-            'isLinearFlow' => $project->project_flow === 'linear',
-            'taskStatuses' => TaskStatus::query()
-                ->active()
-                ->forFlow($project->project_flow)
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']),
-            'projectSprints' => ProjectSprint::query()
-                ->where('project_id', $project->id)
-                ->with(['projectModule:id,name'])
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'project_module_id', 'name']),
-            'assignableUsers' => $project->activeMembers()
-                ->orderBy('users.name')
-                ->get(['users.id', 'users.name']),
-            'parentTaskOptions' => Task::query()
-                ->where('project_id', $project->id)
-                ->accessibleBy(auth()->user())
-                ->whereKeyNot($task->id)
-                ->orderBy('title')
-                ->get(['id', 'title', 'project_sprint_id']),
-            'tagOptions' => Tag::query()
-                ->active()
-                ->orderBy('name')
-                ->get(['id', 'name', 'color']),
-            'taskTypeOptions' => TaskType::query()
-                ->active()
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['name', 'code'])
-                ->map(fn(TaskType $taskType) => ['value' => $taskType->code, 'label' => $taskType->name])
-                ->values(),
-            'taskModeOptions' => TaskMode::query()
-                ->active()
-                ->orderByDesc('is_default')
-                ->orderBy('id')
-                ->get(['name', 'code'])
-                ->map(fn(TaskMode $taskMode) => ['value' => $taskMode->code, 'label' => $taskMode->name])
-                ->values(),
-            'taskPriorityOptions' => collect(config('project_constants.task_priorities', []))
-                ->map(fn($config, $key) => ['value' => $key, 'label' => $config['label'] ?? ucfirst($key)])
-                ->values(),
+            'statusHistory' => $statusHistory,
+            'timeLogs' => $timeLogs,
+            'assignmentHistory' => $assignmentHistory,
+            'currentStatus' => [
+                'label' => $task->status?->name ?? 'No Status',
+                'color' => $task->status?->color ?: '#CBD5E1',
+            ],
+            'currentAssignee' => $task->currentAssignee?->name ?? 'Unassigned',
+            'currentAssigneeUser' => $task->currentAssignee,
+            'totalLoggedSeconds' => (int) $timeLogs->sum('duration_seconds'),
         ];
+    }
+
+    private function getTaskActivitiesQuery(Task $task): Builder
+    {
+        return Activity::query()->where(function (Builder $activityQuery) use ($task) {
+            $activityQuery->where(function (Builder $subjectQuery) use ($task) {
+                $subjectQuery->where('subject_type', Task::class)
+                    ->where('subject_id', $task->id);
+            });
+
+            foreach ($this->getTaskActivitySubjectQueries($task) as $subjectType => $subjectIdsQuery) {
+                $activityQuery->orWhere(function (Builder $subjectQuery) use ($subjectType, $subjectIdsQuery) {
+                    $subjectQuery->where('subject_type', $subjectType)
+                        ->whereIn('subject_id', $subjectIdsQuery);
+                });
+            }
+        });
+    }
+
+    private function getTaskActivitySubjectQueries(Task $task): array
+    {
+        return [
+            TaskComment::class => TaskComment::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskNote::class => TaskNote::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskTimeLog::class => TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+        ];
+    }
+
+    private function getRecentTaskActivities(Task $task, int $limit = 20): Collection
+    {
+        return $this->getTaskActivitiesQuery($task)
+            ->with([
+                'subject',
+                'causer' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith([
+                        User::class => ['primaryAttachment'],
+                    ]);
+                },
+            ])
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 
     private function getPaginatedTaskNotes(Task $task, int $page)
@@ -811,17 +781,19 @@ class TaskController extends Controller
                     'default_task_estimate_minutes' => $project->default_task_estimate_seconds !== null
                         ? intdiv((int) $project->default_task_estimate_seconds, 60)
                         : 0,
-                    'modules' => $project->projectModules
-                        ->map(fn(ProjectModule $projectModule) => [
-                            'value' => (string) $projectModule->id,
-                            'text' => $projectModule->name,
+                    'milestones' => $project->projectMilestones
+                        ->reject(fn(ProjectMilestone $projectMilestone) => (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system))
+                        ->map(fn(ProjectMilestone $projectMilestone) => [
+                            'value' => (string) $projectMilestone->id,
+                            'text' => $projectMilestone->name,
                         ])
                         ->values(),
                     'sprints' => $project->projectSprints
+                        ->reject(fn(ProjectSprint $projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))
                         ->map(fn(ProjectSprint $projectSprint) => [
                             'value' => (string) $projectSprint->id,
                             'text' => $projectSprint->name,
-                            'project_module_id' => (string) ($projectSprint->project_module_id ?? ''),
+                            'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
                         ])
                         ->values(),
                     'assignees' => $project->activeMembers
@@ -837,8 +809,7 @@ class TaskController extends Controller
             'defaults' => [
                 'project_id' => $projects->firstWhere('id', $this->resolveDefaultTaskCreateProjectId($projects))?->id,
                 'priority' => $this->getDefaultTaskPriorityValue(),
-                'start_date' => now(config('constants.timezone'))->toDateString(),
-                'due_date' => now(config('constants.timezone'))->addDay()->toDateString(),
+                'due_date_time' => now(config('constants.timezone'))->addDay()->format('Y-m-d H:i'),
             ],
             'parent_options_url' => route('tasks.quick-create-parent-options'),
         ];
@@ -893,89 +864,6 @@ class TaskController extends Controller
         return (string) (array_key_first($priorities) ?? 'medium');
     }
 
-    private function getDefaultTaskEstimateSeconds(Project $project): int
-    {
-        return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
-    }
-
-    private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
-    {
-        $currentLog = $task->currentAssignmentLog()->first();
-        $now = now(config('constants.timezone'));
-
-        if ($currentLog) {
-            $currentLog->update([
-                'assigned_to' => $now,
-                'is_current' => false,
-            ]);
-        }
-
-        if ($newAssigneeId) {
-            $task->assignmentLogs()->create([
-                'user_id' => $newAssigneeId,
-                'assigned_from' => $now,
-                'is_current' => true,
-            ]);
-        }
-    }
-
-    private function resolveTaskTagIds(array $submittedTags): array
-    {
-        return collect($submittedTags)
-            ->filter(fn($tag) => filled($tag))
-            ->map(function ($tag) {
-                if (is_numeric($tag)) {
-                    return (int) $tag;
-                }
-
-                return $this->firstOrCreateTaskTag((string) $tag)->id;
-            })
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function firstOrCreateTaskTag(string $name): Tag
-    {
-        $cleanName = trim($name);
-        $baseSlug = Str::slug($cleanName);
-        $slug = $baseSlug !== '' ? $baseSlug : Str::lower(Str::random(8));
-
-        $existingTag = Tag::withTrashed()
-            ->whereRaw('LOWER(name) = ?', [Str::lower($cleanName)])
-            ->orWhere('slug', $slug)
-            ->first();
-
-        if ($existingTag) {
-            if ($existingTag->trashed()) {
-                $existingTag->restore();
-            }
-
-            if (! $existingTag->is_active) {
-                $existingTag->is_active = true;
-                $existingTag->save();
-            }
-
-            return $existingTag;
-        }
-
-        $candidateSlug = $slug;
-        $suffix = 2;
-
-        while (Tag::withTrashed()->where('slug', $candidateSlug)->exists()) {
-            $candidateSlug = $slug . '-' . $suffix;
-            $suffix++;
-        }
-
-        return Tag::create([
-            'name' => $cleanName,
-            'slug' => $candidateSlug,
-            'type' => 'general',
-            'is_active' => true,
-            'is_system' => false,
-        ]);
-    }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -986,5 +874,136 @@ class TaskController extends Controller
         return redirect()
             ->route('tasks.index')
             ->with('success', 'Task deleted successfully.');
+    }
+
+    /** Task timer functions */
+
+    public function start(Task $task, TaskServices $taskServices): JsonResponse
+    {
+        $startRestriction = $taskServices->getStartRestriction($task);
+
+        if ($startRestriction) {
+            return response()->json(
+                ['message' => $startRestriction['message']],
+                $startRestriction['status']
+            );
+        }
+
+        $taskServices->startTimer($task, auth()->id());
+
+        return response()->json(['message' => 'Timer started'], Response::HTTP_OK);
+    }
+
+    public function stop(Request $request, Task $task, TaskServices $taskServices): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if (! $taskServices->isAllowedToStop($task, $user)) {
+                return response()->json(['message' => 'Not allowed to stop timer for this task'], Response::HTTP_FORBIDDEN);
+            }
+
+            if (
+                $user
+                && $taskServices->requiresNonAssigneeStopConfirmation($task, $user)
+                && ! $request->boolean('confirmed_non_assignee_stop')
+            ) {
+                $task->loadMissing('currentAssignee:id,name');
+
+                return response()->json([
+                    'message' => 'Please confirm before stopping another assignee\'s timer.',
+                    'requires_confirmation' => true,
+                    'assignee_name' => $task->currentAssignee?->name,
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $log = $taskServices->stopTimer($task, $user);
+
+            return response()->json(['message' => 'Timer stopped', 'data' => $log], Response::HTTP_OK);
+        } catch (\RuntimeException $e) {
+
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    public function transitionStatus(Request $request, TaskServices $taskServices): JsonResponse
+    {
+        $validator = validator($request->all(), [
+            'status_id' => ['required', 'integer'],
+            'moved_task_id' => ['required', 'integer'],
+            'task_ids' => ['required', 'array', 'min:1'],
+            'task_ids.*' => ['integer'],
+            'include_task_detail' => ['nullable', 'boolean'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first() ?: 'The given data was invalid.',
+                'errors' => $validator->errors(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validated = $validator->validated();
+
+        try {
+            $statusId = (int) $validated['status_id'];
+            $task = $taskServices->transitionStatus(
+                auth()->user(),
+                (int) $validated['moved_task_id'],
+                collect($validated['task_ids'])->map(fn($taskId) => (int) $taskId)->all(),
+                $statusId
+            );
+
+            $task = $this->loadTaskForDetail($task);
+            $response = [
+                'success' => true,
+                'message' => 'Task status updated successfully.',
+                'html' => view('tasks.kanban._card', [
+                    'task' => $task,
+                    'status' => $task->status,
+                    'priorities' => config('project_constants.task_priorities', []),
+                ])->render(),
+            ];
+
+            if (! empty($validated['include_task_detail'])) {
+                $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());
+                $overviewData = $this->getTaskOverviewData($task);
+                $historyData = $this->getTaskHistoryData($task);
+                $headerData = $this->getTaskHeaderData($task, $taskServices);
+
+                $response['header_html'] = view('tasks.partials.header', [
+                    'task' => $task,
+                    'project' => $task->project,
+                    'totalTrackedSeconds' => $totalSeconds,
+                ] + $overviewData + $headerData)->render();
+
+                $response['overview_html'] = view('tasks.partials.tabs.overview', [
+                    'task' => $task,
+                    'project' => $task->project,
+                ] + $overviewData)->render();
+
+                $response['history_html'] = view('tasks.partials.tabs.history', [
+                    'task' => $task,
+                    'project' => $task->project,
+                ] + $historyData)->render();
+            }
+
+            return response()->json($response);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
+        } catch (\Throwable $e) {
+
+            info('Error while changing task status: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while changing task status.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

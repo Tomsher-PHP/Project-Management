@@ -24,8 +24,8 @@
                             </button>
 
                             @if ($project->is_agile)
-                                <button type="button" data-project-tab-trigger="modules" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
-                                    Modules
+                                <button type="button" data-project-tab-trigger="milestones" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                    Milestones
                                 </button>
                             @endif
 
@@ -93,7 +93,7 @@
                     </div>
 
                     @if ($project->is_agile)
-                        <div class="hidden" data-project-tab-panel="modules" data-loaded="false"></div>
+                        <div class="hidden" data-project-tab-panel="milestones" data-loaded="false"></div>
                     @endif
 
                     <div class="hidden" data-project-tab-panel="tasks" data-loaded="false"></div>

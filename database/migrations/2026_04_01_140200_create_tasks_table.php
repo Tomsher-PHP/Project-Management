@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects');
-            $table->foreignId('project_module_id')->nullable()->constrained('project_modules');
+            $table->foreignId('project_milestone_id')->nullable()->constrained('project_milestones');
             $table->foreignId('project_sprint_id')->nullable()->constrained('project_sprints');
             $table->foreignId('parent_task_id')->nullable()->constrained('tasks');
 
-            $table->string('title');
+            $table->string('name');
             $table->string('code', 100)->unique();
             $table->longText('description')->nullable();
 
@@ -29,8 +29,7 @@ return new class extends Migration
 
             $table->foreignId('current_assignee_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->date('start_date')->nullable();
-            $table->date('due_date')->nullable();
+            $table->timestamp('due_date_time')->nullable();
             $table->timestamp('completed_at')->nullable();
 
             $table->unsignedBigInteger('estimated_time_seconds')->default(0);
@@ -46,15 +45,13 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index('project_id');
-            $table->index('project_module_id');
+            $table->index('project_milestone_id');
             $table->index('project_sprint_id');
             $table->index('parent_task_id');
             $table->index('status_id');
             $table->index('task_type_id');
             $table->index('task_mode_id');
             $table->index('current_assignee_id');
-            $table->index('due_date');
-            $table->index('sort_order');
         });
     }
 

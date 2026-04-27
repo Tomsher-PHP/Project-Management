@@ -11,4 +11,16 @@ class NotificationController extends Controller
         auth()->user()->unreadNotifications->markAsRead();
         return redirect()->back();
     }
+
+    public function markRead(string $notification)
+    {
+        $notification = auth()->user()
+            ->notifications()
+            ->whereKey($notification)
+            ->firstOrFail();
+
+        $notification->markAsRead();
+
+        return redirect($notification->data['url'] ?? url()->previous());
+    }
 }

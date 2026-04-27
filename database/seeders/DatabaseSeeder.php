@@ -40,9 +40,9 @@ class DatabaseSeeder extends Seeder
             TaskModeSeeder::class,
             ProjectStageSeeder::class,
             TagsSeeder::class,
-            AgileModuleSeeder::class,
+            AgileMilestoneSeeder::class,
             AgileSprintSeeder::class,
-            AgileModuleStatusSeeder::class,
+            AgileMilestoneStatusSeeder::class,
             AgileSprintStatusSeeder::class,
 
             // Country related seeders

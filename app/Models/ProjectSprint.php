@@ -15,7 +15,7 @@ class ProjectSprint extends Model
 
     protected $fillable = [
         'project_id',
-        'project_module_id',
+        'project_milestone_id',
         'name',
         'color',
         'description',
@@ -26,13 +26,15 @@ class ProjectSprint extends Model
         'derived_time_seconds',
         'actual_time_seconds',
         'sort_order',
+        'is_backlog',
+        'is_system',
         'added_by',
         'updated_by',
     ];
 
     protected $casts = [
         'project_id' => 'integer',
-        'project_module_id' => 'integer',
+        'project_milestone_id' => 'integer',
         'status_id' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
@@ -40,6 +42,8 @@ class ProjectSprint extends Model
         'derived_time_seconds' => 'integer',
         'actual_time_seconds' => 'integer',
         'sort_order' => 'integer',
+        'is_backlog' => 'boolean',
+        'is_system' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
     ];
@@ -56,16 +60,16 @@ class ProjectSprint extends Model
 
         static::saved(function (ProjectSprint $projectSprint) {
             $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
 
         static::deleted(function (ProjectSprint $projectSprint) {
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
 
         static::restored(function (ProjectSprint $projectSprint) {
             $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectModule?->refreshTrackedTimeMetrics();
+            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
         });
     }
 
@@ -74,9 +78,9 @@ class ProjectSprint extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function projectModule()
+    public function projectMilestone()
     {
-        return $this->belongsTo(ProjectModule::class);
+        return $this->belongsTo(ProjectMilestone::class);
     }
 
     public function status()
@@ -99,6 +103,14 @@ class ProjectSprint extends Model
         return $this->hasMany(Task::class)->orderBy('sort_order');
     }
 
+    public function scopeOrderForDisplay($query)
+    {
+        return $query
+            ->orderByRaw('CASE WHEN is_backlog = 1 THEN 1 ELSE 0 END')
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function getEstimatedTimeFormattedAttribute()
     {
         $seconds = $this->estimated_time_seconds ?? 0;
@@ -106,7 +118,7 @@ class ProjectSprint extends Model
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
     public function getEstimatedTimeMinutesAttribute()
@@ -123,7 +135,7 @@ class ProjectSprint extends Model
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
     public function getActualTimeFormattedAttribute(): string
@@ -133,7 +145,7 @@ class ProjectSprint extends Model
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
 
-        return sprintf('%02d h : %02d m', $hours, $minutes);
+        return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
     public function getTaskCountAttribute(): int
@@ -181,5 +193,51 @@ class ProjectSprint extends Model
             'derived_time_seconds' => $derivedSeconds,
             'actual_time_seconds' => $actualSeconds,
         ]);
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'color',
+        'description',
+        'status_id',
+        'completed_at',
+        'derived_time_seconds',
+        'actual_time_seconds',
+        'sort_order',
+        'added_by',
+        'updated_by',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'project_milestone_id' => 'Milestone',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'estimated_time_seconds' => 'Estimated Time',
+            'sort_order' => 'Sort Order',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'project_id' => $this->project?->name ?? $value,
+            'project_milestone_id' => $this->projectMilestone?->name ?? $value,
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+
+    protected function getActivityParent(): array
+    {
+        return [
+            'type' => Project::class,
+            'id' => $this->project_id,
+        ];
     }
 }

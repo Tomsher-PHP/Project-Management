@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\AgileModuleController;
+use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommonController;
@@ -14,7 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
-use App\Http\Controllers\ProjectModuleController;
+use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectStageController;
@@ -27,7 +27,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskTimeLogChangeRequestController;
+use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
+use App\Http\Controllers\UserHierarchyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,9 +80,24 @@ Route::middleware(['auth'])->group(function () {
     // End of Role & Permission Routes
 
     // User Management Routes
+    Route::post(
+        '/users/notification-settings',
+        [UserController::class, 'updateNotificationSettings']
+    )->name('users.notification.settings');
+    Route::post(
+        '/users/general-settings',
+        [UserController::class, 'updateGeneralSettings']
+    )->name('users.general.settings');
+
+    Route::post(
+        '/users/change-password',
+        [UserController::class, 'changePassword']
+    )->name('users.change.password');
+
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
+    Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
     // End of User Management Routes
@@ -156,13 +174,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
         // End Configuration Routes
 
-        // Agile module Routes
-        Route::patch('/agile-modules/toggle-status', [AgileModuleController::class, 'toggleStatus'])->middleware('permission.type:agile_module.edit')->name('agile_module.toggleStatus');
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.view')->only(['index']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.create')->only(['store']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.edit')->only(['update']);
-        Route::resource('agile-modules', AgileModuleController::class)->middleware('permission.type:agile_module.delete')->only(['destroy']);
-        // End Agile module Routes
+        // Agile milestone Routes
+        Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:agile_milestone.edit')->name('agile_milestone.toggleStatus');
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.view')->only(['index']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.create')->only(['store']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.edit')->only(['update']);
+        Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.delete')->only(['destroy']);
+        // End Agile milestone Routes
 
         // Agile sprint Routes
         Route::patch('/agile-sprints/toggle-status', [AgileSprintController::class, 'toggleStatus'])->middleware('permission.type:agile_sprint.edit')->name('agile_sprint.toggleStatus');
@@ -212,6 +230,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.markAllRead');
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.markRead');
     // End Notification Routes
 
     // Customer Routes
@@ -234,9 +253,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
-        Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->middleware(['permission.type:project.view', 'can:view,task'])->name('projects.tasks.modal');
+        Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
-        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:update,project', 'can:update,task'])->name('projects.tasks.update');
+        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit'])->name('projects.tasks.update');
+        Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
+        Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
 
         // Comments and activity log routes
         Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
@@ -251,18 +272,18 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
-        // Project module and sprint routes
-        Route::post('modules', [ProjectModuleController::class, 'store'])->middleware(['permission.type:project_module.create', 'can:update,project'])->name('projects.modules.store');
-        Route::get('modules/{projectModule}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.modules.sprints.index');
-        Route::post('modules/{projectModule}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.modules.sprints.store');
+        // Project milestone and sprint routes
+        Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');
+        Route::get('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.milestones.sprints.index');
+        Route::post('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.milestones.sprints.store');
         Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
         Route::delete('sprints/{projectSprint}', [ProjectSprintController::class, 'destroy'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.destroy');
         Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.restore');
-        Route::patch('modules/{projectModule}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.modules.sprints.reorder');
-        Route::patch('modules/reorder', [ProjectModuleController::class, 'reorder'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.reorder');
-        Route::put('modules/{projectModule}', [ProjectModuleController::class, 'update'])->middleware(['permission.type:project_module.edit', 'can:update,project'])->name('projects.modules.update');
-        Route::delete('modules/{projectModule}', [ProjectModuleController::class, 'destroy'])->middleware(['permission.type:project_module.delete', 'can:update,project'])->name('projects.modules.destroy');
-        Route::post('modules/{projectModule}/restore', [ProjectModuleController::class, 'restore'])->middleware(['permission.type:project_module.restore', 'can:update,project'])->name('projects.modules.restore');
+        Route::patch('milestones/{projectMilestone}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.milestones.sprints.reorder');
+        Route::patch('milestones/reorder', [ProjectMilestoneController::class, 'reorder'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.reorder');
+        Route::put('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'update'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.update');
+        Route::delete('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'destroy'])->middleware(['permission.type:project_milestone.delete', 'can:update,project'])->name('projects.milestones.destroy');
+        Route::post('milestones/{projectMilestone}/restore', [ProjectMilestoneController::class, 'restore'])->middleware(['permission.type:project_milestone.restore', 'can:update,project'])->name('projects.milestones.restore');
 
         // Scope file routes
         Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');
@@ -283,12 +304,13 @@ Route::middleware(['auth'])->group(function () {
     // End Project Routes
 
     // Task Routes
-    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->middleware(['permission.type:task.create'])->name('tasks.quick-create-parent-options');
+    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
-    Route::prefix('tasks/{task}')->middleware('can:view,task')->group(function () {
+    Route::prefix('tasks/{task}')->group(function () {
         Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
         Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
 
+        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
         Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
         Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
 
@@ -297,20 +319,53 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
         Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
 
+        // Task timer routes
+        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
+        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
+
         Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
-        Route::put('/', [TaskController::class, 'update'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.update');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
+    Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
+
+    // Task status, order change route
+    Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
+    Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
     // End Task Routes
+
+    // Task request routes
+    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
+    Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.bulk-action');
+    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.action');
+    // End Task request routes
+
+    // Task time log change request routes
+    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
+    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
+    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.bulk-action');
+    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.action');
+    // End Task time log change request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
     Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
     Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
     Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+
+    // User hierarchy tree view route
+    Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
 });
 
 Route::get('api-test', function () {

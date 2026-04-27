@@ -18,11 +18,27 @@ class TaskPolicy
             return true;
         }
 
-        if ((int) $task->added_by === (int) $user->id) {
+        if ((int) ($task->current_assignee_id ?? 0) === (int) $user->id) {
             return true;
         }
 
-        return (int) ($task->current_assignee_id ?? 0) === (int) $user->id;
+        $task->loadMissing([
+            'project.teamLeader',
+            'projectMilestone:id,owner_id',
+        ]);
+
+        if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        if ((int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        return $task->assignmentLogs()
+            ->where('user_id', $user->id)
+            ->where('worked_time_seconds', '>', 0)
+            ->exists();
     }
 
     public function update(User $user, Task $task): bool
@@ -33,5 +49,10 @@ class TaskPolicy
     public function delete(User $user, Task $task): bool
     {
         return $user->can('task.delete') && $this->view($user, $task);
+    }
+
+    public function move(User $user, Task $task): bool
+    {
+        return $user->can('task.move') && $this->view($user, $task);
     }
 }

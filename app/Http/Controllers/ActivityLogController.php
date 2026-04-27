@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Models\Project;
+use App\Models\Task;
+use App\Models\TaskComment;
+use App\Models\TaskNote;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,22 +22,38 @@ use Throwable;
 
 class ActivityLogController extends Controller
 {
+    use BuildsProjectActivityQueries;
+
     protected $pageTitle;
     protected $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Activity Log';
-        $this->subTitle = 'Track changes across all modules';
+        $this->subTitle = 'Track changes across all milestones';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
     }
 
     public function activityLog(Request $request)
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $filteredProject = null;
+        $filteredTask = null;
 
         $activities = Activity::query()
             ->with(['causer', 'subject'])
+            ->when($request->filled('project_id'), function (Builder $query) use ($request, &$filteredProject) {
+                $filteredProject = Project::findOrFail((int) $request->input('project_id'));
+                abort_unless(auth()->user()->can('view', $filteredProject), 403);
+
+                $this->applyProjectActivityScope($query, $filteredProject);
+            })
+            ->when($request->filled('task_id'), function (Builder $query) use ($request, &$filteredTask) {
+                $filteredTask = Task::query()->with('project:id,name')->findOrFail((int) $request->input('task_id'));
+                abort_unless(auth()->user()->can('view', $filteredTask), 403);
+
+                $this->applyTaskActivityScope($query, $filteredTask);
+            })
             ->when($request->filled('search'), function (Builder $query) use ($request) {
                 $this->applySearchFilter(
                     $query,
@@ -104,10 +125,44 @@ class ActivityLogController extends Controller
         return view('activity-logs.index', compact(
             'activities',
             'perPage',
+            'filteredProject',
+            'filteredTask',
             'logNames',
             'causers',
             'eventOptions'
         ));
+    }
+
+    private function applyTaskActivityScope(Builder $query, Task $task): Builder
+    {
+        return $query->where(function (Builder $activityQuery) use ($task) {
+            $activityQuery->where(function (Builder $subjectQuery) use ($task) {
+                $subjectQuery->where('subject_type', Task::class)
+                    ->where('subject_id', $task->id);
+            });
+
+            foreach ($this->getTaskActivitySubjectQueries($task) as $subjectType => $subjectIdsQuery) {
+                $activityQuery->orWhere(function (Builder $subjectQuery) use ($subjectType, $subjectIdsQuery) {
+                    $subjectQuery->where('subject_type', $subjectType)
+                        ->whereIn('subject_id', $subjectIdsQuery);
+                });
+            }
+        });
+    }
+
+    private function getTaskActivitySubjectQueries(Task $task): array
+    {
+        return [
+            TaskComment::class => TaskComment::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskNote::class => TaskNote::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+            TaskTimeLog::class => TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->select('id'),
+        ];
     }
 
     private function applySearchFilter(Builder $query, string $search, string $condition = 'contains'): void
@@ -205,7 +260,7 @@ class ActivityLogController extends Controller
         return [
             'can_view' => in_array($event, ['created', 'updated', 'deleted', 'restored'], true) && $rows->isNotEmpty(),
             'event' => $event,
-            'module' => Str::headline($activity->log_name ?? 'activity'),
+            'milestone' => Str::headline($activity->log_name ?? 'activity'),
             'subject' => $this->resolveSubjectLabel($activity),
             'subject_type' => $activity->subject_type ? Str::headline(class_basename($activity->subject_type)) : '--',
             'description' => Str::headline(str_replace('.', ' ', $activity->description)),

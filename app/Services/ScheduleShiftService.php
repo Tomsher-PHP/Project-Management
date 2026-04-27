@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Shift;
+use App\Models\TeamUser;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
 use Illuminate\Support\Carbon;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class ScheduleShiftService
 {
+    private const TEAM_FILTER_NOT_IN_TEAM = 'not_in_team';
 
     // Create schedule
     public function schedule(array $data): void
@@ -30,7 +32,7 @@ class ScheduleShiftService
             }
 
             // AFTER ALL ASSIGNMENTS → SEND BULK NOTIFICATION
-            $shift = Shift::find($data['shift_id']);
+            $shift = Shift::withTrashed()->find($data['shift_id']);
 
             app(NotificationService::class)->sendToMany(
                 $data['users'],
@@ -51,7 +53,7 @@ class ScheduleShiftService
             $this->applyShiftRange($userId, $dateFrom, $dateTo, $shiftId);
 
             // Notify user
-            $shift = Shift::find($shiftId);
+            $shift = Shift::withTrashed()->find($shiftId);
 
             app(NotificationService::class)->send(
                 $userId,
@@ -63,7 +65,7 @@ class ScheduleShiftService
 
     private function applyShiftRange(int $userId, Carbon $newFrom, ?Carbon $newTo, ?int $shiftId, ?string $reason = null): void
     {
-        $shift = Shift::with('weekends')->find($shiftId);
+        $shift = Shift::withTrashed()->with('weekends')->find($shiftId);
 
         $existingAssignments = UserShiftAssignment::where('user_id', $userId)
             ->where(function ($q) use ($newFrom, $newTo) {
@@ -141,7 +143,7 @@ class ScheduleShiftService
             $this->storeWeekends($assignment, $shiftData);
         } else {
 
-            $shift = Shift::find($shiftData['shift_id']);
+            $shift = Shift::withTrashed()->with('weekends')->find($shiftData['shift_id']);
 
             $assignment = UserShiftAssignment::create([
                 'user_id' => $userId,
@@ -162,7 +164,7 @@ class ScheduleShiftService
     // Store week end data of corresponding assigned shift
     private function storeWeekends(UserShiftAssignment $assignment, $shift): void
     {
-        if ($shift->weekends->isEmpty()) {
+        if (!$shift || $shift->weekends->isEmpty()) {
             return;
         }
 
@@ -199,9 +201,34 @@ class ScheduleShiftService
     }
 
     // Fetch users and shifts
-    public function getUsersAndShifts(): array
+    public function getUsersAndShifts(?string $teamFilter = null): array
     {
         $users = app(UserService::class)->getAccessibleUsers(auth()->user());
+
+        if ($teamFilter === self::TEAM_FILTER_NOT_IN_TEAM) {
+            $teamUserIds = TeamUser::query()
+                ->where('is_active', true)
+                ->whereNull('deleted_at')
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $users = $users
+                ->whereNotIn('id', $teamUserIds)
+                ->values();
+        } elseif (filled($teamFilter)) {
+            $teamUserIds = TeamUser::query()
+                ->where('team_id', (int) $teamFilter)
+                ->where('is_active', true)
+                ->whereNull('deleted_at')
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $users = $users
+                ->whereIn('id', $teamUserIds)
+                ->values();
+        }
 
         $shifts = Shift::active()->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
 
@@ -228,7 +255,7 @@ class ScheduleShiftService
     }
 
     // Get assignments for users in a given week
-    public function getAssignments(Carbon $startOfWeek, Carbon $endOfWeek)
+    public function getAssignments(Carbon $startOfWeek, Carbon $endOfWeek, ?array $userIds = null)
     {
         return UserShiftAssignment::where(function ($query) use ($startOfWeek, $endOfWeek) {
             $query->where('date_from', '<=', $endOfWeek)
@@ -236,6 +263,8 @@ class ScheduleShiftService
                     $q->where('date_to', '>=', $startOfWeek)
                         ->orWhereNull('date_to');
                 });
-        })->get();
+        })
+            ->when($userIds !== null, fn ($query) => $query->whereIn('user_id', $userIds))
+            ->get();
     }
 }

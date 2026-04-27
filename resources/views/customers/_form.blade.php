@@ -27,24 +27,29 @@
             </div>
 
             <!-- Company Email -->
-            <x-forms.email-input
-                label="Company Email"
-                name="email"
-                id="email"
-                :value="old('email', $customer->email ?? '')"
-                placeholder="Enter company email"
-                domain-suffix="@gmail.com"
-            />
+            <x-forms.email-input label="Company Email" name="email" id="email" :value="old('email', $customer->email ?? '')" placeholder="Enter company email" domain-suffix="@gmail.com" />
 
             <!-- Industry -->
             <div class="flex flex-col gap-2">
                 <label for="industry_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Industry</label>
-                <select name="industry_id" id="industry_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400" data-sort="0">
-                    <option value="">Select Industry</option>
-                    @foreach ($industries as $industry)
-                        <option value="{{ $industry->id }}" {{ old('industry_id', $customer->industry_id ?? '') == $industry->id ? 'selected' : '' }}>{{ $industry->name }}</option>
-                    @endforeach
-                </select>
+
+                <div class="flex items-center gap-2">
+                    <select name="industry_id" id="industry_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400" data-sort="0">
+                        <option value="">Select Industry</option>
+                        @foreach ($industries as $industry)
+                            <option value="{{ $industry->id }}" {{ old('industry_id', $customer->industry_id ?? '') == $industry->id ? 'selected' : '' }}>{{ $industry->name }}</option>
+                        @endforeach
+                    </select>
+
+                    @can('industry.create')
+                        <button type="button" data-target="#customer-industry-modal" data-select-target="industry_id" data-milestone="Industry" data-url="{{ route('settings.industries.store') }}" data-method="POST" data-sort_order="{{ $nextIndustrySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Industry" aria-label="Add Industry">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                    @endcan
+                </div>
+
                 @error('industry_id')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
@@ -204,7 +209,7 @@
         </div>
 
         <div class="pt-6 border-t flex justify-left dark:border-darkblack-400 dark:text-white">
-            <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
+            <button type="button" data-target="#multi-step-modal" data-milestone="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
         </div>
@@ -226,3 +231,27 @@
         </button>
     </div>
 </form>
+
+@can('industry.create')
+    <x-form-modal modalId="customer-industry-modal" module="Industry" formId="customerIndustryForm" action="{{ route('settings.industries.store') }}" button="Create Industry">
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Parent Industry</label>
+            <select name="parent_id" id="customer_industry_parent_id" class="tom-select w-full" data-sort="0">
+                <option value="">Select Parent Industry</option>
+                @foreach (($parentIndustries ?? []) as $parentIndustry)
+                    <option value="{{ $parentIndustry->id }}">{{ $parentIndustry->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+        </div>
+    </x-form-modal>
+@endcan

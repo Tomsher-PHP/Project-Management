@@ -17,7 +17,11 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            $table->enum('project_role', ['team_leader', 'coordinator', 'member']);
+            $table->string('project_role')->default('member')->index();
+
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('removed_at')->nullable();
+            $table->foreignId('removed_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
 

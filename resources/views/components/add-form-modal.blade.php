@@ -27,7 +27,7 @@
             <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <h3 class="modal-title text-2xl font-semibold text-bgray-900 dark:text-white">
-                        Add {{ $module }}
+                        Add {{ $milestone }}
                     </h3>
 
                     <button type="button" class="modal-close inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300">

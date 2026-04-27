@@ -1,38 +1,38 @@
 {
-  "_datepicker-BxghH_9E.js": {
-    "file": "assets/datepicker-BxghH_9E.js",
+  "_datepicker-I9Bkd33q.js": {
+    "file": "assets/datepicker-I9Bkd33q.js",
     "name": "datepicker",
     "imports": [
-      "_flatpickr.min-D0WFQuZ-.js"
+      "_flatpickr.min-BJdP9L7S.js"
     ]
   },
   "_flatpickr-CksuuEqD.css": {
     "file": "assets/flatpickr-CksuuEqD.css",
     "src": "_flatpickr-CksuuEqD.css"
   },
-  "_flatpickr.min-D0WFQuZ-.js": {
-    "file": "assets/flatpickr.min-D0WFQuZ-.js",
+  "_flatpickr.min-BJdP9L7S.js": {
+    "file": "assets/flatpickr.min-BJdP9L7S.js",
     "name": "flatpickr.min",
     "css": [
       "assets/flatpickr-CksuuEqD.css"
     ]
   },
-  "_timepicker-mZgnxHNj.js": {
-    "file": "assets/timepicker-mZgnxHNj.js",
+  "_timepicker-io5AL2NV.js": {
+    "file": "assets/timepicker-io5AL2NV.js",
     "name": "timepicker",
     "imports": [
-      "_flatpickr.min-D0WFQuZ-.js"
+      "_flatpickr.min-BJdP9L7S.js"
     ]
   },
-  "_weekpicker-BwYHMdIS.js": {
-    "file": "assets/weekpicker-BwYHMdIS.js",
+  "_weekpicker-D6kr6shV.js": {
+    "file": "assets/weekpicker-D6kr6shV.js",
     "name": "weekpicker",
     "imports": [
-      "_flatpickr.min-D0WFQuZ-.js"
+      "_flatpickr.min-BJdP9L7S.js"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DOiUOjKU.css",
+    "file": "assets/app-D5ThAFS6.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -41,15 +41,15 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bvs7p6Mg.js",
+    "file": "assets/app-BrPJdbMR.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-BxghH_9E.js",
-      "_flatpickr.min-D0WFQuZ-.js",
-      "_timepicker-mZgnxHNj.js",
-      "_weekpicker-BwYHMdIS.js"
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js",
+      "_timepicker-io5AL2NV.js",
+      "_weekpicker-D6kr6shV.js"
     ],
     "css": [
       "assets/app-CqGrDw4D.css"
@@ -74,42 +74,77 @@
     "isEntry": true
   },
   "resources/js/modules/customer-contact.js": {
-    "file": "assets/customer-contact-BwU15WCS.js",
+    "file": "assets/customer-contact-DTWoFvT6.js",
     "name": "customer-contact",
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-B-aILkHI.js",
+    "file": "assets/project-detail-C6ATu0BE.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-BxghH_9E.js",
-      "_flatpickr.min-D0WFQuZ-.js",
-      "_timepicker-mZgnxHNj.js",
-      "_weekpicker-BwYHMdIS.js"
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js",
+      "resources/js/modules/projects/project-tasks.js",
+      "_timepicker-io5AL2NV.js",
+      "_weekpicker-D6kr6shV.js"
+    ]
+  },
+  "resources/js/modules/projects/project-tasks.js": {
+    "file": "assets/project-tasks-B1tgxY_x.js",
+    "name": "project-tasks",
+    "src": "resources/js/modules/projects/project-tasks.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js"
     ]
   },
   "resources/js/modules/schedule-shift.js": {
-    "file": "assets/schedule-shift-BwIJ0g7S.js",
+    "file": "assets/schedule-shift-D0Zmtywu.js",
     "name": "schedule-shift",
     "src": "resources/js/modules/schedule-shift.js",
     "isEntry": true,
     "imports": [
-      "_flatpickr.min-D0WFQuZ-.js",
-      "_weekpicker-BwYHMdIS.js"
+      "_flatpickr.min-BJdP9L7S.js",
+      "_weekpicker-D6kr6shV.js"
+    ]
+  },
+  "resources/js/modules/task-detail.js": {
+    "file": "assets/task-detail-CLIaXV2k.js",
+    "name": "task-detail",
+    "src": "resources/js/modules/task-detail.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js",
+      "_timepicker-io5AL2NV.js",
+      "_weekpicker-D6kr6shV.js"
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-B8A6HfI3.js",
+    "file": "assets/task-list-create-C65DEMHM.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-BxghH_9E.js",
-      "_flatpickr.min-D0WFQuZ-.js"
+      "_datepicker-I9Bkd33q.js",
+      "_flatpickr.min-BJdP9L7S.js"
     ]
+  },
+  "resources/js/modules/task-list-subtasks.js": {
+    "file": "assets/task-list-subtasks-zO9FwpyV.js",
+    "name": "task-list-subtasks",
+    "src": "resources/js/modules/task-list-subtasks.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/kanban-board.js": {
+    "file": "assets/kanban-board-BdFS9mhO.js",
+    "name": "kanban-board",
+    "src": "resources/js/modules/tasks/kanban-board.js",
+    "isEntry": true
   },
   "resources/js/modules/team.js": {
     "file": "assets/team-BtdavKLX.js",

@@ -80,7 +80,9 @@
                                                 </div>
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $user->name }}
+                                                        <a href="{{ route('users.show', $user->id) }}" class="transition hover:text-success-400">
+                                                            {{ $user->name }}
+                                                        </a>
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Role: {{ $user->role_name }}</span>
@@ -111,6 +113,9 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
+                                                @can('user.view')
+                                                    <x-view-button :action="route('users.show', $user->id)" />
+                                                @endcan
                                                 @can('user.edit')
                                                     <x-edit-button :action="route('users.edit', $user->id)" />
                                                 @endcan

@@ -2,17 +2,28 @@
 
 namespace App\Services;
 
+use App\Models\AgileMilestoneStatus;
+use App\Models\AgileSprintStatus;
 use App\Models\Project;
+use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
+use App\Models\Task;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class ProjectServices
 {
+    private const BACKLOG_MILESTONE_NAME = 'Unplanned Work';
+    private const BACKLOG_SPRINT_NAME = 'Backlog';
+    private const BACKLOG_MILESTONE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
+    private const BACKLOG_SPRINT_DESCRIPTION = 'Contains pending tasks waiting to be scheduled into an active sprint.';
+
     protected $attachmentService;
 
     public function __construct(AttachmentService $attachmentService)
@@ -221,6 +232,244 @@ class ProjectServices
         });
     }
 
+    public function findOrCreateUnplannedWorkMilestone(Project $project): ProjectMilestone
+    {
+        $this->ensureAgileProject($project);
+
+        return DB::transaction(function () use ($project) {
+            Project::query()
+                ->whereKey($project->id)
+                ->lockForUpdate()
+                ->first();
+
+            $projectMilestone = ProjectMilestone::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->orderBy('id')
+                ->first();
+
+            if (! $projectMilestone) {
+                $projectMilestone = ProjectMilestone::onlyTrashed()
+                    ->where('project_id', $project->id)
+                    ->where('is_backlog', true)
+                    ->orderBy('id')
+                    ->first();
+            }
+
+            if (! $projectMilestone) {
+                return $project->projectMilestones()->create([
+                    'name' => self::BACKLOG_MILESTONE_NAME,
+                    'description' => self::BACKLOG_MILESTONE_DESCRIPTION,
+                    'status_id' => $this->defaultAgileMilestoneStatusId(),
+                    'sort_order' => $this->nextProjectMilestoneOrder($project),
+                    'is_backlog' => true,
+                    'is_system' => true,
+                ]);
+            }
+
+            if ($projectMilestone->trashed()) {
+                $projectMilestone->restore();
+                $projectMilestone->sort_order = $this->nextProjectMilestoneOrder($project);
+            }
+
+            $projectMilestone->fill([
+                'name' => self::BACKLOG_MILESTONE_NAME,
+                'description' => self::BACKLOG_MILESTONE_DESCRIPTION,
+                'is_backlog' => true,
+                'is_system' => true,
+            ]);
+
+            if (! $projectMilestone->status_id) {
+                $projectMilestone->status_id = $this->defaultAgileMilestoneStatusId();
+            }
+
+            if ($projectMilestone->isDirty()) {
+                $projectMilestone->save();
+            }
+
+            return $projectMilestone->fresh();
+        });
+    }
+
+    public function findOrCreateBacklogSprint(Project $project, ProjectMilestone $milestone): ProjectSprint
+    {
+        $this->ensureAgileProject($project);
+        $this->ensureProjectMilestoneBelongsToProject($project, $milestone);
+
+        if (! $milestone->is_backlog) {
+            throw new InvalidArgumentException('Backlog sprint must belong to a backlog project milestone.');
+        }
+
+        return DB::transaction(function () use ($project, $milestone) {
+            Project::query()
+                ->whereKey($project->id)
+                ->lockForUpdate()
+                ->first();
+
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->orderBy('id')
+                ->first();
+
+            if (! $projectSprint) {
+                $projectSprint = ProjectSprint::onlyTrashed()
+                    ->where('project_id', $project->id)
+                    ->where('is_backlog', true)
+                    ->orderBy('id')
+                    ->first();
+            }
+
+            if (! $projectSprint) {
+                return $milestone->projectSprints()->create([
+                    'project_id' => $project->id,
+                    'name' => self::BACKLOG_SPRINT_NAME,
+                    'description' => self::BACKLOG_SPRINT_DESCRIPTION,
+                    'status_id' => $this->defaultAgileSprintStatusId(),
+                    'sort_order' => $this->nextProjectSprintOrder($milestone),
+                    'is_backlog' => true,
+                    'is_system' => true,
+                ]);
+            }
+
+            if ($projectSprint->trashed()) {
+                $projectSprint->restore();
+                $projectSprint->sort_order = $this->nextProjectSprintOrder($milestone);
+            }
+
+            $projectSprint->fill([
+                'project_id' => $project->id,
+                'project_milestone_id' => $milestone->id,
+                'name' => self::BACKLOG_SPRINT_NAME,
+                'description' => self::BACKLOG_SPRINT_DESCRIPTION,
+                'is_backlog' => true,
+                'is_system' => true,
+            ]);
+
+            if (! $projectSprint->status_id) {
+                $projectSprint->status_id = $this->defaultAgileSprintStatusId();
+            }
+
+            if ($projectSprint->isDirty()) {
+                $projectSprint->save();
+            }
+
+            return $projectSprint->fresh();
+        });
+    }
+
+    public function finalizeTaskPlacement(
+        Project $project,
+        ?int $projectMilestoneId = null,
+        ?int $projectSprintId = null
+    ): array {
+        if ($project->is_linear) {
+            return [
+                'project_milestone' => null,
+                'project_sprint' => null,
+                'project_milestone_id' => null,
+                'project_sprint_id' => null,
+            ];
+        }
+
+        if ($projectSprintId) {
+            $projectSprint = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprintId);
+
+            if (! $projectSprint) {
+                throw new InvalidArgumentException('The selected sprint is invalid.');
+            }
+
+            $projectMilestone = ProjectMilestone::query()
+                ->where('project_id', $project->id)
+                ->find($projectSprint->project_milestone_id);
+
+            return [
+                'project_milestone' => $projectMilestone,
+                'project_sprint' => $projectSprint,
+                'project_milestone_id' => $projectSprint->project_milestone_id,
+                'project_sprint_id' => $projectSprint->id,
+            ];
+        }
+
+        $projectMilestone = $this->findOrCreateUnplannedWorkMilestone($project);
+        $projectSprint = $this->findOrCreateBacklogSprint($project, $projectMilestone);
+
+        return [
+            'project_milestone' => $projectMilestone,
+            'project_sprint' => $projectSprint,
+            'project_milestone_id' => $projectMilestone->id,
+            'project_sprint_id' => $projectSprint->id,
+        ];
+    }
+
+    public function moveTaskToSprint(Project $project, Task $task, ?int $projectSprintId = null): Task
+    {
+        if ((int) $task->project_id !== (int) $project->id) {
+            throw new InvalidArgumentException('The provided task does not belong to the given project.');
+        }
+
+        if (! $projectSprintId) {
+            throw new InvalidArgumentException('A target sprint is required to move this task.');
+        }
+
+        $projectSprint = ProjectSprint::query()
+            ->where('project_id', $project->id)
+            ->find($projectSprintId);
+
+        if (! $projectSprint) {
+            throw new InvalidArgumentException('The selected sprint is invalid.');
+        }
+
+        if ($task->parent_task_id !== null) {
+            throw new InvalidArgumentException('Subtasks cannot be moved to another sprint.');
+        }
+
+        if ((int) ($task->project_sprint_id ?? 0) === (int) $projectSprint->id) {
+            throw new InvalidArgumentException('Please choose a different sprint.');
+        }
+
+        DB::transaction(function () use ($project, $task, $projectSprint) {
+            $task->update([
+                'project_sprint_id' => $projectSprint->id,
+                'project_milestone_id' => $projectSprint->project_milestone_id,
+                'sort_order' => Task::nextSortOrder($project->id, (int) $projectSprint->id),
+            ]);
+
+            $this->syncTaskDescendantPlacement(
+                $task,
+                (int) $projectSprint->project_milestone_id,
+                (int) $projectSprint->id
+            );
+        });
+
+        return $task->fresh();
+    }
+
+    public function syncTaskPlacementToDescendants(Task $task): void
+    {
+        $this->syncTaskDescendantPlacement(
+            $task,
+            $task->project_milestone_id ? (int) $task->project_milestone_id : null,
+            $task->project_sprint_id ? (int) $task->project_sprint_id : null
+        );
+    }
+
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId): void
+    {
+        $task->childTasks()
+            ->get()
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId) {
+                $childTask->update([
+                    'project_milestone_id' => $projectMilestoneId,
+                    'project_sprint_id' => $projectSprintId,
+                ]);
+
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId);
+            });
+    }
+
     private function buildTimeline($startDate, $targetDate): array
     {
         $dateFormat = config('constants.date_format');
@@ -289,5 +538,43 @@ class ProjectServices
         }
 
         return Carbon::parse($date)->setTimeFrom(now());
+    }
+
+    private function defaultAgileMilestoneStatusId(): ?int
+    {
+        return AgileMilestoneStatus::query()
+            ->where('is_default', true)
+            ->value('id');
+    }
+
+    private function defaultAgileSprintStatusId(): ?int
+    {
+        return AgileSprintStatus::query()
+            ->where('is_default', true)
+            ->value('id');
+    }
+
+    private function nextProjectMilestoneOrder(Project $project): int
+    {
+        return ((int) $project->projectMilestones()->max('sort_order')) + 1;
+    }
+
+    private function nextProjectSprintOrder(ProjectMilestone $milestone): int
+    {
+        return ((int) $milestone->projectSprints()->max('sort_order')) + 1;
+    }
+
+    private function ensureAgileProject(Project $project): void
+    {
+        if (! $project->is_agile) {
+            throw new InvalidArgumentException('Backlog records are only available for agile projects.');
+        }
+    }
+
+    private function ensureProjectMilestoneBelongsToProject(Project $project, ProjectMilestone $milestone): void
+    {
+        if ((int) $milestone->project_id !== (int) $project->id) {
+            throw new InvalidArgumentException('The provided project milestone does not belong to the given project.');
+        }
     }
 }
