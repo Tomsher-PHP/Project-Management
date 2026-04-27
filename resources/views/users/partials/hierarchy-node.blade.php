@@ -13,10 +13,11 @@
     $roleName = $user->is_super_admin
         ? 'Super Admin'
         : ($user->roles->first()?->name ?? 'No Role');
+    $isAuthUser = (int) $user->id === (int) auth()->id();
 @endphp
 
-<li class="org-node">
-    <div class="org-card">
+<li class="org-node {{ !empty($children) ? 'org-node--branch' : '' }}">
+    <div class="org-card {{ $isAuthUser ? 'org-card--auth' : '' }}">
         <div class="org-avatar">
             @if ($hasAvatar)
                 <img src="{{ $user->profile_image_url }}" alt="{{ $user->name }}">
@@ -30,15 +31,17 @@
             <p class="org-role mt-0.5 text-xs font-medium text-bgray-600 dark:text-bgray-300">{{ $roleName }}</p>
         </div>
 
-        @if ($isDetached)
-            <span class="org-badge org-badge--warn">Review</span>
-        @elseif (!empty($children))
-            <span class="org-badge org-badge--count">{{ count($children) }}</span>
-        @endif
+        <div class="org-badges">
+            @if ($isDetached)
+                <span class="org-badge org-badge--warn">Review</span>
+            @elseif (!empty($children))
+                <span class="org-badge org-badge--count">{{ count($children) }}</span>
+            @endif
 
-        @if (! $user->is_active)
-            <span class="org-badge org-badge--inactive">Off</span>
-        @endif
+            @if (! $user->is_active)
+                <span class="org-badge org-badge--inactive">Off</span>
+            @endif
+        </div>
     </div>
 
     @if (!empty($children))
