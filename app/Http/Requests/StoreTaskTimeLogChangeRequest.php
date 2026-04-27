@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\TaskTimeLog;
+use App\Models\TaskTimeLogChangeRequest;
 use App\Services\CompanyService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -57,21 +58,20 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                 }
 
                 if ((int) $timeLog->task_id !== (int) $this->integer('task_id')) {
-                    $validator->errors()->add('task_time_log_id', 'The selected time log does not belong to this task.');
-
+                    $validator->errors()->add('task_time_log_id', 'Time log not linked to this task.');
                     return;
                 }
 
                 if ((int) $timeLog->user_id !== (int) $this->user()?->id) {
-                    $validator->errors()->add('task_time_log_id', 'You can only request changes for your own time logs.');
+                    $validator->errors()->add('task_time_log_id', 'You can only change your own time logs.');
                 }
 
                 if ((bool) $timeLog->is_running) {
-                    $validator->errors()->add('task_time_log_id', 'Stop the running timer before requesting a time change.');
+                    $validator->errors()->add('task_time_log_id', 'Stop the running timer before requesting.');
                 }
 
                 if ($timeLog->task?->isRejectedRequest()) {
-                    $validator->errors()->add('task_id', 'Time changes are unavailable for rejected tasks.');
+                    $validator->errors()->add('task_id', 'Time change not allowed for rejected tasks.');
                 }
 
                 $hasPendingChangeRequest = $timeLog->changeRequests()
@@ -79,7 +79,7 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     ->exists();
 
                 if ($hasPendingChangeRequest) {
-                    $validator->errors()->add('task_time_log_id', 'A pending time change request already exists for this log.');
+                    $validator->errors()->add('task_time_log_id', 'Pending change exists for this log.');
                 }
 
                 $newStartedAt = $this->normalizedNewStartedAt();
@@ -91,7 +91,6 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
 
                 if ($newEndedAt->greaterThan(now())) {
                     $validator->errors()->add('new_ended_at', 'The new end date and time cannot be in the future.');
-
                     return;
                 }
 
@@ -117,10 +116,7 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     ->exists();
 
                 if ($hasUserOverlapAcrossAnyTask) {
-                    $message = 'You already have another time log in the requested time range.';
-
-                    $validator->errors()->add('new_started_at', $message);
-                    $validator->errors()->add('new_ended_at', $message);
+                    $validator->errors()->add('new_ended_at', 'You already have a time log in this range.');
                 }
 
                 $hasTaskOverlapByAnyUser = TaskTimeLog::query()
@@ -130,10 +126,31 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     ->exists();
 
                 if ($hasTaskOverlapByAnyUser) {
-                    $message = 'Another user already has a time log in this task for the requested time range.';
+                    $validator->errors()->add('new_ended_at', 'Time range already logged by another user');
+                }
 
-                    $validator->errors()->add('new_started_at', $message);
-                    $validator->errors()->add('new_ended_at', $message);
+                // Check if any PENDING change requests exist for the same task in the requested time range
+                $hasPendingChangeRequestOverlapOnTask = TaskTimeLogChangeRequest::query()
+                    ->whereHas('timeLog', function ($query) use ($timeLog) {
+                        $query->where('task_id', $timeLog->task_id);
+                    })
+                    ->where('status', 'pending')
+                    ->where(function ($query) use ($newStartedAt, $newEndedAt) {
+                        $query
+                            ->where(function ($q) use ($newStartedAt, $newEndedAt) {
+                                $q->whereNotNull('new_ended_at')
+                                    ->where('new_started_at', '<', $newEndedAt)
+                                    ->where('new_ended_at', '>', $newStartedAt);
+                            })
+                            ->orWhere(function ($q) use ($newEndedAt) {
+                                $q->whereNull('new_ended_at')
+                                    ->where('new_started_at', '<', $newEndedAt);
+                            });
+                    })
+                    ->exists();
+
+                if ($hasPendingChangeRequestOverlapOnTask) {
+                    $validator->errors()->add('new_ended_at', 'Pending request in time range.');
                 }
             },
         ];
