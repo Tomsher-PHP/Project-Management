@@ -1,10 +1,10 @@
 <aside class="sidebar-wrapper fixed top-0 z-30 block h-full bg-white dark:bg-darkblack-600 sm:hidden xl:block">
-    <div class="sidebar-header relative z-30 flex h-[84px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 dark:border-darkblack-400">
+    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 dark:border-darkblack-400">
         <a href="{{ route('dashboard') }}">
             <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
             <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
         </a>
-        <button type="button" class="drawer-btn absolute right-0 top-auto" title="Ctrl+b">
+        <button type="button" class="drawer-btn absolute right-0 top-[8px]" title="Ctrl+b">
             <span>
                 <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M0 10C0 4.47715 4.47715 0 10 0H16V40H10C4.47715 40 0 35.5228 0 30V10Z" fill="#22C55E" />
