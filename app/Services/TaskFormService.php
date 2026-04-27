@@ -80,26 +80,4 @@ class TaskFormService
 
         return (string) (array_key_first($priorities) ?? 'medium');
     }
-
-    // public function getCreateData($user)
-    // {
-    //     return [
-    //         'taskCreateProjects' => Project::query()
-    //             ->accessibleBy($user)
-    //             ->with([
-    //                 'projectMilestones' => fn($q) => $q->select(...),
-    //                 'projectSprints' => fn($q) => $q->select(...),
-    //                 'activeMembers:id,name',
-    //             ])
-    //             ->orderBy('name')
-    //             ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']),
-
-    //         'taskTypeOptions' => TaskType::active()->get(),
-    //         'taskModeOptions' => TaskMode::active()->get(),
-    //         'tagOptions' => Tag::active()->get(),
-
-    //         'defaultTaskPriority' => config('project_constants.default_priority'),
-    //         'defaultTaskDueDate' => now()->addDay()->toDateString(),
-    //     ];
-    // }
 }

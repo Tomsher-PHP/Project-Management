@@ -76,6 +76,7 @@ class TaskQuickStoreRequest extends FormRequest
                 ),
             ],
             'due_date_time' => ['nullable', 'date'],
+            'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
             'tag_ids' => ['nullable', 'array'],

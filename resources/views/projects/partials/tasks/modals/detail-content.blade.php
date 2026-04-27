@@ -192,7 +192,7 @@
 
                 <div>
                     <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Due Date</label>
-                    <input type="text" name="due_date_time" value="{{ $task->due_date_time?->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
+                    <input type="text" name="due_date_time" value="{{ $task->due_date_time?->copy()->timezone(config('constants.timezone'))->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date_time"></p>
                 </div>
 

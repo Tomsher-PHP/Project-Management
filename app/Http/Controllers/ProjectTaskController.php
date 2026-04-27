@@ -320,7 +320,6 @@ class ProjectTaskController extends Controller
             ->get(['id', 'name', 'color']);
         $defaultTaskStatusId = $this->getDefaultTaskStatusId($project);
         $defaultTaskPriority = $this->getDefaultTaskPriorityValue();
-        $defaultTaskDueDate = now()->addDay()->toDateString();
         $defaultTaskEstimateMinutes = $project->default_task_estimate_seconds !== null
             ? intdiv((int) $project->default_task_estimate_seconds, 60)
             : 0;
@@ -350,7 +349,6 @@ class ProjectTaskController extends Controller
             'taskPriorityOptions' => $taskPriorityOptions,
             'defaultTaskPriority' => $defaultTaskPriority,
             'defaultTaskEstimateMinutes' => $defaultTaskEstimateMinutes,
-            'defaultTaskDueDate' => $defaultTaskDueDate,
             'tagOptions' => $tagOptions,
         ])->render();
     }

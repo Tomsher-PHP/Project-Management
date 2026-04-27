@@ -8,6 +8,7 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Traits\HasFormOptions;
@@ -135,6 +136,20 @@ class Task extends Model
         static::restored(function (Task $task) {
             $task->refreshPlacementMetrics();
         });
+    }
+
+    public static function normalizeTaskDueDateTime(mixed $value): ?string
+    {
+        if (! filled($value)) {
+            return null;
+        }
+
+        return Carbon::parse(
+            (string) $value,
+            (string) config('constants.timezone', config('app.timezone'))
+        )
+            ->timezone((string) config('app.timezone'))
+            ->format('Y-m-d H:i:s');
     }
 
     public function scopeAccessibleBy($query, User $user)

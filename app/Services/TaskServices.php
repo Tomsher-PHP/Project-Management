@@ -248,7 +248,7 @@ class TaskServices
     protected function buildCreatePayload(Project $project, array $validated, array $defaults, array $placement): array
     {
         $resolvedSprintId = $placement['project_sprint_id'];
-
+    
         return [
             'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,
@@ -260,7 +260,7 @@ class TaskServices
             'task_mode_id' => $validated['task_mode_id'] ?? $defaults['task_mode_id'],
             'priority' => $validated['priority'] ?? $defaults['priority'],
             'current_assignee_id' => ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null,
-            'due_date_time' => $validated['due_date_time'] ?? null,
+            'due_date_time' => Task::normalizeTaskDueDateTime($validated['due_date_time'] ?? null),
             'estimated_time_seconds' => array_key_exists('estimated_time_minutes', $validated)
                 ? (int) (($validated['estimated_time_minutes'] ?? 0) * 60)
                 : $defaults['estimated_time_seconds'],
@@ -283,7 +283,7 @@ class TaskServices
             'task_mode_id' => $validated['task_mode_id'],
             'priority' => $validated['priority'],
             'current_assignee_id' => ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null,
-            'due_date_time' => $validated['due_date_time'] ?? null,
+            'due_date_time' => Task::normalizeTaskDueDateTime($validated['due_date_time'] ?? null),
             'completed_at' => array_key_exists('completed_at', $validated) ? ($validated['completed_at'] ?? null) : $task->completed_at,
             'estimated_time_seconds' => (int) (($validated['estimated_time_minutes'] ?? 0) * 60),
             'is_billable' => (bool) ($validated['is_billable'] ?? false),
