@@ -55,13 +55,13 @@
                                     <x-sorting.sortable-column column="currentAssignee.name" label="Assignee" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="status.name" label="Status" />
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="task_type" label="Type" />
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Type</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="task_mode" label="Task Mode" />
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Mode</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate Time" />

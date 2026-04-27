@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use App\Traits\TaskFilterable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +15,7 @@ use App\Traits\HasFormOptions;
 
 class Task extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+    use SoftDeletes, TaskFilterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected ?int $previousProjectMilestoneIdForMetrics = null;
 

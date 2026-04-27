@@ -31,11 +31,9 @@ class TaskServices
     {
         $query = $this->queryService->baseQuery($user);
 
-        return $this->filterService
-            ->sort(
-                $this->filterService->apply($query, $filters),
-                $filters
-            )
+        return $query
+            ->filter($filters)
+            ->sort($filters)
             ->whereNull('parent_task_id')
             ->with($this->relations())
             ->withCount('childTasks')
@@ -112,8 +110,8 @@ class TaskServices
 
     private function buildKanbanBaseQuery(User $user, array $filters, string $flowType)
     {
-        return $this->filterService
-            ->apply($this->queryService->baseQuery($user), $filters)
+        return $this->queryService->baseQuery($user)
+            ->filter($filters)
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
             ->where('request_status', '!=', 'rejected');
     }
