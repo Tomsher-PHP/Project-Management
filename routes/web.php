@@ -31,6 +31,7 @@ use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use App\Http\Controllers\UserHierarchyController;
+use App\Http\Controllers\UserWorkspace;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -62,9 +63,7 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/user-dashboard', function () {
-        return view('user-dashboard');
-    })->name('user.dashboard');
+    Route::get('/user-workspace', [UserWorkspace::class, 'index'])->name('user.workspace');
 
     Route::get('/profile', function () {
         return view('user-profile');

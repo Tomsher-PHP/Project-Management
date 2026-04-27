@@ -67,7 +67,7 @@
                                     Default</a>
                             </li>
                             <li>
-                                <a href="{{ route('user.dashboard') }}" class="text-md inline-block py-1.5 font-medium text-bgray-600 transition-all hover:text-bgray-800 dark:text-bgray-50 hover:dark:text-success-300">User Dashboard</a>
+                                <a href="{{ route('user.workspace') }}" class="text-md inline-block py-1.5 font-medium text-bgray-600 transition-all hover:text-bgray-800 dark:text-bgray-50 hover:dark:text-success-300">Workspace</a>
                             </li>
                         </ul>
                     </li>
