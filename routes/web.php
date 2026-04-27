@@ -30,6 +30,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
+use App\Http\Controllers\UserHierarchyController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -362,6 +363,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
     Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
     Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+
+    // User hierarchy tree view route
+    Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
 });
 
 Route::get('api-test', function () {

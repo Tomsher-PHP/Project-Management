@@ -84,6 +84,19 @@
                             </span>
                         @endif
                     </button>
+                    @can('user.tree_view')
+                        <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 transition hover:bg-success-50 dark:border-darkblack-400 dark:hover:bg-darkblack-500 {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
+                            <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M6 19V16C6 14.8954 6.89543 14 8 14H16C17.1046 14 18 14.8954 18 16V19" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M12 10H17C18.1046 10 19 10.8954 19 12V14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M12 10H7C5.89543 10 5 10.8954 5 12V14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <rect x="9" y="3" width="6" height="4" rx="1.5" stroke-width="1.5" />
+                                <rect x="3" y="17" width="6" height="4" rx="1.5" stroke-width="1.5" />
+                                <rect x="15" y="17" width="6" height="4" rx="1.5" stroke-width="1.5" />
+                            </svg>
+                        </a>
+                    @endcan
                     {{-- <button onclick="messageAction()" type="button" id="message-btn" class="relative flex h-[52px] w-[52px] items-center justify-center rounded-[12px] border border-success-300 dark:border-darkblack-400">
                         <span class="absolute -right-[5px] -top-[2px] h-3.5 w-3.5 rounded-full border-2 border-white bg-error-300 dark:border-none"></span>
                         <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
