@@ -1,1405 +1,1437 @@
 @extends('layouts.master')
-
-@section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-12 xl:pb-12">
-        <!-- write your code here-->
-        <div class="2xl:flex 2xl:space-x-[48px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1">
-                <!-- total widget-->
-                <div class="mb-[24px] w-full">
-                    <div class="grid grid-cols-1 gap-[24px] lg:grid-cols-3">
-                        <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">
-                            <div class="mb-5 flex items-center justify-between">
-                                <div class="flex items-center space-x-[7px]">
-                                    <div class="icon">
-                                        <span>
-                                            <img src="./assets/images/icons/total-earn.svg" alt="icon" />
-                                        </span>
-                                    </div>
-                                    <span class="text-lg font-semibold text-bgray-900 dark:text-white">User Dashboard</span>
-                                </div>
-                                <div>
-                                    <img src="./assets/images/avatar/members-2.png" alt="members" />
-                                </div>
-                            </div>
-                            <div class="flex items-end justify-between">
-                                <div class="flex-1">
-                                    <p class="text-3xl font-bold leading-[48px] text-bgray-900 dark:text-white">
-                                        $7,245.00
-                                    </p>
-                                    <div class="flex items-center space-x-1">
-                                        <span>
-                                            <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.4318 0.522827L12.4446 0.522827L8.55575 0.522827L7.56859 0.522827C6.28227 0.522827 5.48082 1.91818 6.12896 3.02928L9.06056 8.05489C9.7037 9.1574 11.2967 9.1574 11.9398 8.05489L14.8714 3.02928C15.5196 1.91818 14.7181 0.522828 13.4318 0.522827Z" fill="#22C55E" />
-                                                <path opacity="0.4" d="M2.16878 13.0485L3.15594 13.0485L7.04483 13.0485L8.03199 13.0485C9.31831 13.0485 10.1198 11.6531 9.47163 10.542L6.54002 5.5164C5.89689 4.41389 4.30389 4.41389 3.66076 5.5164L0.729153 10.542C0.0810147 11.6531 0.882466 13.0485 2.16878 13.0485Z" fill="#22C55E" />
-                                            </svg>
-                                        </span>
-                                        <span class="text-sm font-medium text-success-300">
-                                            + 3.5%
-                                        </span>
-                                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                            from last week
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="w-[106px]">
-                                    <canvas id="totalEarn" height="68"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">
-                            <div class="mb-5 flex items-center justify-between">
-                                <div class="flex items-center space-x-[7px]">
-                                    <div class="icon">
-                                        <span>
-                                            <img src="./assets/images/icons/total-earn.svg" alt="icon" />
-                                        </span>
-                                    </div>
-                                    <span class="text-lg font-semibold text-bgray-900 dark:text-white">User Dashboard</span>
-                                </div>
-                                <div>
-                                    <img src="./assets/images/avatar/members-2.png" alt="members" />
-                                </div>
-                            </div>
-                            <div class="flex items-end justify-between">
-                                <div class="flex-1">
-                                    <p class="text-3xl font-bold leading-[48px] text-bgray-900 dark:text-white">
-                                        $7,245.00
-                                    </p>
-                                    <div class="flex items-center space-x-1">
-                                        <span>
-                                            <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.4318 0.522827L12.4446 0.522827L8.55575 0.522827L7.56859 0.522827C6.28227 0.522827 5.48082 1.91818 6.12896 3.02928L9.06056 8.05489C9.7037 9.1574 11.2967 9.1574 11.9398 8.05489L14.8714 3.02928C15.5196 1.91818 14.7181 0.522828 13.4318 0.522827Z" fill="#22C55E" />
-                                                <path opacity="0.4" d="M2.16878 13.0485L3.15594 13.0485L7.04483 13.0485L8.03199 13.0485C9.31831 13.0485 10.1198 11.6531 9.47163 10.542L6.54002 5.5164C5.89689 4.41389 4.30389 4.41389 3.66076 5.5164L0.729153 10.542C0.0810147 11.6531 0.882466 13.0485 2.16878 13.0485Z" fill="#22C55E" />
-                                            </svg>
-                                        </span>
-                                        <span class="text-sm font-medium text-success-300">
-                                            + 3.5%
-                                        </span>
-                                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                            from last week
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="w-[106px]">
-                                    <canvas id="totalSpending" height="68"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">
-                            <div class="mb-5 flex items-center justify-between">
-                                <div class="flex items-center space-x-[7px]">
-                                    <div class="icon">
-                                        <span>
-                                            <img src="./assets/images/icons/total-earn.svg" alt="icon" />
-                                        </span>
-                                    </div>
-                                    <span class="text-lg font-semibold text-bgray-900 dark:text-white">User Dashboard</span>
-                                </div>
-                                <div>
-                                    <img src="./assets/images/avatar/members-2.png" alt="members" />
-                                </div>
-                            </div>
-                            <div class="flex items-end justify-between">
-                                <div class="flex-1">
-                                    <p class="text-3xl font-bold leading-[48px] text-bgray-900 dark:text-white">
-                                        $7,245.00
-                                    </p>
-                                    <div class="flex items-center space-x-1">
-                                        <span>
-                                            <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M13.4318 0.522827L12.4446 0.522827L8.55575 0.522827L7.56859 0.522827C6.28227 0.522827 5.48082 1.91818 6.12896 3.02928L9.06056 8.05489C9.7037 9.1574 11.2967 9.1574 11.9398 8.05489L14.8714 3.02928C15.5196 1.91818 14.7181 0.522828 13.4318 0.522827Z" fill="#22C55E" />
-                                                <path opacity="0.4" d="M2.16878 13.0485L3.15594 13.0485L7.04483 13.0485L8.03199 13.0485C9.31831 13.0485 10.1198 11.6531 9.47163 10.542L6.54002 5.5164C5.89689 4.41389 4.30389 4.41389 3.66076 5.5164L0.729153 10.542C0.0810147 11.6531 0.882466 13.0485 2.16878 13.0485Z" fill="#22C55E" />
-                                            </svg>
-                                        </span>
-                                        <span class="text-sm font-medium text-success-300">
-                                            + 3.5%
-                                        </span>
-                                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
-                                            from last week
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="w-[106px]">
-                                    <canvas id="totalGoal" height="68"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- revenue, flow -->
-                <div class="mb-[24px] w-full xl:flex xl:space-x-[24px]">
-                    <div class="flex w-full flex-col justify-between rounded-lg bg-white px-[24px] py-3 dark:bg-darkblack-600 xl:w-66">
-                        <div class="mb-2 flex items-center justify-between border-b border-bgray-300 pb-2 dark:border-darkblack-400">
-                            <h3 class="text-xl font-bold text-bgray-900 dark:text-white sm:text-2xl">
-                                Revenue Flow
-                            </h3>
-                            <div class="hidden items-center space-x-[28px] sm:flex">
-                                <div class="flex items-center space-x-2">
-                                    <div class="h-3 w-3 rounded-full bg-warning-300"></div>
-                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">Pending
-                                    </span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <div class="h-3 w-3 rounded-full bg-success-300"></div>
-                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">Signed
-                                    </span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <div class="h-3 w-3 rounded-full bg-orange"></div>
-                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">Lost
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="date-filter relative">
-                                <button onclick="dateFilterAction('#date-filter-body')" type="button" class="flex items-center space-x-1 overflow-hidden rounded-lg bg-bgray-100 px-3 py-2 dark:bg-darkblack-500 dark:text-white">
-                                    <span class="text-sm font-medium text-bgray-900 dark:text-white">Jan 10 - Jan 16</span>
-                                    <span>
-                                        <svg class="stroke-bgray-900 dark:stroke-gray-50" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M4 6.5L8 10.5L12 6.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                </button>
-                                <div id="date-filter-body" class="absolute right-0 top-[44px] z-10 hidden overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                    <ul>
-                                        <li onclick="dateFilterAction('#date-filter-body')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            Jan 10 - Jan 16
-                                        </li>
-                                        <li onclick="dateFilterAction('#date-filter-body')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            Jan 10 - Jan 16
-                                        </li>
-                                        <li onclick="dateFilterAction('#date-filter-body')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            Jan 10 - Jan 16
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                            <canvas id="revenueFlow" height="255"></canvas>
-                        </div>
-                    </div>
-                    <div class="hidden flex-1 xl:block">
-                        <div class="rounded-lg bg-white dark:bg-darkblack-600">
-                            <div class="flex items-center justify-between border-b border-bgray-300 px-[20px] py-[12px] dark:border-darkblack-400">
-                                <h3 class="text-xl font-bold text-bgray-900 dark:text-white">
-                                    Efficiency
-                                </h3>
-                                <div class="date-filter relative">
-                                    <button onclick="dateFilterAction('#month-filter')" type="button" class="flex items-center space-x-1">
-                                        <span class="text-base font-semibold text-bgray-900 dark:text-white">Monthly</span>
-                                        <span>
-                                            <svg class="stroke-bgray-900 dark:stroke-bgray-50" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M4 6.5L8 10.5L12 6.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </span>
-                                    </button>
-                                    <div id="month-filter" class="absolute right-0 top-5 z-10 hidden overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                        <ul>
-                                            <li onclick="dateFilterAction('#month-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                January
-                                            </li>
-                                            <li onclick="dateFilterAction('#month-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                February
-                                            </li>
-
-                                            <li onclick="dateFilterAction('#month-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                March
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="px-[20px] py-[12px]">
-                                <div class="mb-4 flex items-center space-x-8">
-                                    <div class="relative w-[180px]">
-                                        <canvas id="pie_chart" height="168"></canvas>
-                                        <div class="absolute z-0 h-[34px] w-[34px] rounded-full bg-[#EDF2F7]" style="
-                left: calc(50% - 17px);
-                top: calc(50% - 17px);
-                "></div>
-                                    </div>
-                                    <div class="counting">
-                                        <div class="mb-6">
-                                            <div class="flex items-center space-x-[2px]">
-                                                <p class="text-lg font-bold text-success-300">
-                                                    $5,230
-                                                </p>
-                                                <span><svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M10.7749 0.558058C10.5309 0.313981 10.1351 0.313981 9.89107 0.558058L7.39107 3.05806C7.14699 3.30214 7.14699 3.69786 7.39107 3.94194C7.63514 4.18602 8.03087 4.18602 8.27495 3.94194L9.70801 2.50888V11C9.70801 11.3452 9.98783 11.625 10.333 11.625C10.6782 11.625 10.958 11.3452 10.958 11V2.50888L12.3911 3.94194C12.6351 4.18602 13.0309 4.18602 13.2749 3.94194C13.519 3.69786 13.519 3.30214 13.2749 3.05806L10.7749 0.558058Z" fill="#22C55E" />
-                                                        <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M3.22407 11.4419C3.46815 11.686 3.86388 11.686 4.10796 11.4419L6.60796 8.94194C6.85203 8.69786 6.85203 8.30214 6.60796 8.05806C6.36388 7.81398 5.96815 7.81398 5.72407 8.05806L4.29102 9.49112L4.29101 1C4.29101 0.654823 4.01119 0.375001 3.66602 0.375001C3.32084 0.375001 3.04102 0.654823 3.04102 1L3.04102 9.49112L1.60796 8.05806C1.36388 7.81398 0.968151 7.81398 0.724074 8.05806C0.479996 8.30214 0.479996 8.69786 0.724074 8.94194L3.22407 11.4419Z" fill="#22C55E" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                            <p class="text-base font-medium text-bgray-600">
-                                                Arrival
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center space-x-[2px]">
-                                                <p class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                    $6,230
-                                                </p>
-                                                <span>
-                                                    <svg class="fill-bgray-900 dark:fill-bgray-50" width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M10.7749 0.558058C10.5309 0.313981 10.1351 0.313981 9.89107 0.558058L7.39107 3.05806C7.14699 3.30214 7.14699 3.69786 7.39107 3.94194C7.63514 4.18602 8.03087 4.18602 8.27495 3.94194L9.70801 2.50888V11C9.70801 11.3452 9.98783 11.625 10.333 11.625C10.6782 11.625 10.958 11.3452 10.958 11V2.50888L12.3911 3.94194C12.6351 4.18602 13.0309 4.18602 13.2749 3.94194C13.519 3.69786 13.519 3.30214 13.2749 3.05806L10.7749 0.558058Z" />
-                                                        <path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M3.22407 11.4419C3.46815 11.686 3.86388 11.686 4.10796 11.4419L6.60796 8.94194C6.85203 8.69786 6.85203 8.30214 6.60796 8.05806C6.36388 7.81398 5.96815 7.81398 5.72407 8.05806L4.29102 9.49112L4.29101 1C4.29101 0.654823 4.01119 0.375001 3.66602 0.375001C3.32084 0.375001 3.04102 0.654823 3.04102 1L3.04102 9.49112L1.60796 8.05806C1.36388 7.81398 0.968151 7.81398 0.724074 8.05806C0.479996 8.30214 0.479996 8.69786 0.724074 8.94194L3.22407 11.4419Z" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                            <p class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Spending
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="status">
-                                    <div class="mb-1.5 flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="h-2.5 w-2.5 rounded-full bg-success-300"></div>
-                                            <span class="text-sm font-medium text-bgray-600 dark:text-bgray-50">Goal</span>
-                                        </div>
-                                        <p class="text-sm font-bold text-bgray-900 dark:text-bgray-50">
-                                            13%
-                                        </p>
-                                    </div>
-                                    <div class="mb-1.5 flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="h-2.5 w-2.5 rounded-full bg-warning-300"></div>
-                                            <span class="text-sm font-medium text-bgray-600 dark:text-white">Spending</span>
-                                        </div>
-                                        <p class="text-sm font-bold text-bgray-900 dark:text-bgray-50">
-                                            28%
-                                        </p>
-                                    </div>
-                                    <div class="mb-1.5 flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="h-2.5 w-2.5 rounded-full bg-bgray-200"></div>
-                                            <span class="text-sm font-medium text-bgray-600 dark:text-white">Others</span>
-                                        </div>
-                                        <p class="text-sm font-bold text-bgray-900 dark:text-bgray-50">
-                                            59%
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!--list table-->
-                <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-                    <div class="flex flex-col space-y-5">
-                        <div class="flex h-[56px] w-full space-x-4">
-                            <div class="hidden h-full rounded-lg border border-transparent bg-bgray-100 px-[18px] focus-within:border-success-300 dark:bg-darkblack-500 sm:block sm:w-70 lg:w-88">
-                                <div class="flex h-full w-full items-center space-x-[15px]">
-                                    <span>
-                                        <svg class="stroke-bgray-900 dark:stroke-white" width="21" height="22" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="9.80204" cy="10.6761" r="8.98856" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M16.0537 17.3945L19.5777 20.9094" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <label for="listSearch" class="w-full">
-                                        <input type="text" id="listSearch" placeholder="Search by name, email, or others..." class="search-input w-full border-none bg-bgray-100 px-0 text-sm tracking-wide text-bgray-600 placeholder:text-sm placeholder:font-medium placeholder:text-bgray-500 focus:outline-none focus:ring-0 dark:bg-darkblack-500" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="relative h-full flex-1">
-                                <button onclick="dateFilterAction('#table-filter')" type="button" class="flex h-full w-full items-center justify-center rounded-lg border border-bgray-300 bg-bgray-100 dark:border-darkblack-500 dark:bg-darkblack-500">
-                                    <div class="flex items-center space-x-3">
-                                        <span>
-                                            <svg class="stroke-bgray-900 dark:stroke-success-400" width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M7.55169 13.5022H1.25098" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path d="M10.3623 3.80984H16.663" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.94797 3.75568C5.94797 2.46002 4.88981 1.40942 3.58482 1.40942C2.27984 1.40942 1.22168 2.46002 1.22168 3.75568C1.22168 5.05133 2.27984 6.10193 3.58482 6.10193C4.88981 6.10193 5.94797 5.05133 5.94797 3.75568Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M17.2214 13.4632C17.2214 12.1675 16.1641 11.1169 14.8591 11.1169C13.5533 11.1169 12.4951 12.1675 12.4951 13.4632C12.4951 14.7589 13.5533 15.8095 14.8591 15.8095C16.1641 15.8095 17.2214 14.7589 17.2214 13.4632Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </span>
-                                        <span class="text-base font-medium text-success-300">Filters</span>
-                                    </div>
-                                </button>
-                                <div id="table-filter" class="absolute right-0 top-[60px] z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                    <ul>
-                                        <li onclick="dateFilterAction('#table-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            January
-                                        </li>
-                                        <li onclick="dateFilterAction('#table-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            February
-                                        </li>
-
-                                        <li onclick="dateFilterAction('#table-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            March
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="filter-content w-full">
-                            <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-                                <div class="w-full">
-                                    <p class="mb-2 text-base font-bold leading-[24px] text-bgray-900 dark:text-white">
-                                        Location
-                                    </p>
-                                    <div class="relative h-[56px] w-full">
-                                        <button onclick="dateFilterAction('#province-filter')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
-                                            <span>
-                                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <div id="province-filter" class="absolute right-0 top-14 z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                            <ul>
-                                                <li onclick="dateFilterAction('#province-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    January
-                                                </li>
-                                                <li onclick="dateFilterAction('#province-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    February
-                                                </li>
-
-                                                <li onclick="dateFilterAction('#province-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    March
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="w-full">
-                                    <p class="mb-2 text-base font-bold leading-[24px] text-bgray-900 dark:text-white">
-                                        Amount Spent
-                                    </p>
-                                    <div class="relative h-[56px] w-full">
-                                        <button onclick="dateFilterAction('#amount-filter')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
-                                            <span>
-                                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <div id="amount-filter" class="absolute right-0 top-14 z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                            <ul>
-                                                <li onclick="dateFilterAction('#amount-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    January
-                                                </li>
-                                                <li onclick="dateFilterAction('#amount-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    February
-                                                </li>
-
-                                                <li onclick="dateFilterAction('#amount-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    March
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="w-full">
-                                    <p class="mb-2 text-base font-bold leading-[24px] text-bgray-900 dark:text-white">
-                                        Transaction list Date
-                                    </p>
-                                    <div class="relative h-[56px] w-full">
-                                        <button onclick="dateFilterAction('#date-filter-table')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
-                                            <span>
-                                                <svg class="stroke-bgray-500 dark:stroke-white" width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M18.6758 5.8186H6.67578C5.57121 5.8186 4.67578 6.71403 4.67578 7.8186V19.8186C4.67578 20.9232 5.57121 21.8186 6.67578 21.8186H18.6758C19.7804 21.8186 20.6758 20.9232 20.6758 19.8186V7.8186C20.6758 6.71403 19.7804 5.8186 18.6758 5.8186Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M16.6758 3.8186V7.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M8.67578 3.8186V7.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M4.67578 11.8186H20.6758" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M11.6758 15.8186H12.6758" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M12.6758 15.8186V18.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <div id="date-filter-table" class="absolute right-0 top-14 z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                            <ul>
-                                                <li onclick="dateFilterAction('#amount-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    January
-                                                </li>
-                                                <li onclick="dateFilterAction('#amount-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    February
-                                                </li>
-
-                                                <li onclick="dateFilterAction('#amount-filter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    March
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="w-full">
-                                    <p class="mb-2 text-base font-bold leading-[24px] text-bgray-900 dark:text-white">
-                                        Type of transaction
-                                    </p>
-                                    <div class="relative h-[56px] w-full">
-                                        <button onclick="dateFilterAction('#trans-filter-tb')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
-                                            <span>
-                                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <div id="trans-filter-tb" class="absolute right-0 top-14 z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                            <ul>
-                                                <li onclick="dateFilterAction('#trans-filter-tb')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    January
-                                                </li>
-                                                <li onclick="dateFilterAction('#trans-filter-tb')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    February
-                                                </li>
-
-                                                <li onclick="dateFilterAction('#trans-filter-tb')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                                    March
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="table-content w-full overflow-x-auto">
-                            <table class="w-full">
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <td class="">
-                                        <label class="text-center">
-                                            <input type="checkbox" class="h-5 w-5 cursor-pointer rounded-full border border-bgray-400 bg-transparent text-success-300 focus:outline-none focus:ring-0" />
-                                        </label>
-                                    </td>
-                                    <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Customer name</span>
-                                            <span>
-                                                <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10.332 1.31567V13.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M5.66602 11.3157L3.66602 13.3157L1.66602 11.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M3.66602 13.3157V1.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M12.332 3.31567L10.332 1.31567L8.33203 3.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Email</span>
-                                            <span>
-                                                <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10.332 1.31567V13.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M5.66602 11.3157L3.66602 13.3157L1.66602 11.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M3.66602 13.3157V1.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M12.332 3.31567L10.332 1.31567L8.33203 3.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Location</span>
-                                            <span>
-                                                <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10.332 1.31567V13.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M5.66602 11.3157L3.66602 13.3157L1.66602 11.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M3.66602 13.3157V1.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M12.332 3.31567L10.332 1.31567L8.33203 3.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="w-[165px] px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Spent</span>
-                                            <span>
-                                                <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M10.332 1.31567V13.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M5.66602 11.3157L3.66602 13.3157L1.66602 11.3157" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M3.66602 13.3157V1.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M12.332 3.31567L10.332 1.31567L8.33203 3.31567" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0"></td>
-                                </tr>
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <td class="">
-                                        <label class="text-center">
-                                            <input type="checkbox" class="h-5 w-5 cursor-pointer rounded-full border border-bgray-400 bg-transparent text-success-300 focus:outline-none focus:ring-0" />
-                                        </label>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <div class="h-10 w-10 overflow-hidden rounded-full">
-                                                <img src="./assets/images/avatar/user-40x40.png" alt="avatar" class="h-full w-full object-cover" />
-                                            </div>
-                                            <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                Devon Lane
-                                            </p>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            devon@mail.com
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            Philadelphia, USA
-                                        </p>
-                                    </td>
-                                    <td class="w-[165px] px-6 py-5 xl:px-0">
-                                        <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                            $101.00
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex justify-center">
-                                            <button type="button">
-                                                <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 2.00024C8 2.55253 8.44772 3.00024 9 3.00024C9.55228 3.00024 10 2.55253 10 2.00024C10 1.44796 9.55228 1.00024 9 1.00024C8.44772 1.00024 8 1.44796 8 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M1 2.00024C1 2.55253 1.44772 3.00024 2 3.00024C2.55228 3.00024 3 2.55253 3 2.00024C3 1.44796 2.55228 1.00024 2 1.00024C1.44772 1.00024 1 1.44796 1 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M15 2.00024C15 2.55253 15.4477 3.00024 16 3.00024C16.5523 3.00024 17 2.55253 17 2.00024C17 1.44796 16.5523 1.00024 16 1.00024C15.4477 1.00024 15 1.44796 15 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <td class="">
-                                        <label class="text-center">
-                                            <input type="checkbox" class="h-5 w-5 cursor-pointer rounded-full border border-bgray-400 bg-transparent text-success-300 focus:outline-none focus:ring-0" />
-                                        </label>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <div class="h-10 w-10 overflow-hidden rounded-full">
-                                                <img src="./assets/images/avatar/user-40x40-1.png" alt="avatar" class="h-full w-full object-cover" />
-                                            </div>
-                                            <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                Bessie Cooper
-                                            </p>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            devon@mail.com
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            Philadelphia, USA
-                                        </p>
-                                    </td>
-                                    <td class="w-[165px] px-6 py-5 xl:px-0">
-                                        <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                            $101.00
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex justify-center">
-                                            <button type="button">
-                                                <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 2.00024C8 2.55253 8.44772 3.00024 9 3.00024C9.55228 3.00024 10 2.55253 10 2.00024C10 1.44796 9.55228 1.00024 9 1.00024C8.44772 1.00024 8 1.44796 8 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M1 2.00024C1 2.55253 1.44772 3.00024 2 3.00024C2.55228 3.00024 3 2.55253 3 2.00024C3 1.44796 2.55228 1.00024 2 1.00024C1.44772 1.00024 1 1.44796 1 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M15 2.00024C15 2.55253 15.4477 3.00024 16 3.00024C16.5523 3.00024 17 2.55253 17 2.00024C17 1.44796 16.5523 1.00024 16 1.00024C15.4477 1.00024 15 1.44796 15 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <td class="">
-                                        <label class="text-center">
-                                            <input type="checkbox" class="h-5 w-5 cursor-pointer rounded-full border border-bgray-400 bg-transparent text-success-300 focus:outline-none focus:ring-0" />
-                                        </label>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <div class="h-10 w-10 overflow-hidden rounded-full">
-                                                <img src="./assets/images/avatar/user-40x40-2.png" alt="avatar" class="h-full w-full object-cover" />
-                                            </div>
-                                            <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                Dianne Russell
-                                            </p>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            devon@mail.com
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <p class="text-base font-medium text-bgray-900 dark:text-white">
-                                            Philadelphia, USA
-                                        </p>
-                                    </td>
-                                    <td class="w-[165px] px-6 py-5 xl:px-0">
-                                        <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                            $101.00
-                                        </p>
-                                    </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex justify-center">
-                                            <button type="button">
-                                                <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 2.00024C8 2.55253 8.44772 3.00024 9 3.00024C9.55228 3.00024 10 2.55253 10 2.00024C10 1.44796 9.55228 1.00024 9 1.00024C8.44772 1.00024 8 1.44796 8 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M1 2.00024C1 2.55253 1.44772 3.00024 2 3.00024C2.55228 3.00024 3 2.55253 3 2.00024C3 1.44796 2.55228 1.00024 2 1.00024C1.44772 1.00024 1 1.44796 1 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                    <path d="M15 2.00024C15 2.55253 15.4477 3.00024 16 3.00024C16.5523 3.00024 17 2.55253 17 2.00024C17 1.44796 16.5523 1.00024 16 1.00024C15.4477 1.00024 15 1.44796 15 2.00024Z" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="pagination-content w-full">
-                            <div class="flex w-full items-center justify-center lg:justify-between">
-                                <div class="hidden items-center space-x-4 lg:flex">
-                                    <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50">Show result:</span>
-                                    <div class="relative">
-                                        <button onclick="dateFilterAction('#result-filter')" type="button" class="flex items-center space-x-6 rounded-lg border border-bgray-300 px-2.5 py-[14px] dark:border-darkblack-400">
-                                            <span class="text-sm font-semibold text-bgray-900 dark:text-bgray-50">3</span>
-                                            <span>
-                                                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M4.03516 6.03271L8.03516 10.0327L12.0352 6.03271" stroke="#A0AEC0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <div id="result-filter" class="absolute right-0 top-14 z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg">
-                                            <ul>
-                                                <li onclick="dateFilterAction('#result-filter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-medium hover:bg-bgray-100">
-                                                    1
-                                                </li>
-                                                <li onclick="dateFilterAction('#result-filter')" class="cursor-pointer px-5 py-2 text-sm font-medium text-bgray-900 hover:bg-bgray-100">
-                                                    2
-                                                </li>
-
-                                                <li onclick="dateFilterAction('#result-filter')" class="cursor-pointer px-5 py-2 text-sm font-medium text-bgray-900 hover:bg-bgray-100">
-                                                    3
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-5 sm:space-x-[35px]">
-                                    <button type="button">
-                                        <span>
-                                            <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12.7217 5.03271L7.72168 10.0327L12.7217 15.0327" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </span>
-                                    </button>
-                                    <div class="flex items-center">
-                                        <button type="button" class="rounded-lg bg-success-50 px-4 py-1.5 text-xs font-bold text-success-300 dark:bg-darkblack-500 dark:text-bgray-50 lg:px-6 lg:py-2.5 lg:text-sm">
-                                            1
-                                        </button>
-                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-500 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
-                                            2
-                                        </button>
-
-                                        <span class="text-sm text-bgray-500">. . . .</span>
-                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-500 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
-                                            20
-                                        </button>
-                                    </div>
-                                    <button type="button">
-                                        <span>
-                                            <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M7.72168 5.03271L12.7217 10.0327L7.72168 15.0327" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <section class="flex w-full flex-col space-x-0 lg:flex-row lg:space-x-6 2xl:w-[400px] 2xl:flex-col 2xl:space-x-0">
-                <div class="mb-6 w-full rounded-lg bg-white px-[42px] py-5 dark:border dark:border-darkblack-400 dark:bg-darkblack-600 lg:mb-0 lg:w-1/2 2xl:mb-6 2xl:w-full">
-                    <div class="my-wallet mb-8 w-full">
-                        <div class="mb-3 flex items-center justify-between">
-                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                My Wallet
-                            </h3>
-                            <div class="payment-select relative mb-3">
-                                <button onclick="dateFilterAction('#cardsOptions')" type="button">
-                                    <svg width="18" height="4" viewBox="0 0 18 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M8 2C8 2.55228 8.44772 3 9 3C9.55228 3 10 2.55228 10 2C10 1.44772 9.55228 1 9 1C8.44772 1 8 1.44772 8 2Z" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M1 2C1 2.55228 1.44772 3 2 3C2.55228 3 3 2.55228 3 2C3 1.44772 2.55228 1 2 1C1.44772 1 1 1.44772 1 2Z" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M15 2C15 2.55228 15.4477 3 16 3C16.5523 3 17 2.55228 17 2C17 1.44772 16.5523 1 16 1C15.4477 1 15 1.44772 15 2Z" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </button>
-                                <div id="cardsOptions" class="absolute right-0 top-full z-10 hidden min-w-[150px] overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                    <ul>
-                                        <li onclick="dateFilterAction('#cardsOptions')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            Master Card
-                                        </li>
-                                        <li onclick="dateFilterAction('#cardsOptions')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            VISA Card
-                                        </li>
-                                        <li onclick="dateFilterAction('#cardsOptions')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                            Others
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex justify-center">
-                            <div class="card-slider relative w-[280px] md:w-[340px]">
-                                <div class="w-full">
-                                    <img src="./assets/images/payments/card-1.svg" alt="card" />
-                                </div>
-                                <div class="w-full">
-                                    <img src="./assets/images/payments/card-2.svg" alt="card" />
-                                </div>
-                                <div class="w-full">
-                                    <img src="./assets/images/payments/card-3.svg" alt="card" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w-full">
-                        <h3 class="mb-4 text-lg font-bold text-bgray-900 dark:text-white">
-                            Quick Transfer
-                        </h3>
-                        <div class="payment-select relative mb-3">
-                            <button onclick="dateFilterAction('#paymentFilter')" type="button" class="flex h-[56px] w-full items-center justify-between overflow-hidden rounded-lg border border-bgray-200 px-5 dark:border-darkblack-400">
-                                <div class="flex items-center space-x-2">
-                                    <span>
-                                        <img src="./assets/images/payments/master-mini.svg" alt="master" />
-                                    </span>
-                                    <span class="text-sm font-medium text-bgray-900 dark:text-white">Debit</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-sm font-bold text-bgray-900 dark:text-bgray-50">
-                                        $10,431
-                                    </span>
-                                    <span class="text-sm font-medium text-bgray-900">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M4 6L8 10L12 6" stroke="#A0AEC0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                </div>
-                            </button>
-                            <div id="paymentFilter" class="absolute right-0 top-full z-10 hidden w-full overflow-hidden rounded-lg bg-white shadow-lg dark:bg-darkblack-500">
-                                <ul>
-                                    <li onclick="dateFilterAction('#paymentFilter')" class="text-bgray-90 cursor-pointer px-5 py-2 text-sm font-semibold hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                        Jan 10 - Jan 16
-                                    </li>
-                                    <li onclick="dateFilterAction('#paymentFilter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                        Jan 10 - Jan 16
-                                    </li>
-                                    <li onclick="dateFilterAction('#paymentFilter')" class="cursor-pointer px-5 py-2 text-sm font-semibold text-bgray-900 hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600">
-                                        Jan 10 - Jan 16
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="flex h-[98px] w-full flex-col justify-between rounded-lg border border-bgray-200 p-4 focus-within:border-success-300 dark:border-darkblack-400">
-                            <p class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
-                                Enter amount
-                            </p>
-                            <div class="flex h-[35px] w-full items-center justify-between">
-                                <span class="text-2xl font-bold text-bgray-900 dark:text-white">$</span>
-                                <label class="w-full">
-                                    <input type="text" class="w-full border-none p-0 text-2xl font-bold text-bgray-900 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" />
-                                </label>
-                                <div>
-                                    <img src="./assets/images/avatar/members-3.png" alt="members" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex w-full flex-col justify-between rounded-lg bg-white dark:border dark:border-darkblack-400 dark:bg-darkblack-600 lg:w-1/2 2xl:w-full">
-                    <div class="flex justify-between border-b border-bgray-300 px-[26px] py-6 dark:border-darkblack-400">
-                        <h1 class="text-2xl font-semibold text-bgray-900 dark:text-white">
-                            Team Chat
-                        </h1>
-                        <div class="flex items-center space-x-3">
-                            <div>
-                                <img src="./assets/images/avatar/members-3.png" alt="members" />
-                            </div>
-                            <button type="button" class="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-bgray-200">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.75 1C7.75 0.585786 7.41421 0.25 7 0.25C6.58579 0.25 6.25 0.585786 6.25 1V6.25H1C0.585786 6.25 0.25 6.58579 0.25 7C0.25 7.41421 0.585786 7.75 1 7.75H6.25V13C6.25 13.4142 6.58579 13.75 7 13.75C7.41421 13.75 7.75 13.4142 7.75 13V7.75H13C13.4142 7.75 13.75 7.41421 13.75 7C13.75 6.58579 13.4142 6.25 13 6.25H7.75V1Z" fill="#718096" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="w-full px-5 py-6 lg:px-[35px] lg:py-[38px]">
-                        <div class="mb-5 flex flex-col space-y-[32px]">
-                            <div class="flex justify-start">
-                                <div class="flex items-end space-x-3">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="h-[35px] w-[36px] overflow-hidden rounded-full">
-                                            <img src="./assets/images/avatar/user-1.png" alt="avater" class="h-full w-full object-cover" />
-                                        </div>
-                                        <div class="rounded-lg bg-bgray-100 p-3 dark:bg-darkblack-500">
-                                            <p class="text-sm font-medium text-bgray-900 dark:text-white">
-                                                Hi, What can I help you with?
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
-                                </div>
-                            </div>
-                            <div class="flex justify-start">
-                                <div class="flex items-end space-x-3">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="h-[35px] w-[36px] overflow-hidden rounded-full">
-                                            <img src="./assets/images/avatar/user-1.png" alt="avater" class="h-full w-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <img src="./assets/images/others/mp3.png" class="block dark:hidden" alt="mp3" />
-                                            <img src="./assets/images/others/mp3-dark.png" class="hidden dark:block" alt="mp3" />
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
-                                </div>
-                            </div>
-                            <div class="flex justify-end">
-                                <div class="flex items-end space-x-3">
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
-                                    <div class="flex items-center space-x-2">
-                                        <div class="rounded-b-lg rounded-l-lg bg-bgray-100 p-3 dark:bg-darkblack-500">
-                                            <p class="text-sm font-medium text-bgray-900 dark:text-white">
-                                                Hi, What can I help you with?
-                                            </p>
-                                        </div>
-                                        <div class="h-[35px] w-[36px] overflow-hidden rounded-full">
-                                            <img src="./assets/images/avatar/user-1.png" alt="avater" class="h-full w-full object-cover" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex justify-start">
-                                <div class="flex items-end space-x-3">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="h-[35px] w-[36px] overflow-hidden rounded-full">
-                                            <img src="./assets/images/avatar/user-1.png" alt="avater" class="h-full w-full object-cover" />
-                                        </div>
-                                        <div class="rounded-lg bg-bgray-100 p-3 dark:bg-darkblack-500">
-                                            <p class="text-sm font-medium text-bgray-900 dark:text-white">
-                                                Hi, What can I help you with?
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex h-[58px] w-full items-center space-x-4">
-                            <div class="flex h-full w-full items-center justify-between rounded-lg border border-transparent bg-bgray-100 px-5 focus-within:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 lg:w-[318px]">
-                                <span>
-                                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.66652 4.1112L5.22208 8.55565C4.60843 9.1693 4.60843 10.1642 5.22208 10.7779C5.83573 11.3915 6.83065 11.3915 7.4443 10.7779L11.8887 6.33343C13.116 5.10613 13.116 3.11628 11.8887 1.88898C10.6614 0.661681 8.6716 0.661681 7.4443 1.88898L2.99985 6.33343C1.1589 8.17438 1.1589 11.1591 2.99985 13.0001C4.8408 14.841 7.82557 14.841 9.66652 13.0001L14.111 8.55565" stroke="#CBD5E0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </span>
-                                <label class="w-full">
-                                    <input type="text" placeholder="Type your Message..." class="w-full border-none bg-bgray-100 p-0 pl-[15px] font-medium placeholder:text-sm placeholder:font-medium placeholder:text-bgray-400 focus:outline-none focus:ring-0 dark:bg-darkblack-500 dark:text-white" />
-                                </label>
-                                <span>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M19 11V12C19 15.866 15.866 19 12 19M5 11V12C5 15.866 8.13401 19 12 19M12 19V22M12 22H15M12 22H9M12 16C9.79086 16 8 14.2091 8 12V6C8 3.79086 9.79086 2 12 2C14.2091 2 16 3.79086 16 6V12C16 14.2091 14.2091 16 12 16Z" stroke="#A0AEC0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <button type="button">
-                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.3894 0H2.61094C0.339326 0 -0.844596 2.63548 0.696196 4.26234L3.78568 7.52441C4.23 7.99355 4.47673 8.60858 4.47673 9.24704V15.4553C4.47673 17.8735 7.61615 18.9233 9.13941 17.0145L19.4463 4.09894C20.7775 2.43071 19.5578 0 17.3894 0Z" fill="#22C55E" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-        <!-- write your code here-->
-    </main>
-@endsection
-
-@push('scripts')
-    <script>
-        //dashboard
-        function totalEarn() {
-            const ctx_bids = document.getElementById("totalEarn").getContext("2d");
-            const bitsMonth = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-            ];
-            const bitsData = [
-                0, 10, 0, 65, 0, 25, 0, 35, 20, 100, 40, 75, 50, 85, 60,
-            ];
-            const totalEarn = new Chart(ctx_bids, {
-                type: "line",
-                data: {
-                    labels: bitsMonth,
-                    datasets: [{
-                        label: "Visitor",
-                        data: bitsData,
-                        backgroundColor: () => {
-                            const chart = document
-                                .getElementById("totalEarn")
-                                .getContext("2d");
-                            const gradient = chart.createLinearGradient(0, 0, 0, 450);
-                            gradient.addColorStop(0, "rgba(34, 197, 94,0.41)");
-                            gradient.addColorStop(0.2, "rgba(255, 255, 255, 0)");
-
-                            return gradient;
-                        },
-                        borderColor: "#22C55E",
-                        pointRadius: 0,
-                        pointBackgroundColor: "#fff",
-                        pointBorderColor: "#22C55E",
-                        borderWidth: 1,
-                        fill: true,
-                        fillColor: "#fff",
-                        tension: 0.4,
-                    }, ],
-                },
-                options: {
-                    layout: {
-                        padding: {
-                            bottom: -20,
-                        },
-                    },
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                        y: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                    },
-
-                    plugins: {
-                        legend: {
-                            position: "top",
-                            display: false,
-                        },
-                        title: {
-                            display: false,
-                            text: "Visitor: 2k",
-                        },
-                        tooltip: {
-                            enabled: false,
-                        },
-                    },
-                },
-            });
-        }
-        totalEarn();
-
-        function totalSpendingChart() {
-            let ctx_bids = document
-                .getElementById("totalSpending")
-                .getContext("2d");
-            let bitsMonth = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-            ];
-            let bitsData = [
-                0, 10, 0, 65, 0, 25, 0, 35, 20, 100, 40, 75, 50, 85, 60,
-            ];
-            let totalEarn = new Chart(ctx_bids, {
-                type: "line",
-                data: {
-                    labels: bitsMonth,
-                    datasets: [{
-                        label: "Visitor",
-                        data: bitsData,
-                        backgroundColor: () => {
-                            const chart = document
-                                .getElementById("totalEarn")
-                                .getContext("2d");
-                            const gradient = chart.createLinearGradient(0, 0, 0, 450);
-                            gradient.addColorStop(0, "rgba(34, 197, 94,0.41)");
-                            gradient.addColorStop(0.2, "rgba(255, 255, 255, 0)");
-
-                            return gradient;
-                        },
-                        borderColor: "#22C55E",
-                        pointRadius: 0,
-                        pointBackgroundColor: "#fff",
-                        pointBorderColor: "#22C55E",
-                        borderWidth: 1,
-                        fill: true,
-                        fillColor: "#fff",
-                        tension: 0.4,
-                    }, ],
-                },
-                options: {
-                    layout: {
-                        padding: {
-                            bottom: -20,
-                        },
-                    },
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                        y: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                    },
-
-                    plugins: {
-                        legend: {
-                            position: "top",
-                            display: false,
-                        },
-                        title: {
-                            display: false,
-                            text: "Visitor: 2k",
-                        },
-                        tooltip: {
-                            enabled: false,
-                        },
-                    },
-                },
-            });
-        }
-        totalSpendingChart();
-
-        $(".card-slider").slick({
-            dots: true,
-            infinite: true,
-            autoplay: true,
-            speed: 500,
-            fade: true,
-            cssEase: "linear",
-            arrows: false,
-        });
-
-        function totalGoal() {
-            let ctx_bids = document.getElementById("totalGoal").getContext("2d");
-            let bitsMonth = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Jan",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-                "Feb",
-                "Mar",
-                "Afril",
-                "May",
-            ];
-            let bitsData = [
-                0, 10, 0, 65, 0, 25, 0, 35, 20, 100, 40, 75, 50, 85, 60,
-            ];
-            let totalEarn = new Chart(ctx_bids, {
-                type: "line",
-                data: {
-                    labels: bitsMonth,
-                    datasets: [{
-                        label: "Visitor",
-                        data: bitsData,
-                        backgroundColor: () => {
-                            const chart = document
-                                .getElementById("totalGoal")
-                                .getContext("2d");
-                            const gradient = chart.createLinearGradient(0, 0, 0, 450);
-                            gradient.addColorStop(0, "rgba(34, 197, 94,0.41)");
-                            gradient.addColorStop(0.2, "rgba(255, 255, 255, 0)");
-                            console.log({
-                                gradient
-                            });
-                            return gradient;
-                        },
-                        borderColor: "#22C55E",
-                        pointRadius: 0,
-                        pointBackgroundColor: "#fff",
-                        pointBorderColor: "#22C55E",
-                        borderWidth: 1,
-                        fill: true,
-                        fillColor: "#fff",
-                        tension: 0.4,
-                    }, ],
-                },
-                options: {
-                    layout: {
-                        padding: {
-                            bottom: -20,
-                        },
-                    },
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                        y: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false,
-                            },
-                        },
-                    },
-
-                    plugins: {
-                        legend: {
-                            position: "top",
-                            display: false,
-                        },
-                        title: {
-                            display: false,
-                            text: "Visitor: 2k",
-                        },
-                        tooltip: {
-                            enabled: false,
-                        },
-                    },
-                },
-            });
-        }
-        totalGoal();
-
-        let revenueFlowElement = document
-            .getElementById("revenueFlow")
-            .getContext("2d");
-        let month = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "April",
-            "May",
-            "Jun",
-            "July",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-        ];
-
-        let revenueFlow = new Chart(revenueFlowElement, {
-            type: "bar",
-            data: {
-                labels: month,
-                datasets: dataSetsLight,
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: "rgb(243 ,246, 255 ,1)",
-                        },
-                        gridLines: {
-                            zeroLineColor: "transparent",
-                        },
-                        ticks: {
-                            callback(value) {
-                                return `${value}% `;
-                            },
-                        },
-                    },
-                    x: {
-                        grid: {
-                            color: "rgb(243 ,246, 255 ,1)",
-                        },
-                        gridLines: {
-                            zeroLineColor: "transparent",
-                        },
-                    },
-                },
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                },
-                x: {
-                    stacked: true,
-                },
-                y: {
-                    stacked: true,
-                },
-            },
-        });
-        //pie chart
-        let pieChart = document.getElementById("pie_chart").getContext("2d");
-
-        const data = {
-            labels: [10, 20, 30],
-            datasets: [{
-                label: "My First Dataset",
-                data: [15, 20, 35, 40],
-                backgroundColor: ["#1A202C", "#61C660", "#F8CC4B", "#EDF2F7"],
-                borderColor: ["#ffffff", "#ffffff", "#ffffff", "#1A202C"],
-                hoverOffset: 18,
-                borderWidth: 0,
-            }, ],
-        };
-        const customDatalabels = {
-            id: "customDatalabels",
-            afterDatasetsDraw(chart, args, pluginOptions) {
-                const {
-                    ctx,
-                    data,
-                    chartArea: {
-                        top,
-                        bottom,
-                        left,
-                        right,
-                        width,
-                        height
-                    },
-                } = chart;
-                ctx.save();
-                data.datasets[0].data.forEach((datapoint, index) => {
-                    const {
-                        x,
-                        y
-                    } = chart
-                        .getDatasetMeta(0)
-                        .data[index].tooltipPosition();
-                    ctx.font = "bold 12px sans-serif";
-                    ctx.fillStyle = data.datasets[0].borderColor[index];
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    ctx.fillText(`${datapoint}%`, x, y);
-                });
-            },
-        };
-        const config = {
-            type: "doughnut",
-            data,
-            options: {
-                maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        left: 10,
-                        right: 10,
-                        top: 10,
-                        bottom: 10,
-                    },
-                },
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                },
-            },
-            plugins: [customDatalabels],
-        };
-
-        let pieChartConfiig = new Chart(pieChart, config);
-
-        //chart dark mode
-        let themeToggleSwitch = document.getElementById("theme-toggle");
-
-        //onclick
-
-        if (themeToggleSwitch) {
-            themeToggleSwitch.addEventListener("click", function() {
-                if (
-                    document.documentElement.classList[0] === "light" ||
-                    localStorage.theme === "light"
-                ) {
-                    revenueFlow.data.datasets = dataSetsLight;
-                    revenueFlow.options.scales.y.ticks.color = "black";
-                    revenueFlow.options.scales.x.ticks.color = "black";
-                    revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.update();
-                } else {
-                    revenueFlow.data.datasets = dataSetsLight;
-                    revenueFlow.options.scales.y.ticks.color = "black";
-                    revenueFlow.options.scales.x.ticks.color = "black";
-                    revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-                    revenueFlow.update();
-                }
-            });
-        }
-
-        //initial load
-        if (
-            localStorage.theme === "light" ||
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
-            revenueFlow.data.datasets = dataSetsLight;
-            revenueFlow.options.scales.y.ticks.color = "black";
-            revenueFlow.options.scales.x.ticks.color = "black";
-            revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-            revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-        } else {
-            revenueFlow.data.datasets = dataSetsLight;
-            revenueFlow.options.scales.y.ticks.color = "black";
-            revenueFlow.options.scales.x.ticks.color = "black";
-            revenueFlow.options.scales.x.grid.color = "rgb(243 ,246, 255 ,1)";
-            revenueFlow.options.scales.y.grid.color = "rgb(243 ,246, 255 ,1)";
-        }
-        revenueFlow.update();
-    </script>
+@push('navbar-actions')
+<div id="running-task-bar" class="hidden items-center gap-3 rounded-full bg-[#eaf4f6] px-4 py-2 shadow-sm">
+   <div class="min-w-0">
+      <p id="running-task-project" class="truncate text-xs font-medium uppercase tracking-[0.12em] text-bgray-500"></p>
+      <h2 id="running-task-name" class="truncate text-sm font-semibold text-bgray-900"></h2>
+   </div>
+   <p id="running-task-timer" class="whitespace-nowrap text-[20px] font-bold leading-none tracking-[-0.03em] text-[#111827]">00:00:00</p>
+   <button id="running-task-pause" type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#c9dceb] bg-white text-[#1d4f91] shadow-[0_2px_6px_rgba(29,79,145,0.14)] transition duration-200 hover:border-[#afcae0] hover:bg-[#f8fbff]" aria-label="Resume task">
+      <span aria-hidden="true">
+         <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 3.5V12.5L12 8L5 3.5Z" fill="currentColor" />
+         </svg>
+      </span>
+   </button>
+</div>
 @endpush
+@section('page-content')
+<main class="w-full bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.06),_transparent_26%),linear-gradient(180deg,#f6f8fc_0%,#eef3f8_100%)] px-6 pb-10 pt-[100px] sm:pt-[120px] xl:px-1 xl:pb-12">
+   <div class="mx-autospace-y-8">
+
+<section class="grid gap-6 xl:grid-cols-[75%_25%] rounded-2xl bg-white p-6 shadow-sm">
+
+  <!-- LEFT -->
+  <div>
+
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900">
+        Work Activity
+      </h3>
+      <!-- Legend -->
+  <div class="mt-4 flex gap-5 text-xs text-gray-600">
+    <div class="flex items-center gap-2">
+      <span class="h-3 w-3 rounded bg-blue-600"></span> Task
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="h-3 w-3 rounded bg-black"></span> Shift
+    </div>
+  </div>
+    </div>
+
+    <!-- 24 Hour Labels -->
+    <div class="flex justify-between text-[10px] text-gray-700 mb-2">
+      <span>12AM</span><span>01AM</span><span>02AM</span><span>03AM</span>
+      <span>04AM</span><span>05AM</span><span>06AM</span><span>07AM</span>
+      <span>08AM</span><span>09AM</span><span>10AM</span><span>11AM</span>
+      <span>12PM</span><span>01PM</span><span>02PM</span><span>03PM</span>
+      <span>04PM</span><span>05PM</span><span>06PM</span><span>07PM</span>
+      <span>08PM</span><span>09PM</span><span>10PM</span><span>11PM</span>
+    </div>
+
+    <!-- MAIN ACTIVITY BAR -->
+    <div class="relative h-4 w-full rounded bg-gray-300 overflow-hidden">
+
+      <!-- Worked segments -->
+      <div class="absolute left-[33%] w-[8%] h-full bg-blue-600"></div>
+      <div class="absolute left-[42%] w-[8%] h-full bg-blue-600"></div>
+
+      <!-- Break -->
+      <div class="absolute left-[50%] w-[3%] h-full bg-gray-300"></div>
+
+      <!-- Worked -->
+      <div class="absolute left-[52%] w-[10%] h-full bg-blue-600"></div>
+      <div class="absolute left-[63%] w-[12%] h-full bg-blue-600"></div>
+
+    </div>
+
+    <!-- SHIFT BAR -->
+    <div class="mt-3 relative h-3 w-full rounded bg-gray-300 overflow-hidden">
+      <div class="absolute left-[30%] w-[45%] h-full bg-blue-200"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="px-6 py-7 border-l-2 border-gray-400 text-center">
+
+      <p class="text-lg font-semibold text-gray-900">
+        Worked Today
+      </p>
+
+      <h4 class="work-time-dial__value">08h 06m</h4>
+
+    </div>
+  </div>
+
+</section>
+      <section class="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_360px]">
+         <div class="space-y-8">
+            <section class="overflow-hidden rounded-[28px] border border-bgray-200 bg-white/90 shadow-sm backdrop-blur">
+               <div class="flex items-center justify-between gap-4 border-b border-[#ded8ce] px-6 py-4 xl:px-8">
+                  <h2 class="text-[22px] font-medium tracking-[-0.02em] text-bgray-900">My tasks</h2>
+                  <span id="task-total-badge" class="inline-flex rounded-full border border-[#d7d0c5] bg-[#f4f1ea] px-4 py-2 text-[15px] font-medium text-bgray-700">Total: 2:11:16</span>
+               </div>
+               <div class="task-list">
+                  <article class="task-row task-row--selected" data-task-item data-completed="false" data-selected="true">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="false" aria-label="Mark Resolve campaign blocker as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Resolve campaign blocker</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-amber" data-task-project>Q2 Marketing</span>
+                              <span class="task-pill task-pill--priority-high">High</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>0:54</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="54" aria-pressed="false" aria-label="Start Resolve campaign blocker">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Resolve campaign blocker">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="false">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="false" aria-label="Mark Review API v3 auth spec as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Review API v3 auth spec</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-violet" data-task-project>API v3</span>
+                              <span class="task-pill task-pill--priority-high">High</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>0:07</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="7" aria-pressed="false" aria-label="Start Review API v3 auth spec">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Review API v3 auth spec">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="false">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="false" aria-label="Mark Update design token file as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Update design token file</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-teal" data-task-project>Design System</span>
+                              <span class="task-pill task-pill--priority-medium">Med</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>46:22</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="2782" aria-pressed="false" aria-label="Start Update design token file">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Update design token file">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="false">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="false" aria-label="Mark Write Q2 retro notes as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Write Q2 retro notes</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-stone" data-task-project>Internal</span>
+                              <span class="task-pill task-pill--priority-medium">Med</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>0:02</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="2" aria-pressed="false" aria-label="Start Write Q2 retro notes">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Write Q2 retro notes">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="false">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="false" aria-label="Mark Schedule design review as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Schedule design review</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-teal" data-task-project>Design System</span>
+                              <span class="task-pill task-pill--priority-low">Low</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>0:01</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="1" aria-pressed="false" aria-label="Start Schedule design review">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Schedule design review">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="true">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="true" aria-label="Mark Review Figma handoff as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Review Figma handoff</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-blue" data-task-project>Mobile App</span>
+                              <span class="task-pill task-pill--priority-low">Low</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>30:20</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="1820" aria-pressed="false" aria-label="Start Review Figma handoff">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Review Figma handoff">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+                  <article class="task-row" data-task-item data-completed="true">
+                     <div class="task-row__inner">
+                        <button type="button" class="task-check" data-task-complete-toggle aria-pressed="true" aria-label="Mark Update sprint board as done">
+                           <svg viewBox="0 0 16 16" aria-hidden="true">
+                              <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                           </svg>
+                        </button>
+                        <div class="min-w-0 flex-1">
+                           <h3 class="task-row__title" data-task-name>Update sprint board</h3>
+                           <div class="mt-2 flex flex-wrap items-center gap-2">
+                              <span class="task-pill task-pill--project-violet" data-task-project>API v3</span>
+                              <span class="task-pill task-pill--priority-medium">Med</span>
+                           </div>
+                        </div>
+                        <div class="task-row__actions">
+                           <span class="task-row__time" data-task-time>53:30</span>
+                           <button type="button" class="task-action-btn task-action-btn--play" data-task-play-toggle data-running="false" data-elapsed-seconds="3210" aria-pressed="false" aria-label="Start Update sprint board">
+                           <span data-task-play-icon aria-hidden="true"></span>
+                           <span data-task-play-label>Play</span>
+                           </button>
+                           <button type="button" class="task-action-btn task-action-btn--done" data-task-done-button aria-label="Complete Update sprint board">
+                              <svg viewBox="0 0 16 16" aria-hidden="true">
+                                 <path d="M6.45 11.55L3.3 8.4L2.25 9.45L6.45 13.65L13.75 6.35L12.7 5.3L6.45 11.55Z" fill="currentColor" />
+                              </svg>
+                           </button>
+                        </div>
+                     </div>
+                  </article>
+               </div>
+               <div class="task-summary">
+                  <div class="task-summary__item">
+                     <span class="task-summary__dot task-summary__dot--running"></span>
+                     <span id="task-running-count">0</span>
+                     <span>running</span>
+                  </div>
+                  <div class="task-summary__item">
+                     <span class="task-summary__dot task-summary__dot--done"></span>
+                     <span id="task-done-count">2</span>
+                     <span>done</span>
+                  </div>
+                  <div class="task-summary__item">
+                     <span class="task-summary__dot task-summary__dot--pending"></span>
+                     <span id="task-pending-count">5</span>
+                     <span>pending</span>
+                  </div>
+               </div>
+            </section>
+            <section class="hidden overflow-hidden rounded-[28px] border border-bgray-200 bg-white/90 shadow-sm backdrop-blur">
+               <div class="flex items-center justify-between gap-4 border-b border-[#ded8ce] px-6 py-6 xl:px-8">
+                  <h2 class="text-[22px] font-medium tracking-[-0.02em] text-bgray-900">My tasks</h2>
+                  <span class="inline-flex rounded-full border border-[#d7d0c5] bg-[#f4f1ea] px-4 py-2 text-[15px] font-medium text-bgray-700">Total: 2:11:16</span>
+               </div>
+               <div class="divide-y divide-[#e6dfd5]">
+                  <article class="rounded-[24px] border border-bgray-200 bg-white p-5 shadow-sm">
+                     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div class="min-w-0">
+                           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-500">ERP Suite</p>
+                           <h3 class="mt-2 text-xl font-bold tracking-[-0.02em] text-bgray-900">Custom Software Development</h3>
+                           <p class="mt-2 text-sm text-bgray-600">Inventory Module � Sprint Delta � 32h 15m � Due 02 Nov 2026</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2"><span class="inline-flex rounded-full bg-warning-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-warning-600">Pending</span><span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-600">High Priority</span><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" data-task-run-state-badge>Running</span><button type="button" class="inline-flex items-center justify-center gap-2 rounded-[14px] border px-4 py-2.5 text-sm font-semibold shadow-sm transition duration-200" data-task-play-toggle data-running="true" aria-pressed="true"><span data-task-play-icon aria-hidden="true"></span><span data-task-play-label></span></button></div>
+                     </div>
+                  </article>
+                  <article class="rounded-[24px] border border-bgray-200 bg-white p-5 shadow-sm">
+                     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div class="min-w-0">
+                           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-500">Admin Dashboard</p>
+                           <h3 class="mt-2 text-xl font-bold tracking-[-0.02em] text-bgray-900">New Admin Experience</h3>
+                           <p class="mt-2 text-sm text-bgray-600">Admin Panel � Sprint Gamma � 14h 00m � Due 19 Nov 2026</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2"><span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Frontend Complete</span><span class="inline-flex rounded-full bg-warning-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-warning-600">Medium Priority</span><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" data-task-run-state-badge>Paused</span><button type="button" class="inline-flex items-center justify-center gap-2 rounded-[14px] border px-4 py-2.5 text-sm font-semibold shadow-sm transition duration-200" data-task-play-toggle data-running="false" aria-pressed="false"><span data-task-play-icon aria-hidden="true"></span><span data-task-play-label></span></button></div>
+                     </div>
+                  </article>
+                  <article class="rounded-[24px] border border-bgray-200 bg-white p-5 shadow-sm">
+                     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div class="min-w-0">
+                           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-500">Corporate Website</p>
+                           <h3 class="mt-2 text-xl font-bold tracking-[-0.02em] text-bgray-900">Website Redesign</h3>
+                           <p class="mt-2 text-sm text-bgray-600">Marketing Pages � Sprint Zeta � 16h 20m � Due 19 Nov 2026</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2"><span class="inline-flex rounded-full bg-success-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-success-600">Completed</span><span class="inline-flex rounded-full bg-warning-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-warning-600">Medium Priority</span><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" data-task-run-state-badge>Running</span><button type="button" class="inline-flex items-center justify-center gap-2 rounded-[14px] border px-4 py-2.5 text-sm font-semibold shadow-sm transition duration-200" data-task-play-toggle data-running="true" aria-pressed="true"><span data-task-play-icon aria-hidden="true"></span><span data-task-play-label></span></button></div>
+                     </div>
+                  </article>
+                  <article class="rounded-[24px] border border-bgray-200 bg-white p-5 shadow-sm">
+                     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div class="min-w-0">
+                           <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-500">Website Revamp</p>
+                           <h3 class="mt-2 text-xl font-bold tracking-[-0.02em] text-bgray-900">Landing Page Redesign</h3>
+                           <p class="mt-2 text-sm text-bgray-600">UI/UX Module � Sprint Alpha � 18h 30m � Due 15 Dec 2026</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2"><span class="inline-flex rounded-full bg-success-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-success-600">Completed</span><span class="inline-flex rounded-full bg-red-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-600">High Priority</span><span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" data-task-run-state-badge>Paused</span><button type="button" class="inline-flex items-center justify-center gap-2 rounded-[14px] border px-4 py-2.5 text-sm font-semibold shadow-sm transition duration-200" data-task-play-toggle data-running="false" aria-pressed="false"><span data-task-play-icon aria-hidden="true"></span><span data-task-play-label></span></button></div>
+                     </div>
+                  </article>
+               </div>
+            </section>
+         </div>
+         <aside class="space-y-6">
+            <section class="overflow-hidden rounded-[28px] border border-bgray-200 bg-white/90 shadow-sm backdrop-blur">
+               <div class="border-b border-bgray-200 px-5 py-5">
+                  <div class="flex items-end justify-between gap-3">
+                     <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-500">Recent Activity</p>
+                        <h2 class="mt-2 text-2xl font-bold tracking-[-0.02em] text-bgray-900">Notifications and updates</h2>
+                     </div>
+                     <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold text-bgray-700">4 items</span>
+                  </div>
+               </div>
+               <div class="space-y-4 p-5">
+                  <article class="rounded-[22px] border border-bgray-200 bg-bgray-50/70 p-4">
+                     <h3 class="text-sm font-semibold text-bgray-900">ERP Suite needs attention</h3>
+                     <p class="mt-1 text-xs text-bgray-500">12 min ago</p>
+                     <p class="mt-3 text-sm text-bgray-600">Scope approval is still blocking the inventory module milestone.</p>
+                  </article>
+                  <article class="rounded-[22px] border border-bgray-200 bg-bgray-50/70 p-4">
+                     <h3 class="text-sm font-semibold text-bgray-900">New stakeholder note on Admin Dashboard</h3>
+                     <p class="mt-1 text-xs text-bgray-500">28 min ago</p>
+                     <p class="mt-3 text-sm text-bgray-600">The team requested one final review pass before release sign-off.</p>
+                  </article>
+                  <article class="rounded-[22px] border border-bgray-200 bg-bgray-50/70 p-4">
+                     <h3 class="text-sm font-semibold text-bgray-900">Clock-in activity confirmed</h3>
+                     <p class="mt-1 text-xs text-bgray-500">1 hr ago</p>
+                     <p class="mt-3 text-sm text-bgray-600">Time tracking synced successfully for the 08:50 AM session start.</p>
+                  </article>
+                  <article class="rounded-[22px] border border-bgray-200 bg-bgray-50/70 p-4">
+                     <h3 class="text-sm font-semibold text-bgray-900">Brand Logo Design marked delivered</h3>
+                     <p class="mt-1 text-xs text-bgray-500">2 hr ago</p>
+                     <p class="mt-3 text-sm text-bgray-600">Assets are exported and ready for archival with final documentation.</p>
+                  </article>
+               </div>
+            </section>
+         </aside>
+      </section>
+   </div>
+   <style>
+      .timeline-card {
+      position: relative;
+      }
+      .timeline-chart-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      }
+      .timeline-chart {
+      position: relative;
+      width: 1280px;
+      flex: 0 0 auto;
+      margin-inline: auto;
+      padding: 0.75rem 0 0.25rem;
+      }
+      .timeline-grid {
+      display: grid;
+      gap: 0.35rem;
+      align-items: end;
+      }
+      .timeline-slot {
+      position: relative;
+      height: 168px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #f6f7f9 0%, #edf1f5 100%);
+      overflow: hidden;
+      transition: background-color 0.18s ease, box-shadow 0.18s ease;
+      }
+      .timeline-slot.is-highlighted {
+      background: linear-gradient(180deg, #eff5ff 0%, #e5eefc 100%);
+      box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+      }
+      .timeline-slot__top {
+      position: absolute;
+      inset: 0.35rem 0.2rem 3.25rem;
+      border-radius: 12px 12px 0 0;
+      background: rgba(255, 255, 255, 0.72);
+      }
+      .timeline-slot__worked-fill {
+      position: absolute;
+      left: 0.2rem;
+      right: 0.2rem;
+      bottom: 3.25rem;
+      appearance: none;
+      border: 0;
+      padding: 0;
+      border-radius: 10px 10px 0 0;
+      background: #84c400;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      }
+      .timeline-slot__worked-fill.is-active {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.14);
+      }
+      .timeline-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      }
+      .timeline-track--activity {
+      bottom: 2.05rem;
+      height: 20px;
+      background: #dbe2ea;
+      border-radius: 0;
+      }
+      .timeline-track--shift {
+      bottom: 1rem;
+      height: 12px;
+      background: #dbe2ea;
+      border-radius: 0;
+      }
+      .timeline-shift-indicator {
+      position: absolute;
+      bottom: 1rem;
+      height: 12px;
+      background: #2563eb;
+      border-radius: 0;
+      pointer-events: none;
+      }
+      .timeline-slot__label {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.2rem;
+      text-align: center;
+      color: #7a8795;
+      font-size: 0.95rem;
+      font-weight: 500;
+      }
+      .timeline-segment {
+      position: absolute;
+      appearance: none;
+      border: 0;
+      padding: 0;
+      background-clip: padding-box;
+      cursor: pointer;
+      transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
+      }
+      .timeline-segment--shift {
+      background: #16a34a;
+      }
+      .timeline-segment--offline {
+      background: #ef4444;
+      }
+      .timeline-segment.is-active {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.14);
+      }
+      .timeline-segment--activity {
+      bottom: 2.05rem;
+      height: 20px;
+      border-radius: 0;
+      min-width: 4px;
+      }
+      .timeline-segment--activity.timeline-segment--shift {
+      background: #84c400;
+      }
+      .timeline-segment--activity.timeline-segment--offline {
+      background: #ef4444;
+      }
+      .timeline-tooltip {
+      position: absolute;
+      z-index: 10;
+      width: 220px;
+      border-radius: 16px;
+      border: 1px solid #d9e3ef;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 0.85rem 0.95rem;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16);
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      }
+      .timeline-tooltip__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+      }
+      .timeline-tooltip__dot {
+      height: 8px;
+      width: 8px;
+      border-radius: 9999px;
+      }
+      .timeline-tooltip__title {
+      margin-top: 0.55rem;
+      color: #111827;
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.3;
+      }
+      .timeline-tooltip__meta {
+      margin-top: 0.35rem;
+      color: #607080;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      }
+      .work-time-dial {
+      position: relative;
+      width: min(100%, 18rem);
+      aspect-ratio: 1;
+      margin-inline: auto;
+      }
+      .work-time-dial__ticks {
+      position: absolute;
+      inset: 0;
+      border-radius: 9999px;
+      background:
+      repeating-conic-gradient(from -90deg, rgba(100, 116, 139, 0.72) 0deg 1.35deg, transparent 1.35deg 30deg),
+      repeating-conic-gradient(from -90deg, rgba(148, 163, 184, 0.58) 0deg 0.5deg, transparent 0.5deg 6deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 28px), #000 calc(100% - 28px) calc(100% - 10px), transparent calc(100% - 10px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 28px), #000 calc(100% - 28px) calc(100% - 10px), transparent calc(100% - 10px));
+      }
+      .work-time-dial__face {
+      position: absolute;
+      inset: 2.15rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      text-align: center;
+      }
+      .work-time-dial__label {
+      color: #27364a;
+      font-size: 1.05rem;
+      font-weight: 500;
+      line-height: 1.4;
+      }
+      .work-time-dial__value {
+      margin-top: 0.55rem;
+      color: #6ea400;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      }
+      .task-list {
+      background: linear-gradient(180deg, #fffdfa 0%, #fff 100%);
+      }
+      .task-row {
+      border-bottom: 1px solid #ece4d8;
+      transition: background-color 0.2s ease, opacity 0.2s ease;
+      }
+      .task-row:last-child {
+      border-bottom: 0;
+      }
+      .task-row--selected,
+      .task-row[data-running="true"] {
+      background: #f3efe7;
+      }
+      .task-row[data-completed="true"] {
+      opacity: 0.58;
+      }
+      .task-row.is-undo-pending {
+      opacity: 1;
+      background: inherit;
+      }
+      .task-row__inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      }
+      .task-row__title {
+      color: #414141;
+      font-size: 1.05rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      }
+      .task-row[data-completed="true"] .task-row__title {
+      text-decoration: line-through;
+      }
+      .task-check,
+      .task-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid #ddd3c7;
+      background: #fff;
+      transition: all 0.2s ease;
+      }
+      .task-check {
+      height: 24px;
+      width: 24px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      color: transparent;
+      }
+      .task-check.is-hidden {
+      visibility: hidden;
+      }
+      .task-check svg,
+      .task-action-btn svg {
+      height: 16px;
+      width: 16px;
+      }
+      .task-row[data-completed="true"] .task-check {
+      border-color: #96d6c5;
+      background: #8dd1bf;
+      color: #fff;
+      }
+      .task-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      line-height: 1;
+      }
+      .task-pill--project-amber {
+      background: #f7ece2;
+      color: #8f3b18;
+      }
+      .task-pill--project-violet {
+      background: #eceafb;
+      color: #5652b3;
+      }
+      .task-pill--project-teal {
+      background: #dff1eb;
+      color: #0d6a60;
+      }
+      .task-pill--project-stone {
+      background: #ddd8cf;
+      color: #5a5651;
+      }
+      .task-pill--project-blue {
+      background: #e9eef9;
+      color: #6782b9;
+      }
+      .task-pill--priority-high {
+      background: #fbeceb;
+      color: #a0372f;
+      }
+      .task-pill--priority-medium {
+      background: #f6ead7;
+      color: #8c5b12;
+      }
+      .task-pill--priority-low {
+      background: #e5f2ec;
+      color: #5f927f;
+      }
+      .task-row__actions {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-left: auto;
+      flex-shrink: 0;
+      }
+      .task-row__time {
+      min-width: 3.9rem;
+      text-align: right;
+      color: #47454b;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      }
+      .task-action-btn {
+      height: 42px;
+      min-width: 42px;
+      gap: 0.4rem;
+      padding: 0 0.8rem;
+      }
+      .task-action-btn--play {
+      width: auto;
+      color: #346eb9;
+      white-space: nowrap;
+      }
+      .task-action-btn--play [data-task-play-label] {
+      color: #6e675f;
+      font-weight: 500;
+      }
+      .task-action-btn--play.is-running {
+      border-color: #c8d7ef;
+      background: #eef5ff;
+      color: #285d9d;
+      }
+      .task-action-btn--play.is-running [data-task-play-label] {
+      color: #6e675f;
+      }
+      .task-action-btn--done {
+      width: 42px;
+      padding: 0;
+      color: #0d7c5b;
+      }
+      .task-action-btn--undo {
+      width: auto;
+      padding: 0 0.95rem;
+      color: #6e675f;
+      font: inherit;
+      }
+      .task-action-btn[disabled] {
+      cursor: default;
+      color: #bfb7ac;
+      }
+      .task-action-btn.is-hidden {
+      display: none;
+      }
+      .task-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-top: 1px solid #d7d0c5;
+      background: #f4f1ea;
+      padding: 1rem 1.5rem;
+      color: #6e675f;
+      font-size: 0.95rem;
+      font-weight: 500;
+      }
+      .task-summary__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      }
+      .task-summary__dot {
+      height: 12px;
+      width: 12px;
+      border-radius: 9999px;
+      }
+      .task-summary__dot--running {
+      background: #3a87dd;
+      }
+      .task-summary__dot--done {
+      background: #27a86f;
+      }
+      .task-summary__dot--pending {
+      background: #d8d4cf;
+      }
+      @media (max-width: 768px) {
+      .timeline-chart {
+      width: 1180px;
+      }
+      .task-row__inner {
+      flex-wrap: wrap;
+      }
+      .task-row__actions {
+      width: 100%;
+      justify-content: flex-end;
+      }
+      .task-summary {
+      flex-wrap: wrap;
+      }
+      }
+   </style>
+   <script>
+      document.title = 'Tomsher Pmt | Project Tasks';
+      
+      document.addEventListener('DOMContentLoaded', () => {
+          const stickyBar = document.getElementById('running-task-bar');
+          const stickyProject = document.getElementById('running-task-project');
+          const stickyName = document.getElementById('running-task-name');
+          const stickyTimer = document.getElementById('running-task-timer');
+          const stickyPauseButton = document.getElementById('running-task-pause');
+          const totalBadge = document.getElementById('task-total-badge');
+          const runningCount = document.getElementById('task-running-count');
+          const doneCount = document.getElementById('task-done-count');
+          const pendingCount = document.getElementById('task-pending-count');
+          const timelineEl = document.getElementById('task-timeline');
+          const timelineTooltip = document.getElementById('task-timeline-tooltip');
+          const taskItems = Array.from(document.querySelectorAll('[data-task-item]'));
+          const taskButtons = taskItems
+              .map((task) => task.querySelector('[data-task-play-toggle]'))
+              .filter(Boolean);
+          let activeButton = null;
+          let timerIntervalId = null;
+          let stickyDisplayButton = null;
+          let selectedTask = taskItems.find((task) => task.dataset.selected === 'true') || null;
+          const undoTimers = new Map();
+          const undoDelayMs = 4000;
+          const timelineSlots = Array.from({ length: 24 }, (_, index) => {
+              const hour = index % 12 === 0 ? 12 : index % 12;
+              const suffix = index < 12 ? 'AM' : 'PM';
+      
+              return {
+                  label: `${hour} ${suffix}`,
+                  start: index * 60,
+                  end: (index + 1) * 60
+              };
+          });
+          const timelineSegments = [
+              { type: 'shift', title: 'Resolve campaign blocker', project: 'Q2 Marketing', details: 'Sprint push for campaign blocker resolution.', start: 540, end: 590, height: 76 },
+              { type: 'offline', title: 'Offline break', project: 'Status update', details: 'Connectivity drop during morning sync.', start: 590, end: 600, height: 76 },
+              { type: 'shift', title: 'Review API v3 auth spec', project: 'API v3', details: 'Security review and token validation pass.', start: 600, end: 655, height: 118 },
+              { type: 'offline', title: 'Offline handoff', project: 'Status update', details: 'Short offline period while waiting for stakeholder feedback.', start: 655, end: 667, height: 118 },
+              { type: 'shift', title: 'Update design token file', project: 'Design System', details: 'Token cleanup and spacing variable updates.', start: 667, end: 750, height: 132 },
+              { type: 'offline', title: 'Offline interruption', project: 'Status update', details: 'Brief interruption before lunch wrap-up.', start: 750, end: 765, height: 132 },
+              { type: 'shift', title: 'Write Q2 retro notes', project: 'Internal', details: 'Retro draft and action item capture.', start: 765, end: 830, height: 120 },
+              { type: 'shift', title: 'Schedule design review', project: 'Design System', details: 'Review scheduling and attendee confirmation.', start: 850, end: 915, height: 132 },
+              { type: 'offline', title: 'Offline review gap', project: 'Status update', details: 'Brief away period before the afternoon push.', start: 915, end: 925, height: 132 },
+              { type: 'shift', title: 'Resolve campaign blocker', project: 'Q2 Marketing', details: 'Final fixes and stakeholder follow-up.', start: 925, end: 1035, height: 138 },
+              { type: 'offline', title: 'Offline check-in', project: 'Status update', details: 'Short break before handoff updates.', start: 1035, end: 1048, height: 138 },
+              { type: 'shift', title: 'Review API v3 auth spec', project: 'API v3', details: 'Late-day verification and summary notes.', start: 1048, end: 1080, height: 124 }
+          ];
+          const timelineShiftWindow = { start: 540, end: 1110 };
+      
+          const playIcon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3.5V12.5L12 8L5 3.5Z" fill="currentColor" /></svg>';
+          const pauseIcon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3H7V13H5V3Z" fill="currentColor" /><path d="M9 3H11V13H9V3Z" fill="currentColor" /></svg>';
+      
+          const minutesToLabel = (minutes) => {
+              const hours24 = Math.floor(minutes / 60);
+              const mins = String(minutes % 60).padStart(2, '0');
+              const suffix = hours24 >= 12 ? 'PM' : 'AM';
+              const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+      
+              return `${hours12}:${mins} ${suffix}`;
+          };
+      
+          const formatDuration = (totalSeconds) => {
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+              const seconds = String(totalSeconds % 60).padStart(2, '0');
+      
+              return `${hours}:${minutes}:${seconds}`;
+          };
+      
+          const clearTimelineHighlight = () => {
+              timelineEl?.querySelectorAll('.timeline-slot').forEach((slot) => {
+                  slot.classList.remove('is-highlighted');
+              });
+      
+              timelineEl?.querySelectorAll('.timeline-segment, .timeline-slot__worked-fill').forEach((segment) => {
+                  segment.classList.remove('is-active');
+              });
+          };
+      
+          const hideTimelineTooltip = () => {
+              timelineTooltip?.classList.add('hidden');
+              clearTimelineHighlight();
+          };
+      
+          const showTimelineTooltip = (segment, event) => {
+              if (!timelineEl || !timelineTooltip) {
+                  return;
+              }
+      
+              clearTimelineHighlight();
+      
+              timelineEl.querySelectorAll(`[data-segment-id="${segment.id}"]`).forEach((entry) => {
+                  entry.classList.add('is-active');
+              });
+      
+              timelineEl.querySelectorAll('.timeline-slot').forEach((slot) => {
+                  const slotStart = Number(slot.dataset.slotStart);
+                  const slotEnd = Number(slot.dataset.slotEnd);
+                  if (segment.start < slotEnd && segment.end > slotStart) {
+                      slot.classList.add('is-highlighted');
+                  }
+              });
+      
+              const dotColor = segment.type === 'shift' ? '#16a34a' : '#ef4444';
+              timelineTooltip.innerHTML = `
+                  <div class="timeline-tooltip__label">
+                      <span class="timeline-tooltip__dot" style="background:${dotColor}"></span>
+                      <span>${segment.type}</span>
+                  </div>
+                  <p class="timeline-tooltip__title">${segment.title}</p>
+                  <p class="timeline-tooltip__meta">${segment.project}</p>
+                  <p class="timeline-tooltip__meta">${minutesToLabel(segment.start)} - ${minutesToLabel(segment.end)}</p>
+                  <p class="timeline-tooltip__meta">${segment.details}</p>
+              `;
+      
+              const timelineRect = timelineEl.getBoundingClientRect();
+              const x = event.clientX - timelineRect.left + 16;
+              const y = event.clientY - timelineRect.top - 22;
+      
+              timelineTooltip.classList.remove('hidden');
+              const tooltipWidth = timelineTooltip.offsetWidth;
+              const tooltipHeight = timelineTooltip.offsetHeight;
+              const maxLeft = timelineRect.width - tooltipWidth - 8;
+              const left = Math.max(8, Math.min(x, maxLeft));
+              const top = Math.max(8, y - tooltipHeight);
+      
+              timelineTooltip.style.left = `${left}px`;
+              timelineTooltip.style.top = `${top}px`;
+          };
+      
+          const renderTimeline = () => {
+              if (!timelineEl) {
+                  return;
+              }
+      
+              const timelineStart = 0;
+              const timelineEnd = 24 * 60;
+              const totalMinutes = timelineEnd - timelineStart;
+              const gridColumns = timelineSlots.map((slot) => `${slot.end - slot.start}fr`).join(' ');
+      
+              const slotMarkup = timelineSlots.map((slot, index) => {
+                  const overlappingShiftSegments = timelineSegments
+                      .map((segment, segmentIndex) => ({ ...segment, id: segmentIndex }))
+                      .filter((segment) => segment.type === 'shift' && segment.start < slot.end && segment.end > slot.start);
+      
+                  const workedMinutes = overlappingShiftSegments.reduce((total, segment) => {
+                      const overlapStart = Math.max(segment.start, slot.start);
+                      const overlapEnd = Math.min(segment.end, slot.end);
+                      return total + Math.max(0, overlapEnd - overlapStart);
+                  }, 0);
+      
+                  const workedHeight = Math.max(0, Math.min(100, (workedMinutes / (slot.end - slot.start)) * 100));
+                  const primarySegment = overlappingShiftSegments[0];
+      
+                  return `
+                      <div class="timeline-slot" data-slot-index="${index}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
+                          <div class="timeline-slot__top"></div>
+                          ${primarySegment ? `
+                              <button
+                                  type="button"
+                                  class="timeline-slot__worked-fill"
+                                  style="height:${workedHeight}%;"
+                                  data-segment-id="${primarySegment.id}"
+                                  aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
+                              ></button>
+                          ` : ''}
+                          <span class="timeline-slot__label">${slot.label}</span>
+                      </div>
+                  `;
+              }).join('');
+      
+              const activityMarkup = timelineSegments.map((segment, index) => {
+                  const left = ((segment.start - timelineStart) / totalMinutes) * 100;
+                  const width = ((segment.end - segment.start) / totalMinutes) * 100;
+      
+                  return `
+                      <button
+                          type="button"
+                          class="timeline-segment timeline-segment--activity timeline-segment--${segment.type}"
+                          style="left:${left}%;width:${width}%;"
+                          data-segment-id="${index}"
+                          aria-label="${segment.title} from ${minutesToLabel(segment.start)} to ${minutesToLabel(segment.end)}"
+                      ></button>
+                  `;
+              }).join('');
+      
+              const shiftLeft = ((timelineShiftWindow.start - timelineStart) / totalMinutes) * 100;
+              const shiftWidth = ((timelineShiftWindow.end - timelineShiftWindow.start) / totalMinutes) * 100;
+              const shiftIndicatorMarkup = `
+                  <div
+                      class="timeline-shift-indicator"
+                      style="left:${shiftLeft}%;width:${shiftWidth}%;"
+                      aria-hidden="true"
+                  ></div>
+              `;
+      
+              timelineEl.innerHTML = `
+                  <div class="timeline-grid" style="grid-template-columns:${gridColumns};">${slotMarkup}</div>
+                  <div class="timeline-track timeline-track--activity" aria-hidden="true"></div>
+                  <div class="timeline-track timeline-track--shift" aria-hidden="true"></div>
+                  ${activityMarkup}
+                  ${shiftIndicatorMarkup}
+              `;
+      
+              timelineEl.querySelectorAll('.timeline-segment, .timeline-slot__worked-fill').forEach((node) => {
+                  const segment = timelineSegments[Number(node.dataset.segmentId)];
+                  segment.id = Number(node.dataset.segmentId);
+      
+                  node.addEventListener('mouseenter', (event) => {
+                      showTimelineTooltip(segment, event);
+                  });
+      
+                  node.addEventListener('mousemove', (event) => {
+                      showTimelineTooltip(segment, event);
+                  });
+      
+                  node.addEventListener('mouseleave', () => {
+                      hideTimelineTooltip();
+                  });
+              });
+      
+              timelineEl.querySelectorAll('.timeline-slot').forEach((slot) => {
+                  slot.addEventListener('mouseenter', () => {
+                      clearTimelineHighlight();
+                      slot.classList.add('is-highlighted');
+                  });
+                  slot.addEventListener('mouseleave', () => {
+                      clearTimelineHighlight();
+                  });
+              });
+      
+              timelineEl.addEventListener('mouseleave', () => {
+                  hideTimelineTooltip();
+              });
+          };
+      
+          const formatTaskTime = (totalSeconds) => {
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600) / 60);
+              const seconds = String(totalSeconds % 60).padStart(2, '0');
+      
+              if (hours > 0) {
+                  return `${hours}:${String(minutes).padStart(2, '0')}:${seconds}`;
+              }
+      
+              return `${minutes}:${seconds}`;
+          };
+      
+          const getTaskDetails = (button) => {
+              const article = button.closest('[data-task-item]');
+              const name = article?.querySelector('[data-task-name]')?.textContent.trim() || 'Task';
+              const project = article?.querySelector('[data-task-project]')?.textContent.trim() || 'Project';
+      
+              return { name, project };
+          };
+      
+          const getElapsedSeconds = (button) => {
+              const baseElapsed = Number(button.dataset.elapsedSeconds || '0');
+              const startedAt = Number(button.dataset.startedAt || '0');
+      
+              if (button.dataset.running === 'true' && startedAt > 0) {
+                  return baseElapsed + Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+              }
+      
+              return baseElapsed;
+          };
+      
+          const renderTaskTime = (button) => {
+              const article = button.closest('[data-task-item]');
+              const timeLabel = article?.querySelector('[data-task-time]');
+      
+              if (timeLabel) {
+                  timeLabel.textContent = formatTaskTime(getElapsedSeconds(button));
+              }
+          };
+      
+          const updateSummary = () => {
+              let running = 0;
+              let done = 0;
+              let pending = 0;
+              let totalElapsed = 0;
+      
+              taskButtons.forEach((button) => {
+                  const article = button.closest('[data-task-item]');
+                  const isCompleted = article?.dataset.completed === 'true';
+                  const isRunning = button.dataset.running === 'true';
+                  const elapsed = getElapsedSeconds(button);
+      
+                  totalElapsed += elapsed;
+                  renderTaskTime(button);
+      
+                  if (isCompleted) {
+                      done += 1;
+                      return;
+                  }
+      
+                  if (isRunning) {
+                      running += 1;
+                      return;
+                  }
+      
+                  pending += 1;
+              });
+      
+              if (totalBadge) totalBadge.textContent = `Total: ${formatDuration(totalElapsed)}`;
+              if (runningCount) runningCount.textContent = String(running);
+              if (doneCount) doneCount.textContent = String(done);
+              if (pendingCount) pendingCount.textContent = String(pending);
+          };
+      
+          const refreshSelection = () => {
+              taskItems.forEach((task) => {
+                  const button = task.querySelector('[data-task-play-toggle]');
+                  const isCompleted = task.dataset.completed === 'true';
+                  const isUndoPending = task.dataset.undoPending === 'true';
+                  const isRunning = button?.dataset.running === 'true';
+                  const isSelected = selectedTask === task && !isCompleted && !isUndoPending && !isRunning;
+      
+                  task.classList.toggle('task-row--selected', isSelected);
+              });
+          };
+      
+          const clearUndoTimer = (article) => {
+              const existingTimer = undoTimers.get(article);
+      
+              if (existingTimer) {
+                  window.clearTimeout(existingTimer);
+                  undoTimers.delete(article);
+              }
+          };
+      
+          const syncStickyBar = (button, elapsedSeconds = 0) => {
+              if (!button) {
+                  stickyDisplayButton = null;
+                  stickyBar?.classList.add('hidden');
+                  return;
+              }
+      
+              const { name, project } = getTaskDetails(button);
+              stickyDisplayButton = button;
+      
+              if (stickyProject) stickyProject.textContent = project;
+              if (stickyName) stickyName.textContent = name;
+              if (stickyTimer) stickyTimer.textContent = formatDuration(elapsedSeconds);
+              stickyBar?.classList.remove('hidden');
+          };
+      
+          const syncStickyAction = (button) => {
+              if (!stickyPauseButton) {
+                  return;
+              }
+      
+              const icon = stickyPauseButton.querySelector('span');
+              const isRunning = button?.dataset.running === 'true';
+      
+              stickyPauseButton.setAttribute('aria-label', isRunning ? 'Pause task' : 'Resume task');
+      
+              if (icon) {
+                  icon.innerHTML = isRunning ? pauseIcon : playIcon;
+              }
+          };
+      
+          const clearRunningTimer = () => {
+              if (timerIntervalId) {
+                  window.clearInterval(timerIntervalId);
+                  timerIntervalId = null;
+              }
+          };
+      
+          const persistElapsed = (button) => {
+              if (!button) {
+                  return;
+              }
+      
+              if (button.dataset.running === 'true') {
+                  button.dataset.elapsedSeconds = String(getElapsedSeconds(button));
+              }
+      
+              delete button.dataset.startedAt;
+          };
+      
+          const applyTaskState = (button) => {
+              const article = button.closest('[data-task-item]');
+              const completeToggle = article?.querySelector('[data-task-complete-toggle]');
+              const doneButton = article?.querySelector('[data-task-done-button]');
+              const undoButton = article?.querySelector('[data-task-undo-button]');
+              const icon = button.querySelector('[data-task-play-icon]');
+              const label = button.querySelector('[data-task-play-label]');
+              const isCompleted = article?.dataset.completed === 'true';
+              const isUndoPending = article?.dataset.undoPending === 'true';
+              const isRunning = button.dataset.running === 'true' && !isCompleted;
+              const taskName = article?.querySelector('[data-task-name]')?.textContent.trim() || 'task';
+      
+              article?.setAttribute('data-running', isRunning ? 'true' : 'false');
+              article?.classList.toggle('is-undo-pending', isUndoPending);
+              button.classList.toggle('is-running', isRunning);
+              button.classList.toggle('is-hidden', isCompleted || isUndoPending);
+              completeToggle?.classList.toggle('is-hidden', isUndoPending);
+              doneButton?.classList.toggle('is-hidden', isCompleted || isUndoPending);
+              undoButton?.classList.toggle('is-hidden', !isUndoPending);
+      
+              if (doneButton) {
+                  doneButton.disabled = isCompleted || isUndoPending;
+              }
+      
+              if (completeToggle) {
+                  completeToggle.setAttribute('aria-pressed', isCompleted ? 'true' : 'false');
+              }
+      
+              button.setAttribute('aria-label', `${isRunning ? 'Pause' : 'Start'} ${taskName}`);
+      
+              if (icon) {
+                  icon.innerHTML = isRunning ? pauseIcon : playIcon;
+              }
+      
+              if (label) {
+                  label.textContent = isRunning ? 'Pause' : 'Play';
+              }
+      
+              refreshSelection();
+              updateSummary();
+          };
+      
+          const pauseTask = (button) => {
+              if (!button) {
+                  return;
+              }
+      
+              persistElapsed(button);
+              button.dataset.running = 'false';
+              button.setAttribute('aria-pressed', 'false');
+              applyTaskState(button);
+      
+              if (activeButton === button) {
+                  activeButton = null;
+                  clearRunningTimer();
+                  syncStickyBar(button, Number(button.dataset.elapsedSeconds || '0'));
+              }
+      
+              syncStickyAction(button);
+          };
+      
+          const finalizeCompletedTask = (article) => {
+              if (!article) {
+                  return;
+              }
+      
+              article.dataset.undoPending = 'false';
+              clearUndoTimer(article);
+      
+              const button = article.querySelector('[data-task-play-toggle]');
+              if (button) {
+                  applyTaskState(button);
+              }
+          };
+      
+          const startTask = (button) => {
+              const article = button.closest('[data-task-item]');
+      
+              if (article?.dataset.completed === 'true' || article?.dataset.undoPending === 'true') {
+                  return;
+              }
+      
+              if (activeButton && activeButton !== button) {
+                  pauseTask(activeButton);
+              }
+      
+              clearRunningTimer();
+      
+              button.dataset.running = 'true';
+              button.dataset.startedAt = String(Date.now());
+              button.setAttribute('aria-pressed', 'true');
+              selectedTask = article || null;
+              applyTaskState(button);
+      
+              activeButton = button;
+      
+              const renderTimer = () => {
+                  const liveElapsed = getElapsedSeconds(button);
+      
+                  syncStickyBar(button, liveElapsed);
+                  renderTaskTime(button);
+                  updateSummary();
+              };
+      
+              renderTimer();
+              syncStickyAction(button);
+              timerIntervalId = window.setInterval(renderTimer, 1000);
+          };
+      
+          const undoTask = (article) => {
+              if (!article) {
+                  return;
+              }
+      
+              clearUndoTimer(article);
+              article.dataset.completed = 'false';
+              article.dataset.undoPending = 'false';
+              selectedTask = article;
+      
+              const button = article.querySelector('[data-task-play-toggle]');
+              if (button) {
+                  button.dataset.running = 'false';
+                  button.setAttribute('aria-pressed', 'false');
+                  applyTaskState(button);
+              }
+      
+              syncStickyBar(activeButton, activeButton ? getElapsedSeconds(activeButton) : 0);
+              syncStickyAction(activeButton);
+          };
+      
+          const completeTask = (article) => {
+              if (!article || article.dataset.completed === 'true') {
+                  return;
+              }
+      
+              const button = article.querySelector('[data-task-play-toggle]');
+      
+              if (button?.dataset.running === 'true') {
+                  pauseTask(button);
+              }
+      
+              article.dataset.completed = 'true';
+              article.dataset.undoPending = 'true';
+              article.dataset.selected = 'false';
+              if (selectedTask === article) {
+                  selectedTask = null;
+              }
+      
+              if (button) {
+                  button.dataset.running = 'false';
+                  button.setAttribute('aria-pressed', 'false');
+                  applyTaskState(button);
+              }
+      
+              clearUndoTimer(article);
+              undoTimers.set(article, window.setTimeout(() => {
+                  finalizeCompletedTask(article);
+              }, undoDelayMs));
+      
+              updateSummary();
+              syncStickyBar(activeButton, activeButton ? getElapsedSeconds(activeButton) : 0);
+              syncStickyAction(activeButton);
+          };
+      
+          taskItems.forEach((task) => {
+              const button = task.querySelector('[data-task-play-toggle]');
+              const completeToggle = task.querySelector('[data-task-complete-toggle]');
+              const doneButton = task.querySelector('[data-task-done-button]');
+              const actions = task.querySelector('.task-row__actions');
+      
+              if (!button) {
+                  return;
+              }
+      
+              if (actions && !task.querySelector('[data-task-undo-button]')) {
+                  const undoButton = document.createElement('button');
+                  undoButton.type = 'button';
+                  undoButton.className = 'task-action-btn task-action-btn--undo is-hidden';
+                  undoButton.setAttribute('data-task-undo-button', '');
+                  undoButton.textContent = 'Undo';
+                  actions.appendChild(undoButton);
+              }
+      
+              const undoButton = task.querySelector('[data-task-undo-button]');
+      
+              if (!button.dataset.elapsedSeconds) {
+                  button.dataset.elapsedSeconds = '0';
+              }
+      
+              button.dataset.running = 'false';
+              button.setAttribute('aria-pressed', 'false');
+              task.dataset.undoPending = 'false';
+              applyTaskState(button);
+      
+              button.addEventListener('click', () => {
+                  if (button.dataset.running === 'true') {
+                      pauseTask(button);
+                      return;
+                  }
+      
+                  startTask(button);
+              });
+      
+              completeToggle?.addEventListener('click', () => {
+                  completeTask(task);
+              });
+      
+              doneButton?.addEventListener('click', () => {
+                  completeTask(task);
+              });
+      
+              undoButton?.addEventListener('click', () => {
+                  undoTask(task);
+              });
+          });
+      
+          stickyPauseButton?.addEventListener('click', () => {
+              if (!stickyDisplayButton) {
+                  return;
+              }
+      
+              if (stickyDisplayButton.dataset.running === 'true') {
+                  pauseTask(stickyDisplayButton);
+                  return;
+              }
+      
+              startTask(stickyDisplayButton);
+          });
+      
+          refreshSelection();
+          updateSummary();
+          renderTimeline();
+          syncStickyBar(null);
+          syncStickyAction(null);
+      });
+   </script>
+</main>
+@endsection
