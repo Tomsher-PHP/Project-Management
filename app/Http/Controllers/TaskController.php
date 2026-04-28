@@ -15,6 +15,7 @@ use App\Models\TaskStatus;
 use App\Models\TaskNote;
 use App\Models\TaskTimeLog;
 use App\Models\User;
+use App\Models\UserGeneralSetting;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
 use App\Services\TaskFilterService;
@@ -90,8 +91,8 @@ class TaskController extends Controller
     // Kanban view for tasks.
     public function kanbanView(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
-        $selectedFlowType = 'agile';
         $user = $request->user();
+        $selectedFlowType = $user->generalSettings()->where('user_id', $user->id)->value('kanban_view') ?? 'agile';
 
         $baseQuery = app(TaskQueryService::class)->baseQuery($user);
 
@@ -121,6 +122,7 @@ class TaskController extends Controller
             'perPage' => $request->input('per_page'),
             'taskCreateDependencies' => $taskCreateDependencies,
             'boardStatuses' => $boardStatuses,
+            'selectedFlowType' => $selectedFlowType,
         ], $filters, $formData));
     }
 
@@ -137,6 +139,9 @@ class TaskController extends Controller
             ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
 
         $priorities = config('project_constants.task_priorities', []);
+
+        // Update flow view
+        $user->generalSettings()->update(['kanban_view' => $selectedFlowType]);
 
         if ($request->ajax()) {
             if ($request->filled('status_id')) {
@@ -595,11 +600,11 @@ class TaskController extends Controller
             'taskStatusOptions' => blank($flowType)
                 ? collect()
                 : TaskStatus::query()
-                    ->active()
-                    ->forFlow($flowType)
-                    ->orderBy('sort_order')
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'color', 'is_completed']),
+                ->active()
+                ->forFlow($flowType)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(['id', 'name', 'color', 'is_completed']),
             'canChangeTaskStatus' => $user && $taskServices->isAllowedChangeStatus($task, $user),
             'taskStatusTransitionUrl' => route('tasks.transition-status'),
         ];
