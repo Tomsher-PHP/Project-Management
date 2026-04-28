@@ -51,14 +51,14 @@ class NotifyTaskStart extends Command
             foreach ($tasks as $task) {
                 $startAt = $task->due_date_time->copy()->subSeconds($task->estimated_time_seconds);
                 $notifyAt = $startAt->copy()->subMinutes($minutesBefore);
-    
-                if ($now->betweenIncluded($notifyAt, $notifyAt->copy()->addMinute())) {
+
+                if ($now->between($notifyAt, $startAt)) {
                     if ($notificationService->notifyTaskStart($task)) {
                         $sentCount++;
                     }
                 }
             }
-    
+
             Log::info("Task start notifications sent: {$sentCount}");
         }
 
