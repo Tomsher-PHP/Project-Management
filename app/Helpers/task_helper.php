@@ -12,19 +12,25 @@ if (!function_exists('taskStatusIsCompleted')) {
 if (!function_exists('taskDueColor')) {
     function taskDueColor($dueAt, $estimateSeconds = null, $status = null): string
     {
+        if (!$dueAt) {
+            return 'normal';
+        }
+
         if (taskStatusIsCompleted($status)) {
             return 'normal';
         }
 
         $now = now();
+        $minutesBefore = (int) env('TASK_START_NOTIFICATION_MINUTES_BEFORE', 10);
 
         if (!$estimateSeconds) {
             return $dueAt->gt($now) ? 'normal' : 'red';
         }
 
         $startThreshold = $dueAt->copy()->subSeconds($estimateSeconds);
+        $notifyAt = $startThreshold->copy()->subMinutes($minutesBefore);
 
-        if ($now->lt($startThreshold)) {
+        if ($now->lt($notifyAt)) {
             return 'normal';
         }
 

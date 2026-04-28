@@ -48,6 +48,7 @@ class Task extends Model
         'rejected_at',
         'rejection_reason',
         'sort_order',
+        'start_notify_at',
         'added_by',
         'updated_by',
     ];
