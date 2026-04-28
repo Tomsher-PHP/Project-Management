@@ -10,16 +10,7 @@
 
                 <div class="min-w-0">
                     <h2 class="min-w-0">
-                        <x-task-name-status
-                            :name="$task->name"
-                            :request-type="$task->request_type"
-                            :request-status="$task->request_status"
-                            :truncate="false"
-                            display="flex"
-                            text-class="text-xl font-bold text-bgray-900 dark:text-white"
-                            name-class="break-words"
-                            class="max-w-full"
-                        />
+                        <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :truncate="false" display="flex" text-class="text-xl font-bold text-bgray-900 dark:text-white" name-class="break-words" class="max-w-full" />
                     </h2>
                     <p class="text-sm text-bgray-500">
                         Code: {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
@@ -73,7 +64,17 @@
                 @endif
                 <span><strong>Type:</strong> {{ $taskTypeLabel }}</span>
                 <span><strong>Mode:</strong> {{ $taskModeLabel }}</span>
-                <span><strong>Due Date:</strong> @appDateTime($task->due_date_time)</span>
+                <span>
+                    <strong>Due Date:</strong>
+                    <span class="{{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task->status) }} inline-flex items-center gap-0.5">
+                        {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task->status) !!}
+                        @if ($task->due_date_time)
+                            @appDateTime($task->due_date_time)
+                        @else
+                            --
+                        @endif
+                    </span>
+                </span>
             </div>
         </div>
 
@@ -91,21 +92,10 @@
 
         @php
             $isRunning = $task->timeLogs()->where('is_running', 1)->exists();
-            $isStartDisabled = ! $isRunning && ! $canStartTimerFromStatus;
+            $isStartDisabled = !$isRunning && !$canStartTimerFromStatus;
         @endphp
 
-        <button type="button"
-            data-task-id="{{ $task->id }}"
-            data-running="{{ $isRunning ? 1 : 0 }}"
-            data-current-user-id="{{ auth()->id() ?? '' }}"
-            data-assignee-id="{{ $task->current_assignee_id ?? '' }}"
-            data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}"
-            data-task-name="{{ $task->name }}"
-            id="task-timer-btn"
-            @disabled($isStartDisabled)
-            @if ($isStartDisabled)
-                title="Move this task to an active status before starting the timer."
-            @endif
+        <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" data-current-user-id="{{ auth()->id() ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}" data-task-name="{{ $task->name }}" id="task-timer-btn" @disabled($isStartDisabled) @if ($isStartDisabled) title="Move this task to an active status before starting the timer." @endif
             class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold transition {{ $isRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isStartDisabled ? 'cursor-not-allowed bg-bgray-300 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }}">
             {{ $isRunning ? 'Stop' : 'Start' }}
         </button>
@@ -121,13 +111,7 @@
             @endif
 
             <div class="flex items-center gap-2.5">
-                <x-task-status-dropdown
-                    :task="$task"
-                    :statuses="$taskStatusOptions ?? collect()"
-                    :can-change="$canChangeTaskStatus ?? false"
-                    :transition-url="$taskStatusTransitionUrl ?? null"
-                    :include-task-detail="true"
-                />
+                <x-task-status-dropdown :task="$task" :statuses="$taskStatusOptions ?? collect()" :can-change="$canChangeTaskStatus ?? false" :transition-url="$taskStatusTransitionUrl ?? null" :include-task-detail="true" />
             </div>
 
             <span class="whitespace-nowrap rounded-full border border-bgray-200 bg-bgray-100 px-4 py-1 text-sm font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">

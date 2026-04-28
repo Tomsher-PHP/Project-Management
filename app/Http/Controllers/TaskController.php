@@ -71,7 +71,7 @@ class TaskController extends Controller
             'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
-            'status:id,name,color',
+            'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
@@ -504,7 +504,7 @@ class TaskController extends Controller
             'parentTask:id,name,code',
             'currentAssignee:id,name',
             'currentAssignee.primaryAttachment',
-            'status:id,name,color,type',
+            'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
             'tags:id,name,color',
@@ -574,7 +574,7 @@ class TaskController extends Controller
         return [
             'taskStatusHistories' => $task->statusHistories()
                 ->with([
-                    'status:id,name,color',
+                    'status:id,name,color,type,is_completed',
                     'addedBy:id,name',
                 ])
                 ->orderByDesc('added_at')
@@ -614,7 +614,7 @@ class TaskController extends Controller
     {
         $statusRows = $task->statusHistories()
             ->with([
-                'status:id,name,color',
+                'status:id,name,color,type,is_completed',
                 'addedBy:id,name',
             ])
             ->reorder('added_at')
