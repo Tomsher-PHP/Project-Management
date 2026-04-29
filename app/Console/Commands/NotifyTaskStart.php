@@ -49,10 +49,11 @@ class NotifyTaskStart extends Command
 
         if ($tasks->isNotEmpty()) {
             foreach ($tasks as $task) {
-                $startAt = $task->due_date_time->copy()->subSeconds($task->estimated_time_seconds);
+                $dueAt = $task->due_date_time;
+                $startAt = $dueAt->copy()->subSeconds($task->estimated_time_seconds);
                 $notifyAt = $startAt->copy()->subMinutes($minutesBefore);
 
-                if ($now->between($notifyAt, $startAt)) {
+                if ($now->gte($notifyAt)) {
                     if ($notificationService->notifyTaskStart($task)) {
                         $sentCount++;
                     }

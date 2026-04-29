@@ -78,11 +78,9 @@
                         </svg>
 
                         <!--Notification Badge -->
-                        @if ($unreadCount > 0)
-                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                                {{ $unreadCount }}
-                            </span>
-                        @endif
+                        <span id="notification-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none {{ $unreadCount > 0 ? '' : 'hidden' }}">
+                            {{ $unreadCount }}
+                        </span>
                     </button>
                     @can('user.tree_view')
                         <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 transition hover:bg-success-50 dark:border-darkblack-400 dark:hover:bg-darkblack-500 {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
@@ -145,7 +143,7 @@
                                 </svg>
                             </span>
                         </div>
-                        <ul class="scroll-style-1 h-[335px] w-full overflow-y-scroll">
+                        <ul id="notification-list" class="scroll-style-1 h-[335px] w-full overflow-y-scroll">
                             @forelse($notifications as $notification)
                                 <li class="border-b border-bgray-200 py-4 pl-6 pr-[50px] hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500">
                                     <a href="{{ route('notifications.markRead', $notification->id) }}">
@@ -159,7 +157,7 @@
                                     </a>
                                 </li>
                             @empty
-                                <li class="py-4 pl-6 text-sm text-bgray-500 dark:text-bgray-400">
+                                <li id="no-notifications" class="py-4 pl-6 text-sm text-bgray-500 dark:text-bgray-400">
                                     No notifications
                                 </li>
                             @endforelse
