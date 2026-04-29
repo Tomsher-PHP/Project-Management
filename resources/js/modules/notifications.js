@@ -5,8 +5,6 @@ export function initNotifications(userId) {
 
     window.Echo.private(`App.Models.User.${userId}`)
         .notification((notification) => {
-            console.log('Realtime:', notification);
-
             addNotificationToUI(notification);
             incrementNotificationCount();
         });
