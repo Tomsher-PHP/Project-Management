@@ -211,13 +211,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
         // End Configuration Routes
 
-        //Project KPI templates routes
+        // KPI templates routes
         Route::patch('/kpis/toggle-status', [KPIController::class, 'toggleStatusKPI'])->middleware('permission.type:kpi.edit')->name('kpi.toggleStatus');
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.view')->only(['index']);
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.create')->only(['store']);
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.edit')->only(['update']);
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.delete')->only(['destroy']);
-        // End Project KPI templates routes
+        // End KPI templates routes
     });
     // End Settings Routes
 
