@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\BuildsProjectActivityQueries;
 use App\Http\Requests\ProjectFileRequest;
 use App\Http\Requests\ProjectCommentRequest;
 use App\Http\Requests\ProjectNoteRequest;
+use App\Http\Requests\ProjectPaymentStatusRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
 use App\Models\AgileMilestone;
@@ -550,6 +551,7 @@ class ProjectController extends Controller
     {
         $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
         $timelines = $service->getTimelines($project);
+        $paymentSummary = $service->getPaymentSummary($project);
         $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
         $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
 
@@ -560,6 +562,7 @@ class ProjectController extends Controller
             'priority' => config('project_constants.project_priorities')[$project->priority] ?? null,
             'projectTimeline' => $timelines['projectTimeline'],
             'customerTimeline' => $timelines['customerTimeline'],
+            'paymentSummary' => $paymentSummary,
             'projectStatuses' => ProjectStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])->get(),
             'projectStages' => ProjectStage::forForm($selectedStageId, ['order_by' => 'sort_order'])->get(),
             'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
@@ -633,5 +636,19 @@ class ProjectController extends Controller
                 return null;
             }
         }
+    }
+
+    public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, ProjectServices $service): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $service->createPayment($project, $validated);
+        $project = $project->fresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project payment status updated successfully.',
+            'project_header' => $this->renderProjectHeader($project, $service),
+        ], Response::HTTP_OK);
     }
 }

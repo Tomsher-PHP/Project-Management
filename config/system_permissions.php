@@ -47,6 +47,7 @@ return [
     ['name' => 'project.remove_notes_files', 'sort_order' => 5220],
     ['name' => 'project.status_change',     'sort_order' => 5240],
     ['name' => 'project.customer_end_date', 'sort_order' => 5260],
+    ['name' => 'project.payment_status',    'sort_order' => 5280],
 
     // PROJECT MILESTONE (6000)
     ['name' => 'project_milestone.view',    'sort_order' => 6000],

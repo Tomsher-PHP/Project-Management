@@ -140,6 +140,13 @@ class Project extends Model
         return $this->hasMany(ProjectStageHistory::class)->orderBy('added_at', 'desc');
     }
 
+    public function projectPayments()
+    {
+        return $this->hasMany(ProjectPayment::class)
+            ->orderByDesc('coverage_end_date')
+            ->orderByDesc('id');
+    }
+
     public function comments()
     {
         return $this->hasMany(ProjectComment::class)->orderBy('created_at', 'desc');
