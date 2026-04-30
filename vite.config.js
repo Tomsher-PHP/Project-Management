@@ -24,6 +24,7 @@ export default defineConfig({
                 'resources/js/modules/users/change-password.js',
                 'resources/js/modules/tasks/kanban-board.js',
                 'resources/js/modules/tasks/time-log-change-request.js',
+                'resources/js/modules/kpi-form.js',
             ],
             refresh: true,
         }),

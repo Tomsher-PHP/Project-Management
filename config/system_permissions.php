@@ -160,4 +160,16 @@ return [
     // TASK TIME LOG CHANGE REQUEST (24000)
     ['name' => 'task_time_log_change_request.approve_reject', 'sort_order' => 24000],
 
+    // KPI (25000)
+    ['name' => 'kpi.view',   'sort_order' => 25000],
+    ['name' => 'kpi.create', 'sort_order' => 25020],
+    ['name' => 'kpi.edit',   'sort_order' => 25040],
+    ['name' => 'kpi.delete', 'sort_order' => 25060],
+
+    // Project checklist (26000)
+    ['name' => 'project_checklist.view',   'sort_order' => 26000],
+    ['name' => 'project_checklist.create', 'sort_order' => 26020],
+    ['name' => 'project_checklist.edit',   'sort_order' => 26040],
+    ['name' => 'project_checklist.delete', 'sort_order' => 26060], 
+
 ];
