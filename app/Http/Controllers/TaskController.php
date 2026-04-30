@@ -36,8 +36,8 @@ class TaskController extends Controller
 {
     private const KANBAN_STATUS_PAGE_SIZE = 5;
 
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

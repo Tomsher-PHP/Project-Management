@@ -11,8 +11,8 @@ use Spatie\Permission\Models\Permission;
 
 class RolePermissionController extends Controller
 {
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

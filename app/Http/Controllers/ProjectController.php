@@ -38,8 +38,8 @@ class ProjectController extends Controller
 {
     use BuildsProjectActivityQueries;
 
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {
@@ -311,7 +311,7 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function deleteScopeFile(Project $project, $fileId, AttachmentService $attachmentService)
+    public function deleteScopeFile(Project $project, int $fileId, AttachmentService $attachmentService)
     {
         $attachment = $project->attachments()->where('id', $fileId)->get();
         $attachmentService->delete($attachment);
@@ -621,7 +621,7 @@ class ProjectController extends Controller
         });
     }
 
-    private function convertStoredTimestampToConfigTimezone($value): ?Carbon
+    private function convertStoredTimestampToConfigTimezone(string|Carbon|null  $value): ?Carbon
     {
         if (blank($value)) {
             return null;
