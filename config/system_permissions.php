@@ -167,10 +167,10 @@ return [
     ['name' => 'kpi.edit',   'sort_order' => 25040],
     ['name' => 'kpi.delete', 'sort_order' => 25060],
 
-    // Project checklist (26000)
-    ['name' => 'project_checklist.view',   'sort_order' => 26000],
-    ['name' => 'project_checklist.create', 'sort_order' => 26020],
-    ['name' => 'project_checklist.edit',   'sort_order' => 26040],
-    ['name' => 'project_checklist.delete', 'sort_order' => 26060], 
+    // Project checklist template (26000)
+    ['name' => 'checklist_template.view',   'sort_order' => 26000],
+    ['name' => 'checklist_template.create', 'sort_order' => 26020],
+    ['name' => 'checklist_template.edit',   'sort_order' => 26040],
+    ['name' => 'checklist_template.delete', 'sort_order' => 26060], 
 
 ];

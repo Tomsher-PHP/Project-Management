@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
@@ -218,6 +219,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.edit')->only(['update']);
         Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.delete')->only(['destroy']);
         // End KPI templates routes
+
+        // Checklists templates routes
+        Route::patch('/checklists/toggle-status', [ChecklistController::class, 'toggleStatusChecklist'])->middleware('permission.type:checklist_template.edit')->name('checklist.toggleStatus');
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.view')->only(['index']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.create')->only(['store']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.edit')->only(['update']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.delete')->only(['destroy']);
+        // End Checklists templates routes
     });
     // End Settings Routes
 
