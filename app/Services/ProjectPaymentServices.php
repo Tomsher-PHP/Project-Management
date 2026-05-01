@@ -23,6 +23,22 @@ class ProjectPaymentServices
         });
     }
 
+    public function updatePayment(ProjectPayment $payment, array $data): ProjectPayment
+    {
+        return DB::transaction(function () use ($payment, $data) {
+            $payment->update([
+                'amount' => $data['amount'] ?? null,
+                'paid_date' => $data['paid_date'] ?? null,
+                'coverage_start_date' => $data['coverage_start_date'],
+                'coverage_end_date' => $data['coverage_end_date'],
+                'payment_method' => $data['payment_method'] ?? null,
+                'reference' => $data['reference'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+            return $payment;
+        });
+    }
+
     public function getPaymentSummary(Project $project): array
     {
         $timezone = config('constants.timezone');

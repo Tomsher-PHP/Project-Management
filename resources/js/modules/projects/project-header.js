@@ -680,10 +680,18 @@ const initializeProjectHeader = () => {
             }
 
             const header = document.getElementById('project-header');
-
             if (header && result.project_header) {
                 header.innerHTML = result.project_header;
                 syncProjectHeaderExpandedState(header);
+            }
+
+            if (result.payments_tab) {
+                document.dispatchEvent(new CustomEvent('project-tab:replace', {
+                    detail: {
+                        tab: 'payments',
+                        html: result.payments_tab,
+                    },
+                }));
             }
 
             closeProjectPaymentModal();

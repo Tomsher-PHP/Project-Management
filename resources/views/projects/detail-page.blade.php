@@ -49,6 +49,12 @@
                                 Checklists
                             </button>
 
+                            @if ($project->is_linear && auth()->user()->can('project.view_payment_status'))
+                                <button type="button" data-project-tab-trigger="payments" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                    Payments
+                                </button>
+                            @endif
+
                             <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 History
                             </button>
@@ -105,6 +111,9 @@
                     <div class="hidden" data-project-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="notes" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="checklists" data-loaded="false"></div>
+                    @if ($project->is_linear && auth()->user()->can('project.view_payment_status'))
+                        <div class="hidden" data-project-tab-panel="payments" data-loaded="false"></div>
+                    @endif
                     <div class="hidden" data-project-tab-panel="history" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
                 </div>
@@ -127,4 +136,5 @@
         };
     </script>
     @vite('resources/js/modules/projects/project-detail.js')
+    @vite('resources/js/modules/projects/project-payment.js')
 @endpush

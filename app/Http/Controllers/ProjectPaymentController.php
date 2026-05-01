@@ -40,6 +40,38 @@ class ProjectPaymentController extends Controller
             'success' => true,
             'message' => 'Project payment status updated successfully.',
             'project_header' => $this->renderProjectHeader($project),
+            'payments_tab' => $this->renderPaymentsTab($project),
         ], Response::HTTP_OK);
+    }
+
+    public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, \App\Models\ProjectPayment $payment): JsonResponse
+    {
+        $validated = $request->validated();
+        if (!$project->is_linear) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project payment status can not be updated for non-linear flow project.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($payment->project_id !== $project->id) {
+            abort(403, 'Unauthorized access to this payment.');
+        }
+
+        $this->projectPaymentService->updatePayment($payment, $validated);
+        $project = $project->fresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project payment status updated successfully.',
+            'project_header' => $this->renderProjectHeader($project),
+            'payments_tab' => $this->renderPaymentsTab($project),
+        ], Response::HTTP_OK);
+    }
+
+    public function renderPaymentsTab(Project $project): string
+    {
+        $payments = $project->projectPayments()->orderByDesc('added_at')->orderByDesc('id')->get();
+        return view('projects.partials.tabs.payments', compact('project', 'payments'))->render();
     }
 }
