@@ -7,7 +7,7 @@
 
     $projectStatusUpdateUrl = route('projects.updateProjectStatus', $project);
     $projectStageUpdateUrl = route('projects.updateProjectStage', $project);
-    $projectPaymentUpdateUrl = route('projects.updateProjectPaymentStatus', $project);
+    $projectPaymentUpdateUrl = route('projects.addProjectPaymentStatus', $project);
 
     $projectCreatedAtLabel = $project->created_at
         ? $project->created_at
