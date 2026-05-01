@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectChecklist;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
@@ -93,6 +94,25 @@ class ProjectChecklistController extends Controller
                 ->values(),
             'member_card' => $memberCard,
         ], Response::HTTP_OK);
+    }
+
+    public function renderWorkspaceChecklist(Request $request, Project $project): JsonResponse
+    {
+        $checklist = $request->input('checklist', []);
+        $checklistIndex = $request->input('checklistIndex', 0);
+        $titleError = $request->input('titleError');
+        $questionsError = $request->input('questionsError');
+        $questionErrors = $request->input('questionErrors', []);
+
+        $html = view('projects.partials.checklists.workspace-checklist', [
+            'checklist' => $checklist,
+            'checklistIndex' => $checklistIndex,
+            'titleError' => $titleError,
+            'questionsError' => $questionsError,
+            'questionErrors' => $questionErrors,
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 
     private function syncAssignedChecklists(Project $project, User $member, array $payload): void

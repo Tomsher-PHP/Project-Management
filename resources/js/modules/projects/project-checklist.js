@@ -1,6 +1,7 @@
 import Alert from '../../alert';
 
 const state = {
+    projectId: null,
     activeMemberId: null,
     activeButton: null,
     library: [],
@@ -41,11 +42,13 @@ const normalizeChecklist = (checklist = {}) => ({
     questions: Array.isArray(checklist.questions) && checklist.questions.length
         ? checklist.questions.map((question) => normalizeQuestion(question))
         : [normalizeQuestion({ question: '' })],
+    isExpanded: checklist.isExpanded ?? false,
 });
 
 const createBlankChecklist = () => normalizeChecklist({
     title: '',
     questions: [{ question: '' }],
+    isExpanded: true,
 });
 
 const getSelectedTemplateIds = () => state.checklists
@@ -104,108 +107,40 @@ const renderWorkspaceEmptyState = () => `
     </div>
 `;
 
-const renderWorkspaceChecklist = (checklist, checklistIndex) => {
+const renderWorkspaceChecklist = async (checklist, checklistIndex) => {
     const titleError = getError(`checklists.${checklistIndex}.title`);
     const questionsError = getError(`checklists.${checklistIndex}.questions`);
+    const questionErrors = checklist.questions.map((_, qIndex) => getError(`checklists.${checklistIndex}.questions.${qIndex}.question`));
 
-    const questionsMarkup = checklist.questions.map((question, questionIndex) => {
-        const questionError = getError(`checklists.${checklistIndex}.questions.${questionIndex}.question`);
+    try {
+        const response = await fetch(`/projects/${state.projectId}/checklists/render-workspace`, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                checklist,
+                checklistIndex,
+                titleError,
+                questionsError,
+                questionErrors,
+            }),
+        });
 
-        return `
-            <div class="rounded-xl border border-bgray-200 bg-bgray-50/70 p-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
-                <div class="flex items-start gap-3">
-                    <span class="mt-2 inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-white text-xs font-semibold text-success-500 shadow-sm dark:bg-darkblack-600 dark:text-success-300">
-                        ${questionIndex + 1}
-                    </span>
-
-                    <div class="min-w-0 flex-1">
-                        <input
-                            type="text"
-                            value="${escapeHtml(question.question)}"
-                            class="w-full rounded-lg border ${questionError ? 'border-red-500' : 'border-bgray-200'} bg-white px-3 py-2.5 text-sm text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white"
-                            placeholder="Enter checklist question"
-                            data-project-checklist-question-input
-                            data-checklist-index="${checklistIndex}"
-                            data-question-index="${questionIndex}"
-                        >
-                        ${questionError ? `<p class="mt-1 text-xs text-red-500">${escapeHtml(questionError)}</p>` : ''}
-                    </div>
-
-                    <button
-                        type="button"
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300"
-                        data-project-checklist-remove-question
-                        data-checklist-index="${checklistIndex}"
-                        data-question-index="${questionIndex}"
-                        aria-label="Remove question"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    return `
-        <article class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-project-checklist-card data-client-key="${escapeHtml(checklist.clientKey)}">
-            <div class="flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 md:flex-row md:items-start md:justify-between">
-                <div class="min-w-0 flex-1">
-                    <div class="mb-3 flex flex-wrap items-center gap-2">
-                        ${checklist.template_name
-            ? `<span class="inline-flex items-center rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-success-500 dark:bg-darkblack-500 dark:text-success-300">Library Template</span>`
-            : `<span class="inline-flex items-center rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">Custom</span>`}
-                        ${checklist.template_name ? `<span class="text-xs text-bgray-500 dark:text-bgray-300">${escapeHtml(checklist.template_name)}</span>` : ''}
-                    </div>
-
-                    <input
-                        type="text"
-                        value="${escapeHtml(checklist.title)}"
-                        class="w-full rounded-xl border ${titleError ? 'border-red-500' : 'border-bgray-200'} bg-white px-4 py-3 text-sm font-semibold text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                        placeholder="Checklist title"
-                        data-project-checklist-title-input
-                        data-checklist-index="${checklistIndex}"
-                    >
-                    ${titleError ? `<p class="mt-1 text-xs text-red-500">${escapeHtml(titleError)}</p>` : ''}
-                </div>
-
-                <button
-                    type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300"
-                    data-project-checklist-remove
-                    data-checklist-index="${checklistIndex}"
-                    aria-label="Remove checklist"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="mt-4 space-y-3">
-                ${questionsMarkup}
-                ${questionsError ? `<p class="text-xs text-red-500">${escapeHtml(questionsError)}</p>` : ''}
-            </div>
-
-            <div class="mt-4">
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-medium text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300"
-                    data-project-checklist-add-question
-                    data-checklist-index="${checklistIndex}"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Add Question</span>
-                </button>
-            </div>
-        </article>
-    `;
+        if (response.ok) {
+            const result = await response.json();
+            return result.html || '';
+        }
+    } catch (error) {
+        console.error('Failed to render checklist', error);
+    }
+    return '';
 };
 
-const renderWorkspace = () => {
+const renderWorkspace = async () => {
     const modal = getModal();
     const workspace = modal?.querySelector('[data-project-checklist-workspace]');
 
@@ -222,7 +157,9 @@ const renderWorkspace = () => {
         return;
     }
 
-    const cards = state.checklists.map((checklist, index) => renderWorkspaceChecklist(checklist, index)).join('');
+    const cardPromises = state.checklists.map((checklist, index) => renderWorkspaceChecklist(checklist, index));
+    const cardsArray = await Promise.all(cardPromises);
+    const cards = cardsArray.join('');
 
     workspace.innerHTML = state.checklists.length
         ? `${cards}<div class="h-24 rounded-2xl border border-dashed border-bgray-200 bg-bgray-50/50 dark:border-darkblack-400 dark:bg-darkblack-500/20" data-project-checklist-dropzone></div>`
@@ -282,30 +219,37 @@ const renderLibrary = () => {
                         data-project-checklist-library-item
                         data-template-id="${template.id}"
                     >
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
+                        <div class="flex items-start justify-between gap-3 cursor-pointer group" data-project-checklist-library-toggle data-template-id="${template.id}">
+                            <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h5 class="truncate text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(template.name)}</h5>
+                                    <h5 class="truncate text-sm font-semibold text-bgray-900 group-hover:text-success-500 transition-colors dark:text-white">${escapeHtml(template.name)}</h5>
                                     ${isSelected ? '<span class="inline-flex items-center rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-success-600 dark:bg-darkblack-500 dark:text-success-300">Selected</span>' : ''}
                                 </div>
                                 <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${template.questions.length} ${template.questions.length === 1 ? 'question' : 'questions'}</p>
                             </div>
 
-                            <button
-                                type="button"
-                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl ${isSelected ? 'bg-success-100 text-success-500 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200'} transition duration-200 hover:bg-success-50 hover:text-success-500"
-                                data-project-checklist-library-add
-                                data-template-id="${template.id}"
-                                ${isSelected ? 'disabled' : ''}
-                                aria-label="Add checklist template"
-                            >
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" class="inline-flex h-9 w-9 items-center justify-center text-bgray-400 transition-transform duration-200 ${template.isExpanded ? 'rotate-180' : ''}">
+                                     <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                     </svg>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl ${isSelected ? 'bg-success-100 text-success-500 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200'} transition duration-200 hover:bg-success-50 hover:text-success-500"
+                                    data-project-checklist-library-add
+                                    data-template-id="${template.id}"
+                                    ${isSelected ? 'disabled' : ''}
+                                    aria-label="Add checklist template"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="mt-3 space-y-2">
+                        <div class="mt-3 space-y-2 ${template.isExpanded ? '' : 'hidden'}">
                             ${preview.map((question, index) => `
                                 <div class="rounded-xl bg-bgray-50 px-3 py-2 text-xs text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
                                     ${index + 1}. ${escapeHtml(question.question)}
@@ -358,10 +302,10 @@ const renderMemberSummary = () => {
     }
 };
 
-const renderChecklistModal = () => {
+const renderChecklistModal = async () => {
     renderMemberSummary();
-    renderWorkspace();
     renderLibrary();
+    await renderWorkspace();
 };
 
 const scrollChecklistIntoView = (clientKey) => {
@@ -380,7 +324,7 @@ const scrollChecklistIntoView = (clientKey) => {
     }, 1600);
 };
 
-const addChecklistFromTemplate = (templateId) => {
+const addChecklistFromTemplate = async (templateId) => {
     const normalizedTemplateId = Number(templateId || 0);
 
     if (!normalizedTemplateId) {
@@ -390,7 +334,8 @@ const addChecklistFromTemplate = (templateId) => {
     const existingChecklist = state.checklists.find((checklist) => Number(checklist.checklist_template_id || 0) === normalizedTemplateId);
 
     if (existingChecklist) {
-        renderChecklistModal();
+        existingChecklist.isExpanded = true;
+        await renderChecklistModal();
         scrollChecklistIntoView(existingChecklist.clientKey);
         Alert.info('This checklist template is already assigned to the member.');
         return;
@@ -407,11 +352,12 @@ const addChecklistFromTemplate = (templateId) => {
         template_name: template.name,
         title: template.name,
         questions: template.questions,
+        isExpanded: true,
     });
 
     state.checklists.push(checklist);
     state.errors = {};
-    renderChecklistModal();
+    await renderChecklistModal();
     scrollChecklistIntoView(checklist.clientKey);
 };
 
@@ -425,6 +371,7 @@ const openChecklistManager = async (button) => {
 
     state.activeButton = button;
     state.activeMemberId = Number(memberId);
+    state.projectId = projectId;
     state.loading = true;
     state.saving = false;
     state.librarySearch = '';
@@ -435,7 +382,7 @@ const openChecklistManager = async (button) => {
     state.saveUrl = '';
 
     setModalVisibility(true);
-    renderChecklistModal();
+    await renderChecklistModal();
 
     try {
         const response = await fetch(`/projects/${projectId}/members/${memberId}/checklists`, {
@@ -451,7 +398,7 @@ const openChecklistManager = async (button) => {
         }
 
         state.member = result.member || null;
-        state.library = Array.isArray(result.library) ? result.library : [];
+        state.library = Array.isArray(result.library) ? result.library.map(lib => ({ ...lib, isExpanded: false })) : [];
         state.checklists = Array.isArray(result.checklists)
             ? result.checklists.map((checklist) => normalizeChecklist(checklist))
             : [];
@@ -465,7 +412,7 @@ const openChecklistManager = async (button) => {
         state.loading = false;
     }
 
-    renderChecklistModal();
+    await renderChecklistModal();
 };
 
 const saveChecklists = async () => {
@@ -552,13 +499,40 @@ const bindChecklistListeners = () => {
             return;
         }
 
+        const libraryToggle = event.target.closest('[data-project-checklist-library-toggle]');
+
+        if (libraryToggle && !event.target.closest('[data-project-checklist-library-add]')) {
+            const templateId = Number(libraryToggle.dataset.templateId);
+            const template = state.library.find((t) => Number(t.id) === templateId);
+
+            if (template) {
+                template.isExpanded = !template.isExpanded;
+                renderLibrary();
+            }
+            return;
+        }
+
+        const checklistToggle = event.target.closest('[data-project-checklist-toggle]');
+
+        if (checklistToggle) {
+            const checklistIndex = Number(checklistToggle.dataset.checklistIndex);
+            const checklist = state.checklists[checklistIndex];
+
+            if (checklist) {
+                checklist.isExpanded = !checklist.isExpanded;
+                renderChecklistModal();
+            }
+            return;
+        }
+
         const addBlankButton = event.target.closest('[data-project-checklist-add-blank]');
 
         if (addBlankButton) {
             state.checklists.push(createBlankChecklist());
             state.errors = {};
-            renderChecklistModal();
-            scrollChecklistIntoView(state.checklists[state.checklists.length - 1].clientKey);
+            renderChecklistModal().then(() => {
+                scrollChecklistIntoView(state.checklists[state.checklists.length - 1].clientKey);
+            });
             return;
         }
 

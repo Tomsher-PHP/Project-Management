@@ -6,7 +6,6 @@
             <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex flex-col gap-4 border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:flex-row sm:items-start sm:justify-between sm:px-7">
                     <div class="min-w-0">
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-success-400">Team Checklist</p>
                         <h3 class="mt-2 text-xl font-semibold text-bgray-900 dark:text-white">
                             Manage Project Checklists
                         </h3>
@@ -35,9 +34,6 @@
                         <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Assigned Checklists</h4>
-                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                    Add a blank checklist or drag a library template here, then edit the questions for this team member.
-                                </p>
                             </div>
 
                             <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-medium text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300" data-project-checklist-add-blank>
@@ -56,9 +52,6 @@
                     <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
                         <div class="mb-5">
                             <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Checklist Library</h4>
-                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                Reuse active checklist templates from Settings. Drag to the left or use the add button.
-                            </p>
                         </div>
 
                         <label class="relative mb-4 block">
@@ -74,12 +67,8 @@
                     </aside>
                 </div>
 
-                <div class="flex flex-col gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-                    <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                        Saving will update this member's assigned project checklists.
-                    </p>
-
-                    <div class="flex items-center gap-3">
+                <div class="flex flex-col gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:flex-row sm:items-center sm:justify-end sm:px-7">
+                    <div class="flex w-full items-center justify-end gap-3 sm:w-auto">
                         <button type="button" class="inline-flex items-center justify-center rounded-lg border border-bgray-200 px-4 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 dark:border-darkblack-400 dark:text-bgray-200 dark:hover:bg-darkblack-500" data-project-checklist-close>
                             Cancel
                         </button>
