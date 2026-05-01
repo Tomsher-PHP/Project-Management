@@ -51,7 +51,7 @@
         <div class="quick-access-wrapper relative">
             <div class="flex items-center space-x-7">
                 <div class="hidden items-center space-x-3 xl:flex">
-                    <button type="button" id="theme-toggle" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400">
+                    <button type="button" id="theme-toggle" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400" data-user="{{ auth()->user()->id }}">
                         <span class="block dark:hidden">
                             <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M18.3284 14.8687C13.249 14.8687 9.13135 10.751 9.13135 5.67163C9.13135 4.74246 9.26914 3.84548 9.5254 3C5.74897 4.14461 3 7.65276 3 11.803C3 16.8824 7.11765 21 12.197 21C16.3472 21 19.8554 18.251 21 14.4746C20.1545 14.7309 19.2575 14.8687 18.3284 14.8687Z" stroke-width="1.5" stroke-linejoin="round" />

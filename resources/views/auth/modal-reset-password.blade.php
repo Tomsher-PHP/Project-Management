@@ -108,7 +108,7 @@
                     </p>
                     <form action="{{ route('reset.password') }}" method="POST" id="reset-password-form">
                         <div class="mb-6 relative">
-                            <input type="text" id="reset-new-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:text-white dark:bg-darkblack-500 dark:border-0" placeholder="Password" />
+                            <input type="password" id="reset-new-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:text-white dark:bg-darkblack-500 dark:border-0" placeholder="Password" />
                             <button class="absolute top-4 right-4 bottom-4">
                                 <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M2 1L20 19" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -118,7 +118,7 @@
                             </button>
                         </div>
                         <div class="mb-8 relative">
-                            <input type="text" id="reset-confirm-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:bg-darkblack-500 dark:border-0" placeholder="Confirm new Password" />
+                            <input type="password" id="reset-confirm-password" class="text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border-success-300 focus:ring-0 rounded-lg px-4 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:bg-darkblack-500 dark:border-0" placeholder="Confirm new Password" />
                             <button class="absolute top-4 right-4 bottom-4">
                                 <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M2 1L20 19" stroke="#718096" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />

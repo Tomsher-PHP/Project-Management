@@ -252,4 +252,24 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Password updated successfully.');
     }
+
+    public function updateModal(Request $request, User $user, UserService $service)
+    {
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'contact_person' => 'nullable|string|max:255',
+            'contact_person_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'profile_image' => 'nullable|image|max:2048',
+        ]);
+
+        $service->updateModalUser($user, $validated);
+
+        return response()->json([
+            'message' => 'User updated successfully.'
+        ]);
+    }
 }

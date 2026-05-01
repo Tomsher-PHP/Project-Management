@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Configuration;
 use App\Models\Task;
+use App\Models\UserGeneralSetting;
 use App\Policies\TaskPolicy;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -11,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -72,6 +74,18 @@ class AppServiceProvider extends ServiceProvider
             'globalCompanyWebsite' => $companyWebsite,
             'globalEmailSuffix' => $emailSuffix,
         ]);
+
+        View::composer('*', function ($view) {
+
+            $userTheme = '';
+
+            if (auth()->check()) {
+                $userTheme = UserGeneralSetting::where('user_id', auth()->id())
+                    ->value('theme') ?? '';
+            }
+
+            $view->with('userTheme', $userTheme);
+        });
 
         Blade::directive('appDate', function ($expression) {
             return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDate({$expression}); ?>";

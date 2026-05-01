@@ -19,6 +19,26 @@
     <link rel="stylesheet" href="{{ asset(config('assets.css.style')) }}" />
 
     @stack('styles')
+    <script>
+        (function () {
+
+            // // DB value passed from Laravel
+            // let dbTheme = 
+
+            // // localStorage override (frontend cache)
+            let theme = "{{ $userTheme ?? 'light' }}";
+
+            // sync both
+            localStorage.setItem('theme', theme);
+
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+        })();
+    </script>
 </head>
 
 <body>
@@ -35,7 +55,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700">
+            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700 h-screen">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
@@ -62,8 +82,8 @@
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 
     <script>
-        localStorage.theme = 'light';
-        document.documentElement.classList.remove('dark');
+        // localStorage.theme = 'dark';
+        // document.documentElement.classList.remove('light');
 
         let dataSetsLight = [{
                 label: "My First Dataset",

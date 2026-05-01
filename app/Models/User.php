@@ -150,6 +150,11 @@ class User extends Authenticatable
         return asset(config('assets.images.default_avatar'));
     }
 
+    public function getHasProfileImageAttribute()
+    {
+        return (bool) $this->primaryAttachment;
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

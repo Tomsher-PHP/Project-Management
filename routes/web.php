@@ -94,12 +94,15 @@ Route::middleware(['auth'])->group(function () {
         [UserController::class, 'changePassword']
     )->name('users.change.password');
 
+    Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])
+    ->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
+    
     // End of User Management Routes
 
     // Settings Routes

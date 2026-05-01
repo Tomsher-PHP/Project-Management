@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Jobs\SendWelcomeMailJob;
+use App\Mail\WelcomeUserMail;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class UserService
@@ -51,6 +55,17 @@ class UserService
                 $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, 'public', 'public', true);
             }
 
+            // Generate password
+            $plainPassword = Str::random(8);
+
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => bcrypt($plainPassword),
+            ]);
+
+            // Send mail
+            dispatch(new SendWelcomeMailJob($user, $plainPassword));
             return $user;
         });
     }
@@ -248,5 +263,23 @@ class UserService
             })
             ->orderBy('name')
             ->get();
+    }
+
+    public function updateModalUser(User $user, array $data)
+    {
+        $user->update([
+            'name' => $data['name'],
+        ]);
+
+        $user->details()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'phone' => $data['phone'] ?? null,
+                'whatsapp' => $data['whatsapp'] ?? null,
+                'contact_person' => $data['contact_person'] ?? null,
+                'contact_person_number' => $data['contact_person_number'] ?? null,
+                'address' => $data['address'] ?? null,
+            ]
+        );
     }
 }

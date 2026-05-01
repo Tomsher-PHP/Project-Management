@@ -21,6 +21,9 @@
 
         <x-filters.button />
         </div>
+        @php
+            session(['users_return_url' => url()->full()]);
+        @endphp
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
