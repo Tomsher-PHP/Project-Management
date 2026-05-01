@@ -58,7 +58,11 @@
                                             @foreach($checklist->items as $item)
                                                 <div class="flex items-start gap-3 rounded-lg border border-bgray-200 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition hover:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-600">
                                                     <div class="flex h-5 items-center mt-0.5">
-                                                        <input type="checkbox" id="item-{{ $item->id }}" class="h-5 w-5 cursor-pointer rounded border-bgray-300 text-success-400 focus:ring-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:ring-offset-darkblack-600 dark:checked:bg-success-400" {{ $item->is_completed ? 'checked' : '' }}>
+                                                        <input type="checkbox" id="item-{{ $item->id }}" class="h-5 w-5 cursor-pointer rounded border-bgray-300 text-success-400 focus:ring-success-400 disabled:opacity-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:ring-offset-darkblack-600 dark:checked:bg-success-400" 
+                                                            data-project-checklist-item-toggle 
+                                                            data-url="{{ route('projects.checklists.toggleItem', ['project' => $project, 'itemId' => $item->id]) }}"
+                                                            {{ $item->status ? 'checked' : '' }}
+                                                            @disabled($user->id !== auth()->id())>
                                                     </div>
                                                     <label for="item-{{ $item->id }}" class="cursor-pointer text-sm font-medium leading-relaxed text-bgray-800 dark:text-bgray-100">
                                                         {{ $item->question }}

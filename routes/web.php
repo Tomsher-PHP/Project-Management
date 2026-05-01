@@ -322,9 +322,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
         Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
         Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
-
-        // Team checklist routes
-
+        Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
     });
 
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);

@@ -27,6 +27,6 @@ class ProjectChecklistItem extends Model
 
     public function checklist()
     {
-        return $this->belongsTo(ProjectChecklist::class);
+        return $this->belongsTo(ProjectChecklist::class, 'project_checklist_id');
     }
 }

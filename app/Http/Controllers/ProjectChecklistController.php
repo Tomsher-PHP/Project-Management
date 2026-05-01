@@ -26,6 +26,35 @@ class ProjectChecklistController extends Controller
 
         return view('projects.partials.tabs.checklists', compact('project', 'users'))->render();
     }
+
+    public function toggleItemStatus(Request $request, Project $project, $itemId): JsonResponse
+    {
+        $request->validate([
+            'is_completed' => 'required|boolean',
+        ]);
+
+        $item = \App\Models\ProjectChecklistItem::findOrFail($itemId);
+        $checklist = $item->checklist;
+
+        if ($checklist->project_id !== $project->id) {
+            abort(403, 'Unauthorized access to this checklist item.');
+        }
+
+        if ($checklist->assigned_to !== auth()->id()) {
+            abort(403, 'You can only check off your own questions.');
+        }
+
+        $item->update([
+            'status' => $request->is_completed ? 1 : 0,
+            'completed_at' => $request->is_completed ? now() : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist item updated successfully.',
+            'status' => $item->status,
+        ], Response::HTTP_OK);
+    }
     public function show(Project $project, int $userId): JsonResponse
     {
         $member = $this->resolveProjectMember($project, $userId);

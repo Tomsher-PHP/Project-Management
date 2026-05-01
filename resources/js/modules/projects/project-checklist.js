@@ -674,6 +674,36 @@ const bindChecklistListeners = () => {
         }
     });
 
+    document.addEventListener('change', async (event) => {
+        const toggleInput = event.target.closest('[data-project-checklist-item-toggle]');
+        if (toggleInput) {
+            const url = toggleInput.dataset.url;
+            const isCompleted = toggleInput.checked;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ is_completed: isCompleted })
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Failed to update item.');
+                }
+                
+                Alert.success(result.message || 'Checklist item updated successfully.');
+            } catch (error) {
+                toggleInput.checked = !isCompleted;
+                Alert.error(error.message || 'Failed to update checklist item.');
+            }
+        }
+    });
+
     document.body.dataset.projectChecklistBound = 'true';
 };
 
