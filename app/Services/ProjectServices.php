@@ -214,7 +214,7 @@ class ProjectServices
             ]);
 
             if (!empty($data['attachments'])) {
-                $directory = 'project_files/' . $project->project_code. '/notes';
+                $directory = 'project_files/' . $project->project_code . '/notes';
 
                 foreach ($data['attachments'] as $file) {
                     $this->attachmentService->upload(
@@ -250,6 +250,7 @@ class ProjectServices
 
     public function getPaymentSummary(Project $project): array
     {
+        $timezone = config('constants.timezone');
         $latestPayment = $project->projectPayments()
             ->orderByDesc('coverage_end_date')
             ->orderByDesc('id')
@@ -268,8 +269,8 @@ class ProjectServices
         }
 
         $today = now(config('constants.timezone'))->startOfDay();
-        $coverageStartDate = $latestPayment->coverage_start_date?->copy()->startOfDay();
-        $coverageEndDate = $latestPayment->coverage_end_date?->copy()->startOfDay();
+        $coverageStartDate = $latestPayment->coverage_start_date?->copy()->timezone($timezone)->startOfDay();
+        $coverageEndDate = $latestPayment->coverage_end_date?->copy()->timezone($timezone)->startOfDay();
 
         if ($coverageStartDate && $coverageStartDate->gt($today)) {
             $label = 'Upcoming';

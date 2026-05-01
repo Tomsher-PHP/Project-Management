@@ -555,6 +555,14 @@ class ProjectController extends Controller
         $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
         $timelines = $service->getTimelines($project);
         $paymentSummary = $service->getPaymentSummary($project);
+        $projectPaymentColor = $paymentSummary['color'] ?? '#EF4444';
+        $paymentCoverageText = match (true) {
+            !empty($paymentSummary['coverage_start_date']) && !empty($paymentSummary['coverage_end_date']) => 'Coverage: ' . AppServiceProvider::formatAppDate($paymentSummary['coverage_start_date']) . ' - ' . AppServiceProvider::formatAppDate($paymentSummary['coverage_end_date']),
+            !empty($paymentSummary['coverage_end_date']) => 'Coverage ends ' . AppServiceProvider::formatAppDate($paymentSummary['coverage_end_date']),
+            default => $paymentSummary['description'] ?? 'No payment recorded yet.',
+        };
+        $paymentMetaText = $paymentSummary['amount'] !== null ? number_format((float) $paymentSummary['amount'], 2) : (!empty($paymentSummary['paid_date']) ? 'Paid on ' . AppServiceProvider::formatAppDate($paymentSummary['paid_date']) : null);
+
         $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
         $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
 
@@ -566,6 +574,9 @@ class ProjectController extends Controller
             'projectTimeline' => $timelines['projectTimeline'],
             'customerTimeline' => $timelines['customerTimeline'],
             'paymentSummary' => $paymentSummary,
+            'projectPaymentColor' => $projectPaymentColor,
+            'paymentCoverageText' => $paymentCoverageText,
+            'paymentMetaText' => $paymentMetaText,
             'projectStatuses' => ProjectStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])->get(),
             'projectStages' => ProjectStage::forForm($selectedStageId, ['order_by' => 'sort_order'])->get(),
             'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
