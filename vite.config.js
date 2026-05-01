@@ -25,6 +25,7 @@ export default defineConfig({
                 'resources/js/modules/tasks/kanban-board.js',
                 'resources/js/modules/tasks/time-log-change-request.js',
                 'resources/js/modules/kpi-form.js',
+                'resources/js/modules/checklist-template-form.js',
             ],
             refresh: true,
         }),

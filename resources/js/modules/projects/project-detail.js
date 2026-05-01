@@ -1,6 +1,7 @@
 import './project-ajax';
 import './project-team';
 import './project-files';
+import './project-checklist';
 import './project-scope-files';
 import './project-milestones';
 import './project-tasks';

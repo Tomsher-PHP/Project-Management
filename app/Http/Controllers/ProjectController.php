@@ -427,7 +427,10 @@ class ProjectController extends Controller
     private function renderTeamTab(Project $project): string
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $project->load('members');
+        $project->load([
+            'members.details.designation',
+            'members.primaryAttachment',
+        ]);
 
         $existingMemberIds = $project->members
             ->pluck('id')

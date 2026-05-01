@@ -172,6 +172,11 @@ class Project extends Model
         return $this->hasMany(Task::class)->orderBy('sort_order');
     }
 
+    public function projectChecklists()
+    {
+        return $this->hasMany(ProjectChecklist::class)->orderBy('id');
+    }
+
     public function latestStatusHistory()
     {
         return $this->hasOne(ProjectStatusHistory::class)->latestOfMany();

@@ -13,6 +13,7 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
+use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\ProjectMemberController;
@@ -315,6 +316,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
         Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
         Route::patch('members/{userId}/role', [ProjectMemberController::class, 'updateRole'])->middleware('permission.type:project.remove_team')->name('projects.updateMemberRole');
+
+        // Team checklist routes
+        Route::get('members/{userId}/checklists', [ProjectChecklistController::class, 'show'])->middleware('permission.type:project.add_team')->name('projects.checklists.show');
+        Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
+
     });
 
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
