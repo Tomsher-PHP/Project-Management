@@ -45,6 +45,10 @@
                                 Notes & Files
                             </button>
 
+                            <button type="button" data-project-tab-trigger="checklists" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                Checklists
+                            </button>
+
                             <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
                                 History
                             </button>
@@ -100,6 +104,7 @@
                     <div class="hidden" data-project-tab-panel="team" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="notes" data-loaded="false"></div>
+                    <div class="hidden" data-project-tab-panel="checklists" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="history" data-loaded="false"></div>
                     <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
                 </div>

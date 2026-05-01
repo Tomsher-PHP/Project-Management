@@ -317,11 +317,13 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
         Route::patch('members/{userId}/role', [ProjectMemberController::class, 'updateRole'])->middleware('permission.type:project.remove_team')->name('projects.updateMemberRole');
 
-        // Team checklist routes
+        // Assigned checklist routes
         Route::get('members/{userId}/checklists', [ProjectChecklistController::class, 'show'])->middleware('permission.type:project.add_team')->name('projects.checklists.show');
         Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
         Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
         Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
+
+        // Team checklist routes
 
     });
 

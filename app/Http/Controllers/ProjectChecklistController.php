@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectChecklistController extends Controller
 {
+    public function renderChecklistsTab(Project $project): string
+    {
+        $users = User::whereHas('projectChecklists', function ($q) use ($project) {
+                $q->where('project_id', $project->id);
+            })
+            ->with(['projectChecklists' => function ($q) use ($project) {
+                $q->where('project_id', $project->id)->with('items');
+            }])
+            ->get();
+
+        return view('projects.partials.tabs.checklists', compact('project', 'users'))->render();
+    }
     public function show(Project $project, int $userId): JsonResponse
     {
         $member = $this->resolveProjectMember($project, $userId);

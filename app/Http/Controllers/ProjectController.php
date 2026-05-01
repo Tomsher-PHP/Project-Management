@@ -156,7 +156,7 @@ class ProjectController extends Controller
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
-        $allowedTabs = ['milestones', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
+        $allowedTabs = ['milestones', 'tasks', 'team', 'scope', 'notes', 'history', 'settings', 'checklists'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         return response()->json([
@@ -368,6 +368,7 @@ class ProjectController extends Controller
             'notes' => $this->renderNotesTab($project, $request),
             'history' => $this->renderHistoryTab($project),
             'settings' => $this->renderSettingsTab($project),
+            'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
         };
     }
