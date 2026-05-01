@@ -292,7 +292,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
         // Project payment status route
-        Route::patch('project-payment-status', [ProjectController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
+        Route::patch('project-payment-status', [ProjectController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
 
         // Project milestone and sprint routes
         Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');

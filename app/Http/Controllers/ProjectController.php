@@ -656,6 +656,12 @@ class ProjectController extends Controller
     public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, ProjectServices $service): JsonResponse
     {
         $validated = $request->validated();
+        if (!$project->is_linear) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project payment status can not be updated for non-linear flow project.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
         $service->createPayment($project, $validated);
         $project = $project->fresh();
