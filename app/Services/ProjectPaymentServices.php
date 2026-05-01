@@ -43,7 +43,6 @@ class ProjectPaymentServices
     {
         $timezone = config('constants.timezone');
         $latestPayment = $project->projectPayments()
-            ->orderByDesc('coverage_end_date')
             ->orderByDesc('id')
             ->first();
 

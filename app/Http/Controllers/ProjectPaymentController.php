@@ -71,7 +71,7 @@ class ProjectPaymentController extends Controller
 
     public function renderPaymentsTab(Project $project): string
     {
-        $payments = $project->projectPayments()->orderByDesc('added_at')->orderByDesc('id')->get();
+        $payments = $project->projectPayments()->get();
         return view('projects.partials.tabs.payments', compact('project', 'payments'))->render();
     }
 }

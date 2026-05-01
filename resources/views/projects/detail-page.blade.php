@@ -19,47 +19,47 @@
                 <div class="mb-4 flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 xl:flex-row xl:items-center xl:justify-between">
                     <div class="overflow-x-auto">
                         <div class="flex min-w-max items-center gap-5">
-                            <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-success-300 pb-2.5 text-[15px] font-semibold text-success-300 transition">
+                            <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Overview
                             </button>
 
                             @if ($project->is_agile)
-                                <button type="button" data-project-tab-trigger="milestones" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                <button type="button" data-project-tab-trigger="milestones" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                     Milestones
                                 </button>
                             @endif
 
-                            <button type="button" data-project-tab-trigger="tasks" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="tasks" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Tasks
                             </button>
 
-                            <button type="button" data-project-tab-trigger="team" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="team" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Team
                             </button>
 
-                            <button type="button" data-project-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Scope
                             </button>
 
-                            <button type="button" data-project-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Notes & Files
                             </button>
 
-                            <button type="button" data-project-tab-trigger="checklists" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="checklists" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Checklists
                             </button>
 
                             @if ($project->is_linear && auth()->user()->can('project.view_payment_status'))
-                                <button type="button" data-project-tab-trigger="payments" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                                <button type="button" data-project-tab-trigger="payments" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                     Payments
                                 </button>
                             @endif
 
-                            <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 History
                             </button>
 
-                            <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Settings
                             </button>
                         </div>

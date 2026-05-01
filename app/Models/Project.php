@@ -142,9 +142,7 @@ class Project extends Model
 
     public function projectPayments()
     {
-        return $this->hasMany(ProjectPayment::class)
-            ->orderByDesc('coverage_end_date')
-            ->orderByDesc('id');
+        return $this->hasMany(ProjectPayment::class)->orderByDesc('id');
     }
 
     public function comments()
