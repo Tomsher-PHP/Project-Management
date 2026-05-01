@@ -13,6 +13,7 @@ use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\KPIController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectSprintController;
@@ -172,11 +173,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.delete')->only(['destroy']);
         // End Project Stage Routes
 
-        // Configuration Routes
-        Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
-        Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
-        // End Configuration Routes
-
         // Agile milestone Routes
         Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:agile_milestone.edit')->name('agile_milestone.toggleStatus');
         Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.view')->only(['index']);
@@ -212,6 +208,19 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
         // End Task settings Routes
+
+        // Configuration Routes
+        Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
+        Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
+        // End Configuration Routes
+
+        // KPI templates routes
+        Route::patch('/kpis/toggle-status', [KPIController::class, 'toggleStatusKPI'])->middleware('permission.type:kpi.edit')->name('kpi.toggleStatus');
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.view')->only(['index']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.create')->only(['store']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.edit')->only(['update']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.delete')->only(['destroy']);
+        // End KPI templates routes
     });
     // End Settings Routes
 
@@ -274,6 +283,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
+
+        // Project payment status route
+        Route::patch('project-payment-status', [ProjectController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
 
         // Project milestone and sprint routes
         Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');

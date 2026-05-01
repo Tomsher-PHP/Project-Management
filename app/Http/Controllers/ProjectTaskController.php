@@ -191,7 +191,7 @@ class ProjectTaskController extends Controller
             'projectSprint:id,name,project_milestone_id',
             'parentTask:id,name',
             'currentAssignee.primaryAttachment',
-            'status:id,name,color',
+            'status:id,name,color,type,is_completed',
             'tags:id,name,color',
             'addedBy:id,name',
             'updatedBy:id,name',

@@ -108,6 +108,7 @@
 
         @include('projects.partials.modals.insights-modal')
         @include('projects.partials.modals.change-project-attribute-modal')
+        @include('projects.partials.modals.project-payment-status-modal')
     </main>
 @endsection
 

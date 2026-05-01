@@ -102,7 +102,7 @@ class TaskServices
             'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
-            'status:id,name,color,type',
+            'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];

@@ -2,16 +2,15 @@
     $isSubtask = $isSubtask ?? false;
     $parentTaskId = $parentTaskId ?? null;
     $depth = $depth ?? 0;
-    $isBacklogPlacement = $project->project_flow !== 'linear' && ! $task->project_sprint_id;
-    $shouldPrefillPlacement = ! $isBacklogPlacement
-        && ! ($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectMilestone?->is_backlog || $task->projectMilestone?->is_system);
+    $isBacklogPlacement = $project->project_flow !== 'linear' && !$task->project_sprint_id;
+    $shouldPrefillPlacement = !$isBacklogPlacement && !($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectMilestone?->is_backlog || $task->projectMilestone?->is_system);
     $statusColor = $task->status?->color ?: '#CBD5E1';
     $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
     $typeColor = $task->taskType?->color ?: '#64748B';
     $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
     $modeColor = $task->taskMode?->color ?: '#3B82F6';
     $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
-    $canMoveTask = $showTaskActionColumn && ! $isSubtask && auth()->user()?->can('move', $task);
+    $canMoveTask = $showTaskActionColumn && !$isSubtask && auth()->user()?->can('move', $task);
     $canDeleteTask = $showTaskActionColumn && auth()->user()?->can('delete', $task);
 @endphp
 
@@ -49,7 +48,7 @@
                         </button>
                     @endif
 
-                    @if ($task->parentTask && ! $isSubtask)
+                    @if ($task->parentTask && !$isSubtask)
                         <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Child of {{ $task->parentTask->name }}</p>
                     @endif
                 </div>
@@ -113,7 +112,10 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->due_date_time)
-            <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDateTime($task->due_date_time)</div>
+            <div class="inline-flex items-center gap-0.5 text-sm font-medium text-bgray-900 dark:text-white {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task->status) }}">
+                {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task->status) !!}
+                <span>@appDateTime($task->due_date_time)</span>
+            </div>
         @else
             <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
         @endif
@@ -131,7 +133,7 @@
 
                     <div class="hidden min-w-[148px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-row-menu>
                         @can('task.create')
-                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? ($task->project_milestone_id ?? '') : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? ($task->project_sprint_id ?? '') : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
+                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? $task->project_milestone_id ?? '' : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? $task->project_sprint_id ?? '' : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 4a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 0110 4z" clip-rule="evenodd" />
                                 </svg>

@@ -27,7 +27,7 @@ class TaskRequestServices
                 'projectMilestone:id,name,owner_id',
                 'projectSprint:id,name',
                 'currentAssignee:id,name',
-                'status:id,name,color',
+                'status:id,name,color,type,is_completed',
                 'taskType:id,name,code,color',
                 'taskMode:id,name,code,color',
                 'approvedBy:id,name',

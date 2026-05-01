@@ -2,8 +2,10 @@
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
     $canChangeProjectStatus = auth()->user()->can('project.status_change');
     $canChangeProjectStage = auth()->user()->can('project.edit');
+    $canManageProjectPayment = auth()->user()->can('project.payment_status');
     $projectStatusUpdateUrl = route('projects.updateProjectStatus', $project);
     $projectStageUpdateUrl = route('projects.updateProjectStage', $project);
+    $projectPaymentUpdateUrl = route('projects.updateProjectPaymentStatus', $project);
     $projectCreatedAtLabel = $project->created_at
         ? $project->created_at
             ->copy()
@@ -28,6 +30,22 @@
     $flowLabel = ucfirst($project->project_flow ?? 'linear');
     $projectStatusColor = $project->projectStatus->color ?? '#6B7280';
     $projectStageColor = $project->projectStage->color ?? '#6B7280';
+    $paymentSummary = $paymentSummary ?? [
+        'label' => 'Unpaid',
+        'color' => '#EF4444',
+        'description' => 'No payment recorded yet.',
+        'coverage_start_date' => null,
+        'coverage_end_date' => null,
+        'amount' => null,
+        'paid_date' => null,
+    ];
+    $projectPaymentColor = $paymentSummary['color'] ?? '#EF4444';
+    $paymentCoverageText = match (true) {
+        !empty($paymentSummary['coverage_start_date']) && !empty($paymentSummary['coverage_end_date']) => 'Coverage: ' . $paymentSummary['coverage_start_date']->format($globalDateFormat) . ' - ' . $paymentSummary['coverage_end_date']->format($globalDateFormat),
+        !empty($paymentSummary['coverage_end_date']) => 'Coverage ends ' . $paymentSummary['coverage_end_date']->format($globalDateFormat),
+        default => $paymentSummary['description'] ?? 'No payment recorded yet.',
+    };
+    $paymentMetaText = $paymentSummary['amount'] !== null ? 'Amount: ' . number_format((float) $paymentSummary['amount'], 2) : ($paymentSummary['paid_date'] ? 'Paid on ' . $paymentSummary['paid_date']->format($globalDateFormat) : null);
 @endphp
 
 <div class="mb-6 rounded-lg bg-white p-5 dark:bg-darkblack-600" data-project-header-card data-project-id="{{ $project->id }}">
@@ -148,6 +166,26 @@
                     <span class="inline-flex h-[42px] items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-white" style="border: 1px solid {{ $projectStageColor }}; background-color: {{ $projectStageColor }};">
                         {{ $project->projectStage->name ?? 'No Stage' }}
                     </span>
+                @endif
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <span class="shrink-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-bgray-600 dark:text-bgray-200">Payment</span>
+                <div class="flex flex-col items-start gap-1 sm:items-end">
+                    <span class="inline-flex h-[42px] items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-white" style="border: 1px solid {{ $projectPaymentColor }}; background-color: {{ $projectPaymentColor }};" title="{{ $paymentCoverageText }}">
+                        {{ $paymentSummary['label'] ?? 'Unpaid' }}
+                    </span>
+
+                    @if ($canManageProjectPayment && $paymentMetaText)
+                        <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                            {{ $paymentMetaText }}
+                        </p>
+                    @endif
+                </div>
+                @if ($canManageProjectPayment)
+                    <button type="button" class="inline-flex h-[42px] items-center whitespace-nowrap rounded-lg border border-bgray-200 bg-bgray-50 px-4 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-payment-modal-open data-url="{{ $projectPaymentUpdateUrl }}">
+                        + Payment Status
+                    </button>
                 @endif
             </div>
 

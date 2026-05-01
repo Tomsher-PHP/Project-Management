@@ -9,8 +9,8 @@ use Illuminate\Http\Response;
 
 class AgileSprintController extends Controller
 {
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

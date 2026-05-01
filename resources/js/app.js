@@ -4,6 +4,9 @@ import Alpine from 'alpinejs';
 import TomSelect from "tom-select";
 import Quill from 'quill';
 
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
 import './bootstrap';
 import './status-toggle';
 import './modules/reset-password';
@@ -24,6 +27,7 @@ import { initDatepicker } from './components/datepicker';
 import { initTimepicker } from './components/timepicker';
 import { initWeekPicker } from './components/weekpicker';
 import { initTaskTimer } from './modules/task-timer';
+import { initNotifications } from './modules/notifications';
 
 window.Swal = Swal;
 window.Alert = Alert;
@@ -39,7 +43,5 @@ document.addEventListener('DOMContentLoaded', function () {
     initTimepicker();
     initWeekPicker();
     initTaskTimer();
+    initNotifications(window.authUserId);
 });
-
-
-

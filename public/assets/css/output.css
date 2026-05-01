@@ -6388,3 +6388,32 @@ select {
     font-size: 20px;
   }
 }
+
+.task-due-date--normal {
+  color: inherit;
+}
+
+.task-due-date--orange {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity));
+  font-weight: 600;
+}
+
+.task-due-date--red {
+  --tw-text-opacity: 1;
+  color: rgb(221 51 51 / var(--tw-text-opacity));
+  font-weight: 600;
+}
+
+.task-due-date__icon {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.task-due-date__icon--orange {
+  color: rgb(234 179 8 / 1);
+}
+
+.task-due-date__icon--red {
+  color: rgb(221 51 51 / 1);
+}

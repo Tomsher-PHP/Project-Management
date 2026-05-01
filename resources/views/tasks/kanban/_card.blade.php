@@ -19,10 +19,7 @@
             $estimatedTime = $task->estimatedTimeFormatted;
             $dueDate = $task->due_date_time;
             $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
-            $isDueOrPast = $dueDate && ! $isCompleted
-                ? $dueDate->copy()->timezone(config('constants.timezone'))->lessThanOrEqualTo(now(config('constants.timezone')))
-                : false;
-            $dueDateTextClass = $isDueOrPast ? 'text-error-300 dark:text-error-200' : 'text-gray-500 dark:text-gray-400';
+            $dueDateStatus = $task->status ?? $status ?? null;
 
             $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
         @endphp
@@ -30,15 +27,7 @@
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
                 <h5 class="leading-snug">
-                    <x-task-name-status
-                        :name="$task->name ?? ($task->code ?? 'Untitled task')"
-                        :request-type="$task->request_type"
-                        :request-status="$task->request_status"
-                        :limit="25"
-                        text-class="text-sm font-semibold {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}"
-                        name-class="block"
-                        class="max-w-full"
-                    />
+                    <x-task-name-status :name="$task->name ?? ($task->code ?? 'Untitled task')" :request-type="$task->request_type" :request-status="$task->request_status" :limit="25" text-class="text-sm font-semibold {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}" name-class="block" class="max-w-full" />
                 </h5>
 
                 <div class="mt-2 space-y-1 text-[11px] leading-snug">
@@ -60,15 +49,8 @@
 
         @if ($dueDate)
             <div class="flex items-center justify-between gap-3">
-                <span class="inline-flex min-w-0 items-center gap-1.5 {{ $dueDateTextClass }} @if ($isDueOrPast) rounded border border-b-alertsErrorBase px-1.5 py-0.5 @endif">
-                    <svg class="h-5 w-5 flex-shrink-0 stroke-current" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18.6758 5.8186H6.67578C5.57121 5.8186 4.67578 6.71403 4.67578 7.8186V19.8186C4.67578 20.9232 5.57121 21.8186 6.67578 21.8186H18.6758C19.7804 21.8186 20.6758 20.9232 20.6758 19.8186V7.8186C20.6758 6.71403 19.7804 5.8186 18.6758 5.8186Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M16.6758 3.8186V7.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M8.67578 3.8186V7.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M4.67578 11.8186H20.6758" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M11.6758 15.8186H12.6758" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        <path d="M12.6758 15.8186V18.8186" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
+                <span class="inline-flex min-w-0 items-center gap-0.5 text-xs leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $dueDateStatus) }}">
+                    {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $dueDateStatus) !!}
                     <small class="truncate text-xs uppercase leading-5 tracking-wide" title="Due date">
                         {{ $dueDateDisplay }}
                     </small>

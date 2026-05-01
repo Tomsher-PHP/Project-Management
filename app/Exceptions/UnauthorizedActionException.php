@@ -6,8 +6,8 @@ use Exception;
 
 class UnauthorizedActionException extends Exception
 {
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {
