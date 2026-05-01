@@ -115,6 +115,19 @@ class ProjectChecklistController extends Controller
         return response()->json(['html' => $html]);
     }
 
+    public function renderLibraryChecklist(Request $request, Project $project): JsonResponse
+    {
+        $templates = $request->input('templates', []);
+        $selectedTemplateIds = $request->input('selectedTemplateIds', []);
+
+        $html = view('projects.partials.checklists.library', [
+            'templates' => $templates,
+            'selectedTemplateIds' => $selectedTemplateIds,
+        ])->render();
+
+        return response()->json(['html' => $html]);
+    }
+
     private function syncAssignedChecklists(Project $project, User $member, array $payload): void
     {
         $payloadCollection = collect($payload)->values();
