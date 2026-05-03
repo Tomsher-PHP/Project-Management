@@ -21,6 +21,10 @@ class Task extends Model
 
     protected ?int $previousProjectSprintIdForMetrics = null;
 
+    public const REQUEST_PENDING = 'pending';
+    public const REQUEST_APPROVED = 'approved';
+    public const REQUEST_REJECTED = 'rejected';
+
     protected $fillable = [
         'project_id',
         'project_milestone_id',

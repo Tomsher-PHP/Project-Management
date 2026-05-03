@@ -23,6 +23,7 @@ use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
+use App\Services\ProjectAnalyticsService;
 use App\Services\ProjectPaymentServices;
 use App\Services\ProjectServices;
 use App\Services\UserService;
@@ -43,11 +44,13 @@ class ProjectController extends Controller
     protected string $subTitle;
     protected ProjectPaymentServices $projectPaymentService;
     protected ProjectServices $projectServices;
+    protected ProjectAnalyticsService $analyticsService;
 
-    public function __construct(ProjectPaymentServices $projectPaymentService, ProjectServices $projectServices)
+    public function __construct(ProjectPaymentServices $projectPaymentService, ProjectServices $projectServices, ProjectAnalyticsService $analyticsService)
     {
         $this->projectPaymentService = $projectPaymentService;
         $this->projectServices = $projectServices;
+        $this->analyticsService = $analyticsService;
 
         $this->pageTitle = 'Project Management';
         $this->subTitle = 'Manage your projects';
@@ -370,6 +373,7 @@ class ProjectController extends Controller
     private function renderTab(Project $project, string $tab, ProjectServices $service, Request $request): string
     {
         return match ($tab) {
+            'overview' => $this->renderOverviewTab($project),
             'milestones' => $this->renderMilestonesTab($project),
             'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
             'team' => $this->renderTeamTab($project),
@@ -381,6 +385,19 @@ class ProjectController extends Controller
             'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
         };
+    }
+
+    private function renderOverviewTab(Project $project): string
+    {
+        $taskStatusOverview = $this->analyticsService->getTaskStatusOverview($project);
+        $taskAssigneeOverview = $this->analyticsService->getTaskAssigneeOverview($project);
+
+        return view('projects.partials.tabs.overview', [
+            'project' => $project,
+            'taskStatusOverview' => $taskStatusOverview,
+            'taskAssigneeOverview' => $taskAssigneeOverview,
+            'totalTaskCount' => $taskStatusOverview->sum('count'),
+        ])->render();
     }
 
     private function getRecentProjectComments(Project $project, int $limit = 10): Collection

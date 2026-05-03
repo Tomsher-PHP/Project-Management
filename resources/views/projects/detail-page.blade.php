@@ -98,9 +98,7 @@
                 </div>
 
                 <div data-project-tab-panels>
-                    <div data-project-tab-panel="overview" data-loaded="true">
-                        @include('projects.partials.tabs.overview')
-                    </div>
+                    <div data-project-tab-panel="overview" data-loaded="false"></div>
 
                     @if ($project->is_agile)
                         <div class="hidden" data-project-tab-panel="milestones" data-loaded="false"></div>
