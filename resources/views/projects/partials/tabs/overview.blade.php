@@ -1,4 +1,17 @@
 @php
+    $workedSeconds = (int) $progressbar->get('worked_seconds', 0);
+    $estimatedSeconds = (int) $progressbar->get('estimated_seconds', 0);
+    $workedPercent = (float) $progressbar->get('worked_percent', 0);
+    $estimatedPercent = (float) $progressbar->get('estimated_percent', 0);
+    $differencePercentage = $progressbar->get('difference_percentage');
+    $hasEstimate = (bool) $progressbar->get('has_estimate', false);
+    $isExceeded = (bool) $progressbar->get('is_exceeded', false);
+    $isWithinEstimate = $hasEstimate && ! $isExceeded;
+    $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
+    $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-500 dark:text-bgray-300');
+    $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
+    $estimatedBarColor = (string) $progressbar->get('estimated_bar_color', 'bg-bgray-400 dark:bg-bgray-300');
+    $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
     $chartItems = $taskStatusOverview
         ->map(
             fn(array $status) => [
@@ -22,6 +35,54 @@
 @endphp
 
 <div class="space-y-6" data-project-overview data-project-id="{{ $project->id }}">
+    @if ($hasEstimate)
+        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+                <div>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Project Time Progress</h4>
+                </div>
+
+                <div class="text-right">
+                    <p class="text-sm font-bold {{ $statusTextColor }}">{{ $statusLabel }}</p>
+                    <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
+                        </svg>
+                        {{ $differencePercentage }}%
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-5 p-5">
+                <div class="rounded-xl">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Worked</p>
+                        </div>
+                        <p class="text-sm font-bold text-bgray-900 dark:text-white">{{ $formatDuration($workedSeconds) }}</p>
+                    </div>
+
+                    <div class="h-4 w-full overflow-hidden rounded-full bg-bgray-100 dark:bg-darkblack-500">
+                        <div class="h-full rounded-full transition-all duration-500 {{ $workedBarColor }}" style="width: {{ $workedPercent }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl">
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Estimated</p>
+                        </div>
+                        <p class="text-sm font-bold text-bgray-900 dark:text-white">{{ $formatDuration($estimatedSeconds) }}</p>
+                    </div>
+
+                    <div class="h-4 w-full overflow-hidden rounded-full bg-bgray-100 dark:bg-darkblack-500">
+                        <div class="h-full rounded-full transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
+
     <div class="grid gap-6 xl:grid-cols-2">
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
@@ -140,17 +201,18 @@
                                 <div class="flex items-center justify-end gap-4 text-right">
                                     <div>
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
+                                            {{ $formatDuration($estimatedSeconds) }}
+                                        </p>
+                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Estimated</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($workedSeconds) }}
                                         </p>
                                         <p class="text-xs text-bgray-500 dark:text-bgray-300">Worked</p>
                                     </div>
 
-                                    <div>
-                                        <p class="text-sm font-bold text-bgray-900 dark:text-white">
-                                            {{ $formatDuration($estimatedSeconds) }}
-                                        </p>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Estimated</p>
-                                    </div>
 
                                     <div>
                                         <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">

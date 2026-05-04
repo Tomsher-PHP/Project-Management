@@ -7,12 +7,97 @@ use App\Models\ProjectMilestone;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ProjectAnalyticsService
 {
+
+    public function getProgressbar(Project $project): Collection
+    {
+        $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
+
+        if ($estimatedSeconds <= 0) {
+            return collect($this->emptyProgressbarPayload());
+        }
+
+        $workedSeconds = $this->getApprovedWorkedSeconds($project);
+        $maxSeconds = max($estimatedSeconds, $workedSeconds, 1);
+        $workedPercent = round(($workedSeconds / $maxSeconds) * 100, 1);
+        $estimatedPercent = round(($estimatedSeconds / $maxSeconds) * 100, 1);
+
+        $isExceeded = $workedSeconds > $estimatedSeconds;
+        $isExact = $workedSeconds === $estimatedSeconds;
+        $isEarly = $workedSeconds < $estimatedSeconds;
+        $differenceSeconds = abs($estimatedSeconds - $workedSeconds);
+        $differencePercentage = (int) round(($differenceSeconds / $estimatedSeconds) * 100);
+
+        $statusLabel = match (true) {
+            $isExceeded => 'Exceeded estimate',
+            $isExact => 'Exactly on estimate',
+            default => 'Within estimate',
+        };
+
+        $statusTextColor = match (true) {
+            $isExceeded => 'text-red-600 dark:text-red-400',
+            $isExact => 'text-blue-600 dark:text-blue-400',
+            default => 'text-green-600 dark:text-green-400',
+        };
+
+        $workedBarColor = $isExceeded ? 'bg-red-500' : 'bg-green-500';
+        $estimatedBarColor = 'bg-warning-300 dark:bg-bgray-600';
+
+        return collect([
+            'worked_seconds' => $workedSeconds,
+            'estimated_seconds' => $estimatedSeconds,
+            'worked_percent' => $workedPercent,
+            'estimated_percent' => $estimatedPercent,
+            'has_estimate' => true,
+            'is_exceeded' => $isExceeded,
+            'is_exact' => $isExact,
+            'is_early' => $isEarly,
+            'status_label' => $statusLabel,
+            'status_text_color' => $statusTextColor,
+            'worked_bar_color' => $workedBarColor,
+            'estimated_bar_color' => $estimatedBarColor,
+            'difference_seconds' => $differenceSeconds,
+            'difference_percentage' => $differencePercentage,
+        ]);
+    }
+
+    private function getApprovedWorkedSeconds(Project $project): int
+    {
+        return (int) TaskTimeLog::query()
+            ->join('tasks', 'tasks.id', '=', 'task_time_logs.task_id')
+            ->where('tasks.project_id', $project->id)
+            ->where('tasks.request_status', Task::REQUEST_APPROVED)
+            ->whereNull('tasks.deleted_at')
+            ->where('task_time_logs.is_approved', true)
+            ->sum('task_time_logs.duration_seconds');
+    }
+
+    private function emptyProgressbarPayload(): array
+    {
+        return [
+            'worked_seconds' => 0,
+            'estimated_seconds' => 0,
+            'worked_percent' => 0,
+            'estimated_percent' => 0,
+            'has_estimate' => false,
+            'is_exceeded' => false,
+            'is_exact' => false,
+            'is_early' => false,
+            'status_label' => 'No estimate added',
+            'status_text_color' => 'text-bgray-500 dark:text-bgray-300',
+            'worked_bar_color' => 'bg-green-500',
+            'estimated_bar_color' => 'bg-warning-300 dark:bg-bgray-600',
+            'difference_seconds' => 0,
+            'difference_percentage' => null,
+        ];
+    }
+
     // Get task wise overview for a project, grouped by status
     public function getTaskStatusOverview(Project $project): Collection
     {
