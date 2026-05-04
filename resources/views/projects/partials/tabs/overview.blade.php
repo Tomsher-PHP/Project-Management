@@ -9,6 +9,7 @@
         )
         ->values();
     $hasChartData = $totalTaskCount > 0;
+    $hasMilestoneBurnupData = !empty($milestoneBurnupChart['labels']);
     $totalWorkedSeconds = (int) $taskAssigneeOverview->sum('worked_time_seconds');
     $assigneeCount = $taskAssigneeOverview->whereNotNull('id')->count();
     $formatDuration = function (?int $seconds): string {
@@ -112,6 +113,14 @@
                 @else
                     <div class="space-y-3">
                         @foreach ($taskAssigneeOverview as $assignee)
+                            @php
+                                $workedSeconds = (int) ($assignee['worked_time_seconds'] ?? 0);
+                                $estimatedSeconds = (int) ($assignee['estimated_time_seconds'] ?? 0);
+                                $hasEstimatedTime = $estimatedSeconds > 0;
+                                $isWithinEstimate = $hasEstimatedTime && $workedSeconds <= $estimatedSeconds;
+                                $comparisonPercentage = $hasEstimatedTime ? (int) round((abs($estimatedSeconds - $workedSeconds) / $estimatedSeconds) * 100) : null;
+                                $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
+                            @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
                                 <div class="flex min-w-0 items-center gap-3">
                                     @if ($assignee['profile_image_url'])
@@ -128,9 +137,31 @@
                                     </div>
                                 </div>
 
-                                <div class="text-right">
-                                    <p class="text-sm font-bold text-bgray-900 dark:text-white">{{ $formatDuration($assignee['worked_time_seconds']) }}</p>
-                                    <p class="text-xs text-bgray-500 dark:text-bgray-300">worked</p>
+                                <div class="flex items-center justify-end gap-4 text-right">
+                                    <div>
+                                        <p class="text-sm font-bold text-bgray-900 dark:text-white">
+                                            {{ $formatDuration($workedSeconds) }}
+                                        </p>
+                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Worked</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm font-bold text-bgray-900 dark:text-white">
+                                            {{ $formatDuration($estimatedSeconds) }}
+                                        </p>
+                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Estimated</p>
+                                    </div>
+
+                                    @if ($hasEstimatedTime)
+                                        <div>
+                                            <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
+                                                </svg>
+                                                {{ $comparisonPercentage }}%
+                                            </p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -139,4 +170,27 @@
             </div>
         </section>
     </div>
+
+    <!-- Milestone burn up chart -->
+    <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
+        <div class="mb-4">
+            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
+                Milestone Journey
+            </h3>
+            <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                Estimated vs actual cumulative hours by milestone
+            </p>
+        </div>
+
+        <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
+
+        <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
+            <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
+        </div>
+
+        <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
+            No milestone burnup data available yet.
+        </div>
+    </div>
+
 </div>

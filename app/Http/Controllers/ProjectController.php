@@ -166,8 +166,16 @@ class ProjectController extends Controller
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
         $allowedTabs = [
-            'overview', 'milestones', 'tasks', 'team',
-            'scope', 'notes', 'checklists', 'history', 'settings', 'payments'
+            'overview',
+            'milestones',
+            'tasks',
+            'team',
+            'scope',
+            'notes',
+            'checklists',
+            'history',
+            'settings',
+            'payments'
         ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
@@ -391,11 +399,13 @@ class ProjectController extends Controller
     {
         $taskStatusOverview = $this->analyticsService->getTaskStatusOverview($project);
         $taskAssigneeOverview = $this->analyticsService->getTaskAssigneeOverview($project);
+        $milestoneBurnupChart = $this->analyticsService->getMilestoneBurnupChartData($project);
 
         return view('projects.partials.tabs.overview', [
             'project' => $project,
             'taskStatusOverview' => $taskStatusOverview,
             'taskAssigneeOverview' => $taskAssigneeOverview,
+            'milestoneBurnupChart' => $milestoneBurnupChart,
             'totalTaskCount' => $taskStatusOverview->sum('count'),
         ])->render();
     }
