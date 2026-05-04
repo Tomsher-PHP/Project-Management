@@ -205,7 +205,7 @@ class ProjectAnalyticsService
             'end_label' => $hasMilestones ? $endLabel : null,
             'origin_label' => $hasMilestones ? $originLabel : null,
             'interval' => $interval,
-            'max_hours' => $roundedMaxHours,
+            'max_hours' => ($roundedMaxHours + $interval),
             'datasets' => [
                 [
                     'label' => 'Estimated Hours',
