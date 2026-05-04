@@ -120,6 +120,37 @@ const scheduleChartResize = (chart) => {
     window.setTimeout(resizeChart, 180);
 };
 
+const waitForVisiblePanel = (panel, callback) => {
+    if (!panel) {
+        return;
+    }
+
+    const runCallback = () => {
+        if (typeof callback === 'function') {
+            callback();
+        }
+    };
+
+    if (!panel.classList.contains('hidden')) {
+        runCallback();
+        return;
+    }
+
+    const observer = new MutationObserver(() => {
+        if (panel.classList.contains('hidden')) {
+            return;
+        }
+
+        observer.disconnect();
+        runCallback();
+    });
+
+    observer.observe(panel, {
+        attributes: true,
+        attributeFilter: ['class'],
+    });
+};
+
 const renderOverviewChart = (overviewRoot) => {
     const projectId = overviewRoot.dataset.projectId;
     const canvas = overviewRoot.querySelector('[data-project-overview-chart]');
@@ -427,8 +458,10 @@ const initializeOverviewPanel = (panel) => {
         return;
     }
 
-    renderOverviewChart(overviewRoot);
-    renderBurnupChart(overviewRoot);
+    waitForVisiblePanel(panel, () => {
+        renderOverviewChart(overviewRoot);
+        renderBurnupChart(overviewRoot);
+    });
 };
 
 document.addEventListener('project-tab:loaded', (event) => {
