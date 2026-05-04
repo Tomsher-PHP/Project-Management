@@ -103,6 +103,23 @@ const formatHourValue = (value) => {
     return `${normalizedValue}h`;
 };
 
+const scheduleChartResize = (chart) => {
+    if (!chart) {
+        return;
+    }
+
+    const resizeChart = () => {
+        chart.resize();
+        chart.update('none');
+    };
+
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(resizeChart);
+    });
+
+    window.setTimeout(resizeChart, 180);
+};
+
 const renderOverviewChart = (overviewRoot) => {
     const projectId = overviewRoot.dataset.projectId;
     const canvas = overviewRoot.querySelector('[data-project-overview-chart]');
@@ -208,6 +225,7 @@ const renderOverviewChart = (overviewRoot) => {
     });
 
     getChartRegistry(projectId).status = chart;
+    scheduleChartResize(chart);
 };
 
 const renderBurnupChart = (overviewRoot) => {
@@ -259,6 +277,11 @@ const renderBurnupChart = (overviewRoot) => {
 
             chart.data.datasets.forEach((dataset, datasetIndex) => {
                 const meta = chart.getDatasetMeta(datasetIndex);
+
+                if (!chart.isDatasetVisible(datasetIndex) || meta.hidden) {
+                    return;
+                }
+
                 const labelColor = dataset.borderColor || dataset.backgroundColor || '#111827';
 
                 meta.data.forEach((element, pointIndex) => {
@@ -394,6 +417,7 @@ const renderBurnupChart = (overviewRoot) => {
     });
 
     getChartRegistry(projectId).burnup = chart;
+    scheduleChartResize(chart);
 };
 
 const initializeOverviewPanel = (panel) => {

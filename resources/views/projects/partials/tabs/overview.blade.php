@@ -26,8 +26,8 @@
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
-                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Tasks</h4>
-                    <p class="text-sm text-bgray-500 dark:text-bgray-300">Status distribution for this project.</p>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Task Status Breakdown</h4>
+                    <p class="text-sm text-bgray-500 dark:text-bgray-300">See how project tasks are distributed across each workflow status.</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
@@ -44,18 +44,18 @@
                 <script type="application/json" data-project-overview-chart-data>@json($chartItems)</script>
 
                 <div class="{{ $hasChartData ? '' : 'hidden' }} flex h-full flex-col gap-8 lg:flex-row lg:items-center lg:justify-between" data-project-overview-chart-wrapper>
-                    <div class="flex items-center justify-center">
-                        <div class="relative w-[180px]">
-                            <canvas data-project-overview-chart height="168" aria-label="Project task status chart"></canvas>
+                    <div class="flex items-center justify-center lg:flex-[1.15]">
+                        <div class="relative w-[220px] md:w-[240px]">
+                            <canvas data-project-overview-chart height="220" aria-label="Project task status chart"></canvas>
                             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div class="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#F8F8FC] text-sm font-bold text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-project-overview-chart-total>
+                                <div class="flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#F8F8FC] text-base font-bold text-bgray-900 dark:bg-darkblack-500 dark:text-white" data-project-overview-chart-total>
                                     {{ $totalTaskCount }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex-1 space-y-3">
+                    <div class="space-y-3 lg:w-full lg:max-w-[320px] lg:flex-[0.85]">
                         @forelse ($taskStatusOverview as $status)
                             @php
                                 $percentage = $totalTaskCount > 0 ? round(($status['count'] / $totalTaskCount) * 100) : 0;
@@ -152,16 +152,14 @@
                                         <p class="text-xs text-bgray-500 dark:text-bgray-300">Estimated</p>
                                     </div>
 
-                                    @if ($hasEstimatedTime)
-                                        <div>
-                                            <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                    <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
-                                                </svg>
-                                                {{ $comparisonPercentage }}%
-                                            </p>
-                                        </div>
-                                    @endif
+                                    <div>
+                                        <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
+                                            </svg>
+                                            {{ $comparisonPercentage ?? 0 }}%
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -171,26 +169,28 @@
         </section>
     </div>
 
-    <!-- Milestone burn up chart -->
-    <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
-        <div class="mb-4">
-            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
-                Milestone Journey
-            </h3>
-            <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                Estimated vs actual cumulative hours by milestone
-            </p>
-        </div>
+    @if ($project->isAgile)
+        <!-- Milestone burn up chart -->
+        <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
+            <div class="mb-4">
+                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
+                    Milestone Journey
+                </h3>
+                <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                    Estimated vs actual cumulative hours by milestone
+                </p>
+            </div>
 
-        <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
+            <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
 
-        <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
-            <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
-        </div>
+            <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
+                <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
+            </div>
 
-        <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
-            No milestone burnup data available yet.
+            <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
+                No milestone burnup data available yet.
+            </div>
         </div>
-    </div>
+    @endif
 
 </div>
