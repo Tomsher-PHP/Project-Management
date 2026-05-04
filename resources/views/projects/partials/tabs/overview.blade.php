@@ -171,25 +171,29 @@
 
     @if ($project->isAgile)
         <!-- Milestone burn up chart -->
-        <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
-            <div class="mb-4">
-                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
-                    Milestone Journey
-                </h3>
-                <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                    Estimated vs actual cumulative hours by milestone
-                </p>
-            </div>
+        <div class="grid gap-6 xl:grid-cols-1">
+            <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
+                            Milestone Journey
+                        </h3>
+                        <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                            Estimated vs actual cumulative hours by milestone
+                        </p>
+                    </div>
 
-            <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
+                    <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
 
-            <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
-                <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
-            </div>
+                    <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
+                        <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
+                    </div>
 
-            <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
-                No milestone burnup data available yet.
-            </div>
+                    <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
+                        No milestone burnup data available yet.
+                    </div>
+                </div>
+            </section>
         </div>
     @endif
 
