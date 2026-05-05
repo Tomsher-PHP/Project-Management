@@ -88,8 +88,10 @@ const setFieldValue = (field, value = '') => {
     const normalizedValue = value ?? '';
 
     if (field._flatpickr) {
+        const dateFormat = field._flatpickr.config.dateFormat || field.dataset.format || 'Y-m-d H:i';
+
         if (normalizedValue) {
-            field._flatpickr.setDate(normalizedValue, true, 'Y-m-d H:i');
+            field._flatpickr.setDate(normalizedValue, true, dateFormat);
             field._flatpickr.jumpToDate(normalizedValue);
         } else {
             field._flatpickr.clear();
