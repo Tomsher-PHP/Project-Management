@@ -113,7 +113,9 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                     ->where('user_id', $timeLog->user_id)
                     ->whereKeyNot($timeLog->id)
                     ->where($applyTimeRangeOverlapScope)
-                    ->exists();
+                    ->get();
+
+                dd($newStartedAt, $newEndedAt, $timeLog->id, $hasUserOverlapAcrossAnyTask);
 
                 if ($hasUserOverlapAcrossAnyTask) {
                     $validator->errors()->add('new_ended_at', 'You already have a time log in this range.');
@@ -181,6 +183,7 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
 
     private function parseCompanyDateTime(mixed $value): ?Carbon
     {
+        dd($value);
         if (! filled($value)) {
             return null;
         }
