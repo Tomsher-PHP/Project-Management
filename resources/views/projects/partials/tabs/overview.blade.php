@@ -6,12 +6,14 @@
     $differencePercentage = $progressbar->get('difference_percentage');
     $hasEstimate = (bool) $progressbar->get('has_estimate', false);
     $isExceeded = (bool) $progressbar->get('is_exceeded', false);
-    $isWithinEstimate = $hasEstimate && ! $isExceeded;
+    $isWithinEstimate = $hasEstimate && !$isExceeded;
     $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
     $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-500 dark:text-bgray-300');
     $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
     $estimatedBarColor = (string) $progressbar->get('estimated_bar_color', 'bg-bgray-400 dark:bg-bgray-300');
     $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
+    $workedTrackColor = $isExceeded ? 'bg-red-50 dark:bg-red-900/20' : 'bg-success-50 dark:bg-success-900/20';
+    $estimatedTrackColor = 'bg-warning-100 bg-opacity-30 dark:bg-darkblack-500';
     $chartItems = $taskStatusOverview
         ->map(
             fn(array $status) => [
@@ -37,12 +39,12 @@
 <div class="space-y-6" data-project-overview data-project-id="{{ $project->id }}">
     @if ($hasEstimate)
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Project Time Progress</h4>
                 </div>
 
-                <div class="text-right">
+                <div class="flex items-center justify-end gap-2 text-right">
                     <p class="text-sm font-bold {{ $statusTextColor }}">{{ $statusLabel }}</p>
                     <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -54,41 +56,60 @@
             </div>
 
             <div class="space-y-5 p-5">
-                <div class="rounded-xl">
-                    <div class="mb-2 flex items-center justify-between gap-3">
-                        <div>
-                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Worked</p>
+                <div class="space-y-0">
+                    <div class="relative h-6 overflow-hidden {{ $workedTrackColor }}">
+                        <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $workedBarColor }}" style="width: {{ $workedPercent }}%;"></div>
+                        <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
+                            <span>Worked</span>
+                            <span>{{ $formatDuration($workedSeconds) }}</span>
                         </div>
-                        <p class="text-sm font-bold text-bgray-900 dark:text-white">{{ $formatDuration($workedSeconds) }}</p>
                     </div>
 
-                    <div class="h-4 w-full overflow-hidden rounded-full bg-bgray-100 dark:bg-darkblack-500">
-                        <div class="h-full rounded-full transition-all duration-500 {{ $workedBarColor }}" style="width: {{ $workedPercent }}%;"></div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl">
-                    <div class="mb-2 flex items-center justify-between gap-3">
-                        <div>
-                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">Estimated</p>
+                    <div class="relative h-6 overflow-hidden {{ $estimatedTrackColor }}">
+                        <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
+                        <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
+                            <span>Estimated</span>
+                            <span>{{ $formatDuration($estimatedSeconds) }}</span>
                         </div>
-                        <p class="text-sm font-bold text-bgray-900 dark:text-white">{{ $formatDuration($estimatedSeconds) }}</p>
-                    </div>
-
-                    <div class="h-4 w-full overflow-hidden rounded-full bg-bgray-100 dark:bg-darkblack-500">
-                        <div class="h-full rounded-full transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
                     </div>
                 </div>
             </div>
         </section>
     @endif
 
+    @if ($project->isAgile)
+        <!-- Milestone burn up chart -->
+        <div class="grid gap-6 xl:grid-cols-1">
+            <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
+                            Milestone Journey
+                        </h3>
+                        <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                            Estimated vs actual cumulative hours by milestone
+                        </p>
+                    </div>
+
+                    <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
+
+                    <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
+                        <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
+                    </div>
+
+                    <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
+                        No milestone burnup data available yet.
+                    </div>
+                </div>
+            </section>
+        </div>
+    @endif
+
     <div class="grid gap-6 xl:grid-cols-2">
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Task Status Breakdown</h4>
-                    <p class="text-sm text-bgray-500 dark:text-bgray-300">See how project tasks are distributed across each workflow status.</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
@@ -150,10 +171,9 @@
         </section>
 
         <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">User Wise</h4>
-                    <p class="text-sm text-bgray-500 dark:text-bgray-300">Worked duration and involved tasks by user.</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
@@ -230,33 +250,5 @@
             </div>
         </section>
     </div>
-
-    @if ($project->isAgile)
-        <!-- Milestone burn up chart -->
-        <div class="grid gap-6 xl:grid-cols-1">
-            <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-                <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
-                            Milestone Journey
-                        </h3>
-                        <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                            Estimated vs actual cumulative hours by milestone
-                        </p>
-                    </div>
-
-                    <script type="application/json" data-project-overview-burnup-data>@json($milestoneBurnupChart)</script>
-
-                    <div class="{{ $hasMilestoneBurnupData ? '' : 'hidden' }} h-[420px]" data-project-overview-burnup-chart-wrapper>
-                        <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
-                    </div>
-
-                    <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
-                        No milestone burnup data available yet.
-                    </div>
-                </div>
-            </section>
-        </div>
-    @endif
 
 </div>

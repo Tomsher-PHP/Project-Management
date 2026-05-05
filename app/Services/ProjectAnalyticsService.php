@@ -46,8 +46,8 @@ class ProjectAnalyticsService
             default => 'text-green-600 dark:text-green-400',
         };
 
-        $workedBarColor = $isExceeded ? 'bg-red-500' : 'bg-green-500';
-        $estimatedBarColor = 'bg-warning-300 dark:bg-bgray-600';
+        $workedBarColor = $isExceeded ? 'bg-red-500' : 'bg-green-400';
+        $estimatedBarColor = 'bg-warning-100 dark:bg-bgray-600';
 
         return collect([
             'worked_seconds' => $workedSeconds,
