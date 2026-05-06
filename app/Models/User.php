@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -144,7 +143,7 @@ class User extends Authenticatable
     public function getProfileImageUrlAttribute()
     {
         if ($this->primaryAttachment) {
-            return Storage::disk($this->primaryAttachment->disk)->url($this->primaryAttachment->file_path);
+            return $this->primaryAttachment->url;
         }
 
         return asset(config('assets.images.default_avatar'));
