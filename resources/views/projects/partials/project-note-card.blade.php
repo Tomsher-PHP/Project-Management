@@ -35,13 +35,14 @@
                     @php
                         $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
                         $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+                        $attachmentUrl = rescue(fn() => $attachment->url, null, false);
                     @endphp
 
                     <div class="rounded-lg border border-bgray-200 p-3 transition hover:border-success-300 hover:bg-success-50/40 dark:border-darkblack-400 dark:hover:bg-darkblack-400" data-note-attachment-id="{{ $attachment->id }}">
-                        <a href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank" class="flex items-center gap-3">
+                        <a @if ($attachmentUrl) href="{{ $attachmentUrl }}" target="_blank" @endif class="flex items-center gap-3">
                             <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-bgray-100 dark:bg-darkblack-600">
-                                @if ($isImage)
-                                    <img src="{{ asset('storage/' . $attachment->file_path) }}" alt="{{ $attachment->original_name }}" class="h-full w-full object-cover" />
+                                @if ($isImage && $attachmentUrl)
+                                    <img src="{{ $attachmentUrl }}" alt="{{ $attachment->original_name }}" class="h-full w-full object-cover" />
                                 @else
                                     <svg width="22" height="28" viewBox="0 0 67 86" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd" clip-rule="evenodd" d="M5.4032 0H46.9892L67 19.8123V80.625C67 83.5946 64.5796 86 61.5968 86H5.4032C2.42052 86 0 83.5946 0 80.625V5.37496C0 2.40536 2.4208 0 5.4032 0Z" fill="white" />

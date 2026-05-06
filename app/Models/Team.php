@@ -8,7 +8,6 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class Team extends Model
 {
@@ -75,7 +74,7 @@ class Team extends Model
     public function getTeamAvatarUrlAttribute()
     {
         if ($this->primaryAttachment) {
-            return Storage::disk($this->primaryAttachment->disk)->url($this->primaryAttachment->file_path);
+            return $this->primaryAttachment->url;
         }
 
         return asset('assets/images/avatar/team_avatar.jpg');

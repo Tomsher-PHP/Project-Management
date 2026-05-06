@@ -8,12 +8,24 @@ use Illuminate\Support\Str;
 
 class AttachmentService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function getUrl(Attachment $attachment)
     {
-        //
+        return $attachment->url;
+    }
+
+    public function getTemporaryUrl(Attachment $attachment, int $minutes = 15)
+    {
+        if (! $attachment->file_path) {
+            return null;
+        }
+
+        $disk = $attachment->disk ?? config('filesystems.default');
+
+        if ($disk !== 's3') {
+            return Storage::disk($disk)->url($attachment->file_path);
+        }
+
+        return Storage::disk($disk)->temporaryUrl($attachment->file_path, now()->addMinutes($minutes));
     }
 
     /**
@@ -58,11 +70,26 @@ class AttachmentService
         // 1. Generate Unique File Name
         $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
 
-        // 2. Store File
-        // $path = Storage::disk($disk)->putFileAs($directory, $file, $fileName, $visibility);
-        $path = $file->storeAs($directory, $fileName, $disk);
+        // 2. Resolve Storage Disk and Visibility
+        $actualDisk = config('filesystems.default', $disk);
+        $actualVisibility = $actualDisk === 's3' ? config('filesystems.disks.s3.visibility', $visibility) : $visibility;
 
-        // 3. If Primary, Remove Old Primary
+        // 3. Store File
+        try {
+            $path = Storage::disk($actualDisk)->putFileAs($directory, $file, $fileName, [
+                'visibility' => $actualVisibility,
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return null;
+        }
+
+        if (! $path) {
+            return null;
+        }
+
+        // 4. If Primary, Remove Old Primary
         if ($isPrimary) {
             Attachment::where('link_id', $attachable->id)
                 ->where('link_type', get_class($attachable))
@@ -70,7 +97,7 @@ class AttachmentService
                 ->update(['is_primary' => 0]);
         }
 
-        // 4. Create Attachment Record
+        // 5. Create Attachment Record
         return Attachment::create([
             'link_id'       => $attachable->id,
             'link_type'     => get_class($attachable),
@@ -82,8 +109,8 @@ class AttachmentService
             'file_type'     => $file->getMimeType(),
             'file_size'     => $file->getSize(),
 
-            'disk'          => $disk,
-            'visibility'    => $visibility,
+            'disk'          => $actualDisk,
+            'visibility'    => $actualVisibility,
             'is_primary'    => $isPrimary ? 1 : 0,
             'is_active'        => 1,
         ]);
@@ -106,9 +133,12 @@ class AttachmentService
         $deleted = true;
 
         foreach ($attachments as $attachment) {
-            $disk = $attachment->disk ?? 'public';
-            if ($attachment->file_path && Storage::disk($disk)->exists($attachment->file_path)) {
-                Storage::disk($disk)->delete($attachment->file_path);
+            if ($attachment->file_path) {
+                $disk = $attachment->disk ?? 'public';
+
+                if (Storage::disk($disk)->exists($attachment->file_path)) {
+                    Storage::disk($disk)->delete($attachment->file_path);
+                }
             }
 
             $deleted = $attachment->delete() && $deleted;
