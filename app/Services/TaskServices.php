@@ -80,6 +80,16 @@ class TaskServices
             : $this->buildKanbanBaseQuery($user, $filters, $flowType)
             ->whereIn('id', $pageTaskIds->all())
             ->with($this->relations())
+            ->withCount([
+                'childTasks',
+                'childTasks as completed_child_tasks_count' => function ($query) {
+                    $query->where(function ($childTaskQuery) {
+                        $childTaskQuery
+                            ->whereNotNull('completed_at')
+                            ->orWhereHas('status', fn($statusQuery) => $statusQuery->where('is_completed', true));
+                    });
+                },
+            ])
             ->orderBy('sort_order')
             ->get();
 

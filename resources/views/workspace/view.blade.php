@@ -2,6 +2,26 @@
 
 @push('styles')
     <style>
+        :root {
+            --workspace-ink: #111653;
+            --workspace-muted: #6677a7;
+            --workspace-blue: #0866ff;
+            --workspace-border: #edf1f7;
+            --workspace-panel-shadow: 0 10px 28px rgba(18, 25, 95, 0.06);
+            --workspace-soft-shadow: 0 6px 18px rgba(18, 25, 95, 0.04);
+        }
+
+        [data-user-workspace] {
+            color: var(--workspace-ink);
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+
+        [data-user-workspace] button,
+        [data-user-workspace] input,
+        [data-user-workspace] select {
+            letter-spacing: 0;
+        }
+
         .kanban-ghost {
             background: transparent !important;
             border: 1px dashed rgba(166, 167, 168, 0.8);
@@ -24,97 +44,127 @@
 @endpush
 
 @push('navbar-actions')
-    <div id="running-task-bar" class="hidden items-center gap-3 rounded-full bg-[#eaf4f6] px-4 py-2 shadow-sm">
-        <div class="min-w-0">
-            <p id="running-task-project" class="truncate text-xs font-medium uppercase tracking-[0.12em] text-bgray-500"></p>
-            <h2 id="running-task-name" class="truncate text-sm font-semibold text-bgray-900"></h2>
+    <div id="running-task-bar" class="hidden min-w-[520px] items-center gap-4 rounded-[14px] border border-[#edf1f7] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(18,25,95,0.08)]">
+        <span class="h-3.5 w-3.5 shrink-0 rounded-full bg-[#0866ff]"></span>
+        <div class="min-w-0 flex-1">
+            <p id="running-task-project" class="truncate text-[12px] font-extrabold uppercase leading-none text-[#0866ff]">WORKING ACTIVITY</p>
+            <h2 id="running-task-name" class="mt-2 truncate text-[15px] font-extrabold leading-none text-[#111653]"></h2>
         </div>
-        <p id="running-task-timer" class="whitespace-nowrap text-[20px] font-bold leading-none tracking-[-0.03em] text-[#111827]">00:00:00</p>
-        <button id="running-task-pause" type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#c9dceb] bg-white text-[#1d4f91] shadow-[0_2px_6px_rgba(29,79,145,0.14)] transition duration-200 hover:border-[#afcae0] hover:bg-[#f8fbff]" aria-label="Resume task">
+        <p id="running-task-timer" class="whitespace-nowrap px-5 text-[16px] font-extrabold leading-none text-[#111653]">00:00:00</p>
+        <button id="running-task-pause" type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f1f3f7] text-[#111653] transition duration-200 hover:bg-[#e7ecf5]" aria-label="Resume task">
             <span aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M5 3.5V12.5L12 8L5 3.5Z" fill="currentColor" />
                 </svg>
             </span>
         </button>
+        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
+            <span class="h-4 w-4 rounded-[3px] bg-red-600"></span>
+        </span>
     </div>
 @endpush
 @section('page-content')
-    <main class="w-full bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.06),_transparent_26%),linear-gradient(180deg,#f6f8fc_0%,#eef3f8_100%)] px-6 pb-10 pt-[80px] sm:pt-[80px] xl:px-1 xl:pb-12">
-        <div class="mx-autospace-y-8">
+    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] sm:px-5 xl:px-4" data-user-workspace>
+        <div class="space-y-2.5">
+            <header class="flex min-h-[44px] items-center justify-between">
+                <h1 class="text-[22px] font-extrabold tracking-normal text-[#111653]">Dashboard</h1>
+            </header>
 
-            <section class="grid gap-6 xl:grid-cols-[75%_25%] rounded-2xl bg-white p-6 shadow-sm">
+            <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] sm:px-7 sm:py-6">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
+                        <p class="mt-1 text-[15px] font-semibold text-[#6b7280]">
+                            Shift 09:00 - 18:00 &bull; Click a break to add it to working time
+                        </p>
+                    </div>
 
-                <!-- LEFT -->
-                <div>
+                    <div class="grid grid-cols-3 gap-6 text-center">
+                        <div>
+                            <p class="text-[26px] font-extrabold leading-none text-[#0b8ee8]">9h</p>
+                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Shift</p>
+                        </div>
+                        <div>
+                            <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">7h 38m</p>
+                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Worked</p>
+                        </div>
+                        <div>
+                            <p class="text-[26px] font-extrabold leading-none text-[#d78900]">1h 18m</p>
+                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Break</p>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Header -->
-                    <div class="mb-6 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            Work Activity
-                        </h3>
-                        <!-- Legend -->
-                        <div class="mt-4 flex gap-5 text-xs text-gray-600">
-                            <div class="flex items-center gap-2">
-                                <span class="h-3 w-3 rounded bg-blue-600"></span> Task
+                <div class="daily-timeline-scroll mt-8 overflow-x-auto pb-1">
+                    <div class="daily-timeline min-w-[980px]">
+                        <div class="daily-timeline__rail">
+                            <div class="daily-timeline__ticks" aria-hidden="true"></div>
+
+                            <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc(18% + 2px); width: calc(12.3% - 4px);" aria-label="2h 29m">
+                            </button>
+                            <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc(30.3% + 2px); width: calc(5.6% - 4px);" aria-label="30m">
+                            </button>
+                            <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc(35.9% + 2px); width: calc(37.2% - 4px);" aria-label="4h 9m">
+                            </button>
+                            <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc(73.1% + 2px); width: calc(4.8% - 4px);" aria-label="48m">
+                            </button>
+
+                            <div class="daily-timeline__shift daily-timeline__shift--bottom" style="left: 12.2%; width: 65%;">
+                                <span>09:00</span>
+                                <strong>9h</strong>
+                                <span>18:00</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="h-3 w-3 rounded bg-black"></span> Shift
+                        </div>
+
+                        <div class="daily-timeline__labels" aria-label="24 hour labels">
+                            <span>00</span><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span>
+                            <span>06</span><span>07</span><span>08</span><span>09</span><span>10</span><span>11</span>
+                            <span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span>
+                            <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            @php
+                $boardTaskTotal = collect($tasksByStatus ?? [])->sum(fn($column) => (int) ($column['total'] ?? 0));
+                $boardStatusTotal = $boardStatuses->count();
+            @endphp
+
+            <section class="space-y-6" data-project-tasks-root data-project-task-response-mode="reload">
+                <div class="overflow-hidden rounded-[14px] border border-[var(--workspace-border)] bg-white shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <div class="border-b border-[#edf1f7] bg-white px-4 py-3 dark:border-darkblack-400 dark:bg-darkblack-600">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span class="inline-flex h-6 w-6 items-center justify-center text-[#111653]">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h7v7H4V4Zm9 0h7v4h-7V4ZM4 13h7v7H4v-7Zm9-3h7v10h-7V10Z" />
+                                    </svg>
+                                </span>
+                                <h3 class="text-[17px] font-extrabold tracking-normal text-[#111653] dark:text-white">Work Board</h3>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#e7ecf5] bg-white px-4 text-sm font-extrabold text-[#111653] shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff]">
+                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 .8 1.6L12 11v4a1 1 0 0 1-.553.894l-2 1A1 1 0 0 1 8 16v-5L3.2 4.6A1 1 0 0 1 3 4Z" />
+                                    </svg>
+                                    <span>All Tasks</span>
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0866ff] px-4 text-sm font-extrabold text-white shadow-[0_10px_20px_rgba(8,102,255,0.2)] transition hover:bg-[#075ce6]">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5" />
+                                    </svg>
+                                    <span>Add Task</span>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 24 Hour Labels -->
-                    <div class="flex justify-between text-[10px] text-gray-700 mb-2">
-                        <span>12AM</span><span>01AM</span><span>02AM</span><span>03AM</span>
-                        <span>04AM</span><span>05AM</span><span>06AM</span><span>07AM</span>
-                        <span>08AM</span><span>09AM</span><span>10AM</span><span>11AM</span>
-                        <span>12PM</span><span>01PM</span><span>02PM</span><span>03PM</span>
-                        <span>04PM</span><span>05PM</span><span>06PM</span><span>07PM</span>
-                        <span>08PM</span><span>09PM</span><span>10PM</span><span>11PM</span>
-                    </div>
-
-                    <!-- MAIN ACTIVITY BAR -->
-                    <div class="relative h-4 w-full rounded bg-gray-300 overflow-hidden">
-
-                        <!-- Worked segments -->
-                        <div class="absolute left-[33%] w-[8%] h-full bg-blue-600"></div>
-                        <div class="absolute left-[42%] w-[8%] h-full bg-blue-600"></div>
-
-                        <!-- Break -->
-                        <div class="absolute left-[50%] w-[3%] h-full bg-gray-300"></div>
-
-                        <!-- Worked -->
-                        <div class="absolute left-[52%] w-[10%] h-full bg-blue-600"></div>
-                        <div class="absolute left-[63%] w-[12%] h-full bg-blue-600"></div>
-
-                    </div>
-
-                    <!-- SHIFT BAR -->
-                    <div class="mt-3 relative h-3 w-full rounded bg-gray-300 overflow-hidden">
-                        <div class="absolute left-[30%] w-[45%] h-full bg-blue-200"></div>
-                    </div>
-
-                </div>
-
-                <!-- RIGHT -->
-                <div>
-                    <div class="px-6 py-7 border-l-2 border-gray-400 text-center">
-
-                        <p class="text-lg font-semibold text-gray-900">
-                            Worked Today
-                        </p>
-
-                        <h4 class="work-time-dial__value">08h 06m</h4>
-
-                    </div>
-                </div>
-
-            </section>
-            <section class="mt-4 space-y-6" data-project-tasks-root data-project-task-response-mode="reload">
-                <div class="rounded-[14px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <div class="custom-scroll overflow-x-auto">
-                        <div id="kanban-container" class="flex h-[calc(100vh-220px)] min-w-max gap-6 p-6">
+                    <div class="custom-scroll overflow-x-auto bg-white dark:bg-darkblack-700">
+                        <div id="kanban-container" class="flex h-[calc(100vh-620px)] min-h-[410px] min-w-max gap-3.5 p-3.5">
                             @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses])
                         </div>
                     </div>
@@ -131,6 +181,232 @@
 
         </div>
         <style>
+            .daily-timeline-scroll {
+                scrollbar-width: thin;
+                scrollbar-color: #a9c9e4 transparent;
+            }
+
+            .daily-timeline-scroll::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .daily-timeline-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .daily-timeline-scroll::-webkit-scrollbar-thumb {
+                background: #a9c9e4;
+                border-radius: 9999px;
+            }
+
+            .daily-timeline {
+                position: relative;
+            }
+
+            .daily-timeline__rail {
+                position: relative;
+                height: 166px;
+                overflow: visible;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .daily-timeline__rail::before,
+            .daily-timeline__rail::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events: none;
+            }
+
+            .daily-timeline__rail::before {
+                height: 38px;
+                background-image: repeating-linear-gradient(
+                    90deg,
+                    rgba(194, 203, 216, 0.86) 0 1px,
+                    transparent 1px 0.8333%
+                );
+                -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.78) 72%, rgba(0, 0, 0, 0.42) 100%);
+                mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.78) 72%, rgba(0, 0, 0, 0.42) 100%);
+            }
+
+            .daily-timeline__rail::after {
+                height: 50px;
+                background-image: repeating-linear-gradient(
+                    90deg,
+                    rgba(43, 50, 67, 0.88) 0 2px,
+                    transparent 2px 4.1667%
+                );
+                -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.84) 72%, rgba(0, 0, 0, 0.48) 100%);
+                mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.84) 72%, rgba(0, 0, 0, 0.48) 100%);
+            }
+
+            .daily-timeline__ticks {
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 34px;
+                height: 25px;
+                border-radius: 6px;
+                background: #e9e9e9;
+                pointer-events: none;
+            }
+
+            .daily-timeline__ticks::after {
+                display: none;
+            }
+
+            .daily-timeline__segment {
+                position: absolute;
+                top: 34px;
+                z-index: 2;
+                display: inline-flex;
+                height: 25px;
+                min-width: 36px;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                border: 0;
+                border-radius: 5px;
+                color: #fff;
+                font-size: 0;
+                font-weight: 800;
+                line-height: 1;
+                box-shadow: 0 8px 14px rgba(8, 102, 255, 0.12);
+                white-space: nowrap;
+                transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+            }
+
+            .daily-timeline__segment::before {
+                content: attr(aria-label);
+                position: absolute;
+                left: 50%;
+                top: -31px;
+                display: inline-flex;
+                height: 23px;
+                min-width: 48px;
+                transform: translateX(-50%);
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+                background: #0866ff;
+                padding: 0 8px;
+                color: #fff;
+                font-size: 11px;
+                font-weight: 800;
+                white-space: nowrap;
+            }
+
+            .daily-timeline__segment::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                top: -8px;
+                transform: translateX(-50%);
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid #0866ff;
+            }
+
+            .daily-timeline__segment--break {
+                z-index: 3;
+            }
+
+            .daily-timeline__segment:hover {
+                filter: brightness(1.04);
+                transform: translateY(-1px);
+                box-shadow: 0 10px 18px rgba(18, 25, 95, 0.1);
+            }
+
+            .daily-timeline__segment--work {
+                background: #0866ff;
+            }
+
+            .daily-timeline__segment--break {
+                background: #ff8500;
+                color: #fff;
+                box-shadow: 0 8px 14px rgba(224, 154, 0, 0.16);
+            }
+
+            .daily-timeline__segment--break::before {
+                background: #ff8500;
+            }
+
+            .daily-timeline__segment--break::after {
+                border-top-color: #ff8500;
+            }
+
+            .daily-timeline__shift {
+                position: absolute;
+                z-index: 1;
+                display: flex;
+                height: 30px;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                border: 2px solid #8cb6ff;
+                border-radius: 8px;
+                background: linear-gradient(90deg, #eef5ff 0%, #dbeafe 100%);
+                padding: 0 0.35rem;
+                color: #0866ff;
+                font-size: 0.78rem;
+                font-weight: 800;
+                box-shadow: 0 8px 14px rgba(3, 119, 201, 0.14);
+            }
+
+            .daily-timeline__shift--bottom {
+                top: 80px;
+            }
+
+            .daily-timeline__shift > span {
+                border: 0;
+                border-radius: 6px;
+                background: #fff;
+                padding: 0.32rem 0.7rem;
+                color: #0866ff;
+            }
+
+            .daily-timeline__shift strong {
+                color: #0866ff;
+                font-size: 0.85rem;
+                letter-spacing: 0;
+            }
+
+            .daily-timeline__shift strong span {
+                color: #0866ff;
+                padding: 0 0.25rem;
+            }
+
+            .daily-timeline__labels {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 6px;
+                padding: 0;
+                color: #6b7280;
+                font-size: 0.85rem;
+                font-weight: 800;
+            }
+
+            .daily-timeline__labels span {
+                display: flex;
+                width: 0;
+                flex: 0 0 0;
+                justify-content: center;
+                white-space: nowrap;
+            }
+
+            .daily-timeline__labels span:first-child {
+                justify-content: flex-start;
+            }
+
+            .daily-timeline__labels span:last-child {
+                justify-content: flex-end;
+            }
+
             .timeline-card {
                 position: relative;
             }
