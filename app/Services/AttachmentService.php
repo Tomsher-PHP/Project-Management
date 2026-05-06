@@ -70,11 +70,9 @@ class AttachmentService
         // 1. Generate Unique File Name
         $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
 
-        // 2. Resolve Storage Disk
-        $actualDisk = config('filesystems.default') === 's3' ? 's3' : $disk;
-        $actualVisibility = $actualDisk === 's3'
-            ? config('filesystems.disks.s3.visibility', $visibility)
-            : $visibility;
+        // 2. Resolve Storage Disk and Visibility
+        $actualDisk = config('filesystems.default', $disk);
+        $actualVisibility = $actualDisk === 's3' ? config('filesystems.disks.s3.visibility', $visibility) : $visibility;
 
         // 3. Store File
         try {
