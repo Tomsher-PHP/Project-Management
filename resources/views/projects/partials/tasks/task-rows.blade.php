@@ -1,6 +1,7 @@
 @php
     $showEmptyState = $showEmptyState ?? true;
-    $showTaskActionColumn = $showTaskActionColumn ?? auth()->user()?->can('task.delete') || ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
+    $user = auth()->user();
+    $showTaskActionColumn = $showTaskActionColumn ?? $user?->can('task.edit') || $user?->can('task.delete') || ($project->is_agile && $user?->can('task.move'));
 @endphp
 
 @forelse ($tasks as $task)

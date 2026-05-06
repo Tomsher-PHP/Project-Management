@@ -4,7 +4,9 @@
         'next_page' => null,
         'has_more_pages' => false,
     ];
-    $showTaskActionColumn = $showTaskActionColumn ?? auth()->user()?->can('task.delete') || ($project->project_flow !== 'linear' && auth()->user()?->can('task.move'));
+
+    $user = auth()->user();
+    $showTaskActionColumn = $showTaskActionColumn ?? $user?->can('task.edit') || $user?->can('task.delete') || ($project->is_agile && $user?->can('task.move'));
 @endphp
 
 <div class="overflow-hidden rounded-[20px] border border-bgray-200 dark:border-darkblack-400" data-project-task-group-task-list data-current-page="{{ $pagination['page'] }}" data-next-page="{{ $pagination['next_page'] ?? '' }}" data-has-more-pages="{{ $pagination['has_more_pages'] ? 'true' : 'false' }}">
