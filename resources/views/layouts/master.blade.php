@@ -9,6 +9,10 @@
 
     <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher Pmt</title>
 
+    <script>
+        window.authUserId = {{ auth()->id() }};
+    </script>
+
     {{-- Vite Assets --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

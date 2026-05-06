@@ -19,18 +19,7 @@
 
             <div class="min-w-0">
                 <a href="{{ route('tasks.edit', $task) }}" class="block">
-                    <x-task-name-status
-                        :name="$task->name"
-                        :request-type="$task->request_type"
-                        :request-status="$task->request_status"
-                        :limit="20"
-                        limit-end=".."
-                        show-priority-indicator
-                        priority-indicator="line"
-                        :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'"
-                        :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'"
-                        class="max-w-full"
-                    />
+                    <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
                     <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
                     </p>
@@ -130,7 +119,10 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->due_date_time)
-            <div class="text-sm font-medium text-bgray-900 dark:text-white">@appDateTime($task->due_date_time)</div>
+            <div class="inline-flex items-center gap-0.5 text-sm font-medium text-bgray-900 dark:text-white {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task->status) }}">
+                {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task->status) !!}
+                <span>@appDateTime($task->due_date_time)</span>
+            </div>
         @else
             <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
         @endif

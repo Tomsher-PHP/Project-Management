@@ -10,8 +10,8 @@ use Illuminate\Http\Response;
 class TechnologyController extends Controller
 {
 
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

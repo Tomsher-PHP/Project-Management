@@ -7,6 +7,7 @@ use App\Models\AgileSprintStatus;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
+use App\Models\ProjectPayment;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
@@ -213,7 +214,7 @@ class ProjectServices
             ]);
 
             if (!empty($data['attachments'])) {
-                $directory = 'project_files/' . $project->project_code. '/notes';
+                $directory = 'project_files/' . $project->project_code . '/notes';
 
                 foreach ($data['attachments'] as $file) {
                     $this->attachmentService->upload(
@@ -575,6 +576,43 @@ class ProjectServices
     {
         if ((int) $milestone->project_id !== (int) $project->id) {
             throw new InvalidArgumentException('The provided project milestone does not belong to the given project.');
+        }
+    }
+
+    public function getLatestProjectStatusChangeDate(Project $project): ?Carbon
+    {
+        $latestDate = $project->statusHistories()
+            ->reorderDesc('added_at')
+            ->orderByDesc('id')
+            ->value('added_at');
+
+        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
+    }
+
+    public function getLatestProjectStageChangeDate(Project $project): ?Carbon
+    {
+        $latestDate = $project->stageHistories()
+            ->reorderDesc('added_at')
+            ->orderByDesc('id')
+            ->value('added_at');
+
+        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
+    }
+
+    public function convertStoredTimestampToConfigTimezone(string|Carbon|null $value): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, 'UTC')->timezone(config('constants.timezone'));
+        } catch (\Throwable) {
+            try {
+                return Carbon::parse($value, config('constants.timezone'))->timezone(config('constants.timezone'));
+            } catch (\Throwable) {
+                return null;
+            }
         }
     }
 }

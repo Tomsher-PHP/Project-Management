@@ -204,6 +204,11 @@ class User extends Authenticatable
             ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
     }
 
+    public function projectChecklists()
+    {
+        return $this->hasMany(ProjectChecklist::class, 'assigned_to');
+    }
+
     public function currentAssignedTasks()
     {
         return $this->hasMany(Task::class, 'current_assignee_id');

@@ -140,6 +140,11 @@ class Project extends Model
         return $this->hasMany(ProjectStageHistory::class)->orderBy('added_at', 'desc');
     }
 
+    public function projectPayments()
+    {
+        return $this->hasMany(ProjectPayment::class)->orderByDesc('id');
+    }
+
     public function comments()
     {
         return $this->hasMany(ProjectComment::class)->orderBy('created_at', 'desc');
@@ -163,6 +168,11 @@ class Project extends Model
     public function tasks()
     {
         return $this->hasMany(Task::class)->orderBy('sort_order');
+    }
+
+    public function projectChecklists()
+    {
+        return $this->hasMany(ProjectChecklist::class)->orderBy('id');
     }
 
     public function latestStatusHistory()

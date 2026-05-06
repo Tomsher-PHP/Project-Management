@@ -11,19 +11,19 @@
                 <div class="mb-4 flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 xl:flex-row xl:items-center xl:justify-between">
                     <div class="overflow-x-auto">
                         <div class="flex min-w-max items-center gap-5">
-                            <button type="button" data-task-tab-trigger="overview" class="border-b-2 border-success-300 pb-2.5 text-[15px] font-semibold text-success-300 transition">
+                            <button type="button" data-task-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Overview
                             </button>
 
-                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Project Scope
                             </button>
 
-                            <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 Notes & Files
                             </button>
 
-                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
                                 History
                             </button>
                         </div>

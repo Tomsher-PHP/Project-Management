@@ -28,7 +28,10 @@
             $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
 
             $canViewScheduleShift = $authUser?->can('schedule_shift.view');
-            $canViewSettings = $authUser && ($authUser->can('department.view') || $authUser->can('designation.view') || $authUser->can('shift.view') || $authUser->can('technology.view') || $authUser->can('project_category.view') || $authUser->can('industry.view') || $authUser->can('project_status.view') || $authUser->can('project_stage.view') || $authUser->can('configuration.view') || $authUser->can('agile_milestone.view') || $authUser->can('agile_sprint.view') || $authUser->can('task_settings.view'));
+
+            $settingsPermissions = config('constants.settings_permissions');
+            $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+
             $canViewActivityLog = $authUser?->can('activity_log.view');
 
             $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;

@@ -1,6 +1,13 @@
 {
-  "_datepicker-Bx8nmcKD.js": {
-    "file": "assets/datepicker-Bx8nmcKD.js",
+  "_alert-LtxA_H6Z.js": {
+    "file": "assets/alert-LtxA_H6Z.js",
+    "name": "alert",
+    "imports": [
+      "resources/js/modules/users/change-password.js"
+    ]
+  },
+  "_datepicker-Cg43rwNk.js": {
+    "file": "assets/datepicker-Cg43rwNk.js",
     "name": "datepicker",
     "imports": [
       "resources/js/modules/users/change-password.js",
@@ -33,7 +40,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-L2iyIEDo.css",
+    "file": "assets/app-Cs7CeAUl.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -42,13 +49,14 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D01-eTh_.js",
+    "file": "assets/app-DtojI2GS.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "resources/js/modules/users/change-password.js",
-      "_datepicker-Bx8nmcKD.js",
+      "_alert-LtxA_H6Z.js",
+      "_datepicker-Cg43rwNk.js",
       "_flatpickr.min-BJdP9L7S.js",
       "_timepicker-io5AL2NV.js",
       "_weekpicker-WW3ukRQH.js"
@@ -69,6 +77,12 @@
     "src": "resources/js/modules/activity-logs.js",
     "isEntry": true
   },
+  "resources/js/modules/checklist-template-form.js": {
+    "file": "assets/checklist-template-form-Cqw0kBkE.js",
+    "name": "checklist-template-form",
+    "src": "resources/js/modules/checklist-template-form.js",
+    "isEntry": true
+  },
   "resources/js/modules/create-schedule.js": {
     "file": "assets/create-schedule-B1-a-NAp.js",
     "name": "create-schedule",
@@ -81,13 +95,20 @@
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
   },
+  "resources/js/modules/kpi-form.js": {
+    "file": "assets/kpi-form-BL6DO7iw.js",
+    "name": "kpi-form",
+    "src": "resources/js/modules/kpi-form.js",
+    "isEntry": true
+  },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BCY0LEoO.js",
+    "file": "assets/project-detail-Dohzvpyl.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-Bx8nmcKD.js",
+      "_alert-LtxA_H6Z.js",
+      "_datepicker-Cg43rwNk.js",
       "_flatpickr.min-BJdP9L7S.js",
       "resources/js/modules/projects/project-tasks.js",
       "_timepicker-io5AL2NV.js",
@@ -95,13 +116,23 @@
       "resources/js/modules/users/change-password.js"
     ]
   },
+  "resources/js/modules/projects/project-payment.js": {
+    "file": "assets/project-payment-Dge7250o.js",
+    "name": "project-payment",
+    "src": "resources/js/modules/projects/project-payment.js",
+    "isEntry": true,
+    "imports": [
+      "resources/js/modules/users/change-password.js"
+    ]
+  },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-DkhG05Ak.js",
+    "file": "assets/project-tasks-C2NxlU4Q.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-Bx8nmcKD.js",
+      "_alert-LtxA_H6Z.js",
+      "_datepicker-Cg43rwNk.js",
       "_flatpickr.min-BJdP9L7S.js",
       "resources/js/modules/users/change-password.js"
     ]
@@ -117,26 +148,29 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-v6NSkIWF.js",
+    "file": "assets/task-detail-vukIdxO2.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-Bx8nmcKD.js",
+      "_alert-LtxA_H6Z.js",
       "_flatpickr.min-BJdP9L7S.js",
+      "_datepicker-Cg43rwNk.js",
       "_timepicker-io5AL2NV.js",
       "_weekpicker-WW3ukRQH.js",
+      "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
       "resources/js/modules/users/change-password.js"
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-Cf1DdlEJ.js",
+    "file": "assets/task-list-create-BEYNhJoc.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
     "imports": [
-      "_datepicker-Bx8nmcKD.js",
+      "_alert-LtxA_H6Z.js",
+      "_datepicker-Cg43rwNk.js",
       "_flatpickr.min-BJdP9L7S.js",
       "resources/js/modules/users/change-password.js"
     ]
@@ -148,10 +182,20 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-BdFS9mhO.js",
+    "file": "assets/kanban-board-Cuw7UdNY.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
+  },
+  "resources/js/modules/tasks/time-log-change-request.js": {
+    "file": "assets/time-log-change-request-ExcSUCoQ.js",
+    "name": "time-log-change-request",
+    "src": "resources/js/modules/tasks/time-log-change-request.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-LtxA_H6Z.js",
+      "resources/js/modules/users/change-password.js"
+    ]
   },
   "resources/js/modules/team.js": {
     "file": "assets/team-BtdavKLX.js",

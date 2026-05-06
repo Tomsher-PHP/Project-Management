@@ -11,9 +11,11 @@
             /* IMPORTANT: remove inner content */
             color: transparent !important;
         }
+
         .kanban-ghost * {
             visibility: hidden !important;
         }
+
         .kanban-chosen {
             transform: scale(1.02);
         }
@@ -131,6 +133,9 @@
 @endsection
 
 @push('scripts')
+    <script>
+        const initialFlowType = @json($selectedFlowType);
+    </script>
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/kanban-board.js')

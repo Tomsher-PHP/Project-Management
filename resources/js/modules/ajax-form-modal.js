@@ -365,7 +365,7 @@ $(document).ready(function () {
         let url = form.attr('action');
         let formData = new FormData(this);
 
-        form.find('.error-text').remove();
+        clearFormErrors(form);
 
         $.ajax({
             url: url,
@@ -396,8 +396,36 @@ $(document).ready(function () {
                 if (xhr.status === 422) {
                     let errors = xhr.responseJSON.errors;
                     $.each(errors, function (key, value) {
+                        const normalizedName = key.replace(/\.(\d+)/g, '[$1]');
+                        const rootKey = key.split('.')[0];
                         let input = form.find('[name="' + key + '"]');
-                        input.after('<span class="text-red-500 error-text">' + value[0] + '</span>');
+
+                        if (!input.length) {
+                            input = form.find('[name="' + normalizedName + '"]');
+                        }
+
+                        if (!input.length) {
+                            input = form.find('[name="' + rootKey + '[]"]').first();
+                        }
+
+                        if (!input.length && key.includes('.')) {
+                            const keySegments = key.split('.');
+                            const itemIndex = Number.parseInt(keySegments[1], 10);
+                            const repeatedInputs = form.find('[name="' + rootKey + '[]"]');
+
+                            if (!Number.isNaN(itemIndex) && repeatedInputs.length > itemIndex) {
+                                input = repeatedInputs.eq(itemIndex);
+                            }
+                        }
+
+                        if (!input.length) {
+                            input = form.find('[name="' + rootKey + '"]');
+                        }
+
+                        if (input.length) {
+                            input.addClass('border-red-500');
+                            input.last().after('<span class="text-red-500 error-text">' + value[0] + '</span>');
+                        }
 
                     });
                 }

@@ -141,11 +141,9 @@ class ProjectSprintController extends Controller
 
             if ($milestoneChanged && $originalProjectMilestone) {
                 $this->normalizeOrder($originalProjectMilestone);
-                $originalProjectMilestone->refreshTrackedTimeMetrics();
             }
 
             $this->normalizeOrder($targetProjectMilestone);
-            $targetProjectMilestone->refreshTrackedTimeMetrics();
         });
 
         $projectSprint->refresh();
@@ -203,7 +201,6 @@ class ProjectSprintController extends Controller
 
             if ($projectMilestone) {
                 $this->normalizeOrder($projectMilestone);
-                $projectMilestone->refreshTrackedTimeMetrics();
             }
         });
 

@@ -209,7 +209,7 @@
         </div>
 
         <div class="pt-6 border-t flex justify-left dark:border-darkblack-400 dark:text-white">
-            <button type="button" data-target="#multi-step-modal" data-milestone="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
+            <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
         </div>

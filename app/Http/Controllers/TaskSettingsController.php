@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class TaskSettingsController extends Controller
 {
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

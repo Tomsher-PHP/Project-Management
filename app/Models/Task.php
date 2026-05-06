@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use App\Traits\TaskFilterable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,11 +15,11 @@ use App\Traits\HasFormOptions;
 
 class Task extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+    use SoftDeletes, TaskFilterable, Sortable, LogsModelActivity, HasFormOptions;
 
-    protected ?int $previousProjectMilestoneIdForMetrics = null;
-
-    protected ?int $previousProjectSprintIdForMetrics = null;
+    public const REQUEST_PENDING = 'pending';
+    public const REQUEST_APPROVED = 'approved';
+    public const REQUEST_REJECTED = 'rejected';
 
     protected $fillable = [
         'project_id',
@@ -48,6 +48,7 @@ class Task extends Model
         'rejected_at',
         'rejection_reason',
         'sort_order',
+        'start_notify_at',
         'added_by',
         'updated_by',
     ];
@@ -117,24 +118,6 @@ class Task extends Model
 
         static::updating(function (Task $task) {
             $task->updated_by = Auth::id();
-            $task->previousProjectMilestoneIdForMetrics = $task->getOriginal('project_milestone_id')
-                ? (int) $task->getOriginal('project_milestone_id')
-                : null;
-            $task->previousProjectSprintIdForMetrics = $task->getOriginal('project_sprint_id')
-                ? (int) $task->getOriginal('project_sprint_id')
-                : null;
-        });
-
-        static::saved(function (Task $task) {
-            $task->refreshPlacementMetrics();
-        });
-
-        static::deleted(function (Task $task) {
-            $task->refreshPlacementMetrics();
-        });
-
-        static::restored(function (Task $task) {
-            $task->refreshPlacementMetrics();
         });
     }
 
@@ -175,45 +158,6 @@ class Task extends Model
                         ->where('task_assignment_logs.worked_time_seconds', '>', 0);
                 });
         });
-    }
-
-    public function refreshPlacementMetrics(): void
-    {
-        $sprintIds = collect([
-            $this->project_sprint_id ? (int) $this->project_sprint_id : null,
-            $this->previousProjectSprintIdForMetrics,
-        ])
-            ->filter()
-            ->unique()
-            ->values();
-
-        $moduleIds = collect([
-            $this->project_milestone_id ? (int) $this->project_milestone_id : null,
-            $this->previousProjectMilestoneIdForMetrics,
-        ]);
-
-        if ($sprintIds->isNotEmpty()) {
-            $sprints = ProjectSprint::query()
-                ->whereIn('id', $sprintIds->all())
-                ->get();
-
-            foreach ($sprints as $projectSprint) {
-                $projectSprint->refreshDerivedTimeSeconds();
-                $moduleIds->push($projectSprint->project_milestone_id ? (int) $projectSprint->project_milestone_id : null);
-            }
-        }
-
-        $moduleIds
-            ->filter()
-            ->unique()
-            ->values()
-            ->whenNotEmpty(fn($ids) => ProjectMilestone::query()
-                ->whereIn('id', $ids->all())
-                ->get()
-                ->each(fn(ProjectMilestone $projectMilestone) => $projectMilestone->refreshTrackedTimeMetrics()));
-
-        $this->previousProjectMilestoneIdForMetrics = null;
-        $this->previousProjectSprintIdForMetrics = null;
     }
 
     public static function generateTaskCode(?Project $project = null): string

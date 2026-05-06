@@ -6,9 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const buttons = document.querySelectorAll('.flow-btn');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    let currentFlow = localStorage.getItem('kanban_flow') || 'agile';
+    let currentFlow = localStorage.getItem('kanban_flow') || initialFlowType || 'agile';
 
-        /** ================= FUNCTIONS ================= */
+    /** ================= FUNCTIONS ================= */
 
     const initKanbanDrag = () => {
         document.querySelectorAll(".kanban-board").forEach(board => {

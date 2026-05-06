@@ -19,8 +19,8 @@ class ScheduleShiftController extends Controller
 {
     private const TEAM_FILTER_NOT_IN_TEAM = 'not_in_team';
 
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

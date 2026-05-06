@@ -3,9 +3,6 @@
 @section('page-content')
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
-        @php
-            $hasSettingsAccess = auth()->user()->can('department.view') || auth()->user()->can('designation.view') || auth()->user()->can('shift.view') || auth()->user()->can('technology.view') || auth()->user()->can('project_category.view') || auth()->user()->can('industry.view') || auth()->user()->can('project_status.view') || auth()->user()->can('project_stage.view') || auth()->user()->can('configuration.view') || auth()->user()->can('agile_milestone.view') || auth()->user()->can('agile_sprint.view') || auth()->user()->can('task_settings.view');
-        @endphp
 
         <!-- write your code here-->
         @if ($hasSettingsAccess)
@@ -361,6 +358,90 @@
                             </div>
                             <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
                                 Setup task settings to map task progress from start to finish.
+                            </p>
+                        </div>
+                    </a>
+                @endcan
+
+                @can('kpi.view')
+                    <a href="{{ route('settings.kpis.index') }}" class="block group transition duration-300">
+                        <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                            <span class="absolute right-6 top-6">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
+                                    <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
+                                    <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
+                                </svg>
+                            </span>
+                            <div class="flex space-x-5">
+                                <div class="shrink-0">
+                                    <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+                                        <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="3" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 12h1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19v1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 7l.7-.7" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 17.7L7 17" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17l.7.7" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 6.3L7 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-bgray-900 dark:text-white">
+                                        KPIs
+                                    </h3>
+                                    <span class="text-lg text-bgray-600 dark:text-bgray-50">
+                                        Setup KPIs
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
+                                Define key performance indicators to track success metrics.
+                            </p>
+                        </div>
+                    </a>
+                @endcan
+
+                @can('checklist_template.view')
+                    <a href="{{ route('settings.checklists.index') }}" class="block group transition duration-300">
+                        <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                            <span class="absolute right-6 top-6">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
+                                    <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
+                                    <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
+                                </svg>
+                            </span>
+                            <div class="flex space-x-5">
+                                <div class="shrink-0">
+                                    <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+                                        <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="3" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 12h1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19v1" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 7l.7-.7" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 17.7L7 17" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17l.7.7" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.3 6.3L7 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-bgray-900 dark:text-white">
+                                        Checklists
+                                    </h3>
+                                    <span class="text-lg text-bgray-600 dark:text-bgray-50">
+                                        Setup Checklists
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="pb-8 pt-5 text-lg text-bgray-600 dark:text-bgray-50">
+                                Create reusable checklist templates for consistent task execution.
                             </p>
                         </div>
                     </a>

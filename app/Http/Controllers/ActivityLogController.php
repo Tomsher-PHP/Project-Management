@@ -24,8 +24,8 @@ class ActivityLogController extends Controller
 {
     use BuildsProjectActivityQueries;
 
-    protected $pageTitle;
-    protected $subTitle;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct()
     {

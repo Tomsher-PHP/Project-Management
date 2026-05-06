@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
@@ -12,9 +13,12 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
+use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\KPIController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
+use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectStageController;
@@ -168,11 +172,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('project-stages', ProjectStageController::class)->middleware('permission.type:project_stage.delete')->only(['destroy']);
         // End Project Stage Routes
 
-        // Configuration Routes
-        Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
-        Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
-        // End Configuration Routes
-
         // Agile milestone Routes
         Route::patch('/agile-milestones/toggle-status', [AgileMilestoneController::class, 'toggleStatus'])->middleware('permission.type:agile_milestone.edit')->name('agile_milestone.toggleStatus');
         Route::resource('agile-milestones', AgileMilestoneController::class)->middleware('permission.type:agile_milestone.view')->only(['index']);
@@ -208,6 +207,27 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.edit')->only(['update']);
         Route::resource('task-modes', TaskSettingsController::class)->middleware('permission.type:task_settings.delete')->only(['destroy']);
         // End Task settings Routes
+
+        // Configuration Routes
+        Route::get('configurations', [ConfigurationController::class, 'edit'])->middleware('permission.type:configuration.view')->name('configurations.edit');
+        Route::put('configurations', [ConfigurationController::class, 'update'])->middleware('permission.type:configuration.edit')->name('configurations.update');
+        // End Configuration Routes
+
+        // KPI templates routes
+        Route::patch('/kpis/toggle-status', [KPIController::class, 'toggleStatusKPI'])->middleware('permission.type:kpi.edit')->name('kpi.toggleStatus');
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.view')->only(['index']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.create')->only(['store']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.edit')->only(['update']);
+        Route::resource('kpis', KPIController::class)->middleware('permission.type:kpi.delete')->only(['destroy']);
+        // End KPI templates routes
+
+        // Checklists templates routes
+        Route::patch('/checklists/toggle-status', [ChecklistController::class, 'toggleStatusChecklist'])->middleware('permission.type:checklist_template.edit')->name('checklist.toggleStatus');
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.view')->only(['index']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.create')->only(['store']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.edit')->only(['update']);
+        Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.delete')->only(['destroy']);
+        // End Checklists templates routes
     });
     // End Settings Routes
 
@@ -271,6 +291,10 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
         Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
+        // Project payment status route
+        Route::match(['patch', 'post'], 'payment-status', [ProjectPaymentController::class, 'addProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.addProjectPaymentStatus');
+        Route::patch('payments/{payment}', [ProjectPaymentController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
+
         // Project milestone and sprint routes
         Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');
         Route::get('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.milestones.sprints.index');
@@ -293,6 +317,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
         Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
         Route::patch('members/{userId}/role', [ProjectMemberController::class, 'updateRole'])->middleware('permission.type:project.remove_team')->name('projects.updateMemberRole');
+
+        // Assigned checklist routes
+        Route::get('members/{userId}/checklists', [ProjectChecklistController::class, 'show'])->middleware('permission.type:project.add_team')->name('projects.checklists.show');
+        Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
+        Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
+        Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
+        Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
     });
 
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);

@@ -27,7 +27,7 @@ class TaskRequestServices
                 'projectMilestone:id,name,owner_id',
                 'projectSprint:id,name',
                 'currentAssignee:id,name',
-                'status:id,name,color',
+                'status:id,name,color,type,is_completed',
                 'taskType:id,name,code,color',
                 'taskMode:id,name,code,color',
                 'approvedBy:id,name',
@@ -111,6 +111,7 @@ class TaskRequestServices
     {
         return $this->accountableRequestQuery($user)
             ->whereKey($task->id)
+            ->where('request_status', 'pending')
             ->exists();
     }
 
@@ -227,6 +228,8 @@ class TaskRequestServices
                 'approved_by' => $user->id,
                 'approved_at' => $approvedAt,
             ]);
+
+        app(ProjectTimeService::class)->recalculateByTask($task->id);
 
         $this->notificationService->notifyTaskRequestReviewed($task, $user, 'approve');
     }

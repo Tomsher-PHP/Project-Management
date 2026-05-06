@@ -4,6 +4,7 @@ import { initDatepicker } from '../../components/datepicker';
 const getProjectHeaderStorageKey = (projectId) => `project-header-expanded:${projectId}`;
 
 const getProjectChangeModal = () => document.getElementById('project-change-modal');
+const getProjectPaymentModal = () => document.getElementById('project-payment-modal');
 
 const parseJsonResponse = async (response) => {
     try {
@@ -61,6 +62,19 @@ const applyProjectChangeErrors = (form, errors = {}) => {
 };
 
 const setProjectChangeDateValue = (input, value) => {
+    if (!input) {
+        return;
+    }
+
+    if (input._flatpickr) {
+        input._flatpickr.setDate(value || '', true, 'Y-m-d');
+        return;
+    }
+
+    input.value = value || '';
+};
+
+const setProjectPaymentDateValue = (input, value) => {
     if (!input) {
         return;
     }
@@ -187,6 +201,100 @@ const closeProjectChangeModal = () => {
     resetProjectChangeModal(modal);
 };
 
+const clearProjectPaymentErrors = (form) => {
+    if (!form) {
+        return;
+    }
+
+    form.querySelectorAll('[data-project-payment-error-for]').forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+
+    form.querySelectorAll('input, textarea, select').forEach((field) => {
+        field.classList.remove('border-red-500');
+    });
+};
+
+const applyProjectPaymentErrors = (form, errors = {}) => {
+    clearProjectPaymentErrors(form);
+
+    Object.entries(errors).forEach(([fieldName, messages]) => {
+        const normalizedFieldName = fieldName.split('.')[0];
+        const field = form.querySelector(`[name="${normalizedFieldName}"]`);
+        const errorNode = form.querySelector(`[data-project-payment-error-for="${normalizedFieldName}"]`);
+
+        field?.classList.add('border-red-500');
+
+        if (errorNode) {
+            errorNode.textContent = Array.isArray(messages) ? messages[0] : String(messages || '');
+            errorNode.classList.remove('hidden');
+        }
+    });
+};
+
+const resetProjectPaymentModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    const form = modal.querySelector('[data-project-payment-form]');
+    const submitButton = modal.querySelector('[data-project-payment-submit]');
+    const defaultDate = modal.dataset.defaultDate || '';
+
+    clearProjectPaymentErrors(form);
+
+    if (form) {
+        form.reset();
+        form.dataset.actionUrl = '';
+    }
+
+    setProjectPaymentDateValue(modal.querySelector('[name="paid_date"]'), defaultDate);
+    setProjectPaymentDateValue(modal.querySelector('[name="coverage_start_date"]'), defaultDate);
+    setProjectPaymentDateValue(modal.querySelector('[name="coverage_end_date"]'), '');
+
+    if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Save Payment Status';
+    }
+};
+
+const closeProjectPaymentModal = () => {
+    const modal = getProjectPaymentModal();
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    resetProjectPaymentModal(modal);
+};
+
+const openProjectPaymentModal = (trigger) => {
+    const modal = getProjectPaymentModal();
+
+    if (!modal || !trigger) {
+        return;
+    }
+
+    const form = modal.querySelector('[data-project-payment-form]');
+
+    resetProjectPaymentModal(modal);
+
+    if (!form) {
+        return;
+    }
+
+    form.dataset.actionUrl = trigger.dataset.url || '';
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+
+    window.setTimeout(() => {
+        modal.querySelector('[name="amount"]')?.focus();
+    }, 50);
+};
+
 const openProjectChangeModal = (option) => {
     const modal = getProjectChangeModal();
 
@@ -307,10 +415,16 @@ const initializeProjectHeader = () => {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const modal = getProjectChangeModal();
+    const paymentModal = getProjectPaymentModal();
 
     if (modal) {
         initDatepicker('.datepicker', {}, modal);
         resetProjectChangeModal(modal);
+    }
+
+    if (paymentModal) {
+        initDatepicker('.datepicker', {}, paymentModal);
+        resetProjectPaymentModal(paymentModal);
     }
 
     const closeAllMenus = (exceptDropdown = null) => {
@@ -381,11 +495,28 @@ const initializeProjectHeader = () => {
             return;
         }
 
+        const paymentModalOpenTrigger = event.target.closest('[data-project-payment-modal-open]');
+
+        if (paymentModalOpenTrigger) {
+            event.preventDefault();
+            closeAllMenus();
+            openProjectPaymentModal(paymentModalOpenTrigger);
+            return;
+        }
+
         const modalCloseTrigger = event.target.closest('[data-project-change-modal-close]');
 
         if (modalCloseTrigger) {
             event.preventDefault();
             closeProjectChangeModal();
+            return;
+        }
+
+        const paymentModalCloseTrigger = event.target.closest('[data-project-payment-modal-close]');
+
+        if (paymentModalCloseTrigger) {
+            event.preventDefault();
+            closeProjectPaymentModal();
             return;
         }
 
@@ -402,6 +533,11 @@ const initializeProjectHeader = () => {
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
+            if (!getProjectPaymentModal()?.classList.contains('hidden')) {
+                closeProjectPaymentModal();
+                return;
+            }
+
             if (!getProjectChangeModal()?.classList.contains('hidden')) {
                 closeProjectChangeModal();
                 return;
@@ -490,6 +626,86 @@ const initializeProjectHeader = () => {
 
             if (modalElement?.classList.contains('hidden')) {
                 resetProjectChangeModal(modalElement);
+            }
+        }
+    });
+
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-project-payment-form]');
+
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const modalElement = form.closest('#project-payment-modal');
+        const submitButton = form.querySelector('[data-project-payment-submit]');
+        const actionUrl = form.dataset.actionUrl || '';
+
+        clearProjectPaymentErrors(form);
+
+        if (!actionUrl) {
+            Alert.error('Unable to update the project payment status.');
+            return;
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+        }
+
+        try {
+            const formData = new FormData(form);
+            formData.set('_method', 'PATCH');
+
+            const response = await fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: formData,
+            });
+            const result = await parseJsonResponse(response);
+
+            if (response.status === 422 && result.errors) {
+                applyProjectPaymentErrors(form, result.errors);
+                throw new Error(result.message || 'Please correct the highlighted fields.');
+            }
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Unable to update the project payment status.');
+            }
+
+            const header = document.getElementById('project-header');
+            if (header && result.project_header) {
+                header.innerHTML = result.project_header;
+                syncProjectHeaderExpandedState(header);
+            }
+
+            if (result.payments_tab) {
+                document.dispatchEvent(new CustomEvent('project-tab:replace', {
+                    detail: {
+                        tab: 'payments',
+                        html: result.payments_tab,
+                    },
+                }));
+            }
+
+            closeProjectPaymentModal();
+            Alert.success(result.message || 'Project payment status updated successfully.');
+        } catch (error) {
+            Alert.error(error.message || 'Unable to update the project payment status.');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Save Payment Status';
+            }
+
+            if (modalElement?.classList.contains('hidden')) {
+                resetProjectPaymentModal(modalElement);
             }
         }
     });

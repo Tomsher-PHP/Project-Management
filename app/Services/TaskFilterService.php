@@ -125,21 +125,12 @@ class TaskFilterService
     // Apply filter clauses to a task query
     public function apply($query, array $filters)
     {
-        return $query
-            ->when($filters['project_id'] ?? null, fn($q, $v) => $q->whereIn('project_id', (array) $v))
-            ->when($filters['status_id'] ?? null, fn($q, $v) => $q->whereIn('status_id', (array) $v))
-            ->when($filters['current_assignee_id'] ?? null, fn($q, $v) => $q->whereIn('current_assignee_id', (array) $v));
+        return $query->filter($filters);
     }
 
     // Sort tasks based on requested criteria
     public function sort($query, array $filters)
     {
-        return match ($filters['sort'] ?? null) {
-            'latest' => $query->latest(),
-            'oldest' => $query->oldest(),
-            'name_asc' => $query->orderBy('title', 'asc'),
-            'name_desc' => $query->orderBy('title', 'desc'),
-            default => $query->orderBy('id', 'desc'),
-        };
+        return $query->sort($filters);
     }
 }

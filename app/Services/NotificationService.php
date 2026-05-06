@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
 use App\Notifications\TaskAssignedNotification;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
@@ -297,5 +298,42 @@ class NotificationService
             "{$actorName} changed task '{$taskName}' in project '{$projectName}' to '{$statusName}', so your running timer was stopped.",
             route('tasks.edit', $task)
         );
+    }
+
+    public function notifyTaskStart(Task $task): bool
+    {
+        $assigneeId = (int) ($task->current_assignee_id ?? 0);
+
+        if (! $assigneeId) {
+            return false;
+        }
+
+        if (($task->status?->type ?? null) !== 'pending') {
+            return false;
+        }
+
+        if (! $task->due_date_time || (int) ($task->estimated_time_seconds ?? 0) <= 0) {
+            return false;
+        }
+
+        if ($task->timeLogs()->exists()) {
+            return false;
+        }
+
+        //update start_notify_at avoid duplicate
+        $task->updateQuietly(['start_notify_at' => now()]);
+
+        $startAt = $task->due_date_time->copy()->subSeconds((int) $task->estimated_time_seconds);
+        $title = 'Task Start Reminder';
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $startAtLabel = $startAt->timezone(config('constants.timezone', config('app.timezone')))->format('d-M-Y h:i A');
+        $dueAtLabel = $task->due_date_time->copy()->timezone(config('constants.timezone', config('app.timezone')))->format('d-M-Y h:i A');
+        $message = "Please start task '{$taskName}' in project '{$projectName}' by {$startAtLabel} to stay on track for the due time {$dueAtLabel}.";
+        $url = route('tasks.edit', $task);
+
+        $this->send($assigneeId, $title, $message, $url);
+
+        return true;
     }
 }
