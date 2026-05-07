@@ -2,12 +2,7 @@
     $authUser = auth()->user();
     $priorities = $priorities ?? config('project_constants.task_priorities', []);
 
-    $canOpenTask = $task->project && $authUser && (
-        $authUser->is_super_admin ||
-        $authUser->can('task.view_all_tasks') ||
-        $authUser->can('task.view') ||
-        (int) ($task->current_assignee_id ?? 0) === (int) $authUser->id
-    );
+    $canOpenTask = $task->project && $authUser && ($authUser->is_super_admin || $authUser->can('task.view_all_tasks') || $authUser->can('task.view') || (int) ($task->current_assignee_id ?? 0) === (int) $authUser->id);
 
     $isCompleted = $status->is_completed ?? false;
 
@@ -25,8 +20,7 @@
     $estimatedTime = $task->estimatedTimeFormatted ?? '-';
     $actualTime = $task->actualTimeFormatted ?? '00:00:00';
 
-    $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string =>
-        \Illuminate\Support\Str::limit($value ?? '', $length, $end);
+    $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
 
     $taskName = $task->name ?? ($task->code ?? 'Untitled task');
     $taskCode = $task->code ?: 'TSK-' . str_pad((string) $task->id, 5, '0', STR_PAD_LEFT);
@@ -57,22 +51,18 @@
     }
 
     $progressPercentage = max(0, min(100, $progressPercentage));
-    $showProgress = ! $isCompleted && ($childTasksCount > 0 || $estimatedSeconds > 0 || $progressPercentage > 0);
+    $showProgress = !$isCompleted && ($childTasksCount > 0 || $estimatedSeconds > 0 || $progressPercentage > 0);
     $progressColor = $status->color ?? '#0866ff';
     $actionLabel = $isCompleted ? 'Done' : ($actualSeconds > 0 ? 'Continue' : 'Start');
 @endphp
 
-<div class="card group overflow-hidden rounded-[11px] border border-[#edf1f7] bg-white shadow-[0_8px_20px_rgba(18,25,95,0.045)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#dfe6f1] hover:shadow-[0_12px_26px_rgba(18,25,95,0.08)]"
-    data-task-id="{{ $task->id }}">
+<div class="card group overflow-hidden rounded-[11px] border border-[#edf1f7] bg-white shadow-[0_8px_20px_rgba(18,25,95,0.045)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#dfe6f1] hover:shadow-[0_12px_26px_rgba(18,25,95,0.08)]" data-task-id="{{ $task->id }}">
 
     {{-- MODAL OPEN AREA ONLY --}}
-    <div class="space-y-2.5 p-3.5 {{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}"
-        @if ($canOpenTask)
-            data-project-task-detail-open
+    <div class="space-y-2.5 p-3.5 {{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
             data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}"
             data-project-task-group-key=""
-            title="Open task"
-        @endif>
+            title="Open task" @endif>
 
         <div class="flex items-center justify-between gap-3">
             <span class="inline-flex min-w-0 items-center rounded-md bg-[#eef5ff] px-2 py-0.5 text-[11px] font-extrabold leading-5 text-[#0866ff]">
@@ -95,15 +85,7 @@
 
         <div class="space-y-1">
             <h5 class="leading-snug">
-                <x-task-name-status
-                    :name="$taskName"
-                    :request-type="$task->request_type"
-                    :request-status="$task->request_status"
-                    :limit="31"
-                    text-class="text-[13px] font-extrabold leading-snug transition {{ $isCompleted ? 'line-through text-gray-400' : 'text-[#111653] group-hover:text-[#0866ff]' }}"
-                    name-class="block"
-                    class="max-w-full"
-                />
+                <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="31" text-class="text-[13px] font-extrabold leading-snug transition {{ $isCompleted ? 'line-through text-gray-400' : 'text-[#111653] group-hover:text-[#0866ff]' }}" name-class="block" class="max-w-full" />
             </h5>
 
             <p class="line-clamp-2 min-h-[2rem] text-[12px] font-bold leading-relaxed text-[#6677a7]">
@@ -129,9 +111,7 @@
         <div class="flex min-w-0 items-center gap-2" title="{{ $task->currentAssignee ? 'Assignee: ' . $task->currentAssignee->name : 'Not Assigned' }}">
             @if ($task->currentAssignee)
                 @if (!empty($task->currentAssignee->profileImageUrl))
-                    <img src="{{ $task->currentAssignee->profileImageUrl }}"
-                        alt="{{ $task->currentAssignee->name }}"
-                        class="h-8 w-8 rounded-full object-cover shadow-[0_4px_12px_rgba(18,25,95,0.12)]" />
+                    <img src="{{ $task->currentAssignee->profileImageUrl }}" alt="{{ $task->currentAssignee->name }}" class="h-8 w-8 rounded-full object-cover shadow-[0_4px_12px_rgba(18,25,95,0.12)]" />
                 @else
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef5ff] text-[11px] font-extrabold uppercase text-[#0866ff]">
                         {{ strtoupper(substr($task->currentAssignee->name, 0, 1)) }}
@@ -158,12 +138,9 @@
                     <span>{{ $actionLabel }}</span>
                 </span>
             @else
-                <button type="button"
-                    class="start-task-btn inline-flex items-center gap-2 rounded-lg px-1.5 py-1 text-[12px] font-extrabold text-[#111653] transition hover:bg-[#eef5ff]"
-                    data-task-id="{{ $task->id }}"
-                    data-task-name="{{ e($taskName) }}">
+                <button type="button" class="start-task-btn inline-flex items-center gap-2 rounded-lg px-1.5 py-1 text-[12px] font-extrabold text-[#111653] transition hover:bg-[#eef5ff]" data-task-id="{{ $task->id }}" data-task-name="{{ e($taskName) }}">
                     <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7 6v12a1 1 0 0 0 1.6.8l8-6a1 1 0 0 0 0-1.6l-8-6Z" clip-rule="evenodd" />
                     </svg>
                     <span>{{ $actionLabel }}</span>
                 </button>
@@ -173,37 +150,37 @@
 </div>
 
 <script>
-(function () {
-    if (window.__taskTimerFinalInit) return;
-    window.__taskTimerFinalInit = true;
+    (function() {
+        if (window.__taskTimerFinalInit) return;
+        window.__taskTimerFinalInit = true;
 
-    let activeTask = null;
-    let seconds = 0;
-    let running = false;
-    let timerInterval = null;
+        let activeTask = null;
+        let seconds = 0;
+        let running = false;
+        let timerInterval = null;
 
-    const old1 = document.getElementById('taskTimerBox');
-    const old2 = document.getElementById('runningTaskTimerBox');
-    if (old1) old1.remove();
-    if (old2) old2.remove();
+        const old1 = document.getElementById('taskTimerBox');
+        const old2 = document.getElementById('runningTaskTimerBox');
+        if (old1) old1.remove();
+        if (old2) old2.remove();
 
-    const pauseIcon = `
+        const pauseIcon = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="5" width="4" height="14" rx="1"></rect>
             <rect x="14" y="5" width="4" height="14" rx="1"></rect>
         </svg>
     `;
 
-    const playIcon = `
+        const playIcon = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"></path>
         </svg>
     `;
 
-    function createTimerBox() {
-        if (document.getElementById('runningTaskTimerBox')) return;
+        function createTimerBox() {
+            if (document.getElementById('runningTaskTimerBox')) return;
 
-        document.body.insertAdjacentHTML('beforeend', `
+            document.body.insertAdjacentHTML('beforeend', `
             <div id="runningTaskTimerBox"
                 style="
                     position: fixed;
@@ -302,82 +279,82 @@
                 </span>
             </div>
         `);
-    }
-
-    function formatTime(totalSeconds) {
-        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-        const s = String(totalSeconds % 60).padStart(2, '0');
-        return `${h}:${m}:${s}`;
-    }
-
-    function renderTimer() {
-        createTimerBox();
-
-        const box = document.getElementById('runningTaskTimerBox');
-        const name = document.getElementById('runningTaskName');
-        const time = document.getElementById('runningTaskTime');
-        const toggle = document.getElementById('runningTaskToggle');
-
-        if (!activeTask) return;
-
-        box.style.display = 'flex';
-
-        name.textContent = activeTask.name;
-        time.textContent = formatTime(seconds);
-
-        toggle.innerHTML = running ? pauseIcon : playIcon;
-        toggle.style.background = running ? '#f1f3f7' : '#ecfdf5';
-        toggle.style.color = running ? '#111653' : '#16a34a';
-    }
-
-    function startInterval() {
-        clearInterval(timerInterval);
-
-        timerInterval = setInterval(function () {
-            if (!running || !activeTask) return;
-
-            seconds++;
-            renderTimer();
-        }, 1000);
-    }
-
-    document.addEventListener('click', function (event) {
-        const startBtn = event.target.closest('.start-task-btn');
-
-        if (startBtn) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-
-            activeTask = {
-                id: startBtn.dataset.taskId,
-                name: startBtn.dataset.taskName || 'No task'
-            };
-
-            seconds = 0;
-            running = true;
-
-            renderTimer();
-            startInterval();
-
-            return false;
         }
 
-        const toggleBtn = event.target.closest('#runningTaskToggle');
-
-        if (toggleBtn) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-
-            if (!activeTask) return false;
-
-            running = !running;
-            renderTimer();
-
-            return false;
+        function formatTime(totalSeconds) {
+            const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+            const s = String(totalSeconds % 60).padStart(2, '0');
+            return `${h}:${m}:${s}`;
         }
-    }, true);
-})();
+
+        function renderTimer() {
+            createTimerBox();
+
+            const box = document.getElementById('runningTaskTimerBox');
+            const name = document.getElementById('runningTaskName');
+            const time = document.getElementById('runningTaskTime');
+            const toggle = document.getElementById('runningTaskToggle');
+
+            if (!activeTask) return;
+
+            box.style.display = 'flex';
+
+            name.textContent = activeTask.name;
+            time.textContent = formatTime(seconds);
+
+            toggle.innerHTML = running ? pauseIcon : playIcon;
+            toggle.style.background = running ? '#f1f3f7' : '#ecfdf5';
+            toggle.style.color = running ? '#111653' : '#16a34a';
+        }
+
+        function startInterval() {
+            clearInterval(timerInterval);
+
+            timerInterval = setInterval(function() {
+                if (!running || !activeTask) return;
+
+                seconds++;
+                renderTimer();
+            }, 1000);
+        }
+
+        document.addEventListener('click', function(event) {
+            const startBtn = event.target.closest('.start-task-btn');
+
+            if (startBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                activeTask = {
+                    id: startBtn.dataset.taskId,
+                    name: startBtn.dataset.taskName || 'No task'
+                };
+
+                seconds = 0;
+                running = true;
+
+                renderTimer();
+                startInterval();
+
+                return false;
+            }
+
+            const toggleBtn = event.target.closest('#runningTaskToggle');
+
+            if (toggleBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                if (!activeTask) return false;
+
+                running = !running;
+                renderTimer();
+
+                return false;
+            }
+        }, true);
+    })();
 </script>

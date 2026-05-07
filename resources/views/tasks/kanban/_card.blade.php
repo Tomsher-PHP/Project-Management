@@ -1,6 +1,29 @@
 @php
     $authUser = auth()->user();
     $canOpenTask = $task->project && $authUser && ($authUser->is_super_admin || $authUser->can('task.view_all_tasks') || $authUser->can('task.view') || (int) ($task->current_assignee_id ?? 0) === (int) $authUser->id);
+
+    $isCompleted = $status->is_completed ?? false;
+    $priority = $task->priority ?? 'medium';
+    $priorityConfig = $priorities[$priority] ?? [];
+    $priorityBgClass = $priorityConfig['bg_class'] ?? 'bg-gray-100';
+    $priorityTextClass = $priorityConfig['bg_text'] ?? 'text-gray-900';
+    $priorityLabel = $priorityConfig['label'] ?? ucfirst($priority);
+    $priorityTone = match ($priority) {
+        'high', 'urgent' => 'bg-red-50 text-red-500',
+        'medium' => 'bg-orange-50 text-orange-500',
+        'low' => 'bg-emerald-50 text-emerald-500',
+        default => 'bg-[#eef5ff] text-[#0866ff]',
+    };
+
+    $estimatedTime = $task->estimatedTimeFormatted;
+    $dueDate = $task->due_date_time;
+    $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
+    $dueDateStatus = $task->status ?? ($status ?? null);
+
+    $showProgress = !$isCompleted && $task->estimated_time_seconds > 0;
+
+    //helper to limit string with tailwind tooltip
+    $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
 @endphp
 
 <div class="card {{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }} bg-white dark:bg-darkblack-600 rounded-md shadow-sm hover:shadow-md transition" data-task-id="{{ $task->id }}" @if ($canOpenTask) data-project-task-detail-open
@@ -8,21 +31,6 @@
         data-project-task-group-key=""
         title="Open task" @endif>
     <div class="p-4 space-y-4">
-        @php
-            $isCompleted = $status->is_completed ?? false;
-            $priority = $task->priority ?? 'medium';
-            $priorityConfig = $priorities[$priority] ?? [];
-            $priorityBgClass = $priorityConfig['bg_class'] ?? 'bg-gray-100';
-            $priorityTextClass = $priorityConfig['bg_text'] ?? 'text-gray-900';
-            $priorityLabel = $priorityConfig['label'] ?? ucfirst($priority);
-
-            $estimatedTime = $task->estimatedTimeFormatted;
-            $dueDate = $task->due_date_time;
-            $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
-            $dueDateStatus = $task->status ?? $status ?? null;
-
-            $stringLimit = fn(?string $value, int $length = 25, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
-        @endphp
 
         <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
