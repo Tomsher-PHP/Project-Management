@@ -66,9 +66,6 @@
 @section('page-content')
     <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] sm:px-5 xl:px-4" data-user-workspace>
         <div class="space-y-2.5">
-            <header class="flex min-h-[44px] items-center justify-between">
-                <h1 class="text-[22px] font-extrabold tracking-normal text-[#111653]">Dashboard</h1>
-            </header>
 
             <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] sm:px-7 sm:py-6">
                 <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -100,22 +97,28 @@
                         <div class="daily-timeline__rail">
                             <div class="daily-timeline__ticks" aria-hidden="true"></div>
 
-                            <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc(18% + 2px); width: calc(12.3% - 4px);" aria-label="2h 29m">
-                            </button>
-                            <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc(30.3% + 2px); width: calc(5.6% - 4px);" aria-label="30m">
-                            </button>
-                            <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc(35.9% + 2px); width: calc(37.2% - 4px);" aria-label="4h 9m">
-                            </button>
-                            <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc(73.1% + 2px); width: calc(4.8% - 4px);" aria-label="48m">
-                            </button>
+                            <!-- Worked Task Start-->
+                            @foreach ($workedTaskSegments ?? [] as $segment)
+                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 4px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
+                                </button>
+                            @endforeach
+                            <!-- Worked Task End-->
 
-                            <div class="daily-timeline__shift daily-timeline__shift--bottom" style="left: 12.2%; width: 65%;">
-                                <span>09:00</span>
-                                <strong>9h</strong>
-                                <span>18:00</span>
-                            </div>
+                            <!-- Allocated Shift Start-->
+                            @foreach (($assignedShift['timeline_segments'] ?? []) as $shiftSegment)
+                                <div class="daily-timeline__shift daily-timeline__shift--bottom" style="left: {{ $shiftSegment['left'] }}%; width: {{ $shiftSegment['width'] }}%;{{ !empty($shiftSegment['color_code']) ? ' --shift-accent: ' . $shiftSegment['color_code'] . ';' : '' }}" data-tooltip-label="{{ $shiftSegment['tooltip_label'] }}" aria-label="{{ $shiftSegment['tooltip_label'] }}" tabindex="0">
+                                    @if (!empty($shiftSegment['start_label']))
+                                        <span>{{ $shiftSegment['start_label'] }}</span>
+                                    @endif
+                                    @if (!empty($shiftSegment['end_label']))
+                                        <span>{{ $shiftSegment['end_label'] }}</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                            <!-- Allocated Shift End-->
                         </div>
 
+                        <!-- Timeline Labels -->
                         <div class="daily-timeline__labels" aria-label="24 hour labels">
                             <span>00</span><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span>
                             <span>06</span><span>07</span><span>08</span><span>09</span><span>10</span><span>11</span>
@@ -205,7 +208,7 @@
 
             .daily-timeline__rail {
                 position: relative;
-                height: 166px;
+                height: 110px;
                 overflow: visible;
                 border: 0;
                 border-radius: 0;
@@ -224,23 +227,19 @@
             }
 
             .daily-timeline__rail::before {
-                height: 38px;
-                background-image: repeating-linear-gradient(
-                    90deg,
-                    rgba(194, 203, 216, 0.86) 0 1px,
-                    transparent 1px 0.8333%
-                );
+                height: 60px;
+                background-image: repeating-linear-gradient(90deg,
+                        rgba(194, 203, 216, 0.86) 0 1px,
+                        transparent 1px 0.6944%);
                 -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.78) 72%, rgba(0, 0, 0, 0.42) 100%);
                 mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.78) 72%, rgba(0, 0, 0, 0.42) 100%);
             }
 
             .daily-timeline__rail::after {
-                height: 50px;
-                background-image: repeating-linear-gradient(
-                    90deg,
-                    rgba(43, 50, 67, 0.88) 0 2px,
-                    transparent 2px 4.1667%
-                );
+                height: 70px;
+                background-image: repeating-linear-gradient(90deg,
+                        rgba(43, 50, 67, 0.88) 0 2px,
+                        transparent 2px 4.1667%);
                 -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.84) 72%, rgba(0, 0, 0, 0.48) 100%);
                 mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.84) 72%, rgba(0, 0, 0, 0.48) 100%);
             }
@@ -250,10 +249,12 @@
                 left: 0;
                 right: 0;
                 top: 34px;
-                height: 25px;
+                height: 35px;
                 border-radius: 6px;
                 background: #e9e9e9;
                 pointer-events: none;
+                z-index: 100;
+                opacity: 60%;
             }
 
             .daily-timeline__ticks::after {
@@ -265,7 +266,7 @@
                 top: 34px;
                 z-index: 2;
                 display: inline-flex;
-                height: 25px;
+                height: 35px;
                 min-width: 36px;
                 align-items: center;
                 justify-content: center;
@@ -279,10 +280,12 @@
                 box-shadow: 0 8px 14px rgba(8, 102, 255, 0.12);
                 white-space: nowrap;
                 transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+                z-index: 200;
+                opacity: 80%;
             }
 
             .daily-timeline__segment::before {
-                content: attr(aria-label);
+                content: attr(data-tooltip-label);
                 position: absolute;
                 left: 50%;
                 top: -31px;
@@ -293,12 +296,16 @@
                 align-items: center;
                 justify-content: center;
                 border-radius: 5px;
-                background: #0866ff;
+                background: #0757d6;
                 padding: 0 8px;
                 color: #fff;
                 font-size: 11px;
                 font-weight: 800;
                 white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.16s ease, visibility 0.16s ease;
             }
 
             .daily-timeline__segment::after {
@@ -309,7 +316,11 @@
                 transform: translateX(-50%);
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 6px solid #0866ff;
+                border-top: 6px solid #0757d6;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.16s ease, visibility 0.16s ease;
             }
 
             .daily-timeline__segment--break {
@@ -320,6 +331,14 @@
                 filter: brightness(1.04);
                 transform: translateY(-1px);
                 box-shadow: 0 10px 18px rgba(18, 25, 95, 0.1);
+            }
+
+            .daily-timeline__segment:hover::before,
+            .daily-timeline__segment:hover::after,
+            .daily-timeline__segment:focus-visible::before,
+            .daily-timeline__segment:focus-visible::after {
+                opacity: 1;
+                visibility: visible;
             }
 
             .daily-timeline__segment--work {
@@ -341,44 +360,86 @@
             }
 
             .daily-timeline__shift {
+                --shift-accent: #0866ff;
                 position: absolute;
                 z-index: 1;
                 display: flex;
-                height: 30px;
+                height: 25px;
                 align-items: center;
                 justify-content: space-between;
                 gap: 1rem;
-                border: 2px solid #8cb6ff;
+                border: 2px solid var(--shift-accent);
                 border-radius: 8px;
-                background: linear-gradient(90deg, #eef5ff 0%, #dbeafe 100%);
+                background:
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.5) 100%),
+                    var(--shift-accent);
                 padding: 0 0.35rem;
-                color: #0866ff;
-                font-size: 0.78rem;
-                font-weight: 800;
+                color: var(--shift-accent);
+                font-size: 0.68rem;
+                font-weight: 600;
                 box-shadow: 0 8px 14px rgba(3, 119, 201, 0.14);
+                opacity: 100%;
+            }
+
+            .daily-timeline__shift::before {
+                content: attr(data-tooltip-label);
+                position: absolute;
+                left: 50%;
+                top: calc(100% + 10px);
+                display: inline-flex;
+                height: 23px;
+                min-width: 48px;
+                transform: translateX(-50%);
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px;
+                background: color-mix(in srgb, var(--shift-accent) 82%, #000 18%);
+                padding: 0 8px;
+                color: #fff;
+                font-size: 11px;
+                font-weight: 800;
+                white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.16s ease, visibility 0.16s ease;
+            }
+
+            .daily-timeline__shift::after {
+                content: "";
+                position: absolute;
+                left: 50%;
+                top: calc(100% + 4px);
+                transform: translateX(-50%);
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-bottom: 6px solid color-mix(in srgb, var(--shift-accent) 82%, #000 18%);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.16s ease, visibility 0.16s ease;
             }
 
             .daily-timeline__shift--bottom {
-                top: 80px;
+                top:75px;
             }
 
             .daily-timeline__shift > span {
                 border: 0;
                 border-radius: 6px;
-                background: #fff;
-                padding: 0.32rem 0.7rem;
-                color: #0866ff;
+                background: transparent;
+                padding: 0 0.45rem;
+                color: #172033;
+                font-size: 0.68rem;
+                line-height: 1;
             }
 
-            .daily-timeline__shift strong {
-                color: #0866ff;
-                font-size: 0.85rem;
-                letter-spacing: 0;
-            }
-
-            .daily-timeline__shift strong span {
-                color: #0866ff;
-                padding: 0 0.25rem;
+            .daily-timeline__shift:hover::before,
+            .daily-timeline__shift:hover::after,
+            .daily-timeline__shift:focus-visible::before,
+            .daily-timeline__shift:focus-visible::after {
+                opacity: 1;
+                visibility: visible;
             }
 
             .daily-timeline__labels {
@@ -1161,14 +1222,14 @@
                       <div class="timeline-slot" data-slot-index="${index}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
                           <div class="timeline-slot__top"></div>
                           ${primarySegment ? `
-                                      <button
-                                          type="button"
-                                          class="timeline-slot__worked-fill"
-                                          style="height:${workedHeight}%;"
-                                          data-segment-id="${primarySegment.id}"
-                                          aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
-                                      ></button>
-                                  ` : ''}
+                                                      <button
+                                                          type="button"
+                                                          class="timeline-slot__worked-fill"
+                                                          style="height:${workedHeight}%;"
+                                                          data-segment-id="${primarySegment.id}"
+                                                          aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
+                                                      ></button>
+                                                  ` : ''}
                           <span class="timeline-slot__label">${slot.label}</span>
                       </div>
                   `;

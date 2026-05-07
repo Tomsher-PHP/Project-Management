@@ -23,4 +23,9 @@ class UserShiftWeekend extends Model
             'week_number' => 'integer',
         ];
     }
+
+    public function assignment()
+    {
+        return $this->belongsTo(UserShiftAssignment::class, 'user_shift_assignment_id');
+    }
 }

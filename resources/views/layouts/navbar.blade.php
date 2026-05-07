@@ -17,9 +17,6 @@
             <h3 class="text-lg font-bold leading-tight text-bgray-900 dark:text-bgray-50 lg:text-[28px]">
                 {{ $pageTitle ?? 'Dashboard' }}
             </h3>
-            <!-- <p class="text-[11px] font-medium leading-4 text-bgray-600 dark:text-bgray-50 lg:text-xs">
-                {{ $subTitle ?? 'Let’s check your update today' }}
-            </p> -->
         </div>
         <!-- search-bar-->
         {{-- <div class="searchbar-wrapper">
