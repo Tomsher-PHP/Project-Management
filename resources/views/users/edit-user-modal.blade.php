@@ -48,6 +48,11 @@
                             </label>
                         </div>
                     </div>
+                    @error('profile_image')
+                        <p class="mt-2 text-sm text-error-300">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <!-- Basic Information Fields -->
@@ -229,3 +234,6 @@
 
     </div>
 </div>
+@push('scripts')
+    @vite('resources/js/image-draggable.js')
+@endpush

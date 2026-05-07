@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendWelcomeMailJob;
 use App\Mail\WelcomeUserMail;
+use App\Models\Configuration;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserDetail;
@@ -55,17 +56,15 @@ class UserService
                 $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, 'public', 'public', true);
             }
 
-            // Generate password
-            $plainPassword = Str::random(8);
+            // KPI sync
+            if (!empty($data['kpi_id'])) {
+                $user->kpis()->sync($data['kpi_id']);
+            }
 
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => bcrypt($plainPassword),
-            ]);
+            $company = Configuration::first();
 
             // Send mail
-            dispatch(new SendWelcomeMailJob($user, $plainPassword));
+            dispatch(new SendWelcomeMailJob($user, $data['password'], $company));
             return $user;
         });
     }
@@ -103,6 +102,11 @@ class UserService
                 ->toArray();
 
             $user->details()->updateOrCreate([], $detailsData);
+
+            // kpis
+            if (isset($data['kpi_id'])) {
+                $user->kpis()->sync($data['kpi_id'] ?? []);
+            }
 
             // Handle Profile Image Upload or delete existing
             if (!empty($data['profile_image'])) {

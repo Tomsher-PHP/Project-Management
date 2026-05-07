@@ -10,15 +10,15 @@
         <div class="flex-shrink-0">
             <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
                 <!-- Preview Image -->
-                <img id="preview" class="absolute inset-0 h-full w-full object-cover rounded-md {{ $user->hasProfileImage ? '' : 'hidden' }}" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
+                <img id="preview" class="absolute inset-0 h-full w-full object-cover rounded-md {{ $user?->hasProfileImage ? '' : 'hidden' }}" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
 
                 <!-- Remove Button -->
-                <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 {{ $user->hasProfileImage ? '' : 'hidden' }}">
+                <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 {{ $user?->hasProfileImage ? '' : 'hidden' }}">
                     ✕
                 </button>
 
                 <!-- Upload Placeholder -->
-                <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ $user->hasProfileImage ? 'hidden' : '' }}">
+                <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ $user?->hasProfileImage ? 'hidden' : '' }}">
                     <label for="profile-image" class="cursor-pointer text-indigo-600">
                         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -400,6 +400,41 @@
                        @error('address') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">{{ old('address', $user->details->address ?? '') }}</textarea>
 
                 @error('address')
+                    <p class="mt-2 text-sm text-error-300">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+        </div>
+    </div>
+    <!-- ================= KPI ================= -->
+    <div>
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+            KPI Information
+        </h3>
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- KPI -->
+            <div class="flex flex-col gap-2">
+                <label for="kpi_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    KPI
+                </label>
+
+                <select name="kpi_id[]" id="kpi_id" class="tom-select w-full" multiple>
+                    <option value="">Select KPI</option>
+
+                    @php
+                        $selectedKpis = old('kpi_id', $user?->kpis->pluck('id')->toArray() ?? []);
+                    @endphp
+
+                    @foreach ($kpis as $kpi)
+                        <option value="{{ $kpi->id }}" {{ in_array($kpi->id, $selectedKpis) ? 'selected' : '' }}>
+                            {{ $kpi->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('kpi_id')
                     <p class="mt-2 text-sm text-error-300">
                         {{ $message }}
                     </p>

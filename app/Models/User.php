@@ -309,4 +309,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserGeneralSetting::class, 'user_id');
     }
+
+    public function kpis()
+    {
+        return $this->belongsToMany(Kpi::class, 'user_kpis')->withTimestamps();;
+    }
 }

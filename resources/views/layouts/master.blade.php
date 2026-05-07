@@ -25,22 +25,15 @@
     @stack('styles')
     <script>
         (function () {
-
-            // // DB value passed from Laravel
-            // let dbTheme = 
-
-            // // localStorage override (frontend cache)
             let theme = "{{ $userTheme ?? 'light' }}";
 
-            // sync both
+            // overwrite stored value
             localStorage.setItem('theme', theme);
 
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-
+            // force apply AFTER other scripts
+            window.addEventListener('load', function () {
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+            });
         })();
     </script>
 </head>

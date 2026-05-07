@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
-            // ❗ HANDLE VALIDATION ERROR
+            // HANDLE VALIDATION ERROR
             if (!response.ok) {
 
                 if (response.status === 422 && data.errors) {
@@ -38,13 +38,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // SUCCESS
             Alert.success(data.message || 'User updated successfully');
-
             window.dispatchEvent(new CustomEvent('close-edit-modal'));
+            window.location.reload();
 
-            // optional DOM update
-            if (data.html) {
-                document.getElementById('userProfileSection').innerHTML = data.html;
-            }
 
         } catch (err) {
             console.error(err);
@@ -54,14 +50,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showValidationErrors(errors) {
         Object.keys(errors).forEach(field => {
+
+            // Special case for profile image
+            if (field === 'profile_image') {
+                const container = document.getElementById('drop-area')?.parentElement;
+
+                if (container) {
+                    const error = document.createElement('p');
+                    error.classList.add('text-red-500', 'text-sm', 'mt-2', 'error-text');
+                    error.innerText = errors[field][0];
+
+                    container.appendChild(error);
+                }
+                return;
+            }
+
+            // Normal fields
             const input = document.querySelector(`[name="${field}"]`);
 
             if (input) {
+                const wrapper = input.closest('.flex.flex-col') || input.parentElement;
+
                 const error = document.createElement('p');
                 error.classList.add('text-red-500', 'text-sm', 'mt-1', 'error-text');
                 error.innerText = errors[field][0];
 
-                input.closest('.flex, .grid, .col-span-1, .flex-col')?.appendChild(error);
+                wrapper.appendChild(error);
             }
         });
     }

@@ -110,6 +110,25 @@
                             </p>
                         </div>
                     </div>
+                    <!-- KPI -->
+                    <div data-tab="kpiTab" class="tab group flex gap-x-4 rounded-lg p-4 transition-all">
+                        <div
+                            class="tab-icon inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-bgray-100 transition-all">
+                            <!-- Icon -->
+                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path d="M4 19V10M10 19V5M16 19V13M22 19V3"
+                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-bold text-bgray-900 dark:text-white">
+                                KPI
+                            </h4>
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                                Track performance and KPI metrics
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 @php
@@ -454,7 +473,7 @@
                         Change Password
                     </h3>
 
-                    <form id="changePasswordForm" method="POST" action="{{ route('users.change.password') }}">
+                    <form id="changePasswordForm" method="POST" action="{{ route('users.change.password') }}" novalidate>
                         @csrf
 
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -469,6 +488,7 @@
                                     name="current_password"
                                     @if(!auth()->user()->is_super_admin) required @endif
                                 class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                <span class="text-red-500 text-sm error" data-error="current_password"></span>
                             </div>
                             @endif
 
@@ -481,6 +501,7 @@
                                     name="new_password"
                                     required
                                     class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                <span class="text-red-500 text-sm mt-1 block error" data-error="new_password"></span>
                             </div>
 
                             <!-- Confirm Password -->
@@ -492,6 +513,7 @@
                                     name="new_password_confirmation"
                                     required
                                     class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+                                <span class="text-red-500 text-sm error" data-error="new_password_confirmation"></span>
                             </div>
 
                             <!-- Hidden User ID -->
@@ -507,6 +529,60 @@
                         </div>
                     </form>
                 </div>
+                <!-- KPI Tab Content -->
+                <div id="kpiTab" class="tab-pane">
+                    <h3 class="mb-5 text-2xl font-bold text-bgray-900 dark:text-white">
+                        KPI Details
+                    </h3>
+
+                    <div class="p-6 rounded-xl bg-white dark:bg-darkblack-500 shadow">
+
+                        @forelse($user->kpis as $kpi)
+
+                        <!-- KPI Title -->
+                        <h4 class="text-lg font-bold text-bgray-800 dark:text-white mt-4 mb-4">
+                            {{ $kpi->name }}
+                        </h4>
+
+                        <!-- KPI Description -->
+                        <div class="space-y-5 text-sm text-bgray-600 dark:text-darkblack-300 mb-6">
+
+                            @foreach(preg_split('/\r\n\r\n|\n\n/', $kpi->description) as $section)
+                            @php
+                            $lines = preg_split('/\r\n|\r|\n/', trim($section));
+                            $heading = array_shift($lines);
+                            @endphp
+
+                            @if($heading)
+                            <div>
+                                <h5 class="font-semibold text-bgray-800 dark:text-white mb-2">
+                                    {{ $heading }}
+                                </h5>
+
+                                <ul class="list-disc pl-5 space-y-1">
+                                    @foreach($lines as $line)
+                                    @if(trim($line))
+                                    <li>{{ $line }}</li>
+                                    @endif
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+                            @endforeach
+
+                        </div>
+
+                        <!-- Divider between KPIs -->
+                        <hr class="my-4 border-gray-200 dark:border-darkblack-400">
+
+                        @empty
+                        <div class="text-bgray-500 dark:text-darkblack-300">
+                            No KPIs assigned to this user.
+                        </div>
+                        @endforelse
+
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -514,6 +590,12 @@
         @include('users.edit-user-modal',['user' => $user])
     </div>
 </main>
+
+@if ($errors->any())
+<script>
+    localStorage.setItem('activeTab', 'changePasswordTab');
+</script>
+@endif
 @endsection
 
 @push('scripts')

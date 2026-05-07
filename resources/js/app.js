@@ -45,3 +45,26 @@ document.addEventListener('DOMContentLoaded', function () {
     initTaskTimer();
     initNotifications(window.authUserId);
 });
+
+// when tab clicked
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        localStorage.setItem('activeTab', this.dataset.tab);
+    });
+});
+
+
+window.addEventListener('DOMContentLoaded', () => {
+    let activeTab = localStorage.getItem('activeTab');
+
+    if (activeTab) {
+        // remove active from all
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+        // activate saved tab
+        document.querySelector(`[data-tab="${activeTab}"]`)?.classList.add('active');
+        document.getElementById(activeTab)?.classList.add('active');
+    }
+});
+
