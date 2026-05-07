@@ -117,4 +117,22 @@ return [
         'H:i',
         'h:i A',
     ],
+
+    // Settings permissions list
+    'settings_permissions' => [
+        'department.view',
+        'designation.view',
+        'shift.view',
+        'technology.view',
+        'project_category.view',
+        'industry.view',
+        'project_status.view',
+        'project_stage.view',
+        'configuration.view',
+        'agile_milestone.view',
+        'agile_sprint.view',
+        'task_settings.view',
+        'kpi.view',
+        'checklist_template.view'
+    ],
 ];

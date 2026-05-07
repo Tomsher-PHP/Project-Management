@@ -8,6 +8,7 @@ use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Services\ProjectTimeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,7 @@ class ProjectMilestoneController extends Controller
                 ], true)
             );
 
-            $projectMilestone->refreshTrackedTimeMetrics();
+            app(ProjectTimeService::class)->recalculateMilestoneTimes($projectMilestone->id);
 
             return $projectMilestone;
         });

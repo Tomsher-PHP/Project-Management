@@ -10,8 +10,10 @@
     $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
     $modeColor = $task->taskMode?->color ?: '#3B82F6';
     $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
+    $canAddSubTask = auth()->user()?->can('task.create');
     $canMoveTask = $showTaskActionColumn && !$isSubtask && auth()->user()?->can('move', $task);
     $canDeleteTask = $showTaskActionColumn && auth()->user()?->can('delete', $task);
+    $canEditTask = $showTaskActionColumn && auth()->user()?->can('task.edit');
 @endphp
 
 <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isSubtask ? 'hidden bg-bgray-50/30 dark:bg-darkblack-500/20' : '' }}" data-project-task-id="{{ $task->id }}" @if ($isSubtask) data-project-task-parent-id="{{ $parentTaskId }}" hidden @endif>
@@ -25,8 +27,7 @@
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <a href="{{ route('tasks.edit', $task) }}" class="inline-flex items-center gap-2 font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
-                            <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full {{ $priorityConfig['bg_class'] ?? 'bg-primary' }}"></span>
-                            <span>{{ $task->name }}</span>
+                            <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
                         </a>
 
                         <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
@@ -123,7 +124,7 @@
 
     @if ($showTaskActionColumn)
         <td class="border-b border-bgray-200 px-4 py-4 align-top text-right dark:border-b-darkblack-400">
-            @if ($canMoveTask || $canDeleteTask)
+            @if ($canAddSubTask || $canMoveTask || $canDeleteTask || $canEditTask)
                 <div class="relative inline-flex" data-project-task-row-dropdown>
                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-500 transition hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" data-project-task-row-menu-trigger aria-expanded="false" aria-label="Task actions">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
@@ -132,14 +133,24 @@
                     </button>
 
                     <div class="hidden min-w-[148px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-row-menu>
-                        @can('task.create')
+                        @if ($canAddSubTask)
                             <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? $task->project_milestone_id ?? '' : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? $task->project_sprint_id ?? '' : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M10 4a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 0110 4z" clip-rule="evenodd" />
                                 </svg>
                                 <span>Add Sub Task</span>
                             </button>
-                        @endcan
+                        @endif
+
+                        @if ($canEditTask)
+                            <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="{{ $group['key'] }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
+                                </svg>
+                                <span>Edit</span>
+                            </button>
+                        @endif
 
                         @if ($canMoveTask)
                             <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-move-open data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}" data-project-task-name="{{ $task->name }}" data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}" data-project-task-current-module="{{ $task->projectMilestone?->name ?? 'None' }}">

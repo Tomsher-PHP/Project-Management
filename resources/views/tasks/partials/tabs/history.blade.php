@@ -119,8 +119,8 @@
                                 @foreach ($timeLogs as $timeLog)
                                     @php
                                         $timeLogUser = $timeLog->user;
-                                        $timeLogStartedAtForInput = $timeLog->started_at?->copy()?->timezone($globalTimezone)?->format('Y-m-d H:i');
-                                        $timeLogEndedAtForInput = $timeLog->ended_at?->copy()?->timezone($globalTimezone)?->format('Y-m-d H:i');
+                                        $timeLogStartedAtForInput = $timeLog->started_at?->copy()?->timezone($globalTimezone)?->format('Y-m-d H:i:s');
+                                        $timeLogEndedAtForInput = $timeLog->ended_at?->copy()?->timezone($globalTimezone)?->format('Y-m-d H:i:s');
                                         $hasPendingTimeLogChangeRequest = (bool) ($timeLog->has_pending_change_request ?? false);
                                         $isDifferentUserLog = (int) ($timeLog->user_id ?? 0) !== (int) auth()->id();
                                         $isRunningLog = (bool) $timeLog->is_running;
@@ -203,7 +203,7 @@
                                         <label for="timeLogChangeRequestNewStartedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                             New Started At <x-red-star />
                                         </label>
-                                        <input type="text" id="timeLogChangeRequestNewStartedAt" name="new_started_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" data-time-log-change-request-started-at placeholder="Select start date and time" autocomplete="off">
+                                        <input type="text" id="timeLogChangeRequestNewStartedAt" name="new_started_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-started-at placeholder="Select start date and time" autocomplete="off">
                                         <p class="mt-1 hidden text-sm text-error-300" data-time-log-change-request-error-for="new_started_at"></p>
                                     </div>
 
@@ -211,7 +211,7 @@
                                         <label for="timeLogChangeRequestNewEndedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
                                             New Ended At <x-red-star />
                                         </label>
-                                        <input type="text" id="timeLogChangeRequestNewEndedAt" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" data-time-log-change-request-ended-at placeholder="Select end date and time" autocomplete="off">
+                                        <input type="text" id="timeLogChangeRequestNewEndedAt" name="new_ended_at" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-enable-seconds="true" data-time-24hr="true" data-format="Y-m-d H:i:S" data-time-log-change-request-ended-at placeholder="Select end date and time" autocomplete="off">
                                         <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300" data-time-log-change-request-duration>
                                             Duration: --
                                         </p>

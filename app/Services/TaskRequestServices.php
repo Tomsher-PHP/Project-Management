@@ -111,6 +111,7 @@ class TaskRequestServices
     {
         return $this->accountableRequestQuery($user)
             ->whereKey($task->id)
+            ->where('request_status', 'pending')
             ->exists();
     }
 
@@ -227,6 +228,8 @@ class TaskRequestServices
                 'approved_by' => $user->id,
                 'approved_at' => $approvedAt,
             ]);
+
+        app(ProjectTimeService::class)->recalculateByTask($task->id);
 
         $this->notificationService->notifyTaskRequestReviewed($task, $user, 'approve');
     }

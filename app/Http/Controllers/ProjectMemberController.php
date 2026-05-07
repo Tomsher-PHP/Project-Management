@@ -27,6 +27,10 @@ class ProjectMemberController extends Controller
             }
 
             $existingMembers = $project->membersAll()
+                ->with([
+                    'details.designation',
+                    'primaryAttachment',
+                ])
                 ->whereIn('users.id', $userIds)
                 ->get()
                 ->keyBy('id');
@@ -72,6 +76,10 @@ class ProjectMemberController extends Controller
 
             // Fetch all members
             $members = $project->membersAll()
+                ->with([
+                    'details.designation',
+                    'primaryAttachment',
+                ])
                 ->whereIn('users.id', $newlyAddedIds)
                 ->get();
 
@@ -212,6 +220,10 @@ class ProjectMemberController extends Controller
         }
 
         return $project->membersAll()
+            ->with([
+                'details.designation',
+                'primaryAttachment',
+            ])
             ->whereIn('users.id', $userIds)
             ->get()
             ->mapWithKeys(function ($member) use ($project) {

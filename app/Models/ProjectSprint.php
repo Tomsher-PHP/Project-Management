@@ -57,20 +57,6 @@ class ProjectSprint extends Model
         static::updating(function (ProjectSprint $projectSprint) {
             $projectSprint->updated_by = Auth::id();
         });
-
-        static::saved(function (ProjectSprint $projectSprint) {
-            $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
-        });
-
-        static::deleted(function (ProjectSprint $projectSprint) {
-            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
-        });
-
-        static::restored(function (ProjectSprint $projectSprint) {
-            $projectSprint->refreshDerivedTimeSeconds();
-            $projectSprint->projectMilestone?->refreshTrackedTimeMetrics();
-        });
     }
 
     public function project()
@@ -162,37 +148,6 @@ class ProjectSprint extends Model
         }
 
         return (int) $query->count();
-    }
-
-    public function refreshDerivedTimeSeconds(): void
-    {
-        $derivedSeconds = 0;
-        $actualSeconds = 0;
-
-        if (
-            Schema::hasTable('tasks')
-            && Schema::hasColumn('tasks', 'project_sprint_id')
-        ) {
-            $query = DB::table('tasks')
-                ->where('project_sprint_id', $this->id);
-
-            if (Schema::hasColumn('tasks', 'deleted_at')) {
-                $query->whereNull('deleted_at');
-            }
-
-            if (Schema::hasColumn('tasks', 'estimated_time_seconds')) {
-                $derivedSeconds = (int) $query->sum('estimated_time_seconds');
-            }
-
-            if (Schema::hasColumn('tasks', 'actual_time_seconds')) {
-                $actualSeconds = (int) $query->sum('actual_time_seconds');
-            }
-        }
-
-        $this->updateQuietly([
-            'derived_time_seconds' => $derivedSeconds,
-            'actual_time_seconds' => $actualSeconds,
-        ]);
     }
 
     /*----------------Activity Log Customization----------------*/

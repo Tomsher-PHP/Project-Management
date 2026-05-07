@@ -3,8 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Configuration;
+use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\UserGeneralSetting;
+use App\Models\TaskTimeLog;
+use App\Observers\ProjectSprintObserver;
+use App\Observers\TaskObserver;
+use App\Observers\TaskTimeLogObserver;
 use App\Policies\TaskPolicy;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -98,6 +103,10 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('appDateTime', function ($expression) {
             return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDateTime({$expression}); ?>";
         });
+
+        Task::observe(TaskObserver::class);
+        TaskTimeLog::observe(TaskTimeLogObserver::class);
+        ProjectSprint::observe(ProjectSprintObserver::class);
 
         Gate::policy(Task::class, TaskPolicy::class);
 

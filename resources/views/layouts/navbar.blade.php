@@ -3,7 +3,7 @@
     $unreadCount = auth()->user()->unreadNotifications->count(); // unread badge
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
-    <div class="relative flex h-[84px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
+    <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
         <button title="Ctrl+b" type="button" class="drawer-btn absolute left-0 top-auto rotate-180 transform">
             <span>
                 <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -17,9 +17,9 @@
             <h3 class="text-lg font-bold leading-tight text-bgray-900 dark:text-bgray-50 lg:text-[28px]">
                 {{ $pageTitle ?? 'Dashboard' }}
             </h3>
-            <p class="text-[11px] font-medium leading-4 text-bgray-600 dark:text-bgray-50 lg:text-xs">
+            <!-- <p class="text-[11px] font-medium leading-4 text-bgray-600 dark:text-bgray-50 lg:text-xs">
                 {{ $subTitle ?? 'Let’s check your update today' }}
-            </p>
+            </p> -->
         </div>
         <!-- search-bar-->
         {{-- <div class="searchbar-wrapper">
@@ -50,8 +50,8 @@
         <!-- quick access-->
         <div class="quick-access-wrapper relative">
             <div class="flex items-center space-x-7">
-                <div class="hidden items-center space-x-3 xl:flex">
-                    <button type="button" id="theme-toggle" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400" data-user="{{ auth()->user()->id }}">
+                <div class="hidden items-center space-x-6 xl:flex">
+                    <button type="button" id="theme-toggle" class="relative flex h-5 w-5 items-center justify-center" data-user="{{ auth()->user()->id }}">
                         <span class="block dark:hidden">
                             <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M18.3284 14.8687C13.249 14.8687 9.13135 10.751 9.13135 5.67163C9.13135 4.74246 9.26914 3.84548 9.5254 3C5.74897 4.14461 3 7.65276 3 11.803C3 16.8824 7.11765 21 12.197 21C16.3472 21 19.8554 18.251 21 14.4746C20.1545 14.7309 19.2575 14.8687 18.3284 14.8687Z" stroke-width="1.5" stroke-linejoin="round" />
@@ -69,7 +69,7 @@
                             </svg>
                         </span>
                     </button>
-                    <button onclick="notificationAction()" id="notification-btn" type="button" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 dark:border-darkblack-400">
+                    <button onclick="notificationAction()" id="notification-btn" type="button" class="relative flex h-5 w-5 items-center justify-center">
                         <span class="absolute -right-[5px] -top-[2px] h-3.5 w-3.5 rounded-full border-2 border-white bg-bgray-300 dark:border-none dark:bg-bgray-600">
                         </span>
                         <svg class="fill-bgray-900 dark:fill-white" width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,7 +83,7 @@
                         </span>
                     </button>
                     @can('user.tree_view')
-                        <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-11 w-11 items-center justify-center rounded-xl border border-success-300 transition hover:bg-success-50 dark:border-darkblack-400 dark:hover:bg-darkblack-500 {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
+                        <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-5 w-5 items-center justify-center  {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
                             <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 5V10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                 <path d="M6 19V16C6 14.8954 6.89543 14 8 14H16C17.1046 14 18 14.8954 18 16V19" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -105,24 +105,17 @@
                 <div class="hidden h-10 w-[1px] bg-bgray-300 dark:bg-darkblack-400 xl:block"></div>
                 <!--author-->
                 <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">
-                    <div class="h-11 w-11 overflow-hidden rounded-xl border border-bgray-300">
+                    <div class="h-8 w-8 overflow-hidden rounded-xl border border-bgray-300">
                         <img class="object-cover" src="{{ auth()->user()->profileImageUrl ?? './assets/images/avatar/profile-52x52.png' }}" alt="avater" />
                     </div>
-                    <div class="hidden 2xl:block">
-                        <div class="flex items-center space-x-2.5">
-                            <h3 class="text-base font-bold leading-[28px] text-bgray-900 dark:text-white">
-                                {{ auth()->user()->name }}
-                            </h3>
+               <div class="flex items-center space-x-2.5">
+                   
                             <span>
                                 <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M7 10L12 14L17 10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </span>
                         </div>
-                        <p class="text-sm font-medium leading-[20px] text-bgray-600 dark:text-bgray-50">
-                            {{ auth()->user()->is_super_admin ? 'Super Admin' : auth()->user()->roleName }}
-                        </p>
-                    </div>
                 </div>
             </div>
             <!--notification, message, store-->

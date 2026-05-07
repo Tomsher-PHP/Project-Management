@@ -18,14 +18,16 @@ use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
 use App\Models\ProjectCategory;
 use App\Models\ProjectSprint;
-use App\Models\ProjectStage;
 use App\Models\ProjectStatus;
 use App\Models\Technology;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\AttachmentService;
+use App\Services\ProjectAnalyticsService;
+use App\Services\ProjectPaymentServices;
 use App\Services\ProjectServices;
 use App\Services\UserService;
+use App\Traits\ProjectHeaderTrait;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,13 +38,20 @@ use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller
 {
-    use BuildsProjectActivityQueries;
+    use BuildsProjectActivityQueries, ProjectHeaderTrait;
 
     protected string $pageTitle;
     protected string $subTitle;
+    protected ProjectPaymentServices $projectPaymentService;
+    protected ProjectServices $projectServices;
+    protected ProjectAnalyticsService $analyticsService;
 
-    public function __construct()
+    public function __construct(ProjectPaymentServices $projectPaymentService, ProjectServices $projectServices, ProjectAnalyticsService $analyticsService)
     {
+        $this->projectPaymentService = $projectPaymentService;
+        $this->projectServices = $projectServices;
+        $this->analyticsService = $analyticsService;
+
         $this->pageTitle = 'Project Management';
         $this->subTitle = 'Manage your projects';
         view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
@@ -156,7 +165,18 @@ class ProjectController extends Controller
 
     public function tab(Request $request, Project $project, string $tab, ProjectServices $service)
     {
-        $allowedTabs = ['milestones', 'tasks', 'team', 'scope', 'notes', 'history', 'settings'];
+        $allowedTabs = [
+            'overview',
+            'milestones',
+            'tasks',
+            'team',
+            'scope',
+            'notes',
+            'checklists',
+            'history',
+            'settings',
+            'payments'
+        ];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
 
         return response()->json([
@@ -180,7 +200,7 @@ class ProjectController extends Controller
 
     public function updateProjectStatus(Request $request, Project $project, ProjectServices $service)
     {
-        $latestStatusChangeDate = $this->getLatestProjectStatusChangeDate($project);
+        $latestStatusChangeDate = $service->getLatestProjectStatusChangeDate($project);
         $validator = Validator::make($request->all(), [
             'status_id' => 'required|exists:project_statuses,id',
             'change_date' => 'required|date',
@@ -210,7 +230,7 @@ class ProjectController extends Controller
             'project_stage_id' => $request->filled('project_stage_id') ? $request->input('project_stage_id') : null,
         ]);
 
-        $latestStageChangeDate = $this->getLatestProjectStageChangeDate($project);
+        $latestStageChangeDate = $service->getLatestProjectStageChangeDate($project);
         $validator = Validator::make($request->all(), [
             'project_stage_id' => 'nullable|exists:project_stages,id',
             'change_date' => 'required|date',
@@ -361,6 +381,7 @@ class ProjectController extends Controller
     private function renderTab(Project $project, string $tab, ProjectServices $service, Request $request): string
     {
         return match ($tab) {
+            'overview' => $this->renderOverviewTab($project),
             'milestones' => $this->renderMilestonesTab($project),
             'tasks' => app(ProjectTaskController::class)->renderTasksTab($project),
             'team' => $this->renderTeamTab($project),
@@ -368,8 +389,27 @@ class ProjectController extends Controller
             'notes' => $this->renderNotesTab($project, $request),
             'history' => $this->renderHistoryTab($project),
             'settings' => $this->renderSettingsTab($project),
+            'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
+            'checklists' => app(ProjectChecklistController::class)->renderChecklistsTab($project),
             default => abort(Response::HTTP_NOT_FOUND),
         };
+    }
+
+    private function renderOverviewTab(Project $project): string
+    {
+        $progressbar = $this->analyticsService->getProgressbar($project);
+        $taskStatusOverview = $this->analyticsService->getTaskStatusOverview($project);
+        $taskAssigneeOverview = $this->analyticsService->getTaskAssigneeOverview($project);
+        $milestoneBurnupChart = $this->analyticsService->getMilestoneBurnupChartData($project);
+
+        return view('projects.partials.tabs.overview', [
+            'project' => $project,
+            'progressbar' => $progressbar,
+            'taskStatusOverview' => $taskStatusOverview,
+            'taskAssigneeOverview' => $taskAssigneeOverview,
+            'milestoneBurnupChart' => $milestoneBurnupChart,
+            'totalTaskCount' => $taskStatusOverview->sum('count'),
+        ])->render();
     }
 
     private function getRecentProjectComments(Project $project, int $limit = 10): Collection
@@ -427,7 +467,10 @@ class ProjectController extends Controller
     private function renderTeamTab(Project $project): string
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
-        $project->load('members');
+        $project->load([
+            'members.details.designation',
+            'members.primaryAttachment',
+        ]);
 
         $existingMemberIds = $project->members
             ->pluck('id')
@@ -470,7 +513,7 @@ class ProjectController extends Controller
                     'from_color' => $history->fromStatus?->color ?: '#CBD5E1',
                     'to_label' => $history->status?->name ?? 'No Status',
                     'to_color' => $history->status?->color ?: '#CBD5E1',
-                    'changed_at' => $this->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                    'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
                     'changed_by' => $history->addedBy?->name ?? '--',
                     'remarks' => $history->remarks,
                 ];
@@ -487,7 +530,7 @@ class ProjectController extends Controller
                     'from_color' => $history->fromStage?->color ?: '#CBD5E1',
                     'to_label' => $history->stage?->name ?? 'No Stage',
                     'to_color' => $history->stage?->color ?: '#CBD5E1',
-                    'changed_at' => $this->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
+                    'changed_at' => $this->projectServices->convertStoredTimestampToConfigTimezone($history->getRawOriginal('added_at')),
                     'changed_by' => $history->addedBy?->name ?? '--',
                     'remarks' => $history->remarks,
                 ];
@@ -530,8 +573,6 @@ class ProjectController extends Controller
         $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
 
         $priorities = config('project_constants.project_priorities');
-        // $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
-        // $projectStages = ProjectStage::active()->orderBy('sort_order', 'asc')->get();
 
         return view('projects.partials.tabs.settings', compact(
             'project',
@@ -542,61 +583,7 @@ class ProjectController extends Controller
             'projectTechnologies',
             'nextProjectTechnologySortOrder',
             'priorities'
-            // 'statuses',
-            // 'projectStages',
         ))->render();
-    }
-
-    private function getProjectHeaderData(Project $project, ProjectServices $service): array
-    {
-        $project->loadMissing(['customer', 'projectStatus', 'projectStage', 'addedBy']);
-        $timelines = $service->getTimelines($project);
-        $paymentSummary = $service->getPaymentSummary($project);
-        $statusChangeMinDate = $this->getLatestProjectStatusChangeDate($project);
-        $stageChangeMinDate = $this->getLatestProjectStageChangeDate($project);
-
-        $selectedStatusId = $project->status_id;
-        $selectedStageId = $project->project_stage_id;
-
-        return [
-            'priority' => config('project_constants.project_priorities')[$project->priority] ?? null,
-            'projectTimeline' => $timelines['projectTimeline'],
-            'customerTimeline' => $timelines['customerTimeline'],
-            'paymentSummary' => $paymentSummary,
-            'projectStatuses' => ProjectStatus::forForm($selectedStatusId, ['order_by' => 'sort_order'])->get(),
-            'projectStages' => ProjectStage::forForm($selectedStageId, ['order_by' => 'sort_order'])->get(),
-            'statusChangeMinDate' => $statusChangeMinDate?->toDateString(),
-            'statusChangeMinDateLabel' => $statusChangeMinDate ? AppServiceProvider::formatAppDate($statusChangeMinDate) : null,
-            'stageChangeMinDate' => $stageChangeMinDate?->toDateString(),
-            'stageChangeMinDateLabel' => $stageChangeMinDate ? AppServiceProvider::formatAppDate($stageChangeMinDate) : null,
-        ];
-    }
-
-    private function renderProjectHeader(Project $project, ProjectServices $service): string
-    {
-        return view('projects.partials.header', array_merge([
-            'project' => $project,
-        ], $this->getProjectHeaderData($project, $service)))->render();
-    }
-
-    private function getLatestProjectStatusChangeDate(Project $project): ?Carbon
-    {
-        $latestDate = $project->statusHistories()
-            ->reorderDesc('added_at')
-            ->orderByDesc('id')
-            ->value('added_at');
-
-        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
-    }
-
-    private function getLatestProjectStageChangeDate(Project $project): ?Carbon
-    {
-        $latestDate = $project->stageHistories()
-            ->reorderDesc('added_at')
-            ->orderByDesc('id')
-            ->value('added_at');
-
-        return $this->convertStoredTimestampToConfigTimezone($latestDate)?->startOfDay();
     }
 
     private function applyProjectChangeDateValidation($validator, ?string $changeDate, ?Carbon $minimumDate): void
@@ -621,26 +608,15 @@ class ProjectController extends Controller
         });
     }
 
-    private function convertStoredTimestampToConfigTimezone(string|Carbon|null  $value): ?Carbon
-    {
-        if (blank($value)) {
-            return null;
-        }
-
-        try {
-            return Carbon::parse($value, 'UTC')->timezone(config('constants.timezone'));
-        } catch (\Throwable) {
-            try {
-                return Carbon::parse($value, config('constants.timezone'))->timezone(config('constants.timezone'));
-            } catch (\Throwable) {
-                return null;
-            }
-        }
-    }
-
     public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, ProjectServices $service): JsonResponse
     {
         $validated = $request->validated();
+        if (!$project->is_linear) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project payment status can not be updated for non-linear flow project.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
 
         $service->createPayment($project, $validated);
         $project = $project->fresh();

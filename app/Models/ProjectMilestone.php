@@ -156,47 +156,6 @@ class ProjectMilestone extends Model
         return (int) $query->count();
     }
 
-    public function refreshTrackedTimeMetrics(): void
-    {
-        $derivedSeconds = $this->projectSprints()
-            ->get(['estimated_time_seconds', 'derived_time_seconds'])
-            ->sum(function (ProjectSprint $projectSprint) {
-                $taskDerivedSeconds = (int) ($projectSprint->derived_time_seconds ?? 0);
-
-                return $taskDerivedSeconds > 0
-                    ? $taskDerivedSeconds
-                    : (int) ($projectSprint->estimated_time_seconds ?? 0);
-            });
-
-        $actualSeconds = 0;
-
-        if (
-            Schema::hasTable('tasks')
-            && Schema::hasColumn('tasks', 'project_sprint_id')
-            && Schema::hasColumn('tasks', 'actual_time_seconds')
-            && Schema::hasTable('project_sprints')
-        ) {
-            $query = DB::table('tasks')
-                ->join('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
-                ->where('project_sprints.project_milestone_id', $this->id);
-
-            if (Schema::hasColumn('tasks', 'deleted_at')) {
-                $query->whereNull('tasks.deleted_at');
-            }
-
-            if (Schema::hasColumn('project_sprints', 'deleted_at')) {
-                $query->whereNull('project_sprints.deleted_at');
-            }
-
-            $actualSeconds = (int) $query->sum('tasks.actual_time_seconds');
-        }
-
-        $this->updateQuietly([
-            'derived_time_seconds' => (int) $derivedSeconds,
-            'actual_time_seconds' => (int) $actualSeconds,
-        ]);
-    }
-
     private function formatSeconds(?int $seconds): string
     {
         $totalSeconds = max(0, (int) ($seconds ?? 0));

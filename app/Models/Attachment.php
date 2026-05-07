@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Attachment extends Model
@@ -51,6 +52,21 @@ class Attachment extends Model
     public function addedBy()
     {
         return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function getUrlAttribute()
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        $disk = $this->disk ?? config('filesystems.default');
+
+        if ($disk === 's3' && $this->visibility === 'private') {
+            return Storage::disk($disk)->temporaryUrl($this->file_path, now()->addMinutes(15));
+        }
+
+        return Storage::disk($disk)->url($this->file_path);
     }
 
     protected function getActivityLogName(): string

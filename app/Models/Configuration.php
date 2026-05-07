@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Configuration extends Model
 {
@@ -37,7 +36,7 @@ class Configuration extends Model
         $attachment = $this->logoAttachment();
 
         return $attachment
-            ? Storage::disk($attachment->disk)->url($attachment->file_path)
+            ? $attachment->url
             : null;
     }
 

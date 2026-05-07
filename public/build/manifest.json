@@ -10,6 +10,7 @@
     "file": "assets/datepicker-Cg43rwNk.js",
     "name": "datepicker",
     "imports": [
+      "resources/js/modules/users/change-password.js",
       "_flatpickr.min-BJdP9L7S.js"
     ]
   },
@@ -39,7 +40,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DHKbXDIh.css",
+    "file": "assets/app-Cs7CeAUl.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -48,7 +49,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BgGR2Bp5.js",
+    "file": "assets/app-DtojI2GS.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -76,6 +77,12 @@
     "src": "resources/js/modules/activity-logs.js",
     "isEntry": true
   },
+  "resources/js/modules/checklist-template-form.js": {
+    "file": "assets/checklist-template-form-Cqw0kBkE.js",
+    "name": "checklist-template-form",
+    "src": "resources/js/modules/checklist-template-form.js",
+    "isEntry": true
+  },
   "resources/js/modules/create-schedule.js": {
     "file": "assets/create-schedule-B1-a-NAp.js",
     "name": "create-schedule",
@@ -88,8 +95,14 @@
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
   },
+  "resources/js/modules/kpi-form.js": {
+    "file": "assets/kpi-form-BL6DO7iw.js",
+    "name": "kpi-form",
+    "src": "resources/js/modules/kpi-form.js",
+    "isEntry": true
+  },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-D89P_lju.js",
+    "file": "assets/project-detail-Dohzvpyl.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -100,6 +113,15 @@
       "resources/js/modules/projects/project-tasks.js",
       "_timepicker-io5AL2NV.js",
       "_weekpicker-WW3ukRQH.js",
+      "resources/js/modules/users/change-password.js"
+    ]
+  },
+  "resources/js/modules/projects/project-payment.js": {
+    "file": "assets/project-payment-Dge7250o.js",
+    "name": "project-payment",
+    "src": "resources/js/modules/projects/project-payment.js",
+    "isEntry": true,
+    "imports": [
       "resources/js/modules/users/change-password.js"
     ]
   },

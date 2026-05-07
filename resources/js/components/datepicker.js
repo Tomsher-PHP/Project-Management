@@ -21,6 +21,7 @@ export function initDatepicker(selector = ".datepicker", config = {}, root = doc
         const maxDate = el.dataset.maxDate || null;
         const openToDate = el.dataset.openToDate || null;
         const enableTime = parseBoolean(el.dataset.enableTime, false);
+        const enableSeconds = parseBoolean(el.dataset.enableSeconds, false);
         const noCalendar = parseBoolean(el.dataset.noCalendar, false);
         const time24hr = parseBoolean(el.dataset.time24hr, true);
         const altInput = parseBoolean(el.dataset.altInput, false);
@@ -35,6 +36,7 @@ export function initDatepicker(selector = ".datepicker", config = {}, root = doc
             mode: mode,
             dateFormat: dateFormat,
             enableTime: enableTime,
+            enableSeconds: enableSeconds,
             noCalendar: noCalendar,
             time_24hr: time24hr,
             altInput: altInput,
