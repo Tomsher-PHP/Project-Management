@@ -1,4 +1,4 @@
-import{A as m,a as X,i as W}from"./datepicker-Bx8nmcKD.js";import{i as L}from"./flatpickr.min-BJdP9L7S.js";import"./change-password-YZDMVk0e.js";const Q=`
+import{A as m}from"./alert-BIAC0wB2.js";import{i as X,a as W}from"./datepicker-gBZgwybl.js";import{i as L}from"./flatpickr.min-CRh9vUC6.js";import"./sweetalert2.esm.all-YZDMVk0e.js";const Q=`
     <div class="rounded-[20px] border border-dashed border-bgray-300 px-6 py-10 text-center dark:border-darkblack-400">
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">Loading tasks...</p>
     </div>
