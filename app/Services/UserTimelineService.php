@@ -34,6 +34,76 @@ class UserTimelineService
             ->all();
     }
 
+    public function getBreakTimelineSegments(array $workedTaskSegments, ?array $assignedShift): array
+    {
+        $workedIntervals = $this->mergeTimelineIntervals($workedTaskSegments);
+
+        if (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false)) {
+            $breakSegments = [];
+
+            foreach ($assignedShift['timeline_segments'] as $shiftSegment) {
+                $windowStart = (int) ($shiftSegment['start_minutes'] ?? 0);
+                $windowEnd = (int) ($shiftSegment['end_minutes'] ?? 0);
+
+                if ($windowEnd <= $windowStart) {
+                    continue;
+                }
+
+                $windowWorkIntervals = [];
+
+                foreach ($workedIntervals as $interval) {
+                    $overlapStart = max($windowStart, $interval['start_minutes']);
+                    $overlapEnd = min($windowEnd, $interval['end_minutes']);
+
+                    if ($overlapEnd > $overlapStart) {
+                        $windowWorkIntervals[] = [
+                            'start_minutes' => $overlapStart,
+                            'end_minutes' => $overlapEnd,
+                        ];
+                    }
+                }
+
+                $windowWorkIntervals = $this->mergeTimelineIntervals($windowWorkIntervals);
+                $cursor = $windowStart;
+
+                foreach ($windowWorkIntervals as $interval) {
+                    if ($interval['start_minutes'] > $cursor) {
+                        $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $interval['start_minutes']);
+                    }
+
+                    $cursor = max($cursor, $interval['end_minutes']);
+                }
+
+                if ($cursor < $windowEnd) {
+                    $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $windowEnd);
+                }
+            }
+
+            return array_values(array_filter($breakSegments));
+        }
+
+        $breakSegments = [];
+
+        for ($index = 1; $index < count($workedIntervals); $index++) {
+            $previousInterval = $workedIntervals[$index - 1];
+            $currentInterval = $workedIntervals[$index];
+
+            if ($currentInterval['start_minutes'] > $previousInterval['end_minutes']) {
+                $breakSegments[] = $this->formatBreakTimelineSegment(
+                    $previousInterval['end_minutes'],
+                    $currentInterval['start_minutes']
+                );
+            }
+        }
+
+        return array_values(array_filter($breakSegments));
+    }
+
+    public function getTotalTimelineMinutes(array $segments): int
+    {
+        return (int) collect($segments)->sum(fn(array $segment) => (int) ($segment['duration_minutes'] ?? 0));
+    }
+
     public function getAssignedShift(int $userId, string|Carbon $date): ?array
     {
         $date = $date instanceof Carbon
@@ -257,6 +327,9 @@ class UserTimelineService
         return [
             'left' => round(($startMinutes / 1440) * 100, 4),
             'width' => round(($durationMinutes / 1440) * 100, 4),
+            'start_minutes' => $startMinutes,
+            'end_minutes' => $endMinutes,
+            'duration_minutes' => $durationMinutes,
             'start_label' => $startLabel,
             'end_label' => $endLabel,
             'duration_label' => $actualWorkingDurationLabel,
@@ -303,9 +376,74 @@ class UserTimelineService
             'task_name' => $log->task?->name ?? ('Task #' . $log->task_id),
             'left' => round(($startMinutesFromDayStart / 1440) * 100, 4),
             'width' => max(round(($durationMinutes / 1440) * 100, 4), 0.01),
+            'start_minutes' => $startMinutesFromDayStart,
+            'end_minutes' => $startMinutesFromDayStart + $durationMinutes,
+            'duration_minutes' => $durationMinutes,
             'start_label' => $segmentStartLocal->format('H:i'),
             'end_label' => $segmentEndLocal->format('H:i'),
             'duration_label' => $this->formatDurationLabel($durationMinutes),
+        ];
+    }
+
+    private function mergeTimelineIntervals(array $segments): array
+    {
+        $intervals = collect($segments)
+            ->map(function (array $segment) {
+                $start = (int) ($segment['start_minutes'] ?? 0);
+                $end = (int) ($segment['end_minutes'] ?? 0);
+
+                return $end > $start
+                    ? ['start_minutes' => $start, 'end_minutes' => $end]
+                    : null;
+            })
+            ->filter()
+            ->sortBy('start_minutes')
+            ->values()
+            ->all();
+
+        $merged = [];
+
+        foreach ($intervals as $interval) {
+            if (empty($merged)) {
+                $merged[] = $interval;
+                continue;
+            }
+
+            $lastIndex = count($merged) - 1;
+
+            if ($interval['start_minutes'] <= $merged[$lastIndex]['end_minutes']) {
+                $merged[$lastIndex]['end_minutes'] = max($merged[$lastIndex]['end_minutes'], $interval['end_minutes']);
+                continue;
+            }
+
+            $merged[] = $interval;
+        }
+
+        return $merged;
+    }
+
+    private function formatBreakTimelineSegment(int $startMinutes, int $endMinutes): ?array
+    {
+        $durationMinutes = $endMinutes - $startMinutes;
+
+        if ($durationMinutes <= 0) {
+            return null;
+        }
+
+        $startLabel = $this->formatMinutesAsTime($startMinutes);
+        $endLabel = $this->formatMinutesAsTime($endMinutes);
+        $durationLabel = $this->formatDurationLabel($durationMinutes);
+
+        return [
+            'left' => round(($startMinutes / 1440) * 100, 4),
+            'width' => max(round(($durationMinutes / 1440) * 100, 4), 0.01),
+            'start_minutes' => $startMinutes,
+            'end_minutes' => $endMinutes,
+            'duration_minutes' => $durationMinutes,
+            'start_label' => $startLabel,
+            'end_label' => $endLabel,
+            'duration_label' => $durationLabel,
+            'tooltip_label' => "Break | {$startLabel} - {$endLabel} | {$durationLabel}",
         ];
     }
 
@@ -337,6 +475,20 @@ class UserTimelineService
         return $time instanceof Carbon
             ? $time->format('H:i')
             : substr((string) $time, 0, 5);
+    }
+
+    private function formatMinutesAsTime(int $minutes): string
+    {
+        $normalizedMinutes = max(0, min($minutes, 1440));
+
+        if ($normalizedMinutes === 1440) {
+            return '00:00';
+        }
+
+        $hours = intdiv($normalizedMinutes, 60);
+        $remainingMinutes = $normalizedMinutes % 60;
+
+        return sprintf('%02d:%02d', $hours, $remainingMinutes);
     }
 
     private function formatDurationLabel(int $durationMinutes): string

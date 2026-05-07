@@ -71,41 +71,45 @@
                 <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
-                        <p class="mt-1 text-[15px] font-semibold text-[#6b7280]">
-                            Shift 09:00 - 18:00 &bull; Click a break to add it to working time
-                        </p>
                     </div>
 
                     <div class="grid grid-cols-3 gap-6 text-center">
                         <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#0b8ee8]">9h</p>
+                            <p class="text-[26px] font-extrabold leading-none text-[#0b8ee8]">{{ $shiftSummaryDuration ?? '--' }}</p>
                             <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Shift</p>
                         </div>
                         <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">7h 38m</p>
+                            <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0m' }}</p>
                             <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Worked</p>
                         </div>
                         <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#d78900]">1h 18m</p>
+                            <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0m' }}</p>
                             <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Break</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="daily-timeline-scroll mt-8 overflow-x-auto pb-1">
+                <div class="daily-timeline-scroll overflow-x-auto pb-1">
                     <div class="daily-timeline min-w-[980px]">
                         <div class="daily-timeline__rail">
                             <div class="daily-timeline__ticks" aria-hidden="true"></div>
 
                             <!-- Worked Task Start-->
                             @foreach ($workedTaskSegments ?? [] as $segment)
-                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 4px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
+                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
                                 </button>
                             @endforeach
                             <!-- Worked Task End-->
 
+                            <!-- Break Start-->
+                            @foreach ($breakTaskSegments ?? [] as $segment)
+                                <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}">
+                                </button>
+                            @endforeach
+                            <!-- Break End-->
+
                             <!-- Allocated Shift Start-->
-                            @foreach (($assignedShift['timeline_segments'] ?? []) as $shiftSegment)
+                            @foreach ($assignedShift['timeline_segments'] ?? [] as $shiftSegment)
                                 <div class="daily-timeline__shift daily-timeline__shift--bottom" style="left: {{ $shiftSegment['left'] }}%; width: {{ $shiftSegment['width'] }}%;{{ !empty($shiftSegment['color_code']) ? ' --shift-accent: ' . $shiftSegment['color_code'] . ';' : '' }}" data-tooltip-label="{{ $shiftSegment['tooltip_label'] }}" aria-label="{{ $shiftSegment['tooltip_label'] }}" tabindex="0">
                                     @if (!empty($shiftSegment['start_label']))
                                         <span>{{ $shiftSegment['start_label'] }}</span>
@@ -253,7 +257,7 @@
                 border-radius: 6px;
                 background: #e9e9e9;
                 pointer-events: none;
-                z-index: 100;
+                z-index: 3;
                 opacity: 60%;
             }
 
@@ -267,12 +271,12 @@
                 z-index: 2;
                 display: inline-flex;
                 height: 35px;
-                min-width: 36px;
+                /* min-width: 36px; */
                 align-items: center;
                 justify-content: center;
-                gap: 6px;
+                /* gap: 6px; */
                 border: 0;
-                border-radius: 5px;
+                border-radius: 0px;
                 color: #fff;
                 font-size: 0;
                 font-weight: 800;
@@ -280,8 +284,8 @@
                 box-shadow: 0 8px 14px rgba(8, 102, 255, 0.12);
                 white-space: nowrap;
                 transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
-                z-index: 200;
-                opacity: 80%;
+                z-index: 4;
+                opacity: 70%;
             }
 
             .daily-timeline__segment::before {
@@ -291,7 +295,7 @@
                 top: -31px;
                 display: inline-flex;
                 height: 23px;
-                min-width: 48px;
+                /* min-width: 48px; */
                 transform: translateX(-50%);
                 align-items: center;
                 justify-content: center;
@@ -346,17 +350,17 @@
             }
 
             .daily-timeline__segment--break {
-                background: #ff8500;
+                background: #ee9802;
                 color: #fff;
                 box-shadow: 0 8px 14px rgba(224, 154, 0, 0.16);
             }
 
             .daily-timeline__segment--break::before {
-                background: #ff8500;
+                background: #ee9802;
             }
 
             .daily-timeline__segment--break::after {
-                border-top-color: #ff8500;
+                border-top-color: #ee9802;
             }
 
             .daily-timeline__shift {
@@ -371,8 +375,8 @@
                 border: 2px solid var(--shift-accent);
                 border-radius: 8px;
                 background:
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.5) 100%),
-                    var(--shift-accent);
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%),
+                    color-mix(in srgb, var(--shift-accent) 88%, #000 12%);
                 padding: 0 0.35rem;
                 color: var(--shift-accent);
                 font-size: 0.68rem;
@@ -421,10 +425,10 @@
             }
 
             .daily-timeline__shift--bottom {
-                top:75px;
+                top: 75px;
             }
 
-            .daily-timeline__shift > span {
+            .daily-timeline__shift>span {
                 border: 0;
                 border-radius: 6px;
                 background: transparent;
@@ -615,7 +619,7 @@
 
             .timeline-tooltip {
                 position: absolute;
-                z-index: 10;
+                z-index: 4;
                 width: 220px;
                 border-radius: 16px;
                 border: 1px solid #d9e3ef;
@@ -1222,14 +1226,14 @@
                       <div class="timeline-slot" data-slot-index="${index}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
                           <div class="timeline-slot__top"></div>
                           ${primarySegment ? `
-                                                      <button
-                                                          type="button"
-                                                          class="timeline-slot__worked-fill"
-                                                          style="height:${workedHeight}%;"
-                                                          data-segment-id="${primarySegment.id}"
-                                                          aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
-                                                      ></button>
-                                                  ` : ''}
+                                                              <button
+                                                                  type="button"
+                                                                  class="timeline-slot__worked-fill"
+                                                                  style="height:${workedHeight}%;"
+                                                                  data-segment-id="${primarySegment.id}"
+                                                                  aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
+                                                              ></button>
+                                                          ` : ''}
                           <span class="timeline-slot__label">${slot.label}</span>
                       </div>
                   `;
@@ -1688,7 +1692,6 @@
             });
         </script>
     </main>
-
 @endsection
 
 @push('scripts')
