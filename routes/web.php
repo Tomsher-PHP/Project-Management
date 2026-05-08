@@ -67,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // User workspace route
     Route::get('/user-workspace', [UserWorkspace::class, 'index'])->name('user.workspace');
 
     Route::get('/profile', function () {

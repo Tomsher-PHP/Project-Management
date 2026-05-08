@@ -1,6 +1,9 @@
 @php
-    $notifications = auth()->user()->unreadNotifications->take(10); // last 10 notifications unread
-    $unreadCount = auth()->user()->unreadNotifications->count(); // unread badge
+    $authUser = auth()->user();
+    $notifications = $authUser->unreadNotifications->take(10); // last 10 notifications unread
+    $unreadCount = $authUser->unreadNotifications->count(); // unread badge
+    $userRoleName = $authUser->role_name ?? 'No Role';
+    $userInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($authUser->name ?? 'U', 0, 1));
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
     <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
@@ -105,14 +108,6 @@
                     <div class="h-8 w-8 overflow-hidden rounded-xl border border-bgray-300">
                         <img class="object-cover" src="{{ auth()->user()->profileImageUrl ?? './assets/images/avatar/profile-52x52.png' }}" alt="avater" />
                     </div>
-               <div class="flex items-center space-x-2.5">
-                   
-                            <span>
-                                <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7 10L12 14L17 10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </span>
-                        </div>
                 </div>
             </div>
             <!--notification, message, store-->
@@ -180,6 +175,38 @@
                         <div>
                             <ul>
                                 <li class="w-full">
+                                    <div class="rounded-lg px-[14px] py-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-success-50 text-lg font-bold text-success-400">
+                                                @if ($authUser->primaryAttachment)
+                                                    <img class="h-full w-full object-cover" src="{{ $authUser->profileImageUrl }}" alt="{{ $authUser->name }}">
+                                                @else
+                                                    <span>{{ $userInitial }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">{{ $authUser->name }}</p>
+                                                <div class="mt-0.5 flex items-center gap-2">
+                                                    <p class="truncate text-xs text-bgray-500 dark:text-bgray-300">{{ $authUser->email }}</p>
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white"
+                                                        onclick="copyProfileEmail(event, @js($authUser->email))"
+                                                        aria-label="Copy email"
+                                                        title="Copy email"
+                                                    >
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M8 7V6C8 4.89543 8.89543 4 10 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                            <path d="M6 8H14C15.1046 8 16 8.89543 16 10V18C16 19.1046 15.1046 20 14 20H6C4.89543 20 4 19.1046 4 18V10C4 8.89543 4.89543 8 6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <p class="mt-1 truncate text-xs font-medium uppercase tracking-wide text-success-400">{{ $userRoleName }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="w-full">
                                     <a href="{{ route('users.show', auth()->id()) }}">
                                         <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 hover:dark:bg-darkblack-500">
                                             <div class="w-[20px]">
@@ -219,21 +246,6 @@
                                             </div>
                                         </button>
                                     </form>
-
-                                    {{-- <a href="#">
-                                        <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-success-300">
-                                            <div class="w-[20px]">
-                                                <span>
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M15 10L13.7071 11.2929C13.3166 11.6834 13.3166 12.3166 13.7071 12.7071L15 14M14 12L22 12M6 20C3.79086 20 2 18.2091 2 16V8C2 5.79086 3.79086 4 6 4M6 20C8.20914 20 10 18.2091 10 16V8C10 5.79086 8.20914 4 6 4M6 20H14C16.2091 20 18 18.2091 18 16M6 4H14C16.2091 4 18 5.79086 18 8" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                            <div class="flex-1">
-                                                <span class="text-sm font-semibold">Log Out</span>
-                                            </div>
-                                        </div>
-                                    </a> --}}
                                 </li>
                             </ul>
                         </div>
@@ -262,3 +274,36 @@
         </div>
     </div>
 </header>
+
+<script>
+    function copyProfileEmail(event, email) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const fallbackCopy = (value) => {
+            const input = document.createElement('textarea');
+            input.value = value;
+            input.setAttribute('readonly', '');
+            input.style.position = 'fixed';
+            input.style.opacity = '0';
+            input.style.pointerEvents = 'none';
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+
+            try {
+                document.execCommand('copy');
+            } finally {
+                document.body.removeChild(input);
+            }
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(email).catch(() => fallbackCopy(email));
+            return false;
+        }
+
+        fallbackCopy(email);
+        return false;
+    }
+</script>

@@ -1,46 +1,7 @@
 @extends('layouts.master')
 
 @push('styles')
-    <style>
-        :root {
-            --workspace-ink: #111653;
-            --workspace-muted: #6677a7;
-            --workspace-blue: #0866ff;
-            --workspace-border: #edf1f7;
-            --workspace-panel-shadow: 0 10px 28px rgba(18, 25, 95, 0.06);
-            --workspace-soft-shadow: 0 6px 18px rgba(18, 25, 95, 0.04);
-        }
-
-        [data-user-workspace] {
-            color: var(--workspace-ink);
-            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-        }
-
-        [data-user-workspace] button,
-        [data-user-workspace] input,
-        [data-user-workspace] select {
-            letter-spacing: 0;
-        }
-
-        .kanban-ghost {
-            background: transparent !important;
-            border: 1px dashed rgba(166, 167, 168, 0.8);
-            box-sizing: border-box;
-            color: transparent !important;
-        }
-
-        .kanban-ghost * {
-            visibility: hidden !important;
-        }
-
-        .kanban-chosen {
-            transform: scale(1.02);
-        }
-
-        .kanban-drag {
-            transform: rotate(2deg);
-        }
-    </style>
+    @vite(['resources/css/modules/user-timeline.css', 'resources/css/modules/kanban.css'])
 @endpush
 
 @push('navbar-actions')
@@ -67,82 +28,7 @@
     <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] sm:px-5 xl:px-4" data-user-workspace>
         <div class="space-y-2.5">
 
-            <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] sm:px-7 sm:py-6">
-                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                        <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-6 text-center">
-                        <div>
-                            <p class="text-[26px] font-extrabold leading-none" style="color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);">{{ $shiftSummaryDuration ?? '--' }}</p>
-                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
-                                <span class="h-2.5 w-2.5 rounded-sm" style="background-color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);"></span>
-                                Shift
-                            </p>
-                        </div>
-
-                        <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0m' }}</p>
-                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
-                                <span class="h-2.5 w-2.5 rounded-sm bg-[#4f5bff]"></span>
-                                Worked
-                            </p>
-                        </div>
-
-                        <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0m' }}</p>
-                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
-                                <span class="h-2.5 w-2.5 rounded-sm bg-[#d78900]"></span>
-                                Break
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="daily-timeline-scroll overflow-x-auto pb-1">
-                    <div class="daily-timeline min-w-[980px]">
-                        <div class="daily-timeline__rail">
-                            <div class="daily-timeline__ticks" aria-hidden="true"></div>
-
-                            <!-- Worked Task Start-->
-                            @foreach ($workedTaskSegments ?? [] as $segment)
-                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
-                                </button>
-                            @endforeach
-                            <!-- Worked Task End-->
-
-                            <!-- Break Start-->
-                            @foreach ($breakTaskSegments ?? [] as $segment)
-                                <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}">
-                                </button>
-                            @endforeach
-                            <!-- Break End-->
-
-                            <!-- Allocated Shift Start-->
-                            @foreach ($assignedShift['timeline_segments'] ?? [] as $shiftSegment)
-                                <div class="daily-timeline__shift daily-timeline__shift--bottom" style="left: {{ $shiftSegment['left'] }}%; width: {{ $shiftSegment['width'] }}%;{{ !empty($shiftSegment['color_code']) ? ' --shift-accent: ' . $shiftSegment['color_code'] . ';' : '' }}" data-tooltip-label="{{ $shiftSegment['tooltip_label'] }}" aria-label="{{ $shiftSegment['tooltip_label'] }}" tabindex="0">
-                                    @if (!empty($shiftSegment['start_label']))
-                                        <span>{{ $shiftSegment['start_label'] }}</span>
-                                    @endif
-                                    @if (!empty($shiftSegment['end_label']))
-                                        <span>{{ $shiftSegment['end_label'] }}</span>
-                                    @endif
-                                </div>
-                            @endforeach
-                            <!-- Allocated Shift End-->
-                        </div>
-
-                        <!-- Timeline Labels -->
-                        <div class="daily-timeline__labels" aria-label="24 hour labels">
-                            <span>00</span><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span>
-                            <span>06</span><span>07</span><span>08</span><span>09</span><span>10</span><span>11</span>
-                            <span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span>
-                            <span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>00</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            @include('workspace.partials.daily-timeline')
             @php
                 $boardTaskTotal = collect($tasksByStatus ?? [])->sum(fn($column) => (int) ($column['total'] ?? 0));
                 $boardStatusTotal = $boardStatuses->count();
@@ -198,7 +84,7 @@
             </section>
 
         </div>
-        <style>
+        {{-- <style>
             .daily-timeline-scroll {
                 scrollbar-width: thin;
                 scrollbar-color: #a9c9e4 transparent;
@@ -973,7 +859,7 @@
                     flex-wrap: wrap;
                 }
             }
-        </style>
+        </style> --}}
         <script>
             document.title = 'Tomsher Pmt | Project Tasks';
 
@@ -1237,14 +1123,14 @@
                       <div class="timeline-slot" data-slot-index="${index}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
                           <div class="timeline-slot__top"></div>
                           ${primarySegment ? `
-                                                                      <button
-                                                                          type="button"
-                                                                          class="timeline-slot__worked-fill"
-                                                                          style="height:${workedHeight}%;"
-                                                                          data-segment-id="${primarySegment.id}"
-                                                                          aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
-                                                                      ></button>
-                                                                  ` : ''}
+                                                                              <button
+                                                                                  type="button"
+                                                                                  class="timeline-slot__worked-fill"
+                                                                                  style="height:${workedHeight}%;"
+                                                                                  data-segment-id="${primarySegment.id}"
+                                                                                  aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
+                                                                              ></button>
+                                                                          ` : ''}
                           <span class="timeline-slot__label">${slot.label}</span>
                       </div>
                   `;
@@ -1706,6 +1592,7 @@
 @endsection
 
 @push('scripts')
+    @vite('resources/js/modules/workspace/user-timeline.js')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
 @endpush

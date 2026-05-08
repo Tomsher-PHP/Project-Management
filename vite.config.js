@@ -27,6 +27,10 @@ export default defineConfig({
                 'resources/js/modules/kpi-form.js',
                 'resources/js/modules/checklist-template-form.js',
                 'resources/js/modules/projects/project-payment.js',
+                'resources/js/modules/workspace/user-timeline.js',
+
+                'resources/css/modules/user-timeline.css',
+                'resources/css/modules/kanban.css',
             ],
             refresh: true,
         }),

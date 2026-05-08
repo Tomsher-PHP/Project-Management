@@ -1,29 +1,7 @@
 @extends('layouts.master')
 
 @push('styles')
-    <style>
-        .kanban-ghost {
-            background: transparent !important;
-            border: 1px dashed rgba(166, 167, 168, 0.8);
-            /* border-radius: 12px; */
-            box-sizing: border-box;
-
-            /* IMPORTANT: remove inner content */
-            color: transparent !important;
-        }
-
-        .kanban-ghost * {
-            visibility: hidden !important;
-        }
-
-        .kanban-chosen {
-            transform: scale(1.02);
-        }
-
-        .kanban-drag {
-            transform: rotate(2deg);
-        }
-    </style>
+    @vite('resources/css/modules/kanban.css')
 @endpush
 
 @section('page-content')
