@@ -45,7 +45,7 @@ class UserWorkspace extends Controller
 
         $assignedShift = $this->timeLineService->getAssignedShift($user->id, $selectedDate);
         $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($user->id, $selectedDate);
-        $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift);
+        $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $selectedDate);
         $shiftSummaryDuration = (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false))
             ? ($assignedShift['timeline_segments'][0]['duration_label'] ?? '--')
             : '--';

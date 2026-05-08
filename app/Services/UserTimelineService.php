@@ -34,8 +34,16 @@ class UserTimelineService
             ->all();
     }
 
-    public function getBreakTimelineSegments(array $workedTaskSegments, ?array $assignedShift): array
+    public function getBreakTimelineSegments(array $workedTaskSegments, ?array $assignedShift, string|Carbon|null $date = null): array
     {
+        [$selectedDate, $currentTimelineMinute, $isFutureDate] = $this->resolveTimelineProgressContext(
+            $date ?? ($assignedShift['date'] ?? now())
+        );
+
+        if ($isFutureDate) {
+            return [];
+        }
+
         $workedIntervals = $this->mergeTimelineIntervals($workedTaskSegments);
 
         if (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false)) {
@@ -44,6 +52,14 @@ class UserTimelineService
             foreach ($assignedShift['timeline_segments'] as $shiftSegment) {
                 $windowStart = (int) ($shiftSegment['start_minutes'] ?? 0);
                 $windowEnd = (int) ($shiftSegment['end_minutes'] ?? 0);
+
+                if ($currentTimelineMinute !== null) {
+                    if ($windowStart >= $currentTimelineMinute) {
+                        continue;
+                    }
+
+                    $windowEnd = min($windowEnd, $currentTimelineMinute);
+                }
 
                 if ($windowEnd <= $windowStart) {
                     continue;
@@ -74,7 +90,7 @@ class UserTimelineService
                     $cursor = max($cursor, $interval['end_minutes']);
                 }
 
-                if ($cursor < $windowEnd) {
+                if ($currentTimelineMinute === null && $cursor < $windowEnd) {
                     $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $windowEnd);
                 }
             }
@@ -235,6 +251,32 @@ class UserTimelineService
             $dayStartLocal->copy()->timezone('UTC'),
             $dayEndExclusiveLocal->copy()->timezone('UTC'),
         ];
+    }
+
+    private function resolveTimelineProgressContext(string|Carbon $date): array
+    {
+        $timezone = $this->getAppTimezone();
+        $selectedDate = $date instanceof Carbon
+            ? $date->copy()->timezone($timezone)->startOfDay()
+            : Carbon::parse($date, $timezone)->timezone($timezone)->startOfDay();
+        $today = Carbon::now($timezone)->startOfDay();
+
+        if ($selectedDate->greaterThan($today)) {
+            return [$selectedDate, null, true];
+        }
+
+        if ($selectedDate->lessThan($today)) {
+            return [$selectedDate, null, false];
+        }
+
+        $now = Carbon::now($timezone);
+        $currentTimelineMinute = ($now->hour * 60) + $now->minute;
+
+        if ($now->second > 0) {
+            $currentTimelineMinute += 1;
+        }
+
+        return [$selectedDate, min($currentTimelineMinute, 1440), false];
     }
 
     private function buildShiftTimelineSegmentsForSelectedDate(

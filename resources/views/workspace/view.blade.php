@@ -75,16 +75,27 @@
 
                     <div class="grid grid-cols-3 gap-6 text-center">
                         <div>
-                            <p class="text-[26px] font-extrabold leading-none text-[#0b8ee8]">{{ $shiftSummaryDuration ?? '--' }}</p>
-                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Shift</p>
+                            <p class="text-[26px] font-extrabold leading-none" style="color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);">{{ $shiftSummaryDuration ?? '--' }}</p>
+                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                                <span class="h-2.5 w-2.5 rounded-sm" style="background-color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);"></span>
+                                Shift
+                            </p>
                         </div>
+
                         <div>
                             <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0m' }}</p>
-                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Worked</p>
+                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                                <span class="h-2.5 w-2.5 rounded-sm bg-[#4f5bff]"></span>
+                                Worked
+                            </p>
                         </div>
+
                         <div>
                             <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0m' }}</p>
-                            <p class="mt-2 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">Break</p>
+                            <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                                <span class="h-2.5 w-2.5 rounded-sm bg-[#d78900]"></span>
+                                Break
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -96,14 +107,14 @@
 
                             <!-- Worked Task Start-->
                             @foreach ($workedTaskSegments ?? [] as $segment)
-                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
+                                <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
                                 </button>
                             @endforeach
                             <!-- Worked Task End-->
 
                             <!-- Break Start-->
                             @foreach ($breakTaskSegments ?? [] as $segment)
-                                <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc({{ $segment['left'] }}% + 2px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}">
+                                <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}">
                                 </button>
                             @endforeach
                             <!-- Break End-->
@@ -1226,14 +1237,14 @@
                       <div class="timeline-slot" data-slot-index="${index}" data-slot-start="${slot.start}" data-slot-end="${slot.end}">
                           <div class="timeline-slot__top"></div>
                           ${primarySegment ? `
-                                                              <button
-                                                                  type="button"
-                                                                  class="timeline-slot__worked-fill"
-                                                                  style="height:${workedHeight}%;"
-                                                                  data-segment-id="${primarySegment.id}"
-                                                                  aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
-                                                              ></button>
-                                                          ` : ''}
+                                                                      <button
+                                                                          type="button"
+                                                                          class="timeline-slot__worked-fill"
+                                                                          style="height:${workedHeight}%;"
+                                                                          data-segment-id="${primarySegment.id}"
+                                                                          aria-label="${primarySegment.title} from ${minutesToLabel(primarySegment.start)} to ${minutesToLabel(primarySegment.end)}"
+                                                                      ></button>
+                                                                  ` : ''}
                           <span class="timeline-slot__label">${slot.label}</span>
                       </div>
                   `;
