@@ -27,7 +27,7 @@ class UserWorkspace extends Controller
     {
         $user = $request->user();
         $selectedDate = $this->resolveSelectedDate($request->input('date'));
-        $timelineViewData = $this->buildTimelineViewData($user->id, $selectedDate);
+        $timelineViewData = $this->buildTimelineViewData($user->id, $selectedDate, $user?->name);
 
         if ($request->ajax()) {
             return response()->json([
@@ -58,7 +58,7 @@ class UserWorkspace extends Controller
         ] + $timelineViewData);
     }
 
-    private function buildTimelineViewData(int $userId, Carbon $selectedDate): array
+    private function buildTimelineViewData(int $userId, Carbon $selectedDate, ?string $userName = null): array
     {
         $assignedShift = $this->timeLineService->getAssignedShift($userId, $selectedDate);
         $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($userId, $selectedDate);
@@ -78,6 +78,8 @@ class UserWorkspace extends Controller
             'breakSummaryDuration' => $this->formatDurationLabel($breakTotalMinutes),
             'selectedDateValue' => $selectedDate->toDateString(),
             'todayDate' => now($selectedDate->getTimezone())->toDateString(),
+            'workspaceGreetingLabel' => $this->buildWorkspaceGreetingLabel($userName),
+            'workspaceGreetingDayName' => $userName ? now()->format('l') : null,
         ];
     }
 
@@ -108,5 +110,21 @@ class UserWorkspace extends Controller
         }
 
         return "{$remainingMinutes}m";
+    }
+
+    private function buildWorkspaceGreetingLabel(?string $userName): ?string
+    {
+        if (blank($userName)) {
+            return null;
+        }
+
+        $hour = now()->hour;
+        $greeting = match (true) {
+            $hour < 12 => 'Good Morning',
+            $hour < 17 => 'Good Afternoon',
+            default => 'Good Evening',
+        };
+
+        return "{$greeting}, {$userName}";
     }
 }

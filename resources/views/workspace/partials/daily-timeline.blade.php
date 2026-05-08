@@ -5,7 +5,16 @@
 <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="flex items-start justify-center xl:justify-start">
-            <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
+            @if (!empty($workspaceGreetingLabel))
+                <div>
+                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">{{ $workspaceGreetingLabel }}</h2>
+                    @if (!empty($workspaceGreetingDayName))
+                        <p class="mt-1 text-sm font-semibold text-[#6b7280]">{{ $workspaceGreetingDayName }}</p>
+                    @endif
+                </div>
+            @else
+                <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
+            @endif
         </div>
 
         <div class="flex justify-center xl:flex-1">
