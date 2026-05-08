@@ -44,7 +44,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h7v7H4V4Zm9 0h7v4h-7V4ZM4 13h7v7H4v-7Zm9-3h7v10h-7V10Z" />
                                     </svg>
                                 </span>
-                                <h3 class="text-[17px] font-extrabold tracking-normal text-[#111653] dark:text-white">Work Board</h3>
+                                <h3 class="text-[17px] font-extrabold tracking-normal text-bgray-800 dark:text-bgray-50">Work Board</h3>
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3">
@@ -56,12 +56,6 @@
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
                                     </svg>
-                                </button>
-                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0866ff] px-4 text-sm font-extrabold text-white shadow-[0_10px_20px_rgba(8,102,255,0.2)] transition hover:bg-[#075ce6]">
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5" />
-                                    </svg>
-                                    <span>Add Task</span>
                                 </button>
                             </div>
                         </div>

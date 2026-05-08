@@ -112,6 +112,7 @@ class TaskServices
             'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',
+            'activeTimeLog:id,task_id,user_id,started_at,is_running',
             'status:id,name,color,type,is_completed',
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',

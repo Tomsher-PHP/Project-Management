@@ -28,7 +28,7 @@
                     <input type="text" value="{{ $selectedDateValue }}" class="datepicker absolute left-0 top-0 h-0 w-0 opacity-0 pointer-events-none" data-user-timeline-picker data-format="Y-m-d" aria-label="Select daily timeline date" readonly>
                 </div>
 
-                <span class="min-w-[150px] px-3 text-center text-base font-semibold text-bgray-800 dark:text-bgray-50" data-user-timeline-date-label>
+                <span class="min-w-[100px] px-1 text-center text-base font-semibold text-bgray-800 dark:text-bgray-50" data-user-timeline-date-label>
                     {{ $selectedDateLabel }}
                 </span>
 
