@@ -7,6 +7,12 @@
 @section('page-content')
     <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace>
         <div class="space-y-2.5">
+            <div class="hidden items-center justify-end" data-workspace-auto-refresh-indicator aria-live="polite">
+                <div class="inline-flex items-center gap-2 rounded-full border border-[#d9e4f5] bg-white/95 px-3 py-1.5 text-xs font-semibold text-[#52607a] shadow-[var(--workspace-soft-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-200">
+                    <span class="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#9bb3d5] border-t-transparent dark:border-bgray-400 dark:border-t-transparent"></span>
+                    <span>Refreshing workspace...</span>
+                </div>
+            </div>
 
             @include('workspace.partials.daily-timeline')
             @php
@@ -68,4 +74,5 @@
     @vite('resources/js/modules/workspace/user-timeline.js')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
+    @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
 @endpush

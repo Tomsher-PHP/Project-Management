@@ -1,6 +1,7 @@
 import { initDatepicker } from '../../components/datepicker';
 
 let activeTimelineRequest = null;
+const CONTROLLER_KEY = '__workspaceTimelineController';
 
 const ROOT_SELECTOR = '[data-user-timeline-root]';
 const PICKER_SELECTOR = '[data-user-timeline-picker]';
@@ -73,6 +74,8 @@ const buildTimelineUrl = (root, date) => {
     return url;
 };
 
+const getTimelineRoot = () => document.querySelector(ROOT_SELECTOR);
+
 const replaceTimelineRoot = (currentRoot, html) => {
     const template = document.createElement('template');
     template.innerHTML = html.trim();
@@ -126,6 +129,26 @@ const requestTimeline = async (root, date) => {
     }
 };
 
+const refreshTimelineForCurrentDate = () => {
+    const root = getTimelineRoot();
+
+    if (!root) {
+        return Promise.resolve(false);
+    }
+
+    return requestTimeline(root, root.dataset.userTimelineSelectedDate || root.dataset.userTimelineToday);
+};
+
+const createTimelineController = () => ({
+    refreshSelectedDate: refreshTimelineForCurrentDate,
+    isBusy: () => {
+        const root = getTimelineRoot();
+        return activeTimelineRequest !== null || root?.getAttribute('aria-busy') === 'true';
+    },
+    getSelectedDate: () => getTimelineRoot()?.dataset.userTimelineSelectedDate || null,
+    getTodayDate: () => getTimelineRoot()?.dataset.userTimelineToday || null,
+});
+
 const bindPicker = (root) => {
     const picker = root.querySelector(PICKER_SELECTOR);
     if (!picker) {
@@ -172,5 +195,6 @@ function bindTimeline(root) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    bindTimeline(document.querySelector(ROOT_SELECTOR));
+    bindTimeline(getTimelineRoot());
+    window[CONTROLLER_KEY] = createTimelineController();
 });

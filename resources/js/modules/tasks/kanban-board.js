@@ -1,10 +1,14 @@
 import Sortable from "sortablejs";
 
+const CONTROLLER_KEY = '__workspaceKanbanBoardController';
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const container = document.getElementById('kanban-container');
     const buttons = document.querySelectorAll('.flow-btn');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    let isKanbanLoading = false;
+    let isDragInProgress = false;
 
     let currentFlow = localStorage.getItem('kanban_flow') || initialFlowType || 'agile';
 
@@ -48,8 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         toggleLoading(evt.item, true);
+        setDragState(true);
 
-        fetch(`/tasks/transition-status`, {
+        return fetch(`/tasks/transition-status`, {
             method: "PATCH",
             headers: {
                 "X-CSRF-TOKEN": csrfToken,
@@ -77,25 +82,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 toggleLoading(evt.item, false);
                 rollback(evt);
                 Alert.error(err.message || "Something went wrong");
+            })
+            .finally(() => {
+                setDragState(false);
             });
     };
 
     const loadKanban = (flow) => {
+        if (!container) {
+            return Promise.resolve(false);
+        }
+
+        isKanbanLoading = true;
+        container.dataset.loading = 'true';
         toggleLoading(container, true);
 
-        fetch(buildKanbanUrl({ flow }), {
+        return fetch(buildKanbanUrl({ flow }), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
             .then(res => res.text())
             .then(html => {
                 container.innerHTML = html;
-                toggleLoading(container, false);
                 initKanbanDrag();
                 initKanbanScroll();
+                return true;
             })
             .catch(() => {
-                toggleLoading(container, false);
                 Alert.error('Failed to load board');
+                return false;
+            })
+            .finally(() => {
+                isKanbanLoading = false;
+                container.dataset.loading = 'false';
+                toggleLoading(container, false);
             });
     };
 
@@ -145,6 +164,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const toggleLoading = (el, state) => {
         el.classList.toggle('opacity-50', state);
+    };
+
+    const setDragState = (state) => {
+        isDragInProgress = state;
+
+        if (container) {
+            container.dataset.dragging = state ? 'true' : 'false';
+        }
     };
 
     const rollback = (evt) => {
@@ -281,12 +308,42 @@ document.addEventListener("DOMContentLoaded", () => {
         ghostClass: "kanban-ghost",
         chosenClass: "kanban-chosen",
         dragClass: "kanban-drag",
+        onStart: () => {
+            setDragState(true);
+        },
         onEnd: handleDrop,
     };
 
+    const createKanbanController = () => ({
+        reload: () => {
+            if (!container || isKanbanLoading || isDragInProgress) {
+                return Promise.resolve(false);
+            }
+
+            return loadKanban(currentFlow);
+        },
+        isBusy: () => {
+            if (!container) {
+                return false;
+            }
+
+            return isKanbanLoading
+                || isDragInProgress
+                || container.dataset.loading === 'true'
+                || container.dataset.dragging === 'true'
+                || [...document.querySelectorAll('.kanban-board')].some((board) => board.dataset.loading === 'true');
+        },
+    });
+
     /** ================= INIT ================= */
+    if (container) {
+        container.dataset.loading = 'false';
+        container.dataset.dragging = 'false';
+    }
+
     setActiveButton(currentFlow);
     loadKanban(currentFlow);
+    window[CONTROLLER_KEY] = createKanbanController();
 
     /** ================= EVENTS ================= */
     buttons.forEach(btn => {

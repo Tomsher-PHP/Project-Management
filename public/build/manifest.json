@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D6RTZ7uR.css",
+    "file": "assets/app-DobVTQmY.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -69,7 +69,7 @@
     ]
   },
   "resources/css/modules/user-timeline.css": {
-    "file": "assets/user-timeline-CBS-JvAH.css",
+    "file": "assets/user-timeline-B4TBOFC3.css",
     "src": "resources/css/modules/user-timeline.css",
     "isEntry": true,
     "name": "user-timeline",
@@ -78,7 +78,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bou03uUp.js",
+    "file": "assets/app-Dh4Gs-tK.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -93,7 +93,7 @@
       "_flatpickr.min-Cc3t1Oke.js"
     ],
     "css": [
-      "assets/app-DbcaeIh-.css"
+      "assets/app-CDFulk6R.css"
     ]
   },
   "resources/js/image-draggable.js": {
@@ -222,7 +222,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-Cuw7UdNY.js",
+    "file": "assets/kanban-board-BAyMDU-9.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
@@ -272,7 +272,7 @@
     "isEntry": true
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-DhZLM-r9.js",
+    "file": "assets/user-timeline-D8OJRK8E.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
