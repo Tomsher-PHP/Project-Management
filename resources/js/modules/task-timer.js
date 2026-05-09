@@ -317,6 +317,19 @@ export function initTaskTimer() {
     syncDisplaysFromDom();
 
     document.addEventListener('task-timer:refresh', syncDisplaysFromDom);
+    document.addEventListener('task-timer:stopped-remotely', (event) => {
+        const taskId = event.detail?.taskId;
+
+        if (!taskId) {
+            return;
+        }
+
+        syncTaskTimerState(String(taskId), {
+            isRunning: false,
+            startedAt: '',
+            totalSeconds: parseSeconds(event.detail?.totalSeconds),
+        });
+    });
 
     if (!window.__taskTimerObserver) {
         window.__taskTimerObserver = new MutationObserver((mutations) => {
@@ -425,6 +438,10 @@ export function initTaskTimer() {
                     totalSeconds: nextTotalSeconds || getCurrentTaskSeconds(taskId),
                 });
 
+                if (String(button.dataset.currentUserId || '') === String(button.dataset.assigneeId || '')) {
+                    document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+                }
+
                 Alert.success(data.message || 'Timer stopped');
             } else {
                 const startedAt = new Date().toISOString();
@@ -435,6 +452,20 @@ export function initTaskTimer() {
                     startedAt,
                     totalSeconds: nextTotalSeconds,
                 });
+
+                document.dispatchEvent(new CustomEvent('navbar-running-task-timer:show', {
+                    detail: {
+                        active: true,
+                        taskId,
+                        taskName: button.dataset.taskName || '',
+                        seconds: nextTotalSeconds,
+                        baseSeconds: nextTotalSeconds,
+                        estimatedSeconds: parseSeconds(getDisplays(taskId)[0]?.dataset.estimatedSeconds),
+                        startedAt,
+                        stopUrl: `/tasks/${taskId}/stop`,
+                        state: 'running',
+                    },
+                }));
 
                 Alert.success(data.message || 'Timer started');
             }

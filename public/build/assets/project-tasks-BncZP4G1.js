@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/project-tasks-qyAaX8ty.js
-import{A as m}from"./alert-LtxA_H6Z.js";import{i as X}from"./datepicker-CA2wRfma.js";import{i as W}from"./estimated-time-input-CIuy8ceU.js";import{i as L}from"./tom-select-BfdBIvPN.js";import"./change-password-YZDMVk0e.js";import"./flatpickr.min-Cc3t1Oke.js";const Q=`
-========
-import{A as m}from"./alert-BIAC0wB2.js";import{i as X,a as W}from"./datepicker-gBZgwybl.js";import{i as L}from"./flatpickr.min-CRh9vUC6.js";import"./sweetalert2.esm.all-YZDMVk0e.js";const Q=`
->>>>>>>> origin/feature/users-page:public/build/assets/project-tasks-CrhK--ta.js
+import{A as m}from"./alert-BIAC0wB2.js";import{i as X}from"./datepicker-CA2wRfma.js";import{i as W}from"./estimated-time-input-CIuy8ceU.js";import{i as L}from"./tom-select-Co1PEiz6.js";import"./sweetalert2.esm.all-YZDMVk0e.js";import"./flatpickr.min-Cc3t1Oke.js";const Q=`
     <div class="rounded-[20px] border border-dashed border-bgray-300 px-6 py-10 text-center dark:border-darkblack-400">
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">Loading tasks...</p>
     </div>

@@ -4,26 +4,6 @@
     @vite(['resources/css/modules/user-timeline.css', 'resources/css/modules/kanban.css'])
 @endpush
 
-@push('navbar-actions')
-    <div id="running-task-bar" class="hidden min-w-[520px] items-center gap-4 rounded-[14px] border border-[#edf1f7] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(18,25,95,0.08)]">
-        <span class="h-3.5 w-3.5 shrink-0 rounded-full bg-[#0866ff]"></span>
-        <div class="min-w-0 flex-1">
-            <p id="running-task-project" class="truncate text-[12px] font-extrabold uppercase leading-none text-[#0866ff]">WORKING ACTIVITY</p>
-            <h2 id="running-task-name" class="mt-2 truncate text-[15px] font-extrabold leading-none text-[#111653]"></h2>
-        </div>
-        <p id="running-task-timer" class="whitespace-nowrap px-5 text-[16px] font-extrabold leading-none text-[#111653]">00:00:00</p>
-        <button id="running-task-pause" type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f1f3f7] text-[#111653] transition duration-200 hover:bg-[#e7ecf5]" aria-label="Resume task">
-            <span aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 3.5V12.5L12 8L5 3.5Z" fill="currentColor" />
-                </svg>
-            </span>
-        </button>
-        <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
-            <span class="h-4 w-4 rounded-[3px] bg-red-600"></span>
-        </span>
-    </div>
-@endpush
 @section('page-content')
     <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] sm:px-5 xl:px-4" data-user-workspace>
         <div class="space-y-2.5">

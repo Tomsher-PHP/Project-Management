@@ -82,14 +82,14 @@
                 title="Open task" @endif>
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
+                    <div class="flex items-center gap-1.5 text-[11px] font-medium text-bgray-900 dark:text-bgray-300">
                         @if ($project)
                             <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                             <span class="truncate" title="{{ $projectName }}">{{ $limitText($projectName, 16) }}</span>
                         @endif
 
                         @if (($project?->project_flow ?? null) === 'agile' && $milestoneName)
-                            <span class="shrink-0 text-bgray-400 dark:text-bgray-500">></span>
+                            <span class="shrink-0 text-bgray-900 dark:text-bgray-500">></span>
                             <span class="truncate" title="{{ $milestoneName }}">{{ $limitText($milestoneName, 16) }}</span>
                         @endif
                     </div>

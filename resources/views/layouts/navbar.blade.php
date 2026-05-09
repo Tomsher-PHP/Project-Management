@@ -50,7 +50,8 @@
         <!-- quick access-->
         <div class="quick-access-wrapper relative">
             <div class="flex items-center space-x-7">
-                <div class="hidden items-center space-x-6 xl:flex">
+                <div class="hidden items-center space-x-6 lg:flex">
+                    @include('layouts.partials.running-task-timer')
                     <button type="button" id="theme-toggle" class="relative flex h-5 w-5 items-center justify-center" data-user="{{ auth()->user()->id }}">
                         <span class="block dark:hidden">
                             <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -102,7 +103,7 @@
                         </svg>
                     </button> --}}
                 </div>
-                <div class="hidden h-10 w-[1px] bg-bgray-300 dark:bg-darkblack-400 xl:block"></div>
+                <div class="hidden h-10 w-[1px] bg-bgray-300 dark:bg-darkblack-400 lg:block"></div>
                 <!--author-->
                 <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">
                     <div class="h-8 w-8 overflow-hidden rounded-xl border border-bgray-300">
