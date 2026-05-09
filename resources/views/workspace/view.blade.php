@@ -5,7 +5,7 @@
 @endpush
 
 @section('page-content')
-    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] sm:px-5 xl:px-4" data-user-workspace>
+    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace>
         <div class="space-y-2.5">
 
             @include('workspace.partials.daily-timeline')
@@ -19,7 +19,7 @@
                     <div class="border-b border-[#edf1f7] bg-white px-4 py-3 dark:border-darkblack-400 dark:bg-darkblack-600">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                             <div class="flex min-w-0 items-center gap-3">
-                                <span class="inline-flex h-6 w-6 items-center justify-center text-[#111653]">
+                                <span class="inline-flex h-6 w-6 items-center justify-center text-[#111653] dark:text-bgray-50">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h7v7H4V4Zm9 0h7v4h-7V4ZM4 13h7v7H4v-7Zm9-3h7v10h-7V10Z" />
                                     </svg>
@@ -28,7 +28,7 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3">
-                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#e7ecf5] bg-white px-4 text-sm font-extrabold text-[#111653] shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff]">
+                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#e7ecf5] bg-white px-4 text-sm font-extrabold text-[#111653] shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff] dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400">
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 .8 1.6L12 11v4a1 1 0 0 1-.553.894l-2 1A1 1 0 0 1 8 16v-5L3.2 4.6A1 1 0 0 1 3 4Z" />
                                     </svg>

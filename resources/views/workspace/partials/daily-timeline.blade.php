@@ -2,24 +2,24 @@
     $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('d M Y');
 @endphp
 
-<section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
+<section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="flex items-start justify-center xl:justify-start">
             @if (!empty($workspaceGreetingLabel))
                 <div>
-                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">{{ $workspaceGreetingLabel }}</h2>
+                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
                     @if (!empty($workspaceGreetingDayName))
-                        <p class="mt-1 text-sm font-semibold text-[#6b7280]">{{ $workspaceGreetingDayName }}</p>
+                        <p class="mt-1 text-sm font-semibold text-[#6b7280] dark:text-bgray-300">{{ $workspaceGreetingDayName }}</p>
                     @endif
                 </div>
             @else
-                <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033]">Daily Timeline</h2>
+                <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">Daily Timeline</h2>
             @endif
         </div>
 
         <div class="flex justify-center xl:flex-1">
-            <div class="flex flex-wrap items-center justify-center gap-2 rounded-md border border-bgray-400 px-1 py-1 dark:bg-darkblack-500">
-                <button type="button" data-user-timeline-prev class="rounded-md px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white">
+            <div class="flex flex-wrap items-center justify-center gap-2 rounded-md border border-bgray-400 bg-white px-1 py-1 dark:border-darkblack-300 dark:bg-darkblack-500">
+                <button type="button" data-user-timeline-prev class="rounded-md px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                     Previous
                 </button>
 
@@ -41,7 +41,7 @@
                     {{ $selectedDateLabel }}
                 </span>
 
-                <button type="button" data-user-timeline-next class="rounded-md px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                <button type="button" data-user-timeline-next class="rounded-md px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-black">
                     Next
                 </button>
             </div>
@@ -50,7 +50,7 @@
         <div class="grid grid-cols-3 gap-6 text-center xl:justify-items-end">
             <div>
                 <p class="text-[26px] font-extrabold leading-none" style="color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);">{{ $shiftSummaryDuration ?? '--' }}</p>
-                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm" style="background-color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);"></span>
                     Shift
                 </p>
@@ -58,7 +58,7 @@
 
             <div>
                 <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0m' }}</p>
-                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#4f5bff]"></span>
                     Worked
                 </p>
@@ -66,7 +66,7 @@
 
             <div>
                 <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0m' }}</p>
-                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280]">
+                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#d78900]"></span>
                     Break
                 </p>
@@ -74,7 +74,7 @@
         </div>
     </div>
 
-    <p class="mt-3 hidden text-center text-xs font-semibold text-[#d14343] xl:text-left" data-user-timeline-error></p>
+    <p class="mt-3 hidden text-center text-xs font-semibold text-[#d14343] dark:text-red-300 xl:text-left" data-user-timeline-error></p>
 
     <div class="daily-timeline-scroll overflow-x-auto pb-1">
         <div class="daily-timeline min-w-[980px]">

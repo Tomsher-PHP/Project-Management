@@ -70,6 +70,7 @@ class UserWorkspace extends Controller
         $workedTotalMinutes = $this->timeLineService->getTotalTimelineMinutes($workedTaskSegments);
         $breakTotalMinutes = $this->timeLineService->getTotalTimelineMinutes($breakTaskSegments);
 
+        $dateFormat = config('constants.date_format');
         return [
             'assignedShift' => $assignedShift,
             'workedTaskSegments' => $workedTaskSegments,
@@ -80,7 +81,7 @@ class UserWorkspace extends Controller
             'selectedDateValue' => $selectedDate->toDateString(),
             'todayDate' => now($selectedDate->getTimezone())->toDateString(),
             'workspaceGreetingLabel' => $this->buildWorkspaceGreetingLabel($userName),
-            'workspaceGreetingDayName' => $userName ? now()->format('l') : null,
+            'workspaceGreetingDayName' => $userName ? now()->format('l, '.$dateFormat) : null,
         ];
     }
 
