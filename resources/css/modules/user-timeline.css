@@ -198,12 +198,12 @@
     position: absolute;
     z-index: 1;
     display: flex;
-    height: 25px;
+    height: 42px;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     border: 2px solid var(--shift-accent);
-    border-radius: 8px;
+    /* border-radius: 8px; */
     background:
         linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%),
         color-mix(in srgb, var(--shift-accent) 88%, #000 12%);
@@ -212,7 +212,7 @@
     font-size: 0.68rem;
     font-weight: 600;
     box-shadow: 0 8px 14px rgba(3, 119, 201, 0.14);
-    opacity: 100%;
+    opacity: 80%;
 }
 
 .daily-timeline__shift::before {
@@ -255,7 +255,7 @@
 }
 
 .daily-timeline__shift--bottom {
-    top: 75px;
+    top: 69px;
 }
 
 .daily-timeline__shift>span {

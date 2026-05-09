@@ -55,6 +55,7 @@ class UserWorkspace extends Controller
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
             'boardStatuses' => $boardStatuses,
+            'selectedFlowType' => $selectedFlowType,
         ] + $timelineViewData);
     }
 
