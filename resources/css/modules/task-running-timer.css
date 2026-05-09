@@ -53,11 +53,11 @@
 
 .running-task-bar__time {
     flex-shrink: 0;
-    font-size: 0.92rem;
+    font-size: 1.0rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.08em;
-    min-width: 70px;
+    min-width: 75px;
 }
 
 .running-task-bar__toggle {
