@@ -1,50 +1,5 @@
 import Alert from "../../alert";
 
-function ajaxFormSubmit(formSelector) {
-
-    // $(formSelector).on('submit', function (e) {
-    //     e.preventDefault();
-
-    //     let form = $(this);
-    //     let url = form.attr('action');
-    //     let btn = form.find('button[type="submit"]');
-
-    //     let formData = new FormData(this);
-
-    //     setButtonLoading(btn, true);
-
-    //     $.ajax({
-    //         url: url,
-    //         type: "POST",
-    //         data: formData,
-    //         processData: false,
-    //         contentType: false,
-
-    //         success: function (response) {
-    //             Alert.success(response.message || 'Success');
-
-    //             form[0].reset();
-    //         },
-
-    //         error: function (xhr) {
-    //             let res = xhr.responseJSON;
-
-    //             if (res?.errors) {
-    //                 Object.values(res.errors).forEach(err => {
-    //                     Alert.errorModal(err[0], 'Error');
-    //                 });
-    //             } else {
-    //                 Alert.errorModal(res?.message || 'Something went wrong', 'Error');
-    //             }
-    //         },
-
-    //         complete: function () {
-    //             setButtonLoading(btn, false);
-    //         }
-    //     });
-    // });
-}
-
 // button loader
 function setButtonLoading(button, isLoading, loadingText = 'Processing...') {
 
@@ -78,3 +33,87 @@ function setButtonLoading(button, isLoading, loadingText = 'Processing...') {
         $btn.html($btn.data('original-text'));
     }
 }
+
+document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    let form = this;
+    let formData = new FormData(form);
+
+    // clear only error messages (NOT labels)
+    document.querySelectorAll('.error').forEach(el => el.innerText = '');
+    document.querySelectorAll('#changePasswordForm input').forEach(i => {
+        i.classList.remove('border-red-500');
+    });
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(async res => {
+
+        let data;
+
+        try {
+            data = await res.json();
+        } catch (e) {
+            console.error("Invalid JSON response", e);
+            return;
+        }
+
+        // clear old errors always
+        document.querySelectorAll('.error').forEach(el => el.innerText = '');
+
+        if (!res.ok) {
+
+            if (data.errors) {
+                Object.keys(data.errors).forEach(field => {
+
+                    let message = data.errors[field][0];
+
+                    // show for exact field
+                    let errorEl = document.querySelector(`[data-error="${field}"]`);
+
+                    if (errorEl) {
+                        errorEl.innerText = message;
+                    }
+
+                    // special case for confirmed validation
+                    if (field === 'new_password') {
+                        let confirmEl = document.querySelector(`[data-error="new_password_confirmation"]`);
+                        if (confirmEl) {
+                            confirmEl.innerText = message;
+                        }
+                    }
+                });
+            } else {
+                console.error(data);
+            }
+
+            return;
+        }
+
+        // success
+        Alert.success('Password changed successfully');
+        form.reset();
+
+        // clear errors on success
+        document.querySelectorAll('.error').forEach(el => el.innerText = '');
+    })
+    .catch(err => console.error(err));
+});
+
+document.querySelectorAll('#changePasswordForm input').forEach(input => {
+    input.addEventListener('input', function () {
+        let errorEl = document.querySelector(`[data-error="${this.name}"]`);
+        if (errorEl) {
+            errorEl.innerText = '';
+        }
+
+        this.classList.remove('border-red-500');
+    });
+});

@@ -1,9 +1,9 @@
 {
-  "_alert-LtxA_H6Z.js": {
-    "file": "assets/alert-LtxA_H6Z.js",
+  "_alert-BIAC0wB2.js": {
+    "file": "assets/alert-BIAC0wB2.js",
     "name": "alert",
     "imports": [
-      "resources/js/modules/users/change-password.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "_datepicker-CA2wRfma.js": {
@@ -146,12 +146,12 @@
     ]
   },
   "resources/js/modules/projects/project-payment.js": {
-    "file": "assets/project-payment-Dge7250o.js",
+    "file": "assets/project-payment-CKl93k2U.js",
     "name": "project-payment",
     "src": "resources/js/modules/projects/project-payment.js",
     "isEntry": true,
     "imports": [
-      "resources/js/modules/users/change-password.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/projects/project-tasks.js": {
@@ -229,8 +229,8 @@
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "resources/js/modules/users/change-password.js"
+      "_alert-BIAC0wB2.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/team.js": {
@@ -240,15 +240,25 @@
     "isEntry": true
   },
   "resources/js/modules/users/change-password.js": {
-    "file": "assets/change-password-YZDMVk0e.js",
+    "file": "assets/change-password-C9D8YKAV.js",
     "name": "change-password",
     "src": "resources/js/modules/users/change-password.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-BIAC0wB2.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/users/general-settings.js": {
-    "file": "assets/general-settings-DVwtbzFU.js",
+    "file": "assets/general-settings-Bx7X_IjL.js",
     "name": "general-settings",
     "src": "resources/js/modules/users/general-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-edit.js": {
+    "file": "assets/user-edit-vxzGAL30.js",
+    "name": "user-edit",
+    "src": "resources/js/modules/users/user-edit.js",
     "isEntry": true
   },
   "resources/js/modules/users/user-notification-settings.js": {

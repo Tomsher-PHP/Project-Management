@@ -95,4 +95,9 @@ class Kpi extends Model
 
         return $slug;
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_kpis');
+    }
 }

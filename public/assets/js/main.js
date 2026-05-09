@@ -298,20 +298,58 @@ if (localStorage.theme === 'dark' || (window.matchMedia('(prefers-color-scheme: 
   document.documentElement.classList.remove('dark');
 }
 
-// Toggle the theme when the button is clicked
+// // Toggle the theme when the button is clicked
 var themeToggle = document.getElementById('theme-toggle');
-themeToggle.addEventListener('click', function () {
-  // Check the current theme and toggle it
-  if (localStorage.theme === 'dark') {
-    localStorage.theme = 'light';
-  } else {
-    localStorage.theme = 'dark';
-  }
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+}
 
-  // Apply the new theme
-  if (localStorage.theme === 'dark') {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-});
+function updateThemeInDB(theme,user_id) {
+    fetch('/users/general-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document
+                .querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            user_id: user_id,
+            field: 'theme',
+            value: theme
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('DB update failed');
+        }
+    })
+    .catch(() => {
+        console.error('Server error');
+    });
+}
+
+if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+
+        const current = localStorage.getItem('theme') || 'light';
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        const user_id =  this.dataset.user;
+
+        // 1. Instant UI update (no delay)
+        applyTheme(newTheme);
+
+        // 2. Update localStorage (frontend source)
+        localStorage.setItem('theme', newTheme);
+
+        // 3. Update DB (background)
+        updateThemeInDB(newTheme, user_id);
+    });
+}
+
+

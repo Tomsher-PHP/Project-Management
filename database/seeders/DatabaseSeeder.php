@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
 
             // Country related seeders
             CountrySeeder::class,
+            KpiSeeder::class,
         ]);
     }
 }
