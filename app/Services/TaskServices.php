@@ -42,11 +42,25 @@ class TaskServices
     }
 
     // Get kanban task groups by status for the current user
-    public function getKanban(User $user, array $filters, string $flowType, $statuses, int $perPage = 5): array
-    {
-        return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage) {
+    public function getKanban(
+        User $user,
+        array $filters,
+        string $flowType,
+        $statuses,
+        int $perPage = 5,
+        array $options = []
+    ): array {
+        return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage, $options) {
             return [
-                $status->id => $this->getKanbanStatusData($user, $filters, $flowType, (int) $status->id, 1, $perPage),
+                $status->id => $this->getKanbanStatusData(
+                    $user,
+                    $filters,
+                    $flowType,
+                    (int) $status->id,
+                    1,
+                    $perPage,
+                    $options
+                ),
             ];
         })->all();
     }
@@ -57,12 +71,13 @@ class TaskServices
         string $flowType,
         int $statusId,
         int $page = 1,
-        int $perPage = 5
+        int $perPage = 5,
+        array $options = []
     ): array {
         $page = max($page, 1);
         $perPage = max($perPage, 1);
 
-        $taskIds = $this->buildKanbanBaseQuery($user, $filters, $flowType)
+        $taskIds = $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
             ->where('status_id', $statusId)
             ->orderBy('sort_order')
             ->pluck('id')
@@ -75,7 +90,7 @@ class TaskServices
 
         $tasks = $pageTaskIds->isEmpty()
             ? collect()
-            : $this->buildKanbanBaseQuery($user, $filters, $flowType)
+            : $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
             ->whereIn('id', $pageTaskIds->all())
             ->with($this->relations())
             ->withCount([
@@ -119,12 +134,38 @@ class TaskServices
         ];
     }
 
-    private function buildKanbanBaseQuery(User $user, array $filters, string $flowType)
-    {
-        return $this->queryService->baseQuery($user)
+    private function buildKanbanBaseQuery(
+        User $user,
+        array $filters,
+        string $flowType,
+        ?int $statusId = null,
+        array $options = []
+    ) {
+        $query = $this->queryService->baseQuery($user)
             ->filter($filters)
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
             ->where('request_status', '!=', 'rejected');
+
+        $recentCompletedDays = (int) ($options['workspace_recent_completed_days'] ?? 0);
+        $completedStatusIds = collect($options['completed_status_ids'] ?? [])
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->values()
+            ->all();
+
+        if (
+            $statusId
+            && $recentCompletedDays > 0
+            && in_array($statusId, $completedStatusIds, true)
+        ) {
+            $query->whereHas('statusHistories', function ($historyQuery) use ($statusId, $recentCompletedDays) {
+                $historyQuery
+                    ->where('status_id', $statusId)
+                    ->where('added_at', '>=', now()->subDays($recentCompletedDays));
+            });
+        }
+
+        return $query;
     }
 
     // Create a simple task with default placement and tags
@@ -257,7 +298,7 @@ class TaskServices
     protected function buildCreatePayload(Project $project, array $validated, array $defaults, array $placement): array
     {
         $resolvedSprintId = $placement['project_sprint_id'];
-    
+
         return [
             'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,

@@ -35,7 +35,7 @@ use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use App\Http\Controllers\UserHierarchyController;
-use App\Http\Controllers\UserWorkspace;
+use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -68,7 +68,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     // User workspace route
-    Route::get('/user-workspace', [UserWorkspace::class, 'index'])->name('user.workspace');
+    Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
 
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');

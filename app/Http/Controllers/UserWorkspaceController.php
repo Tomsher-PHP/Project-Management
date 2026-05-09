@@ -8,7 +8,7 @@ use App\Services\UserTimelineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-class UserWorkspace extends Controller
+class UserWorkspaceController extends Controller
 {
     private const KANBAN_STATUS_PAGE_SIZE = 5;
 
@@ -49,7 +49,15 @@ class UserWorkspace extends Controller
             $request->all(),
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE
+            self::KANBAN_STATUS_PAGE_SIZE,
+            [
+                'workspace_recent_completed_days' => 7,
+                'completed_status_ids' => $boardStatuses
+                    ->where('is_completed', true)
+                    ->pluck('id')
+                    ->map(fn($id) => (int) $id)
+                    ->all(),
+            ]
         );
 
         return view('workspace.view', [
