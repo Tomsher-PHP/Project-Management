@@ -188,14 +188,8 @@
                                             <div class="min-w-0 flex-1">
                                                 <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">{{ $authUser->name }}</p>
                                                 <div class="mt-0.5 flex items-center gap-2">
-                                                    <p class="truncate text-xs text-bgray-500 dark:text-bgray-300">{{ $authUser->email }}</p>
-                                                    <button
-                                                        type="button"
-                                                        class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white"
-                                                        onclick="copyProfileEmail(event, @js($authUser->email))"
-                                                        aria-label="Copy email"
-                                                        title="Copy email"
-                                                    >
+                                                    <p class="truncate text-xs text-bgray-800 dark:text-bgray-300">{{ $authUser->email }}</p>
+                                                    <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" onclick="copyProfileEmail(event, @js($authUser->email))" aria-label="Copy email" title="Copy email">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path d="M8 7V6C8 4.89543 8.89543 4 10 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
                                                             <path d="M6 8H14C15.1046 8 16 8.89543 16 10V18C16 19.1046 15.1046 20 14 20H6C4.89543 20 4 19.1046 4 18V10C4 8.89543 4.89543 8 6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
@@ -257,13 +251,6 @@
                                     <a href="{{ route('settings.index') }}">
                                         <div class="rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-50 dark:hover:bg-darkblack-500">
                                             <span class="text-sm font-semibold">Settings</span>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li class="w-full">
-                                    <a href="{{ route('users.index') }}">
-                                        <div class="rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-50 dark:hover:bg-darkblack-500">
-                                            <span class="text-sm font-semibold">Users</span>
                                         </div>
                                     </a>
                                 </li>
