@@ -70,11 +70,6 @@ Route::middleware(['auth'])->group(function () {
     // User workspace route
     Route::get('/user-workspace', [UserWorkspace::class, 'index'])->name('user.workspace');
 
-    Route::get('/profile', function () {
-        return view('user-profile');
-    })->name('user.profile');
-    // End of sample routes
-
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');
     Route::resource('roles', RolePermissionController::class)->middleware('permission.type:role.view')->only(['index']);

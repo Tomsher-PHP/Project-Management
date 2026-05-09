@@ -18,7 +18,7 @@
         </div>
 
         <div class="flex justify-center xl:flex-1">
-            <div class="flex flex-wrap items-center justify-center gap-2 rounded-md border border-bgray-400 bg-white px-1 py-1 dark:border-darkblack-300 dark:bg-darkblack-500">
+            <div class="flex flex-wrap items-center justify-center gap-2 rounded-md border border-bgray-400 bg-white dark:border-darkblack-300 dark:bg-darkblack-500">
                 <button type="button" data-user-timeline-prev class="rounded-md px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                     Previous
                 </button>
