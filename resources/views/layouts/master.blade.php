@@ -26,10 +26,8 @@
     <script>
         (function () {
             let theme = "{{ $userTheme ?? 'light' }}";
-
             // overwrite stored value
             localStorage.setItem('theme', theme);
-
             // force apply AFTER other scripts
             window.addEventListener('load', function () {
                 document.documentElement.classList.toggle('dark', theme === 'dark');
