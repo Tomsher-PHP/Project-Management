@@ -144,20 +144,7 @@ const ensureDisplay = (root) => {
         return display;
     }
 
-    display = document.createElement('div');
-    display.className = 'text-[10px] font-semibold text-success-500';
-    display.dataset.taskTimerDisplay = '';
-    display.dataset.taskId = root.dataset.taskId || '';
-    display.innerHTML = '<span data-task-timer-text>00:00:00</span>';
-
-    const button = root.querySelector(BUTTON_SELECTOR);
-    if (button) {
-        root.insertBefore(display, button);
-    } else {
-        root.appendChild(display);
-    }
-
-    return display;
+    return null;
 };
 
 const setDisplayState = (display, { startedAt = '', totalSeconds = 0, hidden = false }) => {
@@ -274,17 +261,36 @@ const requiresNonAssigneeConfirmation = (button) => {
     return currentUserId !== '' && assigneeId !== '' && currentUserId !== assigneeId;
 };
 
-const confirmNonAssigneeStop = async (button, fallbackAssigneeName = '') => {
-    const assigneeName = fallbackAssigneeName || button?.dataset.assigneeName || 'the assignee';
-    const taskName = button?.dataset.taskName || 'this task';
+const confirmStopTimer = async ({ assigneeName = '', taskName = 'this task' } = {}) => {
+    const resolvedAssigneeName = assigneeName || 'the assignee';
     const shortTaskName = taskName.length > 15 ? `${taskName.slice(0, 15)}...` : taskName;
 
     return Alert.confirm({
         title: 'Stop Timer?',
-        text: `This task is assigned to ${assigneeName}. Do you want to stop the running timer for ${shortTaskName}?`,
+        text: `This task is assigned to ${resolvedAssigneeName}. Do you want to stop the running timer for ${shortTaskName}?`,
         confirmText: 'Yes, stop timer',
         cancelText: 'Cancel',
         requireText: 'STOP',
+    });
+};
+
+const confirmNonAssigneeStop = async (button, fallbackAssigneeName = '') => {
+    return confirmStopTimer({
+        assigneeName: fallbackAssigneeName || button?.dataset.assigneeName || 'the assignee',
+        taskName: button?.dataset.taskName || 'this task',
+    });
+};
+
+const confirmTaskSwitch = async (runningTaskName = '') => {
+    const shortTaskName = runningTaskName.length > 20 ? `${runningTaskName.slice(0, 20)}...` : runningTaskName;
+
+    return Alert.confirm({
+        title: 'Start This Task?',
+        text: shortTaskName
+            ? `A timer is already running for ${shortTaskName}. Stop it and start this task?`
+            : 'A timer is already running. Stop it and start this task?',
+        confirmText: 'Yes, switch task',
+        cancelText: 'Cancel',
     });
 };
 
@@ -405,6 +411,80 @@ export function initTaskTimer() {
             let { response, data } = await sendRequest(payload);
 
             if (
+                !isRunning
+                && !response.ok
+                && button.dataset.startSwitchEnabled === '1'
+                && data?.requires_confirmation
+                && data?.running_task_id
+            ) {
+                const confirmation = await confirmTaskSwitch(data.running_task_name || '');
+
+                if (!confirmation.isConfirmed) {
+                    setButtonsBusyState(relatedButtons, false);
+                    syncTaskTimerState(taskId, {
+                        isRunning: false,
+                        startedAt: '',
+                        totalSeconds: getCurrentTaskSeconds(taskId),
+                    });
+                    return;
+                }
+
+                const stopRunningTask = async (stopPayload = {}) => {
+                    const stopResponse = await fetch(`/tasks/${data.running_task_id}/stop`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify(stopPayload),
+                    });
+
+                    const stopData = await stopResponse.json();
+                    return { stopResponse, stopData };
+                };
+
+                let stopPayload = {};
+                let { stopResponse, stopData } = await stopRunningTask(stopPayload);
+
+                if (
+                    !stopResponse.ok
+                    && stopData?.requires_confirmation
+                    && !stopPayload.confirmed_non_assignee_stop
+                ) {
+                    const stopConfirmation = await confirmStopTimer({
+                        assigneeName: stopData.assignee_name || data.running_task_assignee_name || '',
+                        taskName: data.running_task_name || 'this task',
+                    });
+
+                    if (!stopConfirmation.isConfirmed) {
+                        setButtonsBusyState(relatedButtons, false);
+                        syncTaskTimerState(taskId, {
+                            isRunning: false,
+                            startedAt: '',
+                            totalSeconds: getCurrentTaskSeconds(taskId),
+                        });
+                        return;
+                    }
+
+                    stopPayload.confirmed_non_assignee_stop = true;
+                    ({ stopResponse, stopData } = await stopRunningTask(stopPayload));
+                }
+
+                if (!stopResponse.ok) {
+                    throw new Error(stopData.message || 'Failed to stop running task');
+                }
+
+                syncTaskTimerState(String(data.running_task_id), {
+                    isRunning: false,
+                    startedAt: '',
+                    totalSeconds: parseSeconds(stopData?.data?.duration_seconds) + parseSeconds(getButtons(String(data.running_task_id))[0]?.dataset.totalSeconds),
+                });
+
+                ({ response, data } = await sendRequest(payload));
+            }
+
+            if (
                 isRunning
                 && !response.ok
                 && data?.requires_confirmation
@@ -460,7 +540,10 @@ export function initTaskTimer() {
                         taskName: button.dataset.taskName || '',
                         seconds: nextTotalSeconds,
                         baseSeconds: nextTotalSeconds,
-                        estimatedSeconds: parseSeconds(getDisplays(taskId)[0]?.dataset.estimatedSeconds),
+                        estimatedSeconds: parseSeconds(
+                            getDisplays(taskId)[0]?.dataset.estimatedSeconds
+                            || button.dataset.estimatedSeconds
+                        ),
                         startedAt,
                         stopUrl: `/tasks/${taskId}/stop`,
                         state: 'running',

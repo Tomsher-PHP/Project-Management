@@ -1,13 +1,27 @@
 @php
-    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('d M Y');
+    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, '.$globalDateFormat);
 @endphp
 
 <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="flex items-start justify-center xl:justify-start">
-            @if (!empty($workspaceGreetingLabel))
+            @if (!empty($workspaceTimelineShowsUser))
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-success-50 text-lg font-bold text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                        @if (!empty($workspaceTimelineUserAvatarUrl))
+                            <img src="{{ $workspaceTimelineUserAvatarUrl }}" alt="{{ $workspaceTimelineUserName }}" class="h-full w-full object-cover" />
+                        @else
+                            <span>{{ $workspaceTimelineUserInitial ?? 'U' }}</span>
+                        @endif
+                    </div>
+
+                    <div>
+                        <h2 class="text-[18px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">{{ $workspaceTimelineUserName }}</h2>
+                    </div>
+                </div>
+            @elseif (!empty($workspaceGreetingLabel))
                 <div>
-                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
+                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-success dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
                     @if (!empty($workspaceGreetingDayName))
                         <p class="mt-1 text-sm font-semibold text-[#6b7280] dark:text-bgray-300">{{ $workspaceGreetingDayName }}</p>
                     @endif

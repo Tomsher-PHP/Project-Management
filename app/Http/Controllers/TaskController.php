@@ -108,13 +108,15 @@ class TaskController extends Controller
                 fn($collection) => $collection->isNotEmpty(),
                 fn($collection) => $collection->where('flow_type', $selectedFlowType)
             )->values();
+        $selectedKanbanSort = $taskServices->resolveKanbanSort($request->input('sort'));
 
         $tasksByStatus = $taskServices->getKanban(
             $user,
             $request->all(),
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE
+            self::KANBAN_STATUS_PAGE_SIZE,
+            ['sort' => $selectedKanbanSort]
         );
 
         return view('tasks.kanban.kanban-view', array_merge([
@@ -123,6 +125,8 @@ class TaskController extends Controller
             'taskCreateDependencies' => $taskCreateDependencies,
             'boardStatuses' => $boardStatuses,
             'selectedFlowType' => $selectedFlowType,
+            'selectedKanbanSort' => $selectedKanbanSort,
+            'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
         ], $filters, $formData));
     }
 
@@ -157,7 +161,8 @@ class TaskController extends Controller
                     $selectedFlowType,
                     $statusId,
                     $page,
-                    self::KANBAN_STATUS_PAGE_SIZE
+                    self::KANBAN_STATUS_PAGE_SIZE,
+                    ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
                 );
 
                 return response()->json([
@@ -179,7 +184,8 @@ class TaskController extends Controller
                 $request->all(),
                 $selectedFlowType,
                 $boardStatuses,
-                self::KANBAN_STATUS_PAGE_SIZE
+                self::KANBAN_STATUS_PAGE_SIZE,
+                ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
             );
 
             return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
@@ -190,7 +196,8 @@ class TaskController extends Controller
             $request->all(),
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE
+            self::KANBAN_STATUS_PAGE_SIZE,
+            ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
         );
 
         return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));
@@ -888,8 +895,17 @@ class TaskController extends Controller
         $startRestriction = $taskServices->getStartRestriction($task);
 
         if ($startRestriction) {
+            $response = ['message' => $startRestriction['message']];
+
+            if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
+                $response['requires_confirmation'] = true;
+                $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
+                $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
+                $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
+            }
+
             return response()->json(
-                ['message' => $startRestriction['message']],
+                $response,
                 $startRestriction['status']
             );
         }
@@ -953,12 +969,13 @@ class TaskController extends Controller
 
         try {
             $statusId = (int) $validated['status_id'];
-            $task = $taskServices->transitionStatus(
+            $transitionResult = $taskServices->transitionStatus(
                 auth()->user(),
                 (int) $validated['moved_task_id'],
                 collect($validated['task_ids'])->map(fn($taskId) => (int) $taskId)->all(),
                 $statusId
             );
+            $task = $transitionResult['task'];
 
             $task = $this->loadTaskForDetail($task);
             $response = [
@@ -970,6 +987,10 @@ class TaskController extends Controller
                     'priorities' => config('project_constants.task_priorities', []),
                 ])->render(),
             ];
+
+            if (! empty($transitionResult['timer_stopped'])) {
+                $response['timer_stopped'] = $transitionResult['timer_stopped'];
+            }
 
             if (! empty($validated['include_task_detail'])) {
                 $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());

@@ -24,6 +24,28 @@ const setTaskStatusOptionsDisabled = (dropdown, isDisabled) => {
     });
 };
 
+const syncAutoStoppedTimer = (payload = null) => {
+    const taskId = payload?.task_id ? String(payload.task_id) : '';
+
+    if (!taskId) {
+        return;
+    }
+
+    document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
+        detail: {
+            taskId,
+            totalSeconds: payload?.total_seconds ?? 0,
+        },
+    }));
+    document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+
+    const navbarState = window.navbarRunningTaskTimer?.getState?.();
+
+    if (String(navbarState?.taskId || '') === taskId) {
+        document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+    }
+};
+
 const initializeTaskStatusDropdown = () => {
     if (document.body.dataset.taskStatusDropdownInitialized === 'true') {
         return;
@@ -93,6 +115,8 @@ const initializeTaskStatusDropdown = () => {
                 if (!response.ok || !result.success) {
                     throw new Error(result.message || 'Unable to update the task status.');
                 }
+
+                syncAutoStoppedTimer(result.timer_stopped);
 
                 document.dispatchEvent(new CustomEvent('task-status:changed', {
                     detail: {

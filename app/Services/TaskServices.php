@@ -18,6 +18,12 @@ use Illuminate\Support\Str;
 
 class TaskServices
 {
+    public const KANBAN_SORT_RECOMMENDED = 'recommended';
+
+    public const KANBAN_SORT_PRIORITY_DESC = 'priority_desc';
+
+    public const KANBAN_SORT_PRIORITY_ASC = 'priority_asc';
+
     // Initialize task service dependencies
     public function __construct(
         protected ProjectServices $projectServices,
@@ -50,6 +56,8 @@ class TaskServices
         int $perPage = 5,
         array $options = []
     ): array {
+        $options['sort'] = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
+
         return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage, $options) {
             return [
                 $status->id => $this->getKanbanStatusData(
@@ -76,10 +84,13 @@ class TaskServices
     ): array {
         $page = max($page, 1);
         $perPage = max($perPage, 1);
+        $sort = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
 
-        $taskIds = $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
+        $taskIds = $this->applyKanbanSorting(
+            $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options),
+            $sort
+        )
             ->where('status_id', $statusId)
-            ->orderBy('sort_order')
             ->pluck('id')
             ->map(fn($id) => (string) $id)
             ->values();
@@ -90,7 +101,10 @@ class TaskServices
 
         $tasks = $pageTaskIds->isEmpty()
             ? collect()
-            : $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
+            : $this->applyKanbanSorting(
+                $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options),
+                $sort
+            )
             ->whereIn('id', $pageTaskIds->all())
             ->with($this->relations())
             ->withCount([
@@ -103,7 +117,6 @@ class TaskServices
                     });
                 },
             ])
-            ->orderBy('sort_order')
             ->get();
 
         $hasMore = ($offset + $tasks->count()) < $total;
@@ -146,6 +159,12 @@ class TaskServices
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
             ->where('request_status', '!=', 'rejected');
 
+        $workspaceUserId = (int) ($options['workspace_user_id'] ?? 0);
+
+        if ($workspaceUserId > 0) {
+            $query->where('current_assignee_id', $workspaceUserId);
+        }
+
         $recentCompletedDays = (int) ($options['workspace_recent_completed_days'] ?? 0);
         $completedStatusIds = collect($options['completed_status_ids'] ?? [])
             ->map(fn($id) => (int) $id)
@@ -166,6 +185,53 @@ class TaskServices
         }
 
         return $query;
+    }
+
+    public function getKanbanSortOptions(): array
+    {
+        return [
+            self::KANBAN_SORT_RECOMMENDED => 'Recommended',
+            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: Urgent to Low',
+            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low to Urgent',
+        ];
+    }
+
+    public function resolveKanbanSort(?string $sort): string
+    {
+        if (! is_string($sort)) {
+            return self::KANBAN_SORT_RECOMMENDED;
+        }
+
+        return array_key_exists($sort, $this->getKanbanSortOptions())
+            ? $sort
+            : self::KANBAN_SORT_RECOMMENDED;
+    }
+
+    private function applyKanbanSorting($query, string $sort)
+    {
+        return match ($sort) {
+            self::KANBAN_SORT_PRIORITY_DESC => $query
+                ->orderByRaw($this->buildPriorityOrderCase(['urgent', 'high', 'medium', 'low']))
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+            self::KANBAN_SORT_PRIORITY_ASC => $query
+                ->orderByRaw($this->buildPriorityOrderCase(['low', 'medium', 'high', 'urgent']))
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+            default => $query
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+        };
+    }
+
+    private function buildPriorityOrderCase(array $priorityOrder): string
+    {
+        $clauses = collect($priorityOrder)
+            ->values()
+            ->map(fn($priority, $index) => sprintf("WHEN '%s' THEN %d", str_replace("'", "''", (string) $priority), $index + 1))
+            ->implode(' ');
+
+        return sprintf('CASE priority %s ELSE %d END', $clauses, count($priorityOrder) + 1);
     }
 
     // Create a simple task with default placement and tags
@@ -605,7 +671,10 @@ class TaskServices
         }
 
         $runningTimer = TaskTimeLog::query()
-            ->with('task:id,name,code')
+            ->with([
+                'task:id,name,code,current_assignee_id',
+                'task.currentAssignee:id,name',
+            ])
             ->where('user_id', $user->id)
             ->where('is_running', 1)
             ->latest('started_at')
@@ -618,7 +687,8 @@ class TaskServices
         if ((int) $runningTimer->task_id === (int) $task->id) {
             return $this->buildTaskStartRestriction(
                 'Timer already running for this task.',
-                Response::HTTP_UNPROCESSABLE_ENTITY
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+                ['reason' => 'already_running']
             );
         }
 
@@ -627,16 +697,22 @@ class TaskServices
 
         return $this->buildTaskStartRestriction(
             "Please stop the timer for '{$runningTaskLabel}' before starting another task.",
-            Response::HTTP_UNPROCESSABLE_ENTITY
+            Response::HTTP_UNPROCESSABLE_ENTITY,
+            [
+                'reason' => 'running_timer_exists',
+                'running_task_id' => (int) $runningTimer->task_id,
+                'running_task_name' => $runningTaskLabel,
+                'running_task_assignee_name' => $runningTimer->task?->currentAssignee?->name,
+            ]
         );
     }
 
-    private function buildTaskStartRestriction(string $message, int $status): array
+    private function buildTaskStartRestriction(string $message, int $status, array $extra = []): array
     {
-        return [
+        return array_merge([
             'message' => $message,
             'status' => $status,
-        ];
+        ], $extra);
     }
 
     // Check whether current user can stop timer on this task
@@ -712,7 +788,7 @@ class TaskServices
             ->sum('duration_seconds');
     }
 
-    public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): Task
+    public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): array
     {
         return DB::transaction(function () use ($user, $movedTaskId, $taskIds, $statusId) {
             $movedTask = Task::query()
@@ -757,6 +833,8 @@ class TaskServices
                 ->get()
                 ->keyBy('id');
 
+            $timerStoppedPayload = null;
+
             foreach ($taskIds as $index => $taskId) {
 
                 $task = $tasks[$taskId] ?? null;
@@ -775,12 +853,12 @@ class TaskServices
                         $previousStatusId,
                         $newStatus->id
                     );
-                    $this->stopRunningTimersIfStatusInactive(
+                    $timerStoppedPayload = $this->stopRunningTimersIfStatusInactive(
                         $task,
                         $previousStatusId,
                         $newStatus,
                         $user
-                    );
+                    ) ?: $timerStoppedPayload;
 
                     app(NotificationService::class)->notifyTaskStatusChanged(
                         $task,
@@ -791,9 +869,12 @@ class TaskServices
                 }
             }
 
-            return Task::query()
-                ->with($this->relations())
-                ->findOrFail($movedTaskId);
+            return [
+                'task' => Task::query()
+                    ->with($this->relations())
+                    ->findOrFail($movedTaskId),
+                'timer_stopped' => $timerStoppedPayload,
+            ];
         });
     }
 
@@ -829,22 +910,26 @@ class TaskServices
             ->first(['id', 'name', 'type']);
     }
 
-    private function stopRunningTimersIfStatusInactive(Task $task, ?int $previousStatusId, ?TaskStatus $newStatus, ?User $actor = null): void
+    private function stopRunningTimersIfStatusInactive(Task $task, ?int $previousStatusId, ?TaskStatus $newStatus, ?User $actor = null): ?array
     {
         if (! $newStatus || $newStatus->type === 'active' || $previousStatusId === (int) $newStatus->id) {
-            return;
+            return null;
         }
 
-        if (! $this->stopAllRunningTimers($task)) {
-            return;
+        $timerStoppedPayload = $this->stopAllRunningTimers($task);
+
+        if (! $timerStoppedPayload) {
+            return null;
         }
 
         if ($actor) {
             $this->notificationService->notifyTaskTimerStoppedBecauseStatusChanged($task, $actor, $newStatus->name ?? 'the updated status');
         }
+
+        return $timerStoppedPayload;
     }
 
-    private function stopAllRunningTimers(Task $task): bool
+    private function stopAllRunningTimers(Task $task): ?array
     {
         $runningLogs = TaskTimeLog::query()
             ->where('task_id', $task->id)
@@ -852,7 +937,7 @@ class TaskServices
             ->get();
 
         if ($runningLogs->isEmpty()) {
-            return false;
+            return null;
         }
 
         $now = now();
@@ -876,10 +961,15 @@ class TaskServices
             $totalDuration += $duration;
         }
 
+        $nextTotalSeconds = (int) ($task->actual_time_seconds ?? 0) + $totalDuration;
+
         if ($totalDuration > 0) {
             $task->increment('actual_time_seconds', $totalDuration);
         }
 
-        return true;
+        return [
+            'task_id' => (int) $task->id,
+            'total_seconds' => $nextTotalSeconds,
+        ];
     }
 }
