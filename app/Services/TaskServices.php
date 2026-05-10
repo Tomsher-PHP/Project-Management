@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 
 class TaskServices
 {
+    public const KANBAN_SORT_RECOMMENDED = 'recommended';
+
     public const KANBAN_SORT_PRIORITY_DESC = 'priority_desc';
 
     public const KANBAN_SORT_PRIORITY_ASC = 'priority_asc';
@@ -182,21 +184,24 @@ class TaskServices
     public function getKanbanSortOptions(): array
     {
         return [
-            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: Urgent → Low',
-            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low → Urgent',
+            self::KANBAN_SORT_RECOMMENDED => 'Recommended',
+            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: Urgent to Low',
+            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low to Urgent',
         ];
     }
 
-    public function resolveKanbanSort(?string $sort): ?string
+    public function resolveKanbanSort(?string $sort): string
     {
         if (! is_string($sort)) {
-            return null;
+            return self::KANBAN_SORT_RECOMMENDED;
         }
 
-        return array_key_exists($sort, $this->getKanbanSortOptions()) ? $sort : null;
+        return array_key_exists($sort, $this->getKanbanSortOptions())
+            ? $sort
+            : self::KANBAN_SORT_RECOMMENDED;
     }
 
-    private function applyKanbanSorting($query, ?string $sort)
+    private function applyKanbanSorting($query, string $sort)
     {
         return match ($sort) {
             self::KANBAN_SORT_PRIORITY_DESC => $query

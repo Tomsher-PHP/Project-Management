@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskStatus;
+use App\Services\TaskFilterService;
+use App\Services\TaskQueryService;
 use App\Services\TaskServices;
 use App\Services\UserTimelineService;
 use Illuminate\Http\Request;
@@ -24,7 +26,7 @@ class UserWorkspaceController extends Controller
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-    public function index(Request $request, TaskServices $taskServices)
+    public function index(Request $request, TaskServices $taskServices, TaskFilterService $taskFilterService)
     {
         $user = $request->user();
         $selectedDate = $this->resolveSelectedDate($request->input('date'));
@@ -41,6 +43,7 @@ class UserWorkspaceController extends Controller
         }
 
         [$selectedFlowType, $boardStatuses, $tasksByStatus, $selectedKanbanSort] = $this->buildWorkspaceKanbanData($request, $taskServices);
+        $filterViewData = $this->buildWorkspaceFilterViewData($request, $taskFilterService, $selectedFlowType);
 
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
@@ -49,7 +52,7 @@ class UserWorkspaceController extends Controller
             'selectedKanbanSort' => $selectedKanbanSort,
             'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
             'priorities' => config('project_constants.task_priorities', []),
-        ] + $timelineViewData);
+        ] + $timelineViewData + $filterViewData);
     }
 
     private function renderKanbanBoard(Request $request, TaskServices $taskServices)
@@ -146,6 +149,16 @@ class UserWorkspaceController extends Controller
         }
 
         return $selectedFlowType;
+    }
+
+    private function buildWorkspaceFilterViewData(Request $request, TaskFilterService $taskFilterService, string $selectedFlowType): array
+    {
+        $baseQuery = app(TaskQueryService::class)
+            ->baseQuery($request->user())
+            ->whereHas('project', fn($query) => $query->where('project_flow', $selectedFlowType))
+            ->where('request_status', '!=', 'rejected');
+
+        return $taskFilterService->getFilters($request->user(), $baseQuery);
     }
 
     private function buildTimelineViewData(int $userId, Carbon $selectedDate, ?string $userName = null): array
