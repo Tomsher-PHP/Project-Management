@@ -79,8 +79,6 @@
         </div>
 
         @php
-            $runningLog = $task->timeLogs()->where('is_running', 1)->latest()->first();
-            $timerStartedAt = $runningLog?->started_at->toISOString() ?? null;
             $canStartTimerFromStatus = ($task->status?->type ?? null) === 'active';
         @endphp
 
@@ -90,11 +88,7 @@
         @endphp
 
         <div class="flex items-center gap-2" data-task-timer-root data-task-id="{{ $task->id }}">
-            <div id="task-timer-display" class="flex items-center gap-2 text-sm font-semibold text-success-500 {{ $runningLog || $totalTrackedSeconds > 0 ? '' : 'hidden' }}" data-task-timer-display data-task-id="{{ $task->id }}" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}">
-                ⏱ <span id="timer-text" data-task-timer-text>00:00:00</span>
-            </div>
-
-            <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" data-current-user-id="{{ auth()->id() ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}" data-task-name="{{ $task->name }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-start-disabled="{{ $isStartDisabled ? 1 : 0 }}" data-disabled-variant="strong" id="task-timer-btn" @disabled($isStartDisabled) @if ($isStartDisabled) title="Move this task to an active status before starting the timer." @endif
+            <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" data-current-user-id="{{ auth()->id() ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}" data-task-name="{{ $task->name }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ (int) ($task->estimated_time_seconds ?? 0) }}" data-start-disabled="{{ $isStartDisabled ? 1 : 0 }}" data-disabled-variant="strong" id="task-timer-btn" @disabled($isStartDisabled) @if ($isStartDisabled) title="Move this task to an active status before starting the timer." @endif
                 class="task-timer-btn whitespace-nowrap rounded-lg px-4 py-1 text-sm font-semibold transition {{ $isRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isStartDisabled ? 'cursor-not-allowed bg-bgray-300 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }}">
                 {{ $isRunning ? 'Stop' : 'Start' }}
             </button>

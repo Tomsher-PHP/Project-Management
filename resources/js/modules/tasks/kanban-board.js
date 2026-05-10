@@ -24,6 +24,28 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
+    const syncAutoStoppedTimer = (payload = null) => {
+        const taskId = payload?.task_id ? String(payload.task_id) : '';
+
+        if (!taskId) {
+            return;
+        }
+
+        document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
+            detail: {
+                taskId,
+                totalSeconds: payload?.total_seconds ?? 0,
+            },
+        }));
+        document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+
+        const navbarState = window.navbarRunningTaskTimer?.getState?.();
+
+        if (String(navbarState?.taskId || '') === taskId) {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+        }
+    };
+
     const initKanbanScroll = () => {
         document.querySelectorAll(".kanban-board").forEach(board => {
             board.addEventListener("scroll", () => {
@@ -72,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(handleFetchError)
             .then((response) => {
+                syncAutoStoppedTimer(response.timer_stopped);
                 replaceMovedCard(evt.item, response.html);
             })
             .catch(err => {

@@ -895,8 +895,17 @@ class TaskController extends Controller
         $startRestriction = $taskServices->getStartRestriction($task);
 
         if ($startRestriction) {
+            $response = ['message' => $startRestriction['message']];
+
+            if (($startRestriction['reason'] ?? null) === 'running_timer_exists') {
+                $response['requires_confirmation'] = true;
+                $response['running_task_id'] = $startRestriction['running_task_id'] ?? null;
+                $response['running_task_name'] = $startRestriction['running_task_name'] ?? null;
+                $response['running_task_assignee_name'] = $startRestriction['running_task_assignee_name'] ?? null;
+            }
+
             return response()->json(
-                ['message' => $startRestriction['message']],
+                $response,
                 $startRestriction['status']
             );
         }
@@ -960,12 +969,13 @@ class TaskController extends Controller
 
         try {
             $statusId = (int) $validated['status_id'];
-            $task = $taskServices->transitionStatus(
+            $transitionResult = $taskServices->transitionStatus(
                 auth()->user(),
                 (int) $validated['moved_task_id'],
                 collect($validated['task_ids'])->map(fn($taskId) => (int) $taskId)->all(),
                 $statusId
             );
+            $task = $transitionResult['task'];
 
             $task = $this->loadTaskForDetail($task);
             $response = [
@@ -977,6 +987,10 @@ class TaskController extends Controller
                     'priorities' => config('project_constants.task_priorities', []),
                 ])->render(),
             ];
+
+            if (! empty($transitionResult['timer_stopped'])) {
+                $response['timer_stopped'] = $transitionResult['timer_stopped'];
+            }
 
             if (! empty($validated['include_task_detail'])) {
                 $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());
