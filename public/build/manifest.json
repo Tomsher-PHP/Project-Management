@@ -280,5 +280,11 @@
       "_datepicker-CA2wRfma.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
+  },
+  "resources/js/modules/workspace/workspace-auto-refresh.js": {
+    "file": "assets/workspace-auto-refresh-BMdeCazp.js",
+    "name": "workspace-auto-refresh",
+    "src": "resources/js/modules/workspace/workspace-auto-refresh.js",
+    "isEntry": true
   }
 }
