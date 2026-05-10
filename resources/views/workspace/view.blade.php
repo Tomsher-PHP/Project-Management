@@ -34,22 +34,14 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3">
-                                <button type="button" class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#e7ecf5] bg-white px-4 text-sm font-extrabold text-[#111653] shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff] dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400">
-                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 .8 1.6L12 11v4a1 1 0 0 1-.553.894l-2 1A1 1 0 0 1 8 16v-5L3.2 4.6A1 1 0 0 1 3 4Z" />
-                                    </svg>
-                                    <span>All Tasks</span>
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
-                                    </svg>
-                                </button>
+                                @include('tasks.kanban._sort_dropdown')
                             </div>
                         </div>
                     </div>
 
                     <div class="custom-scroll overflow-x-auto bg-white dark:bg-darkblack-700">
-                        <div id="kanban-container" class="flex h-[calc(100vh-620px)] min-h-[410px] min-w-max gap-3.5 p-3.5">
-                            @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses])
+                        <div id="kanban-container" class="flex h-[calc(100vh-620px)] min-h-[410px] min-w-max gap-3.5 p-3.5" data-kanban-url="{{ route('user.workspace') }}">
+                            @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses, 'priorities' => $priorities ?? []])
                         </div>
                     </div>
                 </div>

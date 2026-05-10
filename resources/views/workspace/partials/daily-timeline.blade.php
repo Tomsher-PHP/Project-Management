@@ -1,5 +1,5 @@
 @php
-    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('d M Y');
+    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, '.$globalDateFormat);
 @endphp
 
 <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">

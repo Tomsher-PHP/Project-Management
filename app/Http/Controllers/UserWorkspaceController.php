@@ -6,6 +6,7 @@ use App\Models\TaskStatus;
 use App\Services\TaskServices;
 use App\Services\UserTimelineService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
 class UserWorkspaceController extends Controller
@@ -29,42 +30,122 @@ class UserWorkspaceController extends Controller
         $selectedDate = $this->resolveSelectedDate($request->input('date'));
         $timelineViewData = $this->buildTimelineViewData($user->id, $selectedDate, $user?->name);
 
+        if ($request->ajax() && $request->boolean('kanban')) {
+            return $this->renderKanbanBoard($request, $taskServices);
+        }
+
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('workspace.partials.daily-timeline', $timelineViewData)->render(),
             ]);
         }
 
-        $selectedFlowType = $user->generalSettings()->where('user_id', $user->id)->value('kanban_view') ?? 'agile';
+        [$selectedFlowType, $boardStatuses, $tasksByStatus, $selectedKanbanSort] = $this->buildWorkspaceKanbanData($request, $taskServices);
 
+        return view('workspace.view', [
+            'tasksByStatus' => $tasksByStatus,
+            'boardStatuses' => $boardStatuses,
+            'selectedFlowType' => $selectedFlowType,
+            'selectedKanbanSort' => $selectedKanbanSort,
+            'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
+            'priorities' => config('project_constants.task_priorities', []),
+        ] + $timelineViewData);
+    }
+
+    private function renderKanbanBoard(Request $request, TaskServices $taskServices)
+    {
+        [$selectedFlowType, $boardStatuses, $tasksByStatus] = $this->buildWorkspaceKanbanData($request, $taskServices, true);
+        $priorities = config('project_constants.task_priorities', []);
+
+        if ($request->filled('status_id')) {
+            $statusId = (int) $request->input('status_id');
+            $page = max((int) $request->input('page', 1), 1);
+
+            $status = $boardStatuses->firstWhere('id', $statusId);
+            abort_unless($status, Response::HTTP_NOT_FOUND);
+
+            $column = $taskServices->getKanbanStatusData(
+                $request->user(),
+                $request->all(),
+                $selectedFlowType,
+                $statusId,
+                $page,
+                self::KANBAN_STATUS_PAGE_SIZE,
+                $this->buildWorkspaceKanbanOptions($boardStatuses, $request, $taskServices)
+            );
+
+            return response()->json([
+                'status' => true,
+                'html' => view('tasks.kanban._cards', [
+                    'tasks' => $column['tasks'],
+                    'status' => $status,
+                    'priorities' => $priorities,
+                ])->render(),
+                'hasMore' => $column['hasMore'],
+                'nextPage' => $column['nextPage'],
+                'taskIds' => $column['taskIds'],
+                'total' => $column['total'],
+            ], Response::HTTP_OK);
+        }
+
+        return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
+    }
+
+    private function buildWorkspaceKanbanData(Request $request, TaskServices $taskServices, bool $persistRequestedFlow = false): array
+    {
+        $user = $request->user();
+        $selectedFlowType = $this->resolveWorkspaceFlowType($request, $persistRequestedFlow);
         $boardStatuses = TaskStatus::query()
             ->active()
             ->forFlow($selectedFlowType)
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get(['id', 'name', 'color', 'is_default', 'is_completed']);
+        $options = $this->buildWorkspaceKanbanOptions($boardStatuses, $request, $taskServices);
 
-        $tasksByStatus = $taskServices->getKanban(
-            $user,
-            $request->all(),
+        $tasksByStatus = $request->filled('status_id')
+            ? []
+            : $taskServices->getKanban(
+                $user,
+                $request->all(),
+                $selectedFlowType,
+                $boardStatuses,
+                self::KANBAN_STATUS_PAGE_SIZE,
+                $options
+            );
+
+        return [
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE,
-            [
-                'workspace_recent_completed_days' => 7,
-                'completed_status_ids' => $boardStatuses
-                    ->where('is_completed', true)
-                    ->pluck('id')
-                    ->map(fn($id) => (int) $id)
-                    ->all(),
-            ]
-        );
+            $tasksByStatus,
+            $options['sort'] ?? null,
+        ];
+    }
 
-        return view('workspace.view', [
-            'tasksByStatus' => $tasksByStatus,
-            'boardStatuses' => $boardStatuses,
-            'selectedFlowType' => $selectedFlowType,
-        ] + $timelineViewData);
+    private function buildWorkspaceKanbanOptions($boardStatuses, Request $request, TaskServices $taskServices): array
+    {
+        return [
+            'sort' => $taskServices->resolveKanbanSort($request->input('sort')),
+            'workspace_recent_completed_days' => 7,
+            'completed_status_ids' => $boardStatuses
+                ->where('is_completed', true)
+                ->pluck('id')
+                ->map(fn($id) => (int) $id)
+                ->all(),
+        ];
+    }
+
+    private function resolveWorkspaceFlowType(Request $request, bool $persistRequestedFlow = false): string
+    {
+        $user = $request->user();
+        $selectedFlowType = $request->input('flow')
+            ?: ($user->generalSettings()->where('user_id', $user->id)->value('kanban_view') ?? 'agile');
+
+        if ($persistRequestedFlow && $request->filled('flow')) {
+            $user->generalSettings()->update(['kanban_view' => $selectedFlowType]);
+        }
+
+        return $selectedFlowType;
     }
 
     private function buildTimelineViewData(int $userId, Carbon $selectedDate, ?string $userName = null): array

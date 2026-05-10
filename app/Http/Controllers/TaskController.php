@@ -108,13 +108,15 @@ class TaskController extends Controller
                 fn($collection) => $collection->isNotEmpty(),
                 fn($collection) => $collection->where('flow_type', $selectedFlowType)
             )->values();
+        $selectedKanbanSort = $taskServices->resolveKanbanSort($request->input('sort'));
 
         $tasksByStatus = $taskServices->getKanban(
             $user,
             $request->all(),
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE
+            self::KANBAN_STATUS_PAGE_SIZE,
+            ['sort' => $selectedKanbanSort]
         );
 
         return view('tasks.kanban.kanban-view', array_merge([
@@ -123,6 +125,8 @@ class TaskController extends Controller
             'taskCreateDependencies' => $taskCreateDependencies,
             'boardStatuses' => $boardStatuses,
             'selectedFlowType' => $selectedFlowType,
+            'selectedKanbanSort' => $selectedKanbanSort,
+            'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
         ], $filters, $formData));
     }
 
@@ -157,7 +161,8 @@ class TaskController extends Controller
                     $selectedFlowType,
                     $statusId,
                     $page,
-                    self::KANBAN_STATUS_PAGE_SIZE
+                    self::KANBAN_STATUS_PAGE_SIZE,
+                    ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
                 );
 
                 return response()->json([
@@ -179,7 +184,8 @@ class TaskController extends Controller
                 $request->all(),
                 $selectedFlowType,
                 $boardStatuses,
-                self::KANBAN_STATUS_PAGE_SIZE
+                self::KANBAN_STATUS_PAGE_SIZE,
+                ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
             );
 
             return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
@@ -190,7 +196,8 @@ class TaskController extends Controller
             $request->all(),
             $selectedFlowType,
             $boardStatuses,
-            self::KANBAN_STATUS_PAGE_SIZE
+            self::KANBAN_STATUS_PAGE_SIZE,
+            ['sort' => $taskServices->resolveKanbanSort($request->input('sort'))]
         );
 
         return view('tasks.kanban.index', compact('boardStatuses', 'tasksByStatus', 'priorities'));

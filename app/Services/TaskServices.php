@@ -18,6 +18,10 @@ use Illuminate\Support\Str;
 
 class TaskServices
 {
+    public const KANBAN_SORT_PRIORITY_DESC = 'priority_desc';
+
+    public const KANBAN_SORT_PRIORITY_ASC = 'priority_asc';
+
     // Initialize task service dependencies
     public function __construct(
         protected ProjectServices $projectServices,
@@ -50,6 +54,8 @@ class TaskServices
         int $perPage = 5,
         array $options = []
     ): array {
+        $options['sort'] = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
+
         return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage, $options) {
             return [
                 $status->id => $this->getKanbanStatusData(
@@ -76,10 +82,13 @@ class TaskServices
     ): array {
         $page = max($page, 1);
         $perPage = max($perPage, 1);
+        $sort = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
 
-        $taskIds = $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
+        $taskIds = $this->applyKanbanSorting(
+            $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options),
+            $sort
+        )
             ->where('status_id', $statusId)
-            ->orderBy('sort_order')
             ->pluck('id')
             ->map(fn($id) => (string) $id)
             ->values();
@@ -90,7 +99,10 @@ class TaskServices
 
         $tasks = $pageTaskIds->isEmpty()
             ? collect()
-            : $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options)
+            : $this->applyKanbanSorting(
+                $this->buildKanbanBaseQuery($user, $filters, $flowType, $statusId, $options),
+                $sort
+            )
             ->whereIn('id', $pageTaskIds->all())
             ->with($this->relations())
             ->withCount([
@@ -103,7 +115,6 @@ class TaskServices
                     });
                 },
             ])
-            ->orderBy('sort_order')
             ->get();
 
         $hasMore = ($offset + $tasks->count()) < $total;
@@ -166,6 +177,50 @@ class TaskServices
         }
 
         return $query;
+    }
+
+    public function getKanbanSortOptions(): array
+    {
+        return [
+            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: Urgent → Low',
+            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low → Urgent',
+        ];
+    }
+
+    public function resolveKanbanSort(?string $sort): ?string
+    {
+        if (! is_string($sort)) {
+            return null;
+        }
+
+        return array_key_exists($sort, $this->getKanbanSortOptions()) ? $sort : null;
+    }
+
+    private function applyKanbanSorting($query, ?string $sort)
+    {
+        return match ($sort) {
+            self::KANBAN_SORT_PRIORITY_DESC => $query
+                ->orderByRaw($this->buildPriorityOrderCase(['urgent', 'high', 'medium', 'low']))
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+            self::KANBAN_SORT_PRIORITY_ASC => $query
+                ->orderByRaw($this->buildPriorityOrderCase(['low', 'medium', 'high', 'urgent']))
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+            default => $query
+                ->orderBy('sort_order')
+                ->orderBy('id'),
+        };
+    }
+
+    private function buildPriorityOrderCase(array $priorityOrder): string
+    {
+        $clauses = collect($priorityOrder)
+            ->values()
+            ->map(fn($priority, $index) => sprintf("WHEN '%s' THEN %d", str_replace("'", "''", (string) $priority), $index + 1))
+            ->implode(' ');
+
+        return sprintf('CASE priority %s ELSE %d END', $clauses, count($priorityOrder) + 1);
     }
 
     // Create a simple task with default placement and tags
