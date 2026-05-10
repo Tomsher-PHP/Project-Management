@@ -85,19 +85,45 @@ class User extends Authenticatable
 
     public function scopeAccessibleBy($query, $user)
     {
-        // Superadmin or view all userss permission
+        // Superadmin or view all users permission
         if ($user->is_super_admin || $user->can('user.view_all_users')) {
             return $query;
         }
 
-        // Creator, reporter or manager
-        return $query->where(function ($q) use ($user) {
+        $reporterHierarchyUserIds = self::getReporterHierarchyUserIds($user->id);
+
+        return $query->where(function ($q) use ($user, $reporterHierarchyUserIds) {
             $q->where('added_by', $user->id)
+
+                // All nested reporter levels
+                ->orWhereIn('id', $reporterHierarchyUserIds)
+
+                // Only direct manager level
                 ->orWhereHas('details', function ($q2) use ($user) {
-                    $q2->where('reporter_id', $user->id)
-                        ->orWhere('manager_id', $user->id);
+                    $q2->where('manager_id', $user->id);
                 });
         });
+    }
+
+    public static function getReporterHierarchyUserIds($userId): array
+    {
+        $userIds = [];
+        $currentLevelIds = [$userId];
+
+        while (!empty($currentLevelIds)) {
+            $nextLevelIds = UserDetail::whereIn('reporter_id', $currentLevelIds)
+                ->pluck('user_id')
+                ->toArray();
+
+            if (empty($nextLevelIds)) {
+                break;
+            }
+
+            $userIds = array_merge($userIds, $nextLevelIds);
+            $currentLevelIds = $nextLevelIds;
+        }
+
+        return $userIds;
     }
 
     public function details()

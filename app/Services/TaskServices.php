@@ -159,6 +159,12 @@ class TaskServices
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
             ->where('request_status', '!=', 'rejected');
 
+        $workspaceUserId = (int) ($options['workspace_user_id'] ?? 0);
+
+        if ($workspaceUserId > 0) {
+            $query->where('current_assignee_id', $workspaceUserId);
+        }
+
         $recentCompletedDays = (int) ($options['workspace_recent_completed_days'] ?? 0);
         $completedStatusIds = collect($options['completed_status_ids'] ?? [])
             ->map(fn($id) => (int) $id)

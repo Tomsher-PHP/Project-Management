@@ -4,6 +4,8 @@
     $unreadCount = $authUser->unreadNotifications->count(); // unread badge
     $userRoleName = $authUser->role_name ?? 'No Role';
     $userInitial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($authUser->name ?? 'U', 0, 1));
+    $workspaceSelectableUsers = collect($workspaceSelectableUsers ?? []);
+    $workspaceSelectedUserId = (string) ($workspaceSelectedUserId ?? '');
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
     <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
@@ -16,10 +18,26 @@
             </span>
         </button>
         <!--page-title-->
-        <div class="space-y-1">
-            <h3 class="text-lg font-bold leading-tight text-bgray-900 dark:text-bgray-50 lg:text-[28px]">
-                {{ $pageTitle ?? 'Dashboard' }}
-            </h3>
+        <div class="flex items-center gap-3">
+            <div class="space-y-1">
+                <h3 class="text-lg font-bold leading-tight text-bgray-900 dark:text-bgray-50 lg:text-[28px]">
+                    {{ $pageTitle ?? 'Dashboard' }}
+                </h3>
+            </div>
+
+            @if (request()->routeIs('user.workspace') && $workspaceSelectableUsers->isNotEmpty())
+                <div class="min-w-[240px] max-w-[320px]" data-workspace-user-select-root>
+                    <label for="workspace-user-select" class="sr-only">Workspace user</label>
+                    <select id="workspace-user-select" class="tom-select-no-search w-full" data-workspace-user-select>
+                        <option value="" @selected($workspaceSelectedUserId === '')>Select Users</option>
+                        @foreach ($workspaceSelectableUsers as $workspaceSelectableUser)
+                            <option value="{{ $workspaceSelectableUser->id }}" @selected($workspaceSelectedUserId === (string) $workspaceSelectableUser->id)>
+                                {{ $workspaceSelectableUser->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
         </div>
         <!-- search-bar-->
         {{-- <div class="searchbar-wrapper">

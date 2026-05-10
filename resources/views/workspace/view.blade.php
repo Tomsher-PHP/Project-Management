@@ -117,5 +117,6 @@
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
     @vite('resources/js/modules/workspace/workspace-kanban-filters.js')
+    @vite('resources/js/modules/workspace/workspace-user-selector.js')
     @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
 @endpush
