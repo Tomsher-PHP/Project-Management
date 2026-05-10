@@ -267,7 +267,7 @@ class UserWorkspaceController extends Controller
             return null;
         }
 
-        $hour = now()->hour;
+        $hour = now()->setTimezone(config('constants.timezone'))->hour;
         $greeting = match (true) {
             $hour < 12 => 'Good Morning',
             $hour < 17 => 'Good Afternoon',

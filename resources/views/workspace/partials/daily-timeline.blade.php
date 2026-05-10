@@ -21,7 +21,7 @@
                 </div>
             @elseif (!empty($workspaceGreetingLabel))
                 <div>
-                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
+                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-success dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
                     @if (!empty($workspaceGreetingDayName))
                         <p class="mt-1 text-sm font-semibold text-[#6b7280] dark:text-bgray-300">{{ $workspaceGreetingDayName }}</p>
                     @endif
