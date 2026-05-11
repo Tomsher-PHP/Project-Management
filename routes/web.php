@@ -36,7 +36,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
-use App\Http\Controllers\UserWorkspace;
+use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -69,12 +69,8 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/user-workspace', [UserWorkspace::class, 'index'])->name('user.workspace');
-
-    Route::get('/profile', function () {
-        return view('user-profile');
-    })->name('user.profile');
-    // End of sample routes
+    // User workspace route
+    Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
 
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');
@@ -99,12 +95,15 @@ Route::middleware(['auth'])->group(function () {
         [UserController::class, 'changePassword']
     )->name('users.change.password');
 
+    Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])
+    ->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
+    
     // End of User Management Routes
 
     // Settings Routes

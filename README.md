@@ -15,7 +15,7 @@ Clone the repository and install required packages:
 ```bash
 # Install PHP dependencies
 composer install
-
+composer dump-autoload
 # Install JS dependencies
 npm install
 
@@ -58,7 +58,7 @@ npm run dev
 ===========================================
 ===========================================
 
-### 5. Broadcast Channel Setup
+### 5. Broadcast Channel Setup (reverb)
 
 ```bash
 php artisan install:broadcasting

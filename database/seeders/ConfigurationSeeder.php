@@ -14,10 +14,11 @@ class ConfigurationSeeder extends Seeder
     public function run(): void
     {
         Configuration::create([
-            'company_name' => null,
-            'company_email' => null,
-            'company_phone' => null,
-            'company_address' => null,
+            'company_name' => 'Company Name',
+            'company_email' => 'hr@company.com',
+            'company_phone' => '+971 000 0000',
+            'company_address' => 'Company Address',
+            'website' => 'https://company.com',
             'timezone' => 'UTC',
             'date_format' => 'Y-m-d',
             'time_format' => 'H:i',

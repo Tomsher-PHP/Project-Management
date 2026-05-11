@@ -2,6 +2,9 @@
 
 return [
 
+    // DASHBOARD
+    ['name' => 'dashboard.view',   'sort_order' => 500],
+
     // ROLE (1000)
     ['name' => 'role.view',   'sort_order' => 1000],
     ['name' => 'role.create', 'sort_order' => 1020],

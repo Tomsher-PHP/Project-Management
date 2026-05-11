@@ -14,12 +14,22 @@ use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
+    private function getPostLoginRoute(): string
+    {
+        $user = Auth::user();
+
+        if ($user && ($user->is_super_admin || $user->can('dashboard.view'))) {
+            return route('dashboard');
+        }
+
+        return route('user.workspace');
+    }
 
     public function showLogin()
     {
         // redirect to dashboard if already logged
         if (Auth::check()) {
-            return redirect()->route('dashboard'); // or url('/dashboard')
+            return redirect()->to($this->getPostLoginRoute());
         }
         return view('auth.login');
     }
@@ -64,7 +74,7 @@ class AuthController extends Controller
         // Prevent session fixation
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'))
+        return redirect()->intended($this->getPostLoginRoute())
             ->with('success', 'Welcome back!');
     }
 
@@ -81,10 +91,10 @@ class AuthController extends Controller
         ]);
 
         // Send Mail
-        Mail::raw("Your password reset OTP is: {$otp}", function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject('Password Reset OTP');
-        });
+        // Mail::raw("Your password reset OTP is: {$otp}", function ($message) use ($user) {
+        //     $message->to($user->email)
+        //         ->subject('Password Reset OTP');
+        // });
 
         return response()->json([
             'success' => true,

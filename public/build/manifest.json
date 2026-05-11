@@ -1,45 +1,57 @@
 {
-  "_alert-LtxA_H6Z.js": {
-    "file": "assets/alert-LtxA_H6Z.js",
+  "_alert-BIAC0wB2.js": {
+    "file": "assets/alert-BIAC0wB2.js",
     "name": "alert",
     "imports": [
-      "resources/js/modules/users/change-password.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
-  "_datepicker-xDQEUfkb.js": {
-    "file": "assets/datepicker-xDQEUfkb.js",
+  "_datepicker-CA2wRfma.js": {
+    "file": "assets/datepicker-CA2wRfma.js",
     "name": "datepicker",
     "imports": [
-      "_flatpickr.min-BJdP9L7S.js"
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
+  },
+  "_estimated-time-input-CIuy8ceU.js": {
+    "file": "assets/estimated-time-input-CIuy8ceU.js",
+    "name": "estimated-time-input"
   },
   "_flatpickr-CksuuEqD.css": {
     "file": "assets/flatpickr-CksuuEqD.css",
     "src": "_flatpickr-CksuuEqD.css"
   },
-  "_flatpickr.min-BJdP9L7S.js": {
-    "file": "assets/flatpickr.min-BJdP9L7S.js",
+  "_flatpickr.min-Cc3t1Oke.js": {
+    "file": "assets/flatpickr.min-Cc3t1Oke.js",
     "name": "flatpickr.min",
     "css": [
       "assets/flatpickr-CksuuEqD.css"
     ]
   },
-  "_timepicker-io5AL2NV.js": {
-    "file": "assets/timepicker-io5AL2NV.js",
+  "_sweetalert2.esm.all-YZDMVk0e.js": {
+    "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
+    "name": "sweetalert2.esm.all"
+  },
+  "_timepicker-NRYBeS5c.js": {
+    "file": "assets/timepicker-NRYBeS5c.js",
     "name": "timepicker",
     "imports": [
-      "_flatpickr.min-BJdP9L7S.js"
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
-  "_weekpicker-WW3ukRQH.js": {
-    "file": "assets/weekpicker-WW3ukRQH.js",
+  "_tom-select-Co1PEiz6.js": {
+    "file": "assets/tom-select-Co1PEiz6.js",
+    "name": "tom-select"
+  },
+  "_weekpicker-CPVHNp86.js": {
+    "file": "assets/weekpicker-CPVHNp86.js",
     "name": "weekpicker",
     "imports": [
-      "_flatpickr.min-BJdP9L7S.js"
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CyEnqbpP.css",
+    "file": "assets/app-CEbDBIdS.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -47,21 +59,41 @@
       "app.css"
     ]
   },
+  "resources/css/modules/kanban.css": {
+    "file": "assets/kanban-DFG_n4Vm.css",
+    "src": "resources/css/modules/kanban.css",
+    "isEntry": true,
+    "name": "kanban",
+    "names": [
+      "kanban.css"
+    ]
+  },
+  "resources/css/modules/user-timeline.css": {
+    "file": "assets/user-timeline-B4TBOFC3.css",
+    "src": "resources/css/modules/user-timeline.css",
+    "isEntry": true,
+    "name": "user-timeline",
+    "names": [
+      "user-timeline.css"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-h-bXvTxV.js",
+    "file": "assets/app-BwUHCIpf.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "resources/js/modules/users/change-password.js",
-      "_alert-LtxA_H6Z.js",
-      "_datepicker-xDQEUfkb.js",
-      "_flatpickr.min-BJdP9L7S.js",
-      "_timepicker-io5AL2NV.js",
-      "_weekpicker-WW3ukRQH.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_alert-BIAC0wB2.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-Co1PEiz6.js",
+      "_datepicker-CA2wRfma.js",
+      "_timepicker-NRYBeS5c.js",
+      "_weekpicker-CPVHNp86.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ],
     "css": [
-      "assets/app-CqGrDw4D.css"
+      "assets/app-CDFulk6R.css"
     ]
   },
   "resources/js/image-draggable.js": {
@@ -101,77 +133,86 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-DFNDWKCF.js",
+    "file": "assets/project-detail-CW9KzbFv.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "_datepicker-xDQEUfkb.js",
-      "_flatpickr.min-BJdP9L7S.js",
+      "_alert-BIAC0wB2.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-Co1PEiz6.js",
       "resources/js/modules/projects/project-tasks.js",
-      "_timepicker-io5AL2NV.js",
-      "_weekpicker-WW3ukRQH.js",
-      "resources/js/modules/users/change-password.js"
+      "_timepicker-NRYBeS5c.js",
+      "_weekpicker-CPVHNp86.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/projects/project-payment.js": {
-    "file": "assets/project-payment-Dge7250o.js",
+    "file": "assets/project-payment-CKl93k2U.js",
     "name": "project-payment",
     "src": "resources/js/modules/projects/project-payment.js",
     "isEntry": true,
     "imports": [
-      "resources/js/modules/users/change-password.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-DYrAG8KA.js",
+    "file": "assets/project-tasks-BncZP4G1.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "_datepicker-xDQEUfkb.js",
-      "_flatpickr.min-BJdP9L7S.js",
-      "resources/js/modules/users/change-password.js"
+      "_alert-BIAC0wB2.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-Co1PEiz6.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/schedule-shift.js": {
-    "file": "assets/schedule-shift-zaH_OsxK.js",
+    "file": "assets/schedule-shift-C3hkUo1P.js",
     "name": "schedule-shift",
     "src": "resources/js/modules/schedule-shift.js",
     "isEntry": true,
     "imports": [
-      "_flatpickr.min-BJdP9L7S.js",
-      "_weekpicker-WW3ukRQH.js"
+      "_tom-select-Co1PEiz6.js",
+      "_weekpicker-CPVHNp86.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-SZecKWM9.js",
+    "file": "assets/task-detail-CFUNGoSN.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "_flatpickr.min-BJdP9L7S.js",
-      "_datepicker-xDQEUfkb.js",
-      "_timepicker-io5AL2NV.js",
-      "_weekpicker-WW3ukRQH.js",
+      "_alert-BIAC0wB2.js",
+      "_tom-select-Co1PEiz6.js",
+      "_datepicker-CA2wRfma.js",
+      "_timepicker-NRYBeS5c.js",
+      "_weekpicker-CPVHNp86.js",
+      "_estimated-time-input-CIuy8ceU.js",
       "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
-      "resources/js/modules/users/change-password.js"
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-BPQkxKEp.js",
+    "file": "assets/task-list-create-DOzWUk3K.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "_datepicker-xDQEUfkb.js",
-      "_flatpickr.min-BJdP9L7S.js",
-      "resources/js/modules/users/change-password.js"
+      "_alert-BIAC0wB2.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-Co1PEiz6.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/task-list-subtasks.js": {
@@ -181,19 +222,19 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-Cuw7UdNY.js",
+    "file": "assets/kanban-board-BMg-UXCc.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-DoS69AOu.js",
+    "file": "assets/time-log-change-request-CV2RV4vb.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
     "imports": [
-      "_alert-LtxA_H6Z.js",
-      "resources/js/modules/users/change-password.js"
+      "_alert-BIAC0wB2.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/team.js": {
@@ -203,21 +244,59 @@
     "isEntry": true
   },
   "resources/js/modules/users/change-password.js": {
-    "file": "assets/change-password-YZDMVk0e.js",
+    "file": "assets/change-password-C9D8YKAV.js",
     "name": "change-password",
     "src": "resources/js/modules/users/change-password.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-BIAC0wB2.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/users/general-settings.js": {
-    "file": "assets/general-settings-DVwtbzFU.js",
+    "file": "assets/general-settings-Bx7X_IjL.js",
     "name": "general-settings",
     "src": "resources/js/modules/users/general-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-edit.js": {
+    "file": "assets/user-edit-vxzGAL30.js",
+    "name": "user-edit",
+    "src": "resources/js/modules/users/user-edit.js",
     "isEntry": true
   },
   "resources/js/modules/users/user-notification-settings.js": {
     "file": "assets/user-notification-settings-DXeJtXMb.js",
     "name": "user-notification-settings",
     "src": "resources/js/modules/users/user-notification-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/user-timeline.js": {
+    "file": "assets/user-timeline-D8OJRK8E.js",
+    "name": "user-timeline",
+    "src": "resources/js/modules/workspace/user-timeline.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-CA2wRfma.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/workspace/workspace-auto-refresh.js": {
+    "file": "assets/workspace-auto-refresh-BMdeCazp.js",
+    "name": "workspace-auto-refresh",
+    "src": "resources/js/modules/workspace/workspace-auto-refresh.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-kanban-filters.js": {
+    "file": "assets/workspace-kanban-filters-BoJkhQCR.js",
+    "name": "workspace-kanban-filters",
+    "src": "resources/js/modules/workspace/workspace-kanban-filters.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-user-selector.js": {
+    "file": "assets/workspace-user-selector-DkYDWr0_.js",
+    "name": "workspace-user-selector",
+    "src": "resources/js/modules/workspace/workspace-user-selector.js",
     "isEntry": true
   }
 }

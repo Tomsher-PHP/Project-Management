@@ -1,12 +1,20 @@
 import Sortable from "sortablejs";
 
+const CONTROLLER_KEY = '__workspaceKanbanBoardController';
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const container = document.getElementById('kanban-container');
     const buttons = document.querySelectorAll('.flow-btn');
+    const sortDropdown = document.querySelector('[data-kanban-sort-dropdown]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const kanbanEndpoint = container?.dataset.kanbanUrl || '/tasks/kanban';
+    let isKanbanLoading = false;
+    let isDragInProgress = false;
 
     let currentFlow = localStorage.getItem('kanban_flow') || initialFlowType || 'agile';
+    let currentSort = sortDropdown?.dataset.selectedSort || new URLSearchParams(window.location.search).get('sort') || '';
+    const defaultSortLabel = sortDropdown?.querySelector('[data-kanban-sort-label]')?.textContent?.trim() || 'Sort Tasks';
 
     /** ================= FUNCTIONS ================= */
 
@@ -14,6 +22,28 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".kanban-board").forEach(board => {
             new Sortable(board, sortableOptions);
         });
+    };
+
+    const syncAutoStoppedTimer = (payload = null) => {
+        const taskId = payload?.task_id ? String(payload.task_id) : '';
+
+        if (!taskId) {
+            return;
+        }
+
+        document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
+            detail: {
+                taskId,
+                totalSeconds: payload?.total_seconds ?? 0,
+            },
+        }));
+        document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+
+        const navbarState = window.navbarRunningTaskTimer?.getState?.();
+
+        if (String(navbarState?.taskId || '') === taskId) {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+        }
     };
 
     const initKanbanScroll = () => {
@@ -48,8 +78,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         toggleLoading(evt.item, true);
+        setDragState(true);
 
-        fetch(`/tasks/transition-status`, {
+        return fetch(`/tasks/transition-status`, {
             method: "PATCH",
             headers: {
                 "X-CSRF-TOKEN": csrfToken,
@@ -63,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(handleFetchError)
             .then((response) => {
+                syncAutoStoppedTimer(response.timer_stopped);
                 replaceMovedCard(evt.item, response.html);
             })
             .catch(err => {
@@ -77,25 +109,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 toggleLoading(evt.item, false);
                 rollback(evt);
                 Alert.error(err.message || "Something went wrong");
+            })
+            .finally(() => {
+                setDragState(false);
             });
     };
 
     const loadKanban = (flow) => {
+        if (!container) {
+            return Promise.resolve(false);
+        }
+
+        isKanbanLoading = true;
+        container.dataset.loading = 'true';
         toggleLoading(container, true);
 
-        fetch(buildKanbanUrl({ flow }), {
+        return fetch(buildKanbanUrl({ flow }), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
             .then(res => res.text())
             .then(html => {
                 container.innerHTML = html;
-                toggleLoading(container, false);
                 initKanbanDrag();
                 initKanbanScroll();
+                return true;
             })
             .catch(() => {
-                toggleLoading(container, false);
                 Alert.error('Failed to load board');
+                return false;
+            })
+            .finally(() => {
+                isKanbanLoading = false;
+                container.dataset.loading = 'false';
+                toggleLoading(container, false);
             });
     };
 
@@ -147,6 +193,14 @@ document.addEventListener("DOMContentLoaded", () => {
         el.classList.toggle('opacity-50', state);
     };
 
+    const setDragState = (state) => {
+        isDragInProgress = state;
+
+        if (container) {
+            container.dataset.dragging = state ? 'true' : 'false';
+        }
+    };
+
     const rollback = (evt) => {
         if (evt.from) {
             evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
@@ -154,7 +208,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const buildKanbanUrl = (extraParams = {}) => {
+        const url = new URL(kanbanEndpoint, window.location.origin);
         const params = new URLSearchParams(window.location.search);
+
+        params.set('kanban', '1');
+
+        if (currentSort) {
+            params.set('sort', currentSort);
+        } else {
+            params.delete('sort');
+        }
 
         Object.entries(extraParams).forEach(([key, value]) => {
             if (value === null || value === undefined || value === '') {
@@ -165,7 +228,49 @@ document.addEventListener("DOMContentLoaded", () => {
             params.set(key, value);
         });
 
-        return `/tasks/kanban?${params.toString()}`;
+        url.search = params.toString();
+
+        return url.toString();
+    };
+
+    const closeSortMenus = (exceptDropdown = null) => {
+        document.querySelectorAll('[data-kanban-sort-dropdown]').forEach((dropdown) => {
+            if (exceptDropdown && dropdown === exceptDropdown) {
+                return;
+            }
+
+            dropdown.querySelector('[data-kanban-sort-menu]')?.classList.add('hidden');
+            dropdown.querySelector('[data-kanban-sort-trigger]')?.setAttribute('aria-expanded', 'false');
+        });
+    };
+
+    const syncSortDropdown = () => {
+        if (!sortDropdown) {
+            return;
+        }
+
+        const activeOption = sortDropdown.querySelector(`[data-kanban-sort-option][data-value="${currentSort}"]`);
+        const label = activeOption?.dataset.label || defaultSortLabel;
+
+        sortDropdown.dataset.selectedSort = currentSort;
+        sortDropdown.querySelector('[data-kanban-sort-label]').textContent = label;
+
+        sortDropdown.querySelectorAll('[data-kanban-sort-option]').forEach((option) => {
+            option.querySelector('span')?.classList.toggle('text-success-400', option.dataset.value === currentSort);
+            option.querySelector('span')?.classList.toggle('dark:text-success-300', option.dataset.value === currentSort);
+        });
+    };
+
+    const updateBrowserSortState = () => {
+        const url = new URL(window.location.href);
+
+        if (currentSort) {
+            url.searchParams.set('sort', currentSort);
+        } else {
+            url.searchParams.delete('sort');
+        }
+
+        window.history.replaceState({}, '', url);
     };
 
     const getBoardTaskIds = (board) => {
@@ -281,12 +386,43 @@ document.addEventListener("DOMContentLoaded", () => {
         ghostClass: "kanban-ghost",
         chosenClass: "kanban-chosen",
         dragClass: "kanban-drag",
+        onStart: () => {
+            setDragState(true);
+        },
         onEnd: handleDrop,
     };
 
+    const createKanbanController = () => ({
+        reload: () => {
+            if (!container || isKanbanLoading || isDragInProgress) {
+                return Promise.resolve(false);
+            }
+
+            return loadKanban(currentFlow);
+        },
+        isBusy: () => {
+            if (!container) {
+                return false;
+            }
+
+            return isKanbanLoading
+                || isDragInProgress
+                || container.dataset.loading === 'true'
+                || container.dataset.dragging === 'true'
+                || [...document.querySelectorAll('.kanban-board')].some((board) => board.dataset.loading === 'true');
+        },
+    });
+
     /** ================= INIT ================= */
+    if (container) {
+        container.dataset.loading = 'false';
+        container.dataset.dragging = 'false';
+    }
+
+    syncSortDropdown();
     setActiveButton(currentFlow);
     loadKanban(currentFlow);
+    window[CONTROLLER_KEY] = createKanbanController();
 
     /** ================= EVENTS ================= */
     buttons.forEach(btn => {
@@ -300,6 +436,64 @@ document.addEventListener("DOMContentLoaded", () => {
             setActiveButton(flow);
             loadKanban(flow);
         });
+    });
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-kanban-sort-trigger]');
+
+        if (trigger) {
+            const dropdown = trigger.closest('[data-kanban-sort-dropdown]');
+            const menu = dropdown?.querySelector('[data-kanban-sort-menu]');
+
+            if (!dropdown || !menu) {
+                return;
+            }
+
+            const shouldOpen = menu.classList.contains('hidden');
+            closeSortMenus(dropdown);
+            menu.classList.toggle('hidden', !shouldOpen);
+            trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            return;
+        }
+
+        const option = event.target.closest('[data-kanban-sort-option]');
+
+        if (option) {
+            const nextSort = option.dataset.value || '';
+
+            closeSortMenus();
+
+            if (nextSort === currentSort || isKanbanLoading || isDragInProgress) {
+                return;
+            }
+
+            const previousSort = currentSort;
+            currentSort = nextSort;
+            syncSortDropdown();
+            updateBrowserSortState();
+
+            loadKanban(currentFlow).then((success) => {
+                if (success) {
+                    return;
+                }
+
+                currentSort = previousSort;
+                syncSortDropdown();
+                updateBrowserSortState();
+            });
+
+            return;
+        }
+
+        if (!event.target.closest('[data-kanban-sort-dropdown]')) {
+            closeSortMenus();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSortMenus();
+        }
     });
 
 });

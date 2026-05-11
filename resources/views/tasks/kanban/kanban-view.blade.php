@@ -1,29 +1,7 @@
 @extends('layouts.master')
 
 @push('styles')
-    <style>
-        .kanban-ghost {
-            background: transparent !important;
-            border: 1px dashed rgba(166, 167, 168, 0.8);
-            /* border-radius: 12px; */
-            box-sizing: border-box;
-
-            /* IMPORTANT: remove inner content */
-            color: transparent !important;
-        }
-
-        .kanban-ghost * {
-            visibility: hidden !important;
-        }
-
-        .kanban-chosen {
-            transform: scale(1.02);
-        }
-
-        .kanban-drag {
-            transform: rotate(2deg);
-        }
-    </style>
+    @vite('resources/css/modules/kanban.css')
 @endpush
 
 @section('page-content')
@@ -46,6 +24,8 @@
             </button>
 
             <x-filters.button />
+
+            @include('tasks.kanban._sort_dropdown')
 
             <div id="flow-switcher" class="inline-flex rounded-lg border overflow-hidden sm:ml-auto">
                 <button data-flow="agile" class="flow-btn px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-darkblack-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-darkblack-500">
@@ -87,7 +67,7 @@
                 <div class="overflow-x-auto custom-scroll">
 
                     <!-- Board Container -->
-                    <div id="kanban-container" class="flex gap-6 p-6 min-w-max h-[calc(100vh-220px)]">
+                    <div id="kanban-container" class="flex gap-6 p-6 min-w-max h-[calc(100vh-220px)]" data-kanban-url="{{ route('tasks.kanbanMode') }}">
 
                         <!-- LOOP YOUR STATUSES HERE -->
                         @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses])

@@ -23,6 +23,17 @@
     <link rel="stylesheet" href="{{ asset(config('assets.css.style')) }}" />
 
     @stack('styles')
+    <script>
+        (function () {
+            let theme = "{{ $userTheme ?? 'light' }}";
+            // overwrite stored value
+            localStorage.setItem('theme', theme);
+            // force apply AFTER other scripts
+            window.addEventListener('load', function () {
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+            });
+        })();
+    </script>
 </head>
 
 <body>
@@ -39,7 +50,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700">
+            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700 h-screen">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
@@ -66,8 +77,8 @@
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 
     <script>
-        localStorage.theme = 'light';
-        document.documentElement.classList.remove('dark');
+        // localStorage.theme = 'dark';
+        // document.documentElement.classList.remove('light');
 
         let dataSetsLight = [{
                 label: "My First Dataset",

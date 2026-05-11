@@ -88,6 +88,10 @@ class UserRequest extends FormRequest
             ],
 
             'remove_profile_image' => 'nullable',
+            
+            // KPI (multi select)
+            'kpi_id' => ['nullable', 'array'],
+            'kpi_id.*' => ['exists:kpis,id'],
         ];
     }
 }

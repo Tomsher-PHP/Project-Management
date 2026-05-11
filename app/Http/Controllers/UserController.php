@@ -6,6 +6,7 @@ use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
+use App\Models\Kpi;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
@@ -63,6 +64,7 @@ class UserController extends Controller
         $designations = Designation::active()->orderBy('sort_order', 'asc')->get();
         $nextDepartmentSortOrder = ((int) Department::max('sort_order')) + 1;
         $nextDesignationSortOrder = ((int) Designation::max('sort_order')) + 1;
+        $kpis = Kpi::active()->orderBy('id', 'asc')->get();
 
         // Get reporter and managers
         $managers = app(UserService::class)->getAccessibleUsers(auth()->user());
@@ -73,7 +75,8 @@ class UserController extends Controller
             'designations',
             'managers',
             'nextDepartmentSortOrder',
-            'nextDesignationSortOrder'
+            'nextDesignationSortOrder',
+            'kpis'
         ));
     }
 
@@ -114,6 +117,7 @@ class UserController extends Controller
         ])->filter()->unique()->values()->all();
 
         $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $managerIds);
+        $kpis = Kpi::active()->orderBy('id', 'asc')->get();
 
         return view('users.edit', compact(
             'user',
@@ -122,7 +126,8 @@ class UserController extends Controller
             'designations',
             'managers',
             'nextDepartmentSortOrder',
-            'nextDesignationSortOrder'
+            'nextDesignationSortOrder',
+            'kpis'
         ));
     }
 
@@ -242,7 +247,13 @@ class UserController extends Controller
 
         if (!auth()->user()->is_super_admin) {
             if (!Hash::check($request->current_password, $user->password)) {
-                return redirect()->back()->with('error', 'Current password is incorrect.');
+                return response()->json([
+                    'errors' => [
+                        'current_password' => [
+                            'Current password is incorrect.'
+                        ]
+                    ]
+                ], 422);
             }
         }
 
@@ -250,6 +261,29 @@ class UserController extends Controller
             'password' => Hash::make($request->new_password)
         ]);
 
-        return redirect()->back()->with('success', 'Password updated successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully'
+        ]);
+    }
+
+    public function updateModal(Request $request, User $user, UserService $service)
+    {
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'contact_person' => 'nullable|string|max:255',
+            'contact_person_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'profile_image' => 'nullable|image|max:2048',
+        ]);
+
+        $service->updateModalUser($user, $validated);
+
+        return response()->json([
+            'message' => 'User updated successfully.'
+        ]);
     }
 }

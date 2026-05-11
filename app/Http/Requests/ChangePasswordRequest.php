@@ -19,4 +19,15 @@ class ChangePasswordRequest extends FormRequest
             'user_id' => 'nullable|exists:users,id',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'current_password.required' => 'Please enter your current password.',
+
+            'new_password.required' => 'Please enter a new password.',
+            'new_password.min' => 'New password must be at least 6 characters.',
+            'new_password.confirmed' => 'Passwords do not match.',
+        ];
+    }
 }
