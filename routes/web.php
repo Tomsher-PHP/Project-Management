@@ -11,32 +11,34 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\KPIController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\KPIController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectSprintController;
-use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
+use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
+use App\Http\Controllers\TaskTimeLogChangeRequestController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TechnologyController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
 use App\Http\Controllers\UserWorkspace;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     // goto dashboard if authenticated, else show welcome page
@@ -396,7 +398,33 @@ Route::middleware(['auth'])->group(function () {
 
     // User hierarchy tree view route
     Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
+
+    Route::prefix('reports')->group(function () {
+
+    // PROJECT REPORT
+    Route::get('/projects-report', [ReportController::class, 'project'])
+        ->middleware('permission.type:reports.project_view')->name('projects.report');
+
+        Route::get('/reports/project/export', [ReportController::class, 'export'])->name('reports.project.export');
+
+
+    // TASK REPORT
+    Route::get('/tasks-report', [ReportController::class, 'task'])
+        ->middleware('permission.type:reports.task_view')->name('tasks.report');
+
+    Route::get('/tasks/export', [ReportController::class, 'taskExport'])
+        ->middleware('permission.type:reports.task_export');
+
+
+    // ATTENDANCE REPORT
+    Route::get('/attendance-report', [ReportController::class, 'attendance'])
+        ->middleware('permission.type:reports.attendance_view');
+
+    Route::get('/attendance/export', [ReportController::class, 'attendanceExport'])
+        ->middleware('permission.type:reports.attendance_export');
 });
+
+    });
 
 Route::get('api-test', function () {
     dd('test for api');

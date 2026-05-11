@@ -94,3 +94,7 @@ php artisan reverb:start
 php artisan queue:work
 
 npm run dev
+
+
+composer require maatwebsite/excel
+php artisan make:export ProjectReportExport --model=Project
