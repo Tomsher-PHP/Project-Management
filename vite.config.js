@@ -30,6 +30,8 @@ export default defineConfig({
                 'resources/js/modules/projects/project-payment.js',
                 'resources/js/modules/workspace/user-timeline.js',
                 'resources/js/modules/workspace/workspace-auto-refresh.js',
+                'resources/js/modules/workspace/workspace-kanban-filters.js',
+                'resources/js/modules/workspace/workspace-user-selector.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',

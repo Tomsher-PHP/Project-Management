@@ -286,5 +286,17 @@
     "name": "workspace-auto-refresh",
     "src": "resources/js/modules/workspace/workspace-auto-refresh.js",
     "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-kanban-filters.js": {
+    "file": "assets/workspace-kanban-filters-BoJkhQCR.js",
+    "name": "workspace-kanban-filters",
+    "src": "resources/js/modules/workspace/workspace-kanban-filters.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-user-selector.js": {
+    "file": "assets/workspace-user-selector-DkYDWr0_.js",
+    "name": "workspace-user-selector",
+    "src": "resources/js/modules/workspace/workspace-user-selector.js",
+    "isEntry": true
   }
 }
