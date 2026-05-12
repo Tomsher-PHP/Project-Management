@@ -1032,4 +1032,25 @@ class TaskController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    /** Task helper methods */
+    public function dropdownOptions(Request $request, TaskServices $taskServices)
+    {
+        $validated = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'project_milestone_id' => ['nullable', 'exists:project_milestones,id'],
+            'project_sprint_id' => ['nullable', 'exists:project_sprints,id'],
+        ]);
+
+        $tasks = $taskServices->getTaskDropdownOptions(
+            user: $request->user(),
+            projectId: (int) $validated['project_id'],
+            milestoneId: $validated['project_milestone_id'] ?? null,
+            sprintId: $validated['project_sprint_id'] ?? null,
+        );
+
+        return response()->json([
+            'options' => $tasks,
+        ]);
+    }
 }

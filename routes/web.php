@@ -10,6 +10,7 @@ use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
@@ -94,14 +95,14 @@ Route::middleware(['auth'])->group(function () {
     )->name('users.change.password');
 
     Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])
-    ->name('users.modal.update');
+        ->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
-    
+
     // End of User Management Routes
 
     // Settings Routes
@@ -359,6 +360,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
+    Route::get('tasks/dropdown-options', [TaskController::class, 'dropdownOptions'])->name('tasks.dropdown-options');
 
     // Task status, order change route
     Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
@@ -386,6 +388,9 @@ Route::middleware(['auth'])->group(function () {
         ->whereIn('action', ['approve', 'reject'])
         ->name('tasks.time-log-change-requests.action');
     // End Task time log change request routes
+
+    // Handoff Request routes
+    Route::post('/handoff-requests', [HandoffController::class, 'store'])->name('handoff-requests.store');
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

@@ -972,4 +972,27 @@ class TaskServices
             'total_seconds' => $nextTotalSeconds,
         ];
     }
+
+    /** Task dropdown options */
+    public function getTaskDropdownOptions($user, int $projectId, ?int $milestoneId = null, ?int $sprintId = null)
+    {
+        return Task::query()
+            ->accessibleBy($user)
+            ->where('project_id', $projectId)
+            ->when($milestoneId, function ($query) use ($milestoneId) {
+                $query->where('project_milestone_id', $milestoneId);
+            })
+            ->when($sprintId, function ($query) use ($sprintId) {
+                $query->where('project_sprint_id', $sprintId);
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'name' => $task->name,
+                ];
+            })
+            ->values();
+    }
 }

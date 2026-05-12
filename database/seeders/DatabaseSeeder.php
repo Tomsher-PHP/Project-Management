@@ -44,10 +44,11 @@ class DatabaseSeeder extends Seeder
             AgileSprintSeeder::class,
             AgileMilestoneStatusSeeder::class,
             AgileSprintStatusSeeder::class,
+            KpiSeeder::class,
+            HandoffPurposesSeeder::class,
 
             // Country related seeders
             CountrySeeder::class,
-            KpiSeeder::class,
         ]);
     }
 }
