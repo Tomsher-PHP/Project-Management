@@ -22,14 +22,31 @@ class PermissionByType
             return $next($request);
         }
 
-        if (!$user || !$user->can($permission)) {
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'You are not allowed to access this page.'], 403);
-            }
+        if (!$user) {
+            return $this->deny($request);
+        }
 
-            throw new UnauthorizedActionException();
+        $permissions = collect(explode('|', (string) $permission))
+            ->map(fn($item) => trim($item))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (empty($permissions) || !$user->canAny($permissions)) {
+            return $this->deny($request);
         }
 
         return $next($request);
+    }
+
+    private function deny(Request $request): Response
+    {
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'You are not allowed to access.',
+            ], 403);
+        }
+
+        throw new UnauthorizedActionException();
     }
 }

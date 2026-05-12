@@ -4,10 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HandoffRequestFilterable;
+use App\Traits\Sortable;
 
 class HandoffRequest extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HandoffRequestFilterable, Sortable;
+
+    public const STATUS_PENDING = 0;
+    public const STATUS_NOTED = 1;
+    public const STATUS_ASSIGNED = 2;
 
     protected $fillable = [
         'project_id',
@@ -35,6 +41,16 @@ class HandoffRequest extends Model
             'created_task_id' => 'integer',
         ];
     }
+
+    protected $searchable = ['purpose', 'description'];
+
+    protected $sortable = [
+        'project.name',
+        'user.name',
+        'status',
+        'purpose',
+        'created_at',
+    ];
 
     //Relations
 

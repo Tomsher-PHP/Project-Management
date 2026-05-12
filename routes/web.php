@@ -390,7 +390,13 @@ Route::middleware(['auth'])->group(function () {
     // End Task time log change request routes
 
     // Handoff Request routes
-    Route::post('/handoff-requests', [HandoffController::class, 'store'])->name('handoff-requests.store');
+    Route::prefix('handoff-requests')->group(function () {
+        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('handoff_requests.index');
+        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('handoff_requests.store');
+        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:handoff_request.assign'])->name('handoff_requests.assign');
+        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('handoff_requests.note');
+    });
+    // End Handoff Request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

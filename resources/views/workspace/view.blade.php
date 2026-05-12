@@ -41,12 +41,14 @@
                                     </svg>
                                 </span>
                                 <h3 class="text-[17px] font-extrabold tracking-normal text-bgray-800 dark:text-bgray-50">Work Board</h3>
-                                <button type="button" data-handoff-create-open class="ml-2 inline-flex items-center justify-center rounded-lg bg-success-300 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-success-400" title="Create Handoff request to qa, review etc..">
-                                    <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Handoff
-                                </button>
+                                @can('handoff_request.create')
+                                    <button type="button" data-handoff-create-open class="ml-2 inline-flex items-center justify-center rounded-lg bg-success-300 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-success-400" title="Create Handoff request to qa, review etc..">
+                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Handoff
+                                    </button>
+                                @endcan
                             </div>
 
                             <div class="flex flex-wrap items-center gap-3">

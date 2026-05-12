@@ -7,8 +7,79 @@ use App\Models\HandoffRequest;
 use App\Models\HandoffRequestAction;
 use Illuminate\Support\Facades\DB;
 
+use App\Models\User;
+
 class HandoffServices
 {
+    public function getHandoffRequestsForList(User $user, int $perPage, array $filters = [])
+    {
+        $query = HandoffRequest::sort($filters)->with([
+            'project',
+            'projectMilestone',
+            'projectSprint',
+            'sourceTask',
+            'user',
+            'createdTask'
+        ]);
+
+        if (!$user->is_super_admin) {
+            if ($user->can('handoff_request.view_all')) {
+                $query->whereHas('project', function ($q) use ($user) {
+                    $q->accessibleBy($user);
+                });
+            } else {
+                $accessibleUserIds = User::query()
+                    ->accessibleBy($user)
+                    ->pluck('users.id')
+                    ->toArray();
+
+                $accessibleUserIds[] = $user->id;
+                $query->whereIn('user_id', $accessibleUserIds);
+            }
+        }
+
+        return $query->filter($filters)->latest()->paginate($perPage);
+    }
+
+    public function getFilterOptions(User $user): array
+    {
+        $query = HandoffRequest::query();
+
+        if (!$user->is_super_admin) {
+            if ($user->can('handoff_request.view_all')) {
+                $query->whereHas('project', function ($q) use ($user) {
+                    $q->accessibleBy($user);
+                });
+            } else {
+                $accessibleUserIds = User::query()
+                    ->accessibleBy($user)
+                    ->pluck('users.id')
+                    ->toArray();
+
+                $accessibleUserIds[] = $user->id;
+                $query->whereIn('user_id', $accessibleUserIds);
+            }
+        }
+
+        $projectIds = (clone $query)->distinct()->pluck('project_id')->filter();
+        $userIds = (clone $query)->distinct()->pluck('user_id')->filter();
+        $milestoneIds = (clone $query)->distinct()->pluck('project_milestone_id')->filter();
+        $sprintIds = (clone $query)->distinct()->pluck('project_sprint_id')->filter();
+        $purposes = clone $query->distinct()->pluck('purpose')->filter();
+
+        $purposeOptions = [];
+        foreach ($purposes as $p) {
+            $purposeOptions[$p] = $p;
+        }
+
+        return [
+            'projects' => $projectIds->isEmpty() ? collect() : \App\Models\Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
+            'users' => $userIds->isEmpty() ? collect() : User::query()->whereIn('id', $userIds)->orderBy('name')->get(['id', 'name']),
+            'milestones' => $milestoneIds->isEmpty() ? collect() : \App\Models\ProjectMilestone::query()->whereIn('id', $milestoneIds)->orderBy('name')->get(['id', 'name']),
+            'sprints' => $sprintIds->isEmpty() ? collect() : \App\Models\ProjectSprint::query()->whereIn('id', $sprintIds)->orderBy('name')->get(['id', 'name']),
+            'purposes' => $purposeOptions,
+        ];
+    }
 
     public function createHandoffRequest(array $data, int $userId): HandoffRequest
     {

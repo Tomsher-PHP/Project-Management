@@ -26,11 +26,11 @@
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff-requests.store') }}">
+                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Project <x-red-star /></label>
-                            <select name="project_id" class="tom-select w-full" data-handoff-project-select>
+                            <label for="handoff_project_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Project <x-red-star /></label>
+                            <select id="handoff_project_id" name="project_id" class="tom-select w-full" data-handoff-project-select>
                                 <option value="">Select project</option>
                                 @foreach ($handoffAccessibleProjects as $projectOption)
                                     <option value="{{ $projectOption->id }}" data-flow="{{ $projectOption->project_flow }}">
@@ -42,32 +42,32 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
-                            <select name="project_milestone_id" class="tom-select w-full" data-handoff-milestone-select>
+                            <label for="handoff_project_milestone_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                            <select id="handoff_project_milestone_id" name="project_milestone_id" class="tom-select w-full" data-handoff-milestone-select>
                                 <option value="">Select project first</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_milestone_id"></p>
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint</label>
-                            <select name="project_sprint_id" class="tom-select w-full" data-handoff-sprint-select>
+                            <label for="handoff_project_sprint_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Sprint</label>
+                            <select id="handoff_project_sprint_id" name="project_sprint_id" class="tom-select w-full" data-handoff-sprint-select>
                                 <option value="">Select project first</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_sprint_id"></p>
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Source Task</label>
-                            <select name="source_task_id" class="tom-select w-full" data-handoff-task-select>
+                            <label for="handoff_source_task_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Source Task</label>
+                            <select id="handoff_source_task_id" name="source_task_id" class="tom-select w-full" data-handoff-task-select>
                                 <option value="">Select project first</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="source_task_id"></p>
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Purpose <x-red-star /></label>
-                            <select name="purpose" class="tom-select-add w-full" data-handoff-purpose-select data-placeholder="Select or type a purpose..." data-sort="0" data-max-items="1">
+                            <label for="handoff_purpose" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Purpose <x-red-star /></label>
+                            <select id="handoff_purpose" name="purpose" class="tom-select-add w-full" data-handoff-purpose-select data-placeholder="Select or type a purpose..." data-sort="0" data-max-items="1">
                                 <option value="">Select or type a purpose...</option>
                                 @foreach ($handoffPurposes as $purpose)
                                     <option value="{{ $purpose->name }}">{{ $purpose->name }}</option>
@@ -77,8 +77,8 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Description <x-red-star /></label>
-                            <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Provide handoff details"></textarea>
+                            <label for="handoff_description" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Description <x-red-star /></label>
+                            <textarea id="handoff_description" name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Provide handoff details"></textarea>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="description"></p>
                         </div>
                     </div>
