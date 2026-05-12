@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\HandoffPurpose;
 use App\Models\HandoffRequest;
 use App\Models\HandoffRequestAction;
+use App\Models\Project;
+use App\Models\ProjectMilestone;
+use App\Models\ProjectSprint;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
@@ -73,10 +76,10 @@ class HandoffServices
         }
 
         return [
-            'projects' => $projectIds->isEmpty() ? collect() : \App\Models\Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
+            'projects' => $projectIds->isEmpty() ? collect() : Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
             'users' => $userIds->isEmpty() ? collect() : User::query()->whereIn('id', $userIds)->orderBy('name')->get(['id', 'name']),
-            'milestones' => $milestoneIds->isEmpty() ? collect() : \App\Models\ProjectMilestone::query()->whereIn('id', $milestoneIds)->orderBy('name')->get(['id', 'name']),
-            'sprints' => $sprintIds->isEmpty() ? collect() : \App\Models\ProjectSprint::query()->whereIn('id', $sprintIds)->orderBy('name')->get(['id', 'name']),
+            'milestones' => $milestoneIds->isEmpty() ? collect() : ProjectMilestone::query()->whereIn('id', $milestoneIds)->orderBy('name')->get(['id', 'name']),
+            'sprints' => $sprintIds->isEmpty() ? collect() : ProjectSprint::query()->whereIn('id', $sprintIds)->orderBy('name')->get(['id', 'name']),
             'purposes' => $purposeOptions,
         ];
     }
@@ -98,13 +101,14 @@ class HandoffServices
             HandoffRequestAction::create([
                 'handoff_request_id' => $handoffRequest->id,
                 'user_id' => $userId,
-                'action' => 0, // created
+                'action' => HandoffRequestAction::REQUEST_CREATED,
             ]);
 
-            // create new handoff purpose if not exists
             HandoffPurpose::firstOrCreate([
                 'name' => $data['purpose'],
             ]);
+
+            app(\App\Services\NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, User::find($userId));
 
             return $handoffRequest;
         });
@@ -117,11 +121,13 @@ class HandoffServices
                 'status' => HandoffRequest::STATUS_NOTED,
             ]);
 
-            \App\Models\HandoffRequestAction::create([
+            HandoffRequestAction::create([
                 'handoff_request_id' => $handoffRequest->id,
                 'user_id' => $userId,
-                'action' => \App\Models\HandoffRequestAction::REQUEST_NOTED,
+                'action' => HandoffRequestAction::REQUEST_NOTED,
             ]);
+
+            app(\App\Services\NotificationService::class)->notifyHandoffRequestNoted($handoffRequest, User::find($userId));
 
             return $handoffRequest;
         });
@@ -129,10 +135,6 @@ class HandoffServices
 
     public function markAsAssigned(int $handoffRequestId, Task $createdTask, User $user, ?string $comment = null): void
     {
-        if (!$user->can('handoff_request.assign')) {
-            throw new \Exception("You do not have permission to assign handoff requests.");
-        }
-
         $handoffRequest = HandoffRequest::lockForUpdate()->find($handoffRequestId);
         if (!$handoffRequest) {
             throw new \Exception("Handoff request not found.");
@@ -159,10 +161,10 @@ class HandoffServices
             'created_task_id' => $createdTask->id,
         ]);
 
-        \App\Models\HandoffRequestAction::create([
+        HandoffRequestAction::create([
             'handoff_request_id' => $handoffRequest->id,
             'user_id' => $user->id,
-            'action' => \App\Models\HandoffRequestAction::REQUEST_ASSIGNED,
+            'action' => HandoffRequestAction::REQUEST_ASSIGNED,
             'comment' => $comment,
         ]);
 

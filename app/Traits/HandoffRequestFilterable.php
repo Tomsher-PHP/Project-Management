@@ -61,6 +61,7 @@ trait HandoffRequestFilterable
             'project_milestone_id',
             'project_sprint_id',
             'purpose',
+            'status',
         ];
     }
 

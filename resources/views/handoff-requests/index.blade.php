@@ -2,9 +2,25 @@
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root>
+        @php
+            $tabs = [
+                'pending' => 'Pending',
+                'noted' => 'Noted',
+                'assigned' => 'Assigned',
+            ];
+        @endphp
+
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
                 <x-filters.button />
+            </div>
+
+            <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
+                @foreach ($tabs as $status => $label)
+                    <a href="{{ route('handoff_requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
+                        {{ $label }}
+                    </a>
+                @endforeach
             </div>
         </div>
 
@@ -57,7 +73,7 @@
                                 @endphp
                                 <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[120px] text-sm text-bgray-600 dark:text-bgray-200">
+                                        <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
                                             @appDateTime($request->created_at)
                                         </div>
                                     </td>
@@ -88,12 +104,12 @@
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[120px] text-sm text-bgray-600 dark:text-bgray-200">
+                                        <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
                                             {{ $request->purpose ?? '--' }}
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[200px] text-sm text-bgray-600 dark:text-bgray-200" title="{{ $request->description }}">
+                                        <div class="min-w-[200px] text-sm text-bgray-800 dark:text-bgray-300" title="{{ $request->description }}">
                                             {{ \Illuminate\Support\Str::limit($request->description ?? '--', 60) }}
                                         </div>
                                     </td>
@@ -106,23 +122,23 @@
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 text-center dark:border-darkblack-400">
                                         <div class="flex items-center justify-center gap-2">
-                                            @can('handoff_request.assign')
+                                            @if (auth()->user()->can('task.create'))
                                                 @if (in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
-                                                    <button type="button" class="inline-flex items-center justify-center rounded-lg bg-success-50 p-2 text-success-500 transition hover:bg-success-100 hover:text-success-900 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}"
-                                                        data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-description="{{ $request->description ?? '' }}" data-purpose="{{ $request->purpose ?? '' }}">
+                                                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-success-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}"
+                                                        data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-description="{{ $request->description ?? '' }}" data-purpose="{{ $request->purpose ?? '' }}">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                         </svg>
                                                     </button>
                                                 @endif
-                                            @endcan
+                                            @endif
 
                                             @can('handoff_request.note')
                                                 @if ($request->status == App\Models\HandoffRequest::STATUS_PENDING)
                                                     <form method="POST" action="{{ route('handoff_requests.note', $request->id) }}" class="inline-block">
                                                         @csrf
                                                         @method('PATCH')
-                                                        <button type="button" onclick="confirmHandoffNote(this)" class="inline-flex items-center justify-center rounded-lg bg-info-50 p-2 text-info-500 transition hover:bg-info-100 hover:text-info-900 dark:bg-darkblack-500 dark:text-info-300 dark:hover:bg-darkblack-400 dark:hover:text-info-200" title="Mark as Noted">
+                                                        <button type="button" onclick="confirmHandoffNote(this)" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-info-500 shadow-sm transition duration-200 hover:border-info-300 hover:bg-info-50 hover:text-info-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Mark as Noted">
                                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                                             </svg>
@@ -131,7 +147,7 @@
                                                 @endif
                                             @endcan
 
-                                            <button type="button" class="inline-flex items-center justify-center rounded-lg bg-bgray-50 p-2 text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
+                                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-500 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
                                                 onclick="openHandoffViewModal({{ json_encode([
                                                     'date' => $request->created_at->format('Y-m-d H:i:s'),
                                                     'requestedBy' => $requestUser?->name ?? '--',
@@ -165,6 +181,7 @@
         </section>
 
         <x-filters.drawer>
+            <input type="hidden" name="request_status" value="{{ $selectedStatus }}">
             <x-filters.input-search name="search" label="Search" />
 
             <div class="flex flex-col gap-2">
@@ -255,23 +272,19 @@
             </div>
         </div>
 
-        @can('handoff_request.assign')
-            @can('task.create')
-                @include('tasks.partials.create-modal')
-                <script id="task-create-dependencies" type="application/json">
+        @can('task.create')
+            @include('tasks.partials.create-modal')
+            <script id="task-create-dependencies" type="application/json">
                 @json($taskCreateDependencies)
             </script>
-            @endcan
         @endcan
 
     </main>
 @endsection
 
 @push('scripts')
-    @can('handoff_request.assign')
-        @can('task.create')
-            @vite('resources/js/modules/task-list-create.js')
-        @endcan
+    @can('task.create')
+        @vite('resources/js/modules/task-list-create.js')
     @endcan
     @vite('resources/js/modules/tasks/handoff-blend.js')
 @endpush

@@ -10,13 +10,13 @@ function getProjectFlowIcon(flow) {
     }
 }
 
-window.openHandoffViewModal = function(data) {
+window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalDate').textContent = data.date;
     document.getElementById('viewModalRequestedBy').textContent = data.requestedBy;
-    
+
     const projectEl = document.getElementById('viewModalProject');
     projectEl.innerHTML = getProjectFlowIcon(data.projectFlow) + '<span>' + data.project + '</span>';
-    
+
     document.getElementById('viewModalMilestone').textContent = data.milestone;
     document.getElementById('viewModalSprint').textContent = data.sprint;
     document.getElementById('viewModalSourceTask').textContent = data.sourceTask;
@@ -24,19 +24,19 @@ window.openHandoffViewModal = function(data) {
     document.getElementById('viewModalPurpose').textContent = data.purpose;
     document.getElementById('viewModalStatus').textContent = data.status;
     document.getElementById('viewModalDescription').textContent = data.description;
-    
+
     const modal = document.getElementById('handoffViewModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
 
-window.closeHandoffViewModal = function() {
+window.closeHandoffViewModal = function () {
     const modal = document.getElementById('handoffViewModal');
     modal.classList.remove('flex');
     modal.classList.add('hidden');
 }
 
-window.confirmHandoffNote = function(button) {
+window.confirmHandoffNote = function (button) {
     const form = button.closest('form');
     if (!form) return;
 
@@ -59,7 +59,7 @@ document.addEventListener('click', (e) => {
     setTimeout(() => {
         const root = document.querySelector('[data-task-create-root]');
         if (!root) return;
-        
+
         const form = root.querySelector('[data-task-create-form]');
         if (!form) return;
 

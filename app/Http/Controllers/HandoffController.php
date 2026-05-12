@@ -25,12 +25,26 @@ class HandoffController extends Controller
     public function index(Request $request, TaskFormService $taskFormService)
     {
         $perPage = (int) $request->input('per_page', config('constants.per_page_count', 15));
-        $handoffRequests = $this->handoffServices->getHandoffRequestsForList($request->user(), $perPage, $request->all());
+
+        $selectedStatus = in_array($request->input('request_status'), ['pending', 'noted', 'assigned'], true)
+            ? $request->input('request_status')
+            : 'pending';
+
+        $statusValue = match ($selectedStatus) {
+            'pending' => \App\Models\HandoffRequest::STATUS_PENDING,
+            'noted' => \App\Models\HandoffRequest::STATUS_NOTED,
+            'assigned' => \App\Models\HandoffRequest::STATUS_ASSIGNED,
+            default => \App\Models\HandoffRequest::STATUS_PENDING,
+        };
+
+        $filters = array_merge($request->all(), ['status' => $statusValue]);
+
+        $handoffRequests = $this->handoffServices->getHandoffRequestsForList($request->user(), $perPage, $filters);
         $filterOptions = $this->handoffServices->getFilterOptions($request->user());
 
         $taskFormData = [];
         $taskCreateDependencies = [];
-        if ($request->user()->can('task.create') && $request->user()->can('handoff_request.assign')) {
+        if ($request->user()->can('task.create')) {
             $taskFormData = $taskFormService->getCreateData($request->user());
             $taskCreateDependencies = $this->buildTaskCreateDependencies($taskFormData['taskCreateProjects'] ?? collect());
         }
@@ -38,6 +52,7 @@ class HandoffController extends Controller
         return view('handoff-requests.index', array_merge([
             'handoffRequests' => $handoffRequests,
             'perPage' => $perPage,
+            'selectedStatus' => $selectedStatus,
             'taskCreateDependencies' => $taskCreateDependencies,
         ], $filterOptions, $taskFormData));
     }

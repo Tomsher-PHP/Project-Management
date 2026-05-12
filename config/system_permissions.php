@@ -182,6 +182,5 @@ return [
     ['name' => 'handoff_request.view',         'sort_order' => 27020],
     ['name' => 'handoff_request.create',       'sort_order' => 27040],
     ['name' => 'handoff_request.note',         'sort_order' => 27060],
-    ['name' => 'handoff_request.assign',       'sort_order' => 27080],
 
 ];

@@ -362,4 +362,52 @@ class NotificationService
             route('tasks.edit', $createdTask)
         );
     }
+
+    public function notifyHandoffRequestCreated(HandoffRequest $handoffRequest, User $requester): void
+    {
+        $handoffRequest->loadMissing('project.teamLeader');
+
+        $authorizedUserIds = User::permission(['handoff_request.view', 'handoff_request.view_all'])
+            ->pluck('id')
+            ->toArray();
+
+        $teamLeaderId = $handoffRequest->project?->teamLeader?->id;
+
+        $recipientIds = collect($authorizedUserIds)
+            ->push($teamLeaderId)
+            ->filter()
+            ->reject(fn($id) => (int) $id === (int) $requester->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($recipientIds)) {
+            return;
+        }
+
+        $projectName = $handoffRequest->project?->name ?? 'Project';
+        $title = 'New Handoff Request';
+        $message = "{$requester->name} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
+        $url = route('handoff_requests.index', ['request_status' => 'pending']);
+
+        $this->sendToMany($recipientIds, $title, $message, $url);
+    }
+
+    public function notifyHandoffRequestNoted(HandoffRequest $handoffRequest, User $actor): void
+    {
+        $requesterId = (int) $handoffRequest->user_id;
+
+        if (!$requesterId || $requesterId === (int) $actor->id) {
+            return;
+        }
+
+        $handoffRequest->loadMissing('project:id,name');
+
+        $projectName = $handoffRequest->project?->name ?? 'Project';
+        $title = 'Handoff Request Noted';
+        $message = "{$actor->name} marked your handoff request (#{$handoffRequest->id}) in project '{$projectName}' as noted.";
+        $url = route('handoff_requests.index', ['request_status' => 'noted']);
+
+        $this->send($requesterId, $title, $message, $url);
+    }
 }
