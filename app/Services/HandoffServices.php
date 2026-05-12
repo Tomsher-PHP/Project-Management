@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\HandoffPurpose;
 use App\Models\HandoffRequest;
 use App\Models\HandoffRequestAction;
+use App\Models\Task;
 use Illuminate\Support\Facades\DB;
-
 use App\Models\User;
 
 class HandoffServices
@@ -108,5 +108,64 @@ class HandoffServices
 
             return $handoffRequest;
         });
+    }
+
+    public function markAsNoted(HandoffRequest $handoffRequest, int $userId): HandoffRequest
+    {
+        return DB::transaction(function () use ($handoffRequest, $userId) {
+            $handoffRequest->update([
+                'status' => HandoffRequest::STATUS_NOTED,
+            ]);
+
+            \App\Models\HandoffRequestAction::create([
+                'handoff_request_id' => $handoffRequest->id,
+                'user_id' => $userId,
+                'action' => \App\Models\HandoffRequestAction::REQUEST_NOTED,
+            ]);
+
+            return $handoffRequest;
+        });
+    }
+
+    public function markAsAssigned(int $handoffRequestId, Task $createdTask, User $user, ?string $comment = null): void
+    {
+        if (!$user->can('handoff_request.assign')) {
+            throw new \Exception("You do not have permission to assign handoff requests.");
+        }
+
+        $handoffRequest = HandoffRequest::lockForUpdate()->find($handoffRequestId);
+        if (!$handoffRequest) {
+            throw new \Exception("Handoff request not found.");
+        }
+
+        if (!in_array($handoffRequest->status, [HandoffRequest::STATUS_PENDING, HandoffRequest::STATUS_NOTED])) {
+            throw new \Exception("Only pending or noted handoff requests can be assigned.");
+        }
+
+        if ($handoffRequest->project_id !== $createdTask->project_id) {
+            throw new \Exception("Created task project must match handoff request project.");
+        }
+
+        if ($handoffRequest->project_milestone_id && $handoffRequest->project_milestone_id !== $createdTask->project_milestone_id) {
+            throw new \Exception("Created task milestone must match handoff request milestone.");
+        }
+
+        if ($handoffRequest->project_sprint_id && $handoffRequest->project_sprint_id !== $createdTask->project_sprint_id) {
+            throw new \Exception("Created task sprint must match handoff request sprint.");
+        }
+
+        $handoffRequest->update([
+            'status' => HandoffRequest::STATUS_ASSIGNED,
+            'created_task_id' => $createdTask->id,
+        ]);
+
+        \App\Models\HandoffRequestAction::create([
+            'handoff_request_id' => $handoffRequest->id,
+            'user_id' => $user->id,
+            'action' => \App\Models\HandoffRequestAction::REQUEST_ASSIGNED,
+            'comment' => $comment,
+        ]);
+
+        app(\App\Services\NotificationService::class)->notifyHandoffRequestAssigned($handoffRequest, $createdTask, $user);
     }
 }

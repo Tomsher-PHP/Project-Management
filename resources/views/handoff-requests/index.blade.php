@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
+    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root>
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
                 <x-filters.button />
@@ -105,25 +105,52 @@
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 text-center dark:border-darkblack-400">
-                                        <button type="button" class="inline-flex items-center justify-center rounded-lg bg-bgray-50 p-2 text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
-                                            onclick="openHandoffViewModal({{ json_encode([
-                                                'date' => $request->created_at->format('Y-m-d H:i:s'),
-                                                'requestedBy' => $requestUser?->name ?? '--',
-                                                'project' => $request->project?->name ?? '--',
-                                                'projectFlow' => $request->project?->project_flow ?? '',
-                                                'milestone' => $request->projectMilestone?->name ?? '--',
-                                                'sprint' => $request->projectSprint?->name ?? '--',
-                                                'sourceTask' => $request->sourceTask?->name ?? '--',
-                                                'createdTask' => $request->createdTask?->name ?? '--',
-                                                'purpose' => $request->purpose ?? '--',
-                                                'status' => $currentStatusLabel,
-                                                'description' => $request->description ?? '--',
-                                            ]) }})">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        </button>
+                                        <div class="flex items-center justify-center gap-2">
+                                            @can('handoff_request.assign')
+                                                @if (in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
+                                                    <button type="button" class="inline-flex items-center justify-center rounded-lg bg-success-50 p-2 text-success-500 transition hover:bg-success-100 hover:text-success-900 dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}"
+                                                        data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-description="{{ $request->description ?? '' }}" data-purpose="{{ $request->purpose ?? '' }}">
+                                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
+                                            @endcan
+
+                                            @can('handoff_request.note')
+                                                @if ($request->status == App\Models\HandoffRequest::STATUS_PENDING)
+                                                    <form method="POST" action="{{ route('handoff_requests.note', $request->id) }}" class="inline-block">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="button" onclick="confirmHandoffNote(this)" class="inline-flex items-center justify-center rounded-lg bg-info-50 p-2 text-info-500 transition hover:bg-info-100 hover:text-info-900 dark:bg-darkblack-500 dark:text-info-300 dark:hover:bg-darkblack-400 dark:hover:text-info-200" title="Mark as Noted">
+                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endcan
+
+                                            <button type="button" class="inline-flex items-center justify-center rounded-lg bg-bgray-50 p-2 text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
+                                                onclick="openHandoffViewModal({{ json_encode([
+                                                    'date' => $request->created_at->format('Y-m-d H:i:s'),
+                                                    'requestedBy' => $requestUser?->name ?? '--',
+                                                    'project' => $request->project?->name ?? '--',
+                                                    'projectFlow' => $request->project?->project_flow ?? '',
+                                                    'milestone' => $request->projectMilestone?->name ?? '--',
+                                                    'sprint' => $request->projectSprint?->name ?? '--',
+                                                    'sourceTask' => $request->sourceTask?->name ?? '--',
+                                                    'createdTask' => $request->createdTask?->name ?? '--',
+                                                    'purpose' => $request->purpose ?? '--',
+                                                    'status' => $currentStatusLabel,
+                                                    'description' => $request->description ?? '--',
+                                                ]) }})">
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -228,9 +255,23 @@
             </div>
         </div>
 
+        @can('handoff_request.assign')
+            @can('task.create')
+                @include('tasks.partials.create-modal')
+                <script id="task-create-dependencies" type="application/json">
+                @json($taskCreateDependencies)
+            </script>
+            @endcan
+        @endcan
+
     </main>
 @endsection
 
 @push('scripts')
+    @can('handoff_request.assign')
+        @can('task.create')
+            @vite('resources/js/modules/task-list-create.js')
+        @endcan
+    @endcan
     @vite('resources/js/modules/tasks/handoff-blend.js')
 @endpush

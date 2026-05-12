@@ -18,6 +18,7 @@
 
                 <form class="space-y-4 overflow-y-auto px-5 py-5" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-advanced="false" data-self-assignee-id="{{ auth()->id() }}">
                     <input type="hidden" name="request_type" value="assigned" data-task-create-request-type>
+                    <input type="hidden" name="handoff_request_id" id="handoff_request_id">
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>

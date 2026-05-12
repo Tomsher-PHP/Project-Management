@@ -1,3 +1,5 @@
+import Alert from '../../alert';
+
 function getProjectFlowIcon(flow) {
     if (!flow) return '';
     const isAgile = flow.toLowerCase() === 'agile';
@@ -33,3 +35,83 @@ window.closeHandoffViewModal = function() {
     modal.classList.remove('flex');
     modal.classList.add('hidden');
 }
+
+window.confirmHandoffNote = function(button) {
+    const form = button.closest('form');
+    if (!form) return;
+
+    Alert.confirm({
+        title: 'Mark as Noted?',
+        text: 'Are you sure you want to mark this request as noted?',
+        confirmText: 'Yes, mark as noted'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.submit();
+        }
+    });
+}
+
+document.addEventListener('click', (e) => {
+    const assignBtn = e.target.closest('[data-handoff-assign-btn]');
+    if (!assignBtn) return;
+
+    // Wait for the modal script (task-list-create.js) to finish setup and reset
+    setTimeout(() => {
+        const root = document.querySelector('[data-task-create-root]');
+        if (!root) return;
+        
+        const form = root.querySelector('[data-task-create-form]');
+        if (!form) return;
+
+        const handoffId = assignBtn.dataset.handoffRequestId;
+        const handoffInput = form.querySelector('[name="handoff_request_id"]');
+        if (handoffInput) handoffInput.value = handoffId || '';
+
+        const descInput = form.querySelector('[name="description"]');
+        if (descInput) {
+            let descText = '';
+            if (assignBtn.dataset.purpose) descText += `Purpose: ${assignBtn.dataset.purpose}\n\n`;
+            if (assignBtn.dataset.description) descText += assignBtn.dataset.description;
+            descInput.value = descText;
+        }
+
+        const projectId = assignBtn.dataset.projectId;
+        const projectField = form.querySelector('[name="project_id"]');
+        if (projectId && projectField) {
+            if (projectField.tomselect) {
+                projectField.tomselect.setValue(projectId);
+            } else {
+                projectField.value = projectId;
+                projectField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // Wait for project fields (milestones) to update
+            setTimeout(() => {
+                const milestoneId = assignBtn.dataset.projectMilestoneId;
+                const milestoneField = form.querySelector('[name="project_milestone_id"]');
+                if (milestoneId && milestoneField) {
+                    if (milestoneField.tomselect) {
+                        milestoneField.tomselect.setValue(milestoneId);
+                    } else {
+                        milestoneField.value = milestoneId;
+                        milestoneField.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+
+                    // Wait for sprints to load based on milestone
+                    setTimeout(() => {
+                        const sprintId = assignBtn.dataset.projectSprintId;
+                        const sprintField = form.querySelector('[name="project_sprint_id"]');
+                        if (sprintId && sprintField) {
+                            if (sprintField.tomselect) {
+                                sprintField.tomselect.setValue(sprintId);
+                            } else {
+                                sprintField.value = sprintId;
+                                sprintField.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+                    }, 200);
+                }
+            }, 200);
+        }
+    }, 100);
+});

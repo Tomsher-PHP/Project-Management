@@ -29,7 +29,8 @@ class TaskServices
         protected ProjectServices $projectServices,
         protected TaskQueryService $queryService,
         protected TaskFilterService $filterService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected HandoffServices $handoffServices
     ) {}
 
     // Get paginated task list for the current user
@@ -274,6 +275,14 @@ class TaskServices
 
             if (array_key_exists('tag_ids', $validated)) {
                 $this->syncTags($task, $validated['tag_ids'] ?? []);
+            }
+
+            if (!empty($validated['handoff_request_id'])) {
+                $this->handoffServices->markAsAssigned(
+                    (int) $validated['handoff_request_id'],
+                    $task,
+                    auth()->user()
+                );
             }
 
             return $task;

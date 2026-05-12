@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\HandoffRequest;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
@@ -335,5 +336,30 @@ class NotificationService
         $this->send($assigneeId, $title, $message, $url);
 
         return true;
+    }
+
+    public function notifyHandoffRequestAssigned(HandoffRequest $handoffRequest, Task $createdTask, User $actor): void
+    {
+        $requesterId = (int) $handoffRequest->user_id;
+
+        if (!$requesterId || $requesterId === (int) $actor->id) {
+            return;
+        }
+
+        $handoffRequest->loadMissing('project:id,name');
+
+        $taskName = Str::limit($createdTask->name ?? 'Task', 50, '...');
+        $projectName = $handoffRequest->project?->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+
+        $title = 'Handoff Request Assigned';
+        $message = "{$actorName} assigned your handoff request (#{$handoffRequest->id}) and a new task '{$taskName}' (#{$createdTask->id}) was created in project '{$projectName}'.";
+
+        $this->send(
+            $requesterId,
+            $title,
+            $message,
+            route('tasks.edit', $createdTask)
+        );
     }
 }
