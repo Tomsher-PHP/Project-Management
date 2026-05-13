@@ -8,33 +8,16 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
             @can('task.create')
-                <button type="button" class="inline-flex items-center rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-create-open>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>New Task</span>
-                </button>
+                <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
             @endcan
 
-            <button type="button" class="inline-flex items-center rounded-md border border-bgray-200 bg-white px-4 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300" data-task-create-open data-task-create-request-type="self">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Request Task</span>
-            </button>
+            <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
 
             <x-filters.button />
 
             @include('tasks.kanban._sort_dropdown')
 
-            <div id="flow-switcher" class="inline-flex rounded-lg border overflow-hidden sm:ml-auto">
-                <button data-flow="agile" class="flow-btn px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-darkblack-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-darkblack-500">
-                    Agile
-                </button>
-                <button data-flow="linear" class="flow-btn px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-darkblack-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-darkblack-500">
-                    Linear
-                </button>
-            </div>
+            @include('tasks.kanban._project_flow_btn')
         </div>
 
         @php

@@ -1,7 +1,5 @@
 @php
-    $selectedSortLabel = ! empty($selectedKanbanSort) && isset($kanbanSortOptions[$selectedKanbanSort])
-        ? $kanbanSortOptions[$selectedKanbanSort]
-        : ($kanbanSortOptions[\App\Services\TaskServices::KANBAN_SORT_RECOMMENDED] ?? 'Recommended');
+    $selectedSortLabel = !empty($selectedKanbanSort) && isset($kanbanSortOptions[$selectedKanbanSort]) ? $kanbanSortOptions[$selectedKanbanSort] : $kanbanSortOptions[\App\Services\TaskServices::KANBAN_SORT_RECOMMENDED] ?? 'Recommended';
 @endphp
 
 <div class="relative min-w-[220px] shrink-0" data-kanban-sort-dropdown data-selected-sort="{{ $selectedKanbanSort ?? '' }}">
@@ -10,7 +8,7 @@
             <svg class="h-4 w-4 shrink-0 text-bgray-700 dark:text-bgray-300" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path d="M6 4a1 1 0 0 1 1 1v8.586l1.293-1.293a1 1 0 1 1 1.414 1.414l-3 3a1 1 0 0 1-1.414 0l-3-3a1 1 0 0 1 1.414-1.414L5 13.586V5a1 1 0 0 1 1-1Zm8 12a1 1 0 0 1-1-1V6.414l-1.293 1.293a1 1 0 1 1-1.414-1.414l3-3a1 1 0 0 1 1.414 0l3 3a1 1 0 1 1-1.414 1.414L15 6.414V15a1 1 0 0 1-1 1Z" />
             </svg>
-            <span class="shrink-0 font-medium text-bgray-700 dark:text-bgray-300">Sort By:</span>
+            {{-- <span class="shrink-0 font-medium text-bgray-700 dark:text-bgray-300">Sort By:</span> --}}
             <span class="truncate font-extrabold text-[#111653] dark:text-bgray-50" data-kanban-sort-label>{{ $selectedSortLabel }}</span>
         </span>
 

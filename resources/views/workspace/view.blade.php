@@ -5,7 +5,7 @@
 @endpush
 
 @section('page-content')
-    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace>
+    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace data-task-create-root>
         <div class="space-y-2.5">
             <div class="hidden items-center justify-end" data-workspace-auto-refresh-indicator aria-live="polite">
                 <div class="inline-flex items-center gap-2 rounded-full border border-[#d9e4f5] bg-white/95 px-3 py-1.5 text-xs font-semibold text-[#52607a] shadow-[var(--workspace-soft-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-200">
@@ -41,13 +41,11 @@
                                     </svg>
                                 </span>
                                 <h3 class="text-[17px] font-extrabold tracking-normal text-bgray-800 dark:text-bgray-50">Work Board</h3>
+
+                                <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
+
                                 @can('handoff_request.create')
-                                    <button type="button" data-handoff-create-open class="ml-2 inline-flex items-center justify-center rounded-lg bg-success-300 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-success-400" title="Create Handoff request to qa, review etc..">
-                                        <svg class="mr-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        Handoff
-                                    </button>
+                                    <x-button.create-button type="button" data-handoff-create-open title="Create Handoff request to qa, review etc.." label="Handoff" />
                                 @endcan
                             </div>
 
@@ -77,6 +75,7 @@
                                 </button>
 
                                 @include('tasks.kanban._sort_dropdown')
+                                @include('tasks.kanban._project_flow_btn')
                             </div>
                         </div>
                     </div>
@@ -106,6 +105,12 @@
                 </div>
             </x-filters.drawer>
 
+            @include('tasks.partials.create-modal')
+
+            <script id="task-create-dependencies" type="application/json">
+                @json($taskCreateDependencies)
+            </script>
+
             @include('tasks.partials.handoff-create-modal')
 
             <script id="task-filter-dependencies" type="application/json">
@@ -125,6 +130,7 @@
     </script>
     @vite('resources/js/modules/workspace/user-timeline.js')
     @vite('resources/js/modules/projects/project-tasks.js')
+    @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
     @vite('resources/js/modules/workspace/workspace-kanban-filters.js')
     @vite('resources/js/modules/workspace/workspace-user-selector.js')

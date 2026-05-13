@@ -4,13 +4,10 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
             @can('task.create')
-                <button type="button" class="inline-flex items-center rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-create-open>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>New Task</span>
-                </button>
+                <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
             @endcan
+
+            <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
 
             <x-filters.button />
             <x-project-flow-indicator class="sm:ml-auto" />
@@ -102,7 +99,7 @@
                 <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
             </div>
         </div>
-        
+
         @can('task.create')
             @include('tasks.partials.create-modal')
         @endcan
@@ -137,7 +134,7 @@
 @push('scripts')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-subtasks.js')
-@can('task.create')
+    @can('task.create')
         @vite('resources/js/modules/task-list-create.js')
-@endcan
+    @endcan
 @endpush
