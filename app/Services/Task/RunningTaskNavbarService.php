@@ -2,7 +2,9 @@
 
 namespace App\Services\Task;
 
+use App\Models\Task;
 use App\Models\TaskTimeLog;
+use Illuminate\Support\Collection;
 
 class RunningTaskNavbarService
 {
@@ -29,6 +31,66 @@ class RunningTaskNavbarService
                 ->where('is_running', false)
                 ->sum('duration_seconds')
             : 0;
+
+        return $this->buildState($runningTimeLog, $runningTask, $trackedSeconds);
+    }
+
+    public function getTaskStatesForUser(?int $userId, iterable $tasks): array
+    {
+        $taskCollection = Collection::make($tasks)
+            ->filter(fn($task) => $task instanceof Task && $task->id)
+            ->keyBy(fn(Task $task) => (int) $task->id);
+
+        if ($taskCollection->isEmpty()) {
+            return [];
+        }
+
+        $states = $taskCollection
+            ->mapWithKeys(fn(Task $task, int $taskId) => [$taskId => $this->buildState(null, $task, 0)])
+            ->all();
+
+        if ($userId === null) {
+            return $states;
+        }
+
+        $taskIds = $taskCollection->keys()->all();
+        $trackedSecondsByTask = TaskTimeLog::query()
+            ->selectRaw('task_id, COALESCE(SUM(duration_seconds), 0) as tracked_seconds')
+            ->whereIn('task_id', $taskIds)
+            ->where('user_id', $userId)
+            ->where('is_running', false)
+            ->groupBy('task_id')
+            ->pluck('tracked_seconds', 'task_id');
+        $runningLogsByTask = TaskTimeLog::query()
+            ->whereIn('task_id', $taskIds)
+            ->where('user_id', $userId)
+            ->where('is_running', true)
+            ->latest('started_at')
+            ->get()
+            ->unique('task_id')
+            ->keyBy(fn(TaskTimeLog $timeLog) => (int) $timeLog->task_id);
+
+        foreach ($taskCollection as $taskId => $task) {
+            $states[$taskId] = $this->buildState(
+                $runningLogsByTask->get((int) $taskId),
+                $task,
+                (int) ($trackedSecondsByTask[(int) $taskId] ?? 0)
+            );
+        }
+
+        return $states;
+    }
+
+    private function emptyState(): array
+    {
+        return $this->buildState();
+    }
+
+    private function buildState(
+        ?TaskTimeLog $runningTimeLog = null,
+        ?Task $runningTask = null,
+        int $trackedSeconds = 0
+    ): array {
         $elapsedSeconds = $runningTimeLog?->started_at
             ? $runningTimeLog->started_at->diffInSeconds(now())
             : 0;
@@ -46,23 +108,10 @@ class RunningTaskNavbarService
         ];
     }
 
-    private function emptyState(): array
-    {
-        return [
-            'runningTimeLog' => null,
-            'runningTask' => null,
-            'trackedSeconds' => 0,
-            'elapsedSeconds' => 0,
-            'currentSeconds' => 0,
-            'estimatedSeconds' => 0,
-            'timeColorClass' => 'text-bgray-500 dark:text-bgray-300',
-        ];
-    }
-
     private function resolveTimeColorClass(int $currentSeconds, int $estimatedSeconds): string
     {
         if ($estimatedSeconds <= 0) {
-            return 'text-bgray-500 dark:text-bgray-300';
+            return 'text-bgray-700 dark:text-bgray-300';
         }
 
         return $currentSeconds <= $estimatedSeconds

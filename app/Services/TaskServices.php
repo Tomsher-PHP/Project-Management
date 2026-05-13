@@ -12,6 +12,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\TaskType;
 use App\Models\User;
+use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,7 +31,8 @@ class TaskServices
         protected TaskQueryService $queryService,
         protected TaskFilterService $filterService,
         protected NotificationService $notificationService,
-        protected HandoffServices $handoffServices
+        protected HandoffServices $handoffServices,
+        protected RunningTaskNavbarService $runningTaskNavbarService
     ) {}
 
     // Get paginated task list for the current user
@@ -120,6 +122,8 @@ class TaskServices
             ])
             ->get();
 
+        $this->hydrateKanbanTimerState($tasks, $user);
+
         $hasMore = ($offset + $tasks->count()) < $total;
 
         return [
@@ -146,6 +150,31 @@ class TaskServices
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+    }
+
+    private function hydrateKanbanTimerState($tasks, User $user): void
+    {
+        if ($tasks->isEmpty()) {
+            return;
+        }
+
+        $timerStates = $this->runningTaskNavbarService->getTaskStatesForUser($user->id, $tasks);
+
+        foreach ($tasks as $task) {
+            $timerState = $timerStates[(int) $task->id] ?? null;
+
+            if (! is_array($timerState)) {
+                continue;
+            }
+
+            $task->setAttribute('kanban_timer_tracked_seconds', (int) ($timerState['trackedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_elapsed_seconds', (int) ($timerState['elapsedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_current_seconds', (int) ($timerState['currentSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_estimated_seconds', (int) ($timerState['estimatedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-bgray-500 dark:text-bgray-300'));
+            $task->setAttribute('kanban_timer_started_at_iso', $timerState['runningTimeLog']?->started_at?->toISOString());
+            $task->setAttribute('kanban_timer_is_running', $timerState['runningTimeLog'] !== null);
+        }
     }
 
     private function buildKanbanBaseQuery(
