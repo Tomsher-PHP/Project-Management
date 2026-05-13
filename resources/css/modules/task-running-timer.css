@@ -64,19 +64,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 1.75rem;
+    height: 1.75rem;
     flex-shrink: 0;
     border: 0;
-    border-radius: 10px;
-    background: #edf3ff;
-    color: #0f3d91;
+    border-radius: 0.375rem;
+    background: #16A34A;
+    color: #ffffff;
     transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .running-task-bar__toggle:hover {
     transform: translateY(-1px);
-    background: #dce8ff;
+    background: #22C55E;
 }
 
 .running-task-bar[data-running-task-state="running"] .running-task-bar__toggle {
@@ -89,13 +89,19 @@
 }
 
 .dark .running-task-bar__toggle {
-    background: #243042;
-    color: #bfdbfe;
+    background: #22c55e;
+    color: #ffffff;
 }
 
 .dark .running-task-bar[data-running-task-state="running"] .running-task-bar__toggle {
     background: #45242a;
     color: #fda4af;
+}
+
+.running-task-bar__toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
 }
 
 .running-task-bar__toggle svg {

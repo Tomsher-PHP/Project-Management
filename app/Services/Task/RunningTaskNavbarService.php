@@ -16,14 +16,33 @@ class RunningTaskNavbarService
             return $state;
         }
 
-        $runningTimeLog = TaskTimeLog::query()
-            ->with('task:id,name,estimated_time_seconds')
+        $selectedTimeLog = TaskTimeLog::query()
+            ->with([
+                'task:id,name,estimated_time_seconds,status_id',
+                'task.status:id,type',
+            ])
             ->where('user_id', $userId)
             ->where('is_running', true)
             ->latest('started_at')
             ->first();
 
-        $runningTask = $runningTimeLog?->task;
+        if (! $selectedTimeLog) {
+            $selectedTimeLog = TaskTimeLog::query()
+                ->with([
+                    'task:id,name,estimated_time_seconds,status_id',
+                    'task.status:id,type',
+                ])
+                ->where('user_id', $userId)
+                ->where('is_running', false)
+                ->whereHas('task.status', function ($query) {
+                    $query->where('type', 'active');
+                })
+                ->latest('ended_at')
+                ->latest('updated_at')
+                ->first();
+        }
+
+        $runningTask = $selectedTimeLog?->task;
         $trackedSeconds = $runningTask
             ? (int) TaskTimeLog::query()
                 ->where('task_id', $runningTask->id)
@@ -32,7 +51,17 @@ class RunningTaskNavbarService
                 ->sum('duration_seconds')
             : 0;
 
-        return $this->buildState($runningTimeLog, $runningTask, $trackedSeconds);
+        return $this->buildState(
+            $selectedTimeLog,
+            $runningTask,
+            $trackedSeconds,
+            $selectedTimeLog !== null && $runningTask !== null
+        );
+    }
+
+    public function getFrontendStateForUser(?int $userId): array
+    {
+        return $this->toFrontendState($this->getForUser($userId));
     }
 
     public function getTaskStatesForUser(?int $userId, iterable $tasks): array
@@ -74,7 +103,8 @@ class RunningTaskNavbarService
             $states[$taskId] = $this->buildState(
                 $runningLogsByTask->get((int) $taskId),
                 $task,
-                (int) ($trackedSecondsByTask[(int) $taskId] ?? 0)
+                (int) ($trackedSecondsByTask[(int) $taskId] ?? 0),
+                false
             );
         }
 
@@ -87,24 +117,53 @@ class RunningTaskNavbarService
     }
 
     private function buildState(
-        ?TaskTimeLog $runningTimeLog = null,
+        ?TaskTimeLog $selectedTimeLog = null,
         ?Task $runningTask = null,
-        int $trackedSeconds = 0
+        int $trackedSeconds = 0,
+        bool $shouldShowTimer = false
     ): array {
-        $elapsedSeconds = $runningTimeLog?->started_at
-            ? $runningTimeLog->started_at->diffInSeconds(now())
+        $isRunning = (bool) ($selectedTimeLog?->is_running ?? false);
+        $elapsedSeconds = $isRunning && $selectedTimeLog?->started_at
+            ? $selectedTimeLog->started_at->diffInSeconds(now())
             : 0;
         $currentSeconds = $trackedSeconds + $elapsedSeconds;
         $estimatedSeconds = (int) ($runningTask?->estimated_time_seconds ?? 0);
 
         return [
-            'runningTimeLog' => $runningTimeLog,
+            'selectedTimeLog' => $selectedTimeLog,
+            'runningTimeLog' => $selectedTimeLog,
             'runningTask' => $runningTask,
             'trackedSeconds' => $trackedSeconds,
             'elapsedSeconds' => $elapsedSeconds,
             'currentSeconds' => $currentSeconds,
             'estimatedSeconds' => $estimatedSeconds,
             'timeColorClass' => $this->resolveTimeColorClass($currentSeconds, $estimatedSeconds),
+            'isRunning' => $isRunning,
+            'shouldShowTimer' => $shouldShowTimer,
+            'timerState' => $isRunning ? 'running' : 'stopped',
+        ];
+    }
+
+    public function toFrontendState(array $state): array
+    {
+        $task = $state['runningTask'] ?? null;
+        $selectedTimeLog = $state['selectedTimeLog'] ?? null;
+        $isRunning = (bool) ($state['isRunning'] ?? false);
+        $shouldShowTimer = (bool) ($state['shouldShowTimer'] ?? false);
+
+        return [
+            'active' => $shouldShowTimer,
+            'taskId' => $task?->id ? (string) $task->id : '',
+            'taskName' => $task?->name ?? '',
+            'seconds' => (int) ($state['currentSeconds'] ?? 0),
+            'baseSeconds' => (int) ($state['trackedSeconds'] ?? 0),
+            'estimatedSeconds' => (int) ($state['estimatedSeconds'] ?? 0),
+            'startedAt' => $isRunning ? ($selectedTimeLog?->started_at?->toISOString() ?? '') : '',
+            'startUrl' => $task ? route('tasks.start', $task) : '',
+            'stopUrl' => $isRunning && $task ? route('tasks.stop', $task) : '',
+            'state' => ($state['timerState'] ?? 'stopped') === 'running' ? 'running' : 'stopped',
+            'isRunning' => $isRunning,
+            'shouldShowTimer' => $shouldShowTimer,
         ];
     }
 

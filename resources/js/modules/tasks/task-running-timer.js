@@ -4,14 +4,14 @@ const ROOT_SELECTOR = '[data-running-task-timer]';
 const CONTROLLER_KEY = '__navbarRunningTaskTimerController';
 
 const PLAY_ICON = `
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4.25 2.75V11.25L10.75 7L4.25 2.75Z" />
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 2.25V9.75L9.25 6L3 2.25Z" />
     </svg>
 `;
 
 const STOP_ICON = `
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="3" width="8" height="8" rx="1.5" />
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="8" height="8" rx="1.5" />
     </svg>
 `;
 
@@ -53,8 +53,22 @@ const getStateFromDataset = (root) => ({
     baseSeconds: parseSeconds(root.dataset.runningTaskBaseSeconds || root.dataset.runningTaskSeconds),
     estimatedSeconds: parseSeconds(root.dataset.runningTaskEstimatedSeconds),
     startedAt: root.dataset.runningTaskStartedAt || '',
+    startUrl: root.dataset.runningTaskStartUrl || '',
     stopUrl: root.dataset.runningTaskStopUrl || '',
     state: root.dataset.runningTaskState === 'running' ? 'running' : 'stopped',
+});
+
+const normalizeNavbarState = (payload = {}) => ({
+    active: payload.active === true || payload.active === '1' || payload.shouldShowTimer === true,
+    taskId: payload.taskId ? String(payload.taskId) : '',
+    taskName: payload.taskName || '',
+    seconds: parseSeconds(payload.seconds),
+    baseSeconds: parseSeconds(payload.baseSeconds ?? payload.seconds),
+    estimatedSeconds: parseSeconds(payload.estimatedSeconds),
+    startedAt: payload.startedAt || '',
+    startUrl: payload.startUrl || '',
+    stopUrl: payload.stopUrl || '',
+    state: payload.state === 'running' ? 'running' : 'stopped',
 });
 
 const setDatasetState = (root, state) => {
@@ -65,6 +79,7 @@ const setDatasetState = (root, state) => {
     root.dataset.runningTaskBaseSeconds = String(parseSeconds(state.baseSeconds ?? state.seconds));
     root.dataset.runningTaskEstimatedSeconds = String(parseSeconds(state.estimatedSeconds));
     root.dataset.runningTaskStartedAt = state.startedAt || '';
+    root.dataset.runningTaskStartUrl = state.startUrl || '';
     root.dataset.runningTaskStopUrl = state.stopUrl || '';
     root.dataset.runningTaskState = state.state === 'running' ? 'running' : 'stopped';
 };
@@ -104,8 +119,12 @@ const renderState = (elements, state) => {
     }
 
     if (elements.toggle) {
-        elements.toggle.setAttribute('aria-label', 'Stop running task');
-        elements.toggle.setAttribute('title', 'Stop running task');
+        const canStop = state.state === 'running' && state.active && !!state.stopUrl;
+        const canStart = state.state === 'stopped' && state.active && !!state.startUrl;
+
+        elements.toggle.disabled = !(canStop || canStart);
+        elements.toggle.setAttribute('aria-label', canStop ? 'Stop running task' : 'Start task timer');
+        elements.toggle.setAttribute('title', canStop ? 'Stop running task' : 'Start task timer');
     }
 };
 
@@ -160,6 +179,7 @@ const initRunningTaskTimer = () => {
             baseSeconds: 0,
             estimatedSeconds: 0,
             startedAt: '',
+            startUrl: '',
             stopUrl: '',
             state: 'stopped',
         });
@@ -169,6 +189,34 @@ const initRunningTaskTimer = () => {
         if (syncIntervalId) {
             window.clearInterval(syncIntervalId);
             syncIntervalId = null;
+        }
+    };
+
+    const syncStickyTimerAfterTaskStatusChange = ({ taskId = '', statusType = null, navbarTimer = null } = {}) => {
+        if (!taskId || String(state.taskId || '') !== String(taskId)) {
+            return;
+        }
+
+        if (state.state === 'running') {
+            return;
+        }
+
+        if (navbarTimer && typeof navbarTimer === 'object') {
+            const nextNavbarState = normalizeNavbarState(navbarTimer);
+
+            if (nextNavbarState.active) {
+                update(nextNavbarState);
+                return;
+            }
+
+            hide();
+            clearLiveSync();
+            return;
+        }
+
+        if (statusType && statusType !== 'active') {
+            hide();
+            clearLiveSync();
         }
     };
 
@@ -199,8 +247,15 @@ const initRunningTaskTimer = () => {
         syncIntervalId = window.setInterval(tick, 1000);
     };
 
-    const stopRunningTaskFromNavbar = async () => {
-        if (isDestroyed || isStopping || !state.active || !state.taskId || !state.stopUrl) {
+    const toggleTaskFromNavbar = async () => {
+        if (isDestroyed || isStopping || !state.active || !state.taskId) {
+            return;
+        }
+
+        const isRunning = state.state === 'running';
+        const requestUrl = isRunning ? state.stopUrl : state.startUrl;
+
+        if (!requestUrl) {
             return;
         }
 
@@ -212,7 +267,7 @@ const initRunningTaskTimer = () => {
             const currentTaskId = state.taskId;
             const currentBaseSeconds = parseSeconds(state.baseSeconds);
 
-            const response = await fetch(state.stopUrl, {
+            const response = await fetch(requestUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -228,32 +283,57 @@ const initRunningTaskTimer = () => {
                 throw new Error(data.message || 'Failed to stop running task');
             }
 
-            const stoppedDurationSeconds = parseSeconds(data?.data?.duration_seconds);
-            const nextTotalSeconds = currentBaseSeconds + stoppedDurationSeconds;
+            const nextNavbarState = normalizeNavbarState(data?.navbar_timer || {});
 
-            hide();
             clearLiveSync();
-            document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
-                detail: {
-                    taskId: currentTaskId,
-                    totalSeconds: nextTotalSeconds,
-                },
-            }));
-            document.dispatchEvent(new CustomEvent('task-timer:refresh'));
-            document.dispatchEvent(new CustomEvent('task-history:changed', {
-                detail: { taskId: currentTaskId },
-            }));
+            if (nextNavbarState.active) {
+                update(nextNavbarState);
+                if (nextNavbarState.state === 'running') {
+                    startLiveSync();
+                }
+            } else {
+                hide();
+            }
+
+            if (isRunning) {
+                const stoppedDurationSeconds = parseSeconds(data?.data?.duration_seconds);
+                const nextTotalSeconds = currentBaseSeconds + stoppedDurationSeconds;
+
+                document.dispatchEvent(new CustomEvent('task-timer:stopped-remotely', {
+                    detail: {
+                        taskId: currentTaskId,
+                        totalSeconds: nextTotalSeconds,
+                    },
+                }));
+                document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+                document.dispatchEvent(new CustomEvent('task-history:changed', {
+                    detail: { taskId: currentTaskId },
+                }));
+            } else {
+                document.dispatchEvent(new CustomEvent('task-timer:state-sync', {
+                    detail: {
+                        taskId: currentTaskId,
+                        isRunning: nextNavbarState.state === 'running',
+                        startedAt: nextNavbarState.startedAt || '',
+                        totalSeconds: nextNavbarState.baseSeconds ?? nextNavbarState.seconds ?? currentBaseSeconds,
+                    },
+                }));
+                document.dispatchEvent(new CustomEvent('task-timer:refresh'));
+                document.dispatchEvent(new CustomEvent('task-history:changed', {
+                    detail: { taskId: currentTaskId },
+                }));
+            }
         } catch (error) {
             if (window.Alert?.error) {
-                window.Alert.error(error.message || 'Failed to stop running task');
+                window.Alert.error(error.message || 'Failed to update task timer');
             }
         } finally {
             isStopping = false;
-            elements.toggle.disabled = false;
+            renderState(elements, state);
         }
     };
 
-    elements.toggle?.addEventListener('click', stopRunningTaskFromNavbar);
+    elements.toggle?.addEventListener('click', toggleTaskFromNavbar);
 
     const handleNavbarUpdate = (event) => {
         update(event.detail || {});
@@ -275,6 +355,14 @@ const initRunningTaskTimer = () => {
         clearLiveSync();
     };
 
+    const handleTaskStatusChanged = (event) => {
+        syncStickyTimerAfterTaskStatusChange({
+            taskId: event.detail?.taskId,
+            statusType: event.detail?.response?.status_type,
+            navbarTimer: event.detail?.response?.navbar_timer,
+        });
+    };
+
     const cleanup = () => {
         if (isDestroyed) {
             return;
@@ -282,10 +370,11 @@ const initRunningTaskTimer = () => {
 
         isDestroyed = true;
         clearLiveSync();
-        elements.toggle?.removeEventListener('click', stopRunningTaskFromNavbar);
+        elements.toggle?.removeEventListener('click', toggleTaskFromNavbar);
         document.removeEventListener('navbar-running-task-timer:update', handleNavbarUpdate);
         document.removeEventListener('navbar-running-task-timer:show', handleNavbarShow);
         document.removeEventListener('navbar-running-task-timer:hide', handleNavbarHide);
+        document.removeEventListener('task-status:changed', handleTaskStatusChanged);
         window.removeEventListener('pagehide', cleanup);
         window.removeEventListener('beforeunload', cleanup);
 
@@ -297,6 +386,7 @@ const initRunningTaskTimer = () => {
     document.addEventListener('navbar-running-task-timer:update', handleNavbarUpdate);
     document.addEventListener('navbar-running-task-timer:show', handleNavbarShow);
     document.addEventListener('navbar-running-task-timer:hide', handleNavbarHide);
+    document.addEventListener('task-status:changed', handleTaskStatusChanged);
     window.addEventListener('pagehide', cleanup);
     window.addEventListener('beforeunload', cleanup);
 
@@ -315,7 +405,9 @@ const initRunningTaskTimer = () => {
         show,
         hide,
         isStopping: () => isStopping,
-        stop: stopRunningTaskFromNavbar,
+        stop: toggleTaskFromNavbar,
+        toggle: toggleTaskFromNavbar,
+        syncAfterTaskStatusChange: syncStickyTimerAfterTaskStatusChange,
         cleanup,
     };
 };

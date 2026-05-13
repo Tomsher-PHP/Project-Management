@@ -152,7 +152,7 @@ class TaskServices
         ];
     }
 
-    private function hydrateKanbanTimerState($tasks, User $user): void
+    public function hydrateKanbanTimerState($tasks, User $user): void
     {
         if ($tasks->isEmpty()) {
             return;

@@ -39,8 +39,8 @@
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
-  "_tom-select-Co1PEiz6.js": {
-    "file": "assets/tom-select-Co1PEiz6.js",
+  "_tom-select-D_VawerM.js": {
+    "file": "assets/tom-select-D_VawerM.js",
     "name": "tom-select"
   },
   "_weekpicker-CPVHNp86.js": {
@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CEbDBIdS.css",
+    "file": "assets/app-C8uToVHi.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -78,7 +78,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BwUHCIpf.js",
+    "file": "assets/app-BwhSTYSX.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -86,14 +86,14 @@
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_alert-BIAC0wB2.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "_datepicker-CA2wRfma.js",
       "_timepicker-NRYBeS5c.js",
       "_weekpicker-CPVHNp86.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ],
     "css": [
-      "assets/app-CDFulk6R.css"
+      "assets/app-BAJ5nKfT.css"
     ]
   },
   "resources/js/image-draggable.js": {
@@ -133,7 +133,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CW9KzbFv.js",
+    "file": "assets/project-detail-NvBGa5SP.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -141,7 +141,7 @@
       "_alert-BIAC0wB2.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "resources/js/modules/projects/project-tasks.js",
       "_timepicker-NRYBeS5c.js",
       "_weekpicker-CPVHNp86.js",
@@ -159,7 +159,7 @@
     ]
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-BncZP4G1.js",
+    "file": "assets/project-tasks-DQqIk04h.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -167,30 +167,30 @@
       "_alert-BIAC0wB2.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/schedule-shift.js": {
-    "file": "assets/schedule-shift-C3hkUo1P.js",
+    "file": "assets/schedule-shift-DGB5TkSm.js",
     "name": "schedule-shift",
     "src": "resources/js/modules/schedule-shift.js",
     "isEntry": true,
     "imports": [
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "_weekpicker-CPVHNp86.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-CFUNGoSN.js",
+    "file": "assets/task-detail-5hMi8rmp.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
     "imports": [
       "_alert-BIAC0wB2.js",
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "_datepicker-CA2wRfma.js",
       "_timepicker-NRYBeS5c.js",
       "_weekpicker-CPVHNp86.js",
@@ -202,7 +202,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-DOzWUk3K.js",
+    "file": "assets/task-list-create-jCEJ46sa.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -210,7 +210,7 @@
       "_alert-BIAC0wB2.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-Co1PEiz6.js",
+      "_tom-select-D_VawerM.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
@@ -221,8 +221,24 @@
     "src": "resources/js/modules/task-list-subtasks.js",
     "isEntry": true
   },
+  "resources/js/modules/tasks/handoff-blend.js": {
+    "file": "assets/handoff-blend-41u-wn6O.js",
+    "name": "handoff-blend",
+    "src": "resources/js/modules/tasks/handoff-blend.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-BIAC0wB2.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/tasks/handoff.js": {
+    "file": "assets/handoff-CVumuL0L.js",
+    "name": "handoff",
+    "src": "resources/js/modules/tasks/handoff.js",
+    "isEntry": true
+  },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-BMg-UXCc.js",
+    "file": "assets/kanban-board-DP2wWmqX.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
