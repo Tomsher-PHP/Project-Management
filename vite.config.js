@@ -37,6 +37,7 @@ export default defineConfig({
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',
+                'resources/css/modules/task-running-timer.css',
             ],
             refresh: true,
         }),

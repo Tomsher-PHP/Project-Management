@@ -68,6 +68,15 @@
       "kanban.css"
     ]
   },
+  "resources/css/modules/task-running-timer.css": {
+    "file": "assets/task-running-timer-CiSlGq8q.css",
+    "src": "resources/css/modules/task-running-timer.css",
+    "isEntry": true,
+    "name": "task-running-timer",
+    "names": [
+      "task-running-timer.css"
+    ]
+  },
   "resources/css/modules/user-timeline.css": {
     "file": "assets/user-timeline-B4TBOFC3.css",
     "src": "resources/css/modules/user-timeline.css",
@@ -78,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DCzfUiqB.js",
+    "file": "assets/app-Dzvr0Vup.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -93,7 +102,8 @@
       "_flatpickr.min-Cc3t1Oke.js"
     ],
     "css": [
-      "assets/app-DoiNwnzz.css"
+      "assets/app-CqGrDw4D.css",
+      "assets/task-running-timer-CiSlGq8q.css"
     ]
   },
   "resources/js/image-draggable.js": {
