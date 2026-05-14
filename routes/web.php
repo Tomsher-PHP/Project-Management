@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
@@ -70,7 +71,15 @@ Route::middleware(['auth'])->group(function () {
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
-    Route::get('/user-workspace/summary', [UserWorkspaceController::class, 'summary'])->name('user.workspace.summary');
+
+    Route::get('/user-analytics', [AnalyticsController::class, 'index'])->name('user.analytics');
+    Route::get('/user-analytics/summary', [AnalyticsController::class, 'summary'])->name('user.analytics.summary');
+    Route::get('/user-analytics/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])
+        ->name('user.analytics.chart.task-status');
+    Route::get('/user-analytics/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])
+        ->name('user.analytics.chart.task-priority');
+    Route::get('/user-analytics/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])
+        ->name('user.analytics.chart.time-comparison');
 
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');

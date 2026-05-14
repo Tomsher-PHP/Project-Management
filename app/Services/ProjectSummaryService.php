@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectMember;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
+use App\Models\TaskStatus;
 use App\Models\User;
 
 class ProjectSummaryService
@@ -190,8 +191,116 @@ class ProjectSummaryService
             return 0;
         }
 
-        return Task::whereIn('id', $involvedTaskIds)
-            ->where('request_status', 'pending')
-            ->count();
+        return Task::whereIn('id', $involvedTaskIds)->where('request_status', 'pending')->count();
+    }
+
+    /**
+     * Get real task status distribution chart data.
+     *
+     * @param User $authUser
+     * @param User|null $selectedUser
+     * @param int|null $projectId
+     * @return array
+     */
+    public function getTaskStatusChart(User $authUser, ?User $selectedUser = null, ?int $projectId = null): array
+    {
+        $user = $selectedUser ?: $authUser;
+
+        // Base query for involved tasks
+        $query = Task::query()
+            ->where('current_assignee_id', $user->id)
+            ->where('request_status', '!=', 'rejected')
+            ->whereNull('tasks.deleted_at');
+
+        if ($projectId) {
+            $query->where('tasks.project_id', $projectId);
+        }
+
+        // $query = collect([]);
+        // Get grouped counts by status_id
+        $taskCounts = $query->selectRaw('status_id, COUNT(DISTINCT tasks.id) as count')
+            ->groupBy('status_id')
+            ->pluck('count', 'status_id')
+            ->filter(fn($count, $statusId) => !is_null($statusId));
+
+        if ($taskCounts->isEmpty()) {
+            return [
+                'labels' => [],
+                'values' => [],
+                'colors' => [],
+            ];
+        }
+
+        // Fetch used statuses with their metadata
+        $statusesQuery = TaskStatus::query()
+            ->withTrashed()
+            ->whereIn('id', $taskCounts->keys());
+
+        // Apply project-specific ordering/flow if project is selected
+        if ($projectId) {
+            $project = Project::find($projectId);
+            if ($project) {
+                $statusesQuery->forFlow($project->project_flow)->orderBy('sort_order');
+            }
+        } else {
+            $statusesQuery->orderBy('name');
+        }
+
+        $statuses = $statusesQuery->get(['id', 'name', 'color']);
+
+        return [
+            'labels' => $statuses->pluck('name')->toArray(),
+            'values' => $statuses->map(fn($status) => (int) $taskCounts->get($status->id, 0))->toArray(),
+            'colors' => $statuses->map(fn($status) => $status->color ?: '#CBD5E1')->toArray(),
+        ];
+    }
+
+    /**
+     * Get task priority breakdown chart data (Dummy).
+     *
+     * @param User $authUser
+     * @param User|null $selectedUser
+     * @return array
+     */
+    public function getTaskPriorityChart(User $authUser, ?User $selectedUser = null): array
+    {
+        // Note: Real logic later must exclude completed tasks.
+        return [
+            'labels' => ['Low', 'Medium', 'High', 'Urgent'],
+            'values' => [3, 7, 5, 2],
+            'colors' => ['#94a3b8', '#3b82f6', '#f59e0b', '#ef4444'],
+        ];
+    }
+
+    /**
+     * Get time comparison chart data (Dummy).
+     *
+     * @param User $authUser
+     * @param User|null $selectedUser
+     * @param \Illuminate\Support\Carbon|null $date
+     * @return array
+     */
+    public function getTimeComparisonChart(User $authUser, ?User $selectedUser = null, ?\Illuminate\Support\Carbon $date = null): array
+    {
+        // Dummy logic: assume shift is assigned for now if not specified otherwise
+        $hasShift = true;
+
+        if ($hasShift) {
+            return [
+                'has_shift' => true,
+                'labels' => ['Shift Time', 'Task Worked Time', 'Total Break Time'],
+                'values' => [8, 6.5, 1],
+                'unit' => 'hours',
+                'colors' => ['#3b82f6', '#10b981', '#f59e0b'],
+            ];
+        }
+
+        return [
+            'has_shift' => false,
+            'labels' => ['Task Worked Time', 'Total Break Time'],
+            'values' => [6.5, 1],
+            'unit' => 'hours',
+            'colors' => ['#10b981', '#f59e0b'],
+        ];
     }
 }
