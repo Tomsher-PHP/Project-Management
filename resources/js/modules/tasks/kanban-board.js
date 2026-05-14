@@ -146,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.innerHTML = html;
                 initKanbanDrag();
                 initKanbanScroll();
+                document.dispatchEvent(new CustomEvent('workspace:kanban-refreshed'));
                 return true;
             })
             .catch(() => {

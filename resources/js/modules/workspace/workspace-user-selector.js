@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await refreshWorkspaceContext();
+            document.dispatchEvent(new CustomEvent('workspace:user-changed'));
         } finally {
             setBusyState(select, false);
             isUpdating = false;

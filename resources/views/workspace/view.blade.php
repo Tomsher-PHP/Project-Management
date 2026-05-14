@@ -2,6 +2,11 @@
 
 @push('styles')
     @vite(['resources/css/modules/user-timeline.css', 'resources/css/modules/kanban.css'])
+    <style>
+        #kanban-container .kanban-board {
+            height: auto;
+        }
+    </style>
 @endpush
 
 @section('page-content')
@@ -14,21 +19,10 @@
                 </div>
             </div>
 
+            @include('workspace.partials.summary-tiles')
+
             @include('workspace.partials.daily-timeline')
-            @php
-                $boardTaskTotal = collect($tasksByStatus ?? [])->sum(fn($column) => (int) ($column['total'] ?? 0));
-                $boardStatusTotal = $boardStatuses->count();
-                $priorityOptions = collect($priorities ?? [])->map(
-                    fn($config, $key) => (object) [
-                        'id' => $key,
-                        'name' => $config['label'],
-                    ],
-                );
-                $workspaceFilterCount = collect([filled(request('project_id')) ? 'project_id' : null, filled(request('project_milestone_id')) ? 'project_milestone_id' : null, filled(request('project_sprint_id')) ? 'project_sprint_id' : null, filled(request('priority')) ? 'priority' : null])
-                    ->filter()
-                    ->count();
-                $workspaceHasActiveFilters = $workspaceFilterCount > 0;
-            @endphp
+
 
             <section class="space-y-6" data-project-tasks-root data-project-task-response-mode="reload">
                 <div class="overflow-hidden rounded-[14px] border border-[var(--workspace-border)] bg-white shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -81,7 +75,7 @@
                     </div>
 
                     <div class="custom-scroll overflow-x-auto bg-white dark:bg-darkblack-700">
-                        <div id="kanban-container" class="flex h-[calc(100vh-620px)] min-h-[410px] min-w-max gap-3.5 p-3.5" data-kanban-url="{{ route('user.workspace') }}">
+                        <div id="kanban-container" class="flex min-h-[310px] min-w-max items-start gap-3.5 p-3.5" data-kanban-url="{{ route('user.workspace') }}">
                             @include('tasks.kanban._board', ['boardStatuses' => $boardStatuses, 'priorities' => $priorities ?? []])
                         </div>
                     </div>
@@ -128,6 +122,7 @@
     <script>
         const initialFlowType = @json($selectedFlowType);
     </script>
+    @vite('resources/js/modules/workspace/workspace-kanban-heights.js')
     @vite('resources/js/modules/workspace/user-timeline.js')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-create.js')
@@ -136,4 +131,5 @@
     @vite('resources/js/modules/workspace/workspace-user-selector.js')
     @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
     @vite('resources/js/modules/tasks/handoff.js')
+    @vite('resources/js/modules/workspace/summary.js')
 @endpush

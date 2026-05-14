@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
+    Route::get('/user-workspace/summary', [UserWorkspaceController::class, 'summary'])->name('user.workspace.summary');
 
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');

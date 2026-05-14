@@ -13,6 +13,7 @@ use App\Services\TaskFormService;
 use App\Services\TaskQueryService;
 use App\Services\TaskServices;
 use App\Services\UserTimelineService;
+use App\Services\ProjectSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -33,7 +34,7 @@ class UserWorkspaceController extends Controller
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-    public function index(Request $request, TaskServices $taskServices, TaskFilterService $taskFilterService, TaskFormService $taskFormService)
+    public function index(Request $request, TaskServices $taskServices, TaskFilterService $taskFilterService, TaskFormService $taskFormService, ProjectSummaryService $summaryService)
     {
         $user = $request->user();
         $workspaceUser = $this->resolveWorkspaceUser($request);
@@ -57,6 +58,20 @@ class UserWorkspaceController extends Controller
         $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
         $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
 
+        $workspaceFilterCount = collect([
+            filled($request->input('project_id')) ? 'project_id' : null,
+            filled($request->input('project_milestone_id')) ? 'project_milestone_id' : null,
+            filled($request->input('project_sprint_id')) ? 'project_sprint_id' : null,
+            filled($request->input('priority')) ? 'priority' : null
+        ])->filter()->count();
+
+        $priorityOptions = collect(config('project_constants.task_priorities', []))->map(
+            fn($config, $key) => (object) [
+                'id' => $key,
+                'name' => $config['label'],
+            ]
+        );
+
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
             'boardStatuses' => $boardStatuses,
@@ -64,10 +79,47 @@ class UserWorkspaceController extends Controller
             'selectedKanbanSort' => $selectedKanbanSort,
             'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
             'priorities' => config('project_constants.task_priorities', []),
+            'priorityOptions' => $priorityOptions,
             'workspaceSelectableUsers' => $this->getWorkspaceSelectableUsers($user),
             'workspaceSelectedUserId' => (int) $workspaceUser->id === (int) $user->id ? '' : (string) $workspaceUser->id,
             'taskCreateDependencies' => $taskCreateDependencies,
+            'workspaceSummaryTiles' => $summaryService->getTiles(),
+            'workspaceFilterCount' => $workspaceFilterCount,
+            'workspaceHasActiveFilters' => $workspaceFilterCount > 0,
         ] + $timelineViewData + $filterViewData + $formData);
+    }
+
+    public function summary(Request $request, ProjectSummaryService $summaryService)
+    {
+        $authUser = $request->user();
+        $userId = $request->integer('user_id');
+
+        $selectedUser = null;
+
+        if ($userId) {
+            if ((int) $userId === (int) $authUser->id) {
+                $selectedUser = $authUser;
+            } else {
+                $selectedUser = User::query()
+                    ->accessibleBy($authUser)
+                    ->whereKey($userId)
+                    ->first();
+
+                if (! $selectedUser) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You are not authorized to view this summary.',
+                    ], 403);
+                }
+            }
+        }
+
+        $data = $summaryService->getSummary($authUser, $selectedUser);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
     }
 
     private function renderKanbanBoard(Request $request, TaskServices $taskServices, User $workspaceUser)
