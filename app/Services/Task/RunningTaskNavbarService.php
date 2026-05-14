@@ -111,6 +111,72 @@ class RunningTaskNavbarService
         return $states;
     }
 
+    public function getTaskStatesForTaskAssignees(iterable $tasks): array
+    {
+        $taskCollection = Collection::make($tasks)
+            ->filter(fn($task) => $task instanceof Task && $task->id)
+            ->keyBy(fn(Task $task) => (int) $task->id);
+
+        if ($taskCollection->isEmpty()) {
+            return [];
+        }
+
+        $states = $taskCollection
+            ->mapWithKeys(fn(Task $task, int $taskId) => [$taskId => $this->buildState(null, $task, 0)])
+            ->all();
+
+        $taskIds = $taskCollection->keys()->all();
+        $assigneeIds = $taskCollection
+            ->pluck('current_assignee_id')
+            ->filter(fn($userId) => filled($userId))
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($assigneeIds === []) {
+            return $states;
+        }
+
+        $trackedSecondsByTaskAndUser = TaskTimeLog::query()
+            ->selectRaw('task_id, user_id, COALESCE(SUM(duration_seconds), 0) as tracked_seconds')
+            ->whereIn('task_id', $taskIds)
+            ->whereIn('user_id', $assigneeIds)
+            ->where('is_running', false)
+            ->groupBy('task_id', 'user_id')
+            ->get()
+            ->keyBy(fn(TaskTimeLog $timeLog) => $this->taskUserKey((int) $timeLog->task_id, (int) $timeLog->user_id));
+
+        $runningLogsByTaskAndUser = TaskTimeLog::query()
+            ->whereIn('task_id', $taskIds)
+            ->whereIn('user_id', $assigneeIds)
+            ->where('is_running', true)
+            ->latest('started_at')
+            ->get()
+            ->unique(fn(TaskTimeLog $timeLog) => $this->taskUserKey((int) $timeLog->task_id, (int) $timeLog->user_id))
+            ->keyBy(fn(TaskTimeLog $timeLog) => $this->taskUserKey((int) $timeLog->task_id, (int) $timeLog->user_id));
+
+        foreach ($taskCollection as $taskId => $task) {
+            $assigneeId = (int) ($task->current_assignee_id ?? 0);
+
+            if ($assigneeId <= 0) {
+                continue;
+            }
+
+            $taskUserKey = $this->taskUserKey((int) $taskId, $assigneeId);
+            $trackedSeconds = (int) ($trackedSecondsByTaskAndUser->get($taskUserKey)?->tracked_seconds ?? 0);
+
+            $states[$taskId] = $this->buildState(
+                $runningLogsByTaskAndUser->get($taskUserKey),
+                $task,
+                $trackedSeconds,
+                false
+            );
+        }
+
+        return $states;
+    }
+
     private function emptyState(): array
     {
         return $this->buildState();
@@ -176,5 +242,10 @@ class RunningTaskNavbarService
         return $currentSeconds <= $estimatedSeconds
             ? 'text-success-400 dark:text-success-300'
             : 'text-error-300 dark:text-red-300';
+    }
+
+    private function taskUserKey(int $taskId, int $userId): string
+    {
+        return $taskId.':'.$userId;
     }
 }

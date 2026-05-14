@@ -986,7 +986,7 @@ class TaskController extends Controller
             $task = $transitionResult['task'];
 
             $task = $this->loadTaskForDetail($task);
-            $taskServices->hydrateKanbanTimerState(collect([$task]), auth()->user());
+            $taskServices->hydrateKanbanTimerState(collect([$task]), 'current_assignee');
             $response = [
                 'success' => true,
                 'message' => 'Task status updated successfully.',

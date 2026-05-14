@@ -122,7 +122,10 @@ class TaskServices
             ])
             ->get();
 
-        $this->hydrateKanbanTimerState($tasks, $user);
+        $this->hydrateKanbanTimerState(
+            $tasks,
+            $options['timer_user'] ?? 'current_assignee'
+        );
 
         $hasMore = ($offset + $tasks->count()) < $total;
 
@@ -152,13 +155,21 @@ class TaskServices
         ];
     }
 
-    public function hydrateKanbanTimerState($tasks, User $user): void
+    public function hydrateKanbanTimerState($tasks, $timerUser): void
     {
         if ($tasks->isEmpty()) {
             return;
         }
 
-        $timerStates = $this->runningTaskNavbarService->getTaskStatesForUser($user->id, $tasks);
+        if ($timerUser === 'current_assignee') {
+            $timerStates = $this->runningTaskNavbarService->getTaskStatesForTaskAssignees($tasks);
+        } else {
+            $timerUserId = $timerUser instanceof User
+                ? (int) $timerUser->id
+                : (is_numeric($timerUser) ? (int) $timerUser : null);
+
+            $timerStates = $this->runningTaskNavbarService->getTaskStatesForUser($timerUserId, $tasks);
+        }
 
         foreach ($tasks as $task) {
             $timerState = $timerStates[(int) $task->id] ?? null;
@@ -633,23 +644,51 @@ class TaskServices
             ]);
 
             $stoppedByNonAssignee = $this->requiresNonAssigneeStopConfirmation($task, $actor);
-            $log = TaskTimeLog::where('task_id', $task->id)->where('is_running', 1)->latest()->first();
+            $runningLogQuery = TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->where('is_running', 1);
 
-            if (!$log) {
+            $log = null;
+
+            if ($task->current_assignee_id) {
+                $log = (clone $runningLogQuery)
+                    ->where('user_id', $task->current_assignee_id)
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
+                $log = (clone $runningLogQuery)
+                    ->where('user_id', $actor->id)
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
+                $log = $runningLogQuery
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
                 throw new \RuntimeException('Timer not found');
             }
 
-            $duration = $log->started_at->diffInSeconds(now());
+            $stoppedAt = now();
+            $duration = max(0, $log->started_at?->diffInSeconds($stoppedAt) ?? 0);
 
             // Update time log
             $log->update([
-                'ended_at' => now(),
+                'ended_at' => $stoppedAt,
                 'duration_seconds' => $duration,
                 'is_running' => 0,
             ]);
 
             // Update assignment log
-            TaskAssignmentLog::where('id', $log->task_assignment_log_id)->increment('worked_time_seconds', $duration);
+            if ($log->task_assignment_log_id) {
+                TaskAssignmentLog::where('id', $log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
 
             // Update task total time
             $task->increment('actual_time_seconds', $duration);
@@ -762,6 +801,12 @@ class TaskServices
             return false;
         }
 
+        $task->load([
+            'currentAssignee.details',
+            'project.teamLeader',
+            'projectMilestone:id,owner_id',
+        ]);
+
         // if task is not assigned, no one can stop timer
         if ($task->current_assignee_id === null) {
             return false;
@@ -773,29 +818,34 @@ class TaskServices
         }
 
         // Current assignee
-        if ($task->current_assignee_id === $user->id) {
+        if ((int) $task->current_assignee_id === (int) $user->id) {
             return true;
         }
 
-        // Load assignee details safely
-        $assignee = $task->currentAssignee?->loadMissing('details');
-
-        if (!$assignee || !$assignee->details) {
-            return false;
-        }
-
-        // Manager of assignee
-        if ($assignee->details->manager_id === $user->id) {
-            return true;
-        }
-
-        // Reporter of assignee (optional, if needed)
-        if ($assignee->details->reporter_id === $user->id) {
+        /**
+         * Allow if assignee is accessible by this user
+         * Covers:
+         * user.view_all_users permission
+         * users added by this user
+         * nested reporter hierarchy users
+         * direct manager users
+         */
+        if (
+            User::query()
+            ->accessibleBy($user)
+            ->whereKey($task->current_assignee_id)
+            ->exists()
+        ) {
             return true;
         }
 
         // Allow if project team leader
-        if ($task->project->teamLeader->id === $user->id) {
+        if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        // Allow if milestone owner
+        if ((int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id) {
             return true;
         }
 
