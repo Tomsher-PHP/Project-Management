@@ -355,8 +355,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const type = btn.dataset.timeFilter;
 
                     // Reset active state
-                    buttons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+                    buttons.forEach(b => {
+                        b.setAttribute('aria-pressed', 'false');
+                        b.classList.remove('active');
+                    });
                     btn.setAttribute('aria-pressed', 'true');
+                    btn.classList.add('active');
 
                     if (type === 'today') {
                         const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
@@ -384,7 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     maxDate: "today",
                     onChange: (selectedDates, dateStr) => {
                         // When custom date is picked, ensure "Custom" button is active
-                        buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.timeFilter === 'custom'));
+                        buttons.forEach(b => {
+                            const isActive = b.dataset.timeFilter === 'custom';
+                            b.setAttribute('aria-pressed', isActive);
+                            b.classList.toggle('active', isActive);
+                        });
                         loadTimeComparisonChart();
                     }
                 }, timeChartCard);

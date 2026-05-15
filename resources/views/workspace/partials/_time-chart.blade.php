@@ -3,10 +3,22 @@
         <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Time Comparison</h4>
         <div class="flex items-center gap-2">
             <div class="flex rounded-lg border border-bgray-300 bg-white p-0.5 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-filter-group>
-                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all aria-pressed:bg-bgray-100 aria-pressed:text-bgray-900 dark:aria-pressed:bg-darkblack-600 dark:aria-pressed:text-white text-bgray-500" data-time-filter="today" aria-pressed="true">Today</button>
-                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all aria-pressed:bg-bgray-100 aria-pressed:text-bgray-900 dark:aria-pressed:bg-darkblack-600 dark:aria-pressed:text-white text-bgray-500" data-time-filter="yesterday" aria-pressed="false">Yesterday</button>
-                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all aria-pressed:bg-bgray-100 aria-pressed:text-bgray-900 dark:aria-pressed:bg-darkblack-600 dark:aria-pressed:text-white text-bgray-500" data-time-filter="custom" aria-pressed="false">Custom</button>
+                <style>
+                    [data-time-filter].active {
+                        background-color: rgb(34 197 94 / 0.1) !important;
+                        color: rgb(22 163 74) !important;
+                    }
+
+                    .dark [data-time-filter].active {
+                        background-color: rgb(34 197 94 / 0.2) !important;
+                        color: rgb(74 222 128) !important;
+                    }
+                </style>
+                <button type="button" class="active rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-time-filter="today" aria-pressed="true">Today</button>
+                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-time-filter="yesterday" aria-pressed="false">Yesterday</button>
+                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-time-filter="custom" aria-pressed="false">Custom</button>
             </div>
+
             <input type="text" value="{{ now()->toDateString() }}" class="h-0 w-0 border-none p-0 opacity-0" data-workspace-time-chart-date>
         </div>
     </div>
