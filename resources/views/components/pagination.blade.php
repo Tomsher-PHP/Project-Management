@@ -1,6 +1,6 @@
 @props(['paginator', 'perPage'])
 
-<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6 @if ($paginator->total() < 5) hidden @endif">
+<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6 @if ($paginator->total() < 10) hidden @endif">
 
     <!-- Per Page Selector -->
     <div class="flex items-center gap-3">

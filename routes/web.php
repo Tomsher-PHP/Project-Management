@@ -13,32 +13,34 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\KPIController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\KPIController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectSprintController;
-use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
+use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
+use App\Http\Controllers\TaskTimeLogChangeRequestController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TechnologyController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     // goto dashboard if authenticated, else show welcome page
@@ -416,6 +418,66 @@ Route::middleware(['auth'])->group(function () {
 
     // User hierarchy tree view route
     Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
+
+    Route::prefix('reports')->group(function () {
+
+        Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])
+            ->name('reports.projects.by-flow');
+
+        // PROJECT REPORT
+        Route::get('/projects-report', [ReportController::class, 'project'])
+            ->middleware('permission.type:reports.project_view')->name('projects.report');
+
+        Route::get('/reports/project/export', [ReportController::class, 'export'])
+            ->middleware('permission.type:reports.project_export')->name('reports.project.export');
+
+        // TASK REPORT
+        Route::get('/tasks-report', [ReportController::class, 'task'])
+            ->middleware('permission.type:reports.task_view')->name('tasks.report');
+
+        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])
+            ->middleware('permission.type:reports.task_export')->name('reports.task.export');
+
+        // TIME TRACKING REPORT
+        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])
+            ->middleware('permission.type:reports.time_tracking_view')
+            ->name('reports.time.tracking.report');
+
+        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])
+            ->middleware('permission.type:reports.time_tracking_export')
+            ->name('reports.time.tracking.export');
+
+        // MILESTONE REPORT
+        Route::get('/milestones-report', [ReportController::class, 'milestone'])
+            ->middleware('permission.type:reports.milestone_view')
+            ->name('reports.milestones.report');
+
+        Route::get('/reports/milestones/export', [ReportController::class, 'milestoneExport'])
+            ->middleware('permission.type:reports.milestone_export')
+            ->name('reports.milestone.export');
+
+        // SPRINT REPORT
+        Route::get('/sprints-report', [ReportController::class, 'sprint'])
+            ->middleware('permission.type:reports.sprint_view')
+            ->name('reports.sprints.report');
+
+        Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])
+            ->middleware('permission.type:reports.sprint_export')
+            ->name('reports.sprint.export');
+
+        // DAILY REPORT
+        Route::get(
+            '/daily-report',
+            [ReportController::class, 'daily']
+        )->middleware('permission.type:reports.daily_view')
+            ->name('reports.daily');
+
+        Route::get(
+            '/reports/daily/export',
+            [ReportController::class, 'dailyExport']
+        )->middleware('permission.type:reports.daily_export')
+            ->name('reports.daily.export');
+    });
 });
 
 Route::get('api-test', function () {

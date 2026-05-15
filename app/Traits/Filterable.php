@@ -63,9 +63,20 @@ trait Filterable
             $query->whereHas('users', fn($q) => $q->whereIn('users.id', $users));
         }
 
+        // date range filter 
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $dateColumn = $filters['date_column'] ?? 'start_date';
+            if (Schema::hasColumn($query->getModel()->getTable(), $dateColumn)) {
+                $query->whereBetween($dateColumn, [
+                    $filters['start_date'],
+                    $filters['end_date']
+                ]);
+            }
+        }
+
         // 3. Handle dynamic filters
         $dynamicFilters = collect($filters)
-            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id']);
+            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column']);
 
         foreach ($dynamicFilters as $field => $value) {
             if (!Schema::hasColumn($query->getModel()->getTable(), $field) || $value === null || $value === '') {

@@ -207,17 +207,42 @@ class Project extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereHas('is_active', function ($q) {
+        return $query->whereHas('projectStatus', function ($q) {
             $q->where('is_completed', false);
         });
     }
 
     public function scopeCompleted($query)
     {
-        return $query->whereHas('is_active', function ($q) {
-            $q->where('is_completed', true);
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', true)
+             ->where('type', ProjectStatus::TYPE_CLOSED);
         });
     }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('type', ProjectStatus::TYPE_ARCHIEVE);
+        });
+    }
+
+    public function scopeInProgress($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', false)
+            ->where('type', ProjectStatus::TYPE_PROGRESS);
+        });
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', false)
+            ->where('type', ProjectStatus::TYPE_OPEN);
+        });
+    }
+    
 
     /*----------------Attachments----------------*/
 
