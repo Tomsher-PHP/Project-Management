@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-zKC0mKpk.css",
+    "file": "assets/app-C4LmRRzK.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -69,7 +69,7 @@
     ]
   },
   "resources/css/modules/task-running-timer.css": {
-    "file": "assets/task-running-timer-CiSlGq8q.css",
+    "file": "assets/task-running-timer-BmNl9u-d.css",
     "src": "resources/css/modules/task-running-timer.css",
     "isEntry": true,
     "name": "task-running-timer",
@@ -87,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CJn1Ut9V.js",
+    "file": "assets/app-B4beGxHZ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -103,7 +103,7 @@
     ],
     "css": [
       "assets/app-CqGrDw4D.css",
-      "assets/task-running-timer-CiSlGq8q.css"
+      "assets/task-running-timer-BmNl9u-d.css"
     ]
   },
   "resources/js/image-draggable.js": {
@@ -117,6 +117,16 @@
     "name": "activity-logs",
     "src": "resources/js/modules/activity-logs.js",
     "isEntry": true
+  },
+  "resources/js/modules/analytics/summary.js": {
+    "file": "assets/summary-CqNI9nbX.js",
+    "name": "summary",
+    "src": "resources/js/modules/analytics/summary.js",
+    "isEntry": true,
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_datepicker-CA2wRfma.js"
+    ]
   },
   "resources/js/modules/checklist-template-form.js": {
     "file": "assets/checklist-template-form-Cqw0kBkE.js",
@@ -295,12 +305,6 @@
     "file": "assets/user-notification-settings-DXeJtXMb.js",
     "name": "user-notification-settings",
     "src": "resources/js/modules/users/user-notification-settings.js",
-    "isEntry": true
-  },
-  "resources/js/modules/workspace/summary.js": {
-    "file": "assets/summary-Bh07t03C.js",
-    "name": "summary",
-    "src": "resources/js/modules/workspace/summary.js",
     "isEntry": true
   },
   "resources/js/modules/workspace/user-timeline.js": {
