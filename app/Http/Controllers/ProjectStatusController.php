@@ -28,7 +28,7 @@ class ProjectStatusController extends Controller
         $projectStatuses = ProjectStatus::filter($request->all())->sort($request->all())->paginate($perPage)->withQueryString();
         $nextSortOrder = ((int) ProjectStatus::max('sort_order')) + 1;
 
-        return view('settings.project-statuses.index', compact('projectStatuses', 'perPage', 'nextSortOrder','types'));
+        return view('settings.project-statuses.index', compact('projectStatuses', 'perPage', 'nextSortOrder', 'types'));
     }
 
     public function store(ProjectStatusRequest $request)
@@ -41,7 +41,9 @@ class ProjectStatusController extends Controller
                 $this->clearExistingDefaults();
             }
 
-            return activity()->withoutLogs(fn () => ProjectStatus::create($data));
+            $data['is_completed'] = (isset($data['type']) && $data['type'] === ProjectStatus::TYPE_COMPLETED) ? true : false;
+
+            return ProjectStatus::create($data);
         });
 
         return response()->json([
@@ -61,7 +63,9 @@ class ProjectStatusController extends Controller
                 $this->clearExistingDefaults($projectStatus->id);
             }
 
-            activity()->withoutLogs(fn () => $projectStatus->update($data));
+            $data['is_completed'] = (isset($data['type']) && $data['type'] === ProjectStatus::TYPE_COMPLETED) ? true : false;
+
+            $projectStatus->update($data);
 
             return $projectStatus->refresh();
         });
@@ -81,7 +85,7 @@ class ProjectStatusController extends Controller
                 ->with('error', 'System project status cannot be deleted.');
         }
 
-        activity()->withoutLogs(fn () => $projectStatus->delete());
+        $projectStatus->delete();
 
         return redirect()
             ->route('settings.project-statuses.index')
@@ -92,7 +96,7 @@ class ProjectStatusController extends Controller
     {
         $projectStatus = ProjectStatus::findOrFail($request->id);
         $projectStatus->is_active = !$projectStatus->is_active;
-        activity()->withoutLogs(fn () => $projectStatus->save());
+        $projectStatus->save();
 
         return response()->json([
             'success' => true,

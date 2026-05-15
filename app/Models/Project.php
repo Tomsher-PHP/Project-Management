@@ -207,23 +207,21 @@ class Project extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereHas('projectStatus', function ($q) {
-            $q->where('is_completed', false);
-        });
+        return $query->where('is_active', true);
     }
 
     public function scopeCompleted($query)
     {
         return $query->whereHas('projectStatus', function ($q) {
             $q->where('is_completed', true)
-             ->where('type', ProjectStatus::TYPE_CLOSED);
+                ->where('type', ProjectStatus::TYPE_COMPLETED);
         });
     }
 
     public function scopeArchived($query)
     {
         return $query->whereHas('projectStatus', function ($q) {
-            $q->where('type', ProjectStatus::TYPE_ARCHIEVE);
+            $q->where('type', ProjectStatus::TYPE_ARCHIVED);
         });
     }
 
@@ -231,7 +229,7 @@ class Project extends Model
     {
         return $query->whereHas('projectStatus', function ($q) {
             $q->where('is_completed', false)
-            ->where('type', ProjectStatus::TYPE_PROGRESS);
+                ->where('type', ProjectStatus::TYPE_IN_PROGRESS);
         });
     }
 
@@ -239,10 +237,10 @@ class Project extends Model
     {
         return $query->whereHas('projectStatus', function ($q) {
             $q->where('is_completed', false)
-            ->where('type', ProjectStatus::TYPE_OPEN);
+                ->where('type', ProjectStatus::TYPE_OPEN);
         });
     }
-    
+
 
     /*----------------Attachments----------------*/
 

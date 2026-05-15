@@ -46,8 +46,8 @@ return [
 
     'project_status_types' => [
         'open' => 'Open',
-        'in_progress' => 'In progress',
-        'closed' => 'Closed',
+        'in_progress' => 'In Progress',
+        'completed' => 'Completed',
         'archived' => 'Archived',
     ],
 

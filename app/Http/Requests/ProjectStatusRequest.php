@@ -16,10 +16,10 @@ class ProjectStatusRequest extends FormRequest
 
         $normalizedCode = filled($source)
             ? Str::of($source)
-                ->lower()
-                ->replaceMatches('/[^a-z0-9]+/', '_')
-                ->trim('_')
-                ->value()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]+/', '_')
+            ->trim('_')
+            ->value()
             : null;
 
         $this->merge([
@@ -42,16 +42,16 @@ class ProjectStatusRequest extends FormRequest
      */
     public function rules(): array
     {
+        $types = array_keys(config('project_constants.project_status_types'));
         $id = $this->route('project_status') ?? null;
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('project_statuses', 'name')->ignore($id)],
             'code' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9_]+$/', Rule::unique('project_statuses', 'code')->ignore($id)],
             'color' => ['nullable', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
-            'type' => ['required', 'string', Rule::in(['open', 'in_progress', 'closed'])],
+            'type' => ['required', 'string', Rule::in($types)],
             'sort_order' => ['required', 'numeric'],
             'is_default' => ['boolean'],
-            'is_completed' => ['nullable', 'boolean'],
         ];
     }
 }

@@ -14,6 +14,11 @@ class TaskStatus extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
+    public const TYPE_PENDING = 'pending';
+    public const TYPE_ACTIVE = 'active';
+    public const TYPE_COMPLETED = 'completed';
+    public const TYPE_ARCHIVED = 'archived';
+
     protected $fillable = [
         'name',
         'flow_type',

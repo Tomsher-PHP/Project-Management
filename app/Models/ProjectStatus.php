@@ -4,21 +4,18 @@ namespace App\Models;
 
 use App\Traits\Filterable;
 use App\Traits\HasFormOptions;
-use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProjectStatus extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+    use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
-    public const TYPE_ARCHIEVE = 'archieve';
     public const TYPE_OPEN = 'open';
-    public const TYPE_PROGRESS = 'in_progress';
-    public const TYPE_CLOSED = 'closed';
-
-
+    public const TYPE_IN_PROGRESS = 'in_progress';
+    public const TYPE_COMPLETED = 'completed';
+    public const TYPE_ARCHIVED = 'archived';
 
     protected $fillable = [
         'name',

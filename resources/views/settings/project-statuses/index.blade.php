@@ -5,17 +5,17 @@
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
 
-        @can('project_status.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Status" data-url="{{ route('settings.project-statuses.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#22C55E">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+            @can('project_status.create')
+                <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Status" data-url="{{ route('settings.project-statuses.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" data-color="#22C55E">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
 
-                <span>New Project Status</span>
-            </a>
-        @endcan
+                    <span>New Project Status</span>
+                </a>
+            @endcan
 
-        <x-filters.button />
+            <x-filters.button />
         </div>
 
         <!-- write your code here-->
@@ -39,11 +39,6 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
                                             <x-sorting.sortable-column column="type" label="Type" />
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Completed</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -97,11 +92,6 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold uppercase text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ str_replace('_', ' ', $projectStatus->type) }}</span>
-                                        </td>
-                                        <td class="px-6 py-5 xl:px-0">
-                                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $projectStatus->is_completed ? 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50' }}">
-                                                {{ $projectStatus->is_completed ? 'Yes' : 'No' }}
-                                            </span>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
@@ -176,20 +166,9 @@
                 </span>
             </label>
             <select name="type" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                @php
-                    dd($types)
-                @endphp
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="closed">Closed</option>
-            </select>
-        </div>
-
-        <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Is Completed</label>
-            <select name="is_completed" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
-                <option value="0">No</option>
-                <option value="1">Yes</option>
+                @foreach ($types as $type => $label)
+                    <option value="{{ $type }}">{{ $label }}</option>
+                @endforeach
             </select>
         </div>
 
