@@ -11,6 +11,7 @@ return [
 
     'images' => [
         'default_avatar' => 'assets/images/avatar/default-avatar.jpeg',
+        'chart_no_data' => 'assets/images/chart/no-data.png',
     ],
 
     'css' => [

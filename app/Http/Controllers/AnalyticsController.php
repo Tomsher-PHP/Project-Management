@@ -110,7 +110,7 @@ class AnalyticsController extends Controller
 
         $date = $this->resolveSelectedDate($request->input('date'));
 
-        $data = $summaryService->getTimeComparisonChart($request->user(), $selectedUser, $date);
+        $data = $summaryService->getTaskLoggedTimeChart($request->user(), $selectedUser, $date);
 
         return response()->json([
             'success' => true,

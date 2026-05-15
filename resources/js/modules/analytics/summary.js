@@ -1,3 +1,6 @@
+import flatpickr from "flatpickr";
+import { initDatepicker } from "../../components/datepicker";
+
 document.addEventListener('DOMContentLoaded', () => {
     const summarySection = document.querySelector('[data-workspace-summary-section]');
     if (!summarySection) return;
@@ -59,11 +62,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
+     * Toggle chart empty state based on data availability.
+     */
+    const toggleChartEmptyState = (card, hasData) => {
+        if (!card) return;
+        const emptyState = card.querySelector('[data-chart-empty-state]');
+        const content = card.querySelector('[data-chart-content]');
+
+        if (emptyState && content) {
+            emptyState.classList.toggle('hidden', hasData);
+            content.classList.toggle('hidden', !hasData);
+        }
+    };
+
+    /**
      * Render a donut/pie chart.
      */
     const renderWorkspaceDonutChart = (canvasId, data) => {
         const canvas = document.getElementById(canvasId);
         if (!canvas || typeof window.Chart === 'undefined') return;
+
+        const card = canvas.closest('[data-workspace-chart]');
+        const hasData = data.values && data.values.some(v => Number(v) > 0);
+
+        // Toggle empty state
+        toggleChartEmptyState(card, hasData);
+
+        if (!hasData) {
+            destroyChart(canvasId);
+            return;
+        }
 
         destroyChart(canvasId);
 
@@ -71,19 +99,76 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalValue = data.values.reduce((a, b) => a + b, 0);
 
         // Update total display if exists
-        const card = canvas.closest('[data-workspace-chart]');
         const totalNode = card ? card.querySelector('[data-chart-total]') : null;
         if (totalNode) {
-            totalNode.innerText = totalValue.toLocaleString();
+            if (card.dataset.workspaceChart === 'time-comparison' && data.formatted_values?.length > 1) {
+                // Show the second value (Task Worked Time) in the center for this specific chart
+                const valueSpan = totalNode.querySelector('span:last-child');
+                const isTargetMet = data.values[1] >= data.values[0];
+                const colorClass = isTargetMet ? 'text-success-400 dark:text-success-400' : 'text-error-300 dark:text-error-400';
+
+                if (valueSpan) {
+                    valueSpan.innerText = data.formatted_values[1];
+                    valueSpan.className = `text-xs font-bold ${colorClass}`;
+                } else {
+                    totalNode.innerText = data.formatted_values[1];
+                }
+            } else {
+                totalNode.innerText = totalValue.toLocaleString();
+            }
         }
 
         // Generate Legend
         const legendContainer = card ? card.querySelector('[data-chart-legend]') : null;
         if (legendContainer) {
+            const isTimeComparison = card.dataset.workspaceChart === 'time-comparison';
+            const shiftValue = isTimeComparison ? (data.values[0] || 0) : 0;
+
             legendContainer.innerHTML = data.labels.map((label, index) => {
                 const value = data.values[index];
-                const percentage = totalValue > 0 ? Math.round((value / totalValue) * 100) : 0;
+                const formattedValue = data.formatted_values ? data.formatted_values[index] : value.toLocaleString();
                 const color = data.colors[index];
+
+                let percentageHtml = '';
+                let valueColorClass = 'text-bgray-900 dark:text-white';
+
+                if (isTimeComparison) {
+                    if (index === 0) {
+                        // Shift Work Time: No percentage
+                        percentageHtml = '';
+                    } else if (index === 1) {
+                        // Task Worked Time: Compare to Shift
+                        const percentage = shiftValue > 0 ? Math.round((value / shiftValue) * 100) : 0;
+                        const isTargetMet = value >= shiftValue;
+                        const statusClass = isTargetMet
+                            ? 'text-success-400 bg-success-50 dark:bg-success-500/10'
+                            : 'text-error-300 bg-error-50 dark:bg-error-500/10';
+
+                        valueColorClass = isTargetMet ? 'text-success-400 dark:text-success-400' : 'text-error-300 dark:text-error-400';
+
+                        percentageHtml = `
+                            <span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass}">
+                                ${percentage}%
+                            </span>
+                        `;
+                    } else if (index === 2) {
+                        // Total Break Time: Compare to Shift (Neutral)
+                        const percentage = shiftValue > 0 ? Math.round((value / shiftValue) * 100) : 0;
+                        percentageHtml = `
+                            <span class="rounded-full bg-bgray-50 px-2 py-0.5 text-[10px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
+                                ${percentage}%
+                            </span>
+                        `;
+                    }
+                } else {
+                    // Standard Donut logic: % of total
+                    const percentage = totalValue > 0 ? Math.round((value / totalValue) * 100) : 0;
+                    percentageHtml = `
+                        <span class="rounded-full bg-bgray-50 px-2 py-0.5 text-[10px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
+                            ${percentage}%
+                        </span>
+                    `;
+                }
 
                 return `
                     <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 px-4 py-2 dark:border-darkblack-400">
@@ -92,10 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="truncate text-xs font-semibold text-bgray-700 dark:text-bgray-100">${label}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold text-bgray-900 dark:text-white">${value}</span>
-                            <span class="rounded-full bg-bgray-50 px-2 py-0.5 text-[10px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
-                                ${percentage}%
-                            </span>
+                            <span class="text-xs font-bold ${valueColorClass}">${formattedValue}</span>
+                            ${percentageHtml}
                         </div>
                     </div>
                 `;
@@ -122,9 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     tooltip: {
                         callbacks: {
                             label: (context) => {
+                                const index = context.dataIndex;
                                 const value = context.raw;
+                                const formattedValue = data.formatted_values ? data.formatted_values[index] : value.toLocaleString();
                                 const percentage = totalValue > 0 ? Math.round((value / totalValue) * 100) : 0;
-                                return `${context.label}: ${value} (${percentage}%)`;
+                                return `${context.label}: ${formattedValue} (${percentage}%)`;
                             }
                         }
                     }
@@ -256,9 +341,56 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAllWorkspaceCharts();
     });
 
-    // Date change for time comparison chart
-    const timeDateInput = document.querySelector('[data-workspace-time-chart-date]');
-    if (timeDateInput) {
-        timeDateInput.addEventListener('change', loadTimeComparisonChart);
+    // Time Comparison Chart Filter Logic
+    const timeChartCard = document.querySelector('[data-workspace-chart="time-comparison"]');
+    if (timeChartCard) {
+        const filterGroup = timeChartCard.querySelector('[data-time-filter-group]');
+        const dateInput = timeChartCard.querySelector('[data-workspace-time-chart-date]');
+
+        if (filterGroup && dateInput) {
+            const buttons = filterGroup.querySelectorAll('[data-time-filter]');
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.timeFilter;
+
+                    // Reset active state
+                    buttons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+                    btn.setAttribute('aria-pressed', 'true');
+
+                    if (type === 'today') {
+                        const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                        dateInput.value = today;
+                        if (dateInput._flatpickr) dateInput._flatpickr.setDate(today);
+                        loadTimeComparisonChart();
+                    } else if (type === 'yesterday') {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+                        dateInput.value = yesterdayStr;
+                        if (dateInput._flatpickr) dateInput._flatpickr.setDate(yesterdayStr);
+                        loadTimeComparisonChart();
+                    } else if (type === 'custom') {
+                        if (dateInput._flatpickr) {
+                            dateInput._flatpickr.open();
+                        }
+                    }
+                });
+            });
+
+            // Initialize datepicker
+            if (typeof initDatepicker === 'function' && !dateInput._flatpickr) {
+                initDatepicker('[data-workspace-time-chart-date]', {
+                    maxDate: "today",
+                    onChange: (selectedDates, dateStr) => {
+                        // When custom date is picked, ensure "Custom" button is active
+                        buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.timeFilter === 'custom'));
+                        loadTimeComparisonChart();
+                    }
+                }, timeChartCard);
+            }
+        }
     }
 });
+
+

@@ -378,9 +378,12 @@ class UserTimelineService
             'break_label' => $breakDurationMinutes > 0 ? $actualBreakLabel : null,
             'tooltip_label' => $tooltipLabel,
             'shift_name' => $assignment->shift_name,
+            'actual_working_duration_minutes' => $actualWorkingDurationMinutes,
+            'actual_break_duration_minutes' => $breakDurationMinutes,
             'color_code' => $assignment->color_code,
         ];
     }
+
 
     private function mapTaskTimeLogToTimelineSegment(
         TaskTimeLog $log,

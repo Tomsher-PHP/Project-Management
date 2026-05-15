@@ -8,9 +8,25 @@ use App\Models\Task;
 use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 class ProjectSummaryService
 {
+    /**
+     * @var UserTimelineService
+     */
+    private UserTimelineService $timelineService;
+
+    /**
+     * ProjectSummaryService constructor.
+     *
+     * @param UserTimelineService $timelineService
+     */
+    public function __construct(UserTimelineService $timelineService)
+    {
+        $this->timelineService = $timelineService;
+    }
+
     /**
      * Get workspace summary counts based on user involvement.
      *
@@ -323,34 +339,73 @@ class ProjectSummaryService
     }
 
     /**
-     * Get time comparison chart data (Dummy).
+     * Get task logged time chart data
      *
      * @param User $authUser
      * @param User|null $selectedUser
-     * @param \Illuminate\Support\Carbon|null $date
+     * @param Carbon|null $date
      * @return array
      */
-    public function getTimeComparisonChart(User $authUser, ?User $selectedUser = null, ?\Illuminate\Support\Carbon $date = null): array
+    public function getTaskLoggedTimeChart(User $authUser, ?User $selectedUser = null, ?Carbon $date = null): array
     {
-        // Dummy logic: assume shift is assigned for now if not specified otherwise
-        $hasShift = true;
+        $user = $selectedUser ?: $authUser;
+        $date = $date ?: Carbon::today();
+        $userId = (int) $user->id;
 
-        if ($hasShift) {
-            return [
-                'has_shift' => true,
-                'labels' => ['Shift Time', 'Task Worked Time', 'Total Break Time'],
-                'values' => [8, 6.5, 1],
-                'unit' => 'hours',
-                'colors' => ['#3b82f6', '#10b981', '#f59e0b'],
-            ];
+        $assignedShift = $this->timelineService->getAssignedShift($userId, $date);
+        $workedTaskSegments = $this->timelineService->getWorkedTaskTimelineSegments($userId, $date);
+        $breakTaskSegments = $this->timelineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $date);
+
+        $shiftMinutes = 0;
+        if (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false)) {
+            // Take the working duration from the first segment (total shift - assigned break)
+            $shiftMinutes = (int) ($assignedShift['timeline_segments'][0]['actual_working_duration_minutes'] ?? 0);
         }
 
+        $workedMinutes = $this->timelineService->getTotalTimelineMinutes($workedTaskSegments);
+        $breakMinutes = $this->timelineService->getTotalTimelineMinutes($breakTaskSegments);
+
+        $labels = [
+            'Shift Work Time',
+            'Task Worked Time',
+            'Total Break Time',
+        ];
+
+        $values = [
+            $shiftMinutes * 60,
+            $workedMinutes * 60,
+            $breakMinutes * 60,
+        ];
+
+        $formattedValues = [
+            $this->formatDurationForChart($shiftMinutes),
+            $this->formatDurationForChart($workedMinutes),
+            $this->formatDurationForChart($breakMinutes),
+        ];
+
+        $shiftColor = $assignedShift['color_code'] ?? '#3B82F6';
+        $workedColor = '#0866ff';
+        $breakColor = '#F59E0B';
+
         return [
-            'has_shift' => false,
-            'labels' => ['Task Worked Time', 'Total Break Time'],
-            'values' => [6.5, 1],
-            'unit' => 'hours',
-            'colors' => ['#10b981', '#f59e0b'],
+            'labels' => $labels,
+            'values' => $values,
+            'formatted_values' => $formattedValues,
+            'colors' => [$shiftColor, $workedColor, $breakColor],
         ];
     }
+
+    /**
+     * Format minutes into 00h 00m format
+     *
+     * @param int $minutes
+     * @return string
+     */
+    private function formatDurationForChart(int $minutes): string
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+        return sprintf('%02dh %02dm', $hours, $remainingMinutes);
+    }
+
 }
