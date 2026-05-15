@@ -1,10 +1,4 @@
-@props([
-    'task',
-    'statuses' => [],
-    'canChange' => false,
-    'transitionUrl' => null,
-    'includeTaskDetail' => false,
-])
+@props(['task', 'statuses' => [], 'canChange' => false, 'transitionUrl' => null, 'includeTaskDetail' => false])
 
 @php
     $statuses = collect($statuses);
@@ -14,12 +8,7 @@
 
 @if ($canChange && filled($transitionUrl) && $statuses->isNotEmpty())
     <div class="relative min-w-[150px] shrink-0 sm:min-w-[165px]" data-task-status-dropdown>
-        <button
-            type="button"
-            class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]"
-            data-task-status-trigger
-            style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};"
-        >
+        <button type="button" class="relative flex h-[42px] w-[150px] items-center justify-between rounded-lg px-4 text-sm font-semibold text-white shadow-sm transition duration-200 sm:w-[165px]" data-task-status-trigger style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};">
             <span class="truncate whitespace-nowrap">{{ $statusName }}</span>
             <span>
                 <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
@@ -36,16 +25,7 @@
                     @endphp
 
                     <li>
-                        <button
-                            type="button"
-                            class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600"
-                            data-task-status-option
-                            data-task-id="{{ $task->id }}"
-                            data-status-id="{{ $statusOption->id }}"
-                            data-transition-url="{{ $transitionUrl }}"
-                            data-current-status-id="{{ $task->status_id ?? '' }}"
-                            data-include-task-detail="{{ $includeTaskDetail ? 'true' : 'false' }}"
-                        >
+                        <button type="button" class="flex w-full items-center justify-between px-5 py-2 text-left text-sm font-semibold text-bgray-900 transition hover:bg-bgray-100 dark:text-white hover:dark:bg-darkblack-600" data-task-status-option data-task-id="{{ $task->id }}" data-status-id="{{ $statusOption->id }}" data-transition-url="{{ $transitionUrl }}" data-current-status-id="{{ $task->status_id ?? '' }}" data-include-task-detail="{{ $includeTaskDetail ? 'true' : 'false' }}">
                             <span class="flex items-center gap-2 {{ $isCurrent ? 'text-success-400 dark:text-success-300' : '' }}">
                                 <span class="inline-flex h-3 w-3 rounded-full" style="background-color: {{ $statusOption->color ?: '#9CA3AF' }}"></span>
                                 <span>{{ $statusOption->name }}</span>

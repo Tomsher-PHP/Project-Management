@@ -16,17 +16,24 @@
     <div class="sidebar-body overflow-style-none relative z-30 h-screen w-full overflow-y-scroll pb-[200px] pl-8 pt-3">
         @php
             $authUser = auth()->user();
+            $requestMenuBadges = $requestMenuBadges ?? [
+                'task_requests' => 0,
+                'task_time' => 0,
+                'task_handoff' => 0,
+                'has_any_pending' => false,
+            ];
 
             $canViewDashboard = $authUser?->can('dashboard.view');
             $canViewRoles = $authUser?->can('role.view');
-            $canViewUsers = $authUser?->can('user.view');
-            $canViewTeams = $authUser?->can('team.view');
+            $canViewUsers = $authUser?->canAny(['user.view', 'user.view_all_users']);
+            $canViewTeams = $authUser?->canAny(['team.view', 'team.view_all_teams']);
             $canViewCustomers = $authUser?->can('customer.view');
 
-            $canViewProjects = $authUser?->can('project.view');
-            $canViewTasks = $authUser?->can('task.view');
+            $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']);
+            $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']);
             $canViewTaskRequests = $canViewTasks;
             $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
+            $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
 
             $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
@@ -53,6 +60,29 @@
             $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests;
             $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
             $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
+
+            $isDashboardActive = request()->routeIs('dashboard');
+            $isWorkspaceActive = request()->routeIs('user.workspace');
+            $isAnalyticsActive = request()->routeIs('user.analytics');
+            $isRolesActive = request()->routeIs('roles.*');
+            $isUsersActive = request()->routeIs('users.*');
+            $isTeamsActive = request()->routeIs('teams.*');
+            $isCustomersActive = request()->routeIs('customers.*');
+            $isProjectsActive = request()->routeIs('projects.*');
+            $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
+            $isTaskRequestsActive = request()->routeIs('tasks.requests.*');
+            $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
+            $isHandoffsActive = request()->routeIs('handoff_requests.*');
+            $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive;
+            $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive;
+            $isScheduleShiftActive = request()->routeIs('schedule.shift.*');
+            $isSettingsActive = request()->routeIs('settings.*');
+            $isActivityLogActive = request()->routeIs('activity.log*');
+
+            $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
+            $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
+            $sidebarSubLinkActiveClass = 'text-success-400 dark:text-success-300';
+            $sidebarSubLinkInactiveClass = 'text-bgray-600 dark:text-bgray-50 hover:text-bgray-800 hover:dark:text-success-300';
         @endphp
 
         <div class="nav-wrapper mb-[36px] pr-8">
@@ -62,8 +92,8 @@
                 </h4>
                 <ul class="mt-2.5">
                     @if ($canViewDashboard)
-                        <li class="item py-[11px] text-bgray-900 dark:text-white">
-                            <a href="index.html">
+                        <li class="item py-[11px] {{ $isDashboardActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                            <a href="index.html" aria-expanded="{{ $isDashboardActive ? 'true' : 'false' }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
                                         <span class="item-ico">
@@ -72,24 +102,24 @@
                                                 <path class="path-2" d="M5 17C5 14.7909 6.79086 13 9 13C11.2091 13 13 14.7909 13 17V21H5V17Z" fill="#22C55E" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none">Dashboards</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboards</span>
                                     </div>
                                     <span>
-                                        <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current" xmlns="http://www.w3.org/2000/svg">
+                                        <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isDashboardActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
                                             <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
                                         </svg>
                                     </span>
                                 </div>
                             </a>
-                            <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5">
+                            <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isDashboardActive ? 'active' : '' }}">
                                 <li>
-                                    <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium text-bgray-600 transition-all hover:text-bgray-800 dark:text-bgray-50 hover:dark:text-success-300">Dashboard
+                                    <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDashboardActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">Dashboard
                                         Default</a>
                                 </li>
                             </ul>
                         </li>
                     @endif
-                    <li class="item py-[11px] text-bgray-900 dark:text-white">
+                    <li class="item py-[11px] {{ $isWorkspaceActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                         <a href="{{ route('user.workspace') }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
@@ -102,13 +132,31 @@
                                             <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
                                         </svg>
                                     </span>
-                                    <span class="item-text text-lg font-medium leading-none">Workspace</span>
+                                    <span class="item-text text-lg font-medium leading-none {{ $isWorkspaceActive ? $sidebarItemActiveClass : '' }}">Workspace</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="item py-[11px] {{ $isAnalyticsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                        <a href="{{ route('user.analytics') }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="item-ico">
+                                        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M18 16V6C18 3.79086 16.2091 2 14 2H4C1.79086 2 0 3.79086 0 6V16C0 18.2091 1.79086 20 4 20H14C16.2091 20 18 18.2091 18 16Z" fill="#1A202C" class="path-1" />
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 8C4.25 7.58579 4.58579 7.25 5 7.25H13C13.4142 7.25 13.75 7.58579 13.75 8C13.75 8.41421 13.4142 8.75 13 8.75H5C4.58579 8.75 4.25 8.41421 4.25 8Z" fill="#22C55E" class="path-2" />
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H13C13.4142 11.25 13.75 11.5858 13.75 12C13.75 12.4142 13.4142 12.75 13 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12Z" fill="#22C55E" class="path-2" />
+                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 16C4.25 15.5858 4.58579 15.25 5 15.25H9C9.41421 15.25 9.75 15.5858 9.75 16C9.75 16.4142 9.41421 16.75 9 16.75H5C4.58579 16.75 4.25 16.4142 4.25 16Z" fill="#22C55E" class="path-2" />
+                                            <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
+                                        </svg>
+                                    </span>
+                                    <span class="item-text text-lg font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
                                 </div>
                             </div>
                         </a>
                     </li>
                     @if ($canViewRoles)
-                        <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <li class="item py-[11px] {{ $isRolesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                             <a href="{{ route('roles.index') }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
@@ -121,31 +169,14 @@
                                                 <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none">Roles</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isRolesActive ? $sidebarItemActiveClass : '' }}">Roles</span>
                                     </div>
                                 </div>
                             </a>
                         </li>
                     @endif
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="integrations.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M1.57666 3.61499C1.57666 2.51042 2.47209 1.61499 3.57666 1.61499H8.5C9.60456 1.61499 10.5 2.51042 10.5 3.61499V8.53833C10.5 9.64289 9.60456 10.5383 8.49999 10.5383H3.57666C2.47209 10.5383 1.57666 9.64289 1.57666 8.53832V3.61499Z" fill="#1A202C" class="path-1" />
-                                            <path d="M13.5 15.5383C13.5 14.4338 14.3954 13.5383 15.5 13.5383H20.4233C21.5279 13.5383 22.4233 14.4338 22.4233 15.5383V20.4617C22.4233 21.5662 21.5279 22.4617 20.4233 22.4617H15.5C14.3954 22.4617 13.5 21.5662 13.5 20.4617V15.5383Z" fill="#1A202C" class="path-1" />
-                                            <circle cx="6.03832" cy="18" r="4.46166" fill="#1A202C" class="path-1" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M18 2C18.4142 2 18.75 2.33579 18.75 2.75V5.25H21.25C21.6642 5.25 22 5.58579 22 6C22 6.41421 21.6642 6.75 21.25 6.75H18.75V9.25C18.75 9.66421 18.4142 10 18 10C17.5858 10 17.25 9.66421 17.25 9.25V6.75H14.75C14.3358 6.75 14 6.41421 14 6C14 5.58579 14.3358 5.25 14.75 5.25H17.25V2.75C17.25 2.33579 17.5858 2 18 2Z" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">Integrations</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li> --}}
                     @if ($canViewUsers)
-                        <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <li class="item py-[11px] {{ $isUsersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                             <a href="{{ route('users.index') }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
@@ -155,14 +186,14 @@
                                                 <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none">Users</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isUsersActive ? $sidebarItemActiveClass : '' }}">Users</span>
                                     </div>
                                 </div>
                             </a>
                         </li>
                     @endif
                     @if ($canViewTeams)
-                        <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <li class="item py-[11px] {{ $isTeamsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                             <a href="{{ route('teams.index') }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
@@ -172,14 +203,14 @@
                                                 <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none">Teams</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isTeamsActive ? $sidebarItemActiveClass : '' }}">Teams</span>
                                     </div>
                                 </div>
                             </a>
                         </li>
                     @endif
                     @if ($canViewCustomers)
-                        <li class="item py-[11px] text-bgray-900 dark:text-white">
+                        <li class="item py-[11px] {{ $isCustomersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                             <a href="{{ route('customers.index') }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
@@ -189,7 +220,7 @@
                                                 <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none">Customers</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isCustomersActive ? $sidebarItemActiveClass : '' }}">Customers</span>
                                     </div>
                                 </div>
                             </a>
@@ -214,23 +245,6 @@
                             </div>
                         </a>
                     </li> --}}
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="history.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M17.5 12.5C17.5 17.1944 13.6944 21 9 21C4.30558 21 0.5 17.1944 0.5 12.5C0.5 7.80558 4.30558 4 9 4C13.6944 4 17.5 7.80558 17.5 12.5Z" fill="#1A202C" class="path-1" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.99995 1.75C8.02962 1.75 7.09197 1.88462 6.20407 2.13575C5.80549 2.24849 5.39099 2.01676 5.27826 1.61818C5.16553 1.21961 5.39725 0.805108 5.79583 0.692376C6.81525 0.404046 7.89023 0.25 8.99995 0.25C10.1097 0.25 11.1846 0.404046 12.2041 0.692376C12.6026 0.805108 12.8344 1.21961 12.7216 1.61818C12.6089 2.01676 12.1944 2.24849 11.7958 2.13575C10.9079 1.88462 9.97028 1.75 8.99995 1.75Z" fill="#22C55E" class="path-2" />
-                                            <path d="M11 13C11 14.1046 10.1046 15 9 15C7.89543 15 7 14.1046 7 13C7 11.8954 7.89543 11 9 11C10.1046 11 11 11.8954 11 13Z" fill="#22C55E" class="path-2" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M9 7.25C9.41421 7.25 9.75 7.58579 9.75 8V12C9.75 12.4142 9.41421 12.75 9 12.75C8.58579 12.75 8.25 12.4142 8.25 12V8C8.25 7.58579 8.58579 7.25 9 7.25Z" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">History</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li> --}}
                 </ul>
             </div>
             @if ($hasWorkspaceLinks)
@@ -242,7 +256,7 @@
 
                         @if ($canViewProjects)
                             <!-- Projects -->
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isProjectsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('projects.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -255,7 +269,7 @@
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Projects</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isProjectsActive ? $sidebarItemActiveClass : '' }}">Projects</span>
                                         </div>
                                     </div>
                                 </a>
@@ -264,7 +278,7 @@
 
                         @if ($canViewTasks)
                             <!-- Tasks -->
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isTasksActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('tasks.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -277,7 +291,7 @@
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Tasks</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isTasksActive ? $sidebarItemActiveClass : '' }}">Tasks</span>
                                         </div>
                                     </div>
                                 </a>
@@ -286,7 +300,7 @@
 
                         @if ($canViewTasks)
                             <!-- Kanban -->
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isKanbanActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('tasks.kanban.view') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -299,17 +313,16 @@
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Kanban</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isKanbanActive ? $sidebarItemActiveClass : '' }}">Kanban</span>
                                         </div>
                                     </div>
                                 </a>
                             </li>
                         @endif
 
-                        @if ($canViewTaskRequests)
-                            <!-- Task Requests -->
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                <a href="{{ route('tasks.requests.index') }}">
+                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs)
+                            <li class="item py-[11px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="index.html" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
@@ -321,32 +334,56 @@
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Task Requests</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isRequestsMenuActive ? $sidebarItemActiveClass : '' }}">Requests</span>
+                                            @if ($requestMenuBadges['has_any_pending'] ?? false)
+                                                <span class="h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500 dark:border-none"></span>
+                                            @endif
                                         </div>
+                                        <span class="flex items-center gap-2">
+                                            <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isRequestsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
+                                            </svg>
+                                        </span>
                                     </div>
                                 </a>
-                            </li>
-                        @endif
-
-                        @if ($canViewTaskTimeLogChangeRequests)
-                            <!-- Task Requests -->
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                <a href="{{ route('tasks.time-log-change-requests.index') }}">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2.5">
-                                            <span class="item-ico">
-                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
-                                                </svg>
-                                            </span>
-                                            <span class="item-text text-lg font-medium leading-none">Time Requests</span>
-                                        </div>
-                                    </div>
-                                </a>
+                                <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isRequestsMenuActive ? 'active' : '' }}">
+                                    @if ($canViewTaskRequests)
+                                        <li>
+                                            <a href="{{ route('tasks.requests.index') }}" class="text-md inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Task</span>
+                                                @if (($requestMenuBadges['task_requests'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['task_requests'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
+                                    @if ($canViewTaskTimeLogChangeRequests)
+                                        <li>
+                                            <a href="{{ route('tasks.time-log-change-requests.index') }}" class="text-md inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Task Time</span>
+                                                @if (($requestMenuBadges['task_time'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['task_time'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
+                                    @if ($canViewHandoffs)
+                                        <li>
+                                            <a href="{{ route('handoff_requests.index') }}" class="text-md inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isHandoffsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Handoff</span>
+                                                @if (($requestMenuBadges['task_handoff'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['task_handoff'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
                             </li>
                         @endif
                     </ul>
@@ -601,7 +638,7 @@
                     <ul class="mt-2.5">
 
                         @if ($canViewScheduleShift)
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isScheduleShiftActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('schedule.shift.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -614,7 +651,7 @@
                                                     <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Schedule Shift</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isScheduleShiftActive ? $sidebarItemActiveClass : '' }}">Schedule Shift</span>
                                         </div>
                                     </div>
                                 </a>
@@ -622,7 +659,7 @@
                         @endif
 
                         @if ($canViewSettings)
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isSettingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('settings.index') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -634,7 +671,7 @@
                                                     <path d="M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Settings</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isSettingsActive ? $sidebarItemActiveClass : '' }}">Settings</span>
                                         </div>
                                     </div>
                                 </a>
@@ -642,7 +679,7 @@
                         @endif
 
                         @if ($canViewActivityLog)
-                            <li class="item py-[11px] text-bgray-900 dark:text-white">
+                            <li class="item py-[11px] {{ $isActivityLogActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('activity.log') }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2.5">
@@ -654,7 +691,7 @@
                                                     <path d="M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
-                                            <span class="item-text text-lg font-medium leading-none">Activity Log</span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isActivityLogActive ? $sidebarItemActiveClass : '' }}">Activity Log</span>
                                         </div>
                                     </div>
                                 </a>
@@ -669,63 +706,6 @@
 
                 </h4>
                 <ul class="mt-2.5">
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="signin.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" fill="#1A202C" class="path-1" />
-                                            <circle cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">Signin</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li> --}}
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="signup.html">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2.5">
-                                    <span class="item-ico">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" fill="#1A202C" class="path-1" />
-                                            <circle cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-lg font-medium leading-none">Signup</span>
-                                </div>
-                            </div>
-                        </a>
-                    </li> --}}
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="coming-soon.html">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="item-ico">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M18.4 17.2C19.8833 19.1777 18.4721 22 16 22L8 22C5.52786 22 4.11672 19.1777 5.6 17.2L8.15 13.8C8.95 12.7333 8.95 11.2667 8.15 10.2L5.6 6.8C4.11672 4.82229 5.52787 2 8 2L16 2C18.4721 2 19.8833 4.82229 18.4 6.8L15.85 10.2C15.05 11.2667 15.05 12.7333 15.85 13.8L18.4 17.2Z" fill="#1A202C" class="path-1" />
-                                        <path d="M12.7809 9.02391C12.3805 9.52432 11.6195 9.52432 11.2191 9.02391L9.29976 6.6247C8.77595 5.96993 9.24212 5 10.0806 5L13.9194 5C14.7579 5 15.2241 5.96993 14.7002 6.6247L12.7809 9.02391Z" fill="#22C55E" class="path-2" />
-                                    </svg>
-                                </span>
-                                <span class="item-text text-lg font-medium leading-none">Coming Soon</span>
-                            </div>
-                        </a>
-                    </li> --}}
-                    {{-- <li class="item py-[11px] text-bgray-900 dark:text-white">
-                        <a href="404.html">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="item-ico">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="10" cy="10" r="10" fill="#1A202C" class="path-1" />
-                                        <path d="M9 15C9 14.4477 9.44772 14 10 14C10.5523 14 11 14.4477 11 15C11 15.5523 10.5523 16 10 16C9.44772 16 9 15.5523 9 15Z" fill="#22C55E" class="path-2" />
-                                        <path fill-rule="evenodd" clip-rule="evenodd" d="M10 12.75C9.58579 12.75 9.25 12.4142 9.25 12L9.25 5C9.25 4.58579 9.58579 4.25 10 4.25C10.4142 4.25 10.75 4.58579 10.75 5L10.75 12C10.75 12.4142 10.4142 12.75 10 12.75Z" fill="#22C55E" class="path-2" />
-                                    </svg>
-                                </span>
-                                <span class="item-text text-lg font-medium leading-none">404</span>
-                            </div>
-                        </a>
-                    </li> --}}
                     <li class="item py-[11px] text-bgray-900 dark:text-white">
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf

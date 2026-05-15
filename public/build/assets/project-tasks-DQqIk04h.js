@@ -1,8 +1,12 @@
+<<<<<<< HEAD:public/build/assets/project-tasks-BncZP4G1.js
 <<<<<<<< HEAD:public/build/assets/project-tasks-DYrAG8KA.js
 import{A as m}from"./alert-LtxA_H6Z.js";import{a as X,i as W}from"./datepicker-xDQEUfkb.js";import{i as L}from"./flatpickr.min-BJdP9L7S.js";import"./change-password-YZDMVk0e.js";const Q=`
 ========
 import{A as m}from"./alert-BIAC0wB2.js";import{i as X}from"./datepicker-CA2wRfma.js";import{i as W}from"./estimated-time-input-CIuy8ceU.js";import{i as L}from"./tom-select-Co1PEiz6.js";import"./sweetalert2.esm.all-YZDMVk0e.js";import"./flatpickr.min-Cc3t1Oke.js";const Q=`
 >>>>>>>> 55b71beee66d6bc6fd1aaa4bc2048b4650ee3241:public/build/assets/project-tasks-BncZP4G1.js
+=======
+import{A as m}from"./alert-BIAC0wB2.js";import{i as X}from"./datepicker-CA2wRfma.js";import{i as W}from"./estimated-time-input-CIuy8ceU.js";import{i as L}from"./tom-select-D_VawerM.js";import"./sweetalert2.esm.all-YZDMVk0e.js";import"./flatpickr.min-Cc3t1Oke.js";const Q=`
+>>>>>>> 4ec7cb430dc163e11b1bc5c5bceb8bf363e79e9d:public/build/assets/project-tasks-DQqIk04h.js
     <div class="rounded-[20px] border border-dashed border-bgray-300 px-6 py-10 text-center dark:border-darkblack-400">
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">Loading tasks...</p>
     </div>

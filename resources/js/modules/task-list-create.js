@@ -751,10 +751,16 @@ const initializeTaskCreateRoot = (root, dependencies) => {
     });
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+const initTaskCreate = () => {
     const dependencies = parseDependencies();
 
     document.querySelectorAll('[data-task-create-root]').forEach((root) => {
         initializeTaskCreateRoot(root, dependencies);
     });
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTaskCreate);
+} else {
+    initTaskCreate();
+}

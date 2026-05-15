@@ -31,6 +31,11 @@ class TaskQuickStoreRequest extends FormRequest
                 'integer',
                 Rule::exists('projects', 'id'),
             ],
+            'handoff_request_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('handoff_requests', 'id'),
+            ],
             'request_type' => ['nullable', Rule::in($requestTypes)],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

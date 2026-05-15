@@ -214,4 +214,10 @@ return [
     ['name' => 'checklist_template.edit',   'sort_order' => 26040],
     ['name' => 'checklist_template.delete', 'sort_order' => 26060],
 
+    // HANDOFF (27000)
+    ['name' => 'handoff_request.view_all',     'sort_order' => 27000],
+    ['name' => 'handoff_request.view',         'sort_order' => 27020],
+    ['name' => 'handoff_request.create',       'sort_order' => 27040],
+    ['name' => 'handoff_request.note',         'sort_order' => 27060],
+
 ];

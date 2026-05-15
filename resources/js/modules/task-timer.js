@@ -24,6 +24,31 @@ const parseSeconds = (value) => {
     return Number.isNaN(parsed) ? 0 : Math.max(parsed, 0);
 };
 
+const syncNavbarTimerState = (payload = null) => {
+    if (!payload || typeof payload !== 'object') {
+        return false;
+    }
+
+    const detail = {
+        active: payload.active === true || payload.active === '1' || payload.shouldShowTimer === true,
+        taskId: payload.taskId ? String(payload.taskId) : '',
+        taskName: payload.taskName || '',
+        seconds: parseSeconds(payload.seconds),
+        baseSeconds: parseSeconds(payload.baseSeconds ?? payload.seconds),
+        estimatedSeconds: parseSeconds(payload.estimatedSeconds),
+        startedAt: payload.startedAt || '',
+        stopUrl: payload.stopUrl || '',
+        state: payload.state === 'running' ? 'running' : 'stopped',
+    };
+
+    document.dispatchEvent(new CustomEvent(
+        detail.active ? 'navbar-running-task-timer:update' : 'navbar-running-task-timer:hide',
+        detail.active ? { detail } : undefined
+    ));
+
+    return true;
+};
+
 const formatTime = (seconds) => {
     const totalSeconds = Math.max(parseSeconds(seconds), 0);
     const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -323,6 +348,19 @@ export function initTaskTimer() {
     syncDisplaysFromDom();
 
     document.addEventListener('task-timer:refresh', syncDisplaysFromDom);
+    document.addEventListener('task-timer:state-sync', (event) => {
+        const taskId = event.detail?.taskId;
+
+        if (!taskId) {
+            return;
+        }
+
+        syncTaskTimerState(String(taskId), {
+            isRunning: event.detail?.isRunning === true || event.detail?.isRunning === '1',
+            startedAt: event.detail?.startedAt || '',
+            totalSeconds: parseSeconds(event.detail?.totalSeconds),
+        });
+    });
     document.addEventListener('task-timer:stopped-remotely', (event) => {
         const taskId = event.detail?.taskId;
 
@@ -518,7 +556,7 @@ export function initTaskTimer() {
                     totalSeconds: nextTotalSeconds || getCurrentTaskSeconds(taskId),
                 });
 
-                if (String(button.dataset.currentUserId || '') === String(button.dataset.assigneeId || '')) {
+                if (!syncNavbarTimerState(data?.navbar_timer) && String(button.dataset.currentUserId || '') === String(button.dataset.assigneeId || '')) {
                     document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
                 }
 

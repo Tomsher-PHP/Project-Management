@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const syncAutoStoppedTimer = (payload = null) => {
+    const syncAutoStoppedTimer = (payload = null, navbarTimer = null) => {
         const taskId = payload?.task_id ? String(payload.task_id) : '';
 
         if (!taskId) {
@@ -42,7 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const navbarState = window.navbarRunningTaskTimer?.getState?.();
 
         if (String(navbarState?.taskId || '') === taskId) {
-            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+            if (navbarTimer?.active === true || navbarTimer?.active === '1' || navbarTimer?.shouldShowTimer === true) {
+                document.dispatchEvent(new CustomEvent('navbar-running-task-timer:update', {
+                    detail: navbarTimer,
+                }));
+            } else {
+                document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+            }
         }
     };
 
@@ -94,7 +100,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(handleFetchError)
             .then((response) => {
-                syncAutoStoppedTimer(response.timer_stopped);
+                syncAutoStoppedTimer(response.timer_stopped, response.navbar_timer);
+                document.dispatchEvent(new CustomEvent('task-status:changed', {
+                    detail: {
+                        taskId: movedTaskId,
+                        statusId: Number(statusId || 0),
+                        statusType: response.status_type,
+                        response,
+                    },
+                }));
                 replaceMovedCard(evt.item, response.html);
             })
             .catch(err => {
@@ -132,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.innerHTML = html;
                 initKanbanDrag();
                 initKanbanScroll();
+                document.dispatchEvent(new CustomEvent('workspace:kanban-refreshed'));
                 return true;
             })
             .catch(() => {

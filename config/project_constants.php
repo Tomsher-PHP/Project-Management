@@ -99,4 +99,16 @@ return [
         'approved',
         'rejected'
     ],
+
+    'handoff_request_statuses' => [
+        0 => 'pending',
+        1 => 'noted',
+        2 => 'assigned'
+    ],
+
+    'handoff_request_actions' => [
+        0 => 'created',
+        1 => 'noted',
+        2 => 'assigned'
+    ],
 ];

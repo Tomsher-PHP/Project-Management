@@ -22,7 +22,7 @@ class TaskPolicy
             return true;
         }
 
-        $task->loadMissing([
+        $task->load([
             'project.teamLeader',
             'projectMilestone:id,owner_id',
         ]);

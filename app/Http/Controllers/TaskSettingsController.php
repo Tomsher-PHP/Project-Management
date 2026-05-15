@@ -92,8 +92,10 @@ class TaskSettingsController extends Controller
     {
         if ($request->routeIs('settings.task-statuses.store')) {
             $data = app(\App\Http\Requests\TaskStatusRequest::class)->validated();
-            $data['is_completed'] = $request->boolean('is_completed');
             $data['is_default'] = $request->boolean('is_default');
+
+            $data['is_completed'] = ($data['type'] === 'completed') ? 1 : 0;
+
             $taskStatus = DB::transaction(function () use ($data) {
                 if ($data['is_default']) {
                     $this->clearExistingDefaults(TaskStatus::class, null, [
@@ -154,8 +156,9 @@ class TaskSettingsController extends Controller
     {
         if ($request->routeIs('settings.task-statuses.update')) {
             $data = app(\App\Http\Requests\TaskStatusRequest::class)->validated();
-            $data['is_completed'] = $request->boolean('is_completed');
             $data['is_default'] = $request->boolean('is_default');
+
+            $data['is_completed'] = ($data['type'] === 'completed') ? 1 : 0;
 
             $taskStatus = TaskStatus::findOrFail($id);
             $taskStatus = DB::transaction(function () use ($taskStatus, $data) {

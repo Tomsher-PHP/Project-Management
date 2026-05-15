@@ -24,7 +24,7 @@ const setTaskStatusOptionsDisabled = (dropdown, isDisabled) => {
     });
 };
 
-const syncAutoStoppedTimer = (payload = null) => {
+const syncAutoStoppedTimer = (payload = null, navbarTimer = null) => {
     const taskId = payload?.task_id ? String(payload.task_id) : '';
 
     if (!taskId) {
@@ -42,7 +42,13 @@ const syncAutoStoppedTimer = (payload = null) => {
     const navbarState = window.navbarRunningTaskTimer?.getState?.();
 
     if (String(navbarState?.taskId || '') === taskId) {
-        document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+        if (navbarTimer?.active === true || navbarTimer?.active === '1' || navbarTimer?.shouldShowTimer === true) {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:update', {
+                detail: navbarTimer,
+            }));
+        } else {
+            document.dispatchEvent(new CustomEvent('navbar-running-task-timer:hide'));
+        }
     }
 };
 
@@ -116,12 +122,13 @@ const initializeTaskStatusDropdown = () => {
                     throw new Error(result.message || 'Unable to update the task status.');
                 }
 
-                syncAutoStoppedTimer(result.timer_stopped);
+                syncAutoStoppedTimer(result.timer_stopped, result.navbar_timer);
 
                 document.dispatchEvent(new CustomEvent('task-status:changed', {
                     detail: {
                         taskId,
                         statusId,
+                        statusType: result.status_type,
                         response: result,
                     },
                 }));

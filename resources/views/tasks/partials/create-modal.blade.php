@@ -18,10 +18,11 @@
 
                 <form class="space-y-4 overflow-y-auto px-5 py-5" data-task-create-form data-store-url="{{ route('tasks.store') }}" data-default-store-url="{{ route('tasks.store') }}" data-request-store-url="{{ route('tasks.request.store') }}" data-advanced="false" data-self-assignee-id="{{ auth()->id() }}">
                     <input type="hidden" name="request_type" value="assigned" data-task-create-request-type>
+                    <input type="hidden" name="handoff_request_id" id="handoff_request_id">
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Project <x-red-star /></label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
                             <select name="project_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project</option>
                                 @foreach ($taskCreateProjects as $projectOption)
@@ -34,7 +35,7 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
                             <select name="project_milestone_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
@@ -42,7 +43,7 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Sprint
                                 <span class="hidden" data-task-create-required-star="project_sprint_id">
                                     <x-red-star />
@@ -56,7 +57,7 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Parent Task</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
                             <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-task-create-parent-select>
                                 <option value="">Select project first</option>
                             </select>
@@ -64,13 +65,13 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Name <x-red-star /></label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
                             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
                             <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="name"></p>
                         </div>
 
                         <div data-task-create-assignee-field>
-                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Assignee</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
                             <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
@@ -86,7 +87,7 @@
                     <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Status</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</label>
                                 <select name="status_id" class="tom-select-no-search w-full">
                                     <option value="">Select project first</option>
                                 </select>
@@ -94,13 +95,13 @@
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Description</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
                                 <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add task details"></textarea>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="description"></p>
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Task Type</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Type</label>
 
                                 <div class="flex items-center gap-2">
                                     <select name="task_type_id" class="tom-select-no-search w-full">
@@ -122,7 +123,7 @@
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Task Mode</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Mode</label>
 
                                 <div class="flex items-center gap-2">
                                     <select name="task_mode_id" class="tom-select-no-search w-full">
@@ -144,7 +145,7 @@
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Priority</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
                                 <select name="priority" class="tom-select-no-search w-full">
                                     @foreach ($taskPriorityOptions as $option)
                                         <option value="{{ $option->value }}" {{ $option->value === $defaultTaskPriority ? 'selected' : '' }}>{{ $option->label }}</option>
@@ -154,13 +155,13 @@
                             </div>
                             
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date</label>
                                 <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Tags</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Tags</label>
                                 <select name="tag_ids[]" class="tom-select-tags w-full" multiple>
                                     @foreach ($tagOptions as $tagOption)
                                         <option value="{{ $tagOption->id }}">{{ $tagOption->name }}</option>

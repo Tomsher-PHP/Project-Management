@@ -134,17 +134,20 @@ export function initTomSelect(root = document) {
         applyDisabledStyles(instance, el);
     });
 
-    root.querySelectorAll('select.tom-select-tags, input.tom-select-tags').forEach(el => {
+    root.querySelectorAll('select.tom-select-tags, input.tom-select-tags, select.tom-select-add').forEach(el => {
         if (el.tomselect) return;
+
+        const placeholder = el.dataset.placeholder || 'Search or add tags';
+        const maxItems = el.dataset.maxItems || null;
 
         const instance = new TomSelect(el, {
             plugins: ['remove_button', 'clear_button'],
-            maxItems: null,
+            maxItems: maxItems,
             persist: false,
             createOnBlur: true,
             hideSelected: true,
             closeAfterSelect: false,
-            placeholder: 'Search or add tags',
+            placeholder: placeholder,
             create: el.disabled ? false : (input) => {
                 const text = String(input || '').trim();
 

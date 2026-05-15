@@ -11,6 +11,7 @@ use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
 use App\Policies\TaskPolicy;
+use App\View\Composers\SidebarComposer;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
@@ -91,6 +92,8 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('userTheme', $userTheme);
         });
+
+        View::composer('layouts.sidebar', SidebarComposer::class);
 
         Blade::directive('appDate', function ($expression) {
             return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDate({$expression}); ?>";

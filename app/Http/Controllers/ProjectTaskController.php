@@ -353,11 +353,6 @@ class ProjectTaskController extends Controller
         ])->render();
     }
 
-    private function getDefaultTaskEstimateSeconds(Project $project): int
-    {
-        return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
-    }
-
     private function getInitialTaskGroupViewData(Project $project, ?string $preferredGroupKey = null): array
     {
         if ($project->project_flow === 'linear') {
@@ -656,27 +651,6 @@ class ProjectTaskController extends Controller
         ];
     }
 
-    private function resolveTaskTagIds(array $submittedTags): array
-    {
-        return collect($submittedTags)
-            ->map(fn($value) => is_string($value) ? trim($value) : $value)
-            ->filter(fn($value) => filled($value))
-            ->map(function ($value) {
-                if (is_numeric($value)) {
-                    $existingId = Tag::query()->whereKey((int) $value)->value('id');
-
-                    if ($existingId) {
-                        return (int) $existingId;
-                    }
-                }
-
-                return $this->firstOrCreateTaskTag((string) $value)->id;
-            })
-            ->unique()
-            ->values()
-            ->all();
-    }
-
     private function firstOrCreateTaskTag(string $name): Tag
     {
         $cleanName = trim($name);
@@ -749,19 +723,6 @@ class ProjectTaskController extends Controller
         }
 
         return $query;
-    }
-
-    private function getTaskGroupTasks(Project $project, string $groupKey): Collection
-    {
-        $query = $this->buildTaskGroupTasksQuery($project, $groupKey);
-        $tasks = $query->get();
-        $taskRowRelations = $this->getProjectTaskRowRelations();
-
-        $tasks->each(function (Task $task) use ($taskRowRelations) {
-            $this->loadTaskDescendantsForGroup($task, $taskRowRelations);
-        });
-
-        return $tasks;
     }
 
     private function getTaskGroupTaskPage(Project $project, string $groupKey, int $page, int $perPage): array
@@ -916,27 +877,6 @@ class ProjectTaskController extends Controller
             && ! $task->isRejectedRequest()
             && $user->can('task.edit');
     }
-
-    // private function syncTaskAssignmentState(Task $task, ?int $newAssigneeId): void
-    // {
-    //     $currentLog = $task->currentAssignmentLog()->first();
-    //     $now = now();
-
-    //     if ($currentLog) {
-    //         $currentLog->update([
-    //             'assigned_to' => $now,
-    //             'is_current' => false,
-    //         ]);
-    //     }
-
-    //     if ($newAssigneeId) {
-    //         $task->assignmentLogs()->create([
-    //             'user_id' => $newAssigneeId,
-    //             'assigned_from' => $now,
-    //             'is_current' => true,
-    //         ]);
-    //     }
-    // }
 
     private function getExcludedParentTaskIds(?Task $task): array
     {

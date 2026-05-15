@@ -19,12 +19,11 @@
     $dueDateDisplay = \App\Providers\AppServiceProvider::formatAppDateTime($dueDate);
     $dueDateStatus = $task->status ?? ($status ?? null);
 
-    $runningLog = $task->relationLoaded('activeTimeLog')
-        ? $task->activeTimeLog
-        : $task->timeLogs()->where('is_running', 1)->latest('started_at')->first();
-    $totalTrackedSeconds = (int) ($task->actual_time_seconds ?? 0);
-    $timerStartedAt = $runningLog?->started_at?->toISOString();
-    $isTimerRunning = $runningLog !== null;
+    $totalTrackedSeconds = (int) ($task->kanban_timer_tracked_seconds ?? 0);
+    $timerCurrentSeconds = (int) ($task->kanban_timer_current_seconds ?? $totalTrackedSeconds);
+    $timerStartedAt = $task->kanban_timer_started_at_iso;
+    $isTimerRunning = (bool) ($task->kanban_timer_is_running ?? false);
+    $timerTimeColorClass = (string) ($task->kanban_timer_time_color_class ?? 'text-bgray-500 dark:text-bgray-300');
     $startRestriction = $authUser ? $taskTimerService->getStartRestriction($task, $authUser) : ['message' => 'Not allowed to start timer for this task.'];
     $canStartTimer = $authUser ? ($startRestriction === null || in_array(($startRestriction['reason'] ?? null), ['running_timer_exists', 'already_running'], true)) : false;
     $canStopTimer = $authUser ? $taskTimerService->isAllowedToStop($task, $authUser) : false;
@@ -138,14 +137,14 @@
             </div>
 
             <div class="flex items-center gap-2 text-[12px] font-semibold">
-                <span class="shrink-0 text-bgray-500 dark:text-bgray-300" title="Estimated time: {{ $estimatedTime }}">
+                <span class="shrink-0 text-bgray-600 dark:text-bgray-300" title="Estimated time: {{ $estimatedTime }}">
                     {{ $estimatedTime }}
                 </span>
                 <span class="text-bgray-300 dark:text-bgray-500">|</span>
 
                 <div class="flex items-center gap-2" data-task-timer-root data-task-id="{{ $task->id }}" data-task-timer-persist-display="true">
-                    <div class="text-[12px] font-semibold text-bgray-500 dark:text-bgray-300" data-task-timer-display data-task-id="{{ $task->id }}" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ $estimatedSeconds }}" data-compare-estimated="true" title="Worked time">
-                        <span data-task-timer-text>00:00:00</span>
+                    <div class="text-[12px] font-semibold {{ $timerTimeColorClass }}" data-task-timer-display data-task-id="{{ $task->id }}" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ $estimatedSeconds }}" data-compare-estimated="true" title="Worked time">
+                        <span data-task-timer-text>{{ gmdate('H:i:s', $timerCurrentSeconds) }}</span>
                     </div>
                     <span class="text-bgray-300 dark:text-bgray-500">|</span>
 

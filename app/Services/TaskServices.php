@@ -12,6 +12,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\TaskType;
 use App\Models\User;
+use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -29,7 +30,9 @@ class TaskServices
         protected ProjectServices $projectServices,
         protected TaskQueryService $queryService,
         protected TaskFilterService $filterService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected HandoffServices $handoffServices,
+        protected RunningTaskNavbarService $runningTaskNavbarService
     ) {}
 
     // Get paginated task list for the current user
@@ -119,6 +122,11 @@ class TaskServices
             ])
             ->get();
 
+        $this->hydrateKanbanTimerState(
+            $tasks,
+            $options['timer_user'] ?? 'current_assignee'
+        );
+
         $hasMore = ($offset + $tasks->count()) < $total;
 
         return [
@@ -145,6 +153,39 @@ class TaskServices
             'taskType:id,name,code,color',
             'taskMode:id,name,code,color',
         ];
+    }
+
+    public function hydrateKanbanTimerState($tasks, $timerUser): void
+    {
+        if ($tasks->isEmpty()) {
+            return;
+        }
+
+        if ($timerUser === 'current_assignee') {
+            $timerStates = $this->runningTaskNavbarService->getTaskStatesForTaskAssignees($tasks);
+        } else {
+            $timerUserId = $timerUser instanceof User
+                ? (int) $timerUser->id
+                : (is_numeric($timerUser) ? (int) $timerUser : null);
+
+            $timerStates = $this->runningTaskNavbarService->getTaskStatesForUser($timerUserId, $tasks);
+        }
+
+        foreach ($tasks as $task) {
+            $timerState = $timerStates[(int) $task->id] ?? null;
+
+            if (! is_array($timerState)) {
+                continue;
+            }
+
+            $task->setAttribute('kanban_timer_tracked_seconds', (int) ($timerState['trackedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_elapsed_seconds', (int) ($timerState['elapsedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_current_seconds', (int) ($timerState['currentSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_estimated_seconds', (int) ($timerState['estimatedSeconds'] ?? 0));
+            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-bgray-500 dark:text-bgray-300'));
+            $task->setAttribute('kanban_timer_started_at_iso', $timerState['runningTimeLog']?->started_at?->toISOString());
+            $task->setAttribute('kanban_timer_is_running', $timerState['runningTimeLog'] !== null);
+        }
     }
 
     private function buildKanbanBaseQuery(
@@ -274,6 +315,14 @@ class TaskServices
 
             if (array_key_exists('tag_ids', $validated)) {
                 $this->syncTags($task, $validated['tag_ids'] ?? []);
+            }
+
+            if (!empty($validated['handoff_request_id'])) {
+                $this->handoffServices->markAsAssigned(
+                    (int) $validated['handoff_request_id'],
+                    $task,
+                    auth()->user()
+                );
             }
 
             return $task;
@@ -595,23 +644,51 @@ class TaskServices
             ]);
 
             $stoppedByNonAssignee = $this->requiresNonAssigneeStopConfirmation($task, $actor);
-            $log = TaskTimeLog::where('task_id', $task->id)->where('is_running', 1)->latest()->first();
+            $runningLogQuery = TaskTimeLog::query()
+                ->where('task_id', $task->id)
+                ->where('is_running', 1);
 
-            if (!$log) {
+            $log = null;
+
+            if ($task->current_assignee_id) {
+                $log = (clone $runningLogQuery)
+                    ->where('user_id', $task->current_assignee_id)
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
+                $log = (clone $runningLogQuery)
+                    ->where('user_id', $actor->id)
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
+                $log = $runningLogQuery
+                    ->latest('started_at')
+                    ->first();
+            }
+
+            if (! $log) {
                 throw new \RuntimeException('Timer not found');
             }
 
-            $duration = $log->started_at->diffInSeconds(now());
+            $stoppedAt = now();
+            $duration = max(0, $log->started_at?->diffInSeconds($stoppedAt) ?? 0);
 
             // Update time log
             $log->update([
-                'ended_at' => now(),
+                'ended_at' => $stoppedAt,
                 'duration_seconds' => $duration,
                 'is_running' => 0,
             ]);
 
             // Update assignment log
-            TaskAssignmentLog::where('id', $log->task_assignment_log_id)->increment('worked_time_seconds', $duration);
+            if ($log->task_assignment_log_id) {
+                TaskAssignmentLog::where('id', $log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
 
             // Update task total time
             $task->increment('actual_time_seconds', $duration);
@@ -724,6 +801,12 @@ class TaskServices
             return false;
         }
 
+        $task->load([
+            'currentAssignee.details',
+            'project.teamLeader',
+            'projectMilestone:id,owner_id',
+        ]);
+
         // if task is not assigned, no one can stop timer
         if ($task->current_assignee_id === null) {
             return false;
@@ -735,29 +818,34 @@ class TaskServices
         }
 
         // Current assignee
-        if ($task->current_assignee_id === $user->id) {
+        if ((int) $task->current_assignee_id === (int) $user->id) {
             return true;
         }
 
-        // Load assignee details safely
-        $assignee = $task->currentAssignee?->loadMissing('details');
-
-        if (!$assignee || !$assignee->details) {
-            return false;
-        }
-
-        // Manager of assignee
-        if ($assignee->details->manager_id === $user->id) {
-            return true;
-        }
-
-        // Reporter of assignee (optional, if needed)
-        if ($assignee->details->reporter_id === $user->id) {
+        /**
+         * Allow if assignee is accessible by this user
+         * Covers:
+         * user.view_all_users permission
+         * users added by this user
+         * nested reporter hierarchy users
+         * direct manager users
+         */
+        if (
+            User::query()
+            ->accessibleBy($user)
+            ->whereKey($task->current_assignee_id)
+            ->exists()
+        ) {
             return true;
         }
 
         // Allow if project team leader
-        if ($task->project->teamLeader->id === $user->id) {
+        if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {
+            return true;
+        }
+
+        // Allow if milestone owner
+        if ((int) ($task->projectMilestone?->owner_id ?? 0) === (int) $user->id) {
             return true;
         }
 
@@ -971,5 +1059,28 @@ class TaskServices
             'task_id' => (int) $task->id,
             'total_seconds' => $nextTotalSeconds,
         ];
+    }
+
+    /** Task dropdown options */
+    public function getTaskDropdownOptions($user, int $projectId, ?int $milestoneId = null, ?int $sprintId = null)
+    {
+        return Task::query()
+            ->accessibleBy($user)
+            ->where('project_id', $projectId)
+            ->when($milestoneId, function ($query) use ($milestoneId) {
+                $query->where('project_milestone_id', $milestoneId);
+            })
+            ->when($sprintId, function ($query) use ($sprintId) {
+                $query->where('project_sprint_id', $sprintId);
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'name' => $task->name,
+                ];
+            })
+            ->values();
     }
 }

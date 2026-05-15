@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
+use App\Services\Task\RunningTaskNavbarService;
 use App\Services\TaskFilterService;
 use App\Services\TaskFormService;
 use App\Services\TaskQueryService;
@@ -890,7 +891,7 @@ class TaskController extends Controller
 
     /** Task timer functions */
 
-    public function start(Task $task, TaskServices $taskServices): JsonResponse
+    public function start(Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
         $startRestriction = $taskServices->getStartRestriction($task);
 
@@ -912,10 +913,13 @@ class TaskController extends Controller
 
         $taskServices->startTimer($task, auth()->id());
 
-        return response()->json(['message' => 'Timer started'], Response::HTTP_OK);
+        return response()->json([
+            'message' => 'Timer started',
+            'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
+        ], Response::HTTP_OK);
     }
 
-    public function stop(Request $request, Task $task, TaskServices $taskServices): JsonResponse
+    public function stop(Request $request, Task $task, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
         try {
             $user = $request->user();
@@ -940,14 +944,18 @@ class TaskController extends Controller
 
             $log = $taskServices->stopTimer($task, $user);
 
-            return response()->json(['message' => 'Timer stopped', 'data' => $log], Response::HTTP_OK);
+            return response()->json([
+                'message' => 'Timer stopped',
+                'data' => $log,
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser($user?->id),
+            ], Response::HTTP_OK);
         } catch (\RuntimeException $e) {
 
             return response()->json(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         }
     }
 
-    public function transitionStatus(Request $request, TaskServices $taskServices): JsonResponse
+    public function transitionStatus(Request $request, TaskServices $taskServices, RunningTaskNavbarService $runningTaskNavbarService): JsonResponse
     {
         $validator = validator($request->all(), [
             'status_id' => ['required', 'integer'],
@@ -978,14 +986,17 @@ class TaskController extends Controller
             $task = $transitionResult['task'];
 
             $task = $this->loadTaskForDetail($task);
+            $taskServices->hydrateKanbanTimerState(collect([$task]), 'current_assignee');
             $response = [
                 'success' => true,
                 'message' => 'Task status updated successfully.',
+                'status_type' => $task->status?->type,
                 'html' => view('tasks.kanban._card', [
                     'task' => $task,
                     'status' => $task->status,
                     'priorities' => config('project_constants.task_priorities', []),
                 ])->render(),
+                'navbar_timer' => $runningTaskNavbarService->getFrontendStateForUser(auth()->id()),
             ];
 
             if (! empty($transitionResult['timer_stopped'])) {
@@ -1031,5 +1042,26 @@ class TaskController extends Controller
                 'message' => 'Something went wrong while changing task status.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /** Task helper methods */
+    public function dropdownOptions(Request $request, TaskServices $taskServices)
+    {
+        $validated = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'project_milestone_id' => ['nullable', 'exists:project_milestones,id'],
+            'project_sprint_id' => ['nullable', 'exists:project_sprints,id'],
+        ]);
+
+        $tasks = $taskServices->getTaskDropdownOptions(
+            user: $request->user(),
+            projectId: (int) $validated['project_id'],
+            milestoneId: $validated['project_milestone_id'] ?? null,
+            sprintId: $validated['project_sprint_id'] ?? null,
+        );
+
+        return response()->json([
+            'options' => $tasks,
+        ]);
     }
 }

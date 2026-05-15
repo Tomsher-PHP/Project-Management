@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\NotificationController;
@@ -72,6 +74,15 @@ Route::middleware(['auth'])->group(function () {
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
 
+    Route::get('/user-analytics', [AnalyticsController::class, 'index'])->name('user.analytics');
+    Route::get('/user-analytics/summary', [AnalyticsController::class, 'summary'])->name('user.analytics.summary');
+    Route::get('/user-analytics/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])
+        ->name('user.analytics.chart.task-status');
+    Route::get('/user-analytics/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])
+        ->name('user.analytics.chart.task-priority');
+    Route::get('/user-analytics/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])
+        ->name('user.analytics.chart.time-comparison');
+
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');
     Route::resource('roles', RolePermissionController::class)->middleware('permission.type:role.view')->only(['index']);
@@ -96,14 +107,14 @@ Route::middleware(['auth'])->group(function () {
     )->name('users.change.password');
 
     Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])
-    ->name('users.modal.update');
+        ->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
-    
+
     // End of User Management Routes
 
     // Settings Routes
@@ -460,6 +471,88 @@ Route::middleware(['auth'])->group(function () {
         });
 
     });
+
+    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
+    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);
+    Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.edit');
+    Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.update');
+    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.delete', 'can:delete,project'])->only(['destroy']);
+    // End Project Routes
+
+    // Task Routes
+    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
+
+    Route::prefix('tasks/{task}')->group(function () {
+        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
+        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
+
+        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
+        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
+        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+
+        // Task notes and attachments routes
+        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
+        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
+        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+
+        // Task timer routes
+        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
+        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
+
+        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+    });
+
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
+    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
+    Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
+    Route::get('tasks/dropdown-options', [TaskController::class, 'dropdownOptions'])->name('tasks.dropdown-options');
+
+    // Task status, order change route
+    Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
+    Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
+    // End Task Routes
+
+    // Task request routes
+    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
+    Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.bulk-action');
+    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.requests.action');
+    // End Task request routes
+
+    // Task time log change request routes
+    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
+    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
+    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.bulk-action');
+    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('tasks.time-log-change-requests.action');
+    // End Task time log change request routes
+
+    // Handoff Request routes
+    Route::prefix('handoff-requests')->group(function () {
+        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('handoff_requests.index');
+        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('handoff_requests.store');
+        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('handoff_requests.assign');
+        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('handoff_requests.note');
+    });
+    // End Handoff Request routes
+
+    // Activity Log Route
+    Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
+    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
+    Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
+    Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+
+    // User hierarchy tree view route
+    Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
+});
 
 Route::get('api-test', function () {
     dd('test for api');

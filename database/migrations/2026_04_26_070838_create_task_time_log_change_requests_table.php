@@ -11,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_time_log_change_requests', function (Blueprint $table) {
+        $statuses = config('project_constants.request_statuses', []);
+
+        Schema::create('task_time_log_change_requests', function (Blueprint $table) use ($statuses) {
             $table->id();
 
             $table->foreignId('task_time_log_id')->constrained()->cascadeOnDelete();
@@ -28,7 +30,7 @@ return new class extends Migration
             $table->text('reason')->nullable();
 
             // Status
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', $statuses)->default('pending');
 
             // Approval
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
