@@ -12,6 +12,14 @@ use Illuminate\Support\Carbon;
 
 class AnalyticsController extends Controller
 {
+    protected string $pageTitle;
+
+    public function __construct()
+    {
+        $this->pageTitle = 'Analytics';
+        view()->share(['pageTitle' => $this->pageTitle]);
+    }
+
     public function index(Request $request, ProjectSummaryService $summaryService, UserService $userService)
     {
         $user = $request->user();
