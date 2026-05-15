@@ -23,7 +23,7 @@ class ProjectStatusSeeder extends Seeder
             ['name' => 'Active', 'code' => 'active', 'color' => '#007bff', 'type' => 'in_progress', 'is_completed' => 0],
             ['name' => 'On Hold', 'code' => 'on_hold', 'color' => '#ffc107', 'type' => 'open', 'is_completed' => 0],
             ['name' => 'Completed', 'code' => 'completed', 'color' => '#28a745', 'type' => 'closed', 'is_completed' => 1],
-            ['name' => 'Cancelled', 'code' => 'cancelled', 'color' => '#dc3545', 'type' => 'closed', 'is_completed' => 1],
+            ['name' => 'Cancelled', 'code' => 'cancelled', 'color' => '#dc3545', 'type' => 'archieve', 'is_completed' => 0],
         ];
 
         foreach ($statuses as $key => $status) {

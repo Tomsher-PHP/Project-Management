@@ -98,3 +98,4 @@ npm run dev
 
 composer require maatwebsite/excel
 php artisan make:export ProjectReportExport --model=Project
+composer dump-autoload

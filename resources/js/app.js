@@ -29,6 +29,8 @@ import { initTimepicker } from './components/timepicker';
 import { initWeekPicker } from './components/weekpicker';
 import { initTaskTimer } from './modules/task-timer';
 import { initNotifications } from './modules/notifications';
+import './column-manager';
+import './table-search';
 
 window.Swal = Swal;
 window.Alert = Alert;

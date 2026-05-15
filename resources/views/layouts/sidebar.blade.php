@@ -391,7 +391,7 @@
 
                                     @if ($canViewTimeTrackingReports)
                                         <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                            <a href="http://127.0.0.1:8000/schedule-shift">
+                                            <a href="{{ route('reports.time.tracking.report') }}">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
@@ -409,7 +409,7 @@
 
                                     @if ($canViewDailyReports)
                                         <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                            <a href="http://127.0.0.1:8000/schedule-shift">
+                                            <a href="{{ route('reports.daily') }}">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
@@ -535,7 +535,7 @@
 
                                     @if ($canViewMilestoneReports)
                                         <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                            <a href="http://127.0.0.1:8000/schedule-shift">
+                                            <a href="{{ route('reports.milestones.report') }}">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
@@ -553,7 +553,7 @@
 
                                     @if ($canViewSprintReports)
                                         <li class="item py-[11px] text-bgray-900 dark:text-white">
-                                            <a href="http://127.0.0.1:8000/schedule-shift">
+                                            <a href="{{ route('reports.sprints.report') }}">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">

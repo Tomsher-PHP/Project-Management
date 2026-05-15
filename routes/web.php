@@ -265,163 +265,199 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/countries/search', [CommonController::class, 'search'])->name('countries.search');
     // End Common Routes
 
-    // Project Routes
-    Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
-        Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
+        // Project Routes
+        Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
+            Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
 
-        // Project task routes
-        Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
-        Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
-        Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
-        Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
-        Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
-        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit'])->name('projects.tasks.update');
-        Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
-        Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
+            // Project task routes
+            Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
+            Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
+            Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->middleware('permission.type:project.view')->name('projects.tasks.parent-options');
+            Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
+            Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
+            Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit'])->name('projects.tasks.update');
+            Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
+            Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
 
-        // Comments and activity log routes
-        Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
-        Route::get('comments-modal', [ProjectController::class, 'commentsModal'])->middleware('permission.type:project.view')->name('projects.comments.modal');
-        Route::post('comments', [ProjectController::class, 'storeComment'])->middleware('permission.type:project.view')->name('projects.comments.store');
+            // Comments and activity log routes
+            Route::get('activity-modal', [ProjectController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.activity.modal');
+            Route::get('comments-modal', [ProjectController::class, 'commentsModal'])->middleware('permission.type:project.view')->name('projects.comments.modal');
+            Route::post('comments', [ProjectController::class, 'storeComment'])->middleware('permission.type:project.view')->name('projects.comments.store');
 
-        // Project notes and attachments routes
-        Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
-        Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
-        Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
+            // Project notes and attachments routes
+            Route::post('notes', [ProjectController::class, 'storeNote'])->middleware('permission.type:project.add_notes_files')->name('projects.storeNote');
+            Route::delete('notes/{note}', [ProjectController::class, 'deleteNote'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNote');
+            Route::delete('notes/{note}/attachments/{attachment}', [ProjectController::class, 'deleteNoteAttachment'])->middleware('permission.type:project.remove_notes_files')->name('projects.deleteNoteAttachment');
 
-        Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
-        Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
+            Route::patch('project-status', [ProjectController::class, 'updateProjectStatus'])->middleware(['permission.type:project.status_change', 'can:update,project'])->name('projects.updateProjectStatus');
+            Route::patch('project-stage', [ProjectController::class, 'updateProjectStage'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.updateProjectStage');
 
-        // Project payment status route
-        Route::match(['patch', 'post'], 'payment-status', [ProjectPaymentController::class, 'addProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.addProjectPaymentStatus');
-        Route::patch('payments/{payment}', [ProjectPaymentController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
+            // Project payment status route
+            Route::match(['patch', 'post'], 'payment-status', [ProjectPaymentController::class, 'addProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.addProjectPaymentStatus');
+            Route::patch('payments/{payment}', [ProjectPaymentController::class, 'updateProjectPaymentStatus'])->middleware(['permission.type:project.add_payment_status', 'can:update,project'])->name('projects.updateProjectPaymentStatus');
 
-        // Project milestone and sprint routes
-        Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');
-        Route::get('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.milestones.sprints.index');
-        Route::post('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.milestones.sprints.store');
-        Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
-        Route::delete('sprints/{projectSprint}', [ProjectSprintController::class, 'destroy'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.destroy');
-        Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.restore');
-        Route::patch('milestones/{projectMilestone}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.milestones.sprints.reorder');
-        Route::patch('milestones/reorder', [ProjectMilestoneController::class, 'reorder'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.reorder');
-        Route::put('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'update'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.update');
-        Route::delete('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'destroy'])->middleware(['permission.type:project_milestone.delete', 'can:update,project'])->name('projects.milestones.destroy');
-        Route::post('milestones/{projectMilestone}/restore', [ProjectMilestoneController::class, 'restore'])->middleware(['permission.type:project_milestone.restore', 'can:update,project'])->name('projects.milestones.restore');
+            // Project milestone and sprint routes
+            Route::post('milestones', [ProjectMilestoneController::class, 'store'])->middleware(['permission.type:project_milestone.create', 'can:update,project'])->name('projects.milestones.store');
+            Route::get('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'index'])->middleware('permission.type:project.view')->name('projects.milestones.sprints.index');
+            Route::post('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.milestones.sprints.store');
+            Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
+            Route::delete('sprints/{projectSprint}', [ProjectSprintController::class, 'destroy'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.destroy');
+            Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.restore');
+            Route::patch('milestones/{projectMilestone}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.milestones.sprints.reorder');
+            Route::patch('milestones/reorder', [ProjectMilestoneController::class, 'reorder'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.reorder');
+            Route::put('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'update'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.update');
+            Route::delete('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'destroy'])->middleware(['permission.type:project_milestone.delete', 'can:update,project'])->name('projects.milestones.destroy');
+            Route::post('milestones/{projectMilestone}/restore', [ProjectMilestoneController::class, 'restore'])->middleware(['permission.type:project_milestone.restore', 'can:update,project'])->name('projects.milestones.restore');
 
-        // Scope file routes
-        Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');
-        Route::delete('scope-files/{fileId}', [ProjectController::class, 'deleteScopeFile'])->middleware('permission.type:project.remove_scope')->name('projects.deleteScopeFile');
+            // Scope file routes
+            Route::post('scope-files', [ProjectController::class, 'uploadScopeFile'])->middleware('permission.type:project.add_scope')->name('projects.uploadScopeFile');
+            Route::delete('scope-files/{fileId}', [ProjectController::class, 'deleteScopeFile'])->middleware('permission.type:project.remove_scope')->name('projects.deleteScopeFile');
 
-        // Team management within project
-        Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_team')->name('projects.addMember');
-        Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
-        Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
-        Route::patch('members/{userId}/role', [ProjectMemberController::class, 'updateRole'])->middleware('permission.type:project.remove_team')->name('projects.updateMemberRole');
+            // Team management within project
+            Route::post('members', [ProjectMemberController::class, 'addMember'])->middleware('permission.type:project.add_team')->name('projects.addMember');
+            Route::delete('members/{userId}', [ProjectMemberController::class, 'removeMember'])->middleware('permission.type:project.remove_team')->name('projects.removeMember');
+            Route::patch('members/{userId}/toggle-status', [ProjectMemberController::class, 'toggleStatus'])->middleware('permission.type:project.remove_team')->name('projects.toggleStatus');
+            Route::patch('members/{userId}/role', [ProjectMemberController::class, 'updateRole'])->middleware('permission.type:project.remove_team')->name('projects.updateMemberRole');
 
-        // Assigned checklist routes
-        Route::get('members/{userId}/checklists', [ProjectChecklistController::class, 'show'])->middleware('permission.type:project.add_team')->name('projects.checklists.show');
-        Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
-        Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
-        Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
-        Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
-    });
+            // Assigned checklist routes
+            Route::get('members/{userId}/checklists', [ProjectChecklistController::class, 'show'])->middleware('permission.type:project.add_team')->name('projects.checklists.show');
+            Route::put('members/{userId}/checklists', [ProjectChecklistController::class, 'update'])->middleware('permission.type:project.add_team')->name('projects.checklists.update');
+            Route::post('checklists/render-workspace', [ProjectChecklistController::class, 'renderWorkspaceChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderWorkspace');
+            Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
+            Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
+        });
 
-    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
-    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);
-    Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.edit');
-    Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.update');
-    Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.delete', 'can:delete,project'])->only(['destroy']);
-    // End Project Routes
+        Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
+        Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);
+        Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.edit');
+        Route::put('projects/{project}', [ProjectController::class, 'update'])->middleware(['permission.type:project.edit', 'can:update,project'])->name('projects.update');
+        Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.delete', 'can:delete,project'])->only(['destroy']);
+        // End Project Routes
 
-    // Task Routes
-    Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
+        // Task Routes
+        Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
-    Route::prefix('tasks/{task}')->group(function () {
-        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
-        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
+        Route::prefix('tasks/{task}')->group(function () {
+            Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
+            Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
 
-        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
-        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
-        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+            Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
+            Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
+            Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
 
-        // Task notes and attachments routes
-        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
-        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
-        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+            // Task notes and attachments routes
+            Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
+            Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
+            Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
 
-        // Task timer routes
-        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
-        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
+            // Task timer routes
+            Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
+            Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
 
-        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
-    });
+            Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+        });
 
-    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
-    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
-    Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
-    Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
+        Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
+        Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.create'])->only(['create', 'store']);
+        Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
+        Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
 
-    // Task status, order change route
-    Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
-    Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
-    // End Task Routes
+        // Task status, order change route
+        Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');
+        Route::patch('/tasks/transition-status', [TaskController::class, 'transitionStatus'])->name('tasks.transition-status');
+        // End Task Routes
 
-    // Task request routes
-    Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
-    Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
-    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.requests.bulk-action');
-    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.requests.action');
-    // End Task request routes
+        // Task request routes
+        Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
+        Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
+        Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
+            ->whereIn('action', ['approve', 'reject'])
+            ->name('tasks.requests.bulk-action');
+        Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
+            ->whereIn('action', ['approve', 'reject'])
+            ->name('tasks.requests.action');
+        // End Task request routes
 
-    // Task time log change request routes
-    Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
-    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
-    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.time-log-change-requests.bulk-action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.time-log-change-requests.action');
-    // End Task time log change request routes
+        // Task time log change request routes
+        Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
+        Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
+        Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+            ->whereIn('action', ['approve', 'reject'])
+            ->name('tasks.time-log-change-requests.bulk-action');
+        Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
+            ->whereIn('action', ['approve', 'reject'])
+            ->name('tasks.time-log-change-requests.action');
+        // End Task time log change request routes
 
-    // Activity Log Route
-    Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
-    Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
-    Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
-    Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
+        // Activity Log Route
+        Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');
+        Route::get('activity-log/{activity}/details', [ActivityLogController::class, 'details'])->name('activity.log.details');
+        Route::delete('activity-log/bulk-delete', [ActivityLogController::class, 'bulkDelete'])->middleware('permission.type:activity_log.delete')->name('activity.log.bulkDelete');
+        Route::delete('activity-log/{activity}', [ActivityLogController::class, 'destroy'])->middleware('permission.type:activity_log.delete')->name('activity.log.destroy');
 
-    // User hierarchy tree view route
-    Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
+        // User hierarchy tree view route
+        Route::get('user-tree-view', [UserHierarchyController::class, 'index'])->middleware('permission.type:user.tree_view')->name('user.tree_view');
 
-    Route::prefix('reports')->group(function () {
+        
+        Route::prefix('reports')->group(function () {
 
-    // PROJECT REPORT
-    Route::get('/projects-report', [ReportController::class, 'project'])
-        ->middleware('permission.type:reports.project_view')->name('projects.report');
+         Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])
+                    ->name('reports.projects.by-flow');
 
-        Route::get('/reports/project/export', [ReportController::class, 'export'])->name('reports.project.export');
+            // PROJECT REPORT
+            Route::get('/projects-report', [ReportController::class, 'project'])
+                ->middleware('permission.type:reports.project_view')->name('projects.report');
 
+            Route::get('/reports/project/export', [ReportController::class, 'export'])
+                        ->middleware('permission.type:reports.project_export')->name('reports.project.export');
 
-    // TASK REPORT
-    Route::get('/tasks-report', [ReportController::class, 'task'])
-        ->middleware('permission.type:reports.task_view')->name('tasks.report');
+            // TASK REPORT
+            Route::get('/tasks-report', [ReportController::class, 'task'])
+                ->middleware('permission.type:reports.task_view')->name('tasks.report');
 
-    Route::get('/tasks/export', [ReportController::class, 'taskExport'])
-        ->middleware('permission.type:reports.task_export');
+            Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])
+                ->middleware('permission.type:reports.task_export')->name('reports.task.export');
 
+            // TIME TRACKING REPORT
+            Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])
+                ->middleware('permission.type:reports.time_tracking_view')
+                ->name('reports.time.tracking.report');
 
-    // ATTENDANCE REPORT
-    Route::get('/attendance-report', [ReportController::class, 'attendance'])
-        ->middleware('permission.type:reports.attendance_view');
+            Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])
+                ->middleware('permission.type:reports.time_tracking_export')
+                ->name('reports.time.tracking.export');
 
-    Route::get('/attendance/export', [ReportController::class, 'attendanceExport'])
-        ->middleware('permission.type:reports.attendance_export');
-});
+            // MILESTONE REPORT
+            Route::get('/milestones-report', [ReportController::class, 'milestone'])
+                ->middleware('permission.type:reports.milestone_view')
+                ->name('reports.milestones.report');
+
+            Route::get('/reports/milestones/export', [ReportController::class, 'milestoneExport'])
+                ->middleware('permission.type:reports.milestone_export')
+                ->name('reports.milestone.export');
+
+            // SPRINT REPORT
+            Route::get('/sprints-report', [ReportController::class, 'sprint'])
+                ->middleware('permission.type:reports.sprint_view')
+                ->name('reports.sprints.report');
+
+            Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])
+                ->middleware('permission.type:reports.sprint_export')
+                ->name('reports.sprint.export');
+
+            // DAILY REPORT
+            Route::get(
+                '/daily-report',
+                [ReportController::class, 'daily']
+            )->middleware('permission.type:reports.daily_view')
+            ->name('reports.daily');
+
+            Route::get(
+                '/reports/daily/export',
+                [ReportController::class, 'dailyExport']
+            )->middleware('permission.type:reports.daily_export')
+            ->name('reports.daily.export');
+        });
 
     });
 

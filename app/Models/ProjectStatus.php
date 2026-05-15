@@ -13,6 +13,13 @@ class ProjectStatus extends Model
 {
     use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
+    public const TYPE_ARCHIEVE = 'archieve';
+    public const TYPE_OPEN = 'open';
+    public const TYPE_PROGRESS = 'in_progress';
+    public const TYPE_CLOSED = 'closed';
+
+
+
     protected $fillable = [
         'name',
         'code',

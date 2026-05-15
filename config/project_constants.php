@@ -44,6 +44,13 @@ return [
         'linear' => 'Linear',
     ],
 
+    'project_status_types' => [
+        'open' => 'Open',
+        'in_progress' => 'In progress',
+        'closed' => 'Closed',
+        'archived' => 'Archived',
+    ],
+
     'task_status_types' => [
         'pending' => 'Pending', // Default status for new tasks
         'active' => 'Active', // Tasks that are currently being worked on
