@@ -216,7 +216,6 @@ class ProjectSummaryService
             $query->where('tasks.project_id', $projectId);
         }
 
-        // $query = collect([]);
         // Get grouped counts by status_id
         $taskCounts = $query->selectRaw('status_id, COUNT(DISTINCT tasks.id) as count')
             ->groupBy('status_id')
@@ -256,19 +255,70 @@ class ProjectSummaryService
     }
 
     /**
-     * Get task priority breakdown chart data (Dummy).
+     * Get task priority breakdown chart data.
      *
      * @param User $authUser
      * @param User|null $selectedUser
+     * @param int|null $projectId
      * @return array
      */
-    public function getTaskPriorityChart(User $authUser, ?User $selectedUser = null): array
+    public function getTaskPriorityChart(User $authUser, ?User $selectedUser = null, ?int $projectId = null): array
     {
-        // Note: Real logic later must exclude completed tasks.
+        $user = $selectedUser ?: $authUser;
+        $priorities = config('project_constants.task_priorities', []);
+
+        // Map UI background classes to hex colors from public/assets/css/output.css
+        $classColorMap = [
+            'bg-error-300' => '#DD3333',
+            'bg-orange' => '#FF784B',
+            'bg-primary' => '#3B82F6',
+            'bg-success-400' => '#16A34A',
+        ];
+
+        $query = Task::query()
+            ->join('task_statuses', 'tasks.status_id', '=', 'task_statuses.id')
+            ->where('tasks.current_assignee_id', $user->id)
+            ->where('tasks.request_status', '!=', 'rejected')
+            ->where('task_statuses.is_completed', 0)
+            ->whereNull('tasks.deleted_at')
+            ->whereNull('task_statuses.deleted_at');
+
+        if ($projectId) {
+            $query->where('tasks.project_id', $projectId);
+        }
+
+        $taskCounts = $query->selectRaw('tasks.priority, COUNT(DISTINCT tasks.id) as count')
+            ->groupBy('tasks.priority')
+            ->pluck('count', 'priority');
+
+        $labels = [];
+        $values = [];
+        $colors = [];
+        $items = [];
+
+        foreach ($priorities as $key => $config) {
+            $count = (int) ($taskCounts[$key] ?? 0);
+            $bgClass = $config['bg_class'] ?? '';
+            $color = $classColorMap[$bgClass] ?? ($config['color'] ?? '#CBD5E1');
+            $label = $config['label'] ?? ucfirst($key);
+
+            $labels[] = $label;
+            $values[] = $count;
+            $colors[] = $color;
+
+            $items[] = [
+                'priority' => $key,
+                'label' => $label,
+                'count' => $count,
+                'color' => $color,
+            ];
+        }
+
         return [
-            'labels' => ['Low', 'Medium', 'High', 'Urgent'],
-            'values' => [3, 7, 5, 2],
-            'colors' => ['#94a3b8', '#3b82f6', '#f59e0b', '#ef4444'],
+            'labels' => $labels,
+            'values' => $values,
+            'colors' => $colors,
+            'items' => $items, // Included to match requested format while keeping chart compatibility
         ];
     }
 

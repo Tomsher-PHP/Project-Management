@@ -1,4 +1,4 @@
-<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="task-priority" data-task-priority-chart-url="{{ route(request()->routeIs('user.analytics') ? 'user.analytics.chart.task-priority' : 'user.workspace.chart.task-priority') }}">
+<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="task-priority" data-task-priority-chart-url="{{ route('analytics.chart.task-priority') }}">
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Task Priority Breakdown</h4>
     </div>

@@ -10,8 +10,6 @@ use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class UserService
@@ -241,7 +239,7 @@ class UserService
         $accessibleIds = User::accessibleBy($authUser)->select('id');
 
         return User::query()
-            ->when(!empty($includeIds), fn ($query) => $query->withTrashed())
+            ->when(!empty($includeIds), fn($query) => $query->withTrashed())
             ->select('id', 'name', 'email', 'is_active')
             ->with('primaryAttachment')
             ->where(function ($q) use ($accessibleIds, $includeIds) {
@@ -267,6 +265,16 @@ class UserService
             })
             ->orderBy('name')
             ->get();
+    }
+
+    public function getNavSelectableUsers(User $authUser)
+    {
+        return User::query()
+            ->accessibleBy($authUser)
+            ->where('id', '!=', $authUser->id)
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     public function updateModalUser(User $user, array $data)

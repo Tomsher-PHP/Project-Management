@@ -12,6 +12,7 @@ use App\Services\TaskFilterService;
 use App\Services\TaskFormService;
 use App\Services\TaskQueryService;
 use App\Services\TaskServices;
+use App\Services\UserService;
 use App\Services\UserTimelineService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,7 +34,7 @@ class UserWorkspaceController extends Controller
         view()->share(['pageTitle' => $this->pageTitle]);
     }
 
-    public function index(Request $request, TaskServices $taskServices, TaskFilterService $taskFilterService, TaskFormService $taskFormService)
+    public function index(Request $request, TaskServices $taskServices, TaskFilterService $taskFilterService, TaskFormService $taskFormService, UserService $userService)
     {
         $user = $request->user();
         $workspaceUser = $this->resolveWorkspaceUser($request);
@@ -79,7 +80,7 @@ class UserWorkspaceController extends Controller
             'kanbanSortOptions' => $taskServices->getKanbanSortOptions(),
             'priorities' => config('project_constants.task_priorities', []),
             'priorityOptions' => $priorityOptions,
-            'workspaceSelectableUsers' => $this->getWorkspaceSelectableUsers($user),
+            'workspaceSelectableUsers' => $userService->getNavSelectableUsers($user),
             'workspaceSelectedUserId' => (int) $workspaceUser->id === (int) $user->id ? '' : (string) $workspaceUser->id,
             'taskCreateDependencies' => $taskCreateDependencies,
             'workspaceFilterCount' => $workspaceFilterCount,
@@ -217,15 +218,6 @@ class UserWorkspaceController extends Controller
         abort_unless($workspaceUser, Response::HTTP_FORBIDDEN, 'You are not allowed to access this workspace user.');
 
         return $workspaceUser;
-    }
-
-    private function getWorkspaceSelectableUsers(User $authUser)
-    {
-        return User::query()
-            ->accessibleBy($authUser)
-            ->where('id', '!=', $authUser->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
     }
 
     private function buildTimelineViewData(User $workspaceUser, Carbon $selectedDate, bool $isOwnWorkspace = true): array

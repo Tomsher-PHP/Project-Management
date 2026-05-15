@@ -75,7 +75,7 @@ return [
         ],
         'medium' => [
             'label' => 'Medium',
-            'color' => 'yellow',
+            'color' => 'blue',
             'bg_class' => 'bg-primary',
             'bg_text' => 'text-white',
             'text_class' => 'text-blue-500',

@@ -1,4 +1,4 @@
-<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="time-comparison" data-time-comparison-chart-url="{{ route(request()->routeIs('user.analytics') ? 'user.analytics.chart.time-comparison' : 'user.workspace.chart.time-comparison') }}">
+<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="time-comparison" data-time-comparison-chart-url="{{ route('analytics.chart.time-comparison') }}">
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-2.5 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Time Comparison</h4>
         <input type="date" value="{{ now()->toDateString() }}" class="h-8 rounded-lg border border-bgray-300 bg-white px-2 text-xs font-semibold text-bgray-700 outline-none focus:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-workspace-time-chart-date>

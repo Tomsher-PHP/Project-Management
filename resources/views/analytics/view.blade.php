@@ -25,5 +25,5 @@
 
 @push('scripts')
     @vite('resources/js/modules/workspace/workspace-user-selector.js')
-    @vite('resources/js/modules/workspace/summary.js')
+    @vite('resources/js/modules/analytics/summary.js')
 @endpush

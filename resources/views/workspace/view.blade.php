@@ -66,5 +66,4 @@
     @vite('resources/js/modules/workspace/workspace-user-selector.js')
     @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
     @vite('resources/js/modules/tasks/handoff.js')
-    @vite('resources/js/modules/workspace/summary.js')
 @endpush

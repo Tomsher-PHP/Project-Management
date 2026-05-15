@@ -1,6 +1,6 @@
-<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="task-status" data-task-status-chart-url="{{ route(request()->routeIs('user.analytics') ? 'user.analytics.chart.task-status' : 'user.workspace.chart.task-status') }}">
+<div class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-chart="task-status" data-task-status-chart-url="{{ route('analytics.chart.task-status') }}">
     <div class="flex items-center justify-between border-b border-bgray-200 bg-bgray-50/80 px-5 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
-        <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Task Status Distribution</h4>
+        <h4 class="text-sm font-bold text-bgray-900 dark:text-white">Task Status Breakdown</h4>
     </div>
     <div class="flex min-h-[320px] flex-col items-center justify-center p-5">
         <div class="relative h-[180px] w-[180px]">

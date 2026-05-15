@@ -74,14 +74,13 @@ Route::middleware(['auth'])->group(function () {
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
 
-    Route::get('/user-analytics', [AnalyticsController::class, 'index'])->name('user.analytics');
-    Route::get('/user-analytics/summary', [AnalyticsController::class, 'summary'])->name('user.analytics.summary');
-    Route::get('/user-analytics/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])
-        ->name('user.analytics.chart.task-status');
-    Route::get('/user-analytics/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])
-        ->name('user.analytics.chart.task-priority');
-    Route::get('/user-analytics/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])
-        ->name('user.analytics.chart.time-comparison');
+    Route::prefix('user-analytics')->group(function () {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('user.analytics');
+        Route::get('/summary', [AnalyticsController::class, 'summary'])->name('analytics.summary');
+        Route::get('/chart/task-status', [AnalyticsController::class, 'taskStatusChart'])->name('analytics.chart.task-status');
+        Route::get('/chart/task-priority', [AnalyticsController::class, 'taskPriorityChart'])->name('analytics.chart.task-priority');
+        Route::get('/chart/time-comparison', [AnalyticsController::class, 'timeComparisonChart'])->name('analytics.chart.time-comparison');
+    });
 
     // Role & Permission Routes
     Route::patch('/roles/toggle-status', [RolePermissionController::class, 'toggleStatus'])->name('roles.toggleStatus')->middleware('permission.type:role.edit');
@@ -92,22 +91,11 @@ Route::middleware(['auth'])->group(function () {
     // End of Role & Permission Routes
 
     // User Management Routes
-    Route::post(
-        '/users/notification-settings',
-        [UserController::class, 'updateNotificationSettings']
-    )->name('users.notification.settings');
-    Route::post(
-        '/users/general-settings',
-        [UserController::class, 'updateGeneralSettings']
-    )->name('users.general.settings');
+    Route::post('/users/notification-settings', [UserController::class, 'updateNotificationSettings'])->name('users.notification.settings');
+    Route::post('/users/general-settings', [UserController::class, 'updateGeneralSettings'])->name('users.general.settings');
+    Route::post('/users/change-password', [UserController::class, 'changePassword'])->name('users.change.password');
 
-    Route::post(
-        '/users/change-password',
-        [UserController::class, 'changePassword']
-    )->name('users.change.password');
-
-    Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])
-        ->name('users.modal.update');
+    Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])->name('users.modal.update');
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);

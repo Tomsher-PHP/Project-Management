@@ -1,4 +1,4 @@
-<div class="custom-scroll flex items-center gap-3 overflow-x-auto py-0 dark:bg-darkblack-700" data-workspace-summary-section data-workspace-summary-url="{{ route(request()->routeIs('user.analytics') ? 'user.analytics.summary' : 'user.workspace.summary') }}">
+<div class="custom-scroll flex items-center gap-3 overflow-x-auto py-0 dark:bg-darkblack-700" data-workspace-summary-section data-workspace-summary-url="{{ route('analytics.summary') }}">
     @foreach ($workspaceSummaryTiles as $tile)
         <div class="group relative flex min-w-[160px] flex-1 items-center gap-3 shrink-0 rounded-xl border border-bgray-300 bg-white p-3 transition-all duration-300 hover:border-[#d8e4f6] hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] dark:border-darkblack-400 dark:bg-darkblack-600" data-workspace-summary-tile>
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $tile['iconBg'] }} {{ $tile['accent'] }} transition-transform duration-300 group-hover:scale-110">

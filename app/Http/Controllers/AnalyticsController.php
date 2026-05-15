@@ -3,19 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Project;
-use App\Models\Task;
-use App\Models\TaskStatus;
 use App\Services\ProjectSummaryService;
 use App\Services\TaskServices;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class AnalyticsController extends Controller
 {
-    public function index(Request $request, TaskServices $taskServices, ProjectSummaryService $summaryService)
+    public function index(Request $request, ProjectSummaryService $summaryService, UserService $userService)
     {
         $user = $request->user();
         $workspaceUser = $this->resolveWorkspaceUser($request);
@@ -37,7 +34,7 @@ class AnalyticsController extends Controller
         return view('analytics.view', [
             'priorities' => config('project_constants.task_priorities', []),
             'priorityOptions' => $priorityOptions,
-            'workspaceSelectableUsers' => $this->getWorkspaceSelectableUsers($user),
+            'workspaceSelectableUsers' => $userService->getNavSelectableUsers($user),
             'workspaceSelectedUserId' => (int) $workspaceUser->id === (int) $user->id ? '' : (string) $workspaceUser->id,
             'workspaceSummaryTiles' => $summaryService->getTiles(),
             'workspaceFilterCount' => $workspaceFilterCount,
@@ -173,15 +170,6 @@ class AnalyticsController extends Controller
         abort_unless($workspaceUser, Response::HTTP_FORBIDDEN, 'You are not allowed to access this workspace user.');
 
         return $workspaceUser;
-    }
-
-    private function getWorkspaceSelectableUsers(User $authUser)
-    {
-        return User::query()
-            ->accessibleBy($authUser)
-            ->where('id', '!=', $authUser->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
     }
 
     private function resolveSelectedDate(mixed $date): Carbon

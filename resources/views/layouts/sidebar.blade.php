@@ -42,9 +42,6 @@
 
             $canViewActivityLog = $authUser?->can('activity_log.view');
 
-            
-            
-
             $canViewProjectReports = $authUser?->can('reports.project_view');
             $canViewTaskReports = $authUser?->can('reports.task_view');
             $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view');
@@ -400,8 +397,7 @@
                         @if ($canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports)
                             <li x-data="{ open: false }">
 
-                                <div @click="open = !open"
-                                    class="flex items-center justify-between cursor-pointer py-2">
+                                <div @click="open = !open" class="flex items-center justify-between cursor-pointer py-2">
                                     <span class="item-text text-lg font-medium leading-none">Performance</span>
                                     <span>▾</span>
                                 </div>
@@ -415,8 +411,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <path d="M2 14l4-4 3 3 6-7 3 2" stroke="#22C55E" stroke-width="2"/>
-                                                                <circle cx="2" cy="14" r="2" fill="#1A202C"/>
+                                                                <path d="M2 14l4-4 3 3 6-7 3 2" stroke="#22C55E" stroke-width="2" />
+                                                                <circle cx="2" cy="14" r="2" fill="#1A202C" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Productivity Report</span>
@@ -433,8 +429,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <circle cx="10" cy="9" r="7" fill="#1A202C"/>
-                                                                <path d="M10 5v4l3 2" stroke="#22C55E" stroke-width="2"/>
+                                                                <circle cx="10" cy="9" r="7" fill="#1A202C" />
+                                                                <path d="M10 5v4l3 2" stroke="#22C55E" stroke-width="2" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Time Tracking Report</span>
@@ -451,8 +447,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <rect x="2" y="3" width="16" height="13" rx="2" fill="#1A202C"/>
-                                                                <path d="M2 7h16" stroke="#22C55E" stroke-width="2"/>
+                                                                <rect x="2" y="3" width="16" height="13" rx="2" fill="#1A202C" />
+                                                                <path d="M2 7h16" stroke="#22C55E" stroke-width="2" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Daily Report</span>
@@ -467,11 +463,10 @@
                         @endif
 
                         {{-- ================= RESOURCES ================= --}}
-                        @if($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
+                        @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
                             <li x-data="{ open: false }">
 
-                                <div @click="open = !open"
-                                    class="flex items-center justify-between cursor-pointer py-2">
+                                <div @click="open = !open" class="flex items-center justify-between cursor-pointer py-2">
                                     <span class="item-text text-lg font-medium leading-none">Resources</span>
                                     <span>▾</span>
                                 </div>
@@ -485,9 +480,9 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <circle cx="7" cy="6" r="3" fill="#1A202C"/>
-                                                                <circle cx="14" cy="6" r="3" fill="#1A202C"/>
-                                                                <path d="M3 16c1.5-3 12.5-3 14 0" stroke="#22C55E" stroke-width="2"/>
+                                                                <circle cx="7" cy="6" r="3" fill="#1A202C" />
+                                                                <circle cx="14" cy="6" r="3" fill="#1A202C" />
+                                                                <path d="M3 16c1.5-3 12.5-3 14 0" stroke="#22C55E" stroke-width="2" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Attendance Report</span>
@@ -504,9 +499,9 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <circle cx="10" cy="6" r="3" fill="#1A202C"/>
-                                                                <path d="M4 16c1-3 11-3 12 0" stroke="#22C55E" stroke-width="2"/>
-                                                                <path d="M6 2l8 14" stroke="#22C55E" stroke-width="2"/>
+                                                                <circle cx="10" cy="6" r="3" fill="#1A202C" />
+                                                                <path d="M4 16c1-3 11-3 12 0" stroke="#22C55E" stroke-width="2" />
+                                                                <path d="M6 2l8 14" stroke="#22C55E" stroke-width="2" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Leave Report</span>
@@ -523,8 +518,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <rect x="2" y="3" width="16" height="12" rx="2" fill="#1A202C"/>
-                                                                <path d="M5 6h4M5 10h8M5 14h6" stroke="#22C55E" stroke-width="2"/>
+                                                                <rect x="2" y="3" width="16" height="12" rx="2" fill="#1A202C" />
+                                                                <path d="M5 6h4M5 10h8M5 14h6" stroke="#22C55E" stroke-width="2" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Shift Schedule Report</span>
@@ -540,11 +535,10 @@
 
                         {{-- ================= PROJECTS ================= --}}
 
-                        @if($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
+                        @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
                             <li x-data="{ open: false }">
 
-                                <div @click="open = !open"
-                                    class="flex items-center justify-between cursor-pointer py-2">
+                                <div @click="open = !open" class="flex items-center justify-between cursor-pointer py-2">
                                     <span class="item-text text-lg font-medium leading-none">Projects</span>
                                     <span>▾</span>
                                 </div>
@@ -558,9 +552,9 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                <rect x="1" y="2" width="18" height="14" rx="2" fill="#1A202C"/>
-                                                                <rect x="3" y="5" width="6" height="2" fill="#22C55E"/>
-                                                                <rect x="3" y="9" width="10" height="2" fill="#22C55E"/>
+                                                                <rect x="1" y="2" width="18" height="14" rx="2" fill="#1A202C" />
+                                                                <rect x="3" y="5" width="6" height="2" fill="#22C55E" />
+                                                                <rect x="3" y="9" width="10" height="2" fill="#22C55E" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Project Report</span>
@@ -577,8 +571,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <path d="M4 2v14" stroke="#22C55E" stroke-width="2"/>
-                                                                <path d="M4 3h10l-2 3 2 3H4" fill="#1A202C"/>
+                                                                <path d="M4 2v14" stroke="#22C55E" stroke-width="2" />
+                                                                <path d="M4 3h10l-2 3 2 3H4" fill="#1A202C" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Milestone Report</span>
@@ -595,8 +589,8 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <path d="M3 14c4-10 10-10 14 0" stroke="#22C55E" stroke-width="2"/>
-                                                                <circle cx="10" cy="9" r="2" fill="#1A202C"/>
+                                                                <path d="M3 14c4-10 10-10 14 0" stroke="#22C55E" stroke-width="2" />
+                                                                <circle cx="10" cy="9" r="2" fill="#1A202C" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Sprint Report</span>
@@ -613,9 +607,9 @@
                                                     <div class="flex items-center space-x-2.5">
                                                         <span class="item-ico">
                                                             <svg width="20" height="18" viewBox="0 0 20 18" fill="none">
-                                                                <path d="M3 2h14v14H3V2z" fill="#1A202C"/>
-                                                                <path d="M5 6l2 2 3-3" stroke="#22C55E" stroke-width="2" fill="none"/>
-                                                                <path d="M5 10l2 2 3-3" stroke="#22C55E" stroke-width="2" fill="none"/>
+                                                                <path d="M3 2h14v14H3V2z" fill="#1A202C" />
+                                                                <path d="M5 6l2 2 3-3" stroke="#22C55E" stroke-width="2" fill="none" />
+                                                                <path d="M5 10l2 2 3-3" stroke="#22C55E" stroke-width="2" fill="none" />
                                                             </svg>
                                                         </span>
                                                         <span class="item-text text-lg font-medium leading-none">Task Report</span>
