@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-C8uToVHi.css",
+    "file": "assets/app-zKC0mKpk.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -87,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Dzvr0Vup.js",
+    "file": "assets/app-CJn1Ut9V.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -248,7 +248,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-DP2wWmqX.js",
+    "file": "assets/kanban-board-YdosoUZR.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
@@ -297,6 +297,12 @@
     "src": "resources/js/modules/users/user-notification-settings.js",
     "isEntry": true
   },
+  "resources/js/modules/workspace/summary.js": {
+    "file": "assets/summary-Bh07t03C.js",
+    "name": "summary",
+    "src": "resources/js/modules/workspace/summary.js",
+    "isEntry": true
+  },
   "resources/js/modules/workspace/user-timeline.js": {
     "file": "assets/user-timeline-D8OJRK8E.js",
     "name": "user-timeline",
@@ -319,10 +325,22 @@
     "src": "resources/js/modules/workspace/workspace-kanban-filters.js",
     "isEntry": true
   },
+  "resources/js/modules/workspace/workspace-kanban-heights.js": {
+    "file": "assets/workspace-kanban-heights-DSkGZGaz.js",
+    "name": "workspace-kanban-heights",
+    "src": "resources/js/modules/workspace/workspace-kanban-heights.js",
+    "isEntry": true
+  },
   "resources/js/modules/workspace/workspace-user-selector.js": {
-    "file": "assets/workspace-user-selector-DkYDWr0_.js",
+    "file": "assets/workspace-user-selector-t1Y2p1Mz.js",
     "name": "workspace-user-selector",
     "src": "resources/js/modules/workspace/workspace-user-selector.js",
+    "isEntry": true
+  },
+  "resources/js/project-flow.js": {
+    "file": "assets/project-flow-Ba6M30vJ.js",
+    "name": "project-flow",
+    "src": "resources/js/project-flow.js",
     "isEntry": true
   }
 }
