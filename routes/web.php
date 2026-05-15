@@ -45,7 +45,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     // goto dashboard if authenticated, else show welcome page
     if (auth()->check()) {
-        return redirect()->route('dashboard');
+        $user = Auth::user();
+
+        if ($user && ($user->is_super_admin || $user->can('dashboard.view'))) {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('user.workspace');
     }
     return redirect()->route('login');
 });
@@ -69,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     //sample routes for testing dashboard and profile pages, can be removed later
     Route::get('/dashboard', function () {
         return view('dashboard');
-    })->name('dashboard');
+    })->middleware('permission.type:dashboard.view')->name('dashboard');
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
