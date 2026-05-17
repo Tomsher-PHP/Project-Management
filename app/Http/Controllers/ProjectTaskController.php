@@ -206,13 +206,8 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateTask(
-        TaskProjectUpdateRequest $request,
-        Project $project,
-        Task $task,
-        NotificationService $notificationService,
-        TaskServices $taskService
-    ): JsonResponse {
+    public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
+    {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($this->canEditTaskModal($task), Response::HTTP_FORBIDDEN);
 
@@ -233,12 +228,8 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function moveTask(
-        TaskMoveRequest $request,
-        Project $project,
-        Task $task,
-        ProjectServices $projectService
-    ): JsonResponse {
+    public function moveTask(TaskMoveRequest $request, Project $project, Task $task, ProjectServices $projectService): JsonResponse
+    {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
         $validated = $request->validated();
