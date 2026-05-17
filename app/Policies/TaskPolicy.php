@@ -24,7 +24,7 @@ class TaskPolicy
 
         $task->load([
             'project.teamLeader',
-            'projectMilestone:id,owner_id',
+            'projectMilestone:id,owner_id,name',
         ]);
 
         if ((int) ($task->project?->teamLeader?->id ?? 0) === (int) $user->id) {

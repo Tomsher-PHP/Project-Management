@@ -17,6 +17,13 @@ const TASK_DETAIL_LOADING_HTML = (tab) => `
     </div>
 `;
 
+const TASK_DETAIL_ERROR_HTML = (tab) => `
+    <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-red-50/60 px-6 py-12 text-center dark:border-red-900/40 dark:bg-red-900/10">
+        <p class="text-sm font-semibold text-red-500 dark:text-red-300">Unable to load ${tab.charAt(0).toUpperCase() + tab.slice(1)}</p>
+        <p class="mt-2 text-xs text-red-400 dark:text-red-200">Please try again.</p>
+    </div>
+`;
+
 const getFieldErrorTarget = (field) => field?.tomselect?.control || field;
 
 const clearTaskSettingsErrors = (form) => {
@@ -426,8 +433,14 @@ const initializeTaskSettings = (root = document) => {
             }
 
             if (overviewPanel && result.overview_html) {
-                overviewPanel.innerHTML = result.overview_html;
-                overviewPanel.dataset.loaded = 'true';
+                if (overviewPanel.classList.contains('hidden')) {
+                    overviewPanel.dataset.loaded = 'false';
+                    overviewPanel.innerHTML = '';
+                } else {
+                    overviewPanel.innerHTML = result.overview_html;
+                    overviewPanel.dataset.loaded = 'true';
+                    initializeInjectedContent(overviewPanel, 'overview');
+                }
             }
 
             if (settingsPanel && result.settings_html) {
@@ -465,6 +478,10 @@ const initializeTaskSettings = (root = document) => {
 };
 
 const initializeInjectedContent = (panel, tab) => {
+    if (!panel) {
+        return;
+    }
+
     if (window.Alpine && typeof window.Alpine.initTree === 'function') {
         window.Alpine.initTree(panel);
     }
@@ -533,6 +550,30 @@ document.addEventListener('DOMContentLoaded', function () {
         syncUrlForTab(tab);
     };
 
+    const isTabVisible = (tab) => {
+        const panel = getPanel(tab);
+
+        return !!panel && !panel.classList.contains('hidden');
+    };
+
+    const invalidateTab = (tab, { clearContent = false, reloadIfVisible = false } = {}) => {
+        const panel = getPanel(tab);
+
+        if (!panel) {
+            return;
+        }
+
+        panel.dataset.loaded = 'false';
+
+        if (clearContent) {
+            panel.innerHTML = '';
+        }
+
+        if (reloadIfVisible && isTabVisible(tab)) {
+            loadTab(tab);
+        }
+    };
+
     const loadTab = async (tab) => {
         const panel = getPanel(tab);
 
@@ -546,11 +587,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (activeRequestTab === tab) {
+            showTab(tab);
             return;
         }
 
         activeRequestTab = tab;
         panel.innerHTML = TASK_DETAIL_LOADING_HTML(tab);
+        showTab(tab);
 
         try {
             const requestUrl = new URL(tabsUrlTemplate.replace('__TAB__', tab), window.location.origin);
@@ -576,14 +619,14 @@ document.addEventListener('DOMContentLoaded', function () {
             initializeInjectedContent(panel, tab);
             showTab(tab);
         } catch (error) {
-            panel.innerHTML = '';
+            panel.dataset.loaded = 'false';
+            panel.innerHTML = TASK_DETAIL_ERROR_HTML(tab);
+            showTab(tab);
             Alert.error(error.message || `Unable to load the ${tab} tab.`);
         } finally {
             activeRequestTab = null;
         }
     };
-
-    initializeInjectedContent(getPanel('overview'), 'overview');
 
     triggers.forEach((trigger) => {
         trigger.addEventListener('click', function () {
@@ -598,15 +641,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        historyPanel.dataset.loaded = 'false';
-
-        if (historyPanel.classList.contains('hidden')) {
-            historyPanel.innerHTML = '';
-
-            return;
-        }
-
-        loadTab('history');
+        invalidateTab('history', {
+            clearContent: true,
+            reloadIfVisible: true,
+        });
     });
 
     document.addEventListener('task-status:changed', (event) => {
@@ -620,10 +658,11 @@ document.addEventListener('DOMContentLoaded', function () {
             document.dispatchEvent(new CustomEvent('task-timer:refresh'));
         }
 
-        if (overviewPanel && result.overview_html) {
-            overviewPanel.innerHTML = result.overview_html;
-            overviewPanel.dataset.loaded = 'true';
-            initializeInjectedContent(overviewPanel, 'overview');
+        if (overviewPanel) {
+            invalidateTab('overview', {
+                clearContent: !isTabVisible('overview'),
+                reloadIfVisible: true,
+            });
         }
 
         if (historyPanel && result.history_html) {

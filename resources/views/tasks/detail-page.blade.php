@@ -11,19 +11,19 @@
                 <div class="mb-4 flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 xl:flex-row xl:items-center xl:justify-between">
                     <div class="overflow-x-auto">
                         <div class="flex min-w-max items-center gap-5">
-                            <button type="button" data-task-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Overview
                             </button>
 
-                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Project Scope
                             </button>
 
-                            <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Notes & Files
                             </button>
 
-                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-task-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 History
                             </button>
                         </div>
@@ -31,7 +31,7 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         @can('activity_log.view')
-                            <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.activity.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.activity.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                 <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                     <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
@@ -39,13 +39,13 @@
                                     </svg>
                                 </span>
                                 <span>Activity</span>
-                                <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                                <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50">
                                     {{ $taskActivitiesCount }}
                                 </span>
                             </button>
                         @endcan
 
-                        <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                        <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                             <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -54,13 +54,13 @@
                                 </svg>
                             </span>
                             <span>Comments</span>
-                            <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100" data-task-comments-count>
+                            <span class="inline-flex h-5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-50" data-task-comments-count>
                                 {{ $taskCommentsCount }}
                             </span>
                         </button>
 
                         @if ($project && auth()->user()->can('view', $project))
-                            <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                 <span>Open Project</span>
                             </a>
                         @endif
@@ -72,9 +72,7 @@
                 </div>
 
                 <div data-task-tab-panels>
-                    <div data-task-tab-panel="overview" data-loaded="true">
-                        @include('tasks.partials.tabs.overview')
-                    </div>
+                    <div data-task-tab-panel="overview" data-loaded="false"></div>
 
                     <div class="hidden" data-task-tab-panel="scope" data-loaded="false"></div>
                     <div class="hidden" data-task-tab-panel="notes" data-loaded="false"></div>

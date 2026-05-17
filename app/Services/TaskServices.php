@@ -51,14 +51,8 @@ class TaskServices
     }
 
     // Get kanban task groups by status for the current user
-    public function getKanban(
-        User $user,
-        array $filters,
-        string $flowType,
-        $statuses,
-        int $perPage = 5,
-        array $options = []
-    ): array {
+    public function getKanban(User $user, array $filters, string $flowType, $statuses, int $perPage = 5, array $options = []): array
+    {
         $options['sort'] = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
 
         return collect($statuses)->mapWithKeys(function ($status) use ($user, $filters, $flowType, $perPage, $options) {
@@ -76,15 +70,8 @@ class TaskServices
         })->all();
     }
 
-    public function getKanbanStatusData(
-        User $user,
-        array $filters,
-        string $flowType,
-        int $statusId,
-        int $page = 1,
-        int $perPage = 5,
-        array $options = []
-    ): array {
+    public function getKanbanStatusData(User $user, array $filters, string $flowType, int $statusId, int $page = 1, int $perPage = 5, array $options = []): array
+    {
         $page = max($page, 1);
         $perPage = max($perPage, 1);
         $sort = $this->resolveKanbanSort($options['sort'] ?? ($filters['sort'] ?? null));
@@ -140,6 +127,121 @@ class TaskServices
         ];
     }
 
+    public function getTaskDisplayData(Task $task): array
+    {
+        $taskPriorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium'))
+            ?? config('project_constants.task_priorities.medium');
+
+        return [
+            'taskTypeLabel' => $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature')),
+            'taskModeLabel' => $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new')),
+            'taskPriorityLabel' => $taskPriorityConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->priority ?: 'medium')),
+            'taskPriorityConfig' => $taskPriorityConfig,
+        ];
+    }
+
+    public function getTaskOverviewData(Task $task): array
+    {
+        $task->loadMissing([
+            'project:id,name,project_code,project_flow',
+            'projectMilestone:id,name',
+            'projectSprint:id,name,project_milestone_id',
+            'parentTask:id,name,code',
+            'currentAssignee:id,name',
+            'status:id,name,color,type,is_completed',
+            'taskType:id,name,code,color',
+            'taskMode:id,name,code,color',
+            'tags:id,name,color',
+            'addedBy:id,name',
+            'updatedBy:id,name',
+            'currentAssignmentLog.user:id,name',
+            'childTasks' => fn($query) => $query
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->with([
+                    'status:id,name,color,type,is_completed',
+                    'currentAssignee:id,name',
+                ]),
+        ]);
+
+        $displayData = $this->getTaskDisplayData($task);
+
+        return $displayData + [
+            'description' => (string) ($task->description ?? ''),
+            'taskDetails' => [
+                [
+                    'label' => 'Assignee',
+                    'value' => $task->currentAssignee?->name ?? 'Unassigned',
+                ],
+                [
+                    'label' => 'Parent Task',
+                    'value' => $task->parentTask?->name ?? '--',
+                    'url' => $task->parentTask ? route('tasks.edit', $task->parentTask) : null,
+                ],
+                [
+                    'label' => 'Status',
+                    'value' => $task->status?->name ?? 'No status',
+                    'color' => $task->status?->color,
+                ],
+                [
+                    'label' => 'Priority',
+                    'value' => $displayData['taskPriorityLabel'],
+                    'badge_class' => $displayData['taskPriorityConfig']['bg_class'] ?? 'bg-primary',
+                ],
+            ],
+            'contextItems' => [
+                [
+                    'label' => 'Project',
+                    'value' => $task->project?->name ?? '--',
+                    'url' => $task->project ? route('projects.edit', $task->project) : null,
+                ],
+                [
+                    'label' => 'Milestone',
+                    'value' => $task->projectMilestone?->name ?? '--',
+                    'url' => ($task->project && $task->projectMilestone)
+                        ? route('projects.edit', ['project' => $task->project, 'tab' => 'milestones', 'milestone' => $task->projectMilestone->id])
+                        : null,
+                ],
+                [
+                    'label' => 'Sprint',
+                    'value' => $task->projectSprint?->name ?? '--',
+                    'url' => ($task->project && $task->projectSprint)
+                        ? route('projects.edit', [
+                            'project' => $task->project,
+                            'tab' => 'milestones',
+                            'milestone' => $task->projectSprint->project_milestone_id ?: $task->project_milestone_id,
+                            'sprint' => $task->projectSprint->id,
+                        ])
+                        : null,
+                ],
+                [
+                    'label' => 'Created By',
+                    'value' => $task->addedBy?->name ?? '--',
+                ],
+                [
+                    'label' => 'Created At',
+                    'value' => $task->created_at
+                        ? \App\Providers\AppServiceProvider::formatAppDateTime($task->created_at)
+                        : '--',
+                ],
+                [
+                    'label' => 'Updated By',
+                    'value' => $task->updatedBy?->name ?? '--',
+                ],
+                [
+                    'label' => 'Updated At',
+                    'value' => $task->updated_at
+                        ? \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
+                        : '--',
+                ],
+            ],
+            'tags' => $task->tags,
+            'subtasks' => $task->childTasks,
+            'timeComparison' => $this->buildTaskTimeComparison($task),
+            'is_billable' => (bool) $task->is_billable,
+        ];
+    }
+
     // Define related models to eager load for tasks
     private function relations()
     {
@@ -188,13 +290,8 @@ class TaskServices
         }
     }
 
-    private function buildKanbanBaseQuery(
-        User $user,
-        array $filters,
-        string $flowType,
-        ?int $statusId = null,
-        array $options = []
-    ) {
+    private function buildKanbanBaseQuery(User $user, array $filters, string $flowType, ?int $statusId = null, array $options = [])
+    {
         $query = $this->queryService->baseQuery($user)
             ->filter($filters)
             ->whereHas('project', fn($query) => $query->where('project_flow', $flowType))
@@ -804,7 +901,7 @@ class TaskServices
         $task->load([
             'currentAssignee.details',
             'project.teamLeader',
-            'projectMilestone:id,owner_id',
+            'projectMilestone:id,owner_id,name',
         ]);
 
         // if task is not assigned, no one can stop timer
@@ -874,6 +971,40 @@ class TaskServices
             ->where('user_id', $userId)
             ->where('is_running', 0)
             ->sum('duration_seconds');
+    }
+
+    private function buildTaskTimeComparison(Task $task): array
+    {
+        $estimatedSeconds = max(0, (int) ($task->estimated_time_seconds ?? 0));
+        $actualSeconds = max(0, (int) ($task->actual_time_seconds ?? 0));
+        $hasEstimate = $estimatedSeconds > 0;
+        $progressPercent = $hasEstimate ? (int) round(($actualSeconds / $estimatedSeconds) * 100) : 0;
+        $barPercent = max(0, min(100, $progressPercent));
+        $isOverEstimate = $hasEstimate && $actualSeconds > $estimatedSeconds;
+        $differenceSeconds = $hasEstimate ? abs($estimatedSeconds - $actualSeconds) : 0;
+
+        return [
+            'estimated_seconds' => $estimatedSeconds,
+            'actual_seconds' => $actualSeconds,
+            'estimated_formatted' => $this->formatDuration($estimatedSeconds),
+            'actual_formatted' => $this->formatDuration($actualSeconds),
+            'remaining_or_over_formatted' => $hasEstimate ? $this->formatDuration($differenceSeconds) : '--',
+            'remaining_or_over_label' => ! $hasEstimate ? 'No estimate' : ($isOverEstimate ? 'Over' : 'Remaining'),
+            'progress_percent' => $progressPercent,
+            'bar_percent' => $barPercent,
+            'is_over_estimate' => $isOverEstimate,
+            'has_estimate' => $hasEstimate,
+            'status_label' => ! $hasEstimate ? 'No estimate' : ($isOverEstimate ? 'Over estimate' : 'Within estimate'),
+        ];
+    }
+
+    private function formatDuration(int $seconds): string
+    {
+        $normalizedSeconds = max(0, $seconds);
+        $hours = intdiv($normalizedSeconds, 3600);
+        $minutes = intdiv($normalizedSeconds % 3600, 60);
+
+        return sprintf('%02dh %02dm', $hours, $minutes);
     }
 
     public function transitionStatus(User $user, int $movedTaskId, array $taskIds, int $statusId): array

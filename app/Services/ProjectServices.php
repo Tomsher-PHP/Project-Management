@@ -7,7 +7,6 @@ use App\Models\AgileSprintStatus;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
-use App\Models\ProjectPayment;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStage;
 use App\Models\ProjectStageHistory;
@@ -359,11 +358,8 @@ class ProjectServices
         });
     }
 
-    public function finalizeTaskPlacement(
-        Project $project,
-        ?int $projectMilestoneId = null,
-        ?int $projectSprintId = null
-    ): array {
+    public function finalizeTaskPlacement(Project $project, ?int $projectMilestoneId = null, ?int $projectSprintId = null): array
+    {
         if ($project->is_linear) {
             return [
                 'project_milestone' => null,

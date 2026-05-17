@@ -242,8 +242,8 @@ class TaskController extends Controller
     public function edit(Task $task, TaskServices $taskServices)
     {
         $task = $this->loadTaskForDetail($task);
-        $overviewData = $this->getTaskOverviewData($task);
         $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, auth()->id());
+        $displayData = $taskServices->getTaskDisplayData($task);
 
         return view('tasks.detail-page', [
             'task' => $task,
@@ -252,7 +252,7 @@ class TaskController extends Controller
             'taskCommentsCount' => $task->comments()->count(),
             'totalTrackedSeconds' => $totalSeconds,
             'tabsUrlTemplate' => route('tasks.tabs.show', ['task' => $task, 'tab' => '__TAB__']),
-        ] + $overviewData + $this->getTaskHeaderData($task, $taskServices));
+        ] + $displayData + $this->getTaskHeaderData($task, $taskServices));
     }
 
     public function activityModal(Task $task): JsonResponse
@@ -269,7 +269,7 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function tab(Request $request, Task $task, string $tab): JsonResponse
+    public function tab(Request $request, Task $task, string $tab, TaskServices $taskServices): JsonResponse
     {
         $allowedTabs = ['overview', 'scope', 'notes', 'history'];
         abort_unless(in_array($tab, $allowedTabs, true), Response::HTTP_NOT_FOUND);
@@ -279,7 +279,7 @@ class TaskController extends Controller
         return response()->json([
             'status' => true,
             'tab' => $tab,
-            'html' => $this->renderTaskTab($task, $tab),
+            'html' => $this->renderTaskTab($task, $tab, $taskServices),
         ], Response::HTTP_OK);
     }
 
@@ -544,13 +544,13 @@ class TaskController extends Controller
         });
     }
 
-    private function renderTaskTab(Task $task, string $tab): string
+    private function renderTaskTab(Task $task, string $tab, TaskServices $taskServices): string
     {
         return match ($tab) {
             'overview' => view('tasks.partials.tabs.overview', [
                 'task' => $task,
                 'project' => $task->project,
-            ] + $this->getTaskOverviewData($task))->render(),
+            ] + $taskServices->getTaskOverviewData($task))->render(),
             'scope' => $this->renderTaskScopeTab($task),
             'notes' => view('tasks.partials.tabs.notes', [
                 'task' => $task,
@@ -573,30 +573,6 @@ class TaskController extends Controller
             'task' => $task,
             'project' => $task->project,
         ])->render();
-    }
-
-    private function getTaskOverviewData(Task $task): array
-    {
-        $taskPriorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
-
-        return [
-            'taskStatusHistories' => $task->statusHistories()
-                ->with([
-                    'status:id,name,color,type,is_completed',
-                    'addedBy:id,name',
-                ])
-                ->orderByDesc('added_at')
-                ->limit(10)
-                ->get(),
-            'taskTimeLogs' => $task->timeLogs()
-                ->with('user:id,name')
-                ->limit(10)
-                ->get(),
-            'taskTypeLabel' => $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature')),
-            'taskModeLabel' => $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new')),
-            'taskPriorityLabel' => $taskPriorityConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->priority ?: 'medium')),
-            'taskPriorityConfig' => $taskPriorityConfig,
-        ];
     }
 
     private function getTaskHeaderData(Task $task, TaskServices $taskServices): array
@@ -1005,20 +981,15 @@ class TaskController extends Controller
 
             if (! empty($validated['include_task_detail'])) {
                 $totalSeconds = $taskServices->getTotalTrackedSeconds($task->id, (int) auth()->id());
-                $overviewData = $this->getTaskOverviewData($task);
                 $historyData = $this->getTaskHistoryData($task);
+                $displayData = $taskServices->getTaskDisplayData($task);
                 $headerData = $this->getTaskHeaderData($task, $taskServices);
 
                 $response['header_html'] = view('tasks.partials.header', [
                     'task' => $task,
                     'project' => $task->project,
                     'totalTrackedSeconds' => $totalSeconds,
-                ] + $overviewData + $headerData)->render();
-
-                $response['overview_html'] = view('tasks.partials.tabs.overview', [
-                    'task' => $task,
-                    'project' => $task->project,
-                ] + $overviewData)->render();
+                ] + $displayData + $headerData)->render();
 
                 $response['history_html'] = view('tasks.partials.tabs.history', [
                     'task' => $task,
