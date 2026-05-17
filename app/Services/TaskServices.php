@@ -192,8 +192,14 @@ class TaskServices
             'contextItems' => [
                 [
                     'label' => 'Project',
-                    'value' => $task->project?->name ?? '--',
+                    'value' => $task->project
+                        ? view('components.project-flow-icon', [
+                            'flow' => $task->project->project_flow,
+                            'size' => 'sm',
+                        ])->render() . '<span>' . e($task->project->name) . '</span>'
+                        : '--',
                     'url' => $task->project ? route('projects.edit', $task->project) : null,
+                    'is_html' => true,
                 ],
                 [
                     'label' => 'Milestone',
@@ -215,23 +221,21 @@ class TaskServices
                         : null,
                 ],
                 [
-                    'label' => 'Created By',
-                    'value' => $task->addedBy?->name ?? '--',
-                ],
-                [
-                    'label' => 'Created At',
-                    'value' => $task->created_at
+                    'label' => 'Created',
+                    'value' => trim(($task->addedBy?->name ?? '--') . ' at ' . (
+                        $task->created_at
                         ? \App\Providers\AppServiceProvider::formatAppDateTime($task->created_at)
-                        : '--',
+                        : '--'
+                    )),
                 ],
                 [
-                    'label' => 'Updated By',
-                    'value' => $task->updatedBy?->name ?? '--',
-                ],
-                [
-                    'label' => 'Updated At',
-                    'value' => $task->updated_at
-                        ? \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
+                    'label' => 'Updated',
+                    'value' => $task->updatedBy?->name
+                        ? trim($task->updatedBy->name . (
+                            $task->updated_at
+                                ? ' at ' . \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
+                                : ''
+                        ))
                         : '--',
                 ],
             ],
@@ -240,6 +244,15 @@ class TaskServices
             'timeComparison' => $this->buildTaskTimeComparison($task),
             'is_billable' => (bool) $task->is_billable,
         ];
+    }
+
+    public function updateTaskDescription(Task $task, ?string $description): Task
+    {
+        $task->update([
+            'description' => filled($description) ? $description : null,
+        ]);
+
+        return $task->fresh();
     }
 
     // Define related models to eager load for tasks

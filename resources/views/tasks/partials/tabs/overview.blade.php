@@ -22,9 +22,35 @@
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div class="space-y-6 xl:col-span-2">
             <section class="{{ $cardClasses }}">
-                <h3 class="{{ $cardTitleClasses }}">Description</h3>
+                @php
+                    $canEditDescription = auth()->user()?->can('update', $task) ?? false;
+                @endphp
 
-                @if (filled($description))
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="{{ $cardTitleClasses }}">Description</h3>
+                    @if ($canEditDescription)
+                        <span class="text-xs font-medium uppercase tracking-[0.16em] text-bgray-600 dark:text-bgray-300">Editable</span>
+                    @endif
+                </div>
+
+                @if ($canEditDescription)
+                    <form class="mt-4 space-y-3" data-task-overview-description-form action="{{ route('tasks.overview.description.update', $task) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <textarea
+                            name="description"
+                            rows="6"
+                            class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200"
+                            placeholder="Add a task description..."
+                        >{{ $description }}</textarea>
+                        <p class="hidden text-sm text-red-500" data-task-overview-description-error></p>
+                        <div class="flex items-center justify-end">
+                            <button type="submit" class="inline-flex items-center rounded-lg bg-success-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-300" data-task-overview-description-submit>
+                                Save Description
+                            </button>
+                        </div>
+                    </form>
+                @elseif (filled($description))
                     <div class="mt-4 rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 whitespace-pre-line dark:bg-darkblack-500 dark:text-bgray-300">{{ $description }}</div>
                 @else
                     <p class="mt-4 {{ $emptyTextClasses }}">No task description added yet.</p>
@@ -34,20 +60,42 @@
             <section class="{{ $cardClasses }}">
                 <h3 class="{{ $cardTitleClasses }}">Context</h3>
 
-                <dl class="mt-4 divide-y divide-bgray-100 dark:divide-darkblack-400">
-                    @foreach ($contextItems as $item)
+                @php
+                    $visibleContextItems = collect($contextItems)->filter(function ($item) {
+                        $value = $item['value'] ?? null;
+
+                        return filled($value) && $value !== '--';
+                    })->values();
+                @endphp
+
+                @if ($visibleContextItems->isEmpty())
+                    <p class="mt-4 {{ $emptyTextClasses }}">No context details available.</p>
+                @else
+                    <dl class="mt-4 divide-y divide-bgray-100 dark:divide-darkblack-400">
+                    @foreach ($visibleContextItems as $item)
                         <div class="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
                             <dt class="text-sm font-medium text-bgray-600 dark:text-bgray-300">{{ $item['label'] }}</dt>
                             <dd class="max-w-[70%] text-right text-sm font-semibold text-bgray-900 dark:text-white">
                                 @if (! empty($item['url']) && filled($item['value']) && $item['value'] !== '--')
-                                    <a href="{{ $item['url'] }}" class="transition hover:text-success-400 dark:hover:text-success-300">{{ $item['value'] }}</a>
+                                    <a href="{{ $item['url'] }}" class="{{ ! empty($item['is_html']) ? 'inline-flex items-center justify-end gap-2' : '' }} transition hover:text-success-400 dark:hover:text-success-300">
+                                        @if (! empty($item['is_html']))
+                                            {!! $item['value'] !!}
+                                        @else
+                                            {{ $item['value'] }}
+                                        @endif
+                                    </a>
                                 @else
-                                    {{ $item['value'] }}
+                                    @if (! empty($item['is_html']))
+                                        {!! $item['value'] !!}
+                                    @else
+                                        {{ $item['value'] }}
+                                    @endif
                                 @endif
                             </dd>
                         </div>
                     @endforeach
-                </dl>
+                    </dl>
+                @endif
             </section>
 
             <section class="{{ $cardClasses }}">

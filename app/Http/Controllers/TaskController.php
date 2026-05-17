@@ -409,6 +409,32 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function updateOverviewDescription(Request $request, Task $task, TaskServices $taskServices): JsonResponse
+    {
+        $validated = $request->validate([
+            'description' => ['nullable', 'string'],
+        ]);
+
+        if ($task->isRejectedRequest()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Rejected tasks cannot be updated.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $task = $taskServices->updateTaskDescription($task, $validated['description'] ?? null);
+        $task = $this->loadTaskForDetail($task);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Description updated successfully.',
+            'html' => view('tasks.partials.tabs.overview', [
+                'task' => $task,
+                'project' => $task->project,
+            ] + $taskServices->getTaskOverviewData($task))->render(),
+        ], Response::HTTP_OK);
+    }
+
     public function storeNote(TaskNoteRequest $request, Task $task, AttachmentService $attachmentService): JsonResponse
     {
         DB::transaction(function () use ($task, $request, $attachmentService) {

@@ -477,6 +477,85 @@ const initializeTaskSettings = (root = document) => {
     form.dataset.initialized = 'true';
 };
 
+const initializeOverviewDescriptionForm = (root = document) => {
+    const form = root?.querySelector?.('[data-task-overview-description-form]');
+
+    if (!form || form.dataset.initialized === 'true') {
+        return;
+    }
+
+    const errorNode = form.querySelector('[data-task-overview-description-error]');
+    const submitButton = form.querySelector('[data-task-overview-description-submit]');
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (errorNode) {
+            errorNode.textContent = '';
+            errorNode.classList.add('hidden');
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Saving...';
+        }
+
+        try {
+            const response = await fetch(form.getAttribute('action') || '', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: new FormData(form),
+            });
+
+            const result = await response.json();
+
+            if (response.status === 422) {
+                const descriptionError = result.errors?.description?.[0] || result.message;
+
+                if (errorNode && descriptionError) {
+                    errorNode.textContent = descriptionError;
+                    errorNode.classList.remove('hidden');
+                }
+
+                throw new Error(descriptionError || 'Unable to update the description.');
+            }
+
+            if (!response.ok || !result.status) {
+                throw new Error(result.message || 'Unable to update the description.');
+            }
+
+            const tabsRoot = document.querySelector('[data-task-tabs]');
+            const overviewPanel = tabsRoot?.querySelector('[data-task-tab-panel="overview"]');
+
+            if (overviewPanel && result.html) {
+                overviewPanel.innerHTML = result.html;
+                overviewPanel.dataset.loaded = 'true';
+                initializeInjectedContent(overviewPanel, 'overview');
+            }
+
+            Alert.success(result.message || 'Description updated successfully.');
+        } catch (error) {
+            if (errorNode && !errorNode.textContent) {
+                errorNode.textContent = error.message || 'Unable to update the description.';
+                errorNode.classList.remove('hidden');
+            }
+
+            Alert.error(error.message || 'Unable to update the description.');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Save Description';
+            }
+        }
+    });
+
+    form.dataset.initialized = 'true';
+};
+
 const initializeInjectedContent = (panel, tab) => {
     if (!panel) {
         return;
@@ -494,6 +573,10 @@ const initializeInjectedContent = (panel, tab) => {
 
     if (tab === 'settings') {
         initializeTaskSettings(panel);
+    }
+
+    if (tab === 'overview') {
+        initializeOverviewDescriptionForm(panel);
     }
 
     document.dispatchEvent(new CustomEvent('task-tab:loaded', {
