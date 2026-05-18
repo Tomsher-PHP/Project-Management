@@ -9,6 +9,7 @@ use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerRestoreController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\HandoffController;
@@ -269,6 +270,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);
+    
+    // Customer Restore Routes
+    Route::get('/restore/customers', [CustomerRestoreController::class, 'restoreIndex'])->middleware('permission.type:customer.restore')->name('customers.restore.index');
+    Route::post('/restore/customers/bulk', [CustomerRestoreController::class, 'bulkRestore'])->middleware('permission.type:customer.restore')->name('customers.restore.bulk');
+    Route::post('/restore/customers/{id}', [CustomerRestoreController::class, 'restore'])->middleware('permission.type:customer.restore')->name('customers.restore');
     // End Customer Routes
 
     // Common Routes

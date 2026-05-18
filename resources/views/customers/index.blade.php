@@ -3,23 +3,37 @@
 @section('page-content')
     <!-- Page starts -->
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
-        <div class="mb-6 flex flex-wrap items-center gap-3">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                @can('customer.create')
+                    <a href="{{ route('customers.create') }}" class="inline-flex items-center px-4 py-1.5
+                       rounded-md bg-success-300
+                       text-sm font-semibold text-white
+                       hover:bg-success-400
+                       transition duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
 
-        @can('customer.create')
-            <a href="{{ route('customers.create') }}" class="inline-flex items-center px-4 py-1.5
-               rounded-md bg-success-300
-               text-sm font-semibold text-white
-               hover:bg-success-400
-               transition duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+                        <span>New Customer</span>
+                    </a>
+                @endcan
 
-                <span>New Customer</span>
-            </a>
-        @endcan
+                <x-filters.button />
+            </div>
 
-        <x-filters.button />
+            @can('customer.restore')
+                <a href="{{ route('customers.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l5 4-5 4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12h-8" />
+                    </svg>
+                    <span>Restore Customers</span>
+                </a>
+            @endcan
         </div>
 
         <!-- write your code here-->
