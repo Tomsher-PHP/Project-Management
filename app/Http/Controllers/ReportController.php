@@ -166,6 +166,7 @@ class ReportController extends Controller
                 ->get()
         ]);
     }
+    
     public function export(Request $request)
     {
         $projects = $this->projectReportService
