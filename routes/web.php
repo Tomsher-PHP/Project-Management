@@ -38,6 +38,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
+use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -109,6 +110,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
 
+    // User restore routes
+    Route::get('/restore/users', [UserRestoreController::class, 'restoreIndex'])->middleware('permission.type:user.restore')->name('users.restore.index');
+    Route::post('/restore/users/bulk', [UserRestoreController::class, 'bulkRestore'])->middleware('permission.type:user.restore')->name('users.restore.bulk');
+    Route::post('/restore/users/{id}', [UserRestoreController::class, 'restore'])->middleware('permission.type:user.restore')->name('users.restore');
     // End of User Management Routes
 
     // Settings Routes

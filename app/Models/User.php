@@ -185,6 +185,11 @@ class User extends Authenticatable
         return $query->where('is_active', true);
     }
 
+    public function scopeDeleted($query)
+    {
+        return $query->where('delete_status', true);
+    }
+
     public function getRoleIdAttribute()
     {
         return $this->roles->pluck('id')->first();

@@ -26,7 +26,6 @@ return [
     ['name' => 'team.create',         'sort_order' => 3040],
     ['name' => 'team.edit',           'sort_order' => 3060],
     ['name' => 'team.delete',         'sort_order' => 3080],
-    ['name' => 'team.restore',        'sort_order' => 3100],
 
     // CUSTOMER (4000)
     ['name' => 'customer.view',    'sort_order' => 4000],
@@ -73,7 +72,6 @@ return [
     ['name' => 'task.create',             'sort_order' => 8040],
     ['name' => 'task.edit',               'sort_order' => 8060],
     ['name' => 'task.delete',             'sort_order' => 8080],
-    ['name' => 'task.restore',            'sort_order' => 8100],
     ['name' => 'task.add_notes_files',    'sort_order' => 8120],
     ['name' => 'task.remove_notes_files', 'sort_order' => 8140],
     ['name' => 'task.move',               'sort_order' => 8160],
