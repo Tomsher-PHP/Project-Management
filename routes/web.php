@@ -20,6 +20,7 @@ use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\ProjectRestoreController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectPaymentController;
 use App\Http\Controllers\ProjectSprintController;
@@ -343,6 +344,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('checklists/render-library', [ProjectChecklistController::class, 'renderLibraryChecklist'])->middleware('permission.type:project.add_team')->name('projects.checklists.renderLibrary');
         Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
     });
+
+    // Project Restore Routes
+    Route::get('projects/restore', [ProjectRestoreController::class, 'index'])->middleware('permission.type:project.restore')->name('projects.restore.index');
+    Route::post('projects/restore/bulk', [ProjectRestoreController::class, 'bulkRestore'])->middleware('permission.type:project.restore')->name('projects.restore.bulk');
+    Route::post('projects/restore/{id}', [ProjectRestoreController::class, 'restore'])->middleware('permission.type:project.restore')->name('projects.restore');
 
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);

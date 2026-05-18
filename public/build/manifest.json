@@ -193,6 +193,12 @@
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
+  "resources/js/modules/projects/project-restore.js": {
+    "file": "assets/project-restore-CRqppC6U.js",
+    "name": "project-restore",
+    "src": "resources/js/modules/projects/project-restore.js",
+    "isEntry": true
+  },
   "resources/js/modules/projects/project-tasks.js": {
     "file": "assets/project-tasks-mIq5k7UC.js",
     "name": "project-tasks",
