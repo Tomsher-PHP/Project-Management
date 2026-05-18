@@ -24,10 +24,12 @@ const Alert = {
         return Swal.fire({
             target: options.target || document.body,
             title: options.title || 'Are you sure?',
-            text: options.text || 'This action cannot be undone.',
+            text: options.html ? undefined : (options.text || 'This action cannot be undone.'),
+            html: options.html,
             icon: options.icon || 'warning',
             input: requireText ? 'text' : undefined,
             inputPlaceholder: requireText ? `Type "${requireText}" to confirm` : undefined,
+            showConfirmButton: options.showConfirmButton !== undefined ? options.showConfirmButton : true,
             showCancelButton: true,
             confirmButtonText: options.confirmText || 'Yes',
             cancelButtonText: options.cancelText || 'Cancel',

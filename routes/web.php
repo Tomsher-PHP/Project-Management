@@ -284,6 +284,7 @@ Route::middleware(['auth'])->group(function () {
     // Project Routes
     Route::prefix('projects/{project}')->middleware('can:view,project')->group(function () {
         Route::get('tabs/{tab}', [ProjectController::class, 'tab'])->middleware('permission.type:project.view')->name('projects.tabs.show');
+        Route::get('delete-summary', [ProjectController::class, 'deleteSummary'])->middleware(['permission.type:project.delete', 'can:delete,project'])->name('projects.delete-summary');
 
         // Project task routes
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');

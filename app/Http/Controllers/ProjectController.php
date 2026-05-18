@@ -342,9 +342,48 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function deleteSummary(Project $project): JsonResponse
+    {
+        $summary = $this->projectServices->getDeleteSummary($project);
+
+        $html = view('projects.partials.delete-modal', [
+            'project' => $project,
+            'summary' => $summary,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'has_running_timers' => ($summary['running_timers_count'] ?? 0) > 0,
+        ], Response::HTTP_OK);
+    }
+
     public function destroy(Project $project)
     {
+        $summary = $this->projectServices->getDeleteSummary($project);
+
+        if (($summary['running_timers_count'] ?? 0) > 0) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete project because there is a running timer on a task.'
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            return redirect()
+                ->back()
+                ->with('error', 'Cannot delete project because there is a running timer on a task.');
+        }
+
         $project->delete();
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project deleted successfully.',
+                'redirect_url' => route('projects.index')
+            ], Response::HTTP_OK);
+        }
 
         return redirect()
             ->route('projects.index')

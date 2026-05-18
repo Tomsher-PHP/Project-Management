@@ -13,6 +13,8 @@ use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
 use App\Models\Task;
+use App\Models\TaskStatus;
+use App\Models\TaskTimeLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -610,5 +612,24 @@ class ProjectServices
                 return null;
             }
         }
+    }
+
+    public function getDeleteSummary(Project $project): array
+    {
+        $taskIdsQuery = $project->tasks()->select('id');
+
+        return [
+            'is_agile' => $project->is_agile,
+            'milestones_count' => $project->projectMilestones()->count(),
+            'sprints_count' => $project->projectSprints()->count(),
+            'tasks_count' => $project->tasks()->count(),
+            'sub_tasks_count' => $project->tasks()->whereNotNull('parent_task_id')->count(),
+            'active_tasks_count' => $project->tasks()->whereHas('status', function ($query) {
+                $query->where('type', TaskStatus::TYPE_ACTIVE);
+            })->count(),
+            'running_timers_count' => TaskTimeLog::whereIn('task_id', $taskIdsQuery)->whereNull('ended_at')->count(),
+            'pending_requests_count' => $project->tasks()->where('request_status', 'pending')->count(),
+            'scope_files_count' => $project->attachments()->where('category', 'scope_files')->count(),
+        ];
     }
 }

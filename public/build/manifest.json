@@ -1,6 +1,6 @@
 {
-  "_alert-BIAC0wB2.js": {
-    "file": "assets/alert-BIAC0wB2.js",
+  "_alert-CWSsmOu4.js": {
+    "file": "assets/alert-CWSsmOu4.js",
     "name": "alert",
     "imports": [
       "_sweetalert2.esm.all-YZDMVk0e.js"
@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BHauqe30.css",
+    "file": "assets/app-tpaVu9Q7.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -87,13 +87,13 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B4beGxHZ.js",
+    "file": "assets/app-t5WoaKVv.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_sweetalert2.esm.all-YZDMVk0e.js",
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-D_VawerM.js",
       "_datepicker-CA2wRfma.js",
@@ -146,19 +146,34 @@
     "src": "resources/js/modules/customer-contact.js",
     "isEntry": true
   },
+  "resources/js/modules/customer-restore.js": {
+    "file": "assets/customer-restore-GQ6J6lex.js",
+    "name": "customer-restore",
+    "src": "resources/js/modules/customer-restore.js",
+    "isEntry": true
+  },
   "resources/js/modules/kpi-form.js": {
     "file": "assets/kpi-form-BL6DO7iw.js",
     "name": "kpi-form",
     "src": "resources/js/modules/kpi-form.js",
     "isEntry": true
   },
+  "resources/js/modules/projects/project-delete.js": {
+    "file": "assets/project-delete-WOHrl-AU.js",
+    "name": "project-delete",
+    "src": "resources/js/modules/projects/project-delete.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-NvBGa5SP.js",
+    "file": "assets/project-detail-DOmOCuQ1.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-D_VawerM.js",
@@ -179,12 +194,12 @@
     ]
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-DQqIk04h.js",
+    "file": "assets/project-tasks-mIq5k7UC.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-D_VawerM.js",
@@ -204,12 +219,12 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-BMf2YCCG.js",
+    "file": "assets/task-detail-B_XWbZrZ.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_tom-select-D_VawerM.js",
       "_datepicker-CA2wRfma.js",
       "_timepicker-NRYBeS5c.js",
@@ -222,12 +237,12 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-jCEJ46sa.js",
+    "file": "assets/task-list-create-BokuKhcU.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-D_VawerM.js",
@@ -242,12 +257,12 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/handoff-blend.js": {
-    "file": "assets/handoff-blend-41u-wn6O.js",
+    "file": "assets/handoff-blend-B2equtk3.js",
     "name": "handoff-blend",
     "src": "resources/js/modules/tasks/handoff-blend.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
@@ -264,12 +279,12 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-CV2RV4vb.js",
+    "file": "assets/time-log-change-request-iO0EoLGL.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
@@ -280,12 +295,12 @@
     "isEntry": true
   },
   "resources/js/modules/users/change-password.js": {
-    "file": "assets/change-password-C9D8YKAV.js",
+    "file": "assets/change-password-DgNhz_HA.js",
     "name": "change-password",
     "src": "resources/js/modules/users/change-password.js",
     "isEntry": true,
     "imports": [
-      "_alert-BIAC0wB2.js",
+      "_alert-CWSsmOu4.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },

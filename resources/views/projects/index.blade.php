@@ -158,7 +158,7 @@
                                                 </a>
 
                                                 @can('project.delete')
-                                                    <x-delete-form :action="route('projects.destroy', $project->id)" />
+                                                    <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
                                                 @endcan
                                             </div>
                                         </td>
@@ -299,4 +299,5 @@
         </div>
 
     </x-form-modal>
+    @vite('resources/js/modules/projects/project-delete.js')
 @endsection
