@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Models\Configuration;
 use App\Models\ProjectSprint;
 use App\Models\Task;
+use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\TaskTimeLog;
 use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
 use App\Policies\TaskPolicy;
+use App\Policies\UserPolicy;
 use App\View\Composers\SidebarComposer;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -112,10 +114,12 @@ class AppServiceProvider extends ServiceProvider
         ProjectSprint::observe(ProjectSprintObserver::class);
 
         Gate::policy(Task::class, TaskPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Project::class, ProjectPolicy::class);
 
-        Gate::before(function ($user, $ability) {
-            return $user->is_super_admin ? true : null;
-        });
+        // Gate::before(function ($user, $ability) {
+        //     return $user->is_super_admin ? true : null;
+        // });
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string

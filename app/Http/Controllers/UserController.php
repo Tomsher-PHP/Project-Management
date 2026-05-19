@@ -140,13 +140,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        // Prevent deleting super admin
-        if ($user->is_super_admin) {
-            return back()->with('error', 'Super Admin cannot be deleted.');
-        }
-
-        if (auth()->id() === $user->id) {
-            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        if($user->isRunningTask()) {
+            return redirect()->back()->with('error', 'Stop running tasks before deleting the user.');
         }
 
         $user->update([

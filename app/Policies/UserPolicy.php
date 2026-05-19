@@ -20,25 +20,20 @@ class UserPolicy
      */
     public function view(User $authUser, User $model): bool
     {
-        // Superadmin or view all users permission
-        if ($authUser->is_super_admin || $authUser->can('user.view_all_users')) {
-            return true;
-        }
+        $reporterHierarchyUserIds = User::getReporterHierarchyUserIds($authUser->id);
 
-        // Creator
         if ($model->added_by === $authUser->id) {
             return true;
         }
 
-        // Reporter or Manager
-        if (
-            optional($model->details)->reporter_id === $authUser->id ||
-            optional($model->details)->manager_id === $authUser->id
-        ) {
+        if (in_array($model->id, $reporterHierarchyUserIds)) {
             return true;
         }
 
-        // Otherwise deny
+        if (optional($model->details)->manager_id === $authUser->id) {
+            return true;
+        }
+
         return false;
     }
 
@@ -63,6 +58,14 @@ class UserPolicy
      */
     public function delete(User $authUser, User $model): bool
     {
+        if ($model->is_super_admin) {
+            return false;
+        }
+
+        if ($authUser->id === $model->id) {
+            return false;
+        }
+
         return $this->view($authUser, $model);
     }
 

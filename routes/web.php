@@ -110,7 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
     Route::resource('users', UserController::class)->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
-    Route::resource('users', UserController::class)->middleware(['permission.type:user.delete', 'can:delete,user'])->only(['destroy']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware(['permission.type:user.delete', 'can:delete,user']);
 
     // User restore routes
     Route::get('/restore/users', [UserRestoreController::class, 'restoreIndex'])->middleware('permission.type:user.restore')->name('users.restore.index');

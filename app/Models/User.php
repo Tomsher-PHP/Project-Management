@@ -259,6 +259,11 @@ class User extends Authenticatable
         return $this->hasMany(TaskTimeLog::class);
     }
 
+    public function isRunningTask()
+    {
+        return $this->taskTimeLogs()->where('is_running', true)->first();
+    }
+
     public function taskStatusHistories()
     {
         return $this->hasMany(TaskStatusHistory::class, 'added_by');
