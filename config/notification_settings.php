@@ -56,7 +56,6 @@ return [
         'sort_order' => 3
     ],
 
-    // NEW 1: Team Assigned
     'team_assigned' => [
         'label' => 'Team Assigned',
         'action' => 'team_assigned',
@@ -72,7 +71,6 @@ return [
         'sort_order' => 4
     ],
 
-    // NEW 2: Task Status Change
     'task_status_changed' => [
         'label' => 'Task Status Updated',
         'action' => 'task_status_changed',
@@ -92,6 +90,65 @@ return [
         'in_app' => true,
         'email' => true,
         'sort_order' => 5
+    ],
+
+    'task_request' => [
+        'label' => 'Task Request',
+        'action' => 'task_request',
+        'icon_bg' => '#099f38',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#099f38"/>
+                <rect x="20" y="17" width="18" height="24" rx="3" fill="white"/>
+                <rect x="25" y="14" width="8" height="5" rx="2" fill="white"/>
+                <path d="M24 25h10M24 30h8M24 35h6" stroke="#099f38" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="40" cy="36" r="6" fill="#06752A"/>
+                <path d="M37.5 36h5M40 33.5v5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 6
+    ],
+
+    'task_log_request' => [
+        'label' => 'Task Log Request',
+        'action' => 'task_log_request',
+        'icon_bg' => '#2d72d4',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#2d72d4"/>
+                <rect x="18" y="18" width="16" height="22" rx="3" fill="white"/>
+                <path d="M22 24h8M22 29h8M22 34h5" stroke="#2d72d4" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="39" cy="31" r="8" stroke="white" stroke-width="2.5"/>
+                <path d="M39 27v4l3 2" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 7
+    ],
+
+    'handoff_request' => [
+        'label' => 'Handoff Request',
+        'action' => 'handoff_request',
+        'icon_bg' => '#d42d2d',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#d42d2d"/>
+                <circle cx="22" cy="24" r="4" fill="white"/>
+                <circle cx="38" cy="36" r="4" fill="white"/>
+                <path d="M16 42c0-4 3.5-7 8-7h2" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M34 18h2c4.5 0 8 3 8 7" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M24 30h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M31 27l3 3-3 3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M36 30H26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M29 33l-3-3 3-3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 7
     ],
 
 ];
