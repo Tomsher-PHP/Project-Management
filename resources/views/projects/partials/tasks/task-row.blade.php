@@ -2,6 +2,7 @@
     $isSubtask = $isSubtask ?? false;
     $parentTaskId = $parentTaskId ?? null;
     $depth = $depth ?? 0;
+    $isDeletedProjectView = $project->trashed();
     $isBacklogPlacement = $project->project_flow !== 'linear' && !$task->project_sprint_id;
     $shouldPrefillPlacement = !$isBacklogPlacement && !($task->projectSprint?->is_backlog || $task->projectSprint?->is_system || $task->projectMilestone?->is_backlog || $task->projectMilestone?->is_system);
     $statusColor = $task->status?->color ?: '#CBD5E1';
@@ -10,10 +11,10 @@
     $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
     $modeColor = $task->taskMode?->color ?: '#3B82F6';
     $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
-    $canAddSubTask = auth()->user()?->can('task.create');
-    $canMoveTask = $showTaskActionColumn && !$isSubtask && auth()->user()?->can('move', $task);
-    $canDeleteTask = $showTaskActionColumn && auth()->user()?->can('delete', $task);
-    $canEditTask = $showTaskActionColumn && auth()->user()?->can('task.edit');
+    $canAddSubTask = ! $isDeletedProjectView && auth()->user()?->can('task.create');
+    $canMoveTask = ! $isDeletedProjectView && $showTaskActionColumn && !$isSubtask && auth()->user()?->can('move', $task);
+    $canDeleteTask = ! $isDeletedProjectView && $showTaskActionColumn && auth()->user()?->can('delete', $task);
+    $canEditTask = ! $isDeletedProjectView && $showTaskActionColumn && auth()->user()?->can('task.edit');
 @endphp
 
 <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isSubtask ? 'hidden bg-bgray-50/30 dark:bg-darkblack-500/20' : '' }}" data-project-task-id="{{ $task->id }}" @if ($isSubtask) data-project-task-parent-id="{{ $parentTaskId }}" hidden @endif>
@@ -26,9 +27,15 @@
             <div class="flex min-w-0 flex-1 items-start justify-between gap-3">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('tasks.edit', $task) }}" class="inline-flex items-center gap-2 font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
-                            <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
-                        </a>
+                        @if ($isDeletedProjectView)
+                            <div class="inline-flex items-center gap-2 font-semibold text-bgray-900 dark:text-white">
+                                <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 dark:text-white'" class="max-w-full" />
+                            </div>
+                        @else
+                            <a href="{{ route('tasks.edit', $task) }}" class="inline-flex items-center gap-2 font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
+                                <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
+                            </a>
+                        @endif
 
                         <span class="rounded-full bg-bgray-100 px-2 py-0.5 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
                             {{ $task->code ?: 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT) }}
@@ -54,12 +61,14 @@
                     @endif
                 </div>
 
-                <button type="button" class="invisible inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-transparent text-bgray-400 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 hover:border-success-200 hover:text-success-400 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="{{ $group['key'] }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
-                    </svg>
-                </button>
+                @if (! $isDeletedProjectView)
+                    <button type="button" class="invisible inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-transparent text-bgray-400 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 hover:border-success-200 hover:text-success-400 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$project, $task]) }}" data-project-task-group-key="{{ $group['key'] }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
+                        </svg>
+                    </button>
+                @endif
             </div>
         </div>
     </td>

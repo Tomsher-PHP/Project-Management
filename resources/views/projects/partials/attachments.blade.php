@@ -1,6 +1,7 @@
 @php
-    $canCreate = auth()->user()->can('project.add_notes_files');
-    $canRemove = auth()->user()->can('project.remove_notes_files');
+    $isDeletedProjectView = $project->trashed();
+    $canCreate = ! $isDeletedProjectView && auth()->user()->can('project.add_notes_files');
+    $canRemove = ! $isDeletedProjectView && auth()->user()->can('project.remove_notes_files');
 @endphp
 
 <div class="w-full">

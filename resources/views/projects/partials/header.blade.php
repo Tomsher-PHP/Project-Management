@@ -1,8 +1,9 @@
 @php
+    $isDeletedProject = $project->trashed();
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
-    $canChangeProjectStatus = auth()->user()->can('project.status_change');
-    $canChangeProjectStage = auth()->user()->can('project.edit');
-    $canAddProjectPayment = auth()->user()->can('project.add_payment_status');
+    $canChangeProjectStatus = ! $isDeletedProject && auth()->user()->can('project.status_change');
+    $canChangeProjectStage = ! $isDeletedProject && auth()->user()->can('project.edit');
+    $canAddProjectPayment = ! $isDeletedProject && auth()->user()->can('project.add_payment_status');
     $canViewProjectPayment = auth()->user()->can('project.view_payment_status');
 
     $projectStatusUpdateUrl = route('projects.updateProjectStatus', $project);

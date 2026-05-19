@@ -1,4 +1,8 @@
 @php
+    $isDeletedProjectView = $project->trashed();
+    $taskGroupsPageUrl = $isDeletedProjectView
+        ? route('projects.restore.tasks.groups.index', ['id' => $project->id])
+        : route('projects.tasks.groups.index', $project);
     $taskCreateProjectModules = $projectMilestones->reject(fn($projectMilestone) => (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system))->values();
     $taskCreateProjectSprints = $projectSprints->reject(fn($projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))->values();
     $taskCreateDefaultSprintId = $taskCreateProjectSprints->first()?->id;
@@ -62,11 +66,13 @@
                 </span>
             @endunless
 
-            @can('task.create')
-                <button type="button" class="inline-flex items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
-                    + Task
-                </button>
-            @endcan
+            @if (! $isDeletedProjectView)
+                @can('task.create')
+                    <button type="button" class="inline-flex items-center rounded-full bg-success-300 px-3 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-modal-open data-project-task-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
+                        + Task
+                    </button>
+                @endcan
+            @endif
         </div>
     </div>
 
@@ -78,7 +84,7 @@
             </p>
         </div>
     @else
-        <div class="space-y-4" data-project-task-group-list @unless ($isLinearFlow) data-load-url="{{ route('projects.tasks.groups.index', $project) }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
+        <div class="space-y-4" data-project-task-group-list @unless ($isLinearFlow) data-load-url="{{ $taskGroupsPageUrl }}" data-current-page="{{ $taskGroupsPagination['page'] ?? 1 }}" data-next-page="{{ $taskGroupsPagination['next_page'] ?? '' }}" data-has-more-pages="{{ !empty($taskGroupsPagination['has_more_pages']) ? 'true' : 'false' }}" @endunless>
             @include('projects.partials.tasks.group-cards', [
                 'project' => $project,
                 'taskGroups' => $taskGroups,
@@ -98,24 +104,24 @@
         @endunless
     @endif
 
-    @can('task.create')
-        <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-project-task-modal id="project_add_task_modal">
-            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-modal-close></div>
+    @if (! $isDeletedProjectView)
+        @can('task.create')
+            <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-project-task-modal id="project_add_task_modal">
+                <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-modal-close></div>
 
-            <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-                <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-project-task-modal-panel>
-                    <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
-                        <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
-                            <div>
-                                <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
+                <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
+                    <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-project-task-modal-panel>
+                        <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+                            <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
+                                </div>
+
+                                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-modal-close>
+                                    ✕
+                                </button>
                             </div>
-
-                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-modal-close>
-                                ✕
-                            </button>
-                        </div>
-
-                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-advanced="false" data-task-placement='@json($taskPlacementOptions)'>
+                            <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-form data-store-url="{{ route('projects.tasks.store', $project) }}" data-advanced="false" data-task-placement='@json($taskPlacementOptions)'>
                             <div class="grid gap-4 md:grid-cols-2">
                                 @unless ($isLinearFlow)
                                     <div>
@@ -275,8 +281,9 @@
             </div>
         </div>
     @endcan
+    @endif
 
-    @if (!$isLinearFlow && auth()->user()?->can('task.move'))
+    @if (! $isDeletedProjectView && ! $isLinearFlow && auth()->user()?->can('task.move'))
         <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
 

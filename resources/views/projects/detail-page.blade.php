@@ -5,9 +5,22 @@
 
         @php
             $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
+            $isDeletedProjectView = $project->trashed();
+            $tabsUrlTemplate = $isDeletedProjectView ? route('projects.restore.tabs.show', ['id' => $project->id, 'tab' => '__TAB__']) : route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']);
+            $activityModalUrl = $isDeletedProjectView ? route('projects.restore.activity.modal', ['id' => $project->id]) : route('projects.activity.modal', $project);
+            $commentsModalUrl = $isDeletedProjectView ? route('projects.restore.comments.modal', ['id' => $project->id]) : route('projects.comments.modal', $project);
         @endphp
 
-        <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__']) }}">
+        <section class="space-y-6" data-project-tabs data-project-id="{{ $project->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}">
+
+            @if ($isDeletedProjectView)
+                <div class="rounded-xl bg-[#FDF9E9] px-4 py-3 text-sm text-warning-300 dark:bg-darkblack-600 dark:text-warning-200">
+                    <p class="font-semibold">
+                        This project has been deleted. You are viewing it in read-only context. @if ($project->deleted_at)<span>Deleted at: @appDateTime($project->deleted_at)</span>@endif
+                    </p>
+                </div>
+            @endif
+
             <div id="project-header">
                 @include('projects.partials.header', [
                     'projectTimeline' => $projectTimeline,
@@ -67,7 +80,7 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         @can('activity_log.view')
-                            <button type="button" data-project-insights-trigger data-project-insights-url="{{ route('projects.activity.modal', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <button type="button" data-project-insights-trigger data-project-insights-url="{{ $activityModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
                                 <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                     <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
@@ -81,7 +94,7 @@
                             </button>
                         @endcan
 
-                        <button type="button" data-project-insights-trigger data-project-insights-url="{{ route('projects.comments.modal', $project) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                        <button type="button" data-project-insights-trigger data-project-insights-url="{{ $commentsModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
                             <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -128,9 +141,9 @@
     <script>
         window.ProjectApp = {
             id: {{ $project->id }},
-            canCreateNotesFiles: @json(auth()->user()->can('project.add_notes_files')),
-            canRemoveNotesFiles: @json(auth()->user()->can('project.remove_notes_files')),
-            tabsUrlTemplate: @json(route('projects.tabs.show', ['project' => $project, 'tab' => '__TAB__'])),
+            canCreateNotesFiles: @json(!$project->trashed() && auth()->user()->can('project.add_notes_files')),
+            canRemoveNotesFiles: @json(!$project->trashed() && auth()->user()->can('project.remove_notes_files')),
+            tabsUrlTemplate: @json($tabsUrlTemplate),
         };
     </script>
     @vite('resources/js/modules/projects/project-detail.js')

@@ -37,66 +37,72 @@
 
     <!-- Bottom Right Actions -->
     <div class="mt-4 space-y-2">
-        @can('project.add_team', $project)
-            <div class="flex flex-wrap gap-2">
-                @if ($member->pivot->is_active && $member->pivot->project_role !== 'team_leader')
-                    <button type="button" class="set-project-role flex items-center gap-1 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-300" data-id="{{ $member->id }}" data-role="team_leader" data-role-label="Team Leader">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Set as Team Leader
-                    </button>
-                @endif
+        @if (! $project->trashed())
+            @can('project.add_team', $project)
+                <div class="flex flex-wrap gap-2">
+                    @if ($member->pivot->is_active && $member->pivot->project_role !== 'team_leader')
+                        <button type="button" class="set-project-role flex items-center gap-1 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-300" data-id="{{ $member->id }}" data-role="team_leader" data-role-label="Team Leader">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Set as Team Leader
+                        </button>
+                    @endif
 
-                @if ($member->pivot->is_active && $member->pivot->project_role !== 'coordinator')
-                    <button type="button" class="set-project-role flex items-center gap-1 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-blue-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-300" data-id="{{ $member->id }}" data-role="coordinator" data-role-label="Coordinator">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Set as Coordinator
-                    </button>
-                @endif
-            </div>
-        @endcan
+                    @if ($member->pivot->is_active && $member->pivot->project_role !== 'coordinator')
+                        <button type="button" class="set-project-role flex items-center gap-1 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-blue-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-300" data-id="{{ $member->id }}" data-role="coordinator" data-role-label="Coordinator">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Set as Coordinator
+                        </button>
+                    @endif
+                </div>
+            @endcan
+        @endif
 
         <div class="flex flex-wrap justify-end gap-2">
-            @can('project.add_team', $project)
-                <!-- Checklist Button -->
-                <button type="button" class="manage-checklist inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-indigo-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-bgray-100" data-id="{{ $member->id }}" data-project-id="{{ $project->id }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M9 17h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01" />
-                    </svg>
-                    <span>Checklist</span>
-                    @if ($checklistCount > 0)
-                        <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
-                            {{ $checklistCount }}
-                        </span>
-                    @endif
-                </button>
-            @endcan
-
-            @can('project.remove_team', $project)
-                <!-- Enable/Disable Button -->
-                <button type="button" class="toggle-member flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition duration-200
-                           {{ $member->pivot->is_active ? 'border-bgray-200 bg-white text-bgray-700 hover:border-success-300 hover:bg-bgray-100 hover:text-success-300' : 'border-success-100 bg-success-50 text-success-400 hover:border-success-300 hover:bg-success-50 hover:text-success-300' }}" data-id="{{ $member->id }}" data-active="{{ $member->pivot->is_active ? 1 : 0 }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        @if ($member->pivot->is_active)
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        @else
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            @if (! $project->trashed())
+                @can('project.add_team', $project)
+                    <!-- Checklist Button -->
+                    <button type="button" class="manage-checklist inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-indigo-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-bgray-100" data-id="{{ $member->id }}" data-project-id="{{ $project->id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6M9 9h6M9 13h6M9 17h6M5 5h.01M5 9h.01M5 13h.01M5 17h.01" />
+                        </svg>
+                        <span>Checklist</span>
+                        @if ($checklistCount > 0)
+                            <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                                {{ $checklistCount }}
+                            </span>
                         @endif
-                    </svg>
-                    {{ $member->pivot->is_active ? 'Disable' : 'Enable' }}
-                </button>
+                    </button>
+                @endcan
+            @endif
 
-                <!-- Remove Button -->
-                <button type="button" class="remove-member flex items-center gap-1 rounded-full border border-bgray-200 bg-error-50 px-3 py-1 text-xs font-medium text-error-300 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-100" data-id="{{ $member->id }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Remove
-                </button>
-            @endcan
+            @if (! $project->trashed())
+                @can('project.remove_team', $project)
+                    <!-- Enable/Disable Button -->
+                    <button type="button" class="toggle-member flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition duration-200
+                               {{ $member->pivot->is_active ? 'border-bgray-200 bg-white text-bgray-700 hover:border-success-300 hover:bg-bgray-100 hover:text-success-300' : 'border-success-100 bg-success-50 text-success-400 hover:border-success-300 hover:bg-success-50 hover:text-success-300' }}" data-id="{{ $member->id }}" data-active="{{ $member->pivot->is_active ? 1 : 0 }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            @if ($member->pivot->is_active)
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            @else
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            @endif
+                        </svg>
+                        {{ $member->pivot->is_active ? 'Disable' : 'Enable' }}
+                    </button>
+
+                    <!-- Remove Button -->
+                    <button type="button" class="remove-member flex items-center gap-1 rounded-full border border-bgray-200 bg-error-50 px-3 py-1 text-xs font-medium text-error-300 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-100" data-id="{{ $member->id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Remove
+                    </button>
+                @endcan
+            @endif
         </div>
     </div>
 

@@ -349,6 +349,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('projects/restore', [ProjectRestoreController::class, 'index'])->middleware('permission.type:project.restore')->name('projects.restore.index');
     Route::post('projects/restore/bulk', [ProjectRestoreController::class, 'bulkRestore'])->middleware('permission.type:project.restore')->name('projects.restore.bulk');
     Route::post('projects/restore/{id}', [ProjectRestoreController::class, 'restore'])->middleware('permission.type:project.restore')->name('projects.restore');
+    Route::prefix('projects/restore/{id}')->middleware('permission.type:project.restore')->group(function () {
+        Route::get('view', [ProjectRestoreController::class, 'show'])->name('projects.restore.show');
+        Route::get('tabs/{tab}', [ProjectRestoreController::class, 'tab'])->name('projects.restore.tabs.show');
+        Route::get('activity-modal', [ProjectRestoreController::class, 'activityModal'])->middleware('permission.type:activity_log.view')->name('projects.restore.activity.modal');
+        Route::get('comments-modal', [ProjectRestoreController::class, 'commentsModal'])->name('projects.restore.comments.modal');
+        Route::get('milestones/{projectMilestone}/sprints', [ProjectRestoreController::class, 'milestoneSprints'])->name('projects.restore.milestones.sprints.index');
+        Route::get('tasks/groups', [ProjectRestoreController::class, 'taskGroupsPage'])->name('projects.restore.tasks.groups.index');
+        Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
+    });
 
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);

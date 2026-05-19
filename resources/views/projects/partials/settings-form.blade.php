@@ -1,6 +1,7 @@
 @php
     //get project edit permission
-    $canEdit = auth()->user()->can('project.edit');
+    $canEdit = auth()->user()->can('project.edit') && ! $project->trashed();
+    $isDeletedProjectView = $project->trashed();
 @endphp
 <form id="project-settings-form" action="{{ route('projects.update', $project->id) }}" method="POST" class="space-y-10" x-data="projectForm()" data-can-edit="{{ $canEdit ? 'true' : 'false' }}">
     @csrf

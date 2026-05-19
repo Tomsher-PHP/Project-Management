@@ -91,7 +91,7 @@
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-stretch">
-                                                <!-- 🎨 Priority Vertical Line -->
+                                                <!-- Priority Vertical Line -->
                                                 @if (isset($priority))
                                                     <div class="w-1 rounded-sm mr-4 {{ $priority['bg_class'] }}" title="{{ 'Priority: ' . ($priority['label'] ?? '--') }}"></div>
                                                 @endif

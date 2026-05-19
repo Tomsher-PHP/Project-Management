@@ -21,26 +21,32 @@
             @include('projects.partials.modals.comment-items', ['comments' => $comments])
         </div>
 
-        <div class="border-t border-bgray-200 bg-white px-6 py-5 pb-7 dark:border-darkblack-400 dark:bg-darkblack-600 sm:pb-6">
-            <form method="POST" action="{{ route('projects.comments.store', $project) }}" data-project-comment-form>
-                @csrf
-                <div class="flex flex-col gap-3">
-                    <textarea
-                        id="project-comment-message"
-                        name="comment"
-                        rows="3"
-                        class="w-full rounded-xl border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                        placeholder="Write a comment..."
-                        data-project-comment-input
-                    ></textarea>
-                    <p class="hidden text-sm text-error-300" data-project-comment-error></p>
-                    <div class="flex flex-wrap justify-end gap-3">
-                        <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-comment-submit>
-                            Send
-                        </button>
+        @if ($project->trashed())
+            <div class="border-t border-bgray-200 bg-white px-6 py-5 pb-7 text-sm text-warning-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-warning-200 sm:pb-6">
+                Comments are available in read-only mode for deleted projects.
+            </div>
+        @else
+            <div class="border-t border-bgray-200 bg-white px-6 py-5 pb-7 dark:border-darkblack-400 dark:bg-darkblack-600 sm:pb-6">
+                <form method="POST" action="{{ route('projects.comments.store', $project) }}" data-project-comment-form>
+                    @csrf
+                    <div class="flex flex-col gap-3">
+                        <textarea
+                            id="project-comment-message"
+                            name="comment"
+                            rows="3"
+                            class="w-full rounded-xl border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                            placeholder="Write a comment..."
+                            data-project-comment-input
+                        ></textarea>
+                        <p class="hidden text-sm text-error-300" data-project-comment-error></p>
+                        <div class="flex flex-wrap justify-end gap-3">
+                            <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-60" data-project-comment-submit>
+                                Send
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </form>
-        </div>
+                </form>
+            </div>
+        @endif
     </div>
 </div>

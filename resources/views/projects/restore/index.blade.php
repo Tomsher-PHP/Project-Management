@@ -7,7 +7,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Back to Projects</span>
+                <span>Back</span>
             </a>
 
             <div class="flex flex-wrap items-center gap-3">
@@ -36,7 +36,7 @@
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">#</span>
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
-                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Project Name / Code</span>
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Name</span>
                                     </td>
                                     <td class="px-6 py-5 xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Customer</span>
@@ -50,7 +50,6 @@
                                 </tr>
                                 @php
                                     $startNumber = ($projects->currentPage() - 1) * $projects->perPage();
-                                    $globalDateFormat = config('constants.date_format', 'Y-m-d');
                                 @endphp
                                 @forelse ($projects as $project)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
@@ -63,7 +62,7 @@
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-2">
                                                 <x-project-flow-icon :flow="$project->project_flow" size="sm" />
-                                                <span class="text-base font-semibold text-bgray-900 dark:text-white">{{ $project->name }}</span>
+                                                <a href="{{ route('projects.restore.show', $project->id) }}"><span class="text-base font-semibold text-bgray-900 dark:text-white">{{ $project->name }}</span></a>
                                             </div>
                                             <span class="text-xs text-bgray-500">Code: {{ $project->project_code ?? '--' }}</span>
                                         </td>
@@ -74,12 +73,18 @@
                                             <span class="text-base text-bgray-600 dark:text-bgray-50">@appDateTime($project->deleted_at)</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
-                                            <form action="{{ route('projects.restore', $project->id) }}" method="POST" data-project-restore-form>
-                                                @csrf
-                                                <button type="submit" class="inline-flex items-center rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400">
-                                                    Restore
-                                                </button>
-                                            </form>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <a href="{{ route('projects.restore.show', $project->id) }}" class="inline-flex items-center rounded-md border border-bgray-300 px-4 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:text-bgray-50">
+                                                    View
+                                                </a>
+
+                                                <form action="{{ route('projects.restore', $project->id) }}" method="POST" data-project-restore-form>
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400">
+                                                        Restore
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty

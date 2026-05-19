@@ -46,7 +46,7 @@
                             @endif
                         </div>
 
-                        @if ($index === 0 && auth()->user()->can('project.add_payment_status'))
+                        @if ($index === 0 && ! $project->trashed() && auth()->user()->can('project.add_payment_status'))
                             <div class="sm:self-start">
                                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:bg-darkblack-600" data-project-payment-edit data-url="{{ route('projects.updateProjectPaymentStatus', ['project' => $project, 'payment' => $payment]) }}" data-amount="{{ $payment->amount }}" data-paid-date="{{ $payment->paid_date ? $payment->paid_date->format('Y-m-d') : '' }}"
                                     data-coverage-start-date="{{ $payment->coverage_start_date ? $payment->coverage_start_date->format('Y-m-d') : '' }}" data-coverage-end-date="{{ $payment->coverage_end_date ? $payment->coverage_end_date->format('Y-m-d') : '' }}" data-notes="{{ $payment->notes }}">

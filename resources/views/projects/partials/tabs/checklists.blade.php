@@ -62,7 +62,7 @@
                                                             data-project-checklist-item-toggle 
                                                             data-url="{{ route('projects.checklists.toggleItem', ['project' => $project, 'itemId' => $item->id]) }}"
                                                             {{ $item->status ? 'checked' : '' }}
-                                                            @disabled($user->id !== auth()->id())>
+                                                            @disabled($project->trashed() || $user->id !== auth()->id())>
                                                     </div>
                                                     <label for="item-{{ $item->id }}" class="cursor-pointer text-sm font-medium leading-relaxed text-bgray-800 dark:text-bgray-100">
                                                         {{ $item->question }}

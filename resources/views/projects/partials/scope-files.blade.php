@@ -1,6 +1,7 @@
 @php
-    $showUpload = $showUpload ?? true;
-    $showDelete = $showDelete ?? true;
+    $isDeletedProjectView = $project->trashed();
+    $showUpload = ($showUpload ?? true) && ! $isDeletedProjectView;
+    $showDelete = ($showDelete ?? true) && ! $isDeletedProjectView;
     $heading = $heading ?? 'Scope Files';
 @endphp
 
