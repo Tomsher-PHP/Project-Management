@@ -113,13 +113,14 @@ class AppServiceProvider extends ServiceProvider
         TaskTimeLog::observe(TaskTimeLogObserver::class);
         ProjectSprint::observe(ProjectSprintObserver::class);
 
+        Gate::before(function ($user, $ability) {
+            return $user->is_super_admin ? true : null;
+        });
+        
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
 
-        // Gate::before(function ($user, $ability) {
-        //     return $user->is_super_admin ? true : null;
-        // });
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string

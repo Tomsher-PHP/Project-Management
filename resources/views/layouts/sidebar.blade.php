@@ -24,35 +24,35 @@
                 'has_any_pending' => false,
             ];
 
-            $canViewDashboard = $authUser?->can('dashboard.view') || $isSuperAdmin;
-            $canViewRoles = $authUser?->can('role.view') || $isSuperAdmin;
-            $canViewUsers = $authUser?->canAny(['user.view', 'user.view_all_users']) || $isSuperAdmin;
-            $canViewTeams = $authUser?->canAny(['team.view', 'team.view_all_teams']) || $isSuperAdmin;
-            $canViewCustomers = $authUser?->can('customer.view') || $isSuperAdmin;
+            $canViewDashboard = $authUser?->can('dashboard.view');
+            $canViewRoles = $authUser?->can('role.view');
+            $canViewUsers = $authUser?->canAny(['user.view', 'user.view_all_users']);
+            $canViewTeams = $authUser?->canAny(['team.view', 'team.view_all_teams']);
+            $canViewCustomers = $authUser?->can('customer.view');
 
-            $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']) || $isSuperAdmin;
-            $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']) || $isSuperAdmin;
+            $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']);
+            $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']);
             $canViewTaskRequests = $canViewTasks;
-            $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject') || $isSuperAdmin;
-            $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']) || $isSuperAdmin;
+            $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
+            $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
 
-            $canViewScheduleShift = $authUser?->can('schedule_shift.view') || $isSuperAdmin;
+            $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
             $settingsPermissions = config('constants.settings_permissions');
             $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
 
             $canViewActivityLog = $authUser?->can('activity_log.view');
 
-            $canViewProjectReports = $authUser?->can('reports.project_view') || $isSuperAdmin;
-            $canViewTaskReports = $authUser?->can('reports.task_view') || $isSuperAdmin;
-            $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view') || $isSuperAdmin;
-            $canViewAttendanceReports = $authUser?->can('reports.attendance_view') || $isSuperAdmin;
-            $canViewDailyReports = $authUser?->can('reports.daily_view') || $isSuperAdmin;
-            $canViewShiftScheduleReports = $authUser?->can('reports.shift_schedule_view') || $isSuperAdmin;
-            $canViewProductivityReports = $authUser?->can('reports.productivity_view') || $isSuperAdmin;
-            $canViewSprintReports = $authUser?->can('reports.sprint_view') || $isSuperAdmin;
-            $canViewMilestoneReports = $authUser?->can('reports.milestone_view') || $isSuperAdmin;
-            $canViewLeaveReports = $authUser?->can('reports.leave_view') || $isSuperAdmin;
+            $canViewProjectReports = $authUser?->can('reports.project_view');
+            $canViewTaskReports = $authUser?->can('reports.task_view');
+            $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view');
+            $canViewAttendanceReports = $authUser?->can('reports.attendance_view');
+            $canViewDailyReports = $authUser?->can('reports.daily_view');
+            $canViewShiftScheduleReports = $authUser?->can('reports.shift_schedule_view');
+            $canViewProductivityReports = $authUser?->can('reports.productivity_view');
+            $canViewSprintReports = $authUser?->can('reports.sprint_view');
+            $canViewMilestoneReports = $authUser?->can('reports.milestone_view');
+            $canViewLeaveReports = $authUser?->can('reports.leave_view');
 
             $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
             $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests;

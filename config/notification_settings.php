@@ -132,10 +132,10 @@ return [
     'handoff_request' => [
         'label' => 'Handoff Request',
         'action' => 'handoff_request',
-        'icon_bg' => '#d42d2d',
+        'icon_bg' => '#be14ed',
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="30" fill="#d42d2d"/>
+                <circle cx="30" cy="30" r="30" fill="#be14ed"/>
                 <circle cx="22" cy="24" r="4" fill="white"/>
                 <circle cx="38" cy="36" r="4" fill="white"/>
                 <path d="M16 42c0-4 3.5-7 8-7h2" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
