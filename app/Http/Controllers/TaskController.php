@@ -882,8 +882,16 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Task $task): RedirectResponse
+    public function destroy(Task $task, TaskServices $taskServices): RedirectResponse
     {
+        $deleteRestriction = $taskServices->getDeleteRestriction($task);
+
+        if ($deleteRestriction) {
+            return redirect()
+                ->back()
+                ->with('error', $deleteRestriction['message']);
+        }
+
         $task->delete();
 
         return redirect()

@@ -707,6 +707,28 @@ class TaskServices
         return max(0, (int) ($project->default_task_estimate_seconds ?? 0));
     }
 
+    // Get restriction message and status if the task cannot be deleted, otherwise return null
+    public function getDeleteRestriction(Task $task): ?array
+    {
+        if ($task->activeTimeLog()->exists()) {
+            return [
+                'message' => 'Stop the running timer before deleting this task.',
+                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+                'reason' => 'running_timer_exists',
+            ];
+        }
+
+        if ($task->childTasks()->exists()) {
+            return [
+                'message' => 'Delete the subtasks first before removing this task.',
+                'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
+                'reason' => 'subtasks_exist',
+            ];
+        }
+
+        return null;
+    }
+
     /**================= Start/Stop Timer related methods ================= */
 
     // Start a timer for the given task and user
@@ -1227,4 +1249,6 @@ class TaskServices
             })
             ->values();
     }
+
+
 }

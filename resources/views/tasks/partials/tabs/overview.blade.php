@@ -3,11 +3,7 @@
     $cardTitleClasses = 'text-base font-semibold text-bgray-900 dark:text-white';
     $cardTextClasses = 'text-sm text-bgray-600 dark:text-bgray-300';
     $emptyTextClasses = 'text-sm italic text-bgray-600 dark:text-bgray-300';
-    $timeStatusClasses = ! $timeComparison['has_estimate']
-        ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200'
-        : ($timeComparison['is_over_estimate']
-            ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300'
-            : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
+    $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
     $timeBarClasses = $timeComparison['is_over_estimate'] ? 'bg-red-500' : 'bg-success-400';
     $formatDuration = function (?int $seconds): string {
         $normalizedSeconds = max(0, (int) ($seconds ?? 0));
@@ -37,12 +33,7 @@
                     <form class="mt-4 space-y-3" data-task-overview-description-form action="{{ route('tasks.overview.description.update', $task) }}" method="POST">
                         @csrf
                         @method('PATCH')
-                        <textarea
-                            name="description"
-                            rows="6"
-                            class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200"
-                            placeholder="Add a task description..."
-                        >{{ $description }}</textarea>
+                        <textarea name="description" rows="6" class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200" placeholder="Add a task description...">{{ $description }}</textarea>
                         <p class="hidden text-sm text-red-500" data-task-overview-description-error></p>
                         <div class="flex items-center justify-end">
                             <button type="submit" class="inline-flex items-center rounded-lg bg-success-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-300" data-task-overview-description-submit>
@@ -61,39 +52,41 @@
                 <h3 class="{{ $cardTitleClasses }}">Context</h3>
 
                 @php
-                    $visibleContextItems = collect($contextItems)->filter(function ($item) {
-                        $value = $item['value'] ?? null;
+                    $visibleContextItems = collect($contextItems)
+                        ->filter(function ($item) {
+                            $value = $item['value'] ?? null;
 
-                        return filled($value) && $value !== '--';
-                    })->values();
+                            return filled($value) && $value !== '--';
+                        })
+                        ->values();
                 @endphp
 
                 @if ($visibleContextItems->isEmpty())
                     <p class="mt-4 {{ $emptyTextClasses }}">No context details available.</p>
                 @else
                     <dl class="mt-4 divide-y divide-bgray-100 dark:divide-darkblack-400">
-                    @foreach ($visibleContextItems as $item)
-                        <div class="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                            <dt class="text-sm font-medium text-bgray-600 dark:text-bgray-300">{{ $item['label'] }}</dt>
-                            <dd class="max-w-[70%] text-right text-sm font-semibold text-bgray-900 dark:text-white">
-                                @if (! empty($item['url']) && filled($item['value']) && $item['value'] !== '--')
-                                    <a href="{{ $item['url'] }}" class="{{ ! empty($item['is_html']) ? 'inline-flex items-center justify-end gap-2' : '' }} transition hover:text-success-400 dark:hover:text-success-300">
-                                        @if (! empty($item['is_html']))
+                        @foreach ($visibleContextItems as $item)
+                            <div class="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                                <dt class="text-sm font-medium text-bgray-600 dark:text-bgray-300">{{ $item['label'] }}</dt>
+                                <dd class="max-w-[70%] text-right text-sm font-semibold text-bgray-900 dark:text-white">
+                                    @if (!empty($item['url']) && filled($item['value']) && $item['value'] !== '--')
+                                        <a href="{{ $item['url'] }}" class="{{ !empty($item['is_html']) ? 'inline-flex items-center justify-end gap-2' : '' }} transition hover:text-success-400 dark:hover:text-success-300">
+                                            @if (!empty($item['is_html']))
+                                                {!! $item['value'] !!}
+                                            @else
+                                                {{ $item['value'] }}
+                                            @endif
+                                        </a>
+                                    @else
+                                        @if (!empty($item['is_html']))
                                             {!! $item['value'] !!}
                                         @else
                                             {{ $item['value'] }}
                                         @endif
-                                    </a>
-                                @else
-                                    @if (! empty($item['is_html']))
-                                        {!! $item['value'] !!}
-                                    @else
-                                        {{ $item['value'] }}
                                     @endif
-                                @endif
-                            </dd>
-                        </div>
-                    @endforeach
+                                </dd>
+                            </div>
+                        @endforeach
                     </dl>
                 @endif
             </section>
@@ -103,7 +96,7 @@
 
                 <div class="mt-4 flex flex-wrap gap-2">
                     @forelse ($tags as $tag)
-                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
+                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-semibold text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $tag->color ?: '#94A3B8' }}"></span>
                             {{ $tag->name }}
                         </span>
@@ -123,16 +116,16 @@
                         <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                             <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">{{ $item['label'] }}</p>
 
-                            @if (! empty($item['color']))
-                                <span class="mt-2 inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-600 dark:border-darkblack-400 dark:text-bgray-100">
+                            @if (!empty($item['color']))
+                                <span class="mt-2 inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">
                                     <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $item['color'] }}"></span>
                                     {{ $item['value'] }}
                                 </span>
-                            @elseif (! empty($item['badge_class']))
+                            @elseif (!empty($item['badge_class']))
                                 <span class="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold text-white {{ $item['badge_class'] }}">
                                     {{ $item['value'] }}
                                 </span>
-                            @elseif (! empty($item['url']) && filled($item['value']) && $item['value'] !== '--')
+                            @elseif (!empty($item['url']) && filled($item['value']) && $item['value'] !== '--')
                                 <a href="{{ $item['url'] }}" class="mt-2 inline-flex text-sm font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300">
                                     {{ $item['value'] }}
                                 </a>
@@ -185,7 +178,7 @@
                     </div>
 
                     <p class="mt-3 {{ $cardTextClasses }}">
-                        @if (! $timeComparison['has_estimate'])
+                        @if (!$timeComparison['has_estimate'])
                             <span class="text-error-200">Add an estimate to start comparing planned and actual effort.</span>
                         @elseif ($timeComparison['is_over_estimate'])
                             <span class="text-error-200">Actual time is over the estimate by {{ $timeComparison['remaining_or_over_formatted'] }}.</span>
@@ -215,7 +208,7 @@
                 <p class="mt-1 {{ $cardTextClasses }}">Direct child tasks linked to this task.</p>
             </div>
 
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-100">
+            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                 {{ $subtasks->count() }} {{ \Illuminate\Support\Str::plural('subtask', $subtasks->count()) }}
             </span>
         </div>
@@ -245,23 +238,13 @@
                             <tr class="align-top">
                                 <td class="py-4 pr-4">
                                     <a href="{{ route('tasks.edit', $subtask) }}" class="block transition hover:text-success-400 dark:hover:text-success-300">
-                                        <x-task-name-status
-                                            :name="$subtask->name"
-                                            :request-type="$subtask->request_type"
-                                            :request-status="$subtask->request_status"
-                                            :limit="48"
-                                            limit-end=".."
-                                            show-priority-indicator
-                                            priority-indicator="line"
-                                            :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'"
-                                            text-class="text-sm font-semibold text-bgray-900 dark:text-white"
-                                        />
+                                        <x-task-name-status :name="$subtask->name" :request-type="$subtask->request_type" :request-status="$subtask->request_status" :limit="48" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" text-class="text-sm font-semibold text-bgray-900 dark:text-white" />
                                         <p class="mt-1 text-xs text-[#7C97C1] dark:text-bgray-300">{{ $subtask->code ?: 'TSK-' . str_pad($subtask->id, 5, '0', STR_PAD_LEFT) }}</p>
                                     </a>
                                 </td>
                                 <td class="py-4 pr-4">
                                     @if ($subtask->status)
-                                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                                        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                                             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
                                             {{ $subtask->status->name }}
                                         </span>
@@ -276,13 +259,13 @@
                                         {{ $priorityConfig['label'] ?? ucfirst($subtask->priority ?: 'medium') }}
                                     </span>
                                 </td>
-                                <td class="py-4 pr-4 text-sm font-medium text-bgray-700 dark:text-bgray-100">
+                                <td class="py-4 pr-4 text-sm font-medium text-bgray-600 dark:text-bgray-300">
                                     {{ $subtask->currentAssignee?->name ?? 'Unassigned' }}
                                 </td>
-                                <td class="py-4 pr-4 text-sm font-medium text-bgray-700 dark:text-bgray-100">
+                                <td class="py-4 pr-4 text-sm font-medium text-bgray-600 dark:text-bgray-300">
                                     {{ $formatDuration($subtask->estimated_time_seconds) }}
                                 </td>
-                                <td class="py-4 text-sm font-medium text-bgray-700 dark:text-bgray-100">
+                                <td class="py-4 text-sm font-medium text-bgray-600 dark:text-bgray-300">
                                     {{ $formatDuration($subtask->actual_time_seconds) }}
                                 </td>
                             </tr>
