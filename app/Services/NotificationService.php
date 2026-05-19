@@ -3,18 +3,48 @@
 namespace App\Services;
 
 use App\Models\HandoffRequest;
+use App\Models\Shift;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
+use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
-use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class NotificationService
 {
+    private function getNotificationChannels(int $userId, ?string $notificationType): array
+    {
+        if (blank($notificationType)) {
+            return [];
+        }
+
+        $setting = UserNotificationSetting::query()
+            ->where('user_id', $userId)
+            ->where('action', $notificationType)
+            ->first();
+
+        if (! $setting) {
+            return [];
+        }
+
+        $channels = [];
+
+        if ($setting->mail) {
+            $channels[] = 'mail';
+        }
+
+        if ($setting->in_app) {
+            $channels[] = 'database';
+            $channels[] = 'broadcast';
+        }
+
+        return $channels;
+    }
+
     // Single user
-    public function send(int $userId, string $title, string $message, ?string $url = null): void
+    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null): void
     {
         $user = User::find($userId);
 
@@ -22,23 +52,65 @@ class NotificationService
             return;
         }
 
+        $channels = $this->getNotificationChannels($user->id, $notificationType);
+
+        if ($channels === []) {
+            return;
+        }
+
         $user->notify(new TaskAssignedNotification(
             $title,
             $message,
-            $url
+            $url,
+            $channels
         ));
     }
 
     // Multiple users
-    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null): void
+    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null): void
     {
         User::whereIn('id', $userIds)
-            ->chunk(50, function ($users) use ($title, $message, $url) {
-                Notification::send(
-                    $users,
-                    new TaskAssignedNotification($title, $message, $url)
-                );
+            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType) {
+                foreach ($users as $user) {
+                    $channels = $this->getNotificationChannels($user->id, $notificationType);
+
+                    if ($channels === []) {
+                        continue;
+                    }
+
+                    $user->notify(new TaskAssignedNotification(
+                        $title,
+                        $message,
+                        $url,
+                        $channels
+                    ));
+                }
             });
+    }
+
+    // Notify users about shift assignment with shift details
+    public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
+    {
+        $userIds = is_array($userIds) ? $userIds : [$userIds];
+
+        if (empty($userIds)) {
+            return;
+        }
+
+        $dateFrom = $dateFrom instanceof Carbon ? $dateFrom : Carbon::parse($dateFrom);
+        $dateTo = $dateTo ? ($dateTo instanceof Carbon ? $dateTo : Carbon::parse($dateTo)) : null;
+
+        $shift = Shift::withTrashed()->find($shiftId);
+
+        if (! $shift) {
+            return;
+        }
+
+        $title = 'Shift Assigned';
+
+        $message = "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--');
+
+        $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED);
     }
 
     // Task assignment notification to assignee when task is created or updated
@@ -75,7 +147,8 @@ class NotificationService
             $currentAssigneeId,
             $title,
             $message,
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_ASSIGNED
         );
     }
 
@@ -100,7 +173,7 @@ class NotificationService
             foreach ($users as $user) {
                 $actorLabel = $user->id === $actor->id ? 'You' : $actor->name;
                 $message = "{$actorLabel} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
-                $this->send($user->id, $title, $message, $url);
+                $this->send($user->id, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED);
             }
         });
     }
@@ -133,7 +206,8 @@ class NotificationService
             $userIds,
             'Task Request Created',
             "{$requesterName} requested task '{$taskName}' in '{$projectName}'.",
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_REQUEST
         );
     }
 
@@ -165,10 +239,12 @@ class NotificationService
             (int) $task->current_assignee_id,
             $isRejected ? 'Task Request Rejected' : 'Task Request Approved',
             $message,
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_REQUEST
         );
     }
 
+    // Notify related users when a time log change request is created
     public function notifyTaskTimeLogChangeRequestCreated(TaskTimeLogChangeRequest $changeRequest): void
     {
         $changeRequest->loadMissing([
@@ -206,16 +282,14 @@ class NotificationService
             $recipientIds,
             'Task Time Log Change Request Created',
             "{$requesterName} requested a time log change for task '{$taskName}' in '{$projectName}'.",
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_LOG_REQUEST
         );
     }
 
-    public function notifyTaskTimeLogChangeRequestReviewed(
-        TaskTimeLogChangeRequest $changeRequest,
-        User $reviewer,
-        string $action,
-        ?string $description = null
-    ): void {
+    // Notify only the requested user when their time log change request is approved or rejected
+    public function notifyTaskTimeLogChangeRequestReviewed(TaskTimeLogChangeRequest $changeRequest, User $reviewer, string $action, ?string $description = null): void
+    {
         if (! $changeRequest->user_id) {
             return;
         }
@@ -247,10 +321,12 @@ class NotificationService
             (int) $changeRequest->user_id,
             $isRejected ? 'Task Time Log Change Request Rejected' : 'Task Time Log Change Request Approved',
             $message,
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_LOG_REQUEST
         );
     }
 
+    // Notify assignee when their running timer is stopped by other user or system due to status change
     public function notifyTaskTimerStoppedByOtherUser(Task $task, User $actor): void
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -272,10 +348,12 @@ class NotificationService
             $assigneeId,
             'Task Timer Stopped',
             "{$actorName} stopped your running timer for task '{$taskName}' in project '{$projectName}'.",
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_STATUS_CHANGED
         );
     }
 
+    // Notify assignee when their running timer is stopped due to status change by other user or system
     public function notifyTaskTimerStoppedBecauseStatusChanged(Task $task, User $actor, string $statusName): void
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -297,10 +375,12 @@ class NotificationService
             $assigneeId,
             'Task Timer Stopped',
             "{$actorName} changed task '{$taskName}' in project '{$projectName}' to '{$statusName}', so your running timer was stopped.",
-            route('tasks.edit', $task)
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_STATUS_CHANGED
         );
     }
 
+    // Notify assignee when their task is due soon based on due date and estimated time, only notify once when the task starts
     public function notifyTaskStart(Task $task): bool
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -333,36 +413,12 @@ class NotificationService
         $message = "Please start task '{$taskName}' in project '{$projectName}' by {$startAtLabel} to stay on track for the due time {$dueAtLabel}.";
         $url = route('tasks.edit', $task);
 
-        $this->send($assigneeId, $title, $message, $url);
+        $this->send($assigneeId, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED);
 
         return true;
     }
 
-    public function notifyHandoffRequestAssigned(HandoffRequest $handoffRequest, Task $createdTask, User $actor): void
-    {
-        $requesterId = (int) $handoffRequest->user_id;
-
-        if (!$requesterId || $requesterId === (int) $actor->id) {
-            return;
-        }
-
-        $handoffRequest->loadMissing('project:id,name');
-
-        $taskName = Str::limit($createdTask->name ?? 'Task', 50, '...');
-        $projectName = $handoffRequest->project?->name ?? 'Project';
-        $actorName = $actor->name ?? 'A team member';
-
-        $title = 'Handoff Request Assigned';
-        $message = "{$actorName} assigned your handoff request (#{$handoffRequest->id}) and a new task '{$taskName}' (#{$createdTask->id}) was created in project '{$projectName}'.";
-
-        $this->send(
-            $requesterId,
-            $title,
-            $message,
-            route('tasks.edit', $createdTask)
-        );
-    }
-
+    // Notify related users when a handoff request is created
     public function notifyHandoffRequestCreated(HandoffRequest $handoffRequest, User $requester): void
     {
         $handoffRequest->loadMissing('project.teamLeader');
@@ -390,9 +446,37 @@ class NotificationService
         $message = "{$requester->name} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
         $url = route('handoff_requests.index', ['request_status' => 'pending']);
 
-        $this->sendToMany($recipientIds, $title, $message, $url);
+        $this->sendToMany($recipientIds, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
     }
 
+    // Notify related users when a handoff request is assigned and a task is created
+    public function notifyHandoffRequestAssigned(HandoffRequest $handoffRequest, Task $createdTask, User $actor): void
+    {
+        $requesterId = (int) $handoffRequest->user_id;
+
+        if (!$requesterId || $requesterId === (int) $actor->id) {
+            return;
+        }
+
+        $handoffRequest->loadMissing('project:id,name');
+
+        $taskName = Str::limit($createdTask->name ?? 'Task', 50, '...');
+        $projectName = $handoffRequest->project?->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+
+        $title = 'Handoff Request Assigned';
+        $message = "{$actorName} assigned your handoff request (#{$handoffRequest->id}) and a new task '{$taskName}' (#{$createdTask->id}) was created in project '{$projectName}'.";
+
+        $this->send(
+            $requesterId,
+            $title,
+            $message,
+            route('tasks.edit', $createdTask),
+            UserNotificationSetting::HANDOFF_REQUEST
+        );
+    }
+
+    // Notify related users when a handoff request is noted
     public function notifyHandoffRequestNoted(HandoffRequest $handoffRequest, User $actor): void
     {
         $requesterId = (int) $handoffRequest->user_id;
@@ -408,6 +492,6 @@ class NotificationService
         $message = "{$actor->name} marked your handoff request (#{$handoffRequest->id}) in project '{$projectName}' as noted.";
         $url = route('handoff_requests.index', ['request_status' => 'noted']);
 
-        $this->send($requesterId, $title, $message, $url);
+        $this->send($requesterId, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
     }
 }

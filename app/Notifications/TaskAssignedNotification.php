@@ -15,15 +15,17 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
     protected $title;
     protected $message;
     protected $url;
+    protected array $channels = [];
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $title, string $message, ?string $url = null)
+    public function __construct(string $title, string $message, ?string $url = null, array $channels = [])
     {
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;
+        $this->channels = $channels;
         $this->afterCommit();
     }
 
@@ -34,7 +36,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return $this->channels;
     }
 
     /**
