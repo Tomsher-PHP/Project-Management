@@ -137,6 +137,10 @@ class Task extends Model
 
     public function scopeAccessibleBy($query, User $user)
     {
+        $query->whereHas('project', function ($projectQuery) {
+            $projectQuery->whereNull('deleted_at');
+        });
+
         if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
             return $query;
         }

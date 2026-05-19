@@ -1,9 +1,5 @@
 <!-- ================= MODAL ================= -->
-<div
-    x-show="openEdit"
-    x-transition.opacity
-    x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+<div x-show="openEdit" x-transition.opacity x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div @click.outside="openEdit = false" class="w-full max-w-4xl rounded-xl bg-white p-6 dark:bg-darkblack-600">
 
         <!-- HEADER -->
@@ -15,10 +11,7 @@
             <button @click="openEdit = false">✕</button>
         </div>
 
-        <form id="userEditForm"
-            action="{{ route('users.modal.update', $user->id) }}"
-            method="POST"
-            enctype="multipart/form-data">
+        <form id="userEditForm" action="{{ route('users.modal.update', $user->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @if (isset($user))
                 @method('PUT')
@@ -80,7 +73,7 @@
                         @enderror
                     </div>
 
-                    
+
 
                     <!-- Phone -->
                     <div class="flex flex-col gap-2">
@@ -116,12 +109,12 @@
                         @enderror
                     </div>
 
-                    
+
                 </div>
 
             </div>
 
-            
+
 
             <!-- ================= EMERGENCY CONTACT ================= -->
             <div>
