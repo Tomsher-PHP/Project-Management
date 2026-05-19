@@ -32,12 +32,11 @@ class ScheduleShiftService
             }
 
             // AFTER ALL ASSIGNMENTS → SEND BULK NOTIFICATION
-            $shift = Shift::withTrashed()->find($data['shift_id']);
-
-            app(NotificationService::class)->sendToMany(
+            app(NotificationService::class)->sendShiftAssigned(
                 $data['users'],
-                'Shift Assigned',
-                "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--')
+                $data['shift_id'],
+                $dateFrom,
+                $dateTo
             );
         });
     }
@@ -53,12 +52,11 @@ class ScheduleShiftService
             $this->applyShiftRange($userId, $dateFrom, $dateTo, $shiftId);
 
             // Notify user
-            $shift = Shift::withTrashed()->find($shiftId);
-
-            app(NotificationService::class)->send(
+            app(NotificationService::class)->sendShiftAssigned(
                 $userId,
-                'Shift Assigned',
-                "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--')
+                $shiftId,
+                $dateFrom,
+                $dateTo
             );
         });
     }
@@ -210,7 +208,7 @@ class ScheduleShiftService
                 ->where('is_active', true)
                 ->whereNull('deleted_at')
                 ->pluck('user_id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->all();
 
             $users = $users
@@ -222,7 +220,7 @@ class ScheduleShiftService
                 ->where('is_active', true)
                 ->whereNull('deleted_at')
                 ->pluck('user_id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->all();
 
             $users = $users
@@ -264,7 +262,7 @@ class ScheduleShiftService
                         ->orWhereNull('date_to');
                 });
         })
-            ->when($userIds !== null, fn ($query) => $query->whereIn('user_id', $userIds))
+            ->when($userIds !== null, fn($query) => $query->whereIn('user_id', $userIds))
             ->get();
     }
 }
