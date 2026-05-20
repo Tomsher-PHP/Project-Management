@@ -101,6 +101,7 @@ class ProjectServices
 
             // Update project
             $project->update([
+                'parent_project_id' => $data['parent_project_id'] ?? null,
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
                 'priority' => $data['priority'],

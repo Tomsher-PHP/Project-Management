@@ -32,47 +32,47 @@
                 <div class="mb-4 flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 xl:flex-row xl:items-center xl:justify-between">
                     <div class="overflow-x-auto">
                         <div class="flex min-w-max items-center gap-5">
-                            <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="overview" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Overview
                             </button>
 
                             @if ($project->is_agile)
-                                <button type="button" data-project-tab-trigger="milestones" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                                <button type="button" data-project-tab-trigger="milestones" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                     Milestones
                                 </button>
                             @endif
 
-                            <button type="button" data-project-tab-trigger="tasks" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="tasks" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Tasks
                             </button>
 
-                            <button type="button" data-project-tab-trigger="team" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="team" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Team
                             </button>
 
-                            <button type="button" data-project-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="scope" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Scope
                             </button>
 
-                            <button type="button" data-project-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="notes" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Notes & Files
                             </button>
 
-                            <button type="button" data-project-tab-trigger="checklists" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="checklists" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Checklists
                             </button>
 
                             @if ($project->is_linear && auth()->user()->can('project.view_payment_status'))
-                                <button type="button" data-project-tab-trigger="payments" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                                <button type="button" data-project-tab-trigger="payments" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                     Payments
                                 </button>
                             @endif
 
-                            <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 History
                             </button>
 
-                            <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-500 transition">
+                            <button type="button" data-project-tab-trigger="settings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                                 Settings
                             </button>
                         </div>
@@ -80,7 +80,7 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         @can('activity_log.view')
-                            <button type="button" data-project-insights-trigger data-project-insights-url="{{ $activityModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                            <button type="button" data-project-insights-trigger data-project-insights-url="{{ $activityModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                 <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                     <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
@@ -94,7 +94,7 @@
                             </button>
                         @endcan
 
-                        <button type="button" data-project-insights-trigger data-project-insights-url="{{ $commentsModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300">
+                        <button type="button" data-project-insights-trigger data-project-insights-url="{{ $commentsModalUrl }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                             <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
                                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />

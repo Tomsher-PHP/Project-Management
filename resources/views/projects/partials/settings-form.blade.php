@@ -68,6 +68,26 @@
                 @enderror
             </div>
 
+            <div class="flex flex-col gap-2">
+                <label for="parent_project_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                    Parent Project / Rework For
+                </label>
+                <select name="parent_project_id" id="parent_project_id" class="tom-select w-full @error('parent_project_id') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" x-on:change="markDirty()">
+                    <option value="">No parent project</option>
+                    @foreach ($parentProjectOptions as $parentProjectOption)
+                        <option value="{{ $parentProjectOption->id }}" {{ (string) old('parent_project_id', $project->parent_project_id ?? null) === (string) $parentProjectOption->id ? 'selected' : '' }}>
+                            {{ $parentProjectOption->name }}{{ $parentProjectOption->project_code ? ' (' . $parentProjectOption->project_code . ')' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                    Select a completed project only when this project is rework or follow-up work for an earlier delivered project.
+                </p>
+                @error('parent_project_id')
+                    <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
+                @enderror
+            </div>
+
         </div>
     </div>
 

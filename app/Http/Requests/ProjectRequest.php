@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProjectRequest extends FormRequest
@@ -35,6 +36,7 @@ class ProjectRequest extends FormRequest
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $rules += [
+                'parent_project_id' => 'nullable|exists:projects,id',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'customer_end_date' => 'nullable|date|after_or_equal:end_date',
                 'estimated_time_minutes' => 'nullable|integer|min:0',
@@ -51,6 +53,46 @@ class ProjectRequest extends FormRequest
         return $rules;
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (! $this->filled('parent_project_id')) {
+                return;
+            }
+
+            $parentProjectId = (int) $this->input('parent_project_id');
+            $currentProject = $this->route('project');
+
+            if ($currentProject instanceof Project && $parentProjectId === (int) $currentProject->id) {
+                $validator->errors()->add('parent_project_id', 'A project cannot be its own parent project.');
+
+                return;
+            }
+
+            $selectedParentProject = Project::withTrashed()
+                ->with('projectStatus:id,is_completed')
+                ->find($parentProjectId);
+
+            if (! $selectedParentProject) {
+                return;
+            }
+
+            $isExistingParentSelection = $currentProject instanceof Project
+                && (int) ($currentProject->parent_project_id ?? 0) === $parentProjectId;
+
+            if ($isExistingParentSelection) {
+                return;
+            }
+
+            if ($selectedParentProject->trashed() || ! $selectedParentProject->projectStatus?->is_completed) {
+                $validator->errors()->add(
+                    'parent_project_id',
+                    'Please select a completed project when linking this project as rework or follow-up work.'
+                );
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
@@ -62,6 +104,7 @@ class ProjectRequest extends FormRequest
             'project_flow.in' => 'The selected project flow is invalid.',
             'priority.required' => 'Please choose a priority.',
             'priority.in' => 'The selected priority is invalid.',
+            'parent_project_id.exists' => 'The selected parent project is invalid.',
             'project_status.required' => 'Please choose a project status.',
             'project_status.exists' => 'The selected project status is invalid.',
             'start_date.date' => 'Please enter a valid start date.',
@@ -88,6 +131,7 @@ class ProjectRequest extends FormRequest
             'customer_id' => 'customer',
             'project_flow' => 'project flow',
             'priority' => 'priority',
+            'parent_project_id' => 'parent project',
             'project_status' => 'project status',
             'start_date' => 'start date',
             'end_date' => 'end date',

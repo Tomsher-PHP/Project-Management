@@ -1,9 +1,9 @@
 @php
     $isDeletedProject = $project->trashed();
     $canCustomerEndDate = auth()->user()->can('project.customer_end_date');
-    $canChangeProjectStatus = ! $isDeletedProject && auth()->user()->can('project.status_change');
-    $canChangeProjectStage = ! $isDeletedProject && auth()->user()->can('project.edit');
-    $canAddProjectPayment = ! $isDeletedProject && auth()->user()->can('project.add_payment_status');
+    $canChangeProjectStatus = !$isDeletedProject && auth()->user()->can('project.status_change');
+    $canChangeProjectStage = !$isDeletedProject && auth()->user()->can('project.edit');
+    $canAddProjectPayment = !$isDeletedProject && auth()->user()->can('project.add_payment_status');
     $canViewProjectPayment = auth()->user()->can('project.view_payment_status');
 
     $projectStatusUpdateUrl = route('projects.updateProjectStatus', $project);
@@ -43,9 +43,24 @@
                 <div class="h-10 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
 
                 <div class="min-w-0">
+                    @php
+                        $parentProject = $project->parentProject;
+                        $parentProjectUrl = $parentProject ? ($parentProject->trashed() ? route('projects.restore.show', $parentProject->id) : route('projects.edit', $parentProject)) : null;
+                    @endphp
                     <h2 class="truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
                         {{ $project->name }}
                     </h2>
+                    @if ($parentProject)
+                        <p class="text-sm text-bgray-600 dark:text-bgray-300">
+                            Rework for:
+                            <a href="{{ $parentProjectUrl }}" class="font-semibold text-success-400 hover:underline">
+                                {{ $parentProject->name }}
+                            </a>
+                            @if ($parentProject->trashed())
+                                <span class="text-bgray-500">(deleted)</span>
+                            @endif
+                        </p>
+                    @endif
                     <p class="text-sm text-bgray-500">
                         Code: {{ $project->project_code ?? '--' }}
                     </p>

@@ -16,6 +16,7 @@ class Project extends Model
     use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
     protected $fillable = [
+        'parent_project_id',
         'project_code',
         'name',
         'customer_id',
@@ -93,6 +94,16 @@ class Project extends Model
                     $q->where('users.id', $user->id);
                 });
         });
+    }
+
+    public function parentProject()
+    {
+        return $this->belongsTo(Project::class, 'parent_project_id')->withTrashed();
+    }
+
+    public function reworkProjects()
+    {
+        return $this->hasMany(Project::class, 'parent_project_id');
     }
 
     public function customer()
@@ -216,6 +227,25 @@ class Project extends Model
             $q->where('is_completed', true)
                 ->where('type', ProjectStatus::TYPE_COMPLETED);
         });
+    }
+
+    public function scopeEligibleParentOptions($query, ?int $excludeProjectId = null, ?int $selectedParentProjectId = null)
+    {
+        return $query
+            ->withTrashed()
+            ->when($excludeProjectId, fn($q) => $q->whereKeyNot($excludeProjectId))
+            ->where(function ($q) use ($selectedParentProjectId) {
+                $q->where(function ($eligibleQuery) {
+                    $eligibleQuery->completed()
+                        ->whereNull('deleted_at');
+                });
+
+                if ($selectedParentProjectId) {
+                    $q->orWhere('id', $selectedParentProjectId);
+                }
+            })
+            ->orderBy('name')
+            ->orderBy('project_code');
     }
 
     public function scopeArchived($query)

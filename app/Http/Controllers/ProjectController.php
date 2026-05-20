@@ -600,6 +600,7 @@ class ProjectController extends Controller
         $selectedCustomerId = $project->customer_id;
         $selectedCategoryId = $project->project_category_id;
         $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
+        $selectedParentProjectId = $project->parent_project_id;
 
         $users = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $salesPersonIds);
         $project->load('technologies');
@@ -607,6 +608,9 @@ class ProjectController extends Controller
         $customers = Customer::forForm($selectedCustomerId)->get();
         $projectCategories = ProjectCategory::forForm($selectedCategoryId, 'sort_order')->get();
         $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
+        $parentProjectOptions = Project::query()
+            ->eligibleParentOptions($project->id, $selectedParentProjectId)
+            ->get();
 
         $nextProjectCategorySortOrder = ((int) ProjectCategory::max('sort_order')) + 1;
         $nextProjectTechnologySortOrder = ((int) Technology::max('sort_order')) + 1;
@@ -621,7 +625,8 @@ class ProjectController extends Controller
             'nextProjectCategorySortOrder',
             'projectTechnologies',
             'nextProjectTechnologySortOrder',
-            'priorities'
+            'priorities',
+            'parentProjectOptions'
         ))->render();
     }
 
