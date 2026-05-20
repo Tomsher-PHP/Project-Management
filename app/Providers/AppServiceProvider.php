@@ -11,6 +11,7 @@ use App\Models\TaskTimeLog;
 use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
+use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\UserPolicy;
 use App\View\Composers\SidebarComposer;
