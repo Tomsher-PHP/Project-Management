@@ -2,29 +2,14 @@
     $user = $node['user'];
     $children = $node['children'] ?? [];
     $isDetached = (bool) ($node['is_detached'] ?? false);
-    $initials = \Illuminate\Support\Str::of($user->name)
-        ->trim()
-        ->explode(' ')
-        ->filter()
-        ->take(2)
-        ->map(fn ($part) => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($part, 0, 1)))
-        ->implode('');
-    $hasAvatar = filled($user->primaryAttachment?->file_path ?? null);
-    $roleName = $user->is_super_admin
-        ? 'Super Admin'
-        : ($user->roles->first()?->name ?? 'No Role');
+    $roleName = $user->is_super_admin ? 'Super Admin' : $user->roles->first()?->name ?? 'No Role';
     $isAuthUser = (int) $user->id === (int) auth()->id();
+    $designationName = $user->details?->designation?->name ?? $roleName;
 @endphp
 
 <li class="org-node {{ !empty($children) ? 'org-node--branch' : '' }}">
-    <div class="org-card {{ $isAuthUser ? 'org-card--auth' : '' }}">
-        <div class="org-avatar">
-            @if ($hasAvatar)
-                <img src="{{ $user->profile_image_url }}" alt="{{ $user->name }}">
-            @else
-                <span>{{ $initials }}</span>
-            @endif
-        </div>
+    <div class="org-card {{ $isAuthUser ? 'org-card--auth' : '' }}" data-user-card data-user-name="{{ $user->name }}" data-user-email="{{ $user->email ?? '-' }}" data-user-employee-id="{{ $user->details?->employee_id ?? '-' }}" data-user-role="{{ $roleName }}" data-user-designation="{{ $designationName }}" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="org-user-modal">
+        <x-user-avatar :user="$user" class="org-avatar" />
 
         <div class="org-meta">
             <h4 class="org-name text-sm font-bold text-bgray-900 dark:text-white">{{ $user->name }}</h4>
@@ -34,11 +19,9 @@
         <div class="org-badges">
             @if ($isDetached)
                 <span class="org-badge org-badge--warn">Review</span>
-            @elseif (!empty($children))
-                <span class="org-badge org-badge--count">{{ count($children) }}</span>
             @endif
 
-            @if (! $user->is_active)
+            @if (!$user->is_active)
                 <span class="org-badge org-badge--inactive">Off</span>
             @endif
         </div>

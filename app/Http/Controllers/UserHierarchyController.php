@@ -20,6 +20,8 @@ class UserHierarchyController extends Controller
     {
         $superAdmins = User::query()
             ->with([
+                'details:id,user_id,employee_id,designation_id',
+                'details.designation:id,name',
                 'primaryAttachment',
                 'roles:id,name',
             ])
@@ -30,7 +32,7 @@ class UserHierarchyController extends Controller
 
         $users = User::query()
             ->with([
-                'details:id,user_id,reporter_id,manager_id,department_id,designation_id',
+                'details:id,user_id,reporter_id,manager_id,department_id,designation_id,employee_id',
                 'details.department:id,name',
                 'details.designation:id,name',
                 'details.manager:id,name',
