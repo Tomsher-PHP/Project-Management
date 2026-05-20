@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\HandoffRequest;
+use App\Models\Project;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
@@ -127,6 +128,69 @@ class NotificationService
         );
     }
 
+    public function notifyProjectMemberAdded(int $userId, Project $project, ?string $roleName = null): void
+    {
+        $message = $roleName
+            ? "You have been added to project '{$project->name}' as '{$roleName}'."
+            : "You have been added to project '{$project->name}'.";
+
+        $this->send(
+            $userId,
+            'Project Assigned',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_ASSIGNED
+        );
+    }
+
+    public function notifyProjectMemberRemoved(int $userId, Project $project, ?string $roleName = null): void
+    {
+        $message = $roleName
+            ? "You have been removed from project '{$project->name}' where your role was '{$roleName}'."
+            : "You have been removed from project '{$project->name}'.";
+
+        $this->send(
+            $userId,
+            'Project Removed',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_ASSIGNED
+        );
+    }
+
+    public function notifyProjectMemberStatusChanged(int $userId, Project $project, bool $isEnabled, ?string $roleName = null): void
+    {
+        $title = $isEnabled ? 'Project Access Enabled' : 'Project Access Disabled';
+        $message = $isEnabled
+            ? "Your access to project '{$project->name}' has been enabled."
+            : "Your access to project '{$project->name}' has been disabled.";
+
+        $this->send(
+            $userId,
+            $title,
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_ASSIGNED
+        );
+    }
+
+    public function notifyProjectMemberRoleUpdated(int $userId, Project $project, ?string $oldRoleName = null, ?string $newRoleName = null): void
+    {
+        $message = match (true) {
+            filled($oldRoleName) && filled($newRoleName) => "Your role in project '{$project->name}' has been updated from '{$oldRoleName}' to '{$newRoleName}'.",
+            filled($newRoleName) => "Your role in project '{$project->name}' has been updated to '{$newRoleName}'.",
+            default => "Your role in project '{$project->name}' has been updated.",
+        };
+
+        $this->send(
+            $userId,
+            'Project Role Updated',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_ASSIGNED
+        );
+    }
+
     // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
@@ -181,11 +245,16 @@ class NotificationService
     private function normalizeUserIds(int|array $userIds): array
     {
         return collect(is_array($userIds) ? $userIds : [$userIds])
-            ->filter(fn ($userId) => filled($userId))
-            ->map(fn ($userId) => (int) $userId)
+            ->filter(fn($userId) => filled($userId))
+            ->map(fn($userId) => (int) $userId)
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function getProjectNotificationUrl(Project $project): ?string
+    {
+        return route('projects.edit', $project);
     }
 
     // Task assignment: Notify assignee when task is created or updated

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectMemberRequest;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -12,12 +13,15 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectMemberController extends Controller
 {
-    public function addMember(ProjectMemberRequest $request, Project $project)
+    public function addMember(ProjectMemberRequest $request, Project $project, NotificationService $notificationService)
     {
-        return DB::transaction(function () use ($request, $project) {
+        $notifications = [];
+
+        $response = DB::transaction(function () use ($request, $project, &$notifications) {
             $userIds = (array) $request->user_id;
             $role = $request->project_role;
             $updatedCardIds = [];
+            $roleName = $this->resolveProjectRoleName($role);
 
             if (in_array($role, ['team_leader', 'coordinator'], true) && count($userIds) > 1) {
                 return response()->json([
@@ -50,6 +54,11 @@ class ProjectMemberController extends Controller
                         ]);
 
                         $newlyAddedIds[] = $userId;
+                        $notifications[] = [
+                            'type' => 'added',
+                            'user_id' => (int) $userId,
+                            'role_name' => $roleName,
+                        ];
                     }
                 } else {
                     $project->membersAll()->syncWithoutDetaching([
@@ -60,11 +69,28 @@ class ProjectMemberController extends Controller
                     ]);
 
                     $newlyAddedIds[] = $userId;
+                    $notifications[] = [
+                        'type' => 'added',
+                        'user_id' => (int) $userId,
+                        'role_name' => $roleName,
+                    ];
                 }
             }
 
             if (in_array($role, ['team_leader', 'coordinator'], true) && !empty($newlyAddedIds)) {
-                $updatedCardIds = $this->assignExclusiveRole($project, (int) $newlyAddedIds[0], $role);
+                $roleUpdateResult = $this->assignExclusiveRole($project, (int) $newlyAddedIds[0], $role);
+                $updatedCardIds = $roleUpdateResult['updated_user_ids'];
+
+                foreach ($roleUpdateResult['role_notifications'] as $roleNotification) {
+                    if (in_array($roleNotification['user_id'], $newlyAddedIds, true)) {
+                        continue;
+                    }
+
+                    $notifications[] = [
+                        'type' => 'role_updated',
+                        ...$roleNotification,
+                    ];
+                }
             }
 
             if (empty($newlyAddedIds)) {
@@ -98,11 +124,15 @@ class ProjectMemberController extends Controller
                 'updated_cards' => $updatedCards,
             ]);
         });
+
+        $this->dispatchProjectMemberNotifications($notificationService, $project, $notifications);
+
+        return $response;
     }
 
-    public function removeMember($projectId, $userId)
+    public function removeMember(int $projectId, int $userId, NotificationService $notificationService)
     {
-        $member = ProjectMember::where('project_id', $projectId)
+        $member = ProjectMember::with('project')->where('project_id', $projectId)
             ->where('user_id', $userId)
             ->first();
 
@@ -113,11 +143,17 @@ class ProjectMemberController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
-        $member->update([
+        $roleName = $this->resolveProjectRoleName($member->project_role);
+
+        $updated = $member->update([
             'is_active' => false,
             'removed_at' => now(),
             'removed_by' => Auth::id(),
         ]);
+
+        if ($updated) {
+            $notificationService->notifyProjectMemberRemoved($userId, $member->project, $roleName);
+        }
 
         return response()->json([
             'status' => true,
@@ -125,16 +161,31 @@ class ProjectMemberController extends Controller
         ]);
     }
 
-    public function toggleStatus(Project $project, $userId)
+    public function toggleStatus(Project $project, int $userId, NotificationService $notificationService)
     {
         $member = $project->membersAll()
             ->where('user_id', $userId)
             ->whereNull('project_members.removed_at')
             ->firstOrFail();
 
-        $member->pivot->update([
-            'is_active' => !$member->pivot->is_active,
+        $previousIsActive = (bool) $member->pivot->is_active;
+        $newIsActive = ! $previousIsActive;
+
+        $updated = $member->pivot->update([
+            'is_active' => $newIsActive,
         ]);
+        if ($updated) {
+            $member->pivot->is_active = $newIsActive;
+        }
+
+        if ($updated && $previousIsActive !== $newIsActive) {
+            $notificationService->notifyProjectMemberStatusChanged(
+                $userId,
+                $project,
+                $newIsActive,
+                $this->resolveProjectRoleName($member->pivot->project_role)
+            );
+        }
 
         // Render the updated member card
         $cardHtml = view('projects.partials.member-card', compact('project', 'member'))->render();
@@ -148,13 +199,15 @@ class ProjectMemberController extends Controller
         ]);
     }
 
-    public function updateRole(Request $request, Project $project, $userId)
+    public function updateRole(Request $request, Project $project, int $userId, NotificationService $notificationService)
     {
         $validated = $request->validate([
             'project_role' => ['required', 'in:team_leader,coordinator'],
         ]);
 
-        return DB::transaction(function () use ($project, $userId, $validated) {
+        $notifications = [];
+
+        $response = DB::transaction(function () use ($project, $userId, $validated, &$notifications) {
             $member = $project->membersAll()
                 ->where('users.id', $userId)
                 ->whereNull('project_members.removed_at')
@@ -170,7 +223,14 @@ class ProjectMemberController extends Controller
                 ]);
             }
 
-            $updatedCardIds = $this->assignExclusiveRole($project, (int) $userId, $role);
+            $roleUpdateResult = $this->assignExclusiveRole($project, (int) $userId, $role);
+            $updatedCardIds = $roleUpdateResult['updated_user_ids'];
+            $notifications = array_map(function ($notification) {
+                return [
+                    'type' => 'role_updated',
+                    ...$notification,
+                ];
+            }, $roleUpdateResult['role_notifications']);
 
             return response()->json([
                 'status' => true,
@@ -178,18 +238,39 @@ class ProjectMemberController extends Controller
                 'updated_cards' => $this->renderMemberCards($project, $updatedCardIds),
             ]);
         });
+
+        $this->dispatchProjectMemberNotifications($notificationService, $project, $notifications);
+
+        return $response;
     }
 
     private function assignExclusiveRole(Project $project, int $userId, string $role): array
     {
         $updatedUserIds = [$userId];
+        $roleNotifications = [];
+        $targetMember = $project->membersAll()
+            ->where('users.id', $userId)
+            ->whereNull('project_members.removed_at')
+            ->first();
+        $oldRole = $targetMember?->pivot->project_role;
 
         if (!in_array($role, ['team_leader', 'coordinator'], true)) {
             $project->membersAll()->updateExistingPivot($userId, [
                 'project_role' => $role,
             ]);
 
-            return $updatedUserIds;
+            if ($oldRole !== $role) {
+                $roleNotifications[] = [
+                    'user_id' => $userId,
+                    'old_role_name' => $this->resolveProjectRoleName($oldRole),
+                    'new_role_name' => $this->resolveProjectRoleName($role),
+                ];
+            }
+
+            return [
+                'updated_user_ids' => $updatedUserIds,
+                'role_notifications' => $roleNotifications,
+            ];
         }
 
         $existingRoleHolder = $project->membersAll()
@@ -204,13 +285,29 @@ class ProjectMemberController extends Controller
             ]);
 
             $updatedUserIds[] = (int) $existingRoleHolder->id;
+            $roleNotifications[] = [
+                'user_id' => (int) $existingRoleHolder->id,
+                'old_role_name' => $this->resolveProjectRoleName($existingRoleHolder->pivot->project_role),
+                'new_role_name' => $this->resolveProjectRoleName('member'),
+            ];
         }
 
         $project->membersAll()->updateExistingPivot($userId, [
             'project_role' => $role,
         ]);
 
-        return array_values(array_unique($updatedUserIds));
+        if ($oldRole !== $role) {
+            $roleNotifications[] = [
+                'user_id' => $userId,
+                'old_role_name' => $this->resolveProjectRoleName($oldRole),
+                'new_role_name' => $this->resolveProjectRoleName($role),
+            ];
+        }
+
+        return [
+            'updated_user_ids' => array_values(array_unique($updatedUserIds)),
+            'role_notifications' => $roleNotifications,
+        ];
     }
 
     private function renderMemberCards(Project $project, array $userIds): array
@@ -232,5 +329,42 @@ class ProjectMemberController extends Controller
                 ];
             })
             ->all();
+    }
+
+    private function dispatchProjectMemberNotifications(NotificationService $notificationService, Project $project, array $notifications): void
+    {
+        foreach ($notifications as $notification) {
+            $userId = (int) ($notification['user_id'] ?? 0);
+
+            if (! $userId) {
+                continue;
+            }
+
+            match ($notification['type'] ?? null) {
+                'added' => $notificationService->notifyProjectMemberAdded(
+                    $userId,
+                    $project,
+                    $notification['role_name'] ?? null
+                ),
+                'role_updated' => $notificationService->notifyProjectMemberRoleUpdated(
+                    $userId,
+                    $project,
+                    $notification['old_role_name'] ?? null,
+                    $notification['new_role_name'] ?? null
+                ),
+                default => null,
+            };
+        }
+    }
+
+    private function resolveProjectRoleName(?string $role): ?string
+    {
+        if (blank($role)) {
+            return null;
+        }
+
+        $roleName = config('project_constants.project_roles.' . $role);
+
+        return filled($roleName) ? (string) $roleName : null;
     }
 }
