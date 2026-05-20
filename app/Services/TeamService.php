@@ -3,74 +3,88 @@
 namespace App\Services;
 
 use App\Models\Team;
-use App\Models\TeamUser;
 use Illuminate\Support\Facades\DB;
 
 class TeamService
 {
 
     protected $attachmentService;
+    protected $notificationService;
     protected $avatarDir = 'team_avatar';
 
-    public function __construct(AttachmentService $attachmentService)
+    public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
+        $this->notificationService = $notificationService;
     }
 
     public function createTeam(array $data)
     {
-        return DB::transaction(function () use ($data) {
+        $notificationBatches = [];
 
-            // 1. Handle password
+        $team = DB::transaction(function () use ($data, &$notificationBatches) {
+
             $team = Team::create([
                 ...collect($data)->only(['name'])->toArray(),
             ]);
 
-            // Attach members if exists
-            if (!empty($data['members'])) {
-                $team->users()->attach($this->formatMembers($data['members']));
+            $members = $data['members'] ?? [];
+
+            if ($members !== []) {
+                $team->users()->attach($this->formatMembers($members));
+                $notificationBatches = $this->groupMembersByRoleName($members);
             }
 
-            // 4. Image upload can be handled here if needed
             if (!empty($data['profile_image'])) {
                 $this->attachmentService->upload($data['profile_image'], $this->avatarDir, $team, 'public', 'public', true);
             }
 
             return $team;
         });
+
+        $this->notifyGroupedMembers($team, $notificationBatches, 'added');
+
+        return $team;
     }
 
     public function updateTeam(Team $team, array $data)
     {
-        return DB::transaction(function () use ($team, $data) {
+        $notifications = [
+            'added' => [],
+            'removed' => [],
+        ];
+
+        $team = DB::transaction(function () use ($team, $data, &$notifications) {
+            $existingMembers = $this->getExistingMemberRoles($team);
 
             $team->update([
                 'name' => $data['name'],
             ]);
 
-            // Sync members
-            if (!empty($data['members'])) {
-                $team->users()->sync($this->formatMembers($data['members']));
-            }
+            $members = $data['members'] ?? [];
+            $team->users()->sync($this->formatMembers($members));
 
-            // Handle Profile Image Upload or delete existing
+            $notifications = $this->buildMembershipNotifications($existingMembers, $members);
+
             if (!empty($data['profile_image'])) {
                 $this->updateProfileImage($team, $data['profile_image']);
             } elseif (!empty($data['remove_profile_image'])) {
-                // Delete existing attachments
                 $this->attachmentService->delete($team->attachments);
             }
 
             return $team->load(['users']);
         });
+
+        $this->notifyGroupedMembers($team, $notifications['added'], 'added');
+        $this->notifyGroupedMembers($team, $notifications['removed'], 'removed');
+
+        return $team;
     }
 
     private function updateProfileImage(Team $team, $image): void
     {
-        // Delete existing attachments
         $this->attachmentService->delete($team->attachments);
 
-        // Upload new image
         $this->attachmentService->upload(
             $image,
             $this->avatarDir,
@@ -94,5 +108,114 @@ class TeamService
         }
 
         return $data;
+    }
+
+    private function getExistingMemberRoles(Team $team): array
+    {
+        return $team->users()
+            ->select('users.id')
+            ->get()
+            ->mapWithKeys(function ($user) {
+                return [
+                    (int) $user->id => $this->resolveTeamRoleName($user->pivot->team_role),
+                ];
+            })
+            ->all();
+    }
+
+    private function buildMembershipNotifications(array $existingMembers, array $members): array
+    {
+        $newMembers = collect($members)
+            ->mapWithKeys(function ($member) {
+                $userId = (int) ($member['user_id'] ?? 0);
+
+                if (! $userId) {
+                    return [];
+                }
+
+                return [
+                    $userId => $this->resolveTeamRoleName($member['team_role'] ?? null),
+                ];
+            })
+            ->all();
+
+        $added = [];
+        foreach (array_diff(array_keys($newMembers), array_keys($existingMembers)) as $userId) {
+            $added[$userId] = $newMembers[$userId] ?? null;
+        }
+
+        $removed = [];
+        foreach (array_diff(array_keys($existingMembers), array_keys($newMembers)) as $userId) {
+            $removed[$userId] = $existingMembers[$userId] ?? null;
+        }
+
+        return [
+            'added' => $this->groupNotificationsByRoleName($added),
+            'removed' => $this->groupNotificationsByRoleName($removed),
+        ];
+    }
+
+    private function groupMembersByRoleName(array $members): array
+    {
+        $groupedMembers = collect($members)
+            ->map(function ($member) {
+                return [
+                    'user_id' => (int) ($member['user_id'] ?? 0),
+                    'role_name' => $this->resolveTeamRoleName($member['team_role'] ?? null),
+                ];
+            })
+            ->filter(fn ($member) => $member['user_id'] > 0)
+            ->groupBy('role_name');
+
+        return $groupedMembers->map(function ($members, $roleName) {
+            return [
+                'user_ids' => $members->pluck('user_id')->values()->all(),
+                'role_name' => $roleName ?: null,
+            ];
+        })->values()->all();
+    }
+
+    private function groupNotificationsByRoleName(array $membersByUserId): array
+    {
+        return collect($membersByUserId)
+            ->groupBy(fn ($roleName) => $roleName, true)
+            ->map(function ($roleNames, $roleName) {
+                return [
+                    'user_ids' => $roleNames->keys()->map(fn ($userId) => (int) $userId)->values()->all(),
+                    'role_name' => $roleName ?: null,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function notifyGroupedMembers(Team $team, array $notificationBatches, string $action): void
+    {
+        foreach ($notificationBatches as $batch) {
+            $userIds = $batch['user_ids'] ?? [];
+            $roleName = $batch['role_name'] ?? null;
+
+            if ($userIds === []) {
+                continue;
+            }
+
+            if ($action === 'removed') {
+                $this->notificationService->notifyTeamMemberRemoved($userIds, $team, $roleName);
+                continue;
+            }
+
+            $this->notificationService->notifyTeamMemberAdded($userIds, $team, $roleName);
+        }
+    }
+
+    private function resolveTeamRoleName(?string $teamRole): ?string
+    {
+        if (blank($teamRole)) {
+            return null;
+        }
+
+        $roleName = config('constants.team_roles.' . $teamRole);
+
+        return filled($roleName) ? (string) $roleName : null;
     }
 }

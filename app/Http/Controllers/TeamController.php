@@ -53,7 +53,10 @@ class TeamController extends Controller
 
     public function store(TeamRequest $request, TeamService $service)
     {
-        $service->createTeam($request->validated());
+        $service->createTeam([
+            ...$request->validated(),
+            'members' => $request->input('members', []),
+        ]);
 
         return redirect()->route('teams.index')
             ->with('success', 'Team created successfully.');
@@ -74,7 +77,10 @@ class TeamController extends Controller
 
     public function update(TeamRequest $request, Team $team, TeamService $service)
     {
-        $service->updateTeam($team, $request->validated());
+        $service->updateTeam($team, [
+            ...$request->validated(),
+            'members' => $request->input('members', []),
+        ]);
 
         return redirect()->back()->with('success', 'Team updated successfully.');
     }

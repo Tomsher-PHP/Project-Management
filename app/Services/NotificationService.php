@@ -6,6 +6,7 @@ use App\Models\HandoffRequest;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
+use App\Models\Team;
 use App\Models\User;
 use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
@@ -88,6 +89,44 @@ class NotificationService
             });
     }
 
+    public function notifyTeamMemberAdded(int|array $userIds, Team $team, ?string $roleName = null): void
+    {
+        $userIds = $this->normalizeUserIds($userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $message = $roleName
+            ? "You have been added to team '{$team->name}' as '{$roleName}'."
+            : "You have been added to team '{$team->name}'.";
+
+        $this->dispatchTeamNotification(
+            $userIds,
+            'Team Assigned',
+            $message
+        );
+    }
+
+    public function notifyTeamMemberRemoved(int|array $userIds, Team $team, ?string $roleName = null): void
+    {
+        $userIds = $this->normalizeUserIds($userIds);
+
+        if ($userIds === []) {
+            return;
+        }
+
+        $message = $roleName
+            ? "You have been removed from team '{$team->name}' where your role was '{$roleName}'."
+            : "You have been removed from team '{$team->name}'.";
+
+        $this->dispatchTeamNotification(
+            $userIds,
+            'Team Removed',
+            $message
+        );
+    }
+
     // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
@@ -111,6 +150,42 @@ class NotificationService
         $message = "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--');
 
         $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED);
+    }
+
+    private function dispatchTeamNotification(array $userIds, string $title, string $message): void
+    {
+        // There is no dedicated read-only team detail route, so avoid linking to the edit page here.
+        $url = null;
+
+        if (count($userIds) === 1) {
+            $this->send(
+                $userIds[0],
+                $title,
+                $message,
+                $url,
+                UserNotificationSetting::TEAM_ASSIGNED
+            );
+
+            return;
+        }
+
+        $this->sendToMany(
+            $userIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::TEAM_ASSIGNED
+        );
+    }
+
+    private function normalizeUserIds(int|array $userIds): array
+    {
+        return collect(is_array($userIds) ? $userIds : [$userIds])
+            ->filter(fn ($userId) => filled($userId))
+            ->map(fn ($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     // Task assignment: Notify assignee when task is created or updated
