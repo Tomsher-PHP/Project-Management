@@ -455,25 +455,32 @@ class Task extends Model
         return sprintf('%02dh : %02dm', $hours, $minutes);
     }
 
-    // Get all related users for notifications (assignee, reporter, manager, project team leader, module owner)
+    // Get all related users for notifications (assignee, reporters, manager, project team leader, module owner)
     public function getRelatedUsers()
     {
         $this->loadMissing([
             'addedBy',
-            'currentAssignee.reporter',
             'currentAssignee.manager',
             'project.teamLeader',
             'projectMilestone.owner',
         ]);
 
+        $reporterHierarchyUsers = collect();
+
+        if ($this->current_assignee_id) {
+            $reporterHierarchyUserIds = User::getReporterChainUserIds($this->current_assignee_id);
+
+            $reporterHierarchyUsers = User::whereIn('id', $reporterHierarchyUserIds)->get();
+        }
+
         return collect([
             $this->addedBy,
             $this->currentAssignee,
-            $this->currentAssignee?->reporter,
             $this->currentAssignee?->manager,
             $this->project?->teamLeader,
             $this->projectMilestone?->owner,
         ])
+            ->merge($reporterHierarchyUsers)
             ->filter()
             ->unique('id')
             ->values();

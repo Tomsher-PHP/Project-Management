@@ -105,7 +105,8 @@ class User extends Authenticatable
         });
     }
 
-    public static function getReporterHierarchyUserIds($userId): array
+    // Down Level:Get all user IDs in the reporter hierarchy
+    public static function getReporterHierarchyUserIds(int $userId): array
     {
         $userIds = [];
         $currentLevelIds = [$userId];
@@ -124,6 +125,29 @@ class User extends Authenticatable
         }
 
         return $userIds;
+    }
+
+    // Up Level: Get all user IDs in the reporter chain (Reporters up to the top for the given user)
+    public static function getReporterChainUserIds(int $userId): array
+    {
+        $userIds = [];
+        $currentUserId = $userId;
+
+        while ($currentUserId) {
+            $reporterId = UserDetail::where('user_id', $currentUserId)
+                ->value('reporter_id');
+
+            if (! $reporterId || in_array($reporterId, $userIds)) {
+                break;
+            }
+
+            $userIds[] = $reporterId;
+            $currentUserId = $reporterId;
+        }
+
+        $superAdminIds = User::where('is_super_admin', true)->pluck('id')->toArray();
+
+        return array_values(array_unique(array_merge($userIds, $superAdminIds)));
     }
 
     public function details()

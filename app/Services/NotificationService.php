@@ -88,7 +88,7 @@ class NotificationService
             });
     }
 
-    // Notify users about shift assignment with shift details
+    // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
         $userIds = is_array($userIds) ? $userIds : [$userIds];
@@ -113,7 +113,7 @@ class NotificationService
         $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED);
     }
 
-    // Task assignment notification to assignee when task is created or updated
+    // Task assignment: Notify assignee when task is created or updated
     public function sendTaskAssignmentIfNeeded(Task $task, ?int $currentAssigneeId, ?int $previousAssigneeId = null): void
     {
         $currentAssigneeId = filled($currentAssigneeId) ? (int) $currentAssigneeId : null;
@@ -152,7 +152,7 @@ class NotificationService
         );
     }
 
-    // Task status change notification to assignee, reporter, manager and super admins
+    // Task status change: Notify assignee, reporter, manager and super admins
     public function notifyTaskStatusChanged(Task $task, User $actor, string $oldStatus, string $newStatus): void
     {
         $userIds = $task->getRelatedUsers()
@@ -178,7 +178,7 @@ class NotificationService
         });
     }
 
-    // Notify related users when a task request is created
+    // Task request: Notify related users when a task request is created
     public function notifyTaskRequestCreated(Task $task): void
     {
         $task->loadMissing([
@@ -211,7 +211,7 @@ class NotificationService
         );
     }
 
-    // Notify only the requested user when their task request is approved or rejected
+    // Task request: Notify only the requested user when their task request is approved or rejected
     public function notifyTaskRequestReviewed(Task $task, User $reviewer, string $action, ?string $description = null): void
     {
         if (! $task->current_assignee_id) {
@@ -244,13 +244,12 @@ class NotificationService
         );
     }
 
-    // Notify related users when a time log change request is created
+    // Task time log change request: Notify related users when a time log change request is created
     public function notifyTaskTimeLogChangeRequestCreated(TaskTimeLogChangeRequest $changeRequest): void
     {
         $changeRequest->loadMissing([
             'timeLog.task.project:id,name',
             'user:id,name',
-            'user.reporter' => fn($query) => $query->select('users.id', 'users.name'),
             'user.manager' => fn($query) => $query->select('users.id', 'users.name'),
         ]);
 
@@ -260,10 +259,10 @@ class NotificationService
             return;
         }
 
-        $recipientIds = collect([
-            $changeRequest->user?->reporter?->id,
-            $changeRequest->user?->manager?->id,
-        ])
+        $reporterChainUserIds = $changeRequest->user_id ? User::getReporterChainUserIds($changeRequest->user_id) : [];
+
+        $recipientIds = collect($reporterChainUserIds)
+            ->push($changeRequest->user?->manager?->id)
             ->filter()
             ->reject(fn($userId) => (int) $userId === (int) $changeRequest->user_id)
             ->unique()
@@ -287,7 +286,7 @@ class NotificationService
         );
     }
 
-    // Notify only the requested user when their time log change request is approved or rejected
+    // Task time log change request: Notify only the requested user when their time log change request is approved or rejected
     public function notifyTaskTimeLogChangeRequestReviewed(TaskTimeLogChangeRequest $changeRequest, User $reviewer, string $action, ?string $description = null): void
     {
         if (! $changeRequest->user_id) {
@@ -326,7 +325,7 @@ class NotificationService
         );
     }
 
-    // Notify assignee when their running timer is stopped by other user or system due to status change
+    // Task timer stopped: Notify assignee when their running timer is stopped by other user or system due to status change
     public function notifyTaskTimerStoppedByOtherUser(Task $task, User $actor): void
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -353,7 +352,7 @@ class NotificationService
         );
     }
 
-    // Notify assignee when their running timer is stopped due to status change by other user or system
+    // Task timer stopped: Notify assignee when their running timer is stopped due to status change by other user or system
     public function notifyTaskTimerStoppedBecauseStatusChanged(Task $task, User $actor, string $statusName): void
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -380,7 +379,7 @@ class NotificationService
         );
     }
 
-    // Notify assignee when their task is due soon based on due date and estimated time, only notify once when the task starts
+    // Task start: Notify assignee when their task is due soon based on due date and estimated time, only notify once when the task starts
     public function notifyTaskStart(Task $task): bool
     {
         $assigneeId = (int) ($task->current_assignee_id ?? 0);
@@ -418,7 +417,7 @@ class NotificationService
         return true;
     }
 
-    // Notify related users when a handoff request is created
+    // Handoff request: Notify related users when a handoff request is created
     public function notifyHandoffRequestCreated(HandoffRequest $handoffRequest, User $requester): void
     {
         $handoffRequest->loadMissing('project.teamLeader');
@@ -449,7 +448,7 @@ class NotificationService
         $this->sendToMany($recipientIds, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
     }
 
-    // Notify related users when a handoff request is assigned and a task is created
+    // Handoff request: Notify related users when a handoff request is assigned and a task is created
     public function notifyHandoffRequestAssigned(HandoffRequest $handoffRequest, Task $createdTask, User $actor): void
     {
         $requesterId = (int) $handoffRequest->user_id;
@@ -476,7 +475,7 @@ class NotificationService
         );
     }
 
-    // Notify related users when a handoff request is noted
+    // Handoff request: Notify related users when a handoff request is noted
     public function notifyHandoffRequestNoted(HandoffRequest $handoffRequest, User $actor): void
     {
         $requesterId = (int) $handoffRequest->user_id;
