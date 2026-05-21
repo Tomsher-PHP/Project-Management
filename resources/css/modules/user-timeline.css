@@ -191,6 +191,7 @@
 
 .daily-timeline__segment--break {
     z-index: 3;
+    cursor: default;
 }
 
 .daily-timeline__segment:hover {
@@ -214,6 +215,18 @@
 .daily-timeline__segment--break {
     background: #ee9802;
     color: #fff;
+    box-shadow: 0 8px 14px rgba(224, 154, 0, 0.16);
+}
+
+.daily-timeline__segment--break-request {
+    cursor: pointer;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 8px 16px rgba(224, 154, 0, 0.24);
+    filter: saturate(1.05);
+}
+
+.daily-timeline__segment--break:not(.daily-timeline__segment--break-request):hover {
+    filter: none;
+    transform: none;
     box-shadow: 0 8px 14px rgba(224, 154, 0, 0.16);
 }
 

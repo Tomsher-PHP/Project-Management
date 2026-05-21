@@ -5,6 +5,7 @@ use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
@@ -82,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
+    Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
 
     Route::prefix('user-analytics')->group(function () {
         Route::get('/', [AnalyticsController::class, 'index'])->name('user.analytics');

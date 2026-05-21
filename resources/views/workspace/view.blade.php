@@ -34,13 +34,18 @@
                 </div>
             </x-filters.drawer>
 
+            <!-- Task Create Modal -->
             @include('tasks.partials.create-modal')
 
             <script id="task-create-dependencies" type="application/json">
                 @json($taskCreateDependencies)
             </script>
 
+            <!-- Handoff Request Modal -->
             @include('tasks.partials.handoff-create-modal')
+
+            <!-- Break Work Request Modal -->
+            @include('workspace.partials._break-request-modal')
 
             <script id="task-filter-dependencies" type="application/json">
                 @json([
@@ -65,5 +70,6 @@
     @vite('resources/js/modules/workspace/workspace-kanban-filters.js')
     @vite('resources/js/modules/workspace/workspace-user-selector.js')
     @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
+    @vite('resources/js/modules/workspace/break-work-request.js')
     @vite('resources/js/modules/tasks/handoff.js')
 @endpush

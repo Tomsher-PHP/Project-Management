@@ -1,5 +1,5 @@
 @php
-    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, '.$globalDateFormat);
+    $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, ' . $globalDateFormat);
 @endphp
 
 <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
@@ -104,7 +104,17 @@
 
                 <!-- Break Start-->
                 @foreach ($breakTaskSegments ?? [] as $segment)
-                    <button type="button" class="daily-timeline__segment daily-timeline__segment--break" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}">
+                    @php
+                        $breakDurationSeconds = (int) (($segment['duration_minutes'] ?? 0) * 60);
+                        $isBreakRequestAllowed = $breakDurationSeconds >= 180;
+                    @endphp
+                    <button type="button" class="daily-timeline__segment daily-timeline__segment--break {{ $isBreakRequestAllowed ? 'daily-timeline__segment--break-request' : '' }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}"
+                        @if ($isBreakRequestAllowed) data-break-work-request-trigger
+                            data-break-date="{{ $selectedDateValue }}"
+                            data-break-date-label="{{ $selectedDateLabel }}"
+                            data-break-start="{{ $segment['start_label'] }}"
+                            data-break-end="{{ $segment['end_label'] }}"
+                            data-break-duration="{{ $breakDurationSeconds }}" @endif>
                     </button>
                 @endforeach
                 <!-- Break End-->
