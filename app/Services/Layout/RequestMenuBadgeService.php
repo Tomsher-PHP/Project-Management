@@ -2,6 +2,7 @@
 
 namespace App\Services\Layout;
 
+use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
@@ -28,11 +29,14 @@ class RequestMenuBadgeService
             ? $this->handoffRequestCount($user)
             : 0;
 
+        $breakRequests = $this->breakRequestCount($user);
+
         return [
             'task_requests' => $taskRequests,
             'task_time' => $taskTime,
             'task_handoff' => $taskHandoff,
-            'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff) > 0,
+            'break_requests' => $breakRequests,
+            'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff + $breakRequests) > 0,
         ];
     }
 
@@ -54,6 +58,13 @@ class RequestMenuBadgeService
     {
         return $this->visibleHandoffRequestQuery($user)
             ->where('status', HandoffRequest::STATUS_PENDING)
+            ->count();
+    }
+
+    private function breakRequestCount(User $user): int
+    {
+        return $this->visibleBreakRequestQuery($user)
+            ->where('status', BreakWorkRequest::STATUS_PENDING)
             ->count();
     }
 
@@ -113,6 +124,24 @@ class RequestMenuBadgeService
         return $query->whereIn('user_id', $accessibleUserIds);
     }
 
+    private function visibleBreakRequestQuery(User $user): Builder
+    {
+        if ($user->is_super_admin) {
+            return BreakWorkRequest::query();
+        }
+
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return BreakWorkRequest::query()
+            ->whereIn('user_id', $accessibleUserIds);
+    }
+
     private function applyAccountableUserScope(Builder $query, User $user): void
     {
         $query
@@ -135,6 +164,7 @@ class RequestMenuBadgeService
             'task_requests' => 0,
             'task_time' => 0,
             'task_handoff' => 0,
+            'break_requests' => 0,
             'has_any_pending' => false,
         ];
     }

@@ -83,7 +83,18 @@ Route::middleware(['auth'])->group(function () {
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
+    Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
     Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
+
+    Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])
+        ->middleware(['permission.type:break_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('break-requests.bulk-action');
+
+    Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])
+        ->middleware(['permission.type:break_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('break-requests.action');
 
     Route::prefix('user-analytics')->group(function () {
         Route::get('/', [AnalyticsController::class, 'index'])->name('user.analytics');
@@ -273,7 +284,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);
-    
+
     // Customer Restore Routes
     Route::get('/restore/customers', [CustomerRestoreController::class, 'restoreIndex'])->middleware('permission.type:customer.restore')->name('customers.restore.index');
     Route::post('/restore/customers/bulk', [CustomerRestoreController::class, 'bulkRestore'])->middleware('permission.type:customer.restore')->name('customers.restore.bulk');

@@ -173,7 +173,7 @@ return [
     // LEAVE REPORT
     ['name' => 'reports.leave_view', 'sort_order' => 19090],
     ['name' => 'reports.leave_export', 'sort_order' => 19091],
-    
+
 
     // ACTIVITY LOG (20000)
     ['name' => 'activity_log.view',   'sort_order' => 20000],
@@ -217,5 +217,8 @@ return [
     ['name' => 'handoff_request.view',         'sort_order' => 27020],
     ['name' => 'handoff_request.create',       'sort_order' => 27040],
     ['name' => 'handoff_request.note',         'sort_order' => 27060],
+
+    // Break Request (28000)
+    ['name' => 'break_request.approve_reject',     'sort_order' => 28000],
 
 ];

@@ -21,6 +21,7 @@
                 'task_requests' => 0,
                 'task_time' => 0,
                 'task_handoff' => 0,
+                'break_requests' => 0,
                 'has_any_pending' => false,
             ];
 
@@ -35,6 +36,7 @@
             $canViewTaskRequests = $canViewTasks;
             $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
             $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
+            $canViewBreakRequests = $authUser !== null;
 
             $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
@@ -55,7 +57,7 @@
             $canViewLeaveReports = $authUser?->can('reports.leave_view');
 
             $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
-            $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests;
+            $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
             $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
             $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
 
@@ -72,7 +74,8 @@
             $isTaskRequestsActive = request()->routeIs('tasks.requests.*');
             $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
             $isHandoffsActive = request()->routeIs('handoff_requests.*');
-            $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive;
+            $isBreakRequestsActive = request()->routeIs('break-requests.*');
+            $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive;
             $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive;
 
             $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
@@ -336,7 +339,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs)
+                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests)
                             <!-- Requests -->
                             <li class="item py-[11px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="index.html" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
@@ -365,7 +368,7 @@
                                 </a>
                                 <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isRequestsMenuActive ? 'active' : '' }}">
                                     @if ($canViewTaskRequests)
-                                    <!-- Task Requests -->
+                                        <!-- Task Requests -->
                                         <li>
                                             <a href="{{ route('tasks.requests.index') }}" class="text-md inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Task</span>
@@ -398,6 +401,19 @@
                                                 @if (($requestMenuBadges['task_handoff'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                                                         {{ $requestMenuBadges['task_handoff'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
+                                    @if ($canViewBreakRequests)
+                                        <!-- Break Requests -->
+                                        <li>
+                                            <a href="{{ route('break-requests.index') }}" class="text-md inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isBreakRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                <span>Break</span>
+                                                @if (($requestMenuBadges['break_requests'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['break_requests'] }}
                                                     </span>
                                                 @endif
                                             </a>

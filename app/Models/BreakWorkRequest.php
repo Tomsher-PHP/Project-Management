@@ -85,4 +85,19 @@ class BreakWorkRequest extends Model
     {
         return $this->belongsTo(TaskTimeLog::class);
     }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
 }
