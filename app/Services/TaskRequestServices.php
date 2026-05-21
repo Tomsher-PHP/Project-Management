@@ -117,7 +117,7 @@ class TaskRequestServices
 
     private function visibleRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', 'self');
+        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
 
         if ($user->is_super_admin) {
             return $query;
@@ -180,7 +180,7 @@ class TaskRequestServices
 
     private function accountableRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', 'self');
+        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
 
         if ($user->is_super_admin) {
             return $query;

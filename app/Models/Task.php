@@ -21,6 +21,10 @@ class Task extends Model
     public const REQUEST_APPROVED = 'approved';
     public const REQUEST_REJECTED = 'rejected';
 
+    public const REQUEST_TYPE_SELF = 'self';
+    public const REQUEST_TYPE_ASSIGNED = 'assigned';
+    public const REQUEST_TYPE_BREAK = 'break';
+
     protected $fillable = [
         'project_id',
         'project_milestone_id',
