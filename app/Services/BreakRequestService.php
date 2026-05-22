@@ -17,7 +17,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
@@ -422,18 +421,12 @@ class BreakRequestService
         $task->request_status = Task::REQUEST_APPROVED;
         $task->approved_by = $breakWorkRequest->approved_by;
         $task->approved_at = $breakWorkRequest->approved_at;
-
-        if (Schema::hasColumn('tasks', 'break_work_request_id')) {
-            $task->break_work_request_id = $breakWorkRequest->id;
-        }
-
+        $task->break_work_request_id = $breakWorkRequest->id;
         $task->save();
 
         $task->forceFill(array_filter([
             'added_by' => $breakWorkRequest->user_id ?: $breakWorkRequest->approved_by,
-            'break_work_request_id' => Schema::hasColumn('tasks', 'break_work_request_id')
-                ? $breakWorkRequest->id
-                : null,
+            'break_work_request_id' => $breakWorkRequest->id,
         ], fn($value) => $value !== null))->saveQuietly();
 
         return $task->fresh();
@@ -452,18 +445,12 @@ class BreakRequestService
         $timeLog->is_approved = true;
         $timeLog->approved_by = $breakWorkRequest->approved_by;
         $timeLog->approved_at = $breakWorkRequest->approved_at;
-
-        if (Schema::hasColumn('task_time_logs', 'break_work_request_id')) {
-            $timeLog->break_work_request_id = $breakWorkRequest->id;
-        }
-
+        $timeLog->break_work_request_id = $breakWorkRequest->id;
         $timeLog->save();
 
         $timeLog->forceFill(array_filter([
             'added_by' => $breakWorkRequest->user_id,
-            'break_work_request_id' => Schema::hasColumn('task_time_logs', 'break_work_request_id')
-                ? $breakWorkRequest->id
-                : null,
+            'break_work_request_id' => $breakWorkRequest->id,
         ], fn($value) => $value !== null))->saveQuietly();
 
         return $timeLog->fresh();
@@ -489,10 +476,9 @@ class BreakRequestService
         return TaskStatus::query()
             ->active()
             ->where('flow_type', $flowType)
+            ->orderByDesc('is_completed')
             ->orderByDesc('is_default')
-            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
             ->orderBy('sort_order')
-            ->orderBy('name')
             ->value('id');
     }
 
@@ -518,12 +504,20 @@ class BreakRequestService
 
     private function buildTaskName(BreakWorkRequest $breakWorkRequest): string
     {
-        $timezone = (string) config('constants.timezone', config('app.timezone'));
         $workDate = $breakWorkRequest->work_date?->format('Y-m-d') ?: (string) $breakWorkRequest->getRawOriginal('work_date');
-        $startTime = $breakWorkRequest->started_at?->copy()->timezone($timezone)->format('H:i') ?? '--:--';
-        $endTime = $breakWorkRequest->ended_at?->copy()->timezone($timezone)->format('H:i') ?? '--:--';
         $userName = trim((string) ($breakWorkRequest->user?->name ?? 'User'));
+        $sequence = $this->resolveBreakSequenceForDate($breakWorkRequest);
 
-        return "{$userName} {$workDate} {$startTime} to {$endTime}";
+        return sprintf('%s %s BR - %03d', $userName, $workDate, $sequence);
+    }
+
+    private function resolveBreakSequenceForDate(BreakWorkRequest $breakWorkRequest): int
+    {
+        return max(1, BreakWorkRequest::query()
+            ->where('user_id', $breakWorkRequest->user_id)
+            ->whereDate('work_date', $breakWorkRequest->work_date)
+            ->whereNotNull('approved_by')
+            ->whereNotNull('approved_at')
+            ->count());
     }
 }

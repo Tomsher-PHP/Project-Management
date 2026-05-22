@@ -32,13 +32,13 @@
 
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Start Time <x-red-star /></label>
-                            <input type="text" name="start_time" value="" class="timepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="24" data-break-work-request-time data-break-work-request-start-time placeholder="HH:MM" autocomplete="off">
+                            <input type="text" name="start_time" value="" class="timepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="24" data-enable-seconds="true" data-break-work-request-time data-break-work-request-start-time placeholder="HH:MM:SS" autocomplete="off">
                             <p class="mt-1 hidden text-xs text-red-500" data-break-work-request-error="start_time"></p>
                         </div>
 
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">End Time <x-red-star /></label>
-                            <input type="text" name="end_time" value="" class="timepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="24" data-break-work-request-time data-break-work-request-end-time placeholder="HH:MM" autocomplete="off">
+                            <input type="text" name="end_time" value="" class="timepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="24" data-enable-seconds="true" data-break-work-request-time data-break-work-request-end-time placeholder="HH:MM:SS" autocomplete="off">
                             <p class="mt-1 hidden text-xs text-red-500" data-break-work-request-error="end_time"></p>
                         </div>
 

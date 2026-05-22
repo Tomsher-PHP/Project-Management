@@ -15,25 +15,28 @@ const isModalOpen = (modal) => modal && !modal.classList.contains('hidden');
 const isSubmitting = (form) => form?.dataset.submitting === 'true';
 
 const parseTimeValue = (value) => {
-    if (!value || !/^\d{1,2}:\d{2}$/.test(value)) {
+    if (!value || !/^\d{1,2}:\d{2}(?::\d{2})?$/.test(value)) {
         return null;
     }
 
-    const [hours, minutes] = value.split(':').map(Number);
+    const [hours, minutes, seconds = 0] = value.split(':').map(Number);
 
     if (
         Number.isNaN(hours) ||
         Number.isNaN(minutes) ||
+        Number.isNaN(seconds) ||
         hours < 0 ||
         hours > 23 ||
         minutes < 0 ||
-        minutes > 59
+        minutes > 59 ||
+        seconds < 0 ||
+        seconds > 59
     ) {
         return null;
     }
 
     const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
+    date.setHours(hours, minutes, seconds, 0);
 
     return date;
 };
@@ -53,13 +56,16 @@ const setPickerValue = (field, value) => {
 
     if (field._flatpickr) {
         if (parsedTime) {
-            field._flatpickr.setDate(parsedTime, false, field._flatpickr.config.dateFormat || 'H:i');
+            field._flatpickr.setDate(parsedTime, true, field._flatpickr.config.dateFormat || 'H:i:S');
         } else {
             field._flatpickr.clear(false);
         }
     }
 
-    field.value = normalizedValue;
+    if (!field._flatpickr) {
+        field.value = normalizedValue;
+    }
+
     dispatchFieldEvents(field);
 };
 
@@ -213,7 +219,10 @@ const bindBreakWorkRequest = () => {
         return;
     }
 
-    initTimepicker('[data-break-work-request-time]', {}, modal);
+    initTimepicker('[data-break-work-request-time]', {
+        enableSeconds: true,
+        dateFormat: 'H:i:S',
+    }, modal);
 
     document.addEventListener('click', (event) => {
         const trigger = event.target.closest(TRIGGER_SELECTOR);

@@ -106,7 +106,8 @@
                 @foreach ($breakTaskSegments ?? [] as $segment)
                     @php
                         $breakDurationSeconds = (int) (($segment['duration_minutes'] ?? 0) * 60);
-                        $isBreakRequestAllowed = $breakDurationSeconds >= 180;
+                        $canRequestOwnBreak = empty($workspaceTimelineShowsUser);
+                        $isBreakRequestAllowed = $canRequestOwnBreak && $breakDurationSeconds >= 180;
                     @endphp
                     <button type="button" class="daily-timeline__segment daily-timeline__segment--break {{ $isBreakRequestAllowed ? 'daily-timeline__segment--break-request' : '' }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}"
                         @if ($isBreakRequestAllowed) data-break-work-request-trigger

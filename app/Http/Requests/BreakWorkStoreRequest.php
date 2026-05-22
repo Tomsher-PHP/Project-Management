@@ -4,9 +4,9 @@ namespace App\Http\Requests;
 
 use App\Models\BreakWorkRequest;
 use App\Models\TaskTimeLog;
-use App\Services\CompanyService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class BreakWorkStoreRequest extends FormRequest
 {
@@ -19,8 +19,8 @@ class BreakWorkStoreRequest extends FormRequest
     {
         return [
             'work_date' => ['required', 'date'],
-            'start_time' => ['required', 'date_format:H:i'],
-            'end_time' => ['required', 'date_format:H:i'],
+            'start_time' => ['required'],
+            'end_time' => ['required'],
             'original_break_start' => ['required', 'date_format:H:i'],
             'original_break_end' => ['required', 'date_format:H:i'],
             'description' => ['required', 'string'],
@@ -33,9 +33,9 @@ class BreakWorkStoreRequest extends FormRequest
             'work_date.required' => 'Please select a work date.',
             'work_date.date' => 'The selected work date is invalid.',
             'start_time.required' => 'Please select a start time.',
-            'start_time.date_format' => 'The start time must be in HH:MM format.',
+            'start_time.date_format' => 'The start time must be in HH:MM or HH:MM:SS format.',
             'end_time.required' => 'Please select an end time.',
-            'end_time.date_format' => 'The end time must be in HH:MM format.',
+            'end_time.date_format' => 'The end time must be in HH:MM or HH:MM:SS format.',
             'original_break_start.required' => 'The original break start time is missing.',
             'original_break_start.date_format' => 'The original break start time is invalid.',
             'original_break_end.required' => 'The original break end time is missing.',
@@ -48,7 +48,17 @@ class BreakWorkStoreRequest extends FormRequest
     public function after(): array
     {
         return [
-            function ($validator) {
+            function (Validator $validator) {
+                if (! $this->isAcceptedTimeFormat($this->input('start_time'))) {
+                    $validator->errors()->add('start_time', 'The start time must be in HH:MM or HH:MM:SS format.');
+                    return;
+                }
+
+                if (! $this->isAcceptedTimeFormat($this->input('end_time'))) {
+                    $validator->errors()->add('end_time', 'The end time must be in HH:MM or HH:MM:SS format.');
+                    return;
+                }
+
                 $startedAt = $this->normalizedStartedAt();
                 $endedAt = $this->normalizedEndedAt();
 
@@ -64,6 +74,11 @@ class BreakWorkStoreRequest extends FormRequest
 
                 if (! $endedAt->greaterThan($startedAt)) {
                     $validator->errors()->add('end_time', 'The end time must be after the start time.');
+                    return;
+                }
+
+                if ($startedAt->isFuture() || $endedAt->isFuture()) {
+                    $validator->errors()->add('end_time', 'The selected time cannot be in the future.');
                     return;
                 }
 
@@ -200,10 +215,23 @@ class BreakWorkStoreRequest extends FormRequest
 
         try {
             $timezone = config('constants.timezone', 'UTC');
+            $timeValue = trim((string) $time);
+            $format = str_contains($timeValue, ':') && substr_count($timeValue, ':') === 2
+                ? 'Y-m-d H:i:s'
+                : 'Y-m-d H:i';
 
-            return Carbon::createFromFormat('Y-m-d H:i', trim((string) $date) . ' ' . trim((string) $time), $timezone)->utc();
+            return Carbon::createFromFormat($format, trim((string) $date) . ' ' . $timeValue, $timezone)->utc();
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function isAcceptedTimeFormat(mixed $value): bool
+    {
+        if (! filled($value)) {
+            return false;
+        }
+
+        return (bool) preg_match('/^\d{2}:\d{2}(:\d{2})?$/', trim((string) $value));
     }
 }

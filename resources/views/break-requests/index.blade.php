@@ -3,23 +3,6 @@
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         @php
-            $formatDuration = function (?int $seconds): string {
-                $totalSeconds = max(0, (int) ($seconds ?? 0));
-                $hours = intdiv($totalSeconds, 3600);
-                $minutes = intdiv($totalSeconds % 3600, 60);
-                $remainingSeconds = $totalSeconds % 60;
-
-                if ($hours > 0) {
-                    return sprintf('%dh %02dm', $hours, $minutes);
-                }
-
-                if ($minutes > 0) {
-                    return sprintf('%dm %02ds', $minutes, $remainingSeconds);
-                }
-
-                return sprintf('%ds', $remainingSeconds);
-            };
-
             $tabs = [
                 'pending' => 'Pending',
                 'approved' => 'Approved',
@@ -77,6 +60,9 @@
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Date</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Requested at</span>
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Time Range</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -123,13 +109,18 @@
                                         <span class="min-w-[120px] text-sm text-bgray-700 dark:text-bgray-200">@appDate($breakRequest->work_date)</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <span class="min-w-[170px] text-sm text-bgray-700 dark:text-bgray-200">
+                                            @appDateTime($breakRequest->created_at)
+                                        </span>
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[180px] text-sm text-bgray-700 dark:text-bgray-200">
                                             <p><span class="font-medium text-bgray-700 dark:text-bgray-50">Start:</span> @appTime($breakRequest->started_at)</p>
                                             <p class="mt-1"><span class="font-medium text-bgray-700 dark:text-bgray-50">End:</span> @appTime($breakRequest->ended_at)</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="min-w-[90px] text-sm text-bgray-700 dark:text-bgray-200">{{ $formatDuration($breakRequest->duration_seconds) }}</span>
+                                        <span class="min-w-[90px] text-sm text-bgray-700 dark:text-bgray-200">{{ formatSecondsToHMS($breakRequest->duration_seconds) }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[260px] text-sm text-bgray-700 dark:text-bgray-200">
@@ -160,19 +151,19 @@
                                         @elseif ($breakRequest->isRejected())
                                             <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                                 <p class="font-semibold text-bgray-700 dark:text-white">Rejected by {{ $breakRequest->rejectedBy?->name ?? '--' }}</p>
-                                                <p>{{ $breakRequest->rejected_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                                <p>@appDateTime($breakRequest->rejected_at)</p>
                                                 <p title="{{ $breakRequest->rejection_reason }}">{{ \Illuminate\Support\Str::limit($breakRequest->rejection_reason ?? '--', 45) }}</p>
                                             </div>
                                         @else
                                             <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                                 <p class="font-semibold text-bgray-700 dark:text-white">Approved by {{ $breakRequest->approvedBy?->name ?? '--' }}</p>
-                                                <p>{{ $breakRequest->approved_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}</p>
+                                                <p>@appDateTime($breakRequest->approved_at)</p>
                                             </div>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data :col-span="$showBulkActions ? 8 : 7" message="No {{ strtolower($tabs[$selectedStatus]) }} break work requests found." sub-message="There are no break work requests available for your access level." />
+                                <x-table-no-data :col-span="$showBulkActions ? 9 : 8" message="No {{ strtolower($tabs[$selectedStatus]) }} break work requests found." sub-message="There are no break work requests available for your access level." />
                             @endforelse
                         </tbody>
                     </table>
