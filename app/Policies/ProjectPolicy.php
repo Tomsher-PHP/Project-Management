@@ -21,6 +21,11 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
+        // Skip system projects
+        if($project->is_system) {
+            return false;
+        }
+
         // Superadmin or view all projects permission
         if ($user->is_super_admin || $user->can('project.view_all_projects')) {
             return true;

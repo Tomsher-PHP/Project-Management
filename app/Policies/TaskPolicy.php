@@ -14,6 +14,11 @@ class TaskPolicy
 
     public function view(User $user, Task $task): bool
     {
+        // Skip break work requested tasks
+        if ($task->break_work_request_id) {
+            return false;
+        }
+
         if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
             return true;
         }
