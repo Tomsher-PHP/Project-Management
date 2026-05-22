@@ -75,6 +75,7 @@ const buildTimelineUrl = (root, date) => {
 };
 
 const getTimelineRoot = () => document.querySelector(ROOT_SELECTOR);
+const getTimelineContainer = () => document.querySelector('#workspace-daily-timeline-container');
 
 const replaceTimelineRoot = (currentRoot, html) => {
     const template = document.createElement('template');
@@ -83,6 +84,13 @@ const replaceTimelineRoot = (currentRoot, html) => {
     const nextRoot = template.content.firstElementChild;
     if (!nextRoot) {
         throw new Error('Timeline response did not contain any markup.');
+    }
+
+    const container = getTimelineContainer();
+
+    if (container) {
+        container.dataset.selectedDate = nextRoot.dataset.userTimelineSelectedDate || container.dataset.selectedDate || '';
+        container.dataset.userId = nextRoot.dataset.userTimelineUserId || container.dataset.userId || '';
     }
 
     currentRoot.replaceWith(nextRoot);
@@ -116,14 +124,16 @@ const requestTimeline = async (root, date) => {
         const data = await response.json();
         replaceTimelineRoot(root, data.html || '');
         updateBrowserUrl(normalizedDate);
+        return true;
     } catch (error) {
         if (error.name === 'AbortError') {
-            return;
+            return false;
         }
 
         showError(root, 'Could not update the daily timeline. Please try again.');
         console.error(error);
         setLoadingState(root, false);
+        return false;
     } finally {
         activeTimelineRequest = null;
     }
@@ -141,6 +151,7 @@ const refreshTimelineForCurrentDate = () => {
 
 const createTimelineController = () => ({
     refreshSelectedDate: refreshTimelineForCurrentDate,
+    bindCurrentRoot: () => bindTimeline(getTimelineRoot()),
     isBusy: () => {
         const root = getTimelineRoot();
         return activeTimelineRequest !== null || root?.getAttribute('aria-busy') === 'true';

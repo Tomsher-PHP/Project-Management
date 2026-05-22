@@ -83,8 +83,10 @@ Route::middleware(['auth'])->group(function () {
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
+    Route::get('/workspace/daily-timeline/refresh', [UserWorkspaceController::class, 'refreshDailyTimeline'])->name('workspace.daily-timeline.refresh');
     Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
     Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
+    Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
 
     Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])
         ->middleware(['permission.type:break_request.approve_reject'])

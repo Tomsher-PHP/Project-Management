@@ -238,6 +238,19 @@
     border-top-color: #ee9802;
 }
 
+.daily-timeline__segment--break-request-pending {
+    background: #c17d0f;
+    box-shadow: 0 8px 16px rgba(187, 120, 11, 0.22);
+}
+
+.daily-timeline__segment--break-request-pending::before {
+    background: #c17d0f;
+}
+
+.daily-timeline__segment--break-request-pending::after {
+    border-top-color: #c17d0f;
+}
+
 .daily-timeline__shift {
     --shift-accent: #0866ff;
     position: absolute;

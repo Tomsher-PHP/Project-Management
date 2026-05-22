@@ -6,7 +6,7 @@
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Request Break Time as Work</h3>
+                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-break-work-request-title>Request Break Time as Work</h3>
                     </div>
 
                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-break-work-request-close>
@@ -16,6 +16,9 @@
 
                 <form action="{{ route('break-work-requests.store') }}" method="POST" class="space-y-4 overflow-y-auto px-5 py-5" data-break-work-request-form data-store-url="{{ route('break-work-requests.store') }}">
                     @csrf
+                    <input type="hidden" name="_method" value="" data-break-work-request-method>
+                    <input type="hidden" name="break_request_id" value="" data-break-work-request-id>
+                    <input type="hidden" name="request_mode" value="create" data-break-work-request-mode>
 
                     <input type="hidden" name="work_date" value="" data-break-work-request-work-date>
                     <input type="hidden" name="original_break_start" value="" data-break-work-request-original-start>

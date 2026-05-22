@@ -20,7 +20,12 @@
             </div>
 
             <!-- Daily Timeline Section -->
-            @include('workspace.partials.daily-timeline')
+            <div id="workspace-daily-timeline-container"
+                data-refresh-url="{{ route('workspace.daily-timeline.refresh') }}"
+                data-selected-date="{{ $selectedDateValue }}"
+                data-user-id="{{ $workspaceTimelineUserId }}">
+                @include('workspace.partials.daily-timeline')
+            </div>
 
             <!-- Task Board Section -->
             @include('workspace.partials.kanban-board')

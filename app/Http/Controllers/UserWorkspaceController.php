@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BreakWorkRequest;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
@@ -46,9 +47,7 @@ class UserWorkspaceController extends Controller
         }
 
         if ($request->ajax()) {
-            return response()->json([
-                'html' => view('workspace.partials.daily-timeline', $timelineViewData)->render(),
-            ]);
+            return $this->buildDailyTimelineResponse($timelineViewData);
         }
 
         [$selectedFlowType, $boardStatuses, $tasksByStatus, $selectedKanbanSort] = $this->buildWorkspaceKanbanData($request, $taskServices, $workspaceUser);
@@ -86,6 +85,15 @@ class UserWorkspaceController extends Controller
             'workspaceFilterCount' => $workspaceFilterCount,
             'workspaceHasActiveFilters' => $workspaceFilterCount > 0,
         ] + $timelineViewData + $filterViewData + $formData);
+    }
+
+    public function refreshDailyTimeline(Request $request)
+    {
+        $workspaceUser = $this->resolveWorkspaceUser($request);
+        $selectedDate = $this->resolveSelectedDate($request->input('date'));
+        $timelineViewData = $this->buildTimelineViewData($workspaceUser, $selectedDate, (int) $request->user()->id === (int) $workspaceUser->id);
+
+        return $this->buildDailyTimelineResponse($timelineViewData);
     }
 
     private function renderKanbanBoard(Request $request, TaskServices $taskServices, User $workspaceUser)
@@ -226,6 +234,7 @@ class UserWorkspaceController extends Controller
         $assignedShift = $this->timeLineService->getAssignedShift($userId, $selectedDate);
         $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($userId, $selectedDate);
         $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $selectedDate);
+        $breakTaskSegments = $this->splitBreakSegmentsForPendingRequests($workspaceUser, $selectedDate, $breakTaskSegments, $isOwnWorkspace);
         $shiftSummaryDuration = (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false))
             ? ($assignedShift['timeline_segments'][0]['duration_label'] ?? '--')
             : '--';
@@ -245,10 +254,179 @@ class UserWorkspaceController extends Controller
             'workspaceGreetingLabel' => $isOwnWorkspace ? $this->buildWorkspaceGreetingLabel($workspaceUser->name) : null,
             'workspaceGreetingDayName' => $isOwnWorkspace ? now()->format('l, ' . $dateFormat) : null,
             'workspaceTimelineUserName' => $workspaceUser->name,
+            'workspaceTimelineUserId' => $workspaceUser->id,
             'workspaceTimelineUserAvatarUrl' => $workspaceUser->profileImageUrl,
             'workspaceTimelineUserInitial' => Str::upper(Str::substr($workspaceUser->name ?? 'U', 0, 2)),
             'workspaceTimelineShowsUser' => ! $isOwnWorkspace,
         ];
+    }
+
+    private function buildDailyTimelineResponse(array $timelineViewData)
+    {
+        return response()->json([
+            'success' => true,
+            'html' => view('workspace.partials.daily-timeline', $timelineViewData)->render(),
+        ]);
+    }
+
+    private function splitBreakSegmentsForPendingRequests(User $workspaceUser, Carbon $selectedDate, array $breakTaskSegments, bool $isOwnWorkspace): array
+    {
+        if (! $isOwnWorkspace || $breakTaskSegments === []) {
+            return $breakTaskSegments;
+        }
+
+        $timezone = config('constants.timezone', 'UTC');
+        $dayStartLocal = $selectedDate->copy()->timezone($timezone)->startOfDay();
+        $pendingRequests = BreakWorkRequest::query()
+            ->where('user_id', $workspaceUser->id)
+            ->whereDate('work_date', $selectedDate->toDateString())
+            ->where('status', BreakWorkRequest::STATUS_PENDING)
+            ->whereNotNull('started_at')
+            ->whereNotNull('ended_at')
+            ->orderBy('started_at')
+            ->orderBy('id')
+            ->get();
+
+        if ($pendingRequests->isEmpty()) {
+            return $breakTaskSegments;
+        }
+
+        $segments = [];
+
+        foreach ($breakTaskSegments as $segment) {
+            $segmentStartSeconds = (int) ($segment['start_seconds'] ?? 0);
+            $segmentEndSeconds = (int) ($segment['end_seconds'] ?? 0);
+
+            if ($segmentEndSeconds <= $segmentStartSeconds) {
+                continue;
+            }
+
+            $originalBreakStartLabel = (string) ($segment['start_label'] ?? $this->formatTimelineSecondLabel($dayStartLocal, $segmentStartSeconds));
+            $originalBreakEndLabel = (string) ($segment['end_label'] ?? $this->formatTimelineSecondLabel($dayStartLocal, $segmentEndSeconds));
+            $originalBreakDurationSeconds = max(0, $segmentEndSeconds - $segmentStartSeconds);
+
+            $overlappingRequests = $pendingRequests
+                ->map(function (BreakWorkRequest $breakWorkRequest) use ($dayStartLocal, $segmentStartSeconds, $segmentEndSeconds) {
+                    $requestStartLocal = $breakWorkRequest->started_at?->copy()->timezone($dayStartLocal->getTimezone());
+                    $requestEndLocal = $breakWorkRequest->ended_at?->copy()->timezone($dayStartLocal->getTimezone());
+
+                    if (! $requestStartLocal || ! $requestEndLocal) {
+                        return null;
+                    }
+
+                    $requestStartSeconds = $dayStartLocal->diffInSeconds($requestStartLocal, false);
+                    $requestEndSeconds = $dayStartLocal->diffInSeconds($requestEndLocal, false);
+                    $overlapStartSeconds = max($segmentStartSeconds, $requestStartSeconds);
+                    $overlapEndSeconds = min($segmentEndSeconds, $requestEndSeconds);
+
+                    if ($overlapEndSeconds <= $overlapStartSeconds) {
+                        return null;
+                    }
+
+                    return [
+                        'break_work_request' => $breakWorkRequest,
+                        'start_seconds' => $overlapStartSeconds,
+                        'end_seconds' => $overlapEndSeconds,
+                    ];
+                })
+                ->filter()
+                ->values();
+
+            if ($overlappingRequests->isEmpty()) {
+                $segments[] = $segment + ['segment_state' => 'normal_break'];
+                continue;
+            }
+
+            $cursor = $segmentStartSeconds;
+
+            foreach ($overlappingRequests as $pendingSegment) {
+                $pendingStartSeconds = (int) $pendingSegment['start_seconds'];
+                $pendingEndSeconds = (int) $pendingSegment['end_seconds'];
+                /** @var BreakWorkRequest $pendingBreakRequest */
+                $pendingBreakRequest = $pendingSegment['break_work_request'];
+
+                if ($pendingStartSeconds > $cursor) {
+                    $normalSegment = $this->buildSplitBreakSegment($dayStartLocal, $cursor, $pendingStartSeconds, [
+                        'segment_state' => 'normal_break',
+                    ]);
+
+                    if ($normalSegment) {
+                        $segments[] = $normalSegment;
+                    }
+                }
+
+                $pendingBreakStartLabel = $this->formatTimelineSecondLabel($dayStartLocal, $pendingStartSeconds);
+                $pendingBreakEndLabel = $this->formatTimelineSecondLabel($dayStartLocal, $pendingEndSeconds);
+
+                $pendingBreakSegment = $this->buildSplitBreakSegment($dayStartLocal, $pendingStartSeconds, $pendingEndSeconds, [
+                    'segment_state' => 'pending_break_request',
+                    'tooltip_label' => 'Pending break work request | '
+                        . $pendingBreakStartLabel
+                        . ' - '
+                        . $pendingBreakEndLabel
+                        . ' | '
+                        . formatSecondsToHMS($pendingBreakRequest->duration_seconds ?? max(0, $pendingEndSeconds - $pendingStartSeconds)),
+                    'pending_break_request_id' => $pendingBreakRequest->id,
+                    'pending_break_request_description' => (string) ($pendingBreakRequest->description ?? ''),
+                    'pending_break_request_start_label' => $pendingBreakStartLabel,
+                    'pending_break_request_end_label' => $pendingBreakEndLabel,
+                    'pending_break_request_update_url' => route('break-work-requests.update', $pendingBreakRequest),
+                    'original_break_start_label' => $originalBreakStartLabel,
+                    'original_break_end_label' => $originalBreakEndLabel,
+                    'original_break_duration_seconds' => $originalBreakDurationSeconds,
+                ]);
+
+                if ($pendingBreakSegment) {
+                    $segments[] = $pendingBreakSegment;
+                }
+
+                $cursor = max($cursor, $pendingEndSeconds);
+            }
+
+            if ($cursor < $segmentEndSeconds) {
+                $normalSegment = $this->buildSplitBreakSegment($dayStartLocal, $cursor, $segmentEndSeconds, [
+                    'segment_state' => 'normal_break',
+                ]);
+
+                if ($normalSegment) {
+                    $segments[] = $normalSegment;
+                }
+            }
+        }
+
+        return $segments;
+    }
+
+    private function buildSplitBreakSegment(Carbon $dayStartLocal, int $startSeconds, int $endSeconds, array $attributes = []): ?array
+    {
+        $durationSeconds = max(0, $endSeconds - $startSeconds);
+
+        if ($durationSeconds <= 0) {
+            return null;
+        }
+
+        $startLabel = $this->formatTimelineSecondLabel($dayStartLocal, $startSeconds);
+        $endLabel = $this->formatTimelineSecondLabel($dayStartLocal, $endSeconds);
+
+        return [
+            'left' => round(($startSeconds / 86400) * 100, 4),
+            'width' => max(round(($durationSeconds / 86400) * 100, 4), 0.01),
+            'start_seconds' => $startSeconds,
+            'end_seconds' => $endSeconds,
+            'duration_seconds' => $durationSeconds,
+            'start_minutes' => intdiv($startSeconds, 60),
+            'end_minutes' => intdiv($endSeconds, 60),
+            'duration_minutes' => intdiv($durationSeconds, 60),
+            'start_label' => $startLabel,
+            'end_label' => $endLabel,
+            'duration_label' => formatSecondsToHMS($durationSeconds),
+            'tooltip_label' => "Break | {$startLabel} - {$endLabel} | " . formatSecondsToHMS($durationSeconds),
+        ] + $attributes;
+    }
+
+    private function formatTimelineSecondLabel(Carbon $dayStartLocal, int $seconds): string
+    {
+        return $dayStartLocal->copy()->addSeconds(max(0, $seconds))->format('H:i:s');
     }
 
     private function resolveSelectedDate(mixed $date): Carbon

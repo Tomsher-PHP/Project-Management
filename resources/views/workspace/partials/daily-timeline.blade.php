@@ -2,7 +2,7 @@
     $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, ' . $globalDateFormat);
 @endphp
 
-<section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('user.workspace') }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
+<section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('workspace.daily-timeline.refresh') }}" data-user-timeline-user-id="{{ $workspaceTimelineUserId }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="flex items-start justify-center xl:justify-start">
             @if (!empty($workspaceTimelineShowsUser))
@@ -107,15 +107,30 @@
                     @php
                         $breakDurationSeconds = (int) ($segment['duration_seconds'] ?? 0);
                         $canRequestOwnBreak = empty($workspaceTimelineShowsUser);
-                        $isBreakRequestAllowed = $canRequestOwnBreak && $breakDurationSeconds >= 180;
+                        $segmentState = (string) ($segment['segment_state'] ?? 'normal_break');
+                        $isPendingBreakRequest = $segmentState === 'pending_break_request';
+                        $isBreakRequestAllowed = $canRequestOwnBreak && ($isPendingBreakRequest || $breakDurationSeconds >= 180);
+                        $breakRequestMode = $isPendingBreakRequest ? 'edit' : 'create';
+                        $breakSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--break' . ($isBreakRequestAllowed ? ' daily-timeline__segment--break-request' : '') . ($isPendingBreakRequest ? ' daily-timeline__segment--break-request-pending' : ''));
+                        $originalBreakStart = $isPendingBreakRequest ? $segment['original_break_start_label'] ?? $segment['start_label'] : $segment['start_label'];
+                        $originalBreakEnd = $isPendingBreakRequest ? $segment['original_break_end_label'] ?? $segment['end_label'] : $segment['end_label'];
+                        $originalBreakDuration = $isPendingBreakRequest ? (int) ($segment['original_break_duration_seconds'] ?? $breakDurationSeconds) : $breakDurationSeconds;
                     @endphp
-                    <button type="button" class="daily-timeline__segment daily-timeline__segment--break {{ $isBreakRequestAllowed ? 'daily-timeline__segment--break-request' : '' }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}"
+                    <button type="button" class="{{ $breakSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}"
                         @if ($isBreakRequestAllowed) data-break-work-request-trigger
+                            data-break-request-mode="{{ $breakRequestMode }}"
                             data-break-date="{{ $selectedDateValue }}"
                             data-break-date-label="{{ $selectedDateLabel }}"
-                            data-break-start="{{ $segment['start_label'] }}"
-                            data-break-end="{{ $segment['end_label'] }}"
-                            data-break-duration="{{ $breakDurationSeconds }}" @endif>
+                            data-break-start="{{ $originalBreakStart }}"
+                            data-break-end="{{ $originalBreakEnd }}"
+                            data-break-duration="{{ $originalBreakDuration }}"
+                            @if ($isPendingBreakRequest)
+                                data-break-request-id="{{ $segment['pending_break_request_id'] }}"
+                                data-break-request-update-url="{{ $segment['pending_break_request_update_url'] }}"
+                                data-break-request-start="{{ $segment['pending_break_request_start_label'] }}"
+                                data-break-request-end="{{ $segment['pending_break_request_end_label'] }}"
+                                data-break-request-description="{{ $segment['pending_break_request_description'] }}" @endif
+                        @endif>
                     </button>
                 @endforeach
                 <!-- Break End-->

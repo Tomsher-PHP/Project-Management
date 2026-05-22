@@ -42,6 +42,20 @@ class BreakRequestService
         ]);
     }
 
+    public function updatePendingRequest(BreakWorkRequest $breakWorkRequest, Carbon $startedAt, Carbon $endedAt, int $durationSeconds, string $description, string $workDate, int $updatedBy): BreakWorkRequest
+    {
+        $breakWorkRequest->update([
+            'work_date' => $workDate,
+            'started_at' => $startedAt,
+            'ended_at' => $endedAt,
+            'duration_seconds' => $durationSeconds,
+            'description' => $description,
+            'updated_by' => $updatedBy,
+        ]);
+
+        return $breakWorkRequest->fresh();
+    }
+
     public function getRequestsForUser(User $user, int $perPage, string $status = BreakWorkRequest::STATUS_PENDING, array $filters = []): LengthAwarePaginator
     {
         $query = $this->visibleRequestQuery($user)

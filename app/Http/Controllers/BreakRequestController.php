@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BreakRequestActionRequest;
 use App\Http\Requests\BreakRequestBulkActionRequest;
 use App\Http\Requests\BreakWorkStoreRequest;
+use App\Http\Requests\BreakWorkUpdateRequest;
 use App\Models\BreakWorkRequest;
 use App\Services\BreakRequestService;
 use App\Services\NotificationService;
@@ -81,6 +82,40 @@ class BreakRequestController extends Controller
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    public function update(BreakWorkUpdateRequest $request, BreakWorkRequest $breakWorkRequest, BreakRequestService $breakRequestService): JsonResponse
+    {
+        abort_unless((int) $breakWorkRequest->user_id === (int) $request->user()?->id, Response::HTTP_FORBIDDEN);
+
+        if (! $breakWorkRequest->isPending()) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Only pending break work requests can be updated.');
+        }
+
+        $startedAt = $request->normalizedStartedAt();
+        $endedAt = $request->normalizedEndedAt();
+
+        abort_unless($startedAt && $endedAt, Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        $updatedRequest = $breakRequestService->updatePendingRequest(
+            $breakWorkRequest,
+            $startedAt,
+            $endedAt,
+            $request->durationSeconds(),
+            $request->validated('description'),
+            $request->validated('work_date'),
+            (int) $request->user()->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Break work request updated successfully.',
+            'data' => [
+                'id' => $updatedRequest->id,
+                'status' => $updatedRequest->status,
+                'processing_status' => $updatedRequest->processing_status,
+            ],
+        ]);
     }
 
     public function handleAction(BreakRequestActionRequest $request, BreakWorkRequest $breakWorkRequest, string $action, BreakRequestService $breakRequestService): RedirectResponse

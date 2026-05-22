@@ -189,6 +189,7 @@ class BreakWorkStoreRequest extends FormRequest
     private function hasOverlappingPendingBreakWorkRequest(Carbon $startedAt, Carbon $endedAt): bool
     {
         $userId = $this->user()?->id;
+        $currentBreakWorkRequestId = $this->currentBreakWorkRequestId();
 
         if (! $userId) {
             return false;
@@ -197,6 +198,7 @@ class BreakWorkStoreRequest extends FormRequest
         return BreakWorkRequest::query()
             ->where('user_id', $userId)
             ->where('status', BreakWorkRequest::STATUS_PENDING)
+            ->when($currentBreakWorkRequestId, fn($query) => $query->whereKeyNot($currentBreakWorkRequestId))
             ->whereNotNull('started_at')
             ->whereNotNull('ended_at')
             ->where('started_at', '<', $endedAt)
@@ -243,5 +245,10 @@ class BreakWorkStoreRequest extends FormRequest
         }
 
         return (bool) preg_match('/^\d{2}:\d{2}(:\d{2})?$/', trim((string) $value));
+    }
+
+    protected function currentBreakWorkRequestId(): ?int
+    {
+        return null;
     }
 }
