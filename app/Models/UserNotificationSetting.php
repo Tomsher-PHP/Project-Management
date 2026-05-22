@@ -14,6 +14,7 @@ class UserNotificationSetting extends Model
     public const TASK_REQUEST = 'task_request';
     public const TASK_LOG_REQUEST = 'task_log_request';
     public const HANDOFF_REQUEST = 'handoff_request';
+    public const BREAK_REQUEST = 'break_request';
 
     protected $fillable = [
         'user_id',

@@ -7,6 +7,7 @@ use App\Http\Requests\BreakRequestBulkActionRequest;
 use App\Http\Requests\BreakWorkStoreRequest;
 use App\Models\BreakWorkRequest;
 use App\Services\BreakRequestService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,8 @@ class BreakRequestController extends Controller
             $request->validated('description')
         );
 
+        app(NotificationService::class)->notifyBreakRequestCreated($breakWorkRequest);
+
         $message = 'Break work request submitted successfully.';
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -104,6 +107,18 @@ class BreakRequestController extends Controller
                 ->withErrors($exception->errors());
         }
 
+        $breakWorkRequest = $breakWorkRequest->fresh();
+
+        if ($breakWorkRequest) {
+            $notificationService = app(NotificationService::class);
+
+            if ($action === 'approve') {
+                $notificationService->notifyBreakRequestApproved($breakWorkRequest);
+            } else {
+                $notificationService->notifyBreakRequestRejected($breakWorkRequest);
+            }
+        }
+
         return redirect()
             ->route('break-requests.index')
             ->with('success', $action === 'approve'
@@ -115,10 +130,16 @@ class BreakRequestController extends Controller
     {
         abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
 
+        $selectedRequestIds = collect($request->validated('break_request_ids'))
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
         try {
             $processedCount = $breakRequestService->handleBulkAction(
                 $request->user(),
-                $request->validated('break_request_ids'),
+                $selectedRequestIds,
                 $action,
                 $request->validated('reason')
             );
@@ -133,6 +154,29 @@ class BreakRequestController extends Controller
                 ->withInput()
                 ->with('error', $firstMessage ?: 'Unable to process the break work requests.')
                 ->withErrors($exception->errors());
+        }
+
+        $notificationService = app(NotificationService::class);
+        $updatedRequests = BreakWorkRequest::query()
+            ->whereIn('id', $selectedRequestIds)
+            ->when(
+                $action === 'approve',
+                fn($query) => $query
+                    ->where('status', BreakWorkRequest::STATUS_APPROVED)
+                    ->where('approved_by', $request->user()->id),
+                fn($query) => $query
+                    ->where('status', BreakWorkRequest::STATUS_REJECTED)
+                    ->where('rejected_by', $request->user()->id)
+            )
+            ->get();
+
+        foreach ($updatedRequests as $breakWorkRequest) {
+            if ($action === 'approve') {
+                $notificationService->notifyBreakRequestApproved($breakWorkRequest);
+                continue;
+            }
+
+            $notificationService->notifyBreakRequestRejected($breakWorkRequest);
         }
 
         return redirect()

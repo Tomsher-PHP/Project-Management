@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
 use App\Models\Shift;
@@ -388,13 +389,83 @@ class NotificationService
         );
     }
 
+    public function notifyBreakRequestCreated(BreakWorkRequest $breakWorkRequest): void
+    {
+        $breakWorkRequest->loadMissing([
+            'user:id,name',
+            'user.manager',
+        ]);
+
+        $recipientIds = collect(User::getReporterChainUserIds((int) $breakWorkRequest->user_id))
+            ->push($breakWorkRequest->user?->manager?->id)
+            ->filter()
+            ->reject(fn($userId) => (int) $userId === (int) $breakWorkRequest->user_id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
+        $userName = $breakWorkRequest->user?->name ?? 'A team member';
+
+        $this->sendToMany(
+            $recipientIds,
+            'Break Work Request Created',
+            "{$userName} submitted a break work request for {$workDate} from {$startTime} to {$endTime}.",
+            $this->getBreakRequestNotificationUrl($breakWorkRequest),
+            UserNotificationSetting::BREAK_REQUEST
+        );
+    }
+
+    public function notifyBreakRequestApproved(BreakWorkRequest $breakWorkRequest): void
+    {
+        if (! $breakWorkRequest->user_id) {
+            return;
+        }
+
+        [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
+
+        $this->send(
+            (int) $breakWorkRequest->user_id,
+            'Break Work Request Approved',
+            "Your break work request for {$workDate} from {$startTime} to {$endTime} has been approved.",
+            $this->getBreakRequestNotificationUrl($breakWorkRequest, true),
+            UserNotificationSetting::BREAK_REQUEST
+        );
+    }
+
+    public function notifyBreakRequestRejected(BreakWorkRequest $breakWorkRequest): void
+    {
+        if (! $breakWorkRequest->user_id) {
+            return;
+        }
+
+        [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
+        $message = "Your break work request for {$workDate} from {$startTime} to {$endTime} has been rejected.";
+
+        if (filled($breakWorkRequest->rejection_reason)) {
+            $message .= ' Reason: ' . trim((string) $breakWorkRequest->rejection_reason);
+        }
+
+        $this->send(
+            (int) $breakWorkRequest->user_id,
+            'Break Work Request Rejected',
+            $message,
+            $this->getBreakRequestNotificationUrl($breakWorkRequest),
+            UserNotificationSetting::BREAK_REQUEST
+        );
+    }
+
     // Task time log change request: Notify related users when a time log change request is created
     public function notifyTaskTimeLogChangeRequestCreated(TaskTimeLogChangeRequest $changeRequest): void
     {
         $changeRequest->loadMissing([
             'timeLog.task.project:id,name',
             'user:id,name',
-            'user.manager' => fn($query) => $query->select('users.id', 'users.name'),
+            'user.manager',
         ]);
 
         $task = $changeRequest->timeLog?->task;
@@ -636,5 +707,28 @@ class NotificationService
         $url = route('handoff_requests.index', ['request_status' => 'noted']);
 
         $this->send($requesterId, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
+    }
+
+    private function formatBreakRequestDateTimeParts(BreakWorkRequest $breakWorkRequest): array
+    {
+        $timezone = (string) config('constants.timezone', config('app.timezone'));
+        $workDate = $breakWorkRequest->work_date?->format('Y-m-d') ?: (string) $breakWorkRequest->getRawOriginal('work_date');
+        $startTime = $breakWorkRequest->started_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
+        $endTime = $breakWorkRequest->ended_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
+
+        return [$workDate, $startTime, $endTime];
+    }
+
+    private function getBreakRequestNotificationUrl(BreakWorkRequest $breakWorkRequest, bool $preferTaskUrl = false): ?string
+    {
+        if ($preferTaskUrl) {
+            $breakWorkRequest->loadMissing('task:id');
+
+            if ($breakWorkRequest->task_id && $breakWorkRequest->task) {
+                return route('tasks.edit', $breakWorkRequest->task);
+            }
+        }
+
+        return route('break-requests.index');
     }
 }
