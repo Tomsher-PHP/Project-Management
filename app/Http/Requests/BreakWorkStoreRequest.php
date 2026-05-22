@@ -21,8 +21,8 @@ class BreakWorkStoreRequest extends FormRequest
             'work_date' => ['required', 'date'],
             'start_time' => ['required'],
             'end_time' => ['required'],
-            'original_break_start' => ['required', 'date_format:H:i'],
-            'original_break_end' => ['required', 'date_format:H:i'],
+            'original_break_start' => ['required'],
+            'original_break_end' => ['required'],
             'description' => ['required', 'string'],
         ];
     }
@@ -37,9 +37,9 @@ class BreakWorkStoreRequest extends FormRequest
             'end_time.required' => 'Please select an end time.',
             'end_time.date_format' => 'The end time must be in HH:MM or HH:MM:SS format.',
             'original_break_start.required' => 'The original break start time is missing.',
-            'original_break_start.date_format' => 'The original break start time is invalid.',
+            'original_break_start.date_format' => 'The original break start time must be in HH:MM or HH:MM:SS format.',
             'original_break_end.required' => 'The original break end time is missing.',
-            'original_break_end.date_format' => 'The original break end time is invalid.',
+            'original_break_end.date_format' => 'The original break end time must be in HH:MM or HH:MM:SS format.',
             'description.required' => 'Please enter a description.',
             'description.string' => 'The description must be a valid text value.',
         ];
@@ -56,6 +56,16 @@ class BreakWorkStoreRequest extends FormRequest
 
                 if (! $this->isAcceptedTimeFormat($this->input('end_time'))) {
                     $validator->errors()->add('end_time', 'The end time must be in HH:MM or HH:MM:SS format.');
+                    return;
+                }
+
+                if (! $this->isAcceptedTimeFormat($this->input('original_break_start'))) {
+                    $validator->errors()->add('original_break_start', 'The original break start time must be in HH:MM or HH:MM:SS format.');
+                    return;
+                }
+
+                if (! $this->isAcceptedTimeFormat($this->input('original_break_end'))) {
+                    $validator->errors()->add('original_break_end', 'The original break end time must be in HH:MM or HH:MM:SS format.');
                     return;
                 }
 

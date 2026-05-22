@@ -229,8 +229,8 @@ class UserWorkspaceController extends Controller
         $shiftSummaryDuration = (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false))
             ? ($assignedShift['timeline_segments'][0]['duration_label'] ?? '--')
             : '--';
-        $workedTotalMinutes = $this->timeLineService->getTotalTimelineMinutes($workedTaskSegments);
-        $breakTotalMinutes = $this->timeLineService->getTotalTimelineMinutes($breakTaskSegments);
+        $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($workedTaskSegments);
+        $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($breakTaskSegments);
 
         $dateFormat = config('constants.date_format');
         return [
@@ -238,8 +238,8 @@ class UserWorkspaceController extends Controller
             'workedTaskSegments' => $workedTaskSegments,
             'breakTaskSegments' => $breakTaskSegments,
             'shiftSummaryDuration' => $shiftSummaryDuration,
-            'workedSummaryDuration' => $this->formatDurationLabel($workedTotalMinutes),
-            'breakSummaryDuration' => $this->formatDurationLabel($breakTotalMinutes),
+            'workedSummaryDuration' => formatSecondsToHMS($workedTotalSeconds),
+            'breakSummaryDuration' => formatSecondsToHMS($breakTotalSeconds),
             'selectedDateValue' => $selectedDate->toDateString(),
             'todayDate' => now($selectedDate->getTimezone())->toDateString(),
             'workspaceGreetingLabel' => $isOwnWorkspace ? $this->buildWorkspaceGreetingLabel($workspaceUser->name) : null,
@@ -262,22 +262,6 @@ class UserWorkspaceController extends Controller
         } catch (\Throwable) {
             return now()->startOfDay();
         }
-    }
-
-    private function formatDurationLabel(int $minutes): string
-    {
-        $hours = intdiv(max($minutes, 0), 60);
-        $remainingMinutes = max($minutes, 0) % 60;
-
-        if ($hours > 0 && $remainingMinutes > 0) {
-            return "{$hours}h {$remainingMinutes}m";
-        }
-
-        if ($hours > 0) {
-            return "{$hours}h";
-        }
-
-        return "{$remainingMinutes}m";
     }
 
     private function buildWorkspaceGreetingLabel(?string $userName): ?string

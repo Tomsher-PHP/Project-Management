@@ -307,14 +307,16 @@
     border: 0;
     border-radius: 6px;
     background: transparent;
-    padding: 0 0.45rem;
-    color: #172033;
-    font-size: 0.68rem;
+    color: #ffffff;
+    background-color: #383838;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.78rem;
     line-height: 1;
+    letter-spacing: 0.06rem;
 }
 
 .dark .daily-timeline__shift>span {
-    color: #e5e7eb;
+    color: #ffffff;
 }
 
 .daily-timeline__shift:hover::before,
@@ -521,7 +523,8 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #64748b;
+    /* color: #64748b; */
+    color: #00050b;
 }
 
 .timeline-tooltip__dot {

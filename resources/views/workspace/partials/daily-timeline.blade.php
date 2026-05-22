@@ -71,7 +71,7 @@
             </div>
 
             <div>
-                <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0m' }}</p>
+                <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0s' }}</p>
                 <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#4f5bff]"></span>
                     Worked
@@ -79,7 +79,7 @@
             </div>
 
             <div>
-                <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0m' }}</p>
+                <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0s' }}</p>
                 <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#d78900]"></span>
                     Break
@@ -105,7 +105,7 @@
                 <!-- Break Start-->
                 @foreach ($breakTaskSegments ?? [] as $segment)
                     @php
-                        $breakDurationSeconds = (int) (($segment['duration_minutes'] ?? 0) * 60);
+                        $breakDurationSeconds = (int) ($segment['duration_seconds'] ?? 0);
                         $canRequestOwnBreak = empty($workspaceTimelineShowsUser);
                         $isBreakRequestAllowed = $canRequestOwnBreak && $breakDurationSeconds >= 180;
                     @endphp

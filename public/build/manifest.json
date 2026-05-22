@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DEvxAfr-.css",
+    "file": "assets/app-kqp8Zard.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -333,6 +333,18 @@
     "name": "user-restore",
     "src": "resources/js/modules/users/user-restore.js",
     "isEntry": true
+  },
+  "resources/js/modules/workspace/break-work-request.js": {
+    "file": "assets/break-work-request-BJNlrIfZ.js",
+    "name": "break-work-request",
+    "src": "resources/js/modules/workspace/break-work-request.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-CWSsmOu4.js",
+      "_timepicker-F_B7tF24.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
     "file": "assets/user-timeline-D8OJRK8E.js",
