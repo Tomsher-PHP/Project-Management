@@ -201,7 +201,8 @@ class ScheduleShiftService
     // Fetch users and shifts
     public function getUsersAndShifts(?string $teamFilter = null): array
     {
-        $users = app(UserService::class)->getAccessibleUsers(auth()->user());
+        $user = auth()->user();
+        $users = app(UserService::class)->getAccessibleUsers($user, [], [$user->id]);
 
         if ($teamFilter === self::TEAM_FILTER_NOT_IN_TEAM) {
             $teamUserIds = TeamUser::query()

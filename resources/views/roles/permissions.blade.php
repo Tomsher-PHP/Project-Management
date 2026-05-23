@@ -13,6 +13,12 @@
         </label>
     </div>
 
+    @php
+        $oldPermissions = old('permissions');
+        $rolePermissionIds = isset($role) ? $role->permissions->pluck('id')->map(fn($id) => (string) $id)->toArray() : [];
+        $defaultCheckedPermissionNames = $defaultCheckedPermissions ?? [];
+    @endphp
+
     <div class="space-y-6">
 
         @foreach ($permissions as $milestone => $modulePermissions)
@@ -36,7 +42,12 @@
 
                         @foreach ($modulePermissions as $permission)
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="permission-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}" {{ isset($role) && $role->hasPermissionTo($permission->id) ? 'checked' : '' }}>
+                                @php
+                                    $isChecked = $oldPermissions !== null ? in_array((string) $permission->id, array_map('strval', $oldPermissions), true) : (isset($role) ? in_array((string) $permission->id, $rolePermissionIds, true) : in_array($permission->name, $defaultCheckedPermissionNames, true));
+                                @endphp
+
+                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="permission-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}" @checked($isChecked)>
+                                
                                 <span class="text-sm
                                              text-gray-700
                                              group-hover:text-indigo-600
