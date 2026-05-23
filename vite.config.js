@@ -43,6 +43,7 @@ export default defineConfig({
                 'resources/js/modules/projects/project-delete.js',
                 'resources/js/modules/projects/project-restore.js',
                 'resources/js/modules/workspace/break-work-request.js',
+                'resources/js/login/login.js',
 
                 'resources/css/modules/user-timeline.css',
                 'resources/css/modules/kanban.css',

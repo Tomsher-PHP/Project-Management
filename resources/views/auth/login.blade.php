@@ -52,15 +52,14 @@
                         Don’t have an account?
                         <a href="signup.html" class="font-semibold underline">Sign Up</a>
                     </p> --}}
-                    
-                    <nav class="flex items-center justify-center flex-wrap gap-x-11 pt-24">
+
+                    {{-- <nav class="flex items-center justify-center flex-wrap gap-x-11 pt-24">
                         <a href="#" class="text-sm text-bgray-700 dark:text-white">Terms & Condition</a>
                         <a href="#" class="text-sm text-bgray-700 dark:text-white">Privacy Policy</a>
                         <a href="#" class="text-sm text-bgray-700 dark:text-white">Help</a>
-                        <a href="#" class="text-sm text-bgray-700 dark:text-white">English</a>
-                    </nav>
+                    </nav> --}}
                     <p class="text-bgray-600 dark:text-white text-center text-sm mt-6">
-                        @ {{ date('Y') }} <a href="https://www.tomsher.com/" target="_blank" class="border-b font-semibold hover:text-blue-600">Tomsher Technologies.</a> All rights reserved.
+                        @ {{ date('Y') }} <a href="https://www.tomsher.com/" target="_blank" class="border-b font-semibold hover:text-blue-600">Tomsher Technologies LLC</a> All rights reserved.
                     </p>
                 </div>
             </div>
@@ -78,8 +77,7 @@
                     </li>
                 </ul>
                 <div class="">
-                    <img src="assets/images/illustration/signin.svg
-            " alt="" />
+                    <img src="assets/images/illustration/signin.svg" alt="" />
                 </div>
                 <div>
                     <div class="text-center max-w-lg px-1.5 m-auto">
@@ -95,4 +93,20 @@
             </div>
         </div>
     </section>
+
+    <style>
+        .auth-password-input[type="password"] {
+            font-size: 2.0625rem;
+            letter-spacing: 0.05em;
+        }
+
+        .auth-password-input[type="password"]::placeholder {
+            font-size: 1rem;
+            letter-spacing: normal;
+        }
+    </style>
 @endsection
+
+@push('scripts')
+    @vite('resources/js/login/login.js')
+@endpush
