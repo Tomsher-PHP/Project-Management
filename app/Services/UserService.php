@@ -32,9 +32,11 @@ class UserService
                 : null;
 
             // 1. Handle password
+            $plainPassword = $data['password'];
+
             $user = User::create([
                 ...collect($data)->only(['name', 'email'])->toArray(),
-                'password'  => Hash::make($data['password']),
+                'password'  => Hash::make($plainPassword),
             ]);
 
             // Assign role to user
@@ -62,7 +64,7 @@ class UserService
             $company = Configuration::first();
 
             // Send mail
-            dispatch(new SendWelcomeMailJob($user, $data['password'], $company));
+            dispatch(new SendWelcomeMailJob($user, $plainPassword, $company));
             return $user;
         });
     }
@@ -79,11 +81,7 @@ class UserService
 
             // Prepare & Update User Data
             $userData = collect($data)
-                ->only(['name', 'email'])
-                ->when(!empty($data['password']), function ($collection) use ($data) {
-                    $collection['password'] = Hash::make($data['password']);
-                    return $collection;
-                })
+                ->only(['name', 'email', 'password'])
                 ->toArray();
 
             $user->update($userData);

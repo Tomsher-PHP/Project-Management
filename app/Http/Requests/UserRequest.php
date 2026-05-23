@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserRequest extends FormRequest
 {
@@ -24,6 +25,9 @@ class UserRequest extends FormRequest
     {
         $userId = $this->route('user') ?? null;
         // works if route model binding: users.update/{user}
+        $passwordRules = [
+            Password::min(8)->letters()->numbers(),
+        ];
 
         $email = !$userId ? [
             'required',
@@ -32,18 +36,11 @@ class UserRequest extends FormRequest
             Rule::unique('users', 'email')->ignore($userId),
         ] : [];
 
-        return [
+        $rules = [
             // Basic Info
             'name' => ['required', 'string', 'max:255'],
 
             'email' => $email,
-
-            // Password
-            'password' => [
-                $this->isMethod('post') ? 'required' : 'nullable',
-                'string',
-                'min:6',
-            ],
 
             // Profile Image
             'profile_image' => [
@@ -88,10 +85,24 @@ class UserRequest extends FormRequest
             ],
 
             'remove_profile_image' => 'nullable',
-            
+
             // KPI (multi select)
             'kpi_id' => ['nullable', 'array'],
             'kpi_id.*' => ['exists:kpis,id'],
+        ];
+
+        if ($this->isMethod('post')) {
+            $rules['password'] = array_merge(['required', 'confirmed'], $passwordRules);
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

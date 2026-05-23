@@ -1,5 +1,49 @@
 import Alert from "../../alert";
 
+function initPasswordToggles() {
+    const updatePasswordToggle = (button, input) => {
+        const isVisible = input.type === 'text';
+
+        button.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
+        button.setAttribute('aria-pressed', isVisible ? 'true' : 'false');
+
+        const showIcon = button.querySelector('[data-password-icon="show"]');
+        const hideIcon = button.querySelector('[data-password-icon="hide"]');
+
+        showIcon?.classList.toggle('hidden', isVisible);
+        hideIcon?.classList.toggle('hidden', !isVisible);
+    };
+
+    document.querySelectorAll('#changePasswordForm [data-password-field]').forEach((field) => {
+        const input = field.querySelector('[data-password-input]');
+        const button = field.querySelector('[data-password-toggle]');
+
+        if (!input || !button) {
+            return;
+        }
+
+        updatePasswordToggle(button, input);
+    });
+
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('#changePasswordForm [data-password-toggle]');
+
+        if (!button) {
+            return;
+        }
+
+        const field = button.closest('[data-password-field]');
+        const input = field?.querySelector('[data-password-input]');
+
+        if (!input) {
+            return;
+        }
+
+        input.type = input.type === 'password' ? 'text' : 'password';
+        updatePasswordToggle(button, input);
+    });
+}
+
 // button loader
 function setButtonLoading(button, isLoading, loadingText = 'Processing...') {
 
@@ -34,7 +78,13 @@ function setButtonLoading(button, isLoading, loadingText = 'Processing...') {
     }
 }
 
-document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+const changePasswordForm = document.getElementById('changePasswordForm');
+
+if (changePasswordForm) {
+    initPasswordToggles();
+}
+
+changePasswordForm?.addEventListener('submit', function (e) {
     e.preventDefault();
 
     let form = this;
@@ -54,57 +104,49 @@ document.getElementById('changePasswordForm').addEventListener('submit', functio
         },
         body: formData
     })
-    .then(async res => {
+        .then(async res => {
 
-        let data;
+            let data;
 
-        try {
-            data = await res.json();
-        } catch (e) {
-            console.error("Invalid JSON response", e);
-            return;
-        }
-
-        // clear old errors always
-        document.querySelectorAll('.error').forEach(el => el.innerText = '');
-
-        if (!res.ok) {
-
-            if (data.errors) {
-                Object.keys(data.errors).forEach(field => {
-
-                    let message = data.errors[field][0];
-
-                    // show for exact field
-                    let errorEl = document.querySelector(`[data-error="${field}"]`);
-
-                    if (errorEl) {
-                        errorEl.innerText = message;
-                    }
-
-                    // special case for confirmed validation
-                    if (field === 'new_password') {
-                        let confirmEl = document.querySelector(`[data-error="new_password_confirmation"]`);
-                        if (confirmEl) {
-                            confirmEl.innerText = message;
-                        }
-                    }
-                });
-            } else {
-                console.error(data);
+            try {
+                data = await res.json();
+            } catch (e) {
+                console.error("Invalid JSON response", e);
+                return;
             }
 
-            return;
-        }
+            // clear old errors always
+            document.querySelectorAll('.error').forEach(el => el.innerText = '');
 
-        // success
-        Alert.success('Password changed successfully');
-        form.reset();
+            if (!res.ok) {
 
-        // clear errors on success
-        document.querySelectorAll('.error').forEach(el => el.innerText = '');
-    })
-    .catch(err => console.error(err));
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+
+                        let message = data.errors[field][0];
+
+                        // show for exact field
+                        let errorEl = document.querySelector(`[data-error="${field}"]`);
+
+                        if (errorEl) {
+                            errorEl.innerText = message;
+                        }
+                    });
+                } else {
+                    console.error(data);
+                }
+
+                return;
+            }
+
+            // success
+            Alert.success('Password changed successfully');
+            form.reset();
+
+            // clear errors on success
+            document.querySelectorAll('.error').forEach(el => el.innerText = '');
+        })
+        .catch(err => console.error(err));
 });
 
 document.querySelectorAll('#changePasswordForm input').forEach(input => {

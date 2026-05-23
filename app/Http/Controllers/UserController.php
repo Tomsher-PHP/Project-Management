@@ -140,7 +140,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if($user->isRunningTask()) {
+        if ($user->isRunningTask()) {
             return redirect()->back()->with('error', 'Stop running tasks before deleting the user.');
         }
 
@@ -187,7 +187,7 @@ class UserController extends Controller
 
         $generalSettings = $user->generalSettings;
 
-        return view('users.show', compact('user','userNotificationSettings', 'generalSettings'));
+        return view('users.show', compact('user', 'userNotificationSettings', 'generalSettings'));
     }
 
     public function updateNotificationSettings(Request $request)
@@ -236,7 +236,7 @@ class UserController extends Controller
     /**
      * Function to change password for a user. Only super admin can change password of other users.
      */
-   public function changePassword(ChangePasswordRequest $request)
+    public function changePassword(ChangePasswordRequest $request)
     {
         $user = User::findOrFail($request->user_id);
 
@@ -264,7 +264,7 @@ class UserController extends Controller
 
     public function updateModal(Request $request, User $user, UserService $service)
     {
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
