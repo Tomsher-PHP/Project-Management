@@ -9,7 +9,6 @@ import Pusher from 'pusher-js';
 
 import './bootstrap';
 import './status-toggle';
-import './modules/reset-password';
 import './modules/ajax-form-modal';
 import './modules/config';
 import './modules/activity-log-details';
@@ -70,4 +69,3 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById(activeTab)?.classList.add('active');
     }
 });
-

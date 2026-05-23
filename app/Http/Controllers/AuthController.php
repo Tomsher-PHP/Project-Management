@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetOtpMail;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -82,6 +84,19 @@ class AuthController extends Controller
     public function sendOtp(ForgotPasswordRequest $request)
     {
         $user = User::where('email', $request->email)->first();
+        $existingOtpExpiresAt = $user->password_otp_expires_at
+            ? Carbon::parse($user->password_otp_expires_at)
+            : null;
+
+        if ($existingOtpExpiresAt && now()->lt($existingOtpExpiresAt->copy()->subMinutes(4))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait 60 seconds before requesting a new OTP.',
+                'email' => $user->email,
+            ], 429);
+        }
+
+        $isResendRequest = !empty($user->password_otp) && $existingOtpExpiresAt && now()->lte($existingOtpExpiresAt);
 
         $otp = random_int(10000, 99999);
 
@@ -90,15 +105,11 @@ class AuthController extends Controller
             'password_otp_expires_at' => now()->addMinutes(5),
         ]);
 
-        // Send Mail
-        // Mail::raw("Your password reset OTP is: {$otp}", function ($message) use ($user) {
-        //     $message->to($user->email)
-        //         ->subject('Password Reset OTP');
-        // });
+        Mail::to($user->email)->send(new PasswordResetOtpMail($otp, $user));
 
         return response()->json([
             'success' => true,
-            'message' => 'OTP sent successfully',
+            'message' => $isResendRequest ? 'OTP resent successfully' : 'OTP sent successfully',
             'email' => $user->email
         ]);
     }

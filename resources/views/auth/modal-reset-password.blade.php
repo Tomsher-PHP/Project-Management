@@ -74,6 +74,12 @@
                             <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" class="otp-input w-14 h-14 text-center text-2xl font-bold rounded-xl bg-gray-100 focus:border-success-300 focus:ring-0">
                         </div>
 
+                        <div class="mb-8 text-center">
+                            <button type="button" id="resend-otp-button" class="text-sm font-semibold text-success-300 underline underline-offset-2 transition hover:text-success-400 disabled:cursor-not-allowed disabled:text-bgray-400 disabled:no-underline" disabled>
+                                Resend OTP in 60s
+                            </button>
+                        </div>
+
                         <button type="button" id="step-2-next" class="flex w-full py-4 text-white bg-success-300 transition-all justify-center text-base font-medium rounded-lg">
                             Verify
                         </button>
@@ -109,13 +115,7 @@
                     <form action="{{ route('reset.password') }}" method="POST" id="reset-password-form">
                         <div class="mb-6 relative" data-password-field>
                             <input type="password" id="reset-new-password" data-password-input class="auth-password-input text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border focus:border-success-300 focus:ring-0 rounded-lg pl-4 pr-12 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:text-white dark:bg-darkblack-500 dark:border-0" placeholder="Password" />
-                            <button
-                                type="button"
-                                class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-500 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white"
-                                data-password-toggle
-                                aria-label="Show password"
-                                aria-pressed="false"
-                            >
+                            <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-500 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                     <circle cx="11" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" />
@@ -129,13 +129,7 @@
                         </div>
                         <div class="mb-8 relative" data-password-field>
                             <input type="password" id="reset-confirm-password" data-password-input class="auth-password-input text-bgray-800 text-base border border-bgray-300 h-14 w-full focus:border-success-300 focus:ring-0 rounded-lg pl-4 pr-12 py-3.5 placeholder:text-bgray-500 placeholder:text-base dark:bg-darkblack-500 dark:border-0" placeholder="Confirm new Password" />
-                            <button
-                                type="button"
-                                class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-500 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white"
-                                data-password-toggle
-                                aria-label="Show password"
-                                aria-pressed="false"
-                            >
+                            <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-500 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                     <circle cx="11" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5" />
@@ -154,31 +148,5 @@
                 </div>
             </div>
         </div>
-        <!-- Step 4 -->
-        {{-- <div class="step-content step-4 hidden">
-            <div class="relative  transform overflow-hidden rounded-lg bg-white dark:bg-darkblack-600 p-8 text-left transition-all">
-                <div class="absolute top-0 right-0 pt-5 pr-5">
-                    <button type="button" id="step-4-cancel" class="rounded-md bg-white dark:bg-darkblack-500 focus:outline-none">
-                        <span class="sr-only">Close</span>
-                        <!-- Cross Icon -->
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 6L18 18M6 18L18 6L6 18Z" stroke="#747681" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="text-center mt-4">
-                    <h3 class="text-2xl font-bold text-bgray-900 dark:text-white mb-3">
-                        Your successfully changed your password
-                    </h3>
-                    <p class="text-base font-medium text-bgray-600 dark:text-darkblack-300 mb-7">
-                        Commodo gravida eget ultricies sed in lacus. Commodo, tellus
-                        duis eros pellentesque.
-                    </p>
-                    <a href="{{ route('login') }}" id="step-4-cancel" class="flex w-full py-4 text-white bg-success-300 hover:bg-success-400 transition-all justify-center text-base font-semibold rounded-lg">
-                        Back to Login
-                    </a>
-                </div>
-            </div>
-        </div> --}}
     </div>
 </div>
