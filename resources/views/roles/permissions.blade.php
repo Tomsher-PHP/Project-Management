@@ -19,16 +19,15 @@
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-darkblack-500 dark:border-darkblack-400">
 
                 <!-- Module Header with Module Select All -->
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl dark:bg-darkblack-600 dark:border-darkblack-400 flex justify-between items-center">
-                    <h3 id="permission-module-{{ \Illuminate\Support\Str::slug($milestone) }}" tabindex="-1" class="scroll-mt-28 rounded text-sm font-semibold text-gray-800 tracking-wide uppercase outline-none transition focus:ring-2 focus:ring-success-200 dark:text-white dark:focus:ring-success-900/50">
-                        {{ ucfirst(str_replace('_', ' ', $milestone)) }}
-                    </h3>
-
-                    <!-- Select All for this module -->
-                    <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-bgray-300">
-                        <input type="checkbox" class="module-select-all h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}">
-                        Select All
-                    </label>
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl dark:bg-darkblack-600 dark:border-darkblack-400">
+                    <div class="flex items-center gap-3">
+                        <input id="permission-module-toggle-{{ \Illuminate\Support\Str::slug($milestone) }}" type="checkbox" class="module-select-all h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}" aria-label="Select all permissions for {{ ucfirst(str_replace('_', ' ', $milestone)) }}">
+                        <label for="permission-module-toggle-{{ \Illuminate\Support\Str::slug($milestone) }}" class="cursor-pointer">
+                            <h3 id="permission-module-{{ \Illuminate\Support\Str::slug($milestone) }}" tabindex="-1" class="scroll-mt-28 rounded text-sm font-semibold text-gray-800 tracking-wide uppercase outline-none transition focus:ring-2 focus:ring-success-200 dark:text-white dark:focus:ring-success-900/50">
+                                {{ ucfirst(str_replace('_', ' ', $milestone)) }}
+                            </h3>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Permissions Grid -->

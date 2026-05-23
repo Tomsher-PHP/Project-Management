@@ -6,11 +6,15 @@
     @endif
 
     @php
-        $permissionModules = $permissions->keys()->map(fn($milestone) => [
-            'key' => $milestone,
-            'id' => 'permission-module-' . \Illuminate\Support\Str::slug($milestone),
-            'label' => ucfirst(str_replace('_', ' ', $milestone)),
-        ]);
+        $permissionModules = $permissions->keys()->map(
+            fn($milestone) => [
+                'key' => $milestone,
+                'id' => 'permission-module-' . \Illuminate\Support\Str::slug($milestone),
+                'label' => ucfirst(str_replace('_', ' ', $milestone)),
+            ],
+        );
+        $submitLabel = isset($role) ? 'Update Role' : 'Create Role';
+        $submitButtonClasses = 'px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition';
     @endphp
 
     <!-- ================= BASIC ROLE INFORMATION ================= -->
@@ -81,17 +85,9 @@
     </div>
 
     <!-- ================= SUBMIT ================= -->
-    <div class="pt-6 border-t flex justify-end 
-                dark:border-darkblack-400">
-        <button type="submit" class="px-6 py-2.5 rounded-lg
-                       bg-success-300 text-white font-semibold
-                       hover:bg-success-400 transition">
-
-            @if (isset($role))
-                Update Role
-            @else
-                Create Role
-            @endif
+    <div class="sticky bottom-0 z-20 -mx-1 flex justify-end border-t border-bgray-200 bg-white/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-darkblack-400 dark:bg-darkblack-600/95">
+        <button type="submit" class="{{ $submitButtonClasses }}">
+            {{ $submitLabel }}
         </button>
     </div>
 
@@ -109,8 +105,13 @@
                     }
 
                     event.preventDefault();
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    target.focus({ preventScroll: true });
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    target.focus({
+                        preventScroll: true
+                    });
                 });
             });
         });
