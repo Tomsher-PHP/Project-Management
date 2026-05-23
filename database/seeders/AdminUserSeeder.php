@@ -20,7 +20,7 @@ class AdminUserSeeder extends Seeder
         $adminUser->fill([
             'name' => 'Demo Admin',
             'email' => 'admin@projectmanagement.test',
-            'password' => Hash::make('12345678'),
+            'password' => Hash::make('password@113'),
             'email_verified_at' => now(),
             'is_super_admin' => false,
             'is_active' => true,

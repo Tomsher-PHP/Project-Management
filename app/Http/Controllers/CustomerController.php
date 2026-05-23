@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
 use App\Models\Industry;
+use App\Models\User;
 use App\Services\CustomerServices;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,7 +27,7 @@ class CustomerController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $customers = Customer::with(['industry', 'country'])
+        $customers = Customer::with(['industry', 'country', 'salesPerson'])
             ->filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)
@@ -43,11 +44,12 @@ class CustomerController extends Controller
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');
+        $salesPeople = User::active()->orderBy('name')->get(['id', 'name']);
 
         // Generate customer code
         $customerCode = Customer::generateCustomerCode();
 
-        return view('customers.create', compact('industries', 'parentIndustries', 'nextIndustrySortOrder', 'customerCode', 'emirates'));
+        return view('customers.create', compact('industries', 'parentIndustries', 'nextIndustrySortOrder', 'customerCode', 'emirates', 'salesPeople'));
     }
 
     public function store(CustomerRequest $request, CustomerServices $service)
@@ -66,11 +68,21 @@ class CustomerController extends Controller
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');
+        $salesPeople = User::query()
+            ->where(function ($query) use ($customer) {
+                $query->active();
+
+                if (filled($customer->sales_person_id)) {
+                    $query->orWhere('id', $customer->sales_person_id);
+                }
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         // Generate customer code
         $customerCode = $customer->customer_code;
 
-        return view('customers.edit', compact('customer', 'industries', 'parentIndustries', 'nextIndustrySortOrder', 'emirates', 'customerCode'));
+        return view('customers.edit', compact('customer', 'industries', 'parentIndustries', 'nextIndustrySortOrder', 'emirates', 'customerCode', 'salesPeople'));
     }
 
     public function update(CustomerRequest $request, Customer $customer, CustomerServices $service)

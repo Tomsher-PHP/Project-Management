@@ -66,9 +66,16 @@
 
             <!-- Sales Person -->
             <div class="flex flex-col gap-2">
-                <label for="sales_person" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sales Person <x-red-star /></label>
-                <input type="text" id="sales_person" name="sales_person" value="{{ old('sales_person', $customer->sales_person ?? '') }}" placeholder="Enter sales person name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" />
-                @error('sales_person')
+                <label for="sales_person_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">Sales Person <x-red-star /></label>
+                <select name="sales_person_id" id="sales_person_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400" data-sort="0">
+                    <option value="">Select Sales Person</option>
+                    @foreach ($salesPeople as $salesPerson)
+                        <option value="{{ $salesPerson->id }}" {{ old('sales_person_id', $customer->sales_person_id ?? '') == $salesPerson->id ? 'selected' : '' }}>
+                            {{ $salesPerson->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('sales_person_id')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>

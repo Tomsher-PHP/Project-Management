@@ -23,7 +23,7 @@ class CustomerServices
                 'emirate' => $data['emirate'] ?? null,
                 'google_map_link' => $data['google_map_link'] ?? null,
                 'company_address' => $data['company_address'] ?? null,
-                'sales_person' => $data['sales_person'],
+                'sales_person_id' => $data['sales_person_id'],
                 'new_to_company' => $data['new_to_company'] ?? 0,
             ]);
 
@@ -47,7 +47,7 @@ class CustomerServices
                 'emirate' => $data['emirate'] ?? null,
                 'google_map_link' => $data['google_map_link'] ?? null,
                 'company_address' => $data['company_address'] ?? null,
-                'sales_person' => $data['sales_person'],
+                'sales_person_id' => $data['sales_person_id'],
                 'new_to_company' => $data['new_to_company'] ?? 0,
             ]);
 

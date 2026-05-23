@@ -35,7 +35,7 @@ class CustomerRequest extends FormRequest
             'emirate' => 'nullable|string|max:255',
             'google_map_link' => 'nullable|url|max:255',
             'company_address' => 'nullable|string|max:65535',
-            'sales_person' => 'required|string|max:255',
+            'sales_person_id' => 'required|exists:users,id',
             'new_to_company' => 'boolean',
 
             // Primary Contact (IMPORTANT)
@@ -88,6 +88,8 @@ class CustomerRequest extends FormRequest
             'registered_country_id.exists' => 'Selected country is invalid.',
             'website.url' => 'Please enter a valid website URL.',
             'google_map_link.url' => 'Please enter a valid Google Map link.',
+            'sales_person_id.required' => 'Sales person is required.',
+            'sales_person_id.exists' => 'The selected sales person is invalid.',
 
             // Primary Contact
             'primary_name.required' => 'Contact name is required.',

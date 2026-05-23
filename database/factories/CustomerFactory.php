@@ -38,7 +38,7 @@ class CustomerFactory extends Factory
             ]),
             'google_map_link' => fake()->optional()->url(),
             'company_address' => fake()->optional()->address(),
-            'sales_person' => User::query()->inRandomOrder()->value('name') ?? fake()->name(),
+            'sales_person_id' => User::query()->inRandomOrder()->value('id'),
             'new_to_company' => fake()->boolean(35),
             'is_active' => true,
         ];

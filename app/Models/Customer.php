@@ -25,7 +25,7 @@ class Customer extends Model
         'emirate',
         'google_map_link',
         'company_address',
-        'sales_person',
+        'sales_person_id',
         'new_to_company',
         'is_active',
         'added_by',
@@ -81,6 +81,11 @@ class Customer extends Model
     public function country()
     {
         return $this->belongsTo(Country::class, 'registered_country_id');
+    }
+
+    public function salesPerson()
+    {
+        return $this->belongsTo(User::class, 'sales_person_id');
     }
 
     public function contacts()
