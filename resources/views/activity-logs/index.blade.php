@@ -131,16 +131,10 @@
                                             default => 'bg-blue-50 text-blue-500',
                                         };
                                         $currentModuleLabel = \Illuminate\Support\Str::headline($activity->log_name ?? 'default');
-                                        $resolvedParentType = $activity->parent_type
-                                            ? (\Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($activity->parent_type) ?? $activity->parent_type)
-                                            : null;
-                                        $parentModuleLabel = $resolvedParentType
-                                            ? \Illuminate\Support\Str::headline(class_basename($resolvedParentType))
-                                            : null;
+                                        $resolvedParentType = $activity->parent_type ? \Illuminate\Database\Eloquent\Relations\Relation::getMorphedModel($activity->parent_type) ?? $activity->parent_type : null;
+                                        $parentModuleLabel = $resolvedParentType ? \Illuminate\Support\Str::headline(class_basename($resolvedParentType)) : null;
                                         $milestoneLabel = $parentModuleLabel ?: $currentModuleLabel;
-                                        $milestoneSubtitle = $parentModuleLabel && $parentModuleLabel !== $currentModuleLabel
-                                            ? $currentModuleLabel
-                                            : null;
+                                        $milestoneSubtitle = $parentModuleLabel && $parentModuleLabel !== $currentModuleLabel ? $currentModuleLabel : null;
                                         $changeSummary = match ($event) {
                                             'created' => $changedFields->isNotEmpty() ? 'Created ' . $changedFields->count() . ' ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Created a new record.',
                                             'deleted' => $changedFields->isNotEmpty() ? 'Deleted record with ' . $changedFields->count() . ' tracked ' . \Illuminate\Support\Str::plural('field', $changedFields->count()) . '.' : 'Deleted a record.',
@@ -274,13 +268,13 @@
         <x-filters.multi-select name="causer_id" label="User" :options="$causers" />
 
         <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">From Date</label>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label for="date_from" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">From Date</label>
+            <input type="text" id="date_from" name="date_from" value="{{ request('date_from') }}" class="datepicker w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="Y-m-d" data-alt-input="true" data-alt-format="{{ $globalDateFormat }}" placeholder="Select start date" autocomplete="off">
         </div>
 
         <div class="flex flex-col gap-2">
-            <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">To Date</label>
-            <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
+            <label for="date_to" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">To Date</label>
+            <input type="text" id="date_to" name="date_to" value="{{ request('date_to') }}" class="datepicker w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="Y-m-d" data-alt-input="true" data-alt-format="{{ $globalDateFormat }}" placeholder="Select end date" autocomplete="off">
         </div>
     </x-filters.drawer>
 @endsection
