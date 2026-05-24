@@ -69,11 +69,13 @@
                                 {{ \Illuminate\Support\Str::limit($projectSprint->description, 100) }}
                             </p>
                         @endif
-                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
-                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Status: {{ $statusName }}</span>
-                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Start: {{ $formatDate($projectSprint->start_date) }}</span>
-                            <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">End: {{ $formatDate($projectSprint->end_date) }}</span>
-                        </div>
+                        @if (! $milestone->is_backlog)
+                            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
+                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Status: {{ $statusName }}</span>
+                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Start: {{ $formatDate($projectSprint->start_date) }}</span>
+                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">End: {{ $formatDate($projectSprint->end_date) }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

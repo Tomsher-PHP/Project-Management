@@ -150,15 +150,17 @@
                                                 @endif
                                             </div>
 
-                                            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
-                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Status: {{ $statusName }}</span>
-                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Owner: {{ $ownerName }}</span>
-                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Start: {{ $formatDate($milestone->start_date) }}</span>
-                                                <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">End: {{ $formatDate($milestone->end_date) }}</span>
-                                                @if ($milestone->completed_at)
-                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Completed: {{ $formatDateTime($milestone->completed_at) }}</span>
-                                                @endif
-                                            </div>
+                                            @if (! $milestone->is_backlog)
+                                                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
+                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Status: {{ $statusName }}</span>
+                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Owner: {{ $ownerName }}</span>
+                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Start: {{ $formatDate($milestone->start_date) }}</span>
+                                                    <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">End: {{ $formatDate($milestone->end_date) }}</span>
+                                                    @if ($milestone->completed_at)
+                                                        <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-500">Completed: {{ $formatDateTime($milestone->completed_at) }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
