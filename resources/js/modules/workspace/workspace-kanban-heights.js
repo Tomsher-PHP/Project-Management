@@ -7,10 +7,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const emptyBoardHeight = 310;
     let frameId = null;
+    let deferredTimerId = null;
+
+    const getBoards = () => Array.from(kanbanContainer.querySelectorAll('.kanban-board'));
+
+    const hasLoadingBoards = () => getBoards().some((board) => board.dataset.loading === 'true');
 
     const updateKanbanBoardHeights = () => {
-        const boards = Array.from(kanbanContainer.querySelectorAll('.kanban-board'));
+        const boards = getBoards();
         let sharedBoardHeight = emptyBoardHeight;
+        const scrollPositions = new Map();
+
+        boards.forEach((board) => {
+            scrollPositions.set(board, board.scrollTop);
+        });
 
         boards.forEach((board) => {
             const cards = Array.from(board.querySelectorAll(':scope > .card[data-task-id]'));
@@ -48,15 +58,38 @@ document.addEventListener('DOMContentLoaded', () => {
         boards.forEach((board) => {
             board.style.minHeight = `${sharedBoardHeight}px`;
             board.style.maxHeight = `${sharedBoardHeight}px`;
+            board.scrollTop = scrollPositions.get(board) ?? 0;
         });
     };
 
+    const scheduleDeferredHeightUpdate = () => {
+        if (deferredTimerId !== null) {
+            window.clearTimeout(deferredTimerId);
+        }
+
+        deferredTimerId = window.setTimeout(() => {
+            deferredTimerId = null;
+            queueKanbanBoardHeightUpdate();
+        }, 80);
+    };
+
     const queueKanbanBoardHeightUpdate = () => {
+        if (hasLoadingBoards()) {
+            scheduleDeferredHeightUpdate();
+            return;
+        }
+
         if (frameId !== null) {
             window.cancelAnimationFrame(frameId);
         }
 
         frameId = window.requestAnimationFrame(() => {
+            if (hasLoadingBoards()) {
+                frameId = null;
+                scheduleDeferredHeightUpdate();
+                return;
+            }
+
             updateKanbanBoardHeights();
             frameId = null;
         });
