@@ -264,7 +264,6 @@ class UserController extends Controller
 
     public function updateModal(Request $request, User $user, UserService $service)
     {
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
@@ -272,7 +271,8 @@ class UserController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'contact_person_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
-            'profile_image' => 'nullable|image|max:2048',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'remove_profile_image' => 'nullable',
         ]);
 
         $service->updateModalUser($user, $validated);

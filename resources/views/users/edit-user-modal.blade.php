@@ -26,7 +26,7 @@
                         <img id="preview" class="{{ $user->hasProfileImage ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover rounded-md" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
 
                         <!-- Remove Button -->
-                        <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 {{ $user->hasProfileImage ? '' : 'hidden' }}">
+                        <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-gray-700 shadow-md hover:bg-red-600 {{ $user->hasProfileImage ? '' : 'hidden' }}">
                             ✕
                         </button>
 

@@ -277,19 +277,29 @@ class UserService
 
     public function updateModalUser(User $user, array $data)
     {
-        $user->update([
-            'name' => $data['name'],
-        ]);
+        return $this->runInActivityBatch(function () use ($user, $data) {
+            $user->update([
+                'name' => $data['name'],
+            ]);
 
-        $user->details()->updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'phone' => $data['phone'] ?? null,
-                'whatsapp' => $data['whatsapp'] ?? null,
-                'contact_person' => $data['contact_person'] ?? null,
-                'contact_person_number' => $data['contact_person_number'] ?? null,
-                'address' => $data['address'] ?? null,
-            ]
-        );
+            $user->details()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'phone' => $data['phone'] ?? null,
+                    'whatsapp' => $data['whatsapp'] ?? null,
+                    'contact_person' => $data['contact_person'] ?? null,
+                    'contact_person_number' => $data['contact_person_number'] ?? null,
+                    'address' => $data['address'] ?? null,
+                ]
+            );
+
+            if (!empty($data['profile_image'])) {
+                $this->updateProfileImage($user, $data['profile_image']);
+            } elseif (!empty($data['remove_profile_image'])) {
+                $this->attachmentService->delete($user->attachments);
+            }
+
+            return $user->load(['details', 'primaryAttachment']);
+        });
     }
 }
