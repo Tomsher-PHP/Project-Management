@@ -204,13 +204,7 @@
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
                                 <div class="flex min-w-0 items-center gap-3">
-                                    @if ($assignee['profile_image_url'])
-                                        <img src="{{ $assignee['profile_image_url'] }}" alt="{{ $assignee['name'] }}" class="h-10 w-10 flex-shrink-0 rounded-full object-cover">
-                                    @else
-                                        <span class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-bgray-100 text-sm font-bold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
-                                            {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($assignee['name'], 0, 1)) }}
-                                        </span>
-                                    @endif
+                                    <x-user-avatar :name="$assignee['name']" :image="$assignee['profile_image_url']" class="h-10 w-10 flex-shrink-0" />
 
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">{{ $assignee['name'] }}</p>

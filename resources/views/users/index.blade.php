@@ -91,9 +91,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
-                                                <div class="h-[64px] w-[64px]">
-                                                    <img class="h-full w-full rounded-lg object-cover" src="{{ $user->profile_image_url }}" alt="" />
-                                                </div>
+                                                <x-user-avatar :user="$user" class="h-[64px] w-[64px] text-xl" />
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                         <a href="{{ route('users.show', $user->id) }}" class="transition hover:text-success-400">

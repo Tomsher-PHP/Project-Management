@@ -17,7 +17,7 @@
     <div class="pr-24">
         <div class="mb-3 flex items-center gap-3">
             <!-- Avatar -->
-            <img src="{{ $member->profile_image_url ?? asset('images/default-avatar.png') }}" class="h-10 w-10 rounded-full object-cover" alt="{{ $member->name }}">
+            <x-user-avatar :name="$member->name" :image="$member->profile_image_url ?? null" class="h-10 w-10" />
 
             <div>
                 <h4 class="text-base font-bold text-bgray-900 dark:text-white member-name">
@@ -37,7 +37,7 @@
 
     <!-- Bottom Right Actions -->
     <div class="mt-4 space-y-2">
-        @if (! $project->trashed())
+        @if (!$project->trashed())
             @can('project.add_team', $project)
                 <div class="flex flex-wrap gap-2">
                     @if ($member->pivot->is_active && $member->pivot->project_role !== 'team_leader')
@@ -62,7 +62,7 @@
         @endif
 
         <div class="flex flex-wrap justify-end gap-2">
-            @if (! $project->trashed())
+            @if (!$project->trashed())
                 @can('project.add_team', $project)
                     <!-- Checklist Button -->
                     <button type="button" class="manage-checklist inline-flex items-center gap-2 rounded-full border border-bgray-200 bg-white px-3 py-1 text-xs font-medium text-indigo-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-bgray-100" data-id="{{ $member->id }}" data-project-id="{{ $project->id }}">
@@ -79,7 +79,7 @@
                 @endcan
             @endif
 
-            @if (! $project->trashed())
+            @if (!$project->trashed())
                 @can('project.remove_team', $project)
                     <!-- Enable/Disable Button -->
                     <button type="button" class="toggle-member flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition duration-200

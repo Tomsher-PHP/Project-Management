@@ -76,7 +76,7 @@
     <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
         @if ($task->currentAssignee)
             <div class="flex items-center gap-3">
-                <img src="{{ $task->currentAssignee->profile_image_url }}" alt="{{ $task->currentAssignee->name }}" class="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-darkblack-500">
+                <x-user-avatar :user="$task->currentAssignee" class="h-10 w-10 ring-2 ring-white dark:ring-darkblack-500" />
                 <div>
                     <p class="font-medium text-bgray-900 dark:text-white">{{ $task->currentAssignee->name }}</p>
                 </div>

@@ -21,7 +21,7 @@
                         <!-- user profile -->
                         <div class="col-span-12 xl:col-span-4">
                             <div class="rounded-xl p-6 text-center">
-                                <img src="{{ $user->profileImageUrl ?? asset('images/default-user.png') }}" class="w-24 h-24 rounded-full mx-auto object-cover mb-4" />
+                                <x-user-avatar :user="$user" size="xlg" class="mx-auto mb-4 h-24 w-24 text-3xl" />
                                 <h4 class="col-span-full text-xl font-bold text-gray-800 mb-1 dark:border-darkblack-400 dark:text-white">
                                     {{ $user->name }}
                                 </h4>

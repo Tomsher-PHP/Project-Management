@@ -88,7 +88,7 @@
                                                         @endphp
 
                                                         @foreach ($visibleMembers as $member)
-                                                            <img class="inline-block h-8 w-8 rounded-full ring ring-white" src="{{ $member->profile_image_url }}" alt="{{ $member->name }}" title="{{ $member->name }}" />
+                                                            <x-user-avatar :user="$member" size="sm" class="inline-flex ring ring-white" title="{{ $member->name }}" />
                                                         @endforeach
 
                                                         @if ($remainingCount > 0)

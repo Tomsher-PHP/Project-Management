@@ -196,7 +196,7 @@ class User extends Authenticatable
             return $this->primaryAttachment->url;
         }
 
-        return asset(config('assets.images.default_avatar'));
+        // return asset(config('assets.images.default_avatar'));
     }
 
     public function getHasProfileImageAttribute()

@@ -112,7 +112,7 @@
 
                     <div class="pr-24">
                         <div class="mb-3 flex items-center gap-3">
-                            <img src="{{ $memberEntry->profile_image_url }}" class="h-10 w-10 rounded-full object-cover" alt="{{ $memberEntry->name }}">
+                            <x-user-avatar :name="$memberEntry->name" :image="$memberEntry->profile_image_url" class="h-10 w-10" />
 
                             <div class="min-w-0">
                                 <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white">
