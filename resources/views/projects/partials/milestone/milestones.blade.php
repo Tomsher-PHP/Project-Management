@@ -96,6 +96,9 @@
                                                 </div>
 
                                                 <div class="flex items-center gap-2">
+                                                    <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
+                                                        Save
+                                                    </button>
                                                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -114,6 +117,7 @@
                                                 <div>
                                                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <x-red-star /></label>
                                                     <input type="text" name="name" value="{{ $milestone->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
                                                 </div>
 
                                                 <div>
@@ -124,6 +128,7 @@
                                                             <option value="{{ $assignableUser->id }}" @selected((int) $milestone->owner_id === (int) $assignableUser->id)>{{ $assignableUser->name }}</option>
                                                         @endforeach
                                                     </select>
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="owner_id"></p>
                                                 </div>
 
                                                 <div>
@@ -133,6 +138,7 @@
                                                         :total-minutes="$milestone->estimated_time_minutes ?? 0"
                                                         :show-label="false"
                                                     />
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="estimated_time_minutes"></p>
                                                 </div>
 
                                                 <div>
@@ -140,6 +146,8 @@
                                                     <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-milestone-builder-date-range>
                                                     <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
                                                     <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="start_date"></p>
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="end_date"></p>
                                                 </div>
 
                                                 <div class="xl:col-span-2">
@@ -148,6 +156,7 @@
                                                         <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
                                                     </div>
                                                     <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
+                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
                                                 </div>
                                                 </div>
                                             </div>

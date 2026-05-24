@@ -107,6 +107,18 @@ const getCurrentWeekRange = () => {
     };
 };
 
+const getDefaultBuilderDateRange = (durationDays = 7) => {
+    const today = getTodayDate();
+    const endDate = new Date(today);
+
+    endDate.setDate(today.getDate() + durationDays);
+
+    return {
+        startDate: formatPickerDate(today),
+        endDate: formatPickerDate(endDate),
+    };
+};
+
 const getRangeMinDate = (startDate = '', endDate = '') => {
     const { minDate: defaultMinDate } = getCurrentWeekRange();
     const storedMinDate = [startDate, endDate]
@@ -620,6 +632,9 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             </div>
 
         <div class="flex items-center gap-2">
+            <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
+                Save
+            </button>
             <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -638,6 +653,7 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             <div>
                 <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                 <input type="text" name="name" value="${escapeHtml(milestone.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
             </div>
 
             <div>
@@ -645,10 +661,12 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
                 <select name="owner_id" class="tom-select w-full" data-sort="0">
                     ${renderSelectOptions(config.owners || [], milestone.owner_id, 'Select owner')}
                 </select>
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="owner_id"></p>
             </div>
 
             <div>
                 ${renderEstimatedTimeInput(milestone.estimated_time_minutes ?? 0)}
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="estimated_time_minutes"></p>
             </div>
 
             <div>
@@ -656,6 +674,8 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
                 <input type="text" value="${escapeHtml([milestone.start_date, milestone.end_date].filter(Boolean).join(' to '))}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(milestone.start_date, milestone.end_date))}" data-project-milestone-builder-date-range>
                 <input type="hidden" name="start_date" value="${escapeHtml(milestone.start_date || '')}">
                 <input type="hidden" name="end_date" value="${escapeHtml(milestone.end_date || '')}">
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="start_date"></p>
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="end_date"></p>
             </div>
 
             <div class="xl:col-span-2">
@@ -664,6 +684,7 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
                     <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>${escapeHtml(String((milestone.description || '').length))}</span>/100</span>
                 </div>
                 <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(milestone.description || '')}</textarea>
+                <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
             </div>
             </div>
         </div>
@@ -722,7 +743,6 @@ const initializeProjectModuleBuilderModal = () => {
     let draggedLibraryModule = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
-    const cardTimers = new Map();
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
 
@@ -1019,6 +1039,21 @@ const initializeProjectModuleBuilderModal = () => {
         statusNode.textContent = status;
     };
 
+    const setCardSaveButtonState = (card, isLoading, loadingLabel = 'Saving...') => {
+        const saveButton = card?.querySelector('[data-project-milestone-builder-save]');
+
+        if (!saveButton) {
+            return;
+        }
+
+        if (!saveButton.dataset.defaultLabel) {
+            saveButton.dataset.defaultLabel = saveButton.textContent.trim() || 'Save';
+        }
+
+        saveButton.disabled = isLoading;
+        saveButton.textContent = isLoading ? loadingLabel : saveButton.dataset.defaultLabel;
+    };
+
     const syncCardTitle = (card) => {
         const title = card.querySelector('[data-project-milestone-builder-title]');
         const nameInput = card.querySelector('[name="name"]');
@@ -1213,19 +1248,21 @@ const initializeProjectModuleBuilderModal = () => {
 
         syncCardTitle(card);
         syncDescriptionCount(card);
+        clearInlineFormErrors(card, 'data-project-milestone-builder-error');
+        setCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
     };
 
     const createLibraryModuleCard = async (libraryModule) => {
-        const currentWeekRange = getCurrentWeekRange();
+        const defaultDateRange = getDefaultBuilderDateRange(30);
         const payload = normalizePayload({
             name: buildUniqueModuleName(libraryModule.name || 'New Module'),
             color: libraryModule.color || '#22C55E',
             description: libraryModule.description || '',
             estimated_time_minutes: 0,
             owner_id: '',
-            start_date: currentWeekRange.startDate,
-            end_date: currentWeekRange.endDate,
+            start_date: defaultDateRange.startDate,
+            end_date: defaultDateRange.endDate,
         });
 
         const tempId = `temp-${Date.now()}`;
@@ -1250,6 +1287,7 @@ const initializeProjectModuleBuilderModal = () => {
         syncDescriptionCount(card);
         setCardExpanded(card, true);
         ensureEmptyState();
+        setCardSaveButtonState(card, true);
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
@@ -1272,13 +1310,16 @@ const initializeProjectModuleBuilderModal = () => {
         }
 
         syncCardDateRange(card);
+        clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         const payload = normalizePayload(collectCardPayload(card));
 
         if (!payload.name) {
+            applyInlineFormErrors(card, { name: ['The name field is required.'] }, 'data-project-milestone-builder-error');
             setCardStatus(card, 'Name is required', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
             return;
         }
 
+        setCardSaveButtonState(card, true);
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
@@ -1286,24 +1327,16 @@ const initializeProjectModuleBuilderModal = () => {
             hydrateCardFromModule(card, result.milestone || payload);
             replaceRenderedSection(result);
         } catch (error) {
-            setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            showModalError(error.message || 'Unable to update the project milestone.');
+            if (error.payload?.errors) {
+                applyInlineFormErrors(card, error.payload.errors, 'data-project-milestone-builder-error');
+                setCardStatus(card, 'Fix validation errors', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+            } else {
+                setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+                showModalError(error.message || 'Unable to update the project milestone.');
+            }
+        } finally {
+            setCardSaveButtonState(card, false);
         }
-    };
-
-    const queueModuleSave = (card, delay = 500) => {
-        const existingTimer = cardTimers.get(card);
-
-        if (existingTimer) {
-            window.clearTimeout(existingTimer);
-        }
-
-        const timer = window.setTimeout(() => {
-            cardTimers.delete(card);
-            saveModuleCard(card);
-        }, delay);
-
-        cardTimers.set(card, timer);
     };
 
     const deleteModuleCard = async (card) => {
@@ -1574,6 +1607,7 @@ const initializeProjectModuleBuilderModal = () => {
             syncDescriptionCount(card);
         }
 
+        clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
     });
 
@@ -1592,20 +1626,27 @@ const initializeProjectModuleBuilderModal = () => {
             syncCardDateRange(card);
         }
 
+        clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
-        queueModuleSave(card, 150);
     });
 
     workspace.addEventListener('click', function (event) {
-        const toggleButton = event.target.closest('[data-project-milestone-builder-toggle]');
+        const saveButton = event.target.closest('[data-project-milestone-builder-save]');
 
-        if (!toggleButton) {
-            const deleteButton = event.target.closest('[data-project-milestone-builder-delete]');
+        if (saveButton) {
+            const card = saveButton.closest('[data-project-milestone-builder-card]');
 
-            if (!deleteButton) {
+            if (!card || saveButton.disabled) {
                 return;
             }
 
+            saveModuleCard(card);
+            return;
+        }
+
+        const deleteButton = event.target.closest('[data-project-milestone-builder-delete]');
+
+        if (deleteButton) {
             const card = deleteButton.closest('[data-project-milestone-builder-card]');
 
             if (!card) {
@@ -1613,6 +1654,12 @@ const initializeProjectModuleBuilderModal = () => {
             }
 
             deleteModuleCard(card);
+            return;
+        }
+
+        const toggleButton = event.target.closest('[data-project-milestone-builder-toggle]');
+
+        if (!toggleButton) {
             return;
         }
 
@@ -1711,6 +1758,9 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
             </div>
 
             <div class="flex items-center gap-2">
+                <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-sprint-builder-save>
+                    Save
+                </button>
                 ${config?.canDelete ? `
                     <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1731,10 +1781,12 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                 <div>
                     <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="${escapeHtml(sprint.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                    <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="name"></p>
                 </div>
 
                 <div>
                     ${renderEstimatedTimeInput(sprint.estimated_time_minutes ?? 0)}
+                    <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="estimated_time_minutes"></p>
                 </div>
 
                 <div>
@@ -1742,6 +1794,8 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                     <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(sprint.start_date, sprint.end_date))}" data-project-sprint-builder-date-range>
                     <input type="hidden" name="start_date" value="${escapeHtml(sprint.start_date || '')}">
                     <input type="hidden" name="end_date" value="${escapeHtml(sprint.end_date || '')}">
+                    <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="start_date"></p>
+                    <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="end_date"></p>
                 </div>
 
                 <div class="xl:col-span-2">
@@ -1750,6 +1804,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                         <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-builder-description-count>${escapeHtml(String((sprint.description || '').length))}</span>/100</span>
                     </div>
                     <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(sprint.description || '')}</textarea>
+                    <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="description"></p>
                 </div>
             </div>
         </div>
@@ -1812,7 +1867,6 @@ const initializeProjectSprintBuilderModal = () => {
     let draggedLibrarySprint = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
-    const cardTimers = new Map();
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
 
@@ -2100,6 +2154,21 @@ const initializeProjectSprintBuilderModal = () => {
         statusNode.textContent = status;
     };
 
+    const setSprintCardSaveButtonState = (card, isLoading, loadingLabel = 'Saving...') => {
+        const saveButton = card?.querySelector('[data-project-sprint-builder-save]');
+
+        if (!saveButton) {
+            return;
+        }
+
+        if (!saveButton.dataset.defaultLabel) {
+            saveButton.dataset.defaultLabel = saveButton.textContent.trim() || 'Save';
+        }
+
+        saveButton.disabled = isLoading;
+        saveButton.textContent = isLoading ? loadingLabel : saveButton.dataset.defaultLabel;
+    };
+
     const syncCardTitle = (card) => {
         const title = card.querySelector('[data-project-sprint-builder-title]');
         const nameInput = card.querySelector('[name="name"]');
@@ -2300,6 +2369,8 @@ const initializeProjectSprintBuilderModal = () => {
         syncDescriptionCount(card);
         syncSprintCardDateRange(card);
         syncSprintColor(card);
+        clearInlineFormErrors(card, 'data-project-sprint-builder-error');
+        setSprintCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
     };
 
@@ -2309,15 +2380,15 @@ const initializeProjectSprintBuilderModal = () => {
             return;
         }
 
-        const currentWeekRange = getCurrentWeekRange();
+        const defaultDateRange = getDefaultBuilderDateRange();
         const payload = normalizePayload({
             project_milestone_id: activeMilestoneId,
             name: buildUniqueSprintName(librarySprint.name || 'New Sprint'),
             color: librarySprint.color || '#22C55E',
             description: librarySprint.description || '',
             estimated_time_minutes: 0,
-            start_date: currentWeekRange.startDate,
-            end_date: currentWeekRange.endDate,
+            start_date: defaultDateRange.startDate,
+            end_date: defaultDateRange.endDate,
         });
 
         const cardWrapper = document.createElement('div');
@@ -2366,13 +2437,16 @@ const initializeProjectSprintBuilderModal = () => {
             return;
         }
 
+        clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         const payload = normalizePayload(collectCardPayload(card));
 
         if (!payload.name) {
+            applyInlineFormErrors(card, { name: ['The name field is required.'] }, 'data-project-sprint-builder-error');
             setCardStatus(card, 'Name is required', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
             return;
         }
 
+        setSprintCardSaveButtonState(card, true);
         setCardStatus(card, 'Saving...', 'mt-2 text-xs font-medium text-success-500 dark:text-success-300');
 
         try {
@@ -2385,24 +2459,16 @@ const initializeProjectSprintBuilderModal = () => {
             clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
         } catch (error) {
-            setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
-            showModalError(error.message || 'Unable to update the project sprint.');
+            if (error.payload?.errors) {
+                applyInlineFormErrors(card, error.payload.errors, 'data-project-sprint-builder-error');
+                setCardStatus(card, 'Fix validation errors', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+            } else {
+                setCardStatus(card, 'Save failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
+                showModalError(error.message || 'Unable to update the project sprint.');
+            }
+        } finally {
+            setSprintCardSaveButtonState(card, false);
         }
-    };
-
-    const queueSprintSave = (card, delay = 500) => {
-        const existingTimer = cardTimers.get(card);
-
-        if (existingTimer) {
-            window.clearTimeout(existingTimer);
-        }
-
-        const timer = window.setTimeout(() => {
-            cardTimers.delete(card);
-            saveSprintCard(card);
-        }, delay);
-
-        cardTimers.set(card, timer);
     };
 
     const deleteSprintCard = async (card) => {
@@ -2677,6 +2743,7 @@ const initializeProjectSprintBuilderModal = () => {
             syncSprintCardDateRange(card);
         }
 
+        clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
     });
 
@@ -2695,26 +2762,40 @@ const initializeProjectSprintBuilderModal = () => {
             syncSprintCardDateRange(card);
         }
 
+        clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
-        queueSprintSave(card, 150);
     });
 
     workspace.addEventListener('click', function (event) {
+        const saveButton = event.target.closest('[data-project-sprint-builder-save]');
+
+        if (saveButton) {
+            const card = saveButton.closest('[data-project-sprint-builder-card]');
+
+            if (!card || saveButton.disabled) {
+                return;
+            }
+
+            saveSprintCard(card);
+            return;
+        }
+
+        const deleteButton = event.target.closest('[data-project-sprint-builder-delete]');
+
+        if (deleteButton) {
+            const card = deleteButton.closest('[data-project-sprint-builder-card]');
+
+            if (!card) {
+                return;
+            }
+
+            deleteSprintCard(card);
+            return;
+        }
+
         const toggleButton = event.target.closest('[data-project-sprint-builder-toggle]');
 
         if (!toggleButton) {
-            const deleteButton = event.target.closest('[data-project-sprint-builder-delete]');
-
-            if (deleteButton) {
-                const card = deleteButton.closest('[data-project-sprint-builder-card]');
-
-                if (!card) {
-                    return;
-                }
-
-                deleteSprintCard(card);
-            }
-
             return;
         }
 
