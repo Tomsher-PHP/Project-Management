@@ -57,7 +57,7 @@
                             <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
-                                    <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
                                         Drop needed milestones here, then adjust only the working details your team needs right now.
                                     </p>
                                 </div>
