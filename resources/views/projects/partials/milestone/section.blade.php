@@ -123,7 +123,6 @@
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $milestone->color ?: '#E5E7EB' }}"></span>
                                                 <h5 title="{{ $milestone->name }}" class="text-lg font-semibold text-bgray-900 dark:text-white">{{ \Illuminate\Support\Str::limit($milestone->name, 20) }}</h5>
-                                                <span title="Milestone display order" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50" data-project-milestone-order-badge>{{ $loop->iteration }}</span>
                                                 <span title="Estimated Time: {{ $formatDuration($estimatedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Estimate <span class="ml-1">{{ $formatDuration($estimatedSeconds) }}</span></span>
                                                 <span title="Derived Time: {{ $formatDuration($derivedSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Derived <span class="ml-1">{{ $formatDuration($derivedSeconds) }}</span></span>
                                                 <span title="Actual Time: {{ $formatDuration($actualSeconds) }}" class="inline-flex rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Actual <span class="ml-1">{{ $formatDuration($actualSeconds) }}</span></span>
@@ -165,7 +164,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-2 xl:max-w-[320px] xl:justify-end">
+                            <div class="flex flex-wrap items-center gap-1.5 xl:max-w-[320px] xl:justify-end">
                                 @php
                                     $trashedSprints = $trashedProjectSprintsByModule->get($milestone->id, collect());
                                     $trashedSprintCount = $trashedSprints->count();
@@ -178,8 +177,8 @@
                                     @can('project_sprint.create')
                                         <button type="button" data-project-milestone-id="{{ $milestone->id }}" data-project-milestone-name="{{ $milestone->name }}"
                                             data-project-sprint-load-url="{{ $sprintLoadUrl }}"
-                                            class="project-sprint-builder-open inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-1.5 text-sm font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
-                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            class="project-sprint-builder-open inline-flex items-center gap-1.5 rounded-lg border border-success-200 bg-success-50 px-2.5 py-1 text-xs font-medium text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-300 hover:text-white dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-success-300 dark:hover:text-white">
+                                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                             </svg>
                                             <span>Sprints</span>
@@ -189,33 +188,33 @@
 
                                 @if ($canManageAdditionalSprints && ! $isDeletedProjectView)
                                     @can('project_sprint.delete')
-                                        <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
                                             data-project-sprint-restore-open="{{ $milestone->id }}" @disabled($trashedSprintCount === 0)>
-                                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                             </svg>
                                             <span>Restore</span>
-                                            <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-bgray-100 px-1.5 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-50">{{ $trashedSprintCount }}</span>
+                                            <span class="inline-flex h-4.5 min-w-[1.15rem] items-center justify-center rounded-full bg-bgray-100 px-1 text-[10px] font-semibold text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-50">{{ $trashedSprintCount }}</span>
                                         </button>
                                     @endcan
                                 @endif
 
                                 @if (! $isProtectedModule && ! $isDeletedProjectView)
                                     @can('project_milestone.edit')
-                                        <button type="button" class="project-milestone-builder-edit inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-milestone-id="{{ $milestone->id }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <button type="button" class="project-milestone-builder-edit inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-milestone-id="{{ $milestone->id }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                             </svg>
                                         </button>
                                     @endcan
 
                                     @can('project_milestone.delete')
-                                        <x-delete-form :action="route('projects.milestones.destroy', [$project, $milestone])" ajax render-target="[data-project-milestone-section]" render-mode="replace_outer" />
+                                        <x-delete-form :action="route('projects.milestones.destroy', [$project, $milestone])" formClass="inline-flex" ajax render-target="[data-project-milestone-section]" render-mode="replace_outer" class="h-8 w-8" />
                                     @endcan
                                 @endif
 
-                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-milestone-id="{{ $milestone->id }}" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
-                                    <svg class="h-5 w-5 transition duration-200" :style="{ transform: activeModuleId === {{ $milestone->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-milestone-id="{{ $milestone->id }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
+                                    <svg class="h-4 w-4 transition duration-200" :style="{ transform: activeModuleId === {{ $milestone->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
