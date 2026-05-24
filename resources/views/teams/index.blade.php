@@ -79,7 +79,7 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <div class="mt-4 flex -space-x-2 overflow-hidden">
+                                                <div class="mt-4 flex -space-x-2 overflow-hidden gap-1">
                                                     @if ($team->users->isNotEmpty())
                                                         @php
                                                             $members = $team->users;
