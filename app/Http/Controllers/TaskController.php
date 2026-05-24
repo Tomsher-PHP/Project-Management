@@ -15,7 +15,6 @@ use App\Models\TaskStatus;
 use App\Models\TaskNote;
 use App\Models\TaskTimeLog;
 use App\Models\User;
-use App\Models\UserGeneralSetting;
 use App\Services\AttachmentService;
 use App\Services\NotificationService;
 use App\Services\Task\RunningTaskNavbarService;
