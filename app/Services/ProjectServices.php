@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprintStatus;
+use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectNote;
@@ -54,6 +55,8 @@ class ProjectServices
 
             $defaultProjectStageId = ProjectStage::active()->where('is_default', true)->value('id');
 
+            $customer = Customer::find($data['customer_id']);
+
             // Create project
             $project = Project::create([
                 'project_code' => Project::generateProjectCode(),
@@ -65,6 +68,7 @@ class ProjectServices
                 'project_stage_id' => $defaultProjectStageId,
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
+                'sales_person_id' => $customer ? $customer->sales_person_id : null,
             ]);
 
             // Insert status history
