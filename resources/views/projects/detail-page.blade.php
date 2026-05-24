@@ -1,9 +1,7 @@
 @extends('layouts.master')
-@section('without-main', true)
+@section('main-class', 'w-full px-6 pb-6 pt-[100px] sm:pt-[120px]')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px]">
-
         @php
             $priority = config('project_constants.project_priorities')[$project->priority] ?? null;
             $isDeletedProjectView = $project->trashed();
@@ -135,7 +133,6 @@
         @include('projects.partials.modals.insights-modal')
         @include('projects.partials.modals.change-project-attribute-modal')
         @include('projects.partials.modals.project-payment-status-modal')
-    </main>
 @endsection
 
 @push('scripts')

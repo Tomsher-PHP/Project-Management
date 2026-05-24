@@ -1,8 +1,7 @@
 @extends('layouts.master')
-@section('without-main', true)
+@section('main-class', 'w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px]')
 
 @section('page-content')
-<main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px]">
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-filters.button />
         <x-export-button
@@ -310,8 +309,6 @@
             </div>
         </section>
     </div>
-</main>
-
 <!-- Filter drawer -->
  @php
     $typesFilter = collect($types)->map(
