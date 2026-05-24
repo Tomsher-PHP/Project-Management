@@ -1,4 +1,5 @@
 @extends('layouts.master')
+@section('without-main', true)
 
 @section('page-content')
 

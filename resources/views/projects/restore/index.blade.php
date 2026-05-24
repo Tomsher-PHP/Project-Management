@@ -1,7 +1,6 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <a href="{{ route('projects.index') }}" class="inline-flex items-center gap-2 rounded-md border border-bgray-300 px-4 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:text-bgray-50">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -98,7 +97,6 @@
                 </div>
             </section>
         </div>
-    </main>
 @endsection
 
 @push('scripts')

@@ -2,7 +2,6 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
 
         @can('role.create')
@@ -89,7 +88,6 @@
             </section>
         </div>
         <!-- write your code here-->
-    </main>
     <!-- Page ends -->
 
     <!-- Filter drawer -->

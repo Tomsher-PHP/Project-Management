@@ -529,7 +529,6 @@
 @endpush
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="org-panel org-surface overflow-visible border border-bgray-200 p-6 shadow-sm dark:border-darkblack-400">
             <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -616,7 +615,6 @@
                 </ul>
             </div>
         </div>
-    </main>
 
     <div id="org-user-modal" class="org-user-modal-backdrop" aria-hidden="true">
         <div class="org-user-modal" role="dialog" aria-modal="true" aria-labelledby="org-user-modal-title">

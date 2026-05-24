@@ -2,7 +2,6 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
 
         @can('schedule_shift.create')
             <a href="{{ route('schedule.shift.create') }}" id="schedule-shift-btn" class="inline-flex items-center px-4 py-1.5
@@ -89,7 +88,6 @@
         @include('schedule-shift.partials.modal-change-shift')
 
         <!-- write your code here-->
-    </main>
     <!-- Page ends -->
 @endsection
 

@@ -1,4 +1,5 @@
 @extends('layouts.master')
+@section('without-main', true)
 
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px]">

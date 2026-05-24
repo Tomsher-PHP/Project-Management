@@ -1,7 +1,6 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <section class="space-y-6" data-task-tabs data-task-id="{{ $task->id }}" data-default-tab="overview" data-tabs-url-template="{{ $tabsUrlTemplate }}" data-project-tasks-root data-project-task-response-mode="reload">
             <div id="task-detail-header">
                 @include('tasks.partials.header')
@@ -90,7 +89,6 @@
         </section>
 
         @include('tasks.partials.modals.insights-modal')
-    </main>
 @endsection
 
 @push('scripts')

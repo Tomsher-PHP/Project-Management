@@ -1,6 +1,7 @@
 @extends('layouts.master')
 
 @section('title', 'Unauthorized')
+@section('without-main', true)
 @section('page-content')
     <div class="flex flex-col items-center justify-center h-screen text-center">
         <h1 class="text-xl font-bold text-error-300 dark:text-error-50 lg:text-3xl" style="font-size: 100px;">403</h1>

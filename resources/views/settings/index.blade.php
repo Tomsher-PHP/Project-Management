@@ -2,7 +2,6 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
 
         <!-- write your code here-->
         @if ($hasSettingsAccess)
@@ -497,6 +496,5 @@
             </div>
         @endif
         <!-- write your code here-->
-    </main>
     <!-- Page ends -->
 @endsection

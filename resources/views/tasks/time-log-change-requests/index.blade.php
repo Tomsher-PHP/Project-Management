@@ -1,7 +1,6 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         @php
             $formatDuration = function (?int $seconds): string {
                 $totalSeconds = max(0, (int) ($seconds ?? 0));
@@ -235,7 +234,6 @@
                 </div>
             </div>
         </div>
-    </main>
 @endsection
 
 @push('scripts')

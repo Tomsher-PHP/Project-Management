@@ -1,7 +1,6 @@
 @extends('layouts.master')
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 
             <div class="flex flex-wrap items-center gap-3">
@@ -47,7 +46,6 @@
         <div id="checklist-template-index-content">
             @include('settings.checklists.partials.index-content')
         </div>
-    </main>
 
     <x-form-modal modalId="multi-step-modal" module="Checklist Template" formId="checklistForm" action="{{ route('settings.checklists.store') }}" button="Create Checklist Template" method="POST">
 

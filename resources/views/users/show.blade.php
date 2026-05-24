@@ -1,7 +1,6 @@
 @extends('layouts.master')
 @section('page-content')
     <!-- layout start -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div x-data="{ openEdit: false }" x-on:close-edit-modal.window="openEdit = false" x-cloak>
 
 
@@ -167,7 +166,6 @@
             <!-- edit user modal form -->
             @include('users.edit-user-modal', ['user' => $user])
         </div>
-    </main>
 
     @if ($errors->any())
         <script>

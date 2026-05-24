@@ -24,12 +24,12 @@
 
     @stack('styles')
     <script>
-        (function () {
+        (function() {
             let theme = "{{ $userTheme ?? 'light' }}";
             // overwrite stored value
             localStorage.setItem('theme', theme);
             // force apply AFTER other scripts
-            window.addEventListener('load', function () {
+            window.addEventListener('load', function() {
                 document.documentElement.classList.toggle('dark', theme === 'dark');
             });
         })();
@@ -57,7 +57,13 @@
 
                 <x-flash-alert />
 
-                @yield('page-content')
+                @hasSection('without-main')
+                    @yield('page-content')
+                @else
+                    <main class="@yield('main-class', 'w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]')" @yield('main-attributes')>
+                        @yield('page-content')
+                    </main>
+                @endif
 
             </div>
         </div>

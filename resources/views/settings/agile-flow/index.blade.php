@@ -21,7 +21,6 @@
 @endphp
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
 
             @can($createPermission)
@@ -145,7 +144,6 @@
                 </div>
             </section>
         </div>
-    </main>
 
     <x-form-modal modalId="multi-step-modal" :module="$entityLabel" formId="agileFlowForm" :action="$storeRoute" :button="'Create ' . $entityLabel">
         <div>

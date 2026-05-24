@@ -1,4 +1,5 @@
 @extends('layouts.master')
+@section('without-main', true)
 
 @push('styles')
     @vite('resources/css/modules/kanban.css')

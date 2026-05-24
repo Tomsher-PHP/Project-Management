@@ -6,7 +6,6 @@
     @endphp
 
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]">
 
         <div class="2xl:flex 2xl:space-x-[48px]">
             <section class="mb-6 2xl:mb-0 2xl:flex-1">
@@ -252,7 +251,6 @@
             </section>
         </div>
         <!-- write your code here-->
-    </main>
     <!-- Page ends -->
 
 @endsection
