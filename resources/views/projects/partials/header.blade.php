@@ -10,12 +10,6 @@
     $projectStageUpdateUrl = route('projects.updateProjectStage', $project);
     $projectPaymentUpdateUrl = route('projects.addProjectPaymentStatus', $project);
 
-    $projectCreatedAtLabel = $project->created_at
-        ? $project->created_at
-            ->copy()
-            ->timezone($globalTimezone)
-            ->format($globalDateFormat . ' ' . $globalTimeFormat)
-        : '--';
     $projectTimeline = $projectTimeline ?? [
         'percentage' => 0,
         'bar_class' => 'bg-gray-300',
@@ -262,13 +256,17 @@
                 </div>
             </div>
 
-            <div class="px-1 py-1 text-right">
-                <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                    {{ $project->addedBy->name ?? '--' }}
-                </p>
-                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
-                    {{ $projectCreatedAtLabel }}
-                </p>
+            <div class="flex items-center justify-end gap-3 px-1 py-1">
+                <x-user-avatar :user="$project->addedBy" :name="$project->addedBy->name ?? '--'" size="sm" />
+
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
+                        {{ $project->addedBy->name ?? '--' }}
+                    </p>
+                    <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
+                        @appDateTime($project->created_at)
+                    </p>
+                </div>
             </div>
         </div>
     </div>
