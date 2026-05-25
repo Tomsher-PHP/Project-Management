@@ -13,13 +13,15 @@ return new class extends Migration
     {
         // Add break request link to tables: tasks, task_time_logs
         Schema::table('tasks', function (Blueprint $table) {
-            $table->foreignId('break_work_request_id')->nullable()->after('request_status')->constrained('break_work_requests')->nullOnDelete();
-            
-            DB::statement("ALTER TABLE tasks MODIFY request_type ENUM('self', 'assigned', 'break') NOT NULL DEFAULT 'assigned'");
+            if (!Schema::hasColumn('tasks', 'break_work_request_id')) {
+                $table->foreignId('break_work_request_id')->nullable()->after('request_status')->constrained('break_work_requests')->nullOnDelete();
+            }
         });
 
         Schema::table('task_time_logs', function (Blueprint $table) {
-            $table->foreignId('break_work_request_id')->nullable()->after('approved_at')->constrained('break_work_requests')->nullOnDelete();
+            if (!Schema::hasColumn('task_time_logs', 'break_work_request_id')) {
+                $table->foreignId('break_work_request_id')->nullable()->after('approved_at')->constrained('break_work_requests')->nullOnDelete();
+            }
         });
     }
 
@@ -34,8 +36,6 @@ return new class extends Migration
         });
 
         Schema::table('tasks', function (Blueprint $table) {
-            DB::statement("ALTER TABLE tasks MODIFY request_type ENUM('self', 'assigned') NOT NULL DEFAULT 'assigned'");
-
             $table->dropForeign(['break_work_request_id']);
             $table->dropColumn('break_work_request_id');
         });

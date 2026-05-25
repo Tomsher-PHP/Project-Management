@@ -18,11 +18,11 @@ return new class extends Migration
 
         Schema::table('tasks', function (Blueprint $table) use ($requestTypes, $requestStatuses) {
             if (! Schema::hasColumn('tasks', 'request_type')) {
-                $table->enum('request_type', $requestTypes)->default('assigned')->after('is_billable');
+                $table->string('request_type', 50)->default('assigned')->after('is_billable')->comment($requestTypes ? 'values: ' . implode(', ', $requestTypes) : null);
             }
 
             if (! Schema::hasColumn('tasks', 'request_status')) {
-                $table->enum('request_status', $requestStatuses)->default('approved')->after('request_type');
+                $table->string('request_status', 50)->default('approved')->after('request_type')->comment($requestStatuses ? 'values: ' . implode(', ', $requestStatuses) : null);
             }
 
             if (! Schema::hasColumn('tasks', 'approved_by')) {
