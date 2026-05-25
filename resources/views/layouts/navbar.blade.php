@@ -19,7 +19,7 @@
         @include('layouts.partials.navbar._page-title')
 
         <!-- quick access-->
-        <div class="quick-access-wrapper relative">
+        <div id="navbar-quick-access" class="quick-access-wrapper relative">
             @include('layouts.partials.navbar._top-actions')
             @include('layouts.partials.navbar._notifications-dropdown')
             @include('layouts.partials.navbar._profile-dropdown')
@@ -28,3 +28,42 @@
 </header>
 
 @include('layouts.partials.navbar._scripts')
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const quickAccessWrapper = document.getElementById('navbar-quick-access');
+        const notificationButton = document.getElementById('notification-btn');
+        const notificationBox = document.getElementById('notification-box');
+
+        if (!quickAccessWrapper || !notificationButton || !notificationBox) {
+            return;
+        }
+
+        const positionNotificationDropdown = () => {
+            const wrapperRect = quickAccessWrapper.getBoundingClientRect();
+            const buttonRect = notificationButton.getBoundingClientRect();
+            const boxWidth = parseFloat(window.getComputedStyle(notificationBox).width) || notificationBox.offsetWidth || 400;
+            const viewportPadding = 16;
+
+            const preferredLeft = buttonRect.right - wrapperRect.left - boxWidth;
+            const minLeft = viewportPadding - wrapperRect.left;
+            const maxLeft = window.innerWidth - wrapperRect.left - boxWidth - viewportPadding;
+            const nextLeft = Math.min(Math.max(preferredLeft, minLeft), maxLeft);
+
+            notificationBox.style.left = `${nextLeft}px`;
+            notificationBox.style.top = '68px';
+        };
+
+        positionNotificationDropdown();
+        window.addEventListener('resize', positionNotificationDropdown);
+
+        if ('ResizeObserver' in window) {
+            const resizeObserver = new ResizeObserver(() => {
+                positionNotificationDropdown();
+            });
+
+            resizeObserver.observe(quickAccessWrapper);
+            resizeObserver.observe(notificationButton);
+        }
+    });
+</script>
