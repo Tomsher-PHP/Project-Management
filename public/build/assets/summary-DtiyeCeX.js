@@ -14,7 +14,7 @@ import"./flatpickr.min-Cc3t1Oke.js";import{i as E}from"./datepicker-CA2wRfma.js"
                     <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 px-4 py-2 dark:border-darkblack-400">
                         <div class="flex min-w-0 items-center gap-2.5">
                             <span class="h-2 w-2 flex-shrink-0 rounded-full" style="background-color: ${P};"></span>
-                            <span class="truncate text-xs font-semibold text-bgray-700 dark:text-bgray-100">${l}</span>
+                            <span class="truncate text-xs font-semibold text-bgray-700 dark:text-bgray-300">${l}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-bold ${T}">${A}</span>

@@ -39,8 +39,8 @@
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
-  "_tom-select-D_VawerM.js": {
-    "file": "assets/tom-select-D_VawerM.js",
+  "_tom-select-CxiVPw-X.js": {
+    "file": "assets/tom-select-CxiVPw-X.js",
     "name": "tom-select"
   },
   "_weekpicker-CPVHNp86.js": {
@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B4zJ6au5.css",
+    "file": "assets/app-D1CF04TU.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -78,7 +78,7 @@
     ]
   },
   "resources/css/modules/user-timeline.css": {
-    "file": "assets/user-timeline-BKRvdr4D.css",
+    "file": "assets/user-timeline-CER8jxqH.css",
     "src": "resources/css/modules/user-timeline.css",
     "isEntry": true,
     "name": "user-timeline",
@@ -87,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-ZmNJCYo5.js",
+    "file": "assets/app-DZd8AXGX.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -95,7 +95,7 @@
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_alert-CWSsmOu4.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "_datepicker-CA2wRfma.js",
       "_timepicker-F_B7tF24.js",
       "_weekpicker-CPVHNp86.js",
@@ -112,6 +112,16 @@
     "src": "resources/js/image-draggable.js",
     "isEntry": true
   },
+  "resources/js/login/login.js": {
+    "file": "assets/login-BsjnwmmE.js",
+    "name": "login",
+    "src": "resources/js/login/login.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-CWSsmOu4.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/activity-logs.js": {
     "file": "assets/activity-logs-D4Mu3k-5.js",
     "name": "activity-logs",
@@ -119,7 +129,7 @@
     "isEntry": true
   },
   "resources/js/modules/analytics/summary.js": {
-    "file": "assets/summary-CqNI9nbX.js",
+    "file": "assets/summary-DtiyeCeX.js",
     "name": "summary",
     "src": "resources/js/modules/analytics/summary.js",
     "isEntry": true,
@@ -168,7 +178,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-DVUB0c05.js",
+    "file": "assets/project-detail-D-OrtZWQ.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -176,7 +186,7 @@
       "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "resources/js/modules/projects/project-tasks.js",
       "_timepicker-F_B7tF24.js",
       "_weekpicker-CPVHNp86.js",
@@ -200,7 +210,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-mIq5k7UC.js",
+    "file": "assets/project-tasks-Da6klcvN.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -208,30 +218,30 @@
       "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/schedule-shift.js": {
-    "file": "assets/schedule-shift-DGB5TkSm.js",
+    "file": "assets/schedule-shift-D4mHRsjG.js",
     "name": "schedule-shift",
     "src": "resources/js/modules/schedule-shift.js",
     "isEntry": true,
     "imports": [
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "_weekpicker-CPVHNp86.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-ClPNWDOI.js",
+    "file": "assets/task-detail-Bnc5KLC6.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
     "imports": [
       "_alert-CWSsmOu4.js",
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "_datepicker-CA2wRfma.js",
       "_timepicker-F_B7tF24.js",
       "_weekpicker-CPVHNp86.js",
@@ -243,7 +253,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-BokuKhcU.js",
+    "file": "assets/task-list-create-mKwnfcM9.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -251,7 +261,7 @@
       "_alert-CWSsmOu4.js",
       "_datepicker-CA2wRfma.js",
       "_estimated-time-input-CIuy8ceU.js",
-      "_tom-select-D_VawerM.js",
+      "_tom-select-CxiVPw-X.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_flatpickr.min-Cc3t1Oke.js"
     ]
@@ -263,7 +273,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/handoff-blend.js": {
-    "file": "assets/handoff-blend-B2equtk3.js",
+    "file": "assets/handoff-blend-Bh4-ZyCU.js",
     "name": "handoff-blend",
     "src": "resources/js/modules/tasks/handoff-blend.js",
     "isEntry": true,
@@ -301,7 +311,7 @@
     "isEntry": true
   },
   "resources/js/modules/users/change-password.js": {
-    "file": "assets/change-password-DgNhz_HA.js",
+    "file": "assets/change-password-BUup1kTJ.js",
     "name": "change-password",
     "src": "resources/js/modules/users/change-password.js",
     "isEntry": true,
@@ -369,7 +379,7 @@
     "isEntry": true
   },
   "resources/js/modules/workspace/workspace-kanban-heights.js": {
-    "file": "assets/workspace-kanban-heights-DSkGZGaz.js",
+    "file": "assets/workspace-kanban-heights-Cfjx3R8h.js",
     "name": "workspace-kanban-heights",
     "src": "resources/js/modules/workspace/workspace-kanban-heights.js",
     "isEntry": true
