@@ -75,13 +75,12 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->currentAssignee)
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
-                {{ $task->currentAssignee->name }}
-            </span>
+            <div class="inline-flex items-center gap-2 text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                <x-user-avatar :user="$task->currentAssignee" size="sm" />
+                <span>{{ $task->currentAssignee->name }}</span>
+            </div>
         @else
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
-                Unassigned
-            </span>
+            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Unassigned</span>
         @endif
     </td>
 
