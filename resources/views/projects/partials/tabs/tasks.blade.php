@@ -125,7 +125,7 @@
                             <div class="grid gap-4 md:grid-cols-2">
                                 @unless ($isLinearFlow)
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
                                         <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-module-select>
                                             <option value="">Select milestone or leave empty for backlog</option>
                                             @foreach ($taskCreateProjectModules as $projectMilestone)
@@ -136,7 +136,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                             Sprint
                                             <span class="hidden" data-project-task-required-star="project_sprint_id"></span>
                                         </label>
@@ -150,13 +150,13 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300" data-project-task-placement-hint></p>
+                                        <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-project-task-placement-hint></p>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="project_sprint_id"></p>
                                     </div>
                                 @endunless
 
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Parent Task</label>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Parent Task</label>
                                     <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}">
                                         <option value="">Select parent task</option>
                                     </select>
@@ -164,13 +164,13 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Name <x-red-star /></label>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
                                     <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter task name">
                                     <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="name"></p>
                                 </div>
 
                                 <div>
-                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Assignee</label>
+                                    <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
                                     <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
                                         <option value="">Select assignee</option>
                                         @foreach ($assignableUsers as $assignableUser)
@@ -189,7 +189,7 @@
                             <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-project-task-advanced-section hidden>
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Status</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</label>
                                         <select name="status_id" class="tom-select-no-search w-full">
                                             <option value="" {{ blank($defaultTaskStatusId) ? 'selected' : '' }}>Select status</option>
                                             @foreach ($taskStatuses as $status)
@@ -200,13 +200,13 @@
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Description</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
                                         <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add task details"></textarea>
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="description"></p>
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Task Type</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Type</label>
                                         <select name="task_type_id" class="tom-select-no-search w-full">
                                             @foreach ($taskTypeOptions as $option)
                                                 <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
@@ -216,7 +216,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Task Mode</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task Mode</label>
                                         <select name="task_mode_id" class="tom-select-no-search w-full">
                                             @foreach ($taskModeOptions as $option)
                                                 <option value="{{ $option->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $option->name }}</option>
@@ -226,7 +226,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Priority</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
                                         <select name="priority" class="tom-select-no-search w-full">
                                             @foreach ($taskPriorityOptions as $option)
                                                 <option value="{{ $option['value'] }}" {{ $option['value'] === $defaultTaskPriority ? 'selected' : '' }}>{{ $option['label'] }}</option>
@@ -236,13 +236,13 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Due Date</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date</label>
                                         <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="due_date_time"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Tags</label>
+                                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Tags</label>
                                         <select name="tag_ids[]" class="tom-select-tags w-full" multiple>
                                             @foreach ($tagOptions as $tagOption)
                                                 <option value="{{ $tagOption->id }}">{{ $tagOption->name }}</option>
@@ -252,7 +252,7 @@
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
+                                        <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                             <input type="hidden" name="is_billable" value="0">
                                             <input type="checkbox" name="is_billable" value="1" class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-success-300" {{ $project->default_billable ? 'checked' : '' }}>
                                             <span>Billable task</span>
@@ -267,7 +267,7 @@
                                     Show Advanced
                                 </button>
 
-                                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300" data-project-task-modal-close>
+                                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-project-task-modal-close>
                                     Cancel
                                 </button>
 
@@ -293,8 +293,8 @@
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                             <div>
                                 <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
-                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
-                                    Move <span class="font-medium text-bgray-700 dark:text-bgray-100" data-project-task-move-task-name>this task</span>
+                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
+                                    Move <span class="font-medium text-bgray-700 dark:text-bgray-300" data-project-task-move-task-name>this task</span>
                                     to another sprint.
                                 </p>
                             </div>
@@ -307,7 +307,7 @@
                         <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)'>
                             <input type="hidden" name="_method" value="PATCH">
 
-                            <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-200">
+                            <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300">
                                 <p>
                                     Current sprint:
                                     <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
@@ -315,21 +315,21 @@
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">Milestone</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
                                 <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-move-module-select>
                                     <option value="">All milestones</option>
                                     @foreach ($projectMilestones as $projectMilestone)
                                         <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
                                     @endforeach
                                 </select>
-                                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
+                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
                                     Optional. Choose a milestone to narrow the sprint list.
                                 </p>
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_milestone_id"></p>
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Sprint
                                     <x-red-star />
                                 </label>
@@ -347,7 +347,7 @@
                             </div>
 
                             <div class="flex items-center justify-end gap-3 pt-1">
-                                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300" data-project-task-move-close>
+                                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-project-task-move-close>
                                     Cancel
                                 </button>
 

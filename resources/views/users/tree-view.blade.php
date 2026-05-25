@@ -608,7 +608,7 @@
                             @endif
                         </li>
                     @empty
-                        <li class="org-empty-state rounded-2xl border border-dashed border-bgray-300 px-5 py-8 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                        <li class="org-empty-state rounded-2xl border border-dashed border-bgray-300 px-5 py-8 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                             No users found for the hierarchy view.
                         </li>
                     @endforelse

@@ -74,7 +74,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
-                                            <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                                            <p class="text-sm text-bgray-700 dark:text-bgray-300">
                                                 {{ \Illuminate\Support\Str::limit(trim(strip_tags($kpi->description ?: '')) ?: 'No description added.', 50, '...') }}
                                             </p>
                                         </td>
@@ -117,12 +117,12 @@
     <x-form-modal modalId="multi-step-modal" module="KPI" formId="kpiForm" action="{{ route('settings.kpis.store') }}" button="Create KPI">
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         <div class="md:col-span-2">
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
             <textarea name="description" class="hidden"></textarea>
             <div class="custom-quill">
                 <div id="kpi-description-editor" class="h-60 min-h-[100px] rounded-b-lg bg-white dark:bg-darkblack-500"></div>

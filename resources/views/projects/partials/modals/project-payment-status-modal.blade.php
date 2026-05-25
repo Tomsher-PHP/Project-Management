@@ -7,7 +7,7 @@
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <div>
                         <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Project Payment Status</h3>
-                        <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                             Add the latest payment details to refresh this project's payment status.
                         </p>
                     </div>
@@ -20,43 +20,43 @@
                 <form class="flex flex-col" data-project-payment-form>
                     <div class="grid gap-5 px-6 py-6 sm:grid-cols-2 sm:px-7">
                         <div>
-                            <label for="project_payment_amount" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Amount</label>
+                            <label for="project_payment_amount" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Amount</label>
                             <input type="number" step="0.01" min="0" id="project_payment_amount" name="amount" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Enter amount">
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="amount"></p>
                         </div>
 
                         <div>
-                            <label for="project_payment_paid_date" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Paid Date</label>
+                            <label for="project_payment_paid_date" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Paid Date</label>
                             <input type="text" id="project_payment_paid_date" name="paid_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="{{ $globalDateFormat }}" placeholder="Select paid date" autocomplete="off">
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="paid_date"></p>
                         </div>
 
                         <div>
-                            <label for="project_payment_coverage_start_date" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Coverage Start Date <x-red-star /></label>
+                            <label for="project_payment_coverage_start_date" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Coverage Start Date <x-red-star /></label>
                             <input type="text" id="project_payment_coverage_start_date" name="coverage_start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="{{ $globalDateFormat }}" placeholder="Select start date" autocomplete="off" required>
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="coverage_start_date"></p>
                         </div>
 
                         <div>
-                            <label for="project_payment_coverage_end_date" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Coverage End Date <x-red-star /></label>
+                            <label for="project_payment_coverage_end_date" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Coverage End Date <x-red-star /></label>
                             <input type="text" id="project_payment_coverage_end_date" name="coverage_end_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="{{ $globalDateFormat }}" placeholder="Select end date" autocomplete="off" required>
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="coverage_end_date"></p>
                         </div>
 
                         {{-- <div>
-                            <label for="project_payment_method" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Payment Method</label>
+                            <label for="project_payment_method" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Payment Method</label>
                             <input type="text" id="project_payment_method" name="payment_method" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Cash, bank transfer, card">
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="payment_method"></p>
                         </div> --}}
 
                         {{-- <div>
-                            <label for="project_payment_reference" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Reference</label>
+                            <label for="project_payment_reference" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Reference</label>
                             <input type="text" id="project_payment_reference" name="reference" maxlength="150" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Transaction ID or note">
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="reference"></p>
                         </div> --}}
 
                         <div class="sm:col-span-2">
-                            <label for="project_payment_notes" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Notes</label>
+                            <label for="project_payment_notes" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Notes</label>
                             <textarea id="project_payment_notes" name="notes" rows="4" maxlength="500" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add any payment details or remarks"></textarea>
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-payment-error-for="notes"></p>
                         </div>

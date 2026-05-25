@@ -52,7 +52,7 @@
                             <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
-                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300" data-task-create-placement-hint></p>
+                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-task-create-placement-hint></p>
                             <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="project_sprint_id"></p>
                         </div>
 
@@ -171,7 +171,7 @@
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
+                                <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                     <input type="hidden" name="is_billable" value="0">
                                     <input type="checkbox" name="is_billable" value="1" class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-success-300">
                                     <span>Billable task</span>
@@ -186,7 +186,7 @@
                             Show Advanced
                         </button>
 
-                        <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300" data-task-create-close>
+                        <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-task-create-close>
                             Cancel
                         </button>
 
@@ -215,22 +215,22 @@
 
     <x-form-modal modalId="task-create-type-modal" module="Task Type" formId="taskCreateTypeInlineForm" action="{{ route('settings.task-types.store') }}" button="Create Task Type" modalZIndex="1000">
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
             <input type="text" name="code" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-target required>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
             <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
         </div>
 
@@ -242,30 +242,30 @@
 
     <x-form-modal modalId="task-create-mode-modal" module="Task Mode" formId="taskCreateModeInlineForm" action="{{ route('settings.task-modes.store') }}" button="Create Task Mode" modalZIndex="1000">
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
             <input type="text" name="code" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-target required>
         </div>
 
         <div>
             <div class="mb-2.5 flex items-center justify-between gap-3">
-                <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                 <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
             </div>
             <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
             <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
         </div>
 

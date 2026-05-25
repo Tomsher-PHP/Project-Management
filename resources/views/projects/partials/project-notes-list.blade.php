@@ -2,14 +2,10 @@
     <div class="flex items-center justify-between gap-4">
         <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes History</h3>
         <div class="flex flex-wrap items-center justify-end gap-3">
-            <span id="project-notes-count" data-total="{{ $projectNotes->total() }}" class="text-sm text-bgray-500 dark:text-bgray-300">{{ $projectNotes->total() }} Notes</span>
+            <span id="project-notes-count" data-total="{{ $projectNotes->total() }}" class="text-sm text-bgray-700 dark:text-bgray-300">{{ $projectNotes->total() }} Notes</span>
 
             @if (!empty($canCreate))
-                <button
-                    type="button"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400"
-                    data-project-note-modal-open
-                >
+                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-project-note-modal-open>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>

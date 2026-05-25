@@ -7,7 +7,7 @@
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <div>
                         <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white" data-project-change-title>Change Project Value</h3>
-                        <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-project-change-description>
+                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300" data-project-change-description>
                             Select an option to continue.
                         </p>
                     </div>
@@ -29,7 +29,7 @@
                         </div>
 
                         <div>
-                            <label for="project_change_date" class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Date <x-red-star /></label>
+                            <label for="project_change_date" class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Date <x-red-star /></label>
                             <input type="text" id="project_change_date" name="change_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-format="{{ $globalDateFormat }}" placeholder="Select a date" autocomplete="off" required>
                             <p class="mt-1 hidden text-xs text-error-300" data-project-change-min-date-hint></p>
                             <p class="mt-1 text-sm text-error-300 hidden" data-project-change-error-for="change_date"></p>
@@ -37,7 +37,7 @@
 
                         <div>
                             <div class="mb-2.5 flex items-center justify-between gap-3">
-                                <label for="project_change_remarks" class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Remark</label>
+                                <label for="project_change_remarks" class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Remark</label>
                                 <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-change-remarks-count>0</span>/150</span>
                             </div>
                             <textarea id="project_change_remarks" name="remarks" rows="4" maxlength="150" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add a note for this change"></textarea>

@@ -10,7 +10,7 @@
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">{{ $moduleLabel }} Activity</p>
             <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $subjectLabel }}</h3>
-            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                 {{ $totalActivities }} recent {{ \Illuminate\Support\Str::plural('update', $totalActivities) }} related to this {{ \Illuminate\Support\Str::lower($moduleLabel) }}.
             </p>
         </div>
@@ -79,7 +79,7 @@
                                     <x-activity-log.view-button :activity="$activity" label="View Details" class="h-7 rounded-full px-3" />
                                 </div>
 
-                                <p class="shrink-0 pt-0.5 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                <p class="shrink-0 pt-0.5 text-xs font-medium text-bgray-700 dark:text-bgray-300">
                                     {{ $activity->created_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}
                                 </p>
                             </div>
@@ -88,7 +88,7 @@
                                 <p class="text-sm text-bgray-600 dark:text-bgray-300">
                                     {{ $summary }}
                                 </p>
-                                <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">
+                                <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">
                                     {{ $subjectType }}: {{ $activitySubjectLabel }}
                                 </p>
                             </div>
@@ -96,13 +96,13 @@
                             @if ($visibleChanges->isNotEmpty())
                                 <div class="mt-2 flex flex-wrap gap-1.5">
                                     @foreach ($visibleChanges->take(4) as $label)
-                                        <span class="rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                        <span class="rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                             {{ $label }}
                                         </span>
                                     @endforeach
 
                                     @if ($visibleChanges->count() > 4)
-                                        <span class="rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                        <span class="rounded-full bg-bgray-100 px-2.5 py-0.5 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                             +{{ $visibleChanges->count() - 4 }} more
                                         </span>
                                     @endif
@@ -112,7 +112,7 @@
                     </div>
                 </article>
             @empty
-                <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                     No activity logged for this {{ \Illuminate\Support\Str::lower($moduleLabel) }} or its related records yet.
                 </div>
             @endforelse

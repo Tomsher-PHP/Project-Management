@@ -88,7 +88,7 @@ const renderDisplay = (display, totalSeconds) => {
         const estimatedSeconds = parseSeconds(display.dataset.estimatedSeconds);
 
         display.classList.remove(
-            'text-bgray-500',
+            'text-bgray-700',
             'dark:text-bgray-300',
             'text-success-400',
             'dark:text-success-300',
@@ -97,7 +97,7 @@ const renderDisplay = (display, totalSeconds) => {
         );
 
         if (estimatedSeconds <= 0) {
-            display.classList.add('text-bgray-500', 'dark:text-bgray-300');
+            display.classList.add('text-bgray-700', 'dark:text-bgray-300');
             return;
         }
 
@@ -215,7 +215,7 @@ const setButtonRunningState = (button, { isRunning, totalSeconds }) => {
         'hover:bg-red-500',
         'cursor-not-allowed',
         'bg-bgray-200',
-        'text-bgray-500',
+        'text-bgray-700',
         'bg-bgray-300',
         'text-bgray-600',
         'dark:bg-darkblack-400',
@@ -233,7 +233,7 @@ const setButtonRunningState = (button, { isRunning, totalSeconds }) => {
         if (button.dataset.disabledVariant === 'strong') {
             button.classList.add('bg-bgray-300', 'text-bgray-600', 'dark:bg-darkblack-400', 'dark:text-bgray-300');
         } else {
-            button.classList.add('bg-bgray-200', 'text-bgray-500', 'dark:bg-darkblack-400', 'dark:text-bgray-300');
+            button.classList.add('bg-bgray-200', 'text-bgray-700', 'dark:bg-darkblack-400', 'dark:text-bgray-300');
         }
     } else {
         button.classList.add('bg-success-400', 'hover:bg-success-300');

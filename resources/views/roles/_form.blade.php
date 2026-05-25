@@ -49,14 +49,14 @@
                         <h4 class="text-base font-semibold text-bgray-700 dark:text-bgray-50">
                             Permission Milestones
                         </h4>
-                        <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                        <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
                             Click to jump
                         </span>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
                         @foreach ($permissionModules as $milestone)
-                            <a href="#{{ $milestone['id'] }}" class="rounded-full border border-bgray-200 px-3 py-1.5 text-xs font-semibold text-bgray-600 transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 focus:border-success-300 focus:outline-none focus:ring-2 focus:ring-success-100 dark:border-darkblack-400 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:bg-darkblack-600 dark:hover:text-success-300" data-permission-index-link data-target="{{ $milestone['id'] }}">
+                            <a href="#{{ $milestone['id'] }}" class="rounded-full border border-bgray-200 px-3 py-1.5 text-xs font-semibold text-bgray-600 transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 focus:border-success-300 focus:outline-none focus:ring-2 focus:ring-success-100 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-600 dark:hover:text-success-300" data-permission-index-link data-target="{{ $milestone['id'] }}">
                                 {{ $milestone['label'] }}
                             </a>
                         @endforeach

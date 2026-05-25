@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="flex min-h-[420px] flex-1 items-center justify-center px-6 py-10">
                 <div class="text-center">
                     <div class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-bgray-200 border-t-success-300 dark:border-darkblack-400 dark:border-t-success-300"></div>
-                    <p class="text-sm font-medium text-bgray-500 dark:text-bgray-300">Loading task details...</p>
+                    <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Loading task details...</p>
                 </div>
             </div>
         `;

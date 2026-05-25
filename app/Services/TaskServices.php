@@ -297,7 +297,7 @@ class TaskServices
             $task->setAttribute('kanban_timer_elapsed_seconds', (int) ($timerState['elapsedSeconds'] ?? 0));
             $task->setAttribute('kanban_timer_current_seconds', (int) ($timerState['currentSeconds'] ?? 0));
             $task->setAttribute('kanban_timer_estimated_seconds', (int) ($timerState['estimatedSeconds'] ?? 0));
-            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-bgray-500 dark:text-bgray-300'));
+            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-bgray-700 dark:text-bgray-300'));
             $task->setAttribute('kanban_timer_started_at_iso', $timerState['runningTimeLog']?->started_at?->toISOString());
             $task->setAttribute('kanban_timer_is_running', $timerState['runningTimeLog'] !== null);
         }

@@ -18,7 +18,7 @@
 
             <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
                 @foreach ($tabs as $status => $label)
-                    <a href="{{ route('handoff_requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
+                    <a href="{{ route('handoff_requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                         {{ $label }}
                     </a>
                 @endforeach
@@ -148,7 +148,7 @@
                                                 @endif
                                             @endcan
 
-                                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-500 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
+                                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="View Details"
                                                 onclick="openHandoffViewModal({{ json_encode([
                                                     'date' => $request->created_at->format('Y-m-d H:i:s'),
                                                     'requestedBy' => $requestUser?->name ?? '--',
@@ -202,7 +202,7 @@
             <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-darkblack-600">
                 <div class="mb-4 flex items-center justify-between border-b border-bgray-200 pb-3 dark:border-darkblack-400">
                     <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Handoff Request Details</h3>
-                    <button type="button" onclick="closeHandoffViewModal()" class="text-bgray-500 hover:text-error-300 transition">
+                    <button type="button" onclick="closeHandoffViewModal()" class="text-bgray-700 hover:text-error-300 transition">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -212,61 +212,61 @@
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Date</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Date</span>
                             <p id="viewModalDate" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Requested By</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Requested By</span>
                             <p id="viewModalRequestedBy" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Project</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project</span>
                             <p id="viewModalProject" class="mt-1 flex items-center gap-2 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Milestone</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</span>
                             <p id="viewModalMilestone" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Sprint</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Sprint</span>
                             <p id="viewModalSprint" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Source Task</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</span>
                             <p id="viewModalSourceTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Created Task</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Created Task</span>
                             <p id="viewModalCreatedTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Status</span>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</span>
                             <p id="viewModalStatus" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
                     <div>
-                        <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Purpose</span>
+                        <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose</span>
                         <p id="viewModalPurpose" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                     </div>
 
                     <div>
-                        <span class="block text-sm font-medium text-bgray-500 dark:text-bgray-300">Full Description</span>
-                        <div id="viewModalDescription" class="mt-1 rounded-lg bg-bgray-50 p-3 text-sm text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-100" style="white-space: pre-wrap;"></div>
+                        <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Full Description</span>
+                        <div id="viewModalDescription" class="mt-1 rounded-lg bg-bgray-50 p-3 text-sm text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-300" style="white-space: pre-wrap;"></div>
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end">
-                    <button type="button" onclick="closeHandoffViewModal()" class="rounded-lg bg-bgray-200 px-4 py-2 text-sm font-semibold text-bgray-800 transition hover:bg-bgray-300 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:bg-darkblack-400">
+                    <button type="button" onclick="closeHandoffViewModal()" class="rounded-lg bg-bgray-200 px-4 py-2 text-sm font-semibold text-bgray-800 transition hover:bg-bgray-300 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
                         Close
                     </button>
                 </div>

@@ -198,7 +198,7 @@
                                                     <x-project-flow-icon :flow="$project->project_flow" class="absolute right-0 top-[10px]" :title="'Project Flow: ' . $flowLabel" />
                                                     <a href="{{ route('projects.edit', $project->id) }}" target="_blank">
                                                     {{ $project->name }}
-                                                        <p class="text-sm text-bgray-500">
+                                                        <p class="text-sm text-bgray-700">
                                                         {{ $project->project_code }}
                                                         </p>
                                                     </a>

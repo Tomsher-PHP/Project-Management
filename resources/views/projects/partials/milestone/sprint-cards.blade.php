@@ -32,7 +32,7 @@
                 @else
                     @if (! $isDeletedProjectView)
                         @can('project_sprint.edit')
-                            <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 {{ $dragHandleClasses }}" data-project-sprint-drag-handle @if (! $allPagesLoaded) disabled title="Scroll to load all sprints before reordering" @endif>
+                            <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 {{ $dragHandleClasses }}" data-project-sprint-drag-handle @if (! $allPagesLoaded) disabled title="Scroll to load all sprints before reordering" @endif>
                                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                 </svg>
@@ -65,7 +65,7 @@
                             </span>
                         </div>
                         @if ($projectSprint->description)
-                            <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                            <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
                                 {{ \Illuminate\Support\Str::limit($projectSprint->description, 100) }}
                             </p>
                         @endif
@@ -101,7 +101,7 @@
 @empty
     @if ($showEmptyState)
         <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
-            <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">No sprints added under this milestone yet.</p>
+            <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">No sprints added under this milestone yet.</p>
         </div>
     @endif
 @endforelse

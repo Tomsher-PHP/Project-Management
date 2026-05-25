@@ -30,7 +30,7 @@ function addNotificationToUI(notification) {
                 <strong>${notification.title ?? 'Notification'}</strong>
                 ${notification.message ?? ''}
             </p>
-            <span class="text-xs font-medium text-bgray-500">Just now</span>
+            <span class="text-xs font-medium text-bgray-700">Just now</span>
         </div>
     `;
 

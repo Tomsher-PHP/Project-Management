@@ -3,7 +3,7 @@
     $cardTitleClasses = 'text-base font-semibold text-bgray-900 dark:text-white';
     $cardTextClasses = 'text-sm text-bgray-600 dark:text-bgray-300';
     $emptyTextClasses = 'text-sm italic text-bgray-600 dark:text-bgray-300';
-    $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
+    $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
     $timeBarClasses = $timeComparison['is_over_estimate'] ? 'bg-red-500' : 'bg-success-400';
     $formatDuration = function (?int $seconds): string {
         $normalizedSeconds = max(0, (int) ($seconds ?? 0));
@@ -33,7 +33,7 @@
                     <form class="mt-4 space-y-3" data-task-overview-description-form action="{{ route('tasks.overview.description.update', $task) }}" method="POST">
                         @csrf
                         @method('PATCH')
-                        <textarea name="description" rows="6" class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200" placeholder="Add a task description...">{{ $description }}</textarea>
+                        <textarea name="description" rows="6" class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" placeholder="Add a task description...">{{ $description }}</textarea>
                         <p class="hidden text-sm text-red-500" data-task-overview-description-error></p>
                         <div class="flex items-center justify-end">
                             <button type="submit" class="inline-flex items-center rounded-lg bg-success-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-300" data-task-overview-description-submit>
@@ -193,7 +193,7 @@
                 <h3 class="{{ $cardTitleClasses }}">Billable</h3>
 
                 <div class="mt-4 flex items-center gap-3">
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $is_billable ? 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200' }}">
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $is_billable ? 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' }}">
                         {{ $is_billable ? 'Billable' : 'Non-billable' }}
                     </span>
                 </div>
@@ -249,7 +249,7 @@
                                             {{ $subtask->status->name }}
                                         </span>
                                     @else
-                                        <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
+                                        <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                             No status
                                         </span>
                                     @endif

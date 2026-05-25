@@ -37,7 +37,7 @@
                 @endif
             </div>
             <div class="min-w-0 flex-1">
-                <h4 class="truncate text-[10px] font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-300">{{ $tile['label'] }}</h4>
+                <h4 class="truncate text-[10px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">{{ $tile['label'] }}</h4>
                 <p class="text-xl font-black leading-none {{ $tile['accent'] }}">
                     <span data-workspace-summary-count="{{ $tile['key'] }}">{{ $tile['count'] }}</span>
                 </p>

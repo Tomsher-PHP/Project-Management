@@ -26,8 +26,8 @@
                 </a>
 
                 @if ($task->child_tasks_count > 0)
-                    <button type="button" class="mt-2 inline-flex max-w-full items-center gap-2 text-sm text-bgray-700 transition hover:text-success-400 dark:text-bgray-200 dark:hover:text-success-300" data-task-subtasks-toggle data-task-subtasks-parent="{{ $task->id }}" aria-expanded="false">
-                        <span class="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-bgray-700 transition duration-200 dark:text-bgray-100" data-task-subtasks-icon>
+                    <button type="button" class="mt-2 inline-flex max-w-full items-center gap-2 text-sm text-bgray-700 transition hover:text-success-400 dark:text-bgray-300 dark:hover:text-success-300" data-task-subtasks-toggle data-task-subtasks-parent="{{ $task->id }}" aria-expanded="false">
+                        <span class="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-bgray-700 transition duration-200 dark:text-bgray-300" data-task-subtasks-icon>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M7.22 4.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 11-1.06-1.06L10.94 10 7.22 6.28a.75.75 0 010-1.06z" clip-rule="evenodd" />
                             </svg>
@@ -40,7 +40,7 @@
                 @endif
 
                 @if ($task->project?->project_flow === 'agile')
-                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-500 dark:text-bgray-300">
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-700 dark:text-bgray-300">
                         <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectMilestone?->name ?? '--' }}">
                             Milestone: {{ \Illuminate\Support\Str::limit($task->projectMilestone?->name ?? '--', 20, '..') }}
                         </span>
@@ -75,11 +75,11 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->currentAssignee)
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-100">
+            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                 {{ $task->currentAssignee->name }}
             </span>
         @else
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
+            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                 Unassigned
             </span>
         @endif
@@ -87,26 +87,26 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         @if ($task->status)
-            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                 <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
                 {{ $task->status->name }}
             </span>
         @else
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
+            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                 No status
             </span>
         @endif
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $typeColor }}"></span>
             {{ $typeLabel }}
         </span>
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+        <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $modeColor }}"></span>
             {{ $modeLabel }}
         </span>
@@ -114,7 +114,7 @@
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <div class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>
-        <div class="text-xs text-bgray-500 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
+        <div class="text-xs text-bgray-700 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
@@ -124,14 +124,14 @@
                 <span>@appDateTime($task->due_date_time)</span>
             </div>
         @else
-            <span class="text-sm text-bgray-500 dark:text-bgray-300">No due date</span>
+            <span class="text-sm text-bgray-700 dark:text-bgray-300">No due date</span>
         @endif
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <div class="flex items-center gap-2">
             @if ($task->project)
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-500 shadow-sm transition duration-200 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}" data-project-task-group-key="">
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}" data-project-task-group-key="">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                         <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />

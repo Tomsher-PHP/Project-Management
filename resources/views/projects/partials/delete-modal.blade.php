@@ -7,28 +7,28 @@
         @if ($summary['is_agile'])
             <div class="flex items-center space-x-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['milestones_count'] }} Milestones</span>
+                <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['milestones_count'] }} Milestones</span>
             </div>
             <div class="flex items-center space-x-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['sprints_count'] }} Sprints</span>
+                <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['sprints_count'] }} Sprints</span>
             </div>
         @endif
         <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-            <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['tasks_count'] }} Tasks ({{ $summary['active_tasks_count'] }} active)</span>
+            <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['tasks_count'] }} Tasks ({{ $summary['active_tasks_count'] }} active)</span>
         </div>
         <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
-            <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['sub_tasks_count'] }} Sub-tasks</span>
+            <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['sub_tasks_count'] }} Sub-tasks</span>
         </div>
         <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-            <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['pending_requests_count'] }} Pending requests</span>
+            <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['pending_requests_count'] }} Pending requests</span>
         </div>
         <div class="flex items-center space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-            <span class="text-bgray-700 dark:text-bgray-200 font-medium">{{ $summary['scope_files_count'] }} Scope files</span>
+            <span class="text-bgray-700 dark:text-bgray-300 font-medium">{{ $summary['scope_files_count'] }} Scope files</span>
         </div>
     </div>
 

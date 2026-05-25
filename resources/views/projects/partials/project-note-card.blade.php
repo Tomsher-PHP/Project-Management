@@ -1,12 +1,15 @@
 <article class="rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-note-id="{{ $note->id }}">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-            <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
-                {{ $note->addedBy?->name ?? 'Unknown User' }}
-            </h4>
-            <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                {{ $note->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
-            </p>
+        <div class="flex items-center gap-3">
+            <x-user-avatar :user="$note->addedBy" :name="$note->addedBy?->name ?? 'Unknown User'" class="h-10 w-10 flex-shrink-0" />
+            <div>
+                <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
+                    {{ $note->addedBy?->name ?? 'Unknown User' }}
+                </h4>
+                <p class="text-sm text-bgray-700 dark:text-bgray-300">
+                    @appDateTime($note->created_at)
+                </p>
+            </div>
         </div>
 
         <div class="flex items-center gap-3">
@@ -22,7 +25,7 @@
         </div>
     </div>
 
-    <div class="prose mt-4 max-w-none text-sm text-bgray-700 dark:prose-invert dark:text-bgray-100">
+    <div class="prose mt-4 max-w-none text-sm text-bgray-700 dark:text-bgray-300">
         {!! $note->description !!}
     </div>
 
@@ -56,14 +59,14 @@
                                 <p class="truncate text-sm font-medium text-bgray-900 dark:text-white">
                                     {{ $attachment->original_name }}
                                 </p>
-                                <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                                <p class="text-xs text-bgray-700 dark:text-bgray-300">
                                     {{ number_format($attachment->file_size / 1024, 1) }} KB
                                 </p>
                             </div>
                         </a>
 
                         @if ($canRemove)
-                            <button type="button" class="delete-project-note-file mt-3 text-xs font-medium text-red-500 hover:underline" data-note-id="{{ $note->id }}" data-attachment-id="{{ $attachment->id }}">
+                            <button type="button" class="delete-project-note-file mt-3 text-xs font-medium text-error-300 hover:underline" data-note-id="{{ $note->id }}" data-attachment-id="{{ $attachment->id }}">
                                 Remove File
                             </button>
                         @endif

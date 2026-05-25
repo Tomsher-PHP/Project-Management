@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
             openModal();
             content.innerHTML = `
                 <div class="px-6 py-10 text-center">
-                    <p class="text-sm font-medium text-bgray-500 dark:text-bgray-300">Loading activity details...</p>
+                    <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Loading activity details...</p>
                 </div>
             `;
 

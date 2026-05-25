@@ -13,7 +13,7 @@
                     </span>
 
                     <button type="button" id="bulk-delete-btn" data-bulk-delete-url="{{ route('activity.log.bulkDelete') }}"
-                        class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-5 text-sm font-semibold leading-none text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 disabled:shadow-none dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                        class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-5 text-sm font-semibold leading-none text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 disabled:shadow-none dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-700"
                         disabled>
                         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -35,7 +35,7 @@
                     </p>
                 </div>
 
-                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300">
+                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                     Clear Filter
                 </a>
             </div>
@@ -50,7 +50,7 @@
                     </p>
                 </div>
 
-                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100 dark:hover:border-success-300 dark:hover:text-success-300">
+                <a href="{{ route('activity.log') }}" class="inline-flex h-10 items-center justify-center rounded-lg border border-bgray-200 bg-white px-4 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                     Clear Filter
                 </a>
             </div>
@@ -163,7 +163,7 @@
                                                 </span>
 
                                                 @if ($milestoneSubtitle)
-                                                    <span class="mt-1 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                    <span class="mt-1 text-xs font-medium text-bgray-700 dark:text-bgray-300">
                                                         {{ $milestoneSubtitle }}
                                                     </span>
                                                 @endif
@@ -179,27 +179,27 @@
                                                 <span class="text-base font-semibold text-bgray-900 dark:text-white">
                                                     {{ $subjectLabel }}
                                                 </span>
-                                                <span class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                <span class="text-sm text-bgray-700 dark:text-bgray-300">
                                                     {{ $subjectType }}
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex max-w-[280px] flex-col">
-                                                <span class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                <span class="text-sm text-bgray-700 dark:text-bgray-300">
                                                     {{ $changeSummary }}
                                                 </span>
 
                                                 @if ($changedFields->isNotEmpty())
                                                     <div class="mt-2 flex flex-wrap gap-1.5">
                                                         @foreach ($changedFields->take(3) as $label)
-                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                                                 {{ $label }}
                                                             </span>
                                                         @endforeach
 
                                                         @if ($changedFields->count() > 3)
-                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200">
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                                                 +{{ $changedFields->count() - 3 }} more
                                                             </span>
                                                         @endif
@@ -217,7 +217,7 @@
                                                     {{ $activity->causer?->name ?? 'System' }}
                                                 </span>
                                                 @if ($activity->causer?->email)
-                                                    <span class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                    <span class="text-sm text-bgray-700 dark:text-bgray-300">
                                                         {{ $activity->causer->email }}
                                                     </span>
                                                 @endif
@@ -228,7 +228,7 @@
                                                 <span class="text-sm font-semibold text-bgray-900 dark:text-white">
                                                     {{ $activity->created_at?->timezone($globalTimezone)?->format($globalDateFormat) ?? '--' }}
                                                 </span>
-                                                <span class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                <span class="text-sm text-bgray-700 dark:text-bgray-300">
                                                     {{ $activity->created_at?->timezone($globalTimezone)?->format($globalTimeFormat) ?? '--' }}
                                                 </span>
                                             </div>

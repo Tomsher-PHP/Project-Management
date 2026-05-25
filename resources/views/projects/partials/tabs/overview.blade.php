@@ -8,7 +8,7 @@
     $isExceeded = (bool) $progressbar->get('is_exceeded', false);
     $isWithinEstimate = $hasEstimate && !$isExceeded;
     $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
-    $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-500 dark:text-bgray-300');
+    $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-700 dark:text-bgray-300');
     $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
     $estimatedBarColor = (string) $progressbar->get('estimated_bar_color', 'bg-bgray-400 dark:bg-bgray-300');
     $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
@@ -86,7 +86,7 @@
                         <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
                             Milestone Journey
                         </h3>
-                        <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                        <p class="text-sm text-bgray-700 dark:text-bgray-300">
                             Estimated vs actual cumulative hours by milestone
                         </p>
                     </div>
@@ -97,7 +97,7 @@
                         <canvas data-project-overview-burnup-chart aria-label="Project milestone burnup chart"></canvas>
                     </div>
 
-                    <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
+                    <div class="{{ $hasMilestoneBurnupData ? 'hidden' : '' }} flex h-[420px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-burnup-empty-state>
                         No milestone burnup data available yet.
                     </div>
                 </div>
@@ -113,10 +113,10 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                         {{ $totalTaskCount }} {{ \Illuminate\Support\Str::plural('task', $totalTaskCount) }}
                     </span>
-                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                         {{ $taskStatusOverview->count() }} {{ \Illuminate\Support\Str::plural('status', $taskStatusOverview->count()) }}
                     </span>
                 </div>
@@ -146,7 +146,7 @@
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 px-4 py-3 dark:border-darkblack-400">
                                 <div class="flex min-w-0 items-center gap-3">
                                     <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background-color: {{ $status['color'] }};"></span>
-                                    <span class="truncate text-sm font-semibold text-bgray-700 dark:text-bgray-100">{{ $status['name'] }}</span>
+                                    <span class="truncate text-sm font-semibold text-bgray-700 dark:text-bgray-300">{{ $status['name'] }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-3">
@@ -157,14 +157,14 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                            <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                                 No task statuses available for this project flow.
                             </div>
                         @endforelse
                     </div>
                 </div>
 
-                <div class="{{ $hasChartData ? 'hidden' : '' }} flex h-full min-h-[280px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-empty-state>
+                <div class="{{ $hasChartData ? 'hidden' : '' }} flex h-full min-h-[280px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300" data-project-overview-empty-state>
                     No tasks found for this project yet.
                 </div>
             </div>
@@ -177,10 +177,10 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                         {{ $formatDuration($totalWorkedSeconds) }} worked
                     </span>
-                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-100">
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                         {{ $assigneeCount }} {{ \Illuminate\Support\Str::plural('user', $assigneeCount) }}
                     </span>
                 </div>
@@ -188,7 +188,7 @@
 
             <div class="max-h-[560px] min-h-[320px] overflow-y-auto p-5">
                 @if ($taskAssigneeOverview->isEmpty())
-                    <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                    <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                         No task assignments recorded yet.
                     </div>
                 @else
@@ -208,7 +208,7 @@
 
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">{{ $assignee['name'] }}</p>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">{{ $assignee['count'] }} {{ \Illuminate\Support\Str::plural('task', $assignee['count']) }} involved</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">{{ $assignee['count'] }} {{ \Illuminate\Support\Str::plural('task', $assignee['count']) }} involved</p>
                                     </div>
                                 </div>
 
@@ -217,14 +217,14 @@
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($estimatedSeconds) }}
                                         </p>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Estimated</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">Estimated</p>
                                     </div>
 
                                     <div>
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($workedSeconds) }}
                                         </p>
-                                        <p class="text-xs text-bgray-500 dark:text-bgray-300">Worked</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">Worked</p>
                                     </div>
 
 

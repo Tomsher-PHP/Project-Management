@@ -80,7 +80,7 @@
                         </option>
                     @endforeach
                 </select>
-                <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                <p class="text-sm text-bgray-700 dark:text-bgray-300">
                     Select a completed project only when this project is rework or follow-up work for an earlier delivered project.
                 </p>
                 @error('parent_project_id')
@@ -286,12 +286,12 @@
     @can('project_category.create')
         <x-form-modal modalId="project-category-modal" module="Project Category" formId="projectCategoryInlineForm" action="{{ route('settings.project-categories.store') }}" button="Create Project Category">
             <div>
-                <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
                 <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
 
             <div>
-                <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
                 <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
         </x-form-modal>
@@ -300,12 +300,12 @@
     @can('technology.create')
         <x-form-modal modalId="project-technology-modal" module="Technology" formId="projectTechnologyInlineForm" action="{{ route('settings.technologies.store') }}" button="Create Technology">
             <div>
-                <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
                 <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
 
             <div>
-                <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
                 <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
             </div>
         </x-form-modal>

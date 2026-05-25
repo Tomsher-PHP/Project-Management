@@ -4,7 +4,7 @@
             <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
                 {{ $note->addedBy?->name ?? 'Unknown User' }}
             </h4>
-            <p class="text-sm text-bgray-500 dark:text-bgray-300">
+            <p class="text-sm text-bgray-700 dark:text-bgray-300">
                 {{ $note->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
             </p>
         </div>
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div class="prose mt-4 max-w-none text-sm text-bgray-700 dark:prose-invert dark:text-bgray-100">
+    <div class="prose mt-4 max-w-none text-sm text-bgray-700 dark:prose-invert dark:text-bgray-300">
         {!! $note->description !!}
     </div>
 
@@ -56,7 +56,7 @@
                                 <p class="truncate text-sm font-medium text-bgray-900 dark:text-white">
                                     {{ $attachment->original_name }}
                                 </p>
-                                <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                                <p class="text-xs text-bgray-700 dark:text-bgray-300">
                                     {{ number_format($attachment->file_size / 1024, 1) }} KB
                                 </p>
                             </div>

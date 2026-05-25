@@ -299,7 +299,7 @@
                                         </svg>
                                     </span>
                                     <label for="listSearch" class="w-full">
-                                        <input type="text" id="listSearch" placeholder="Search by name, email, or others..." class="search-input w-full border-none bg-bgray-100 px-0 text-sm tracking-wide text-bgray-600 placeholder:text-sm placeholder:font-medium placeholder:text-bgray-500 focus:outline-none focus:ring-0 dark:bg-darkblack-500" />
+                                        <input type="text" id="listSearch" placeholder="Search by name, email, or others..." class="search-input w-full border-none bg-bgray-100 px-0 text-sm tracking-wide text-bgray-600 placeholder:text-sm placeholder:font-medium placeholder:text-bgray-700 focus:outline-none focus:ring-0 dark:bg-darkblack-500" />
                                     </label>
                                 </div>
                             </div>
@@ -341,7 +341,7 @@
                                     </p>
                                     <div class="relative h-[56px] w-full">
                                         <button onclick="dateFilterAction('#province-filter')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
+                                            <span class="text-base text-bgray-700">State or province</span>
                                             <span>
                                                 <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -370,7 +370,7 @@
                                     </p>
                                     <div class="relative h-[56px] w-full">
                                         <button onclick="dateFilterAction('#amount-filter')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
+                                            <span class="text-base text-bgray-700">State or province</span>
                                             <span>
                                                 <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -399,7 +399,7 @@
                                     </p>
                                     <div class="relative h-[56px] w-full">
                                         <button onclick="dateFilterAction('#date-filter-table')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
+                                            <span class="text-base text-bgray-700">State or province</span>
                                             <span>
                                                 <svg class="stroke-bgray-500 dark:stroke-white" width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M18.6758 5.8186H6.67578C5.57121 5.8186 4.67578 6.71403 4.67578 7.8186V19.8186C4.67578 20.9232 5.57121 21.8186 6.67578 21.8186H18.6758C19.7804 21.8186 20.6758 20.9232 20.6758 19.8186V7.8186C20.6758 6.71403 19.7804 5.8186 18.6758 5.8186Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -433,7 +433,7 @@
                                     </p>
                                     <div class="relative h-[56px] w-full">
                                         <button onclick="dateFilterAction('#trans-filter-tb')" type="button" class="relative flex h-full w-full items-center justify-between rounded-lg bg-bgray-100 px-4 dark:bg-darkblack-500">
-                                            <span class="text-base text-bgray-500">State or province</span>
+                                            <span class="text-base text-bgray-700">State or province</span>
                                             <span>
                                                 <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M5.58203 8.3186L10.582 13.3186L15.582 8.3186" stroke="#A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -694,12 +694,12 @@
                                         <button type="button" class="rounded-lg bg-success-50 px-4 py-1.5 text-xs font-bold text-success-300 dark:bg-darkblack-500 dark:text-bgray-50 lg:px-6 lg:py-2.5 lg:text-sm">
                                             1
                                         </button>
-                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-500 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
+                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-700 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
                                             2
                                         </button>
 
-                                        <span class="text-sm text-bgray-500">. . . .</span>
-                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-500 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
+                                        <span class="text-sm text-bgray-700">. . . .</span>
+                                        <button type="button" class="rounded-lg px-4 py-1.5 text-xs font-bold text-bgray-700 transition duration-300 ease-in-out hover:bg-success-50 hover:text-success-300 dark:hover:bg-darkblack-500 lg:px-6 lg:py-2.5 lg:text-sm">
                                             20
                                         </button>
                                     </div>
@@ -843,7 +843,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
+                                    <span class="text-xs font-medium text-bgray-700">10:00 PM</span>
                                 </div>
                             </div>
                             <div class="flex justify-start">
@@ -857,12 +857,12 @@
                                             <img src="./assets/images/others/mp3-dark.png" class="hidden dark:block" alt="mp3" />
                                         </div>
                                     </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
+                                    <span class="text-xs font-medium text-bgray-700">10:00 PM</span>
                                 </div>
                             </div>
                             <div class="flex justify-end">
                                 <div class="flex items-end space-x-3">
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
+                                    <span class="text-xs font-medium text-bgray-700">10:00 PM</span>
                                     <div class="flex items-center space-x-2">
                                         <div class="rounded-b-lg rounded-l-lg bg-bgray-100 p-3 dark:bg-darkblack-500">
                                             <p class="text-sm font-medium text-bgray-900 dark:text-white">
@@ -887,7 +887,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-medium text-bgray-500">10:00 PM</span>
+                                    <span class="text-xs font-medium text-bgray-700">10:00 PM</span>
                                 </div>
                             </div>
                         </div>

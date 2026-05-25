@@ -27,7 +27,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Date</label>
-                            <div class="rounded-lg border border-gray-200 bg-bgray-50 px-3 py-2.5 text-sm font-medium text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100" data-break-work-request-date-label>
+                            <div class="rounded-lg border border-gray-200 bg-bgray-50 px-3 py-2.5 text-sm font-medium text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-break-work-request-date-label>
                                 --
                             </div>
                             <p class="mt-1 hidden text-xs text-red-500" data-break-work-request-error="work_date"></p>
@@ -53,7 +53,7 @@
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-1">
-                        <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-darkblack-300" data-break-work-request-close>
+                        <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300" data-break-work-request-close>
                             Cancel
                         </button>
 

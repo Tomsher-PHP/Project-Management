@@ -7,7 +7,7 @@
                 </svg>
             </span>
             <h3 class="mt-4 text-lg font-medium text-bgray-900 dark:text-white">No Payments Recorded</h3>
-            <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">There are no payment records for this project yet.</p>
+            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">There are no payment records for this project yet.</p>
         </div>
     @else
         <div class="space-y-4">
@@ -42,13 +42,13 @@
                             </div>
 
                             @if ($payment->notes)
-                                <p class="mt-3 text-sm text-bgray-500 dark:text-bgray-400">{{ $payment->notes }}</p>
+                                <p class="mt-3 text-sm text-bgray-700 dark:text-bgray-400">{{ $payment->notes }}</p>
                             @endif
                         </div>
 
                         @if ($index === 0 && ! $project->trashed() && auth()->user()->can('project.add_payment_status'))
                             <div class="sm:self-start">
-                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:bg-darkblack-600" data-project-payment-edit data-url="{{ route('projects.updateProjectPaymentStatus', ['project' => $project, 'payment' => $payment]) }}" data-amount="{{ $payment->amount }}" data-paid-date="{{ $payment->paid_date ? $payment->paid_date->format('Y-m-d') : '' }}"
+                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-sm font-medium text-bgray-700 shadow-sm transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-600" data-project-payment-edit data-url="{{ route('projects.updateProjectPaymentStatus', ['project' => $project, 'payment' => $payment]) }}" data-amount="{{ $payment->amount }}" data-paid-date="{{ $payment->paid_date ? $payment->paid_date->format('Y-m-d') : '' }}"
                                     data-coverage-start-date="{{ $payment->coverage_start_date ? $payment->coverage_start_date->format('Y-m-d') : '' }}" data-coverage-end-date="{{ $payment->coverage_end_date ? $payment->coverage_end_date->format('Y-m-d') : '' }}" data-notes="{{ $payment->notes }}">
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />

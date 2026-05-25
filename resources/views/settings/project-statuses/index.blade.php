@@ -83,7 +83,7 @@
                                                             </span>
                                                         @endif
                                                     </div>
-                                                    <p class="text-sm text-bgray-500 dark:text-bgray-300">
+                                                    <p class="text-sm text-bgray-700 dark:text-bgray-300">
                                                         {{ $projectStatus->code ?: '--' }}
                                                     </p>
                                                 </div>
@@ -136,23 +136,23 @@
     <x-form-modal modalId="multi-step-modal" module="Project Status" formId="projectStatusForm" action="{{ route('settings.project-statuses.store') }}" button="Create Project Status">
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" data-project-status-name class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400">
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
             <input type="text" name="code" data-project-status-code class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" pattern="[a-z0-9_]+" autocomplete="off">
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Lowercase only. Spaces are converted to underscores.</p>
+            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">Lowercase only. Spaces are converted to underscores.</p>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:border-darkblack-400">
         </div>
 
         <div>
-            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
                 <span>Type <x-red-star /></span>
                 <span class="group relative inline-flex cursor-help">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -171,7 +171,7 @@
         </div>
 
         <div>
-            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
                 <span>Sort Order <x-red-star /></span>
                 <span class="group relative inline-flex cursor-help">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">

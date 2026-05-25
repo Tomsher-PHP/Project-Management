@@ -90,7 +90,7 @@ class ProjectAnalyticsService
             'is_exact' => false,
             'is_early' => false,
             'status_label' => 'No estimate added',
-            'status_text_color' => 'text-bgray-500 dark:text-bgray-300',
+            'status_text_color' => 'text-bgray-700 dark:text-bgray-300',
             'worked_bar_color' => 'bg-green-500',
             'estimated_bar_color' => 'bg-warning-300 dark:bg-bgray-600',
             'difference_seconds' => 0,

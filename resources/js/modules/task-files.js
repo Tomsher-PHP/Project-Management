@@ -299,7 +299,7 @@ const initializeTaskFiles = (root = document) => {
 
         if (panel) {
             panel.innerHTML = `
-                <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                     Loading Notes...
                 </div>
             `;

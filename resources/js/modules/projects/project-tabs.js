@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
             trigger.classList.toggle('border-success-300', isActive);
             trigger.classList.toggle('text-success-300', isActive);
             trigger.classList.toggle('border-transparent', !isActive);
-            trigger.classList.toggle('text-bgray-500', !isActive);
+            trigger.classList.toggle('text-bgray-700', !isActive);
         });
     };
 
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         activeRequestTab = tab;
         panel.innerHTML = `
-            <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+            <div class="flex items-center justify-center rounded-xl border border-dashed border-bgray-300 px-6 py-12 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                 Loading ${tab.charAt(0).toUpperCase() + tab.slice(1)}...
             </div>
         `;

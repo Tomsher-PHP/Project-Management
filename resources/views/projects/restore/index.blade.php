@@ -63,7 +63,7 @@
                                                 <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                                                 <a href="{{ route('projects.restore.show', $project->id) }}"><span class="text-base font-semibold text-bgray-900 dark:text-white">{{ $project->name }}</span></a>
                                             </div>
-                                            <span class="text-xs text-bgray-500">Code: {{ $project->project_code ?? '--' }}</span>
+                                            <span class="text-xs text-bgray-700">Code: {{ $project->project_code ?? '--' }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base text-bgray-600 dark:text-bgray-50 font-semibold">{{ $project->customer->name ?? '--' }}</span>

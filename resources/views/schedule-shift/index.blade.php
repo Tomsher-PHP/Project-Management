@@ -41,7 +41,7 @@
                             <div class="flex items-center gap-1 rounded-md bg-bgray-50 px-2 py-1 dark:bg-darkblack-500">
 
                                 <!-- Previous button -->
-                                <button id="prevWeek" class="px-3 py-2 rounded-md text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                                <button id="prevWeek" class="px-3 py-2 rounded-md text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                                     Previous
                                 </button>
 
@@ -52,7 +52,7 @@
 
                                 <!-- Calendar icon button -->
                                 <div class="relative">
-                                    <button type="button" id="weekPickerBtn" class="flex h-10 w-10 items-center justify-center rounded-md text-bgray-600 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                                    <button type="button" id="weekPickerBtn" class="flex h-10 w-10 items-center justify-center rounded-md text-bgray-600 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -68,7 +68,7 @@
                                 </span>
 
                                 <!-- Next button -->
-                                <button id="nextWeek" class="px-3 py-2 rounded-md text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-100 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                                <button id="nextWeek" class="px-3 py-2 rounded-md text-sm font-medium text-bgray-700 transition hover:bg-white hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
                                     Next
                                 </button>
 

@@ -1,7 +1,7 @@
 @forelse ($previewTasks as $taskName)
     <div class="flex flex-col gap-3 rounded-xl border border-bgray-200 bg-white px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 md:flex-row md:items-center md:justify-between">
         <div class="flex min-w-0 items-start gap-3">
-            <button type="button" class="inline-flex h-8 w-8 shrink-0 cursor-move items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+            <button type="button" class="inline-flex h-8 w-8 shrink-0 cursor-move items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                 </svg>
@@ -9,7 +9,7 @@
 
             <div class="min-w-0">
                 <p class="truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $taskName }}</p>
-                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Task row preview with inline actions and drag handle</p>
+                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">Task row preview with inline actions and drag handle</p>
             </div>
         </div>
 
@@ -32,7 +32,7 @@
         </div>
     </div>
 @empty
-    <div class="rounded-xl border border-dashed border-bgray-300 bg-white px-4 py-4 text-center text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+    <div class="rounded-xl border border-dashed border-bgray-300 bg-white px-4 py-4 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
         No tasks added yet.
     </div>
 @endforelse

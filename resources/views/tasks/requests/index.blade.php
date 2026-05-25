@@ -31,7 +31,7 @@
 
             <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
                 @foreach ($tabs as $status => $label)
-                    <a href="{{ route('tasks.requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-200 dark:hover:bg-darkblack-500' }}">
+                    <a href="{{ route('tasks.requests.index', array_merge(request()->except(['page', 'status']), ['request_status' => $status])) }}" class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                         {{ $label }}
                     </a>
                 @endforeach
@@ -86,7 +86,7 @@
                                             <a href="{{ route('tasks.edit', $task) }}" class="font-semibold text-bgray-900 transition hover:text-success-300 dark:text-white dark:hover:text-success-300">
                                                 {{ $task->name }}
                                             </a>
-                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->code }}</p>
+                                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">{{ $task->code }}</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
@@ -100,7 +100,7 @@
                                             @else
                                                 <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">--</p>
                                             @endif
-                                            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $task->projectMilestone?->name ?? 'No milestone' }}</p>
+                                            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">{{ $task->projectMilestone?->name ?? 'No milestone' }}</p>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
@@ -112,7 +112,7 @@
                                         </span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm text-bgray-600 dark:text-bgray-200">@appDateTime($task->due_date_time)</span>
+                                        <span class="text-sm text-bgray-600 dark:text-bgray-300">@appDateTime($task->due_date_time)</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)
@@ -170,7 +170,7 @@
                     <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                         <div>
                             <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Reject Task Request</h3>
-                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-task-request-reject-task-name></p>
+                            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300" data-task-request-reject-task-name></p>
                         </div>
 
                         <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-task-request-reject-close>
@@ -183,14 +183,14 @@
                         <div data-task-request-reject-hidden-inputs></div>
 
                         <div>
-                            <label for="task-request-rejection-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-200">
+                            <label for="task-request-rejection-reason" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Description <x-red-star />
                             </label>
                             <textarea id="task-request-rejection-reason" name="reason" rows="4" required class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add rejection description"></textarea>
                         </div>
 
                         <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
-                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200" data-task-request-reject-close>
+                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-task-request-reject-close>
                                 Cancel
                             </button>
                             <button type="submit" class="rounded-lg bg-error-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-error-400">

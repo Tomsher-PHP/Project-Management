@@ -9,8 +9,8 @@
                         <h3 class="mt-2 text-xl font-semibold text-bgray-900 dark:text-white">
                             Manage Project Checklists
                         </h3>
-                        <div class="mt-2 flex items-center gap-3 text-sm text-bgray-500 dark:text-bgray-300">
-                            <img src="{{ asset(config('assets.images.default_avatar')) }}" alt="" class="h-9 w-9 rounded-full object-cover" data-project-checklist-member-avatar>
+                        <div class="mt-2 flex items-center gap-3 text-sm text-bgray-700 dark:text-bgray-300">
+                            <x-user-avatar name="Choose a team member" class="h-9 w-9 flex-shrink-0 text-xs" data-project-checklist-member-avatar />
                             <div class="min-w-0">
                                 <p class="truncate font-medium text-bgray-900 dark:text-white" data-project-checklist-member-name>Choose a team member</p>
                                 <p class="truncate" data-project-checklist-member-meta>Drag templates into the workspace and tailor the questions before saving.</p>
@@ -19,7 +19,7 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
+                        <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                             Assigned: <span data-project-checklist-count>0</span>
                         </div>
 
@@ -69,7 +69,7 @@
 
                 <div class="flex flex-col gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:flex-row sm:items-center sm:justify-end sm:px-7">
                     <div class="flex w-full items-center justify-end gap-3 sm:w-auto">
-                        <button type="button" class="inline-flex items-center justify-center rounded-lg border border-bgray-200 px-4 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 dark:border-darkblack-400 dark:text-bgray-200 dark:hover:bg-darkblack-500" data-project-checklist-close>
+                        <button type="button" class="inline-flex items-center justify-center rounded-lg border border-bgray-200 px-4 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-bgray-300 hover:bg-bgray-50 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:bg-darkblack-500" data-project-checklist-close>
                             Cancel
                         </button>
                         <button type="button" class="inline-flex items-center justify-center rounded-lg bg-success-300 px-5 py-2 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-70" data-project-checklist-save>

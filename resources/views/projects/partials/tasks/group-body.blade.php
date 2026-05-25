@@ -1,4 +1,4 @@
-@php
+    @php
     $pagination = $pagination ?? [
         'page' => 1,
         'next_page' => null,
@@ -15,15 +15,15 @@
             <table class="min-w-full border-separate border-spacing-0">
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task</th>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Assignee</th>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Status</th>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Type</th>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Task Mode</th>
-                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-100">Estimate Time</th>
-                        <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Due Date</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Task</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Assignee</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Status</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Type</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Task Mode</th>
+                        <th class="border-b border-r border-bgray-200 border-r-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:border-r-darkblack-400 dark:text-bgray-300">Estimate Time</th>
+                        <th class="border-b border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-300">Due Date</th>
                         @if ($showTaskActionColumn)
-                            <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-100">Actions</th>
+                            <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-b-darkblack-400 dark:text-bgray-300">Actions</th>
                         @endif
                     </tr>
                 </thead>

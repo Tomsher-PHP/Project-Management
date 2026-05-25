@@ -97,7 +97,7 @@ const renderState = (elements, state) => {
     if (elements.timer) {
         elements.timer.textContent = formatTime(state.seconds);
         elements.timer.classList.remove(
-            'text-bgray-500',
+            'text-bgray-700',
             'dark:text-bgray-300',
             'text-success-400',
             'dark:text-success-300',
@@ -106,7 +106,7 @@ const renderState = (elements, state) => {
         );
 
         if (parseSeconds(state.estimatedSeconds) <= 0) {
-            elements.timer.classList.add('text-bgray-500', 'dark:text-bgray-300');
+            elements.timer.classList.add('text-bgray-700', 'dark:text-bgray-300');
         } else if (parseSeconds(state.seconds) <= parseSeconds(state.estimatedSeconds)) {
             elements.timer.classList.add('text-success-400', 'dark:text-success-300');
         } else {

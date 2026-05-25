@@ -15,7 +15,7 @@
         </div>
 
         <div class="flex items-center gap-2 self-start md:self-auto">
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-500 transition duration-200 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:bg-darkblack-500" data-project-checklist-toggle data-checklist-index="{{ $checklistIndex }}" aria-label="Toggle checklist">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-700 transition duration-200 hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:bg-darkblack-500" data-project-checklist-toggle data-checklist-index="{{ $checklistIndex }}" aria-label="Toggle checklist">
                 <svg class="h-5 w-5 transition-transform duration-200 {{ $isExpanded ? 'rotate-180' : '' }}" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>

@@ -9,7 +9,7 @@
                 <img src="{{ asset(config('assets.images.chart_no_data')) }}" alt="No data" class="mx-auto h-32 w-auto opacity-80">
             </div>
             <h4 class="text-sm font-semibold text-bgray-900 dark:text-white">No priority data</h4>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">
+            <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-400">
                 No non-completed tasks found for the selected filters.
             </p>
         </div>

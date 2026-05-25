@@ -117,11 +117,11 @@
                                                             </span>
                                                         @endif
                                                     </div>
-                                                    <p class="mt-1 text-sm font-medium text-bgray-500 dark:text-bgray-300">
+                                                    <p class="mt-1 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                                         {{ $record->code }}
                                                     </p>
                                                     @if ($currentTab === 'modes')
-                                                        <p class="mt-1.5 text-sm text-bgray-500 dark:text-bgray-300">
+                                                        <p class="mt-1.5 text-sm text-bgray-700 dark:text-bgray-300">
                                                             {{ \Illuminate\Support\Str::limit($record->description ?: 'No description added.', 50, '...') }}
                                                         </p>
                                                     @endif
@@ -211,12 +211,12 @@
 
     <x-form-modal modalId="multi-step-modal" :module="$entityLabel" formId="taskSettingsForm" :action="$storeRoute" :button="'Create ' . $entityLabel">
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
         </div>
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Code <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Code <x-red-star /></label>
             <input type="text" name="code" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-target required>
         </div>
 
@@ -246,7 +246,7 @@
                 @enderror
             </div>
             <div>
-                <label for="type" class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+                <label for="type" class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
                     <span>Type <x-red-star /></span>
                     <span class="group relative inline-flex cursor-help">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -273,7 +273,7 @@
         @if ($currentTab === 'modes')
             <div>
                 <div class="mb-2.5 flex items-center justify-between gap-3">
-                    <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                    <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                     <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
                 </div>
                 <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
@@ -281,12 +281,12 @@
         @endif
 
         <div>
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
             <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
         </div>
 
         <div>
-            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-500 dark:text-bgray-50">
+            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
                 <span>Sort Order <x-red-star /></span>
                 <span class="group relative inline-flex cursor-help">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">

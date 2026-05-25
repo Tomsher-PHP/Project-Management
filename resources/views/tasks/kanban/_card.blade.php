@@ -23,7 +23,7 @@
     $timerCurrentSeconds = (int) ($task->kanban_timer_current_seconds ?? $totalTrackedSeconds);
     $timerStartedAt = $task->kanban_timer_started_at_iso;
     $isTimerRunning = (bool) ($task->kanban_timer_is_running ?? false);
-    $timerTimeColorClass = (string) ($task->kanban_timer_time_color_class ?? 'text-bgray-500 dark:text-bgray-300');
+    $timerTimeColorClass = (string) ($task->kanban_timer_time_color_class ?? 'text-bgray-700 dark:text-bgray-300');
     $startRestriction = $authUser ? $taskTimerService->getStartRestriction($task, $authUser) : ['message' => 'Not allowed to start timer for this task.'];
     $canStartTimer = $authUser ? $startRestriction === null || in_array($startRestriction['reason'] ?? null, ['running_timer_exists', 'already_running'], true) : false;
     $canStopTimer = $authUser ? $taskTimerService->isAllowedToStop($task, $authUser) : false;
@@ -86,7 +86,7 @@
                         @endif
 
                         @if (($project?->project_flow ?? null) === 'agile' && $milestoneName)
-                            <span class="shrink-0 text-bgray-900 dark:text-bgray-500">></span>
+                            <span class="shrink-0 text-bgray-900 dark:text-bgray-700">></span>
                             <span class="truncate" title="{{ $milestoneName }}">{{ $limitText($milestoneName, 16) }}</span>
                         @endif
                     </div>
@@ -132,16 +132,16 @@
                 <span class="shrink-0 text-bgray-600 dark:text-bgray-300" title="Estimated time: {{ $estimatedTime }}">
                     {{ $estimatedTime }}
                 </span>
-                <span class="text-bgray-300 dark:text-bgray-500">|</span>
+                <span class="text-bgray-300 dark:text-bgray-700">|</span>
 
                 <div class="flex items-center gap-2" data-task-timer-root data-task-id="{{ $task->id }}" data-task-timer-persist-display="true">
                     <div class="text-[12px] font-semibold {{ $timerTimeColorClass }}" data-task-timer-display data-task-id="{{ $task->id }}" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ $estimatedSeconds }}" data-compare-estimated="true" title="Worked time">
                         <span data-task-timer-text>{{ gmdate('H:i:s', $timerCurrentSeconds) }}</span>
                     </div>
-                    <span class="text-bgray-300 dark:text-bgray-500">|</span>
+                    <span class="text-bgray-300 dark:text-bgray-700">|</span>
 
                     <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isTimerRunning ? 1 : 0 }}" data-current-user-id="{{ $authUserId ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $assigneeName ?? 'the assignee' }}" data-task-name="{{ $taskName }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-start-disabled="{{ $canStartTimer ? 0 : 1 }}" data-can-control-timer="{{ $canControlTimer ? 1 : 0 }}" data-disabled-variant="soft" data-button-style="icon" data-enable-running-indicator="1"
-                        data-start-switch-enabled="1" @disabled($isTimerDisabled) title="{{ $timerButtonTitle }}" aria-label="{{ $isTimerRunning ? 'Stop timer' : 'Start timer' }}" class="task-timer-btn inline-flex h-7 w-7 items-center justify-center rounded-md transition {{ $isTimerRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isTimerDisabled ? 'cursor-not-allowed bg-bgray-200 text-bgray-500 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }} {{ $isTimerRunning ? 'task-timer-btn--running' : '' }}">
+                        data-start-switch-enabled="1" @disabled($isTimerDisabled) title="{{ $timerButtonTitle }}" aria-label="{{ $isTimerRunning ? 'Stop timer' : 'Start timer' }}" class="task-timer-btn inline-flex h-7 w-7 items-center justify-center rounded-md transition {{ $isTimerRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isTimerDisabled ? 'cursor-not-allowed bg-bgray-200 text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }} {{ $isTimerRunning ? 'task-timer-btn--running' : '' }}">
                         @if ($isTimerRunning)
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="2" y="2" width="8" height="8" rx="1.5" />

@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between gap-4">
         <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Notes History</h3>
         <div class="flex flex-wrap items-center justify-end gap-3">
-            <span id="task-notes-count" data-total="{{ $taskNotes->total() }}" class="text-sm text-bgray-500 dark:text-bgray-300">{{ $taskNotes->total() }} Notes</span>
+            <span id="task-notes-count" data-total="{{ $taskNotes->total() }}" class="text-sm text-bgray-700 dark:text-bgray-300">{{ $taskNotes->total() }} Notes</span>
 
             @if (!empty($canCreate))
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400" data-task-note-modal-open>

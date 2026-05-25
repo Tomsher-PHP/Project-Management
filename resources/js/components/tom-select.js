@@ -11,12 +11,12 @@ export function initTomSelect(root = document) {
             'text-bgray-600',
             'dark:border-darkblack-400',
             'dark:bg-darkblack-500',
-            'dark:text-bgray-200'
+            'dark:text-bgray-300'
         );
         instance.control.classList.remove('bg-white');
 
         instance.control.querySelectorAll('.item, input, .ts-control > div').forEach(node => {
-            node.classList.add('text-bgray-600', 'dark:text-bgray-200');
+            node.classList.add('text-bgray-600', 'dark:text-bgray-300');
         });
     };
 

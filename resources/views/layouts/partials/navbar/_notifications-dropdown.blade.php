@@ -25,12 +25,12 @@
                                     <strong class="text-bgray-900 dark:text-white">{{ $notification->data['title'] ?? 'Notification' }}</strong>
                                     {{ $notification->data['message'] ?? '' }}
                                 </p>
-                                <span class="text-xs font-medium text-bgray-500">{{ $notification->created_at->diffForHumans() }}</span>
+                                <span class="text-xs font-medium text-bgray-700">{{ $notification->created_at->diffForHumans() }}</span>
                             </div>
                         </a>
                     </li>
                 @empty
-                    <li id="no-notifications" class="py-4 pl-6 text-sm text-bgray-500 dark:text-bgray-400">
+                    <li id="no-notifications" class="py-4 pl-6 text-sm text-bgray-700 dark:text-bgray-400">
                         No notifications
                     </li>
                 @endforelse

@@ -796,7 +796,7 @@ const showTaskDetailLoading = (modal) => {
 
     content.innerHTML = `
         <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
-            <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-500 dark:text-bgray-300">
+            <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                 Loading task details...
             </div>
         </div>

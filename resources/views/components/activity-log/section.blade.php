@@ -51,7 +51,7 @@
                             <p class="text-sm font-semibold text-bgray-900 dark:text-white">
                                 {{ $activity->causer?->name ?? 'System' }}
                             </p>
-                            <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                            <p class="text-xs text-bgray-700 dark:text-bgray-300">
                                 {{ $activity->created_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) }}
                             </p>
                         </div>
@@ -67,12 +67,12 @@
                         </div>
                     </div>
 
-                    <p class="text-sm text-bgray-700 dark:text-bgray-200">
+                    <p class="text-sm text-bgray-700 dark:text-bgray-300">
                         {{ $summary }}
                     </p>
                 </div>
             @empty
-                <div class="rounded-lg border border-dashed border-bgray-300 px-4 py-6 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+                <div class="rounded-lg border border-dashed border-bgray-300 px-4 py-6 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                     {{ $emptyMessage }}
                 </div>
             @endforelse

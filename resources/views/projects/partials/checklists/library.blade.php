@@ -15,7 +15,7 @@
                             <span class="inline-flex items-center rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-success-600 dark:bg-darkblack-500 dark:text-success-300">Selected</span>
                         @endif
                     </div>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">{{ $questionsCount }} {{ $questionsCount === 1 ? 'question' : 'questions' }}</p>
+                    <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">{{ $questionsCount }} {{ $questionsCount === 1 ? 'question' : 'questions' }}</p>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -24,7 +24,7 @@
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl {{ $isSelected ? 'bg-success-100 text-success-500 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200' }} transition duration-200 hover:bg-success-50 hover:text-success-500" data-project-checklist-library-add data-template-id="{{ $template['id'] }}" {{ $isSelected ? 'disabled' : '' }} aria-label="Add checklist template">
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl {{ $isSelected ? 'bg-success-100 text-success-500 dark:bg-darkblack-500 dark:text-success-300' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' }} transition duration-200 hover:bg-success-50 hover:text-success-500" data-project-checklist-library-add data-template-id="{{ $template['id'] }}" {{ $isSelected ? 'disabled' : '' }} aria-label="Add checklist template">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -34,7 +34,7 @@
 
             <div class="mt-3 space-y-2 {{ $isExpanded ? '' : 'hidden' }}">
                 @foreach ($preview as $index => $question)
-                    <div class="rounded-xl bg-bgray-50 px-3 py-2 text-xs text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-200">
+                    <div class="rounded-xl bg-bgray-50 px-3 py-2 text-xs text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">
                         {{ $index + 1 }}. {{ $question['question'] }}
                     </div>
                 @endforeach

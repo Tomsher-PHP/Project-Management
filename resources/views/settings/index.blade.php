@@ -13,7 +13,7 @@
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
 
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -53,7 +53,7 @@
                     <a href="{{ route('settings.designations.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -88,7 +88,7 @@
                     <a href="{{ route('settings.shifts.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -121,7 +121,7 @@
                     <a href="{{ route('settings.technologies.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -155,7 +155,7 @@
                     <a href="{{ route('settings.project-categories.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -190,7 +190,7 @@
                     <a href="{{ route('settings.industries.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -225,7 +225,7 @@
                     <a href="{{ route('settings.project-statuses.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -258,7 +258,7 @@
                     <a href="{{ route('settings.project-stages.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -295,7 +295,7 @@
                     <a href="{{ auth()->user()->can('agile_milestone.view') ? route('settings.agile-milestones.index') : route('settings.agile-sprints.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -329,7 +329,7 @@
                     <a href="{{ route('settings.task-statuses.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -366,7 +366,7 @@
                     <a href="{{ route('settings.kpis.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -408,7 +408,7 @@
                     <a href="{{ route('settings.checklists.index') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />
@@ -450,7 +450,7 @@
                     <a href="{{ route('settings.configurations.edit') }}" class="block group transition duration-300">
                         <div class="relative rounded-lg bg-white p-6 dark:bg-darkblack-600 hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
                             <span class="absolute right-6 top-6">
-                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-200" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg width="24" height="25" class="text-bgray-400 dark:text-bgray-300" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M12 14.3066C10.8954 14.3066 10 13.4144 10 12.3137C10 11.2131 10.8954 10.3208 12 10.3208C13.1046 10.3208 14 11.2131 14 12.3137C14 13.4144 13.1046 14.3066 12 14.3066Z" stroke-width="1.5" />
                                     <path d="M20 14.3066C18.8954 14.3066 18 13.4144 18 12.3137C18 11.2131 18.8954 10.3208 20 10.3208C21.1046 10.3208 22 11.2131 22 12.3137C22 13.4144 21.1046 14.3066 20 14.3066Z" stroke-width="1.5" />
                                     <path d="M4 14.3066C2.89543 14.3066 2 13.4144 2 12.3137C2 11.2131 2.89543 10.3208 4 10.3208C5.10457 10.3208 6 11.2131 6 12.3137C6 13.4144 5.10457 14.3066 4 14.3066Z" stroke-width="1.5" />

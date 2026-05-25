@@ -42,7 +42,7 @@
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-milestone-builder-count>{{ $editableProjectModules->count() }}</span>
                             </div>
 
@@ -62,7 +62,7 @@
                                     </p>
                                 </div>
 
-                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-reset-search>
+                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-reset-search>
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M3 10a7 7 0 1112.95 3.95l1.55 1.55a1 1 0 01-1.414 1.414l-1.55-1.55A7 7 0 013 10zm7-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                                     </svg>
@@ -77,7 +77,7 @@
                                             <input type="hidden" name="color" value="{{ $milestone->color ?: '#22C55E' }}">
                                             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div class="flex items-start gap-3">
-                                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
+                                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
                                                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                                         </svg>
@@ -87,9 +87,9 @@
                                                         <div class="flex flex-wrap items-center gap-2">
                                                             <span class="inline-flex h-3.5 w-3.5 rounded-sm" style="background-color: {{ $milestone->color ?: '#22C55E' }}" data-project-milestone-builder-color-dot></span>
                                                             <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-milestone-builder-title>{{ $milestone->name }}</h5>
-                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-milestone-builder-order>{{ $milestone->sort_order }}</span>
+                                                            <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-order>{{ $milestone->sort_order }}</span>
                                                         </div>
-                                                        <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-milestone-builder-status>
+                                                        <p class="mt-2 text-xs font-medium text-bgray-700 dark:text-bgray-300" data-project-milestone-builder-status>
                                                             Saved
                                                         </p>
                                                     </div>
@@ -115,13 +115,13 @@
                                             <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-milestone-builder-body>
                                                 <div class="grid gap-4 xl:grid-cols-2">
                                                 <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <x-red-star /></label>
+                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
                                                     <input type="text" name="name" value="{{ $milestone->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                                     <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
                                                 </div>
 
                                                 <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Owner</label>
+                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Owner</label>
                                                     <select name="owner_id" class="tom-select w-full" data-sort="0">
                                                         <option value="">Select owner</option>
                                                         @foreach ($assignableUsers as $assignableUser)
@@ -142,7 +142,7 @@
                                                 </div>
 
                                                 <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
+                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Date Range</label>
                                                     <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-milestone-builder-date-range>
                                                     <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
                                                     <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
@@ -152,7 +152,7 @@
 
                                                 <div class="xl:col-span-2">
                                                     <div class="mb-2 flex items-center justify-between gap-3">
-                                                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
+                                                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
                                                         <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
                                                     </div>
                                                     <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
@@ -169,7 +169,7 @@
                                                 </svg>
                                             </span>
                                             <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Milestones Selected Yet</h5>
-                                            <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                                            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                                                 Drag one or more items from the milestone library to start building this project workspace.
                                             </p>
                                         </div>
@@ -183,7 +183,7 @@
                                                 </span>
                                                 <div>
                                                     <p class="text-sm font-semibold">Drag here for more milestones</p>
-                                                    <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
+                                                    <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
                                                 </div>
                                             </div>
                                         @endif
@@ -225,7 +225,7 @@
                                                             {{ $libraryModule->name }}
                                                         </h5>
                                                     </div>
-                                                    <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                                                    <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
                                                         {{ $libraryModule->description ?: 'No library description added yet.' }}
                                                     </p>
                                                 </div>
@@ -270,20 +270,20 @@
                             <div class="overflow-y-auto px-6 py-6 sm:px-7">
                                 <div class="grid gap-6 md:grid-cols-2">
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
                                         <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="name"></p>
                                     </div>
 
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
                                         <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="color"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
                                         <div class="mb-2.5 flex items-center justify-between gap-3">
-                                            <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                                            <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                                             <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-library-description-count>0</span>/100</span>
                                         </div>
                                         <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
@@ -291,7 +291,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
                                         <input type="number" name="sort_order" min="1" step="1" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="sort_order"></p>
                                     </div>
@@ -325,13 +325,13 @@
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Build Project Sprints</h3>
-                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                 Add library sprints into a milestone work area, then adjust the live sprint details your team needs.
                             </p>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-sprint-builder-count>0</span>
                             </div>
 
@@ -351,12 +351,12 @@
                                             Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                    <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                         Drag needed sprints here, then fine-tune each sprint directly inside this milestone workspace.
                                     </p>
                                 </div>
 
-                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-reset-search>
+                                <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-reset-search>
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M3 10a7 7 0 1112.95 3.95l1.55 1.55a1 1 0 01-1.414 1.414l-1.55-1.55A7 7 0 013 10zm7-5a5 5 0 100 10 5 5 0 000-10z" clip-rule="evenodd" />
                                     </svg>
@@ -402,7 +402,7 @@
                                                             {{ $librarySprint->name }}
                                                         </h5>
                                                     </div>
-                                                    <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                                                    <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
                                                         {{ $librarySprint->description ?: 'No library description added yet.' }}
                                                     </p>
                                                 </div>
@@ -447,20 +447,20 @@
                             <div class="overflow-y-auto px-6 py-6 sm:px-7">
                                 <div class="grid gap-6 md:grid-cols-2">
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
                                         <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="name"></p>
                                     </div>
 
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Color</label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
                                         <input type="color" name="color" value="#22C55E" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="color"></p>
                                     </div>
 
                                     <div class="md:col-span-2">
                                         <div class="mb-2.5 flex items-center justify-between gap-3">
-                                            <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                                            <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                                             <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-library-description-count>0</span>/100</span>
                                         </div>
                                         <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
@@ -468,7 +468,7 @@
                                     </div>
 
                                     <div>
-                                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sort Order <x-red-star /></label>
+                                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sort Order <x-red-star /></label>
                                         <input type="number" name="sort_order" min="1" step="1" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="sort_order"></p>
                                     </div>

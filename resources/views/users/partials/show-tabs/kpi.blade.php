@@ -36,7 +36,7 @@
 
             <hr class="my-4 border-gray-200 dark:border-darkblack-400">
         @empty
-            <div class="text-bgray-500 dark:text-darkblack-300">
+            <div class="text-bgray-700 dark:text-darkblack-300">
                 No KPIs assigned to this user.
             </div>
         @endforelse

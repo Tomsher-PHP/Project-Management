@@ -7,7 +7,7 @@
                 </svg>
             </span>
             <h3 class="mt-4 text-lg font-medium text-bgray-900 dark:text-white">No Checklists Assigned</h3>
-            <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">There are no checklists assigned to any team members in this project.</p>
+            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">There are no checklists assigned to any team members in this project.</p>
         </div>
     @else
         <div class="space-y-4">
@@ -19,10 +19,10 @@
                             <x-user-avatar :name="$user->name" :image="$user->profile_image_url ?: null" class="h-12 w-12 border border-bgray-200 dark:border-darkblack-400" />
                             <div class="text-left">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">{{ $user->name }}</h4>
-                                <p class="mt-0.5 text-sm font-medium text-bgray-500 dark:text-bgray-300">{{ $user->designation_name ?? $user->email }}</p>
+                                <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $user->designation_name ?? $user->email }}</p>
                             </div>
                         </div>
-                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bgray-50 text-bgray-500 dark:bg-darkblack-500 dark:text-bgray-300">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bgray-50 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                             <svg class="h-5 w-5 transition-transform duration-200" :class="expandedUser ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
@@ -43,7 +43,7 @@
                                             </div>
                                             <div class="text-left">
                                                 <h5 class="text-base font-semibold text-bgray-900 dark:text-white">{{ $checklist->title }}</h5>
-                                                <p class="mt-0.5 text-xs text-bgray-500 dark:text-bgray-300">{{ $checklist->items->count() }} {{ $checklist->items->count() === 1 ? 'question' : 'questions' }}</p>
+                                                <p class="mt-0.5 text-xs text-bgray-700 dark:text-bgray-300">{{ $checklist->items->count() }} {{ $checklist->items->count() === 1 ? 'question' : 'questions' }}</p>
                                             </div>
                                         </div>
                                         <span class="text-bgray-400 transition-transform duration-200" :class="expandedChecklist ? 'rotate-180' : ''">
@@ -60,7 +60,7 @@
                                                     <div class="flex h-5 items-center mt-0.5">
                                                         <input type="checkbox" id="item-{{ $item->id }}" class="h-5 w-5 cursor-pointer rounded border-bgray-300 text-success-400 focus:ring-success-400 disabled:opacity-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:ring-offset-darkblack-600 dark:checked:bg-success-400" data-project-checklist-item-toggle data-url="{{ route('projects.checklists.toggleItem', ['project' => $project, 'itemId' => $item->id]) }}" {{ $item->status ? 'checked' : '' }} @disabled($project->trashed() || $user->id !== auth()->id())>
                                                     </div>
-                                                    <label for="item-{{ $item->id }}" class="cursor-pointer text-sm font-medium leading-relaxed text-bgray-800 dark:text-bgray-100">
+                                                    <label for="item-{{ $item->id }}" class="cursor-pointer text-sm font-medium leading-relaxed text-bgray-800 dark:text-bgray-300">
                                                         {{ $item->question }}
                                                     </label>
                                                 </div>

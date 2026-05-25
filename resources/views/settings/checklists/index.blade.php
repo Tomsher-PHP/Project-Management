@@ -19,21 +19,21 @@
             <div class="grid gap-3 md:grid-cols-3">
 
                 <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">Total</span>
+                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Total</span>
                     <span class="text-lg font-bold text-bgray-900 dark:text-white">
                         {{ $stats['total'] ?? 0 }}
                     </span>
                 </div>
 
                 <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">Active</span>
+                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Active</span>
                     <span class="text-lg font-bold text-success-400">
                         {{ $stats['active'] ?? 0 }}
                     </span>
                 </div>
 
                 <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">System</span>
+                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">System</span>
                     <span class="text-lg font-bold text-warning-300">
                         {{ $stats['system'] ?? 0 }}
                     </span>
@@ -50,14 +50,14 @@
     <x-form-modal modalId="multi-step-modal" module="Checklist Template" formId="checklistForm" action="{{ route('settings.checklists.store') }}" button="Create Checklist Template" method="POST">
 
         <div class="md:col-span-2">
-            <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Name <x-red-star /></label>
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. Website Launch Checklist">
         </div>
 
         <div class="md:col-span-2" data-checklist-question-builder>
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <label class="block text-left text-sm text-bgray-500 dark:text-bgray-50">Questions <x-red-star /></label>
+                    <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
                 </div>
 
                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-checklist-question-add>

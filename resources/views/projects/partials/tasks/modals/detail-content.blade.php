@@ -6,8 +6,8 @@
         && $authUser->can('task.view')
         && $authUser->can('view', $task);
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
-    $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
-    $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200';
+    $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
+    $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
     $isPlacementLockedForSubtask = $canEditTask && filled($task->parent_task_id);
     $taskPlacementOptions = [
         'milestones' => $projectMilestones
@@ -30,7 +30,7 @@
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Manage Task</h3>
-            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                 {{ $isRejectedTask ? 'Rejected tasks are read-only and cannot be updated.' : 'Review and update the working details for this task.' }}
             </p>
         </div>
@@ -66,7 +66,7 @@
             <div class="grid gap-6 md:grid-cols-2">
                 @unless ($isLinearFlow)
                     <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Milestone</label>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Milestone</label>
                         <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-detail-module-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
                             <option value="">Select milestone or leave empty for backlog</option>
                             @foreach ($projectMilestones as $projectMilestone)
@@ -82,7 +82,7 @@
                     </div>
 
                     <div>
-                        <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Sprint</label>
+                        <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Sprint</label>
                         <select name="project_sprint_id" class="tom-select w-full" data-sort="0" data-project-task-detail-sprint-select @disabled(!$canEditTask || $isPlacementLockedForSubtask)>
                             <option value="">Select sprint or leave empty for backlog</option>
                             @foreach ($projectSprints as $projectSprint)
@@ -96,16 +96,16 @@
                         @if ($isPlacementLockedForSubtask)
                             <input type="hidden" name="project_sprint_id" value="{{ $task->project_sprint_id ?? '' }}">
                         @endif
-                        <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300" data-project-task-detail-placement-hint></p>
+                        <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300" data-project-task-detail-placement-hint></p>
                         @if ($isPlacementLockedForSubtask)
-                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Subtasks inherit milestone and sprint from the parent task.</p>
+                            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">Subtasks inherit milestone and sprint from the parent task.</p>
                         @endif
                         <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="project_sprint_id"></p>
                     </div>
                 @endunless
 
                 <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Parent Task</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Parent Task</label>
                     <select name="parent_task_id" class="tom-select w-full" data-sort="0" data-parent-task-select @disabled(!$canEditTask)>
                         <option value="">Select parent task</option>
                         @foreach ($parentTaskOptions as $parentTaskOption)
@@ -118,19 +118,19 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Name <x-red-star /></label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Task Name <x-red-star /></label>
                     <input type="text" name="name" value="{{ $task->name }}" class="{{ $textInputClasses }}" @disabled(!$canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="name"></p>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Description</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
                     <textarea name="description" rows="4" class="{{ $textareaClasses }}" @disabled(!$canEditTask)>{{ $task->description }}</textarea>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="description"></p>
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Status</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Status</label>
                     <select name="status_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         <option value="">Select status</option>
                         @foreach ($taskStatuses as $status)
@@ -143,7 +143,7 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Assignee</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Assignee</label>
                     <select name="current_assignee_id" class="tom-select w-full" data-sort="0" @disabled(!$canEditTask)>
                         <option value="">Select assignee</option>
                         @foreach ($assignableUsers as $assignableUser)
@@ -156,7 +156,7 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Type</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Task Type</label>
                     <select name="task_type_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         @foreach ($taskTypeOptions as $option)
                             <option value="{{ $option->id }}" {{ $task->task_type_id === $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
@@ -166,7 +166,7 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Task Mode</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Task Mode</label>
                     <select name="task_mode_id" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         @foreach ($taskModeOptions as $option)
                             <option value="{{ $option->id }}" {{ $task->task_mode_id === $option->id ? 'selected' : '' }}>{{ $option->name }}</option>
@@ -176,7 +176,7 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Priority</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Priority</label>
                     <select name="priority" class="tom-select-no-search w-full" @disabled(!$canEditTask)>
                         @foreach ($taskPriorityOptions as $option)
                             <option value="{{ $option['value'] }}" {{ $task->priority === $option['value'] ? 'selected' : '' }}>{{ $option['label'] }}</option>
@@ -191,13 +191,13 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Due Date</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Due Date</label>
                     <input type="text" name="due_date_time" value="{{ $task->due_date_time?->copy()->timezone(config('constants.timezone'))->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date_time"></p>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="mb-2.5 block text-left text-sm text-bgray-500 dark:text-bgray-50">Tags</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Tags</label>
                     <select name="tag_ids[]" class="tom-select-tags w-full" multiple @disabled(!$canEditTask)>
                         @foreach ($tagOptions as $tagOption)
                             <option value="{{ $tagOption->id }}" {{ in_array((string) $tagOption->id, $selectedTagIds, true) ? 'selected' : '' }}>
@@ -209,7 +209,7 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-100">
+                    <label class="inline-flex items-center gap-3 rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-3 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                         <input type="hidden" name="is_billable" value="0">
                         <input type="checkbox" name="is_billable" value="1" class="h-4 w-4 rounded border-gray-300 text-success-300 focus:ring-success-300" {{ $task->is_billable ? 'checked' : '' }} @disabled(!$canEditTask)>
                         <span>Billable task</span>
@@ -226,11 +226,11 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-400 dark:text-bgray-300">Summary</p>
                         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Estimated</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Estimated</p>
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
                             </div>
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">Actual</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Actual</p>
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->actual_time_formatted }}</p>
                             </div>
                         </div>
@@ -240,23 +240,23 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-400 dark:text-bgray-300">Context</p>
                         <dl class="mt-4 space-y-3 text-sm">
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Milestone</dt>
+                                <dt class="text-bgray-700 dark:text-bgray-300">Milestone</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Sprint</dt>
+                                <dt class="text-bgray-700 dark:text-bgray-300">Sprint</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectSprint?->name ?? '--' }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Created By</dt>
+                                <dt class="text-bgray-700 dark:text-bgray-300">Created By</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->addedBy?->name ?? '--' }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Created At</dt>
+                                <dt class="text-bgray-700 dark:text-bgray-300">Created At</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ \App\Providers\AppServiceProvider::formatAppDateTime($task->created_at) }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-bgray-500 dark:text-bgray-300">Updated At</dt>
+                                <dt class="text-bgray-700 dark:text-bgray-300">Updated At</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at) }}</dd>
                             </div>
                         </dl>

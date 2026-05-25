@@ -101,7 +101,7 @@ const renderWorkspaceEmptyState = () => `
             </span>
             <div>
                 <p class="text-sm font-semibold text-bgray-900 dark:text-white">Drop checklist templates here</p>
-                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">You can also add a blank checklist and build the questions manually.</p>
+                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">You can also add a blank checklist and build the questions manually.</p>
             </div>
         </div>
     </div>
@@ -150,7 +150,7 @@ const renderWorkspace = async () => {
 
     if (state.loading) {
         workspace.innerHTML = `
-            <div class="flex h-full min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="flex h-full min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 Loading checklist assignments...
             </div>
         `;
@@ -176,7 +176,7 @@ const renderLibrary = async () => {
 
     if (state.loading) {
         library.innerHTML = `
-            <div class="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white px-4 text-sm font-medium text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white px-4 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 Loading checklist library...
             </div>
         `;
@@ -199,7 +199,7 @@ const renderLibrary = async () => {
 
     if (!filteredTemplates.length) {
         library.innerHTML = `
-            <div class="rounded-2xl border border-dashed border-bgray-200 bg-white px-5 py-10 text-center text-sm text-bgray-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="rounded-2xl border border-dashed border-bgray-200 bg-white px-5 py-10 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 No checklist templates match your search.
             </div>
         `;
@@ -244,7 +244,18 @@ const renderMemberSummary = () => {
     const saveButton = modal.querySelector('[data-project-checklist-save]');
 
     if (avatar) {
-        avatar.src = state.member?.avatar || avatar.getAttribute('src') || '';
+        const memberName = state.member?.name || 'Choose a team member';
+        const initials = memberName
+            .trim()
+            .replace(/\s+/g, '')
+            .slice(0, 2)
+            .toUpperCase() || 'U';
+
+        if (state.member?.avatar) {
+            avatar.innerHTML = `<img src="${state.member.avatar}" alt="${memberName}" class="h-full w-full rounded-full object-cover">`;
+        } else {
+            avatar.innerHTML = `<span>${initials}</span>`;
+        }
     }
 
     if (name) {
@@ -695,7 +706,7 @@ const bindChecklistListeners = () => {
                 if (!response.ok || !result.success) {
                     throw new Error(result.message || 'Failed to update item.');
                 }
-                
+
                 Alert.success(result.message || 'Checklist item updated successfully.');
             } catch (error) {
                 toggleInput.checked = !isCompleted;

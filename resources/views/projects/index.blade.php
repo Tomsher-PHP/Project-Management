@@ -103,13 +103,13 @@
                                                         <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                             {{ $project->name }}
                                                         </h4>
-                                                        <p class="text-sm text-bgray-500">
+                                                        <p class="text-sm text-bgray-700">
                                                             Code: {{ $project->project_code ?? '--' }}
                                                         </p>
                                                     </a>
                                                     <div class="mt-3 w-full">
                                                         <div class="mb-1 flex items-center justify-between gap-3">
-                                                            <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                                            <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
                                                                 Timeline
                                                             </span>
                                                             <span class="text-xs font-semibold {{ $project->project_timeline['text_class'] }}">
@@ -121,7 +121,7 @@
                                                             <div class="h-full rounded-full {{ $project->project_timeline['bar_class'] }}" style="width: {{ $project->project_timeline['percentage'] }}%;"></div>
                                                         </div>
 
-                                                        <div class="mt-1 flex items-center justify-between gap-3 text-[11px] text-bgray-500 dark:text-bgray-200">
+                                                        <div class="mt-1 flex items-center justify-between gap-3 text-[11px] text-bgray-700 dark:text-bgray-300">
                                                             <span>{{ $project->project_timeline['start_label'] }}</span>
                                                             <span class="text-right">{{ $project->project_timeline['end_label'] }}</span>
                                                         </div>
@@ -137,11 +137,11 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[220px] xl:px-0">
                                             <div class="flex w-full flex-col gap-2">
-                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                                                     <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $projectStatusColor }}"></span>
                                                     {{ $project->projectStatus->name ?? 'No Status' }}
                                                 </span>
-                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-100">
+                                                <span class="inline-flex w-fit items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                                                     <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $projectStageColor }}"></span>
                                                     {{ $project->projectStage->name ?? 'No Stage' }}
                                                 </span>

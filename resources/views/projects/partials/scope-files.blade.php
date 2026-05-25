@@ -11,7 +11,7 @@
 @if ($showUpload && auth()->user()->can('project.add_scope'))
     <div id="file-upload-box" class="border-2 border-dashed border-bgray-300 rounded-xl p-6 mt-4 text-center cursor-pointer hover:border-success-300 transition">
 
-        <p class="text-bgray-500">Attach your project scope files <span class="text-success-300">click to upload</span></p>
+        <p class="text-bgray-700">Attach your project scope files <span class="text-success-300">click to upload</span></p>
         <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png">
     </div>
     <p class="text-error-300 text-sm mt-2">Files includes pdf, xls, xlsx, doc, docx, jpg, jpeg, png and max file size is 5MB</p>

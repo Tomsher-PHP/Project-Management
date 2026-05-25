@@ -3,7 +3,7 @@
         <div>
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-success-400">Task Comments</p>
             <h3 class="mt-2 text-2xl font-bold text-bgray-900 dark:text-white">{{ $task->name }}</h3>
-            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                 Showing the latest {{ $comments->count() }} of {{ $totalComments }} {{ \Illuminate\Support\Str::plural('comment', $totalComments) }}.
             </p>
         </div>

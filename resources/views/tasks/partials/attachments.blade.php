@@ -6,7 +6,7 @@
 <div class="w-full">
     @if (!$canCreate)
         <div class="mb-6">
-            <p class="rounded-lg border border-dashed border-bgray-300 px-4 py-3 text-sm text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+            <p class="rounded-lg border border-dashed border-bgray-300 px-4 py-3 text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                 You have view-only access to task notes.
             </p>
         </div>
@@ -22,7 +22,7 @@
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                             <div>
                                 <h4 class="text-xl font-semibold text-bgray-900 dark:text-white">Add Note & Files</h4>
-                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">
+                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                     Capture a task update and attach supporting files in one place.
                                 </p>
                             </div>
@@ -50,7 +50,7 @@
                                     </label>
 
                                     <input type="file" id="task-note-attachments-input" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-2 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.jpg,.jpeg,.png">
-                                    <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                                    <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                                         You can attach multiple files. Allowed types: pdf, xls, xlsx, doc, docx, jpg, jpeg, png. Max file size: 5MB.
                                     </p>
                                     <div id="selected-task-note-files" class="mt-3 flex flex-wrap gap-2"></div>

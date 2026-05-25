@@ -6,13 +6,13 @@
             <table class="w-full min-w-[760px]">
                 <thead>
                     <tr class="border-b border-bgray-200 text-left dark:border-darkblack-400">
-                        <th class="px-2 py-4 text-sm font-semibold text-bgray-500 dark:text-bgray-50">#</th>
-                        <th class="px-4 py-4 text-sm font-semibold text-bgray-500 dark:text-bgray-50">
+                        <th class="px-2 py-4 text-sm font-semibold text-bgray-700 dark:text-bgray-50">#</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-bgray-700 dark:text-bgray-50">
                             <x-sorting.sortable-column column="name" label="Name" />
                         </th>
-                        <th class="px-4 py-4 text-sm font-semibold text-bgray-500 dark:text-bgray-50">Questions</th>
-                        <th class="px-4 py-4 text-sm font-semibold text-bgray-500 dark:text-bgray-50">Is Active</th>
-                        <th class="px-4 py-4 text-sm font-semibold text-bgray-500 dark:text-bgray-50">Actions</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-bgray-700 dark:text-bgray-50">Questions</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-bgray-700 dark:text-bgray-50">Is Active</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-bgray-700 dark:text-bgray-50">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +40,7 @@
                                         @endif
                                     </div>
 
-                                    <p class="text-xs text-bgray-500 dark:text-bgray-300">
+                                    <p class="text-xs text-bgray-700 dark:text-bgray-300">
                                         {{ $checklist->items_count }} {{ \Illuminate\Support\Str::plural('question', $checklist->items_count) }}
                                     </p>
                                 </div>
@@ -48,7 +48,7 @@
                             <td class="px-4 py-5">
                                 <div class="space-y-2">
                                     @forelse ($previewQuestions as $question)
-                                        <div class="rounded-lg bg-bgray-50 px-3 py-2 text-sm text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-100">
+                                        <div class="rounded-lg bg-bgray-50 px-3 py-2 text-sm text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
                                             {{ $question->question }}
                                         </div>
                                     @empty
@@ -56,7 +56,7 @@
                                     @endforelse
 
                                     @if ($checklist->items_count > $previewQuestions->count())
-                                        <p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                                        <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
                                             +{{ $checklist->items_count - $previewQuestions->count() }} more questions
                                         </p>
                                     @endif
@@ -70,7 +70,7 @@
                             <td class="px-4 py-5">
                                 <div class="flex items-center gap-3">
                                     @can('checklist_template.edit')
-                                        <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template">
+                                        <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                                             </svg>

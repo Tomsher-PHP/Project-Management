@@ -483,7 +483,7 @@ class ProjectServices
             return [
                 'percentage' => 0,
                 'bar_class' => 'bg-gray-300',
-                'text_class' => 'text-bgray-500 dark:text-bgray-300',
+                'text_class' => 'text-bgray-700 dark:text-bgray-300',
                 'start_label' => $startDate?->format($dateFormat) ?? '--',
                 'end_label' => $targetDate?->format($dateFormat) ?? '--',
             ];

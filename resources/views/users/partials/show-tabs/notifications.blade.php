@@ -28,7 +28,7 @@
                         <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
                             {{ $setting['label'] }}
                         </h4>
-                        <p class="text-sm text-bgray-500 dark:text-darkblack-300">
+                        <p class="text-sm text-bgray-700 dark:text-darkblack-300">
                             Manage notifications for {{ $setting['label'] }}
                         </p>
                     </div>

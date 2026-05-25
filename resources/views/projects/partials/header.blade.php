@@ -19,14 +19,14 @@
     $projectTimeline = $projectTimeline ?? [
         'percentage' => 0,
         'bar_class' => 'bg-gray-300',
-        'text_class' => 'text-bgray-500 dark:text-bgray-300',
+        'text_class' => 'text-bgray-700 dark:text-bgray-300',
         'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
         'end_label' => $project->end_date?->format($globalDateFormat) ?? '--',
     ];
     $customerTimeline = $customerTimeline ?? [
         'percentage' => 0,
         'bar_class' => 'bg-gray-300',
-        'text_class' => 'text-bgray-500 dark:text-bgray-300',
+        'text_class' => 'text-bgray-700 dark:text-bgray-300',
         'start_label' => $project->start_date?->format($globalDateFormat) ?? '--',
         'end_label' => $project->customer_end_date?->format($globalDateFormat) ?? '--',
     ];
@@ -51,7 +51,7 @@
                         <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                         <h2 class="min-w-0 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
                             {{ $project->name }}
-                            <span class="text-base font-semibold text-bgray-500 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
+                            <span class="text-base font-semibold text-bgray-700 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
                         </h2>
                     </div>
                     @if ($parentProject)
@@ -61,7 +61,7 @@
                                 {{ $parentProject->name }}
                             </a>
                             @if ($parentProject->trashed())
-                                <span class="text-bgray-500">(deleted)</span>
+                                <span class="text-bgray-700">(deleted)</span>
                             @endif
                         </p>
                     @endif
@@ -167,7 +167,7 @@
                         </div>
                     @endif
                     @if ($canAddProjectPayment)
-                        <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-lg border border-bgray-200 bg-bgray-50 px-3 text-xs font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 dark:hover:border-success-300 dark:hover:text-success-300" data-project-payment-modal-open data-url="{{ $projectPaymentUpdateUrl }}">
+                        <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-lg border border-bgray-200 bg-bgray-50 px-3 text-xs font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-payment-modal-open data-url="{{ $projectPaymentUpdateUrl }}">
                             + Payment Status
                         </button>
                     @endif
@@ -188,27 +188,27 @@
                 <div class="rounded-xl border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                         <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">Customer</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer</p>
                             <p class="mt-1 truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $project->customer->name ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">Project Flow</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Project Flow</p>
                             <div class="mt-1 flex items-center gap-2 text-sm font-medium text-bgray-900 dark:text-white">
                                 <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                                 <span>{{ strtoupper($project->project_flow ?? '--') }}</span>
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">Start Date</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Start Date</p>
                             <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">End Date</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">End Date</p>
                             <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         @if ($canCustomerEndDate)
                             <div class="min-w-0">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-500 dark:text-bgray-300">Customer End Date</p>
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer End Date</p>
                                 <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}</p>
                             </div>
                         @endif
@@ -225,7 +225,7 @@
                                     <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
                                 </div>
 
-                                <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
+                                <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
                                     <span>{{ $projectTimeline['start_label'] }}</span>
                                     <span>{{ $projectTimeline['end_label'] }}</span>
                                 </div>
@@ -247,7 +247,7 @@
                                         <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
                                     </div>
 
-                                    <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-500 dark:text-bgray-300">
+                                    <div class="mt-2 flex items-center justify-between text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
                                         <span>{{ $customerTimeline['start_label'] }}</span>
                                         <span>{{ $customerTimeline['end_label'] }}</span>
                                     </div>
@@ -266,7 +266,7 @@
                 <p class="text-sm font-semibold text-bgray-900 dark:text-white">
                     {{ $project->addedBy->name ?? '--' }}
                 </p>
-                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">
+                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
                     {{ $projectCreatedAtLabel }}
                 </p>
             </div>

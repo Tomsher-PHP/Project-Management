@@ -27,7 +27,7 @@
 
         @if (filled($resolvedDomainSuffix))
             @if ($disabled)
-                <span class="text-xs font-semibold text-bgray-500 dark:text-bgray-300">
+                <span class="text-xs font-semibold text-bgray-700 dark:text-bgray-300">
                     {{ $resolvedDomainSuffix }}
                 </span>
             @else
@@ -38,7 +38,7 @@
         @endif
     </div>
 
-    <input type="email" id="{{ $id }}" name="{{ $name }}" value="{{ $value }}" placeholder="{{ $placeholder }}" class="w-full rounded-lg border p-2 text-gray-900 focus:border-success-300 focus:ring-0 disabled:cursor-not-allowed disabled:border-bgray-200 @if($disabled) bg-bgray-200 @else bg-white @endif disabled:text-bgray-500 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 {{ $inputClasses }}" oninput="this.value = this.value.toLowerCase()" @disabled($disabled)>
+    <input type="email" id="{{ $id }}" name="{{ $name }}" value="{{ $value }}" placeholder="{{ $placeholder }}" class="w-full rounded-lg border p-2 text-gray-900 focus:border-success-300 focus:ring-0 disabled:cursor-not-allowed disabled:border-bgray-200 @if($disabled) bg-bgray-200 @else bg-white @endif disabled:text-bgray-700 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 {{ $inputClasses }}" oninput="this.value = this.value.toLowerCase()" @disabled($disabled)>
 
     @error($errorKey)
         <p class="mt-2 text-sm text-error-300">

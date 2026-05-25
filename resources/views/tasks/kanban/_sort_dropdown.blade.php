@@ -12,7 +12,7 @@
             <span class="truncate font-extrabold text-[#111653] dark:text-bgray-50" data-kanban-sort-label>{{ $selectedSortLabel }}</span>
         </span>
 
-        <svg class="h-4 w-4 shrink-0 text-bgray-500 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+        <svg class="h-4 w-4 shrink-0 text-bgray-700 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
         </svg>
     </button>

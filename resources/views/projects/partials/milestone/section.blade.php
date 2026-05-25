@@ -44,11 +44,11 @@
 
                 <div class="flex flex-wrap items-center gap-2 lg:justify-end">
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-bgray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50">
-                        <span class="text-bgray-500 dark:text-bgray-300">Milestones</span>
+                        <span class="text-bgray-700 dark:text-bgray-300">Milestones</span>
                         <span class="font-semibold text-bgray-900 dark:text-white">{{ $projectMilestones->count() }}</span>
                     </span>
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-bgray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50">
-                        <span class="text-bgray-500 dark:text-bgray-300">Sprints</span>
+                        <span class="text-bgray-700 dark:text-bgray-300">Sprints</span>
                         <span class="font-semibold text-bgray-900 dark:text-white">{{ $projectSprintCount }}</span>
                     </span>
 
@@ -65,7 +65,7 @@
 
                     @if (! $isDeletedProjectView)
                         @can('project_milestone.restore')
-                            <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                            <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-700"
                                 data-project-milestone-restore-open @disabled($trashedCount === 0)>
                                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -95,7 +95,7 @@
                                         </svg>
                                     </span>
                                 @else
-                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-drag-handle>
+                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-drag-handle>
                                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                         </svg>
@@ -190,7 +190,7 @@
 
                                 @if ($canManageAdditionalSprints && ! $isDeletedProjectView)
                                     @can('project_sprint.delete')
-                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-500"
+                                        <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-700"
                                             data-project-sprint-restore-open="{{ $milestone->id }}" @disabled($trashedSprintCount === 0)>
                                             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M3.172 6.172a4 4 0 015.656 0L10 7.343l1.172-1.171a4 4 0 115.656 5.656l-1.829 1.829a4 4 0 01-5.656 0L4.515 8.828a4 4 0 010-5.656zM10 5a1 1 0 00-1 1v2H7a1 1 0 000 2h3a1 1 0 001-1V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -231,7 +231,7 @@
                             data-loaded="false"
                             data-autoload="{{ ($openModuleId ?? null) === $milestone->id ? 'true' : 'false' }}">
                             <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-sprints-state>
-                                <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">
+                                <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">
                                     {{ ($openModuleId ?? null) === $milestone->id ? 'Loading sprints...' : 'Expand this milestone to load its sprints.' }}
                                 </p>
                             </div>
@@ -249,7 +249,7 @@
                                     <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                                         <div>
                                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Restore Project Sprint</h3>
-                                            <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Restore a deleted sprint back into {{ $milestone->name }}. It will be placed at the end of the sprint order.</p>
+                                            <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">Restore a deleted sprint back into {{ $milestone->name }}. It will be placed at the end of the sprint order.</p>
                                         </div>
 
                                         <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-sprint-restore-close>
@@ -260,7 +260,7 @@
                                     <div class="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-7">
                                         @if ($trashedSprints->isEmpty())
                                             <div class="rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-10 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
-                                                <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">No deleted sprints available to restore.</p>
+                                                <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">No deleted sprints available to restore.</p>
                                             </div>
                                         @else
                                             <div class="space-y-4">
@@ -271,7 +271,7 @@
                                                                 <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-full" style="background-color: {{ $trashedSprint->color ?: '#E5E7EB' }}"></span>
                                                                 <h5 class="text-base font-semibold text-bgray-900 dark:text-white">{{ $trashedSprint->name }}</h5>
                                                             </div>
-                                                            <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                                                            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                                                                 Deleted {{ $trashedSprint->deleted_at?->diffForHumans() ?? 'recently' }}.
                                                                 @if ($trashedSprint->description)
                                                                     {{ \Illuminate\Support\Str::limit($trashedSprint->description, 100) }}
@@ -305,7 +305,7 @@
                         </span>
 
                         <h5 class="mt-5 text-xl font-semibold text-bgray-900 dark:text-white">Start Your Milestone Builder</h5>
-                        <p class="mt-2 text-sm leading-6 text-bgray-500 dark:text-bgray-300">
+                        <p class="mt-2 text-sm leading-6 text-bgray-700 dark:text-bgray-300">
                             Create the first milestone to unlock the nested structure for sprints. Once a milestone exists, this page will expand into builder cards with inline actions at every level.
                         </p>
 
@@ -337,7 +337,7 @@
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <div>
                                 <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Restore Project Milestone</h3>
-                                <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Restore a deleted milestone back into this project. It will be placed at the end of the milestone order.</p>
+                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">Restore a deleted milestone back into this project. It will be placed at the end of the milestone order.</p>
                             </div>
 
                             <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-milestone-restore-close>
@@ -348,7 +348,7 @@
                         <div class="max-h-[70vh] overflow-y-auto px-6 py-6 sm:px-7">
                             @if ($trashedProjectMilestones->isEmpty())
                                 <div class="rounded-2xl border border-dashed border-bgray-300 bg-bgray-50 px-6 py-10 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
-                                    <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">No deleted milestones available to restore.</p>
+                                    <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">No deleted milestones available to restore.</p>
                                 </div>
                             @else
                                 <div class="space-y-4">
@@ -359,7 +359,7 @@
                                                     <span class="inline-flex h-3.5 w-3.5 shrink-0 rounded-sm" style="background-color: {{ $trashedModule->color ?: '#E5E7EB' }}"></span>
                                                     <h5 class="text-base font-semibold text-bgray-900 dark:text-white">{{ $trashedModule->name }}</h5>
                                                 </div>
-                                                <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                                                <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                                                     Deleted {{ $trashedModule->deleted_at?->diffForHumans() ?? 'recently' }}.
                                                     @if ($trashedModule->description)
                                                         {{ \Illuminate\Support\Str::limit($trashedModule->description, 100) }}

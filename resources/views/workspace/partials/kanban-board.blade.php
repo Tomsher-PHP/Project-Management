@@ -19,7 +19,7 @@
 
                 <div class="flex flex-wrap items-center gap-3">
                     <label class="relative min-w-[200px] flex-1 sm:min-w-[240px] lg:max-w-[300px]">
-                        <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-bgray-500 dark:text-bgray-300">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 inline-flex items-center text-bgray-700 dark:text-bgray-300">
                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.412 14.412 3.176 3.176" />
                                 <circle cx="8.75" cy="8.75" r="5.75" stroke-linecap="round" stroke-linejoin="round" />

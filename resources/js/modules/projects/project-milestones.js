@@ -183,15 +183,15 @@ const renderEstimatedTimeInput = (totalMinutes = 0) => {
             <input type="hidden" name="estimated_time_minutes" value="${escapeHtml(normalizedTotalMinutes)}" data-estimated-total-minutes>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Hours</label>
+                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-700 dark:text-bgray-300">Hours</label>
                     <input type="number" min="0" step="1" value="${escapeHtml(hours)}" data-estimated-hours class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                 </div>
                 <div>
-                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-500 dark:text-bgray-300">Minutes</label>
+                    <label class="mb-2 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-700 dark:text-bgray-300">Minutes</label>
                     <input type="number" min="0" step="1" value="${escapeHtml(minutes)}" data-estimated-extra-minutes class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                 </div>
             </div>
-            <p class="text-xs text-bgray-500 dark:text-bgray-300">Enter time naturally. We’ll convert it automatically for calculation.</p>
+            <p class="text-xs text-bgray-700 dark:text-bgray-300">Enter time naturally. We’ll convert it automatically for calculation.</p>
         </div>
     `;
 };
@@ -367,7 +367,7 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
 
 const renderProjectModuleSprintsState = (message, extraClasses = '') => `
     <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
-        <p class="text-sm font-medium text-bgray-600 dark:text-bgray-100">${escapeHtml(message)}</p>
+        <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(message)}</p>
     </div>
 `;
 
@@ -615,7 +615,7 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
         <input type="hidden" name="color" value="${escapeHtml(milestone.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
-                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
+                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-drag-handle>
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                     </svg>
@@ -625,9 +625,9 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex h-3.5 w-3.5 rounded-sm" data-project-milestone-builder-color-dot style="background-color: ${escapeHtml(milestone.color || '#22C55E')}"></span>
                         <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-milestone-builder-title>${escapeHtml(milestone.name || 'New Module')}</h5>
-                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-milestone-builder-order>${escapeHtml(milestone.sort_order || '')}</span>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-builder-order>${escapeHtml(milestone.sort_order || '')}</span>
                     </div>
-                    <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-milestone-builder-status>Saved</p>
+                    <p class="mt-2 text-xs font-medium text-bgray-700 dark:text-bgray-300" data-project-milestone-builder-status>Saved</p>
                 </div>
             </div>
 
@@ -651,13 +651,13 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
         <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-milestone-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
             <div>
-                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
+                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                 <input type="text" name="name" value="${escapeHtml(milestone.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                 <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
             </div>
 
             <div>
-                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Owner</label>
+                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Owner</label>
                 <select name="owner_id" class="tom-select w-full" data-sort="0">
                     ${renderSelectOptions(config.owners || [], milestone.owner_id, 'Select owner')}
                 </select>
@@ -670,7 +670,7 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             </div>
 
             <div>
-                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
+                <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Date Range</label>
                 <input type="text" value="${escapeHtml([milestone.start_date, milestone.end_date].filter(Boolean).join(' to '))}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(milestone.start_date, milestone.end_date))}" data-project-milestone-builder-date-range>
                 <input type="hidden" name="start_date" value="${escapeHtml(milestone.start_date || '')}">
                 <input type="hidden" name="end_date" value="${escapeHtml(milestone.end_date || '')}">
@@ -680,7 +680,7 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
 
             <div class="xl:col-span-2">
                 <div class="mb-2 flex items-center justify-between gap-3">
-                    <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
+                    <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
                     <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>${escapeHtml(String((milestone.description || '').length))}</span>/100</span>
                 </div>
                 <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(milestone.description || '')}</textarea>
@@ -701,7 +701,7 @@ const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
                         ${escapeHtml(libraryModule.name || 'New Module')}
                     </h5>
                 </div>
-                <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
                     ${escapeHtml(libraryModule.description || 'No library description added yet.')}
                 </p>
             </div>
@@ -921,7 +921,7 @@ const initializeProjectModuleBuilderModal = () => {
             </span>
             <div>
                 <p class="text-sm font-semibold">Drag here for more milestones</p>
-                <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
             </div>
         </div>
     `;
@@ -1016,7 +1016,7 @@ const initializeProjectModuleBuilderModal = () => {
                         </svg>
                     </span>
                     <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Modules Selected Yet</h5>
-                    <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                    <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                         Drag one or more items from the milestone library to start building this project workspace.
                     </p>
                 </div>
@@ -1035,7 +1035,7 @@ const initializeProjectModuleBuilderModal = () => {
             return;
         }
 
-        statusNode.className = `mt-2 text-xs font-medium ${classes || 'text-bgray-500 dark:text-bgray-300'}`;
+        statusNode.className = `mt-2 text-xs font-medium ${classes || 'text-bgray-700 dark:text-bgray-300'}`;
         statusNode.textContent = status;
     };
 
@@ -1740,7 +1740,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
         <input type="hidden" name="color" value="${escapeHtml(sprint.color || '#22C55E')}">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
-                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-sprint-builder-drag-handle>
+                <button type="button" class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-sprint-builder-drag-handle>
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                     </svg>
@@ -1750,10 +1750,10 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex h-3.5 w-3.5 rounded-full" data-project-sprint-builder-color-dot style="background-color: ${escapeHtml(sprint.color || '#22C55E')}"></span>
                         <h5 class="text-base font-semibold text-bgray-900 dark:text-white" data-project-sprint-builder-title>${escapeHtml(sprint.name || 'New Sprint')}</h5>
-                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-sprint-builder-order>${escapeHtml(sprint.sort_order || '')}</span>
-                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-200" data-project-sprint-builder-task-count>Tasks ${escapeHtml(sprint.task_count ?? 0)}</span>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300" data-project-sprint-builder-order>${escapeHtml(sprint.sort_order || '')}</span>
+                        <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300" data-project-sprint-builder-task-count>Tasks ${escapeHtml(sprint.task_count ?? 0)}</span>
                     </div>
-                    <p class="mt-2 text-xs font-medium text-bgray-500 dark:text-bgray-300" data-project-sprint-builder-status>Saved</p>
+                    <p class="mt-2 text-xs font-medium text-bgray-700 dark:text-bgray-300" data-project-sprint-builder-status>Saved</p>
                 </div>
             </div>
 
@@ -1779,7 +1779,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
         <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-sprint-builder-body>
             <div class="grid gap-4 xl:grid-cols-2">
                 <div>
-                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="${escapeHtml(sprint.name || '')}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                     <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="name"></p>
                 </div>
@@ -1790,7 +1790,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                 </div>
 
                 <div>
-                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Date Range</label>
+                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Date Range</label>
                     <input type="text" value="${escapeHtml([sprint.start_date, sprint.end_date].filter(Boolean).join(' to '))}" class="datepicker project-sprint-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="${escapeHtml(getRangeMinDate(sprint.start_date, sprint.end_date))}" data-project-sprint-builder-date-range>
                     <input type="hidden" name="start_date" value="${escapeHtml(sprint.start_date || '')}">
                     <input type="hidden" name="end_date" value="${escapeHtml(sprint.end_date || '')}">
@@ -1800,7 +1800,7 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
 
                 <div class="xl:col-span-2">
                     <div class="mb-2 flex items-center justify-between gap-3">
-                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Description</label>
+                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
                         <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-builder-description-count>${escapeHtml(String((sprint.description || '').length))}</span>/100</span>
                     </div>
                     <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(sprint.description || '')}</textarea>
@@ -1821,7 +1821,7 @@ const renderSprintLibraryCard = (librarySprint, extraClass = '') => `
                         ${escapeHtml(librarySprint.name || 'New Sprint')}
                     </h5>
                 </div>
-                <p class="mt-2 text-xs leading-5 text-bgray-500 dark:text-bgray-300">
+                <p class="mt-2 text-xs leading-5 text-bgray-700 dark:text-bgray-300">
                     ${escapeHtml(librarySprint.description || 'No library description added yet.')}
                 </p>
             </div>
@@ -1973,7 +1973,7 @@ const initializeProjectSprintBuilderModal = () => {
             </span>
             <div>
                 <p class="text-sm font-semibold">Drag here for more sprints</p>
-                <p class="text-xs text-bgray-500 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected milestone.</p>
+                <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected milestone.</p>
             </div>
         </div>
     `;
@@ -2000,7 +2000,7 @@ const initializeProjectSprintBuilderModal = () => {
                     </svg>
                 </span>
                 <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">Loading Sprints</h5>
-                <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                     Fetching the latest sprint list for this milestone work area.
                 </p>
             </div>
@@ -2108,7 +2108,7 @@ const initializeProjectSprintBuilderModal = () => {
                         </svg>
                     </span>
                     <h5 class="mt-4 text-lg font-semibold text-bgray-900 dark:text-white">No Sprints Selected Yet</h5>
-                    <p class="mt-2 text-sm text-bgray-500 dark:text-bgray-300">
+                    <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
                         Drag one or more items from the sprint library to start building this milestone workspace.
                     </p>
                 </div>
@@ -2150,7 +2150,7 @@ const initializeProjectSprintBuilderModal = () => {
             return;
         }
 
-        statusNode.className = `mt-2 text-xs font-medium ${classes || 'text-bgray-500 dark:text-bgray-300'}`;
+        statusNode.className = `mt-2 text-xs font-medium ${classes || 'text-bgray-700 dark:text-bgray-300'}`;
         statusNode.textContent = status;
     };
 

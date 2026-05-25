@@ -31,7 +31,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         @can('activity_log.view')
                             <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.activity.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
-                                <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
+                                <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-300">
                                     <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M9 4.5V9L12 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                                         <path d="M15.75 9C15.75 12.7279 12.7279 15.75 9 15.75C5.27208 15.75 2.25 12.7279 2.25 9C2.25 5.27208 5.27208 2.25 9 2.25C12.7279 2.25 15.75 5.27208 15.75 9Z" stroke="currentColor" stroke-width="1.6" />
@@ -45,7 +45,7 @@
                         @endcan
 
                         <button type="button" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
-                            <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-200">
+                            <span class="inline-flex h-4 w-4 items-center justify-center text-bgray-600 dark:text-bgray-300">
                                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.25 6.75H12.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                                     <path d="M5.25 9.75H10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
