@@ -10,28 +10,11 @@
             </h4>
 
             <div class="mb-6 space-y-5 text-sm text-bgray-600 dark:text-darkblack-300">
-                @foreach (preg_split('/\r\n\r\n|\n\n/', $kpi->description) as $section)
-                    @php
-                        $lines = preg_split('/\r\n|\r|\n/', trim($section));
-                        $heading = array_shift($lines);
-                    @endphp
-
-                    @if ($heading)
-                        <div>
-                            <h5 class="mb-2 font-semibold text-bgray-800 dark:text-white">
-                                {{ $heading }}
-                            </h5>
-
-                            <ul class="list-disc space-y-1 pl-5">
-                                @foreach ($lines as $line)
-                                    @if (trim($line))
-                                        <li>{{ $line }}</li>
-                                    @endif
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                @endforeach
+                <div>
+                    <h5 class="mb-2 font-semibold text-bgray-800 dark:text-white">
+                        {!! $kpi->description !!}
+                    </h5>
+                </div>
             </div>
 
             <hr class="my-4 border-gray-200 dark:border-darkblack-400">
