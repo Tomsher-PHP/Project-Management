@@ -1,12 +1,15 @@
 <article class="rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-note-id="{{ $note->id }}">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-            <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
-                {{ $note->addedBy?->name ?? 'Unknown User' }}
-            </h4>
-            <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                {{ $note->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
-            </p>
+        <div class="flex items-center gap-3">
+            <x-user-avatar :user="$note->addedBy" size="sm" :name="$note->addedBy?->name ?? 'Unknown User'" />
+            <div>
+                <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
+                    {{ $note->addedBy?->name ?? 'Unknown User' }}
+                </h4>
+                <p class="text-sm text-bgray-700 dark:text-bgray-300">
+                    @appDateTime($note->created_at)
+                </p>
+            </div>
         </div>
 
         <div class="flex items-center gap-3">

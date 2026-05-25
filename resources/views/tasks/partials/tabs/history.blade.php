@@ -89,7 +89,7 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
-                        <img src="{{ $currentAssigneeUser?->profile_image_url ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $currentAssigneeUser?->name ?? $currentAssignee }}" class="h-5 w-5 rounded-full object-cover">
+                        <x-user-avatar :user="$currentAssigneeUser" :name="$currentAssigneeUser?->name ?? $currentAssignee" size="xs" />
                         <span>{{ $currentAssignee }}</span>
                     </span>
                     <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
@@ -131,7 +131,7 @@
                                     <tr>
                                         <td class="px-3 py-3">
                                             <div class="flex items-center gap-2">
-                                                <img src="{{ $timeLogUser?->profile_image_url ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $timeLogUser?->name ?? 'Unknown User' }}" class="h-6 w-6 rounded-full object-cover">
+                                                <x-user-avatar :user="$timeLogUser" :name="$timeLogUser?->name ?? 'Unknown User'" size="xs" />
                                                 <p class="font-semibold text-bgray-900 dark:text-white">{{ $timeLogUser?->name ?? 'Unknown User' }}</p>
                                             </div>
                                         </td>
@@ -273,7 +273,7 @@
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <img src="{{ $assignmentUser?->profile_image_url ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $assignmentUser?->name ?? 'Unknown User' }}" class="h-6 w-6 rounded-full object-cover">
+                                        <x-user-avatar :user="$assignmentUser" :name="$assignmentUser?->name ?? 'Unknown User'" size="xs" />
                                         <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $assignmentUser?->name ?? 'Unknown User' }}</p>
                                     </div>
                                     <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
@@ -308,7 +308,7 @@
                                     <dt class="text-bgray-700 dark:text-bgray-300">Added By</dt>
                                     <dd class="flex items-center justify-end gap-1.5 text-right font-medium text-bgray-900 dark:text-white">
                                         @if ($assignmentAddedBy)
-                                            <img src="{{ $assignmentAddedBy->profile_image_url }}" alt="{{ $assignmentAddedBy->name }}" class="h-4 w-4 rounded-full object-cover">
+                                            <x-user-avatar :user="$assignmentAddedBy" :name="$assignmentAddedBy->name" size="xs" />
                                         @endif
                                         <span>{{ $assignmentAddedBy?->name ?? 'System' }}</span>
                                     </dd>

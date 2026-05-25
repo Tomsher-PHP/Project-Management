@@ -37,7 +37,6 @@
                 @php
                     $event = $activity->event ?? 'updated';
                     $actorName = $activity->causer?->name ?? 'System';
-                    $actorImageUrl = $activity->causer?->profile_image_url ?? asset(config('assets.images.default_avatar'));
                     $subject = $activity->subject;
                     $subjectType = $activity->subject_type ? \Illuminate\Support\Str::headline(class_basename($activity->subject_type)) : \Illuminate\Support\Str::headline($activity->log_name ?? 'Activity');
                     $activitySubjectLabel = $subject?->name ?? ($subject?->title ?? ($subject?->original_name ?? ($subject?->file_name ?? ($subject?->project_code ?? ($subject?->customer_code ?? ($subject?->employee_id ?? ($activity->subject_id ? '#' . $activity->subject_id : '--')))))));
@@ -65,7 +64,7 @@
 
                 <article class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="flex items-start gap-3">
-                        <img src="{{ $actorImageUrl }}" alt="{{ $actorName }}" class="h-10 w-10 shrink-0 rounded-xl border border-bgray-200 object-cover shadow-sm dark:border-darkblack-400" />
+                        <x-user-avatar :user="$activity->causer" :name="$actorName" class="h-10 w-10 shrink-0 border border-bgray-200 shadow-sm dark:border-darkblack-400" />
 
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-start justify-between gap-2">

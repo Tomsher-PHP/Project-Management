@@ -12,6 +12,7 @@
     $initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(\Illuminate\Support\Str::squish($resolvedName), 0, 2));
 
     $sizeClasses = match ($size) {
+        'xs' => 'h-6 w-6 text-xs',
         'sm' => 'h-8 w-8 text-xs',
         'md' => 'h-10 w-10 text-sm',
         'lg' => 'h-12 w-12 text-base',
