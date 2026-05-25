@@ -105,7 +105,7 @@
                                     @endif
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="flex min-w-[180px] items-center gap-3">
-                                            <img src="{{ $requestUser?->profile_image_url ?? asset(config('assets.images.default_avatar')) }}" alt="{{ $requestUser?->name ?? 'Unknown User' }}" class="h-9 w-9 rounded-full object-cover">
+                                            <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
                                             <div>
                                                 <p class="font-semibold text-bgray-900 dark:text-white">{{ $requestUser?->name ?? 'Unknown User' }}</p>
                                             </div>

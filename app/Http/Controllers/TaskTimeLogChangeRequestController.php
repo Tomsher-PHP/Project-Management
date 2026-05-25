@@ -32,7 +32,7 @@ class TaskTimeLogChangeRequestController extends Controller
             ? $request->input('request_status')
             : 'pending';
 
-        return view('tasks.time-log-change-requests.index', [
+        return view('requests.task-time-requests.index', [
             'changeRequests' => $taskTimeLogChangeRequestService->getRequestsForUser($request->user(), $perPage, $selectedStatus, $request->all()),
             'users' => $taskTimeLogChangeRequestService->getFilterOptions($request->user())['users'],
             'perPage' => $perPage,
@@ -67,12 +67,8 @@ class TaskTimeLogChangeRequestController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    public function handleAction(
-        TaskTimeLogChangeRequestActionRequest $request,
-        TaskTimeLogChangeRequest $changeRequest,
-        string $action,
-        TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService
-    ): RedirectResponse {
+    public function handleAction(TaskTimeLogChangeRequestActionRequest $request, TaskTimeLogChangeRequest $changeRequest, string $action, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): RedirectResponse
+    {
         abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
 
         try {
@@ -102,11 +98,8 @@ class TaskTimeLogChangeRequestController extends Controller
                 : 'Time log change request rejected successfully.');
     }
 
-    public function handleBulkAction(
-        TaskTimeLogChangeRequestBulkActionRequest $request,
-        string $action,
-        TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService
-    ): RedirectResponse {
+    public function handleBulkAction(TaskTimeLogChangeRequestBulkActionRequest $request, string $action, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): RedirectResponse
+    {
         abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
 
         try {

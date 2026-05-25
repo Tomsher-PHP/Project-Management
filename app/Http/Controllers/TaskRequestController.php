@@ -31,7 +31,7 @@ class TaskRequestController extends Controller
             : 'pending';
         $filterOptions = $taskRequestServices->getFilterOptions($request->user());
 
-        return view('tasks.requests.index', [
+        return view('requests.task-requests.index', [
             'tasks' => $taskRequestServices->getRequestsForUser(
                 $request->user(),
                 $perPage,

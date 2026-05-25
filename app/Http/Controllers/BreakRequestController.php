@@ -34,7 +34,7 @@ class BreakRequestController extends Controller
             ? $request->input('request_status')
             : BreakWorkRequest::STATUS_PENDING;
 
-        return view('break-requests.index', [
+        return view('requests.break-requests.index', [
             'breakRequests' => $breakRequestService->getRequestsForUser(
                 $request->user(),
                 $perPage,

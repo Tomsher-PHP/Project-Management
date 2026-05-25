@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\HandoffFormRequest;
+use App\Models\HandoffRequest;
 use App\Models\TaskStatus;
 use App\Services\HandoffServices;
 use App\Services\TaskFormService;
@@ -31,10 +32,10 @@ class HandoffController extends Controller
             : 'pending';
 
         $statusValue = match ($selectedStatus) {
-            'pending' => \App\Models\HandoffRequest::STATUS_PENDING,
-            'noted' => \App\Models\HandoffRequest::STATUS_NOTED,
-            'assigned' => \App\Models\HandoffRequest::STATUS_ASSIGNED,
-            default => \App\Models\HandoffRequest::STATUS_PENDING,
+            'pending' => HandoffRequest::STATUS_PENDING,
+            'noted' => HandoffRequest::STATUS_NOTED,
+            'assigned' => HandoffRequest::STATUS_ASSIGNED,
+            default => HandoffRequest::STATUS_PENDING,
         };
 
         $filters = array_merge($request->all(), ['status' => $statusValue]);
@@ -49,7 +50,7 @@ class HandoffController extends Controller
             $taskCreateDependencies = $this->buildTaskCreateDependencies($taskFormData['taskCreateProjects'] ?? collect());
         }
 
-        return view('handoff-requests.index', array_merge([
+        return view('requests.handoff-requests.index', array_merge([
             'handoffRequests' => $handoffRequests,
             'perPage' => $perPage,
             'selectedStatus' => $selectedStatus,
@@ -118,14 +119,14 @@ class HandoffController extends Controller
 
     private function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
     {
-        $status = \App\Models\TaskStatus::query()
+        $status = TaskStatus::query()
             ->active()
             ->where('flow_type', $flowType)
             ->where('is_default', 1)
             ->first();
 
         if (!$status) {
-            $status = \App\Models\TaskStatus::query()
+            $status = TaskStatus::query()
                 ->active()
                 ->where('flow_type', $flowType)
                 ->orderBy('sort_order')
@@ -150,7 +151,7 @@ class HandoffController extends Controller
         ]);
     }
 
-    public function noted(Request $request, \App\Models\HandoffRequest $handoff_request)
+    public function noted(Request $request, HandoffRequest $handoff_request)
     {
         $this->handoffServices->markAsNoted($handoff_request, $request->user()->id);
 
