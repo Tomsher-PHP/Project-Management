@@ -1,7 +1,6 @@
-<div class="space-y-4">
+<div class="space-y-2">
     <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Tasks Overview</h2>
-        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50 bg-bgray-100 dark:bg-darkblack-500 px-2.5 py-1 rounded-full">Dynamic Statuses</span>
+        {{-- <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Tasks Overview</h2> --}}
     </div>
     <!-- KPI cards grid: custom-scroll flex items-center gap-3 overflow-x-auto py-1 -->
     <div class="custom-scroll flex items-center gap-3 overflow-x-auto py-1">

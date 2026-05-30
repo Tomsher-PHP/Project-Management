@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request, DashboardServices $dashboardServices)
     {
-        return view('dashboard.view');
+        $user = $request->user();
+        $notificationCounts = $dashboardServices->getRequestNotificationCounts($user);
+
+        return view('dashboard.view', $notificationCounts);
     }
 
     public function summary(Request $request, DashboardServices $dashboardServices)
