@@ -11,6 +11,7 @@ use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ConfigurationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerRestoreController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\HandoffController;
@@ -73,10 +74,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
 
-    //sample routes for testing dashboard and profile pages, can be removed later
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware('permission.type:dashboard.view')->name('dashboard');
+    // Dashboard Routes
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->middleware('permission.type:dashboard.view')->name('dashboard');
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary'])->middleware('permission.type:dashboard.view')->name('dashboard.summary');
+    // End of Dashboard Routes
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');

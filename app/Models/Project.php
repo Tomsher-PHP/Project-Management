@@ -83,8 +83,7 @@ class Project extends Model
     public function scopeAccessibleBy($query, $user)
     {
         // Skip misc projects
-        $query->where('is_system', false);
-
+        $query->where('projects.is_system', false);
         // Superadmin or view all projects permission
         if ($user->is_super_admin || $user->can('project.view_all_projects')) {
             return $query;

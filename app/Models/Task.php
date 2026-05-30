@@ -142,7 +142,7 @@ class Task extends Model
     public function scopeAccessibleBy($query, User $user)
     {
         // skip break work requested tasks
-        $query->whereNull('break_work_request_id');
+        $query->whereNull('tasks.break_work_request_id');
 
         $query->whereHas('project', function ($projectQuery) {
             $projectQuery->whereNull('deleted_at');

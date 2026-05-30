@@ -39,6 +39,7 @@ export default defineConfig({
                 'resources/js/modules/tasks/handoff-blend.js',
                 'resources/js/modules/workspace/workspace-kanban-heights.js',
                 'resources/js/modules/analytics/summary.js',
+                'resources/js/dashboard.js',
                 'resources/js/modules/customer-restore.js',
                 'resources/js/modules/projects/project-delete.js',
                 'resources/js/modules/projects/project-restore.js',

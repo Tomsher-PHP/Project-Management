@@ -121,7 +121,7 @@
                                                 <path class="path-2" d="M5 17C5 14.7909 6.79086 13 9 13C11.2091 13 13 14.7909 13 17V21H5V17Z" fill="#22C55E" />
                                             </svg>
                                         </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isWorkspaceActive ? $sidebarItemActiveClass : '' }}">Dashboard</span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboard</span>
                                     </div>
                                 </div>
                             </a>
