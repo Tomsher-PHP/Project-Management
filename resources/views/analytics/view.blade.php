@@ -15,10 +15,10 @@
         <div class="space-y-2.5">
 
             <!-- Summary Section -->
-            @include('workspace.partials.summary-tiles')
+            @include('analytics.partials.summary-tiles')
 
-            <!-- Workspace Insights Charts -->
-            @include('workspace.partials.insights-charts')
+            <!-- Analytics Insights Charts -->
+            @include('analytics.partials.insights-charts')
 
         </div>
     </main>

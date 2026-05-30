@@ -112,6 +112,22 @@
                 <ul class="mt-2.5">
                     @if ($canViewDashboard)
                         <li class="item py-[11px] {{ $isDashboardActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                            <a href="{{ route('dashboard') }}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2.5">
+                                        <span class="item-ico">
+                                            <svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path class="path-1" d="M0 8.84719C0 7.99027 0.366443 7.17426 1.00691 6.60496L6.34255 1.86217C7.85809 0.515019 10.1419 0.515019 11.6575 1.86217L16.9931 6.60496C17.6336 7.17426 18 7.99027 18 8.84719V17C18 19.2091 16.2091 21 14 21H4C1.79086 21 0 19.2091 0 17V8.84719Z" fill="#1A202C" />
+                                                <path class="path-2" d="M5 17C5 14.7909 6.79086 13 9 13C11.2091 13 13 14.7909 13 17V21H5V17Z" fill="#22C55E" />
+                                            </svg>
+                                        </span>
+                                        <span class="item-text text-lg font-medium leading-none {{ $isWorkspaceActive ? $sidebarItemActiveClass : '' }}">Dashboard</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+
+                        {{-- <li class="item py-[11px] {{ $isDashboardActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                             <a href="index.html" aria-expanded="{{ $isDashboardActive ? 'true' : 'false' }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
@@ -132,11 +148,10 @@
                             </a>
                             <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isDashboardActive ? 'active' : '' }}">
                                 <li>
-                                    <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDashboardActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">Dashboard
-                                        Default</a>
+                                    <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDashboardActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">Dashboard Default</a>
                                 </li>
                             </ul>
-                        </li>
+                        </li> --}}
                     @endif
                     <li class="item py-[11px] {{ $isWorkspaceActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                         <a href="{{ route('user.workspace') }}">
