@@ -19,88 +19,121 @@
             <!-- Left/Main content (Charts): flex-1 xl:flex-[3.2] space-y-6 -->
             <div class="flex-1 xl:flex-[3.2] space-y-6">
 
-                <!-- 3. ANALYTICS PLACEHOLDERS SECTION -->
-                <div class="space-y-6">
-                    <!-- Two Column Charts Layout -->
-                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
-                        <!-- Left: Project Status Distribution Chart Placeholder -->
-                        <div class="rounded-xl border border-bgray-100 bg-white p-6 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600">
-                            <div class="mb-6 flex items-center justify-between border-b border-bgray-100 pb-4 dark:border-darkblack-500">
-                                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Project Status Distribution</h3>
-                                <span class="text-xs text-bgray-600 dark:text-bgray-50 bg-bgray-100 dark:bg-darkblack-500 px-2 py-1 rounded">Donut Chart</span>
-                            </div>
-                            <!-- High Fidelity Visual Skeleton -->
-                            <div class="flex h-[250px] w-full flex-col items-center justify-center relative">
-                                <!-- Visual Ring Skeleton (Donut Chart Shape) -->
-                                <div class="relative flex h-40 w-40 items-center justify-center rounded-full border-[18px] border-slate-100 dark:border-darkblack-500">
-                                    <!-- Ring Highlights -->
-                                    <div class="absolute inset-[-18px] rounded-full border-[18px] border-transparent border-t-blue-500 border-r-success-300 rotate-45"></div>
-                                    <div class="text-center">
-                                        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">Total</span>
-                                        <p class="text-xl font-extrabold text-bgray-900 dark:text-white" data-dashboard-count="total_projects">
-                                            <span class="inline-block animate-pulse bg-bgray-200 dark:bg-darkblack-500 h-6 w-8 rounded"></span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Legend -->
-                                <div class="mt-6 flex items-center space-x-4">
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span>
-                                        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">Active</span>
-                                    </div>
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="h-2.5 w-2.5 rounded-full bg-orange"></span>
-                                        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">On Hold</span>
-                                    </div>
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="h-2.5 w-2.5 rounded-full bg-success-300"></span>
-                                        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">Completed</span>
-                                    </div>
-                                </div>
-                            </div>
+                <!-- Users Task Worked Time Card -->
+                <div class="rounded-xl border border-bgray-100 bg-white p-6 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600" data-worked-time-section data-worked-time-url="{{ route('dashboard.worked-time') }}">
+                    <!-- Card Header -->
+                    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-bgray-100 pb-4 dark:border-darkblack-500">
+                        <div>
+                            <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Users Task Worked Time</h3>
                         </div>
 
-                        <!-- Right: Task Progress Chart Placeholder -->
-                        <div class="rounded-xl border border-bgray-100 bg-white p-6 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600">
-                            <div class="mb-6 flex items-center justify-between border-b border-bgray-100 pb-4 dark:border-darkblack-500">
-                                <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Task Progress Overview</h3>
-                                <span class="text-xs text-bgray-600 dark:text-bgray-50 bg-bgray-100 dark:bg-darkblack-500 px-2 py-1 rounded">Line Chart</span>
+                        <!-- Filters -->
+                        <div class="flex items-center gap-2">
+                            <div class="flex rounded-lg border border-bgray-300 bg-white p-0.5 dark:border-darkblack-400 dark:bg-darkblack-500" data-worked-time-filter-group>
+                                <style>
+                                    [data-worked-time-filter].active {
+                                        background-color: rgb(34 197 94 / 0.1) !important;
+                                        color: rgb(22 163 74) !important;
+                                    }
+
+                                    .dark [data-worked-time-filter].active {
+                                        background-color: rgb(34 197 94 / 0.2) !important;
+                                        color: rgb(74 222 128) !important;
+                                    }
+                                </style>
+                                <button type="button" class="active rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-worked-time-filter="today" aria-pressed="true">Today</button>
+                                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-worked-time-filter="yesterday" aria-pressed="false">Yesterday</button>
                             </div>
-                            <!-- High Fidelity Visual Skeleton -->
-                            <div class="flex h-[250px] w-full flex-col justify-between relative p-2">
-                                <!-- Mock Grid Lines -->
-                                <div class="flex-1 space-y-8 mt-2 w-full">
-                                    <div class="border-b border-dashed border-slate-100 dark:border-darkblack-500 w-full h-0"></div>
-                                    <div class="border-b border-dashed border-slate-100 dark:border-darkblack-500 w-full h-0"></div>
-                                    <div class="border-b border-dashed border-slate-100 dark:border-darkblack-500 w-full h-0"></div>
-                                    <div class="border-b border-dashed border-slate-100 dark:border-darkblack-500 w-full h-0"></div>
-                                </div>
 
-                                <!-- Absolute Placeholder Mock Line Path -->
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="text-center bg-white/95 dark:bg-darkblack-600/95 px-4 py-2 rounded-lg shadow-sm border border-slate-100 dark:border-darkblack-500 z-10">
-                                        <svg class="h-6 w-6 text-blue-500 mx-auto mb-1" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                        <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">Line Visualization Placeholder</span>
-                                    </div>
+                            <!-- Custom Datepicker Input (Always visible) -->
+                            <div class="relative" id="custom-datepicker-container">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <svg class="h-4 w-4 text-bgray-500 dark:text-bgray-400" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
                                 </div>
-
-                                <!-- X Axis Labels -->
-                                <div class="flex justify-between text-[10px] font-bold text-bgray-600 dark:text-bgray-50 mt-2 px-1">
-                                    <span>Week 1</span>
-                                    <span>Week 2</span>
-                                    <span>Week 3</span>
-                                    <span>Week 4</span>
-                                    <span>Week 5</span>
-                                </div>
+                                <input type="text" id="worked-time-datepicker" class="rounded-lg border border-bgray-150 pl-9 pr-3 py-1.5 text-xs font-bold text-bgray-900 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white w-32" placeholder="Select Date" data-format="Y-m-d" value="{{ today()->toDateString() }}">
                             </div>
                         </div>
-
                     </div>
 
+                    <!-- Worked Time Table -->
+                    <div class="w-full overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-bgray-200 dark:border-darkblack-400">
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User Name</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Date</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Shift Hour</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Hour</th>
+                                </tr>
+                            </thead>
+                            <tbody id="worked-time-table-body" class="divide-y divide-bgray-100 dark:divide-darkblack-500">
+                                @forelse($workedTimeData as $row)
+                                    <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
+                                        <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['user_name'] }}</td>
+                                        <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['date'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['shift_working_hour'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['total_worked_time'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for today.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Running Tasks Card -->
+                <div class="rounded-xl border border-bgray-100 bg-white p-6 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600">
+                    <!-- Card Header -->
+                    <div class="mb-6 border-b border-bgray-100 pb-4 dark:border-darkblack-500">
+                        <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Running Tasks</h3>
+                    </div>
+
+                    <!-- Running Tasks Table -->
+                    <div class="w-full overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-bgray-200 dark:border-darkblack-400">
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User Name</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Task Name</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Estimated Time</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Time</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-bgray-100 dark:divide-darkblack-500">
+                                @forelse($runningTasksData as $row)
+                                    <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
+                                        <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['user_name'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-success-300 hover:text-success-400 transition-colors">
+                                            <a href="{{ route('tasks.edit', $row['task_id']) }}">
+                                                {{ $row['task_name'] }}
+                                            </a>
+                                        </td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['estimated_time'] }}</td>
+                                        <td class="py-3.5 text-sm {{ $row['color_class'] }}">{{ $row['worked_time'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="py-12 text-center">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 dark:bg-darkblack-500/50 dark:text-bgray-300 mb-3">
+                                                    <svg class="h-6 w-6 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                                <h4 class="text-sm font-bold text-bgray-900 dark:text-white mb-1">No Running Tasks</h4>
+                                                <p class="text-xs text-bgray-500 dark:text-bgray-400">There are currently no tasks in progress.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>

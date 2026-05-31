@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D1CF04TU.css",
+    "file": "assets/app-Bl9AGgxh.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -104,6 +104,16 @@
     "css": [
       "assets/app-CqGrDw4D.css",
       "assets/task-running-timer-BmNl9u-d.css"
+    ]
+  },
+  "resources/js/dashboard.js": {
+    "file": "assets/dashboard-3EBnftyS.js",
+    "name": "dashboard",
+    "src": "resources/js/dashboard.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-CA2wRfma.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/image-draggable.js": {

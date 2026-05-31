@@ -12,7 +12,17 @@ class DashboardController extends Controller
         $user = $request->user();
         $notificationCounts = $dashboardServices->getRequestNotificationCounts($user);
 
-        return view('dashboard.view', $notificationCounts);
+        $timezone = config('constants.timezone', 'UTC');
+        $todayStr = now($timezone)->toDateString();
+        $workedTimeData = $dashboardServices->getUsersTaskWorkedTime($user, $todayStr);
+        $runningTasksData = $dashboardServices->getRunningTasks($user);
+
+        $viewData = array_merge($notificationCounts, [
+            'workedTimeData' => $workedTimeData,
+            'runningTasksData' => $runningTasksData,
+        ]);
+
+        return view('dashboard.view', $viewData);
     }
 
     public function summary(Request $request, DashboardServices $dashboardServices)
@@ -23,6 +33,20 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => $data,
+        ]);
+    }
+
+    public function workedTime(Request $request, DashboardServices $dashboardServices)
+    {
+        $user = $request->user();
+        $timezone = config('constants.timezone', 'UTC');
+        $date = $request->query('date', now($timezone)->toDateString());
+
+        $workedTimeData = $dashboardServices->getUsersTaskWorkedTime($user, $date);
+
+        return response()->json([
+            'success' => true,
+            'data' => $workedTimeData,
         ]);
     }
 }

@@ -6,9 +6,11 @@ use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskTimeLog;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class DashboardServices
 {
@@ -101,6 +103,122 @@ class DashboardServices
             'break_request_count' => $breakRequests,
             'total_request_count' => $totalRequestCount,
         ];
+    }
+
+    /**
+     * Get user worked time for a selected date
+     *
+     * @param User $user
+     * @param string $date
+     * @return array
+     */
+    public function getUsersTaskWorkedTime(User $user, string $date): array
+    {
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $dateFormat = config('constants.date_format', 'Y-m-d');
+        $formattedDate = Carbon::parse($date)->format($dateFormat);
+        
+        $timezone = config('constants.timezone', 'UTC');
+        $startUtc = Carbon::parse($date, $timezone)->startOfDay()->setTimezone('UTC');
+        $endUtc = Carbon::parse($date, $timezone)->endOfDay()->setTimezone('UTC');
+
+        return TaskTimeLog::query()
+            ->whereIn('user_id', $accessibleUserIds)
+            ->whereBetween('started_at', [$startUtc, $endUtc])
+            ->where('is_running', false)
+            ->selectRaw('user_id, SUM(duration_seconds) as total_seconds')
+            ->groupBy('user_id')
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name')->with('activeShift');
+            }])
+            ->get()
+            ->map(function ($log) use ($formattedDate) {
+                $activeShift = $log->user->activeShift ?? null;
+                $shiftWorkingHour = '--';
+
+                if ($activeShift) {
+                    $start = Carbon::parse($activeShift->time_from);
+                    $end = Carbon::parse($activeShift->time_to);
+
+                    if ($end->lessThan($start)) {
+                        $end->addDay();
+                    }
+
+                    $totalSeconds = $start->diffInSeconds($end);
+                    $workingSeconds = $totalSeconds - ($activeShift->break_duration ?? 0);
+                    $workingSeconds = max(0, $workingSeconds);
+                    $shiftWorkingHour = formatSecondsToHMS($workingSeconds);
+                }
+
+                return [
+                    'user_id' => $log->user_id,
+                    'user_name' => $log->user->name ?? 'Unknown',
+                    'date' => $formattedDate,
+                    'shift_working_hour' => $shiftWorkingHour,
+                    'total_worked_time' => formatSecondsToHMS($log->total_seconds),
+                ];
+            })
+            ->toArray();
+    }
+
+    /**
+     * Get active running tasks
+     *
+     * @param User $user
+     * @return array
+     */
+    public function getRunningTasks(User $user): array
+    {
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return TaskTimeLog::query()
+            ->whereIn('user_id', $accessibleUserIds)
+            ->where('is_running', true)
+            ->with(['user:id,name', 'task:id,name,estimated_time_seconds,actual_time_seconds'])
+            ->get()
+            ->map(function ($log) {
+                $startedAt = $log->started_at;
+                $elapsedSeconds = $startedAt ? $startedAt->diffInSeconds(now()) : 0;
+
+                $task = $log->task;
+                $estimatedSeconds = $task ? (int) $task->estimated_time_seconds : 0;
+                $actualSeconds = $task ? (int) $task->actual_time_seconds : 0;
+
+                $totalWorkedSeconds = $actualSeconds + $elapsedSeconds;
+
+                $workedTimeFormatted = formatSecondsToHMS($totalWorkedSeconds);
+                $estimatedTimeFormatted = $task && $estimatedSeconds > 0
+                    ? formatSecondsToHMS($estimatedSeconds)
+                    : '--';
+
+                $isOverdue = $estimatedSeconds > 0 && $totalWorkedSeconds > $estimatedSeconds;
+                $colorClass = $isOverdue
+                    ? 'text-red-500 dark:text-red-400 font-bold'
+                    : 'text-success-300 dark:text-success-400 font-bold';
+
+                return [
+                    'user_name' => $log->user->name ?? 'Unknown',
+                    'task_name' => $task->name ?? 'Unnamed Task',
+                    'task_id' => $log->task_id,
+                    'estimated_time' => $estimatedTimeFormatted,
+                    'worked_time' => $workedTimeFormatted,
+                    'color_class' => $colorClass,
+                ];
+            })
+            ->toArray();
     }
 
     private function visibleTaskRequestQuery(User $user): Builder
