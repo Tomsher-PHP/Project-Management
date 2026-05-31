@@ -124,7 +124,7 @@ class DashboardServices
 
         $dateFormat = config('constants.date_format', 'Y-m-d');
         $formattedDate = Carbon::parse($date)->format($dateFormat);
-        
+
         $timezone = config('constants.timezone', 'UTC');
         $selectedDate = Carbon::parse($date, $timezone)->timezone($timezone);
         $dayStartLocal = $selectedDate->copy()->startOfDay();
@@ -198,7 +198,7 @@ class DashboardServices
         $result = [];
         foreach ($usersMap as $userId => $userObj) {
             $totalSeconds = $userTotalSeconds[$userId] ?? 0;
-            
+
             $timeFormat = config('constants.time_format', 'H:i');
             $startStr = isset($userEarliestStart[$userId])
                 ? $userEarliestStart[$userId]->format($timeFormat)
@@ -259,9 +259,10 @@ class DashboardServices
      * Get active running tasks
      *
      * @param User $user
-     * @return array
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getRunningTasks(User $user): array
+    public function getRunningTasks(User $user, int $perPage = 5): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $accessibleUserIds = User::query()
             ->accessibleBy($user)
@@ -277,8 +278,8 @@ class DashboardServices
             ->with(['user' => function ($q) {
                 $q->select('id', 'name')->with('primaryAttachment');
             }, 'task:id,name,estimated_time_seconds,actual_time_seconds'])
-            ->get()
-            ->map(function ($log) {
+            ->paginate($perPage)
+            ->through(function ($log) {
                 $startedAt = $log->started_at;
                 $elapsedSeconds = $startedAt ? $startedAt->diffInSeconds(now()) : 0;
 
@@ -308,8 +309,7 @@ class DashboardServices
                     'worked_time' => $workedTimeFormatted,
                     'color_class' => $colorClass,
                 ];
-            })
-            ->toArray();
+            });
     }
 
     private function visibleTaskRequestQuery(User $user): Builder

@@ -59,6 +59,8 @@ class DashboardActivityTest extends TestCase
      */
     public function test_dashboard_running_tasks_correctly_aggregates_worked_time()
     {
+        \Carbon\Carbon::setTestNow(now());
+
         $user = User::factory()->create();
         $user->givePermissionTo('dashboard.view');
 
@@ -100,6 +102,8 @@ class DashboardActivityTest extends TestCase
         $this->assertEquals('30m 00s', $runningTasks[0]['worked_time']);
         $this->assertEquals('1h 00m', $runningTasks[0]['estimated_time']);
         $this->assertStringContainsString('text-success-300', $runningTasks[0]['color_class']);
+
+        \Carbon\Carbon::setTestNow();
     }
 
     /**
@@ -321,5 +325,63 @@ class DashboardActivityTest extends TestCase
         $this->assertEquals('08:30 AM', $workedTime[0]['start_time']);
         $this->assertEquals('Running', $workedTime[0]['end_time']);
         $this->assertEquals('Day Off', $workedTime[0]['shift_working_hour']);
+    }
+
+    /**
+     * Test paginated running tasks endpoint
+     */
+    public function test_dashboard_running_tasks_endpoint_returns_paginated_json()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('dashboard.view');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Running Task Test',
+            'code' => 'TASK-RUNNING-1',
+            'estimated_time_seconds' => 3600
+        ]);
+
+        // Create 6 running tasks to trigger pagination (since page size is 5)
+        for ($i = 0; $i < 6; $i++) {
+            TaskTimeLog::create([
+                'task_id' => $task->id,
+                'user_id' => $user->id,
+                'started_at' => now()->subMinutes(10),
+                'is_running' => true
+            ]);
+        }
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.running-tasks'));
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'data' => [
+                '*' => [
+                    'user',
+                    'user_name',
+                    'user_avatar_html',
+                    'task_name',
+                    'task_id',
+                    'estimated_time',
+                    'worked_time',
+                    'color_class'
+                ]
+            ],
+            'current_page',
+            'has_more_pages',
+            'next_page',
+            'total'
+        ]);
+
+        $responseData = $response->json();
+        $this->assertTrue($responseData['success']);
+        $this->assertCount(5, $responseData['data']); // 5 per page
+        $this->assertEquals(1, $responseData['current_page']);
+        $this->assertTrue($responseData['has_more_pages']);
+        $this->assertEquals(2, $responseData['next_page']);
+        $this->assertEquals(6, $responseData['total']);
     }
 }

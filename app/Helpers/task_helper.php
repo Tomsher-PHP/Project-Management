@@ -88,3 +88,18 @@ if (!function_exists('taskDueDateIcon')) {
         return new HtmlString('');
     }
 }
+
+if (!function_exists('limitStringChar')) {
+    /**
+     * Limit the number of characters in a string.
+     *
+     * @param string|null $string
+     * @param int $count
+     * @param string $end
+     * @return string
+     */
+    function limitStringChar(?string $string, int $count, string $end = '...'): string
+    {
+        return \Illuminate\Support\Str::limit($string ?? '', $count, $end);
+    }
+}

@@ -233,4 +233,117 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // -------------------------------------------------------------
+    // 3. Running Tasks Infinite Scroll Pagination
+    // -------------------------------------------------------------
+    const runningTasksCard = document.querySelector('[data-running-tasks-card]');
+    if (runningTasksCard) {
+        const scrollContainer = runningTasksCard.querySelector('[data-running-tasks-scroll-container]');
+        const tableBody = runningTasksCard.querySelector('[data-running-tasks-table-body]');
+        const loadingIndicator = runningTasksCard.querySelector('[data-running-tasks-loading-indicator]');
+        const noMoreMsg = runningTasksCard.querySelector('[data-running-tasks-no-more]');
+        const emptyRow = runningTasksCard.querySelector('[data-running-tasks-empty-row]');
+
+        let isLoading = false;
+
+        const escapeHtml = (str) => {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;')
+                      .replace(/'/g, '&#039;');
+        };
+
+        const loadNextPage = async () => {
+            if (isLoading) return;
+
+            const hasMore = runningTasksCard.getAttribute('data-running-tasks-has-more') === 'true';
+            if (!hasMore) return;
+
+            const url = runningTasksCard.getAttribute('data-running-tasks-url');
+            const nextPage = runningTasksCard.getAttribute('data-running-tasks-next-page');
+
+            if (!url || !nextPage) return;
+
+            isLoading = true;
+            if (loadingIndicator) {
+                loadingIndicator.classList.remove('hidden');
+            }
+
+            try {
+                const response = await fetch(`${url}?page=${nextPage}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load running tasks');
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // Prevent showing empty row if we fetched actual items
+                    if (result.data.length > 0 && emptyRow) {
+                        emptyRow.classList.add('hidden');
+                    }
+
+                    // Append new rows
+                    result.data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150';
+
+                        // Task edit URL
+                        const taskEditUrl = `/tasks/${row.task_id}/edit`;
+
+                        tr.innerHTML = `
+                            <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">
+                                <div class="flex items-center gap-2">
+                                    ${row.user_avatar_html || ''}
+                                    <span>${escapeHtml(row.user_name)}</span>
+                                </div>
+                            </td>
+                            <td class="py-3.5 text-sm font-semibold text-success-300 hover:text-success-400 transition-colors">
+                                <a href="${taskEditUrl}">
+                                    ${escapeHtml(row.task_name)}
+                                </a>
+                            </td>
+                            <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.estimated_time)}</td>
+                            <td class="py-3.5 text-sm ${escapeHtml(row.color_class)}">${escapeHtml(row.worked_time)}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+
+                    // Update metadata
+                    runningTasksCard.setAttribute('data-running-tasks-has-more', result.has_more_pages ? 'true' : 'false');
+                    runningTasksCard.setAttribute('data-running-tasks-next-page', result.next_page || '');
+
+                    if (!result.has_more_pages) {
+                        if (noMoreMsg) {
+                            noMoreMsg.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Running Tasks Load Error:', error);
+            } finally {
+                isLoading = false;
+                if (loadingIndicator) {
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+        };
+
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', () => {
+                const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+                // Load when user scrolls near the bottom (within 20px)
+                if (scrollHeight - scrollTop - clientHeight < 20) {
+                    loadNextPage();
+                }
+            });
+        }
+    }
 });

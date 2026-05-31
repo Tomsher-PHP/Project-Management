@@ -49,5 +49,20 @@ class DashboardController extends Controller
             'data' => $workedTimeData,
         ]);
     }
+
+    public function runningTasks(Request $request, DashboardServices $dashboardServices)
+    {
+        $user = $request->user();
+        $runningTasksData = $dashboardServices->getRunningTasks($user, 5);
+
+        return response()->json([
+            'success' => true,
+            'data' => $runningTasksData->items(),
+            'current_page' => $runningTasksData->currentPage(),
+            'has_more_pages' => $runningTasksData->hasMorePages(),
+            'next_page' => $runningTasksData->hasMorePages() ? $runningTasksData->currentPage() + 1 : null,
+            'total' => $runningTasksData->total(),
+        ]);
+    }
 }
 
