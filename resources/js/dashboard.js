@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 : escapeHtml(row.end_time);
 
                             const shiftHtml = row.shift_working_hour === 'Day Off'
-                                ? '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">Day Off</span>'
+                                ? '<span class="inline-flex items-center text-xs font-bold text-amber-700 dark:text-amber-400">Day Off</span>'
                                 : escapeHtml(row.shift_working_hour);
 
                             return `

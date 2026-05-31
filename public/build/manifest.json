@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DZEnwFir.css",
+    "file": "assets/app-yBKdhQ2I.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -107,7 +107,7 @@
     ]
   },
   "resources/js/dashboard.js": {
-    "file": "assets/dashboard-BD0yqnYA.js",
+    "file": "assets/dashboard-DQ09PBKV.js",
     "name": "dashboard",
     "src": "resources/js/dashboard.js",
     "isEntry": true,

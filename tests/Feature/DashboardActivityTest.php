@@ -25,7 +25,7 @@ class DashboardActivityTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('Users Task Worked Time');
+        $response->assertSee('Daily Time');
         $response->assertSee('Running Tasks');
     }
 
