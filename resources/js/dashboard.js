@@ -150,7 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             return `
                                 <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
-                                    <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.user_name)}</td>
+                                    <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">
+                                         <div class="flex items-center gap-2">
+                                             ${row.user_avatar_html || ''}
+                                             <span>${escapeHtml(row.user_name)}</span>
+                                         </div>
+                                    </td>
                                     <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.date)}</td>
                                     <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.start_time)}</td>
                                     <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${endHtml}</td>

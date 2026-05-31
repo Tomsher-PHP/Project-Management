@@ -19,7 +19,12 @@
             <tbody class="divide-y divide-bgray-100 dark:divide-darkblack-500">
                 @forelse($runningTasksData as $row)
                     <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
-                        <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['user_name'] }}</td>
+                        <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">
+                            <div class="flex items-center gap-2">
+                                <x-user-avatar :user="$row['user']" size="sm" />
+                                <span>{{ $row['user_name'] }}</span>
+                            </div>
+                        </td>
                         <td class="py-3.5 text-sm font-semibold text-success-300 hover:text-success-400 transition-colors">
                             <a href="{{ route('tasks.edit', $row['task_id']) }}">
                                 {{ $row['task_name'] }}

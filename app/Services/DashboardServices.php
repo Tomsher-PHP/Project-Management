@@ -141,7 +141,7 @@ class DashboardServices
                     ->orWhere('ended_at', '>', $dayStartUtc);
             })
             ->with(['user' => function ($q) {
-                $q->select('id', 'name')->with('activeShift.weekends');
+                $q->select('id', 'name')->with(['activeShift.weekends', 'primaryAttachment']);
             }])
             ->get();
 
@@ -241,7 +241,9 @@ class DashboardServices
 
             $result[] = [
                 'user_id' => $userId,
+                'user' => $userObj,
                 'user_name' => $userObj->name ?? 'Unknown',
+                'user_avatar_html' => view('components.user-avatar', ['user' => $userObj, 'size' => 'sm'])->render(),
                 'date' => $formattedDate,
                 'start_time' => $startStr,
                 'end_time' => $endStr,
@@ -272,7 +274,9 @@ class DashboardServices
         return TaskTimeLog::query()
             ->whereIn('user_id', $accessibleUserIds)
             ->where('is_running', true)
-            ->with(['user:id,name', 'task:id,name,estimated_time_seconds,actual_time_seconds'])
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name')->with('primaryAttachment');
+            }, 'task:id,name,estimated_time_seconds,actual_time_seconds'])
             ->get()
             ->map(function ($log) {
                 $startedAt = $log->started_at;
@@ -295,7 +299,9 @@ class DashboardServices
                     : 'text-success-300 dark:text-success-400 font-bold';
 
                 return [
+                    'user' => $log->user,
                     'user_name' => $log->user->name ?? 'Unknown',
+                    'user_avatar_html' => view('components.user-avatar', ['user' => $log->user, 'size' => 'sm'])->render(),
                     'task_name' => $task->name ?? 'Unnamed Task',
                     'task_id' => $log->task_id,
                     'estimated_time' => $estimatedTimeFormatted,
