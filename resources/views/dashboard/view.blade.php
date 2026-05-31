@@ -64,8 +64,10 @@
                                 <tr class="border-b border-bgray-200 dark:border-darkblack-400">
                                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User Name</th>
                                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Date</th>
-                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Shift Hour</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Start</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">End</th>
                                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Hour</th>
+                                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Shift Hour</th>
                                 </tr>
                             </thead>
                             <tbody id="worked-time-table-body" class="divide-y divide-bgray-100 dark:divide-darkblack-500">
@@ -73,12 +75,26 @@
                                     <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
                                         <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['user_name'] }}</td>
                                         <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">{{ $row['date'] }}</td>
-                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['shift_working_hour'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['start_time'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">
+                                            @if($row['end_time'] === 'Running')
+                                                <span class="text-success-300 font-semibold">Running</span>
+                                            @else
+                                                {{ $row['end_time'] }}
+                                            @endif
+                                        </td>
                                         <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">{{ $row['total_worked_time'] }}</td>
+                                        <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">
+                                            @if($row['shift_working_hour'] === 'Day Off')
+                                                <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">Day Off</span>
+                                            @else
+                                                {{ $row['shift_working_hour'] }}
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for today.</td>
+                                        <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for today.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

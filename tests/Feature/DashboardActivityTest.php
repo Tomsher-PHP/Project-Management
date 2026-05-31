@@ -203,4 +203,123 @@ class DashboardActivityTest extends TestCase
         $this->assertCount(1, $workedTime);
         $this->assertEquals('1h 00m', $workedTime[0]['total_worked_time']);
     }
+
+    /**
+     * Test worked time calculations split cross-day log durations
+     */
+    public function test_dashboard_worked_time_splits_cross_day_logs()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('dashboard.view');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Cross Day Task',
+            'code' => 'TASK-CD-1',
+            'estimated_time_seconds' => 3600
+        ]);
+
+        // Timezone: Asia/Dubai (UTC+4)
+        config(['constants.timezone' => 'Asia/Dubai']);
+
+        // Log spans across:
+        // Local: 2026-05-24 22:00:00 Asia/Dubai to 2026-05-25 02:00:00 Asia/Dubai
+        // Total local duration is 4 hours (14400 seconds)
+        // UTC: 2026-05-24 18:00:00 UTC to 2026-05-24 22:00:00 UTC
+        $log = TaskTimeLog::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'started_at' => '2026-05-24 18:00:00', // 2026-05-24 22:00:00 Dubai
+            'ended_at' => '2026-05-24 22:00:00',   // 2026-05-25 02:00:00 Dubai
+            'duration_seconds' => 14400,
+            'is_running' => false,
+            'is_approved' => true
+        ]);
+
+        $service = app(DashboardServices::class);
+
+        // Day 1: 2026-05-24
+        // Local window: 2026-05-24 00:00:00 to 2026-05-24 23:59:59
+        // Log starts 22:00:00, ends 02:00:00 next day.
+        // Overlap: 22:00:00 to 24:00:00 (2 hours)
+        $workedTimeDay1 = $service->getUsersTaskWorkedTime($user, '2026-05-24');
+        $this->assertCount(1, $workedTimeDay1);
+        $this->assertEquals('2h 00m', $workedTimeDay1[0]['total_worked_time']);
+
+        // Day 2: 2026-05-25
+        // Local window: 2026-05-25 00:00:00 to 2026-05-25 23:59:59
+        // Overlap: 00:00:00 to 02:00:00 (2 hours)
+        $workedTimeDay2 = $service->getUsersTaskWorkedTime($user, '2026-05-25');
+        $this->assertCount(1, $workedTimeDay2);
+        $this->assertEquals('2h 00m', $workedTimeDay2[0]['total_worked_time']);
+    }
+
+    /**
+     * Test Start/End times calculation and Day Off weekend badge
+     */
+    public function test_dashboard_worked_time_handles_start_end_times_and_day_off()
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('dashboard.view');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Test Task',
+            'code' => 'TASK-ST-1',
+            'estimated_time_seconds' => 3600
+        ]);
+
+        // Configure timezone and format
+        config(['constants.timezone' => 'Asia/Dubai']);
+        config(['constants.time_format' => 'h:i A']);
+
+        // Log 1: 08:30 AM to 10:30 AM Asia/Dubai on 2026-05-24
+        // UTC: 04:30:00 to 06:30:00
+        TaskTimeLog::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'started_at' => '2026-05-24 04:30:00',
+            'ended_at' => '2026-05-24 06:30:00',
+            'duration_seconds' => 7200,
+            'is_running' => false,
+            'is_approved' => true
+        ]);
+
+        // Log 2 (Running): Starts at 01:45 PM Asia/Dubai on 2026-05-24 (13:45:00)
+        // UTC: 09:45:00
+        TaskTimeLog::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'started_at' => '2026-05-24 09:45:00',
+            'is_running' => true,
+            'is_approved' => true
+        ]);
+
+        // Create shift with a weekend/day off on Sunday 24-May-2026
+        $assignment = \App\Models\UserShiftAssignment::create([
+            'user_id' => $user->id,
+            'shift_name' => 'Weekend Shift',
+            'time_from' => '09:00:00',
+            'time_to' => '18:00:00',
+            'break_duration' => 3600,
+            'date_from' => '2026-05-20',
+            'date_to' => '2026-06-10',
+        ]);
+
+        \App\Models\UserShiftWeekend::create([
+            'user_shift_assignment_id' => $assignment->id,
+            'weekday' => 0, // Sunday
+            'week_number' => 4, // ceil(24/7) = 4
+        ]);
+
+        $service = app(DashboardServices::class);
+        $workedTime = $service->getUsersTaskWorkedTime($user, '2026-05-24');
+
+        $this->assertCount(1, $workedTime);
+        $this->assertEquals('08:30 AM', $workedTime[0]['start_time']);
+        $this->assertEquals('Running', $workedTime[0]['end_time']);
+        $this->assertEquals('Day Off', $workedTime[0]['shift_working_hour']);
+    }
 }

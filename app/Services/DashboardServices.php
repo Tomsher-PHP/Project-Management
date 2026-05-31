@@ -126,24 +126,105 @@ class DashboardServices
         $formattedDate = Carbon::parse($date)->format($dateFormat);
         
         $timezone = config('constants.timezone', 'UTC');
-        $startUtc = Carbon::parse($date, $timezone)->startOfDay()->setTimezone('UTC');
-        $endUtc = Carbon::parse($date, $timezone)->endOfDay()->setTimezone('UTC');
+        $selectedDate = Carbon::parse($date, $timezone)->timezone($timezone);
+        $dayStartLocal = $selectedDate->copy()->startOfDay();
+        $dayEndExclusiveLocal = $dayStartLocal->copy()->addDay();
 
-        return TaskTimeLog::query()
+        $dayStartUtc = $dayStartLocal->copy()->timezone('UTC');
+        $dayEndExclusiveUtc = $dayEndExclusiveLocal->copy()->timezone('UTC');
+
+        $logs = TaskTimeLog::query()
             ->whereIn('user_id', $accessibleUserIds)
-            ->whereBetween('started_at', [$startUtc, $endUtc])
-            ->where('is_running', false)
-            ->selectRaw('user_id, SUM(duration_seconds) as total_seconds')
-            ->groupBy('user_id')
+            ->where('started_at', '<', $dayEndExclusiveUtc)
+            ->where(function ($query) use ($dayStartUtc) {
+                $query->whereNull('ended_at')
+                    ->orWhere('ended_at', '>', $dayStartUtc);
+            })
             ->with(['user' => function ($q) {
-                $q->select('id', 'name')->with('activeShift');
+                $q->select('id', 'name')->with('activeShift.weekends');
             }])
-            ->get()
-            ->map(function ($log) use ($formattedDate) {
-                $activeShift = $log->user->activeShift ?? null;
-                $shiftWorkingHour = '--';
+            ->get();
 
-                if ($activeShift) {
+        $userTotalSeconds = [];
+        $userEarliestStart = [];
+        $userLatestEnd = [];
+        $userHasRunning = [];
+        $usersMap = [];
+
+        foreach ($logs as $log) {
+            if (!$log->user) {
+                continue;
+            }
+
+            $userId = $log->user_id;
+            $usersMap[$userId] = $log->user;
+
+            $startedAtLocal = $log->started_at->copy()->timezone($timezone);
+            $endedAtLocal = $log->ended_at ? $log->ended_at->copy()->timezone($timezone) : null;
+
+            $segmentStartLocal = $startedAtLocal->greaterThan($dayStartLocal)
+                ? $startedAtLocal
+                : $dayStartLocal->copy();
+
+            $compareEndLocal = $endedAtLocal ?? Carbon::now($timezone);
+            $segmentEndLocal = $compareEndLocal->lessThan($dayEndExclusiveLocal)
+                ? $compareEndLocal
+                : $dayEndExclusiveLocal->copy();
+
+            if ($segmentEndLocal->greaterThan($segmentStartLocal)) {
+                if (!$log->is_running) {
+                    $overlapSeconds = $segmentStartLocal->diffInSeconds($segmentEndLocal);
+                    if ($overlapSeconds > 0) {
+                        $userTotalSeconds[$userId] = ($userTotalSeconds[$userId] ?? 0) + $overlapSeconds;
+                    }
+                }
+
+                if (!isset($userEarliestStart[$userId]) || $startedAtLocal->lessThan($userEarliestStart[$userId])) {
+                    $userEarliestStart[$userId] = $startedAtLocal;
+                }
+
+                if ($log->is_running) {
+                    $userHasRunning[$userId] = true;
+                } else {
+                    if ($endedAtLocal) {
+                        if (!isset($userLatestEnd[$userId]) || $endedAtLocal->greaterThan($userLatestEnd[$userId])) {
+                            $userLatestEnd[$userId] = $endedAtLocal;
+                        }
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($usersMap as $userId => $userObj) {
+            $totalSeconds = $userTotalSeconds[$userId] ?? 0;
+            
+            $timeFormat = config('constants.time_format', 'H:i');
+            $startStr = isset($userEarliestStart[$userId])
+                ? $userEarliestStart[$userId]->format($timeFormat)
+                : '--';
+
+            if (!empty($userHasRunning[$userId])) {
+                $endStr = 'Running';
+            } else {
+                $endStr = isset($userLatestEnd[$userId])
+                    ? $userLatestEnd[$userId]->format($timeFormat)
+                    : '--';
+            }
+
+            $activeShift = $userObj->activeShift ?? null;
+            $shiftWorkingHour = '--';
+
+            if ($activeShift) {
+                $weekNumber = (int) ceil($selectedDate->day / 7);
+                $isWeekend = $activeShift->weekends
+                    ->where('weekday', $selectedDate->dayOfWeek)
+                    ->where('week_number', $weekNumber)
+                    ->isNotEmpty();
+
+                if ($isWeekend) {
+                    $shiftWorkingHour = 'Day Off';
+                } else {
                     $start = Carbon::parse($activeShift->time_from);
                     $end = Carbon::parse($activeShift->time_to);
 
@@ -151,21 +232,25 @@ class DashboardServices
                         $end->addDay();
                     }
 
-                    $totalSeconds = $start->diffInSeconds($end);
-                    $workingSeconds = $totalSeconds - ($activeShift->break_duration ?? 0);
+                    $totalShiftSeconds = $start->diffInSeconds($end);
+                    $workingSeconds = $totalShiftSeconds - ($activeShift->break_duration ?? 0);
                     $workingSeconds = max(0, $workingSeconds);
                     $shiftWorkingHour = formatSecondsToHMS($workingSeconds);
                 }
+            }
 
-                return [
-                    'user_id' => $log->user_id,
-                    'user_name' => $log->user->name ?? 'Unknown',
-                    'date' => $formattedDate,
-                    'shift_working_hour' => $shiftWorkingHour,
-                    'total_worked_time' => formatSecondsToHMS($log->total_seconds),
-                ];
-            })
-            ->toArray();
+            $result[] = [
+                'user_id' => $userId,
+                'user_name' => $userObj->name ?? 'Unknown',
+                'date' => $formattedDate,
+                'start_time' => $startStr,
+                'end_time' => $endStr,
+                'shift_working_hour' => $shiftWorkingHour,
+                'total_worked_time' => formatSecondsToHMS($totalSeconds),
+            ];
+        }
+
+        return $result;
     }
 
     /**

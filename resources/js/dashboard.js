@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">
+                    <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">
                         <span class="inline-block animate-pulse">Loading worked time...</span>
                     </td>
                 </tr>
@@ -135,25 +135,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.data.length === 0) {
                         tableBody.innerHTML = `
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for this date.</td>
+                                <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for this date.</td>
                             </tr>
                         `;
                     } else {
-                        tableBody.innerHTML = result.data.map(row => `
-                            <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
-                                <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.user_name)}</td>
-                                <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.date)}</td>
-                                <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.shift_working_hour)}</td>
-                                <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.total_worked_time)}</td>
-                            </tr>
-                        `).join('');
+                        tableBody.innerHTML = result.data.map(row => {
+                            const endHtml = row.end_time === 'Running'
+                                ? '<span class="text-success-300 font-semibold">Running</span>'
+                                : escapeHtml(row.end_time);
+
+                            const shiftHtml = row.shift_working_hour === 'Day Off'
+                                ? '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">Day Off</span>'
+                                : escapeHtml(row.shift_working_hour);
+
+                            return `
+                                <tr class="hover:bg-bgray-50/50 dark:hover:bg-darkblack-500/20 transition duration-150">
+                                    <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.user_name)}</td>
+                                    <td class="py-3.5 text-sm text-bgray-900 dark:text-white font-semibold">${escapeHtml(row.date)}</td>
+                                    <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.start_time)}</td>
+                                    <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${endHtml}</td>
+                                    <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.total_worked_time)}</td>
+                                    <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${shiftHtml}</td>
+                                </tr>
+                            `;
+                        }).join('');
                     }
                 }
             } catch (error) {
                 console.error('Worked Time Load Error:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="py-8 text-center text-sm text-red-500">Failed to load worked time.</td>
+                        <td colspan="6" class="py-8 text-center text-sm text-red-500">Failed to load worked time.</td>
                     </tr>
                 `;
             }
