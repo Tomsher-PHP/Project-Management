@@ -6,7 +6,7 @@
         <div class="flex items-center space-x-2">
             <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Request Notifications</h3>
         </div>
-        <span class="inline-flex h-5 items-center justify-center text-xs font-bold text-rose-600 dark:text-rose-300">
+        <span class="inline-flex h-5 items-center justify-center text-xs font-bold text-error-300 dark:text-error-400">
             {{ $total_request_count }} New
         </span>
     </div>
@@ -19,7 +19,7 @@
             <a href="{{ route('tasks.requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-purple-200 bg-slate-50/50 hover:bg-purple-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-purple-900/50 dark:bg-darkblack-500/20 dark:hover:bg-purple-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-purple-500 dark:text-purple-400">
-                        <svg class="h-4.5 w-4.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
@@ -29,7 +29,6 @@
                             <span class="h-2 w-2 rounded-full bg-purple-500"></span>
                         </div>
                         <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">{{ $task_request_count }} new pending task requests</p>
-                        <span class="block text-[10px] text-bgray-600 dark:text-bgray-50">Just now</span>
                     </div>
                 </div>
             </a>
@@ -40,7 +39,7 @@
             <a href="{{ route('tasks.time-log-change-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-amber-200 bg-slate-50/50 hover:bg-amber-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-amber-900/50 dark:bg-darkblack-500/20 dark:hover:bg-amber-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-amber-500 dark:text-amber-400">
-                        <svg class="h-4.5 w-4.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
@@ -50,7 +49,6 @@
                             <span class="h-2 w-2 rounded-full bg-amber-500"></span>
                         </div>
                         <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">{{ $task_log_time_request_count }} pending time log requests</p>
-                        <span class="block text-[10px] text-bgray-600 dark:text-bgray-50">Just now</span>
                     </div>
                 </div>
             </a>
@@ -61,7 +59,7 @@
             <a href="{{ route('handoff_requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-blue-200 bg-slate-50/50 hover:bg-blue-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-blue-900/50 dark:bg-darkblack-500/20 dark:hover:bg-blue-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-blue-500 dark:text-blue-400">
-                        <svg class="h-4.5 w-4.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
                     </div>
@@ -71,7 +69,6 @@
                             <span class="h-2 w-2 rounded-full bg-blue-500"></span>
                         </div>
                         <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">{{ $handoff_request_count }} pending handoff requests</p>
-                        <span class="block text-[10px] text-bgray-600 dark:text-bgray-50">2 hours ago</span>
                     </div>
                 </div>
             </a>
@@ -82,7 +79,7 @@
             <a href="{{ route('break-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-rose-200 bg-slate-50/50 hover:bg-rose-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-rose-900/50 dark:bg-darkblack-500/20 dark:hover:bg-rose-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-rose-500 dark:text-rose-400">
-                        <svg class="h-4.5 w-4.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
                         </svg>
                     </div>
@@ -92,7 +89,6 @@
                             <span class="h-2 w-2 rounded-full bg-rose-500"></span>
                         </div>
                         <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">{{ $break_request_count }} break approvals pending</p>
-                        <span class="block text-[10px] text-bgray-600 dark:text-bgray-50">Yesterday</span>
                     </div>
                 </div>
             </a>

@@ -16,8 +16,8 @@
         <!-- Columns container: flex flex-col xl:flex-row gap-6 -->
         <div class="flex flex-col xl:flex-row gap-6">
 
-            <!-- Left/Main content (Charts): flex-1 xl:flex-[3.8] space-y-6 -->
-            <div class="flex-1 xl:flex-[3.8] space-y-6">
+            <!-- Left/Main content (Charts): flex-1 xl:flex-[4.8] space-y-6 -->
+            <div class="flex-1 xl:flex-[4.8] space-y-6">
 
                 @include('dashboard.partials.daily-time')
 
@@ -25,8 +25,8 @@
 
             </div>
 
-            <!-- Right Sidebar: w-full xl:w-auto xl:flex-[0.8] shrink-0 -->
-            <div class="w-full xl:w-auto xl:flex-[0.8] shrink-0">
+            <!-- Right Sidebar: w-full xl:w-auto xl:flex-[0.4] shrink-0 -->
+            <div class="w-full xl:w-auto xl:flex-[0.4] shrink-0">
 
                 @include('dashboard.partials.requests')
 
@@ -40,4 +40,3 @@
 @push('scripts')
     @vite('resources/js/dashboard.js')
 @endpush
-
