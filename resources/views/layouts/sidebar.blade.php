@@ -158,12 +158,11 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-2.5">
                                     <span class="item-ico">
-                                        <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M18 16V6C18 3.79086 16.2091 2 14 2H4C1.79086 2 0 3.79086 0 6V16C0 18.2091 1.79086 20 4 20H14C16.2091 20 18 18.2091 18 16Z" fill="#1A202C" class="path-1" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 8C4.25 7.58579 4.58579 7.25 5 7.25H13C13.4142 7.25 13.75 7.58579 13.75 8C13.75 8.41421 13.4142 8.75 13 8.75H5C4.58579 8.75 4.25 8.41421 4.25 8Z" fill="#22C55E" class="path-2" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H13C13.4142 11.25 13.75 11.5858 13.75 12C13.75 12.4142 13.4142 12.75 13 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12Z" fill="#22C55E" class="path-2" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 16C4.25 15.5858 4.58579 15.25 5 15.25H9C9.41421 15.25 9.75 15.5858 9.75 16C9.75 16.4142 9.41421 16.75 9 16.75H5C4.58579 16.75 4.25 16.4142 4.25 16Z" fill="#22C55E" class="path-2" />
-                                            <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#1A202C" class="path-1" />
+                                            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#22C55E" class="path-2" />
+                                            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#1A202C" class="path-1" />
+                                            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#1A202C" class="path-1" />
                                         </svg>
                                     </span>
                                     <span class="item-text text-lg font-medium leading-none {{ $isWorkspaceActive ? $sidebarItemActiveClass : '' }}">Workspace</span>
@@ -177,11 +176,9 @@
                                 <div class="flex items-center space-x-2.5">
                                     <span class="item-ico">
                                         <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M18 16V6C18 3.79086 16.2091 2 14 2H4C1.79086 2 0 3.79086 0 6V16C0 18.2091 1.79086 20 4 20H14C16.2091 20 18 18.2091 18 16Z" fill="#1A202C" class="path-1" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 8C4.25 7.58579 4.58579 7.25 5 7.25H13C13.4142 7.25 13.75 7.58579 13.75 8C13.75 8.41421 13.4142 8.75 13 8.75H5C4.58579 8.75 4.25 8.41421 4.25 8Z" fill="#22C55E" class="path-2" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H13C13.4142 11.25 13.75 11.5858 13.75 12C13.75 12.4142 13.4142 12.75 13 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12Z" fill="#22C55E" class="path-2" />
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 16C4.25 15.5858 4.58579 15.25 5 15.25H9C9.41421 15.25 9.75 15.5858 9.75 16C9.75 16.4142 9.41421 16.75 9 16.75H5C4.58579 16.75 4.25 16.4142 4.25 16Z" fill="#22C55E" class="path-2" />
-                                            <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
+                                            <path d="M0 4C0 1.8 1.8 0 4 0H14C16.2 0 18 1.8 18 4V16C18 18.2 16.2 20 14 20H4C1.8 20 0 18.2 0 16V4Z" fill="#1A202C" class="path-1" />
+                                            <path d="M6.5 6C5.4 6 4.5 6.9 4.5 8V14C4.5 15.1 5.4 16 6.5 16C7.6 16 8.5 15.1 8.5 14V8C8.5 6.9 7.6 6 6.5 6Z" fill="#22C55E" class="path-2" />
+                                            <path d="M12.5 10C11.4 10 10.5 10.9 10.5 12V14C10.5 15.1 11.4 16 12.5 16C13.6 16 14.5 15.1 14.5 14V12C14.5 10.9 13.6 10 12.5 10Z" fill="#22C55E" class="path-2" />
                                         </svg>
                                     </span>
                                     <span class="item-text text-lg font-medium leading-none {{ $isAnalyticsActive ? $sidebarItemActiveClass : '' }}">Analytics</span>
@@ -195,12 +192,9 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2.5">
                                         <span class="item-ico">
-                                            <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M18 16V6C18 3.79086 16.2091 2 14 2H4C1.79086 2 0 3.79086 0 6V16C0 18.2091 1.79086 20 4 20H14C16.2091 20 18 18.2091 18 16Z" fill="#1A202C" class="path-1" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 8C4.25 7.58579 4.58579 7.25 5 7.25H13C13.4142 7.25 13.75 7.58579 13.75 8C13.75 8.41421 13.4142 8.75 13 8.75H5C4.58579 8.75 4.25 8.41421 4.25 8Z" fill="#22C55E" class="path-2" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 12C4.25 11.5858 4.58579 11.25 5 11.25H13C13.4142 11.25 13.75 11.5858 13.75 12C13.75 12.4142 13.4142 12.75 13 12.75H5C4.58579 12.75 4.25 12.4142 4.25 12Z" fill="#22C55E" class="path-2" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.25 16C4.25 15.5858 4.58579 15.25 5 15.25H9C9.41421 15.25 9.75 15.5858 9.75 16C9.75 16.4142 9.41421 16.75 9 16.75H5C4.58579 16.75 4.25 16.4142 4.25 16Z" fill="#22C55E" class="path-2" />
-                                                <path d="M11 0H7C5.89543 0 5 0.895431 5 2C5 3.10457 5.89543 4 7 4H11C12.1046 4 13 3.10457 13 2C13 0.895431 12.1046 0 11 0Z" fill="#22C55E" class="path-2" />
+                                            <svg width="18" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2L4 5V11C4 16.52 7.38 20.62 12 22C16.62 20.62 20 16.52 20 11V5L12 2ZM18 11C18 15.42 15.46 18.72 12 20C8.54 18.72 6 15.42 6 11V6.3L12 4.05L18 6.3V11Z" fill="#1A202C" class="path-1" />
+                                                <path d="M10 15.17L6.7 11.87L8.11 10.45L10 12.34L14.68 7.66L16.1 9.08L10 15.17Z" fill="#22C55E" class="path-2" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-lg font-medium leading-none {{ $isRolesActive ? $sidebarItemActiveClass : '' }}">Roles</span>
@@ -233,8 +227,12 @@
                                     <div class="flex items-center space-x-2.5">
                                         <span class="item-ico">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" class="path-1" fill="#1A202C" />
-                                                <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
+                                                <circle cx="6" cy="8" r="2.5" fill="#1A202C" class="path-1" />
+                                                <path d="M6 12C4.2 12 0.5 12.9 0.5 14.7V18H11.5V14.7C11.5 12.9 7.8 12 6 12Z" fill="#1A202C" class="path-1" />
+                                                <circle cx="18" cy="8" r="2.5" fill="#1A202C" class="path-1" />
+                                                <path d="M18 12C16.2 12 12.5 12.9 12.5 14.7V18H23.5V14.7C23.5 12.9 19.8 12 18 12Z" fill="#1A202C" class="path-1" />
+                                                <path d="M12 11C9.5 11 4.5 12.2 4.5 14.8V18H19.5V14.8C19.5 12.2 14.5 11 12 11Z" fill="#1A202C" class="path-1" />
+                                                <circle cx="12" cy="6" r="3.5" fill="#22C55E" class="path-2" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-lg font-medium leading-none {{ $isTeamsActive ? $sidebarItemActiveClass : '' }}">Teams</span>
@@ -250,8 +248,9 @@
                                     <div class="flex items-center space-x-2.5">
                                         <span class="item-ico">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" class="path-1" fill="#1A202C" />
-                                                <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
+                                                <path d="M9 12C6 12 1 13.2 1 15.8V19H17V15.8C17 13.2 12 12 9 12Z" fill="#1A202C" class="path-1" />
+                                                <circle cx="9" cy="7" r="3.5" fill="#22C55E" class="path-2" />
+                                                <path d="M19 2L20.25 5.82H24.27L21.02 8.18L22.26 12L19 9.63L15.74 12L16.98 8.18L12.98 5.82H17.75L19 2Z" fill="#22C55E" class="path-2" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-lg font-medium leading-none {{ $isCustomersActive ? $sidebarItemActiveClass : '' }}">Customers</span>
@@ -296,11 +295,8 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M2 7C2 5.9 2.9 5 4 5H16C17.1 5 18 5.9 18 7V16C18 17.1 17.1 18 16 18H4C2.9 18 2 17.1 2 16V7Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M7 5V3C7 1.9 7.9 1 9 1H11C12.1 1 13 1.9 13 3V5H11V3H9V5H7ZM8.5 10C8.5 9.45 8.95 9 9.5 9H10.5C11.05 9 11.5 9.45 11.5 10V11.5H8.5V10Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isProjectsActive ? $sidebarItemActiveClass : '' }}">Projects</span>
@@ -318,11 +314,8 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M4 3C4 1.9 4.9 1 6 1H14C15.1 1 16 1.9 16 3V16C16 17.1 15.1 18 14 18H6C4.9 18 4 17.1 4 16V3Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M8 1C8 0.45 8.45 0 9 0H11C11.55 0 12 0.45 12 1V2H8V1ZM5.5 7.5L7 9L11 5L12 6L7 11L4.5 8.5L5.5 7.5ZM13 7H15V8H13V7ZM5.5 12.5L7 14L11 10L12 11L7 16L4.5 13.5L5.5 12.5ZM13 12H15V13H13V12Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isTasksActive ? $sidebarItemActiveClass : '' }}">Tasks</span>
@@ -340,11 +333,14 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
+                                                    <rect x="1" y="2" width="5" height="14" rx="1.5" fill="#1A202C" class="path-1" />
+                                                    <rect x="7.5" y="2" width="5" height="14" rx="1.5" fill="#1A202C" class="path-1" />
+                                                    <rect x="14" y="2" width="5" height="14" rx="1.5" fill="#1A202C" class="path-1" />
+                                                    <rect x="2" y="4" width="3" height="3" rx="0.5" fill="#22C55E" class="path-2" />
+                                                    <rect x="2" y="9" width="3" height="4" rx="0.5" fill="#22C55E" class="path-2" />
+                                                    <rect x="8.5" y="5" width="3" height="5" rx="0.5" fill="#22C55E" class="path-2" />
+                                                    <rect x="8.5" y="11" width="3" height="3" rx="0.5" fill="#22C55E" class="path-2" />
+                                                    <rect x="15" y="4" width="3" height="4" rx="0.5" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isKanbanActive ? $sidebarItemActiveClass : '' }}">Kanban</span>
@@ -362,11 +358,8 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M10 2.5C7.2 2.5 5 4.7 5 7.5V13H3V15H17V13H15V7.5C15 4.7 12.8 2.5 10 2.5Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M9 1C9 0.45 9.45 0 10 0C10.55 0 11 0.45 11 1V2.5H9V1ZM8 16C8 17.1 8.9 18 10 18C11.1 18 12 17.1 12 16H8Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isRequestsMenuActive ? $sidebarItemActiveClass : '' }}">Requests</span>
@@ -565,9 +558,8 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect x="1" y="2" width="18" height="14" rx="2" fill="#1A202C" class="path-1" />
-                                                    <rect x="3" y="5" width="6" height="2" fill="#22C55E" class="path-2" />
-                                                    <rect x="3" y="9" width="10" height="2" fill="#22C55E" class="path-2" />
+                                                    <path d="M2 7C2 5.9 2.9 5 4 5H16C17.1 5 18 5.9 18 7V16C18 17.1 17.1 18 16 18H4C2.9 18 2 17.1 2 16V7Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M7 5V3C7 1.9 7.9 1 9 1H11C12.1 1 13 1.9 13 3V5H11V3H9V5H7ZM8.5 10C8.5 9.45 8.95 9 9.5 9H10.5C11.05 9 11.5 9.45 11.5 10V11.5H8.5V10Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : '' }}">Projects</span>
@@ -636,11 +628,14 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5 2V11C5 12.1046 5.89543 13 7 13H18C19.1046 13 20 12.1046 20 11V2C20 0.895431 19.1046 0 18 0H7C5.89543 0 5 0.89543 5 2Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M0 15C0 13.8954 0.895431 13 2 13H2.17157C2.70201 13 3.21071 13.2107 3.58579 13.5858C4.36683 14.3668 5.63317 14.3668 6.41421 13.5858C6.78929 13.2107 7.29799 13 7.82843 13H8C9.10457 13 10 13.8954 10 15V16C10 17.1046 9.10457 18 8 18H2C0.89543 18 0 17.1046 0 16V15Z" fill="#22C55E" class="path-2" />
-                                                    <path d="M7.5 9.5C7.5 10.8807 6.38071 12 5 12C3.61929 12 2.5 10.8807 2.5 9.5C2.5 8.11929 3.61929 7 5 7C6.38071 7 7.5 8.11929 7.5 9.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.25 4.5C8.25 4.08579 8.58579 3.75 9 3.75L16 3.75C16.4142 3.75 16.75 4.08579 16.75 4.5C16.75 4.91421 16.4142 5.25 16 5.25L9 5.25C8.58579 5.25 8.25 4.91421 8.25 4.5Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.25 8.5C11.25 8.08579 11.5858 7.75 12 7.75L16 7.75C16.4142 7.75 16.75 8.08579 16.75 8.5C16.75 8.91421 16.4142 9.25 16 9.25L12 9.25C11.5858 9.25 11.25 8.91421 11.25 8.5Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M2 5C2 3.9 2.9 3 4 3H16C17.1 3 18 3.9 18 5V16C18 17.1 17.1 18 16 18H4C2.9 18 2 17.1 2 16V5Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M16 3H4C2.9 3 2 3.9 2 5V7H18V5C18 3.9 17.1 3 16 3ZM5 1.5C5 0.67 5.67 0 6.5 0C7.33 0 8 0.67 8 1.5V4.5C8 5.33 7.33 6 6.5 6C5.67 6 5 5.33 5 4.5V1.5ZM12 1.5C12 0.67 12.67 0 13.5 0C14.33 0 15 0.67 15 1.5V4.5C15 5.33 14.33 6 13.5 6C12.67 6 12 5.33 12 4.5V1.5Z" fill="#22C55E" class="path-2" />
+                                                    <circle cx="6" cy="11" r="1" fill="#22C55E" class="path-2" />
+                                                    <circle cx="10" cy="11" r="1" fill="#22C55E" class="path-2" />
+                                                    <circle cx="14" cy="11" r="1" fill="#22C55E" class="path-2" />
+                                                    <circle cx="6" cy="14" r="1" fill="#22C55E" class="path-2" />
+                                                    <circle cx="10" cy="14" r="1" fill="#22C55E" class="path-2" />
+                                                    <circle cx="14" cy="14" r="1" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isScheduleShiftActive ? $sidebarItemActiveClass : '' }}">Schedule Shift</span>
@@ -679,10 +674,8 @@
                                         <div class="flex items-center space-x-2.5">
                                             <span class="item-ico">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path
-                                                        d="M13.0606 2H10.9394C9.76787 2 8.81817 2.89543 8.81817 4C8.81817 5.26401 7.46574 6.06763 6.35556 5.4633L6.24279 5.40192C5.22823 4.84963 3.93091 5.17738 3.34515 6.13397L2.28455 7.86602C1.69879 8.8226 2.0464 10.0458 3.06097 10.5981C4.17168 11.2027 4.17168 12.7973 3.06096 13.4019C2.0464 13.9542 1.69879 15.1774 2.28454 16.134L3.34515 17.866C3.93091 18.8226 5.22823 19.1504 6.24279 18.5981L6.35555 18.5367C7.46574 17.9324 8.81817 18.736 8.81817 20C8.81817 21.1046 9.76787 22 10.9394 22H13.0606C14.2321 22 15.1818 21.1046 15.1818 20C15.1818 18.736 16.5343 17.9324 17.6445 18.5367L17.7572 18.5981C18.7718 19.1504 20.0691 18.8226 20.6548 17.866L21.7155 16.134C22.3012 15.1774 21.9536 13.9542 20.939 13.4019C19.8283 12.7973 19.8283 11.2027 20.939 10.5981C21.9536 10.0458 22.3012 8.82262 21.7155 7.86603L20.6548 6.13398C20.0691 5.1774 18.7718 4.84965 17.7572 5.40193L17.6445 5.46331C16.5343 6.06765 15.1818 5.26402 15.1818 4C15.1818 2.89543 14.2321 2 13.0606 2Z"
-                                                        fill="#1A202C" class="path-1" />
-                                                    <path d="M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M13 3C8.03 3 4 7.03 4 12H1L4.89 15.89L5 16L9 12H6C6 8.13 9.13 5 13 5C16.87 5 20 8.13 20 12C20 15.87 16.87 19 13 19C11.07 19 9.32 18.21 8.06 16.94L6.64 18.36C8.27 20 10.51 21 13 21C17.97 21 22 16.97 22 12C22 7.03 17.97 3 13 3Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M12.5 7V12.5L16 14.6L16.8 13.3L14 11.6V7H12.5Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                             <span class="item-text text-lg font-medium leading-none {{ $isActivityLogActive ? $sidebarItemActiveClass : '' }}">Activity Log</span>

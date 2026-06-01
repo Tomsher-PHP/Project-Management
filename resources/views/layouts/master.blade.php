@@ -41,7 +41,14 @@
     <x-page-loader />
 
     <!-- layout start -->
-    <div class="layout-wrapper active w-full">
+    <div id="layout-wrapper" class="layout-wrapper active w-full">
+        <script>
+            (function() {
+                if (localStorage.getItem('sidebar_state') === 'collapsed') {
+                    document.getElementById('layout-wrapper').classList.remove('active');
+                }
+            })();
+        </script>
         <div class="relative flex w-full">
 
             @include('layouts.sidebar')
@@ -79,7 +86,7 @@
     <script>
         AOS.init();
     </script>
-    <script src="{{ asset(config('assets.js.main')) }}"></script>
+    <script src="{{ asset(config('assets.js.main')) }}?v={{ filemtime(public_path(config('assets.js.main'))) }}"></script>
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 
     <script>

@@ -24,8 +24,10 @@ $(function () {
     const checkClassExits = $(".layout-wrapper");
     if (checkClassExits.hasClass("active")) {
       checkClassExits.removeClass("active");
+      localStorage.setItem('sidebar_state', 'collapsed');
     } else {
       checkClassExits.addClass("active");
+      localStorage.setItem('sidebar_state', 'expanded');
     }
   });
   //drawer key access
@@ -46,8 +48,10 @@ $(function () {
       const checkClassExits = $(".layout-wrapper");
       if (checkClassExits.hasClass("active")) {
         checkClassExits.removeClass("active");
+        localStorage.setItem('sidebar_state', 'collapsed');
       } else {
         checkClassExits.addClass("active");
+        localStorage.setItem('sidebar_state', 'expanded');
       }
     }
   });
