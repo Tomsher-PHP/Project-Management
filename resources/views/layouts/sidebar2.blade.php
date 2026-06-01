@@ -374,7 +374,7 @@
                                     </li>
                                 @endif
 
-                                @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
+                                {{-- @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
                                     <li class="item px-[43px] py-[11px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                         <a href="#">
                                             <span class="item-ico">
@@ -410,7 +410,7 @@
                                             @endif
                                         </ul>
                                     </li>
-                                @endif
+                                @endif --}}
 
                                 @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
                                     <li class="item px-[43px] py-[11px] {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">

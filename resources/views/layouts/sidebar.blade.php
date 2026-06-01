@@ -483,7 +483,7 @@
                         @endif
 
                         <!-- RESOURCES -->
-                        @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
+                        {{-- @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
                             <li class="item py-[11px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="index.html" aria-expanded="{{ $isResourcesReportsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
@@ -533,7 +533,7 @@
                                     @endif
                                 </ul>
                             </li>
-                        @endif
+                        @endif --}}
 
                         <!-- PROJECTS -->
                         @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
