@@ -14,9 +14,24 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DailyReportService
 {
+    protected const EXPORTABLE_COLUMNS = [
+        'project' => 'Project',
+        'user' => 'User',
+        'date' => 'Date',
+        'start_time' => 'Start Time',
+        'end_time' => 'End Time',
+        'duration' => 'Duration',
+        'task' => 'Task',
+    ];
+
     public function __construct(
         protected UserTimelineService $userTimelineService
     ) {
+    }
+
+    public function getColumnLabels(): array
+    {
+        return self::EXPORTABLE_COLUMNS;
     }
 
     protected function baseQuery(Request $request, array $excludedFilters = []): Builder
@@ -165,12 +180,41 @@ class DailyReportService
 
     public function export(Request $request)
     {
+        $columns = $this->resolveExportColumns($request);
+
         return Excel::download(
             new DailyReportExport(
-                $this->query($request)->get()
+                $this->query($request)->get(),
+                $columns
             ),
             'daily-report-'.date('Y-m-d').'.xlsx'
         );
+    }
+
+    public function resolveExportColumns(Request $request): array
+    {
+        $allowedColumns = $this->getColumnLabels();
+        $requestedColumns = $request->input('visible_columns', []);
+
+        if (is_string($requestedColumns)) {
+            $requestedColumns = array_filter(explode(',', $requestedColumns));
+        }
+
+        if (! is_array($requestedColumns)) {
+            $requestedColumns = [];
+        }
+
+        $requestedLookup = collect($requestedColumns)
+            ->map(fn($column) => (string) $column)
+            ->filter()
+            ->values()
+            ->flip();
+
+        $columns = collect($allowedColumns)
+            ->filter(fn($_label, $key) => $requestedLookup->has($key))
+            ->all();
+
+        return $columns !== [] ? $columns : $allowedColumns;
     }
 
     protected function resolveFilterIds(Request $request, array $keys): array

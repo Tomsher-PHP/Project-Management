@@ -488,15 +488,7 @@ class ReportController extends Controller
 
         $totalMinutes = $reportService->getTotalMinutes($request);
 
-        $columns = [
-            'date' => 'Date',
-            'user' => 'User',
-            'project' => 'Project',
-            'task' => 'Task',
-            'start_time' => 'Start Time',
-            'end_time' => 'End Time',
-            'duration' => 'Duration',
-        ];
+        $columns = $reportService->getColumnLabels();
 
         $dailyStats = [
             'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),

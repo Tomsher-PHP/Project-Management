@@ -9,7 +9,58 @@
         <x-filters.button />
 
         <!-- EXPORT -->
-        <x-export-button :href="route('reports.daily.export', request()->query())" label="Export Excel" />
+        <form
+            method="GET"
+            action="{{ route('reports.daily.export') }}"
+            id="daily-report-export-form"
+            data-column-order='@json(array_keys($columns))'
+            class="inline-flex"
+        >
+            @foreach (request()->except('visible_columns') as $key => $value)
+                @if (is_array($value))
+                    @foreach ($value as $item)
+                        <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
+
+            <input type="hidden" name="visible_columns" value="">
+
+            <button
+                type="submit"
+                class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300"
+                aria-label="Export report"
+            >
+                <span class="inline-flex items-center justify-center text-current">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 16V4m0 12l-4-4m4 4l4-4"
+                        />
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M4 20h16"
+                        />
+                    </svg>
+                </span>
+
+                <span class="text-sm font-semibold">
+                    Export Excel
+                </span>
+            </button>
+        </form>
 
         <!-- COLUMN MANAGER -->
         <x-column-manager :columns="$columns" report="daily_report" />
@@ -202,5 +253,35 @@
         <x-filters.multi-select name="task_id" label="Task" :options="$tasks" />
 
     </x-filters.drawer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const exportForm = document.getElementById('daily-report-export-form');
+
+            if (!exportForm) {
+                return;
+            }
+
+            const visibleColumnsInput = exportForm.querySelector('input[name="visible_columns"]');
+            const columnOrder = JSON.parse(exportForm.dataset.columnOrder || '[]');
+            const storageKey = 'column_manager_daily_report';
+
+            const syncVisibleColumns = () => {
+                let saved = {};
+
+                try {
+                    saved = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+                } catch (error) {
+                    saved = {};
+                }
+
+                const visibleColumns = columnOrder.filter((column) => saved[column] !== false);
+                visibleColumnsInput.value = visibleColumns.join(',');
+            };
+
+            syncVisibleColumns();
+            exportForm.addEventListener('submit', syncVisibleColumns);
+        });
+    </script>
 
 @endsection
