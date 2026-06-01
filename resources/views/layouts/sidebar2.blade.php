@@ -99,7 +99,7 @@
         <div class="sidebar-body w-full pt-[14px]">
             <div class="flex flex-col items-center">
                 <div class="nav-wrapper mb-[36px]">
-                    
+
                     <!-- MENU GROUP -->
                     <div class="item-wrapper mb-5">
                         <ul class="mt-2.5 flex flex-col items-center justify-center">
@@ -488,7 +488,9 @@
                                         <a href="{{ route('settings.index') }}">
                                             <span class="item-ico">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M13.0606 2H10.9394C9.76787 2 8.81817 2.89543 8.81817 4C8.81817 5.26401 7.46574 6.06763 6.35556 5.4633L6.24279 5.40192C5.22823 4.84963 3.93091 5.17738 3.34515 6.13397L2.28455 7.86602C1.69879 8.8226 2.0464 10.0458 3.06097 10.5981C4.17168 11.2027 4.17168 12.7973 3.06096 13.4019C2.0464 13.9542 1.69879 15.1774 2.28454 16.134L3.34515 17.866C3.93091 18.8226 5.22823 19.1504 6.24279 18.5981L6.35555 18.5367C7.46574 17.9324 8.81817 18.736 8.81817 20C8.81817 21.1046 9.76787 22 10.9394 22H13.0606C14.2321 22 15.1818 21.1046 15.1818 20C15.1818 18.736 16.5343 17.9324 17.6445 18.5367L17.7572 18.5981C18.7718 19.1504 20.0691 18.8226 20.6548 17.866L21.7155 16.134C22.3012 15.1774 21.9536 13.9542 20.939 13.4019C19.8283 12.7973 19.8283 11.2027 20.939 10.5981C21.9536 10.0458 22.3012 8.82262 21.7155 7.86603L20.6548 6.13398C20.0691 5.1774 18.7718 4.84965 17.7572 5.40193L17.6445 5.46331C16.5343 6.06765 15.1818 5.26402 15.1818 4C15.1818 2.89543 14.2321 2 13.0606 2Z" fill="#1A202C" class="path-1" />
+                                                    <path
+                                                        d="M13.0606 2H10.9394C9.76787 2 8.81817 2.89543 8.81817 4C8.81817 5.26401 7.46574 6.06763 6.35556 5.4633L6.24279 5.40192C5.22823 4.84963 3.93091 5.17738 3.34515 6.13397L2.28455 7.86602C1.69879 8.8226 2.0464 10.0458 3.06097 10.5981C4.17168 11.2027 4.17168 12.7973 3.06096 13.4019C2.0464 13.9542 1.69879 15.1774 2.28454 16.134L3.34515 17.866C3.93091 18.8226 5.22823 19.1504 6.24279 18.5981L6.35555 18.5367C7.46574 17.9324 8.81817 18.736 8.81817 20C8.81817 21.1046 9.76787 22 10.9394 22H13.0606C14.2321 22 15.1818 21.1046 15.1818 20C15.1818 18.736 16.5343 17.9324 17.6445 18.5367L17.7572 18.5981C18.7718 19.1504 20.0691 18.8226 20.6548 17.866L21.7155 16.134C22.3012 15.1774 21.9536 13.9542 20.939 13.4019C19.8283 12.7973 19.8283 11.2027 20.939 10.5981C21.9536 10.0458 22.3012 8.82262 21.7155 7.86603L20.6548 6.13398C20.0691 5.1774 18.7718 4.84965 17.7572 5.40193L17.6445 5.46331C16.5343 6.06765 15.1818 5.26402 15.1818 4C15.1818 2.89543 14.2321 2 13.0606 2Z"
+                                                        fill="#1A202C" class="path-1" />
                                                     <path d="M15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
@@ -531,19 +533,6 @@
                     @endif
 
                 </div>
-                <div class="upgrade-wrapper">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-white bg-success-300">
-                        <span>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M14 12.75C14 11.7835 13.1046 11 12 11C10.8954 11 10 11.7835 10 12.75C10 13.7165 10.8954 14.5 12 14.5C13.1046 14.5 14 15.2835 14 16.25C14 17.2165 13.1046 18 12 18C10.8954 18 10 17.2165 10 16.25" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M12 9.5V11" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M12 18V19.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M5.63246 11.1026C6.44914 8.65258 8.74197 7 11.3246 7H12.6754C15.258 7 17.5509 8.65258 18.3675 11.1026L19.3675 14.1026C20.6626 17.9878 17.7708 22 13.6754 22H10.3246C6.22921 22 3.33739 17.9878 4.63246 14.1026L5.63246 11.1026Z" stroke="white" stroke-width="1.5" stroke-linejoin="round" />
-                                <path d="M14.0859 7L9.91411 7L8.51303 5.39296C7.13959 3.81763 8.74185 1.46298 10.7471 2.10985L11.6748 2.40914C11.8861 2.47728 12.1139 2.47728 12.3252 2.40914L13.2529 2.10985C15.2582 1.46298 16.8604 3.81763 15.487 5.39296L14.0859 7Z" stroke="white" stroke-width="1.5" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -569,6 +558,7 @@
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         z-index: 50;
     }
+
     .sidebar-tooltip::before {
         content: '';
         position: absolute;
@@ -579,16 +569,19 @@
         border-style: solid;
         border-color: transparent #0f172a transparent transparent;
     }
+
     .dark .sidebar-tooltip {
         background-color: #1e293b;
         border: 1px solid #334155;
     }
+
     .dark .sidebar-tooltip::before {
         border-color: transparent #1e293b transparent transparent;
     }
+
     /* Show tooltip when hovering the anchor tag / button */
-    .sidebar-wrapper-collapse .sidebar-body .nav-wrapper ul li.item a:hover + .sidebar-tooltip,
-    .sidebar-wrapper-collapse .sidebar-body .nav-wrapper ul li.item button:hover + .sidebar-tooltip {
+    .sidebar-wrapper-collapse .sidebar-body .nav-wrapper ul li.item a:hover+.sidebar-tooltip,
+    .sidebar-wrapper-collapse .sidebar-body .nav-wrapper ul li.item button:hover+.sidebar-tooltip {
         opacity: 1;
     }
 </style>
