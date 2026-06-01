@@ -65,4 +65,11 @@
             </tfoot>
         </table>
     </div>
+
+    <!-- Load More Button -->
+    <div class="mt-6 flex justify-center {{ $runningTasksData->hasMorePages() ? '' : 'hidden' }}" data-running-tasks-load-more-container>
+        <button type="button" data-running-tasks-load-more-btn class="rounded-lg px-5 py-2 font-semibold text-success-300 hover:text-success-400 disabled:opacity-50 disabled:cursor-not-allowed">
+            Load More
+        </button>
+    </div>
 </div>

@@ -235,14 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 3. Running Tasks Infinite Scroll Pagination
+    // 3. Running Tasks Load More Button
     // -------------------------------------------------------------
     const runningTasksCard = document.querySelector('[data-running-tasks-card]');
     if (runningTasksCard) {
-        const scrollContainer = runningTasksCard.querySelector('[data-running-tasks-scroll-container]');
         const tableBody = runningTasksCard.querySelector('[data-running-tasks-table-body]');
-        const loadingIndicator = runningTasksCard.querySelector('[data-running-tasks-loading-indicator]');
-        const noMoreMsg = runningTasksCard.querySelector('[data-running-tasks-no-more]');
+        const loadMoreBtn = runningTasksCard.querySelector('[data-running-tasks-load-more-btn]');
+        const loadMoreContainer = runningTasksCard.querySelector('[data-running-tasks-load-more-container]');
         const emptyRow = runningTasksCard.querySelector('[data-running-tasks-empty-row]');
 
         let isLoading = false;
@@ -254,6 +253,14 @@ document.addEventListener('DOMContentLoaded', () => {
                       .replace(/>/g, '&gt;')
                       .replace(/"/g, '&quot;')
                       .replace(/'/g, '&#039;');
+        };
+
+        const limitStringChar = (str, count, end = '...') => {
+            if (!str) return '';
+            if (str.length > count) {
+                return str.substring(0, count) + end;
+            }
+            return str;
         };
 
         const loadNextPage = async () => {
@@ -268,8 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!url || !nextPage) return;
 
             isLoading = true;
-            if (loadingIndicator) {
-                loadingIndicator.classList.remove('hidden');
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'Loading More...';
             }
 
             try {
@@ -307,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </td>
                             <td class="py-3.5 text-sm font-semibold text-success-300 hover:text-success-400 transition-colors">
                                 <a href="${taskEditUrl}">
-                                    ${escapeHtml(row.task_name)}
+                                    ${escapeHtml(limitStringChar(row.task_name, 30))}
                                 </a>
                             </td>
                             <td class="py-3.5 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.estimated_time)}</td>
@@ -320,9 +328,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     runningTasksCard.setAttribute('data-running-tasks-has-more', result.has_more_pages ? 'true' : 'false');
                     runningTasksCard.setAttribute('data-running-tasks-next-page', result.next_page || '');
 
+                    // Hide container if there are no more pages
                     if (!result.has_more_pages) {
-                        if (noMoreMsg) {
-                            noMoreMsg.classList.remove('hidden');
+                        if (loadMoreContainer) {
+                            loadMoreContainer.classList.add('hidden');
                         }
                     }
                 }
@@ -330,20 +339,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Running Tasks Load Error:', error);
             } finally {
                 isLoading = false;
-                if (loadingIndicator) {
-                    loadingIndicator.classList.add('hidden');
+                if (loadMoreBtn) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = 'Load More';
                 }
             }
         };
 
-        if (scrollContainer) {
-            scrollContainer.addEventListener('scroll', () => {
-                const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-                // Load when user scrolls near the bottom (within 20px)
-                if (scrollHeight - scrollTop - clientHeight < 20) {
-                    loadNextPage();
-                }
-            });
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', loadNextPage);
         }
     }
 });
