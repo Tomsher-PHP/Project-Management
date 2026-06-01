@@ -166,7 +166,7 @@ class ReportController extends Controller
                 ->get()
         ]);
     }
-    
+
     public function export(Request $request)
     {
         $projects = $this->projectReportService
@@ -475,44 +475,30 @@ class ReportController extends Controller
             'subTitle' => $this->subTitle,
         ]);
 
-        $perPage = $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $reportService = app(DailyReportService::class);
 
         $reports = $reportService->getReports($request, $perPage);
+        $displayRows = $reportService->buildDisplayRows($reports, $request);
 
-        $projects = Project::select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $staffs = User::select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $tasks = Task::select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        $projects = $reportService->getFilterProjects($request);
+        $users = $reportService->getFilterUsers($request);
+        $tasks = $reportService->getFilterTasks($request);
 
         $totalMinutes = $reportService->getTotalMinutes($request);
 
         $columns = [
             'date' => 'Date',
-            'staff' => 'Staff',
+            'user' => 'User',
             'project' => 'Project',
             'task' => 'Task',
             'start_time' => 'Start Time',
             'end_time' => 'End Time',
-            'total_time' => 'Total Time',
+            'duration' => 'Duration',
         ];
 
-        $dailyBaseQuery = clone $reports;
-
         $dailyStats = [
-            'total_entries' => $dailyBaseQuery->total(),
-
             'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
 
             'approved_entries' => $reports->getCollection()
@@ -523,7 +509,7 @@ class ReportController extends Controller
                 ->where('is_approved', false)
                 ->count(),
 
-            'active_staffs' => $reports->getCollection()
+            'active_users' => $reports->getCollection()
                 ->pluck('user_id')
                 ->unique()
                 ->count(),
@@ -544,9 +530,10 @@ class ReportController extends Controller
         return view('reports.daily', compact(
             'reports',
             'projects',
-            'staffs',
+            'users',
             'tasks',
             'perPage',
+            'displayRows',
             'totalMinutes',
             'columns',
             'dailyStats'
@@ -558,7 +545,6 @@ class ReportController extends Controller
      */
     public function dailyExport(Request $request)
     {
-        return app(DailyReportService::class)
-            ->export($request);
+        return app(DailyReportService::class)->export($request);
     }
 }

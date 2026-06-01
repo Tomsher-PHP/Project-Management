@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-2">
-    <label class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
+    <label class="text-sm font-medium text-bgray-700 dark:text-bgray-50">
         {{ $label }}
     </label>
 

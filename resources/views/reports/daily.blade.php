@@ -5,80 +5,68 @@
 
     <!-- TOP ACTION BAR -->
     <div class="mb-6 flex flex-wrap items-center gap-3">
-
         <!-- FILTER BUTTON -->
         <x-filters.button />
 
         <!-- EXPORT -->
-        <x-export-button
-            :href="route('reports.daily.export', request()->query())"
-            label="Export Excel" />
+        <x-export-button :href="route('reports.daily.export', request()->query())" label="Export Excel" />
 
         <!-- COLUMN MANAGER -->
         <x-column-manager :columns="$columns" report="daily_report" />
-
-        <!-- SEARCH -->
-        <div class="inline-flex flex-wrap items-center gap-2 rounded-xl bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:ml-auto">
-            <x-table-search target=".daily-report-table" placeholder="Search daily reports..." />
-        </div>
-
     </div>
 
     <!-- REPORT STATS -->
-    <div class="mb-6 grid grid-cols-5 gap-4">
-
-        <!-- TOTAL ENTRIES -->
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="text-sm text-gray-500 dark:text-gray-300">
-                Total Entries
-            </div>
-
-            <div class="mt-2 text-3xl font-bold">
-                {{ $dailyStats['total_entries'] }}
-            </div>
-        </div>
+    <div class="custom-scroll mb-6 flex items-center gap-3 overflow-x-auto py-0">
 
         <!-- TOTAL TIME -->
-        <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
-            <div class="text-sm text-gray-500">
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
                 Total Time
-            </div>
+                </div>
 
-            <div class="mt-2 text-3xl font-bold">
-                {{ $dailyStats['total_hours'] }}
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $dailyStats['total_hours'] }}
+                </div>
             </div>
         </div>
 
-        <!-- TOTAL STAFF -->
-        <div class="rounded-xl border border-green-200 bg-green-50 p-5 shadow-sm">
-            <div class="text-sm text-gray-500">
-                Staff
-            </div>
+        <!-- TOTAL USERS -->
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                Users
+                </div>
 
-            <div class="mt-2 text-3xl font-bold">
-                {{ $dailyStats['active_staffs'] }}
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $dailyStats['active_users'] }}
+                </div>
             </div>
         </div>
 
         <!-- TOTAL PROJECTS -->
-        <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
-            <div class="text-sm text-gray-500">
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
                 Projects
-            </div>
+                </div>
 
-            <div class="mt-2 text-3xl font-bold">
-                {{ $dailyStats['project_count'] }}
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $dailyStats['project_count'] }}
+                </div>
             </div>
         </div>
 
         <!-- TOTAL TASKS -->
-        <div class="rounded-xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
-            <div class="text-sm text-gray-500">
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
                 Tasks
-            </div>
+                </div>
 
-            <div class="mt-2 text-3xl font-bold">
-                {{ $dailyStats['task_count'] }}
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $dailyStats['task_count'] }}
+                </div>
             </div>
         </div>
 
@@ -89,184 +77,130 @@
 
         <div class="overflow-x-auto">
 
-            <table class="w-full min-w-[1300px]">
+            <table class="daily-report-table w-full min-w-[1300px]">
 
                 <!-- HEADER -->
-                <thead>
-
+                <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-
-                        <th class="px-6 py-5 xl:w-[165px]">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
                             #
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-project">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
                             Project
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-staff">
-                            Staff
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
+                            User
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-date">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
                             Date
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-start_time">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
                             Start Time
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-end_time">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
                             End Time
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-total_time">
-                            Total Time (Minutes)
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
+                            Duration
                         </th>
 
-                        <th class="px-6 py-5 xl:w-[165px] col-task">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
                             Task
                         </th>
-
                     </tr>
-
                 </thead>
 
                 <!-- BODY -->
                 <tbody class="divide-y divide-gray-200 dark:divide-darkblack-400">
-
                     @php
-                    $previousEnd = null;
+                        $reportNumber = ($reports->currentPage() - 1) * $reports->perPage();
                     @endphp
 
-                    @forelse($reports as $report)
+                    @forelse($displayRows as $row)
+                        <!-- BREAK ROW -->
+                        @if (($row['type'] ?? null) === 'break')
+                            <tr class="border-y border-yellow-200 bg-yellow-50 dark:border-yellow-900/30 dark:bg-yellow-900/20">
+                                <td colspan="8" class="px-5 py-4 text-center text-sm font-medium text-black dark:text-bgray-50">
+                                    BREAK:
+                                    {{ $row['break']['duration_label'] ?? formatSecondsToHMS($row['break']['duration_seconds'] ?? 0) }}
+                                </td>
+                            </tr>
+                            @continue
+                        @endif
+                        @php
+                            $report = $row['report'];
+                            $reportNumber++;
+                        @endphp
 
-                    {{-- BREAK ROW --}}
-                    @if($previousEnd)
+                        <!-- DATA ROW -->
+                        <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
+                            <td class="px-5 py-4 text-sm text-bgray-600 dark:text-bgray-300">
+                                {{ $reportNumber }}
+                            </td>
 
-                    @php
+                            <td class="px-5 py-4 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
+                                {{ $report->task?->project?->name ?? '-' }}
+                            </td>
 
-                    $breakMinutes =
-                    $previousEnd->diffInMinutes(
-                    $report->started_at
-                    );
+                            <td class="px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300 col-user">
+                                {{ $report->user?->name ?? '-' }}
+                            </td>
 
-                    @endphp
+                            <td class="px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300 col-date">
+                                @appDate($report->started_at)
+                            </td>
 
-                    @if($breakMinutes > 0)
+                            <td class="px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300 col-start_time">
+                                @appTime($report->started_at)
+                            </td>
 
-                    <tr class="bg-yellow-50 dark:bg-yellow-900/10">
+                            <td class="px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300 col-end_time">
+                                @appTime($report->ended_at)
+                            </td>
 
-                        <td
-                            colspan="9"
-                            class="px-5 py-4 text-center text-sm font-medium">
-                            BREAK:
-                            {{ $breakMinutes }} mins
-                        </td>
+                            <td class="px-5 py-4 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-duration">
+                                {{ formatSecondsToHMS($report->duration_seconds) }}
+                            </td>
 
-                    </tr>
-
-                    @endif
-
-                    @endif
-
-                    {{-- DATA ROW --}}
-                    <tr class="transition hover:bg-gray-50 dark:hover:bg-darkblack-500">
-
-                        <td class="px-5 py-4 text-sm">
-                            {{ $loop->iteration }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm font-medium  col-project">
-                            {{ $report->task?->project?->name ?? '-' }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm  col-staff">
-                            {{ $report->user?->name ?? '-' }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm  col-date">
-                            {{ $report->started_at?->format('Y-m-d') }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm col-start_time">
-                            {{ $report->started_at?->format('H:i:s') }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm col-end_time">
-                            {{ $report->ended_at?->format('H:i:s') }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm font-medium col-total_time">
-                            {{ round($report->duration_seconds / 60) }}
-                        </td>
-
-                        <td class="px-5 py-4 text-sm col-task">
-                            {{ $report->task?->name ?? '-' }}
-                        </td>
-
-                    </tr>
-
-                    @php
-                    $previousEnd = $report->ended_at;
-                    @endphp
-
+                            <td class="px-5 py-4 text-sm text-bgray-700 dark:text-bgray-300 col-task">
+                                {{ $report->task?->name ?? '-' }}
+                            </td>
+                        </tr>
                     @empty
-
-                    <tr>
-
-                        <td
-                            colspan="9"
-                            class="px-5 py-10 text-center text-sm text-gray-500">
-                            No records found.
-                        </td>
-
-                    </tr>
-
+                        <tr>
+                            <td colspan="8" class="px-5 py-10 text-center text-sm text-bgray-500 dark:text-bgray-300">
+                                No records found.
+                            </td>
+                        </tr>
                     @endforelse
-
-
-
                 </tbody>
-
             </table>
-
         </div>
 
     </div>
 
     <!-- PAGINATION -->
     <div class="mt-6">
-
-        <x-pagination
-            :paginator="$reports"
-            :per-page="$perPage" />
-
+        <x-pagination :paginator="$reports" :per-page="$perPage" />
     </div>
 
-<!-- FILTER DRAWER -->
-<x-filters.drawer>
+    <!-- FILTER DRAWER -->
+    <x-filters.drawer>
 
-    <x-filters.date-range
-        label="Date Range"
-        startName="start_date"
-        endName="end_date" />
+        <x-filters.date-range label="Date Range" startName="start_date" endName="end_date" />
 
-    <x-filters.multi-select
-        name="project_id"
-        label="Project"
-        :options="$projects" />
+        <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
 
-    <x-filters.multi-select
-        name="user_id"
-        label="Staff"
-        :options="$staffs" />
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" />
 
-    <x-filters.multi-select
-        name="task_id"
-        label="Task"
-        :options="$tasks" />
+        <x-filters.multi-select name="task_id" label="Task" :options="$tasks" />
 
-</x-filters.drawer>
+    </x-filters.drawer>
 
 @endsection
