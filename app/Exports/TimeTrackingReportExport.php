@@ -38,12 +38,16 @@ class TimeTrackingReportExport implements FromCollection, WithHeadings
     {
         return match ($column) {
             'project' => $report->task?->project?->name ?? '-',
+            'milestone' => $report->task?->projectMilestone?->name
+                ?? $report->task?->projectSprint?->projectMilestone?->name
+                ?? '-',
+            'sprint' => $report->task?->projectSprint?->name ?? '-',
+            'task' => $report->task?->name ?? '-',
             'user' => $report->user?->name ?? '-',
             'date' => AppServiceProvider::formatAppDate($report->started_at),
             'start_time' => AppServiceProvider::formatAppTime($report->started_at),
             'end_time' => AppServiceProvider::formatAppTime($report->ended_at),
             'duration' => $report->duration_seconds ? formatSecondsToHMS($report->duration_seconds) : '-',
-            'task' => $report->task?->name ?? '-',
             default => '-',
         };
     }

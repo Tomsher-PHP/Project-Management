@@ -477,6 +477,8 @@ class ReportController extends Controller
         $displayRows = $reportService->buildDisplayRows($reports, $request);
 
         $projects = $reportService->getFilterProjects($request);
+        $projectMilestones = $reportService->getFilterMilestones($request);
+        $projectSprints = $reportService->getFilterSprints($request);
         $users = $reportService->getFilterUsers($request);
 
         $totalMinutes = $reportService->getTotalMinutes($request);
@@ -515,6 +517,8 @@ class ReportController extends Controller
         return view('reports.time-tracking', compact(
             'reports',
             'projects',
+            'projectMilestones',
+            'projectSprints',
             'users',
             'perPage',
             'displayRows',

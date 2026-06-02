@@ -3,6 +3,8 @@
 namespace App\Services\Reports;
 
 use App\Exports\TimeTrackingReportExport;
+use App\Models\ProjectMilestone;
+use App\Models\ProjectSprint;
 use App\Models\TaskTimeLog;
 use App\Providers\AppServiceProvider;
 use App\Services\UserTimelineService;
@@ -17,12 +19,14 @@ class TimeTrackingReportService
 {
     protected const EXPORTABLE_COLUMNS = [
         'project' => 'Project',
+        'milestone' => 'Milestone',
+        'sprint' => 'Sprint',
+        'task' => 'Task',
         'user' => 'User',
         'date' => 'Date',
         'start_time' => 'Start Time',
         'end_time' => 'End Time',
         'duration' => 'Duration',
-        'task' => 'Task',
     ];
 
     public function __construct(
@@ -42,7 +46,20 @@ class TimeTrackingReportService
         $taskIds = in_array('task_id', $excludedFilters, true)
             ? []
             : $this->resolveFilterIds($request, ['task_id']);
+        $milestoneIds = $this->shouldExcludeAnyFilter(
+            $excludedFilters,
+            ['project_milestone_id', 'milestone_id']
+        )
+            ? []
+            : $this->resolveFilterIds($request, ['project_milestone_id', 'milestone_id']);
+        $sprintIds = $this->shouldExcludeAnyFilter(
+            $excludedFilters,
+            ['project_sprint_id', 'sprint_id']
+        )
+            ? []
+            : $this->resolveFilterIds($request, ['project_sprint_id', 'sprint_id']);
         $userIds = in_array('user_id', $excludedFilters, true)
+            || in_array('staff_id', $excludedFilters, true)
             ? []
             : $this->getSelectedUserIds($request);
 
@@ -61,6 +78,22 @@ class TimeTrackingReportService
             ->when($taskIds !== [], function ($q) use ($taskIds) {
                 $q->whereIn('task_id', $taskIds);
             })
+            ->when($milestoneIds !== [], function ($q) use ($milestoneIds) {
+                $q->whereHas('task', function ($taskQuery) use ($milestoneIds) {
+                    $taskQuery->where(function ($milestoneQuery) use ($milestoneIds) {
+                        $milestoneQuery
+                            ->whereIn('project_milestone_id', $milestoneIds)
+                            ->orWhereHas('projectSprint', function ($sprintQuery) use ($milestoneIds) {
+                                $sprintQuery->whereIn('project_milestone_id', $milestoneIds);
+                            });
+                    });
+                });
+            })
+            ->when($sprintIds !== [], function ($q) use ($sprintIds) {
+                $q->whereHas('task', function ($taskQuery) use ($sprintIds) {
+                    $taskQuery->whereIn('project_sprint_id', $sprintIds);
+                });
+            })
             ->when(
                 !empty($request->start_date) &&
                     !empty($request->end_date),
@@ -78,8 +111,11 @@ class TimeTrackingReportService
         return $this->baseQuery($request)
             ->with([
                 'user:id,name',
-                'task:id,name,project_id',
-                'task.project:id,name',
+                'task:id,name,project_id,project_milestone_id,project_sprint_id',
+                'task.project:id,name,project_flow',
+                'task.projectMilestone:id,project_id,name',
+                'task.projectSprint:id,project_id,project_milestone_id,name',
+                'task.projectSprint.projectMilestone:id,project_id,name',
             ])
             ->orderByDesc('started_at')
             ->orderByDesc('id');
@@ -118,12 +154,67 @@ class TimeTrackingReportService
 
     public function getFilterUsers(Request $request): Collection
     {
-        return $this->baseQuery($request, ['user_id'])
+        return $this->baseQuery($request, ['user_id', 'staff_id'])
             ->join('users', 'users.id', '=', 'task_time_logs.user_id')
             ->select('users.id', 'users.name')
             ->distinct()
             ->orderBy('users.name')
             ->get();
+    }
+
+    public function getFilterMilestones(Request $request): Collection
+    {
+        $milestoneIds = $this->baseQuery($request, ['project_milestone_id', 'milestone_id'])
+            ->join('tasks', 'tasks.id', '=', 'task_time_logs.task_id')
+            ->leftJoin('project_sprints', 'project_sprints.id', '=', 'tasks.project_sprint_id')
+            ->selectRaw('COALESCE(tasks.project_milestone_id, project_sprints.project_milestone_id) as milestone_id')
+            ->pluck('milestone_id')
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        return $milestoneIds->isEmpty()
+            ? collect()
+            : ProjectMilestone::with('project:id,name')
+            ->whereIn('id', $milestoneIds)
+            ->orderBy('name')
+            ->get(['id', 'project_id', 'name'])
+            ->map(fn($milestone) => (object) [
+                'id' => $milestone->id,
+                'project_id' => $milestone->project_id,
+                'name' => $milestone->project?->name
+                    ? "{$milestone->project->name} / {$milestone->name}"
+                    : $milestone->name,
+            ]);
+    }
+
+    public function getFilterSprints(Request $request): Collection
+    {
+        $sprintIds = $this->baseQuery($request, ['project_sprint_id', 'sprint_id'])
+            ->join('tasks', 'tasks.id', '=', 'task_time_logs.task_id')
+            ->whereNotNull('tasks.project_sprint_id')
+            ->pluck('tasks.project_sprint_id')
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        return $sprintIds->isEmpty()
+            ? collect()
+            : ProjectSprint::with(['project:id,name', 'projectMilestone:id,name'])
+            ->whereIn('id', $sprintIds)
+            ->orderBy('name')
+            ->get(['id', 'project_id', 'project_milestone_id', 'name'])
+            ->map(fn($sprint) => (object) [
+                'id' => $sprint->id,
+                'project_id' => $sprint->project_id,
+                'project_milestone_id' => $sprint->project_milestone_id,
+                'name' => collect([
+                    $sprint->project?->name,
+                    $sprint->projectMilestone?->name,
+                    $sprint->name,
+                ])->filter()->implode(' / '),
+            ]);
     }
 
     public function shouldShowBreakRows(Request $request): bool
@@ -226,6 +317,13 @@ class TimeTrackingReportService
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function shouldExcludeAnyFilter(array $excludedFilters, array $keys): bool
+    {
+        return collect($keys)->contains(
+            fn(string $key) => in_array($key, $excludedFilters, true)
+        );
     }
 
     protected function buildBreakRowsByReportId(Collection $reports, int $selectedUserId): array
