@@ -1,8 +1,14 @@
 <aside class="sidebar-wrapper fixed top-0 z-30 block h-full bg-white dark:bg-darkblack-600 sm:hidden xl:block">
-    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 dark:border-darkblack-400">
-        <a href="{{ route('dashboard') }}">
-            <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="logo" />
-            <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden dark:block" alt="logo" />
+    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 pb-4 dark:border-darkblack-400">
+        <a href="{{ route('dashboard') }}" class="flex items-center">
+            <span class="relative inline-flex">
+                <img src="{{ asset(config('assets.icons.logo')) }}" class="block h-10 w-auto dark:hidden" alt="logo" />
+                <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden h-10 w-auto dark:block" alt="logo" />
+
+                <span class="absolute -bottom-4 -left-1 inline-flex shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                    {{ config('app.version') }}
+                </span>
+            </span>
         </a>
         <button type="button" class="drawer-btn absolute right-0 top-[8px]" title="Ctrl+b">
             <span>
