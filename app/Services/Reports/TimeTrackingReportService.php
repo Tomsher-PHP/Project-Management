@@ -40,6 +40,7 @@ class TimeTrackingReportService
 
     protected function baseQuery(Request $request, array $excludedFilters = []): Builder
     {
+        $dateRange = $this->resolveStartedAtDateRange($request);
         $projectIds = in_array('project_id', $excludedFilters, true)
             ? []
             : $this->resolveFilterIds($request, ['project_id']);
@@ -94,16 +95,15 @@ class TimeTrackingReportService
                     $taskQuery->whereIn('project_sprint_id', $sprintIds);
                 });
             })
-            ->when(
-                !empty($request->start_date) &&
-                    !empty($request->end_date),
-                function ($q) use ($request) {
-                    $q->whereBetween('started_at', [
-                        $request->start_date . ' 00:00:00',
-                        $request->end_date . ' 23:59:59',
-                    ]);
-                }
-            );
+            ->when($dateRange['type'] === 'between', function ($q) use ($dateRange) {
+                $q->whereBetween('started_at', [
+                    $dateRange['start']->toDateString() . ' 00:00:00',
+                    $dateRange['end']->toDateString() . ' 23:59:59',
+                ]);
+            })
+            ->when($dateRange['type'] === 'single', function ($q) use ($dateRange) {
+                $q->whereDate('started_at', $dateRange['date']->toDateString());
+            });
     }
 
     protected function query(Request $request)
@@ -324,6 +324,50 @@ class TimeTrackingReportService
         return collect($keys)->contains(
             fn(string $key) => in_array($key, $excludedFilters, true)
         );
+    }
+
+    protected function resolveStartedAtDateRange(Request $request): array
+    {
+        $startDate = $this->parseFilterDate($request->input('start_date'));
+        $endDate = $this->parseFilterDate($request->input('end_date'));
+
+        if ($startDate && $endDate) {
+            if ($startDate->gt($endDate)) {
+                [$startDate, $endDate] = [$endDate, $startDate];
+            }
+
+            return [
+                'type' => 'between',
+                'start' => $startDate,
+                'end' => $endDate,
+            ];
+        }
+
+        if ($startDate || $endDate) {
+            return [
+                'type' => 'single',
+                'date' => $startDate ?? $endDate,
+            ];
+        }
+
+        return ['type' => null];
+    }
+
+    protected function parseFilterDate(mixed $value): ?Carbon
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('Y-m-d', trim($value));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $date && $date->format('Y-m-d') === trim($value)
+            ? $date
+            : null;
     }
 
     protected function buildBreakRowsByReportId(Collection $reports, int $selectedUserId): array
