@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('task:notify-start')->everyMinute()->withoutOverlapping();
 Schedule::command('projects:recalculate-times')->everySixHours()->withoutOverlapping();
+Schedule::command('reports:cleanup')->dailyAt('02:00')->timezone(config('app.timezone'))->withoutOverlapping();

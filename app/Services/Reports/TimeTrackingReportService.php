@@ -3,20 +3,27 @@
 namespace App\Services\Reports;
 
 use App\Exports\TimeTrackingReportExport;
+use App\Jobs\GenerateTimeTrackingReportJob;
+use App\Models\GeneratedReport;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\TaskTimeLog;
-use App\Providers\AppServiceProvider;
 use App\Services\UserTimelineService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use RuntimeException;
 
 class TimeTrackingReportService
 {
+    protected const REPORT_STORAGE_DISK = 'local';
+
+    protected const REPORT_STORAGE_DIRECTORY = 'reports/time-tracking';
+
     protected const EXPORTABLE_COLUMNS = [
         'project' => 'Project',
         'milestone' => 'Milestone',
@@ -261,22 +268,81 @@ class TimeTrackingReportService
 
     public function export(Request $request)
     {
-        $columns = $this->resolveExportColumns($request);
-        $formatedDate = AppServiceProvider::formatAppDate(now());
+        $generatedReport = $this->createGeneratedReport(
+            $request->all(),
+            $request->user()?->id,
+            GeneratedReport::REQUESTED_VIA_MANUAL
+        );
 
-        return Excel::download(
-            new TimeTrackingReportExport(
-                $this->query($request)->get(),
-                $columns
-            ),
-            'time-tracking-report-' . $formatedDate . '.xlsx'
+        $generatedReport = $this->generateQueuedExport($generatedReport);
+
+        if (! $generatedReport->path || ! $generatedReport->filename) {
+            throw new RuntimeException('The generated report file is not available for download.');
+        }
+
+        return Storage::disk((string) $generatedReport->disk)->download(
+            $generatedReport->path,
+            $generatedReport->filename
         );
     }
 
     public function resolveExportColumns(Request $request): array
     {
+        return $this->resolveExportColumnsFromFilters($request->all());
+    }
+
+    public function queueExport(array $filters = [], ?int $userId = null, string $requestedVia = GeneratedReport::REQUESTED_VIA_MANUAL): GeneratedReport
+    {
+        $generatedReport = $this->createGeneratedReport($filters, $userId, $requestedVia);
+
+        GenerateTimeTrackingReportJob::dispatch($generatedReport->id);
+
+        return $generatedReport;
+    }
+
+    public function generateQueuedExport(GeneratedReport $generatedReport): GeneratedReport
+    {
+        $filters = $this->normalizeExportFilters($generatedReport->filters ?? []);
+        $request = $this->makeFilterRequest($filters);
+        $columns = $this->resolveExportColumnsFromFilters($filters);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
+        $filename = $this->buildQueuedFilename($generatedReport->id, $generatedReport->user_id, $generatedAt);
+        $path = self::REPORT_STORAGE_DIRECTORY . '/' . $filename;
+
+        Storage::disk(self::REPORT_STORAGE_DISK)->makeDirectory(self::REPORT_STORAGE_DIRECTORY);
+
+        $stored = Excel::store(
+            new TimeTrackingReportExport(
+                $this->query($request)->get(),
+                $columns,
+                $filters,
+                $generatedAt
+            ),
+            $path,
+            self::REPORT_STORAGE_DISK
+        );
+
+        if (! $stored) {
+            throw new RuntimeException('Failed to store the generated time tracking report file.');
+        }
+
+        $generatedReport->forceFill([
+            'status' => GeneratedReport::STATUS_COMPLETED,
+            'disk' => self::REPORT_STORAGE_DISK,
+            'path' => $path,
+            'filename' => $filename,
+            'generated_at' => $generatedAt,
+            'failed_at' => null,
+            'error_message' => null,
+        ])->save();
+
+        return $generatedReport->refresh();
+    }
+
+    public function resolveExportColumnsFromFilters(array $filters): array
+    {
         $allowedColumns = $this->getColumnLabels();
-        $requestedColumns = $request->input('visible_columns', []);
+        $requestedColumns = $filters['visible_columns'] ?? [];
 
         if (is_string($requestedColumns)) {
             $requestedColumns = array_filter(explode(',', $requestedColumns));
@@ -297,6 +363,77 @@ class TimeTrackingReportService
             ->all();
 
         return $columns !== [] ? $columns : $allowedColumns;
+    }
+
+    protected function normalizeExportFilters(array $filters): array
+    {
+        $allowedKeys = [
+            'start_date',
+            'end_date',
+            'project_id',
+            'project_milestone_id',
+            'project_sprint_id',
+            'user_id',
+            'staff_id',
+            'task_id',
+            'visible_columns',
+        ];
+
+        $normalized = [];
+
+        foreach ($allowedKeys as $key) {
+            if (! array_key_exists($key, $filters)) {
+                continue;
+            }
+
+            $value = $filters[$key];
+
+            if (in_array($key, ['start_date', 'end_date', 'visible_columns'], true)) {
+                $normalized[$key] = is_array($value) ? array_values($value) : (string) $value;
+                continue;
+            }
+
+            $values = is_array($value) ? $value : [$value];
+            $normalized[$key] = collect($values)
+                ->filter(fn($item) => filled($item))
+                ->map(fn($item) => (int) $item)
+                ->filter(fn(int $item) => $item > 0)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $normalized;
+    }
+
+    protected function createGeneratedReport(
+        array $filters = [],
+        ?int $userId = null,
+        string $requestedVia = GeneratedReport::REQUESTED_VIA_MANUAL
+    ): GeneratedReport {
+        return GeneratedReport::query()->create([
+            'user_id' => $userId,
+            'report_type' => GeneratedReport::REPORT_TYPE_TIME_TRACKING,
+            'status' => GeneratedReport::STATUS_PENDING,
+            'requested_via' => $requestedVia,
+            'filters' => $this->normalizeExportFilters($filters),
+            'requested_at' => now(),
+        ]);
+    }
+
+    protected function makeFilterRequest(array $filters): Request
+    {
+        return Request::create('/reports/time-tracking/export', 'GET', $filters);
+    }
+
+    protected function buildQueuedFilename(int $generatedReportId, ?int $userId, Carbon $generatedAt): string
+    {
+        return sprintf(
+            'time_tracking_report_%s_%s_%d.xlsx',
+            $userId ? 'user_' . $userId : 'system',
+            $generatedAt->format('Ymd_His'),
+            $generatedReportId
+        );
     }
 
     protected function resolveFilterIds(Request $request, array $keys): array
