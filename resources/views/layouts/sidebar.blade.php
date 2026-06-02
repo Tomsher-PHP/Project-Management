@@ -85,7 +85,7 @@
             $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive;
 
             $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
-            $isTimeTrackingReportActive = request()->routeIs('reports.time.tracking', 'reports.time.tracking.export');
+            $isTimeTrackingReportActive = request()->routeIs('reports.time_tracking', 'reports.time_tracking.export');
             $isDailyReportActive = request()->routeIs('reports.daily', 'reports.daily.export');
             $isPerformanceReportsMenuActive = $isProductivityReportActive || $isTimeTrackingReportActive || $isDailyReportActive;
 
@@ -467,20 +467,20 @@
                                         </li>
                                     @endif
 
-                                    @if ($canViewTimeTrackingReports)
+                                    {{-- @if ($canViewDailyReports)
                                         <!-- Time Tracking Report -->
                                         <li>
                                             <a href="{{ route('reports.time.tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 Time Tracking
                                             </a>
                                         </li>
-                                    @endif
+                                    @endif --}}
 
-                                    @if ($canViewDailyReports)
-                                        <!-- Daily Report -->
+                                    @if ($canViewTimeTrackingReports)
+                                        <!-- Time Tracking Report -->
                                         <li>
-                                            <a href="{{ route('reports.daily') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDailyReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Daily
+                                            <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Time Tracking
                                             </a>
                                         </li>
                                     @endif

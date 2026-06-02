@@ -469,8 +469,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');
 
         // TIME TRACKING REPORT
-        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time.tracking');
-        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time.tracking.export');
+        // Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time.tracking');
+        // Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time.tracking.export');
 
         // MILESTONE REPORT
         Route::get('/milestones-report', [ReportController::class, 'milestone'])->middleware('permission.type:reports.milestone_view')->name('milestones');
@@ -480,9 +480,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sprints-report', [ReportController::class, 'sprint'])->middleware('permission.type:reports.sprint_view')->name('sprints');
         Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
 
-        // DAILY REPORT
-        Route::get('/daily-report', [ReportController::class, 'daily'])->middleware('permission.type:reports.daily_view')->name('daily');
-        Route::get('/reports/daily/export', [ReportController::class, 'dailyExport'])->middleware('permission.type:reports.daily_export')->name('daily.export');
+        // TIME TRACKING REPORT
+        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time_tracking');
+        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time_tracking.export');
     });
 });
 

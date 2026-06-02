@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\ProjectReportExport;
 use App\Models\Customer;
 use App\Models\Project;
-use App\Models\ProjectMilestone;
-use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
-use App\Models\Task;
 use App\Models\User;
 use App\Services\Reports\DailyReportService;
 use App\Services\Reports\MilestoneReportService;
@@ -280,7 +277,7 @@ class ReportController extends Controller
     }
 
     // Time Tracking report
-    public function timeTracking(Request $request, TaskFilterService $filterService)
+    public function timeTracking_old(Request $request, TaskFilterService $filterService)
     {
         $this->pageTitle = 'Time Tracking Report';
 
@@ -353,10 +350,9 @@ class ReportController extends Controller
     /**
      * Time Tracking EXPORT
      */
-    public function timeTrackingExport(Request $request)
+    public function timeTrackingExport_old(Request $request)
     {
-        return $this->timeTrackingReportService
-            ->exportLogs($request);
+        return $this->timeTrackingReportService->exportLogs($request);
     }
 
     public function milestone(Request $request)
@@ -465,26 +461,23 @@ class ReportController extends Controller
             ->export($request);
     }
 
-    public function daily(Request $request)
+    public function timeTracking(Request $request)
     {
-        $this->pageTitle = 'Daily Report';
-        $this->subTitle = 'View and analyze daily time entries';
+        $this->pageTitle = 'Time Tracking Report';
 
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
 
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $reportService = app(DailyReportService::class);
+        $reportService = app(TimeTrackingReportService::class);
 
         $reports = $reportService->getReports($request, $perPage);
         $displayRows = $reportService->buildDisplayRows($reports, $request);
 
         $projects = $reportService->getFilterProjects($request);
         $users = $reportService->getFilterUsers($request);
-        $tasks = $reportService->getFilterTasks($request);
 
         $totalMinutes = $reportService->getTotalMinutes($request);
 
@@ -519,11 +512,10 @@ class ReportController extends Controller
                 ->count(),
         ];
 
-        return view('reports.daily', compact(
+        return view('reports.time-tracking', compact(
             'reports',
             'projects',
             'users',
-            'tasks',
             'perPage',
             'displayRows',
             'totalMinutes',
@@ -535,8 +527,8 @@ class ReportController extends Controller
     /**
      * DAILY REPORT EXPORT
      */
-    public function dailyExport(Request $request)
+    public function timeTrackingExport(Request $request)
     {
-        return app(DailyReportService::class)->export($request);
+        return app(TimeTrackingReportService::class)->export($request);
     }
 }

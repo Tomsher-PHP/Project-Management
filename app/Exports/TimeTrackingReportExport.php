@@ -7,7 +7,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class DailyReportExport implements FromCollection, WithHeadings
+class TimeTrackingReportExport implements FromCollection, WithHeadings
 {
     protected Collection $reports;
     protected array $columns;
