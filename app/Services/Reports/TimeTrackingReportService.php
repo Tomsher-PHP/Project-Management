@@ -406,11 +406,8 @@ class TimeTrackingReportService
         return $normalized;
     }
 
-    protected function createGeneratedReport(
-        array $filters = [],
-        ?int $userId = null,
-        string $requestedVia = GeneratedReport::REQUESTED_VIA_MANUAL
-    ): GeneratedReport {
+    protected function createGeneratedReport(array $filters = [], ?int $userId = null, string $requestedVia = GeneratedReport::REQUESTED_VIA_MANUAL): GeneratedReport
+    {
         return GeneratedReport::query()->create([
             'user_id' => $userId,
             'report_type' => GeneratedReport::REPORT_TYPE_TIME_TRACKING,
