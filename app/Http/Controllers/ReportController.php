@@ -533,19 +533,6 @@ class ReportController extends Controller
      */
     public function timeTrackingExport(Request $request)
     {
-        if ($request->expectsJson()) {
-            $generatedReport = app(TimeTrackingReportService::class)->queueExport(
-                $request->all(),
-                $request->user()?->id
-            );
-
-            return response()->json([
-                'message' => 'Your report is being generated.',
-                'report_id' => $generatedReport->id,
-                'status' => $generatedReport->status,
-            ], 202);
-        }
-
         return app(TimeTrackingReportService::class)->export($request);
     }
 }
