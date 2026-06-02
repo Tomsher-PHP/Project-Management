@@ -35,8 +35,82 @@
     </div>
 
     <!-- Laravel Pagination Links -->
-    <div>
-        {{ $paginator->links() }}
-    </div>
+    @if ($paginator->hasPages())
+        @php
+            $currentPage = $paginator->currentPage();
+            $lastPage = $paginator->lastPage();
+
+            if ($lastPage <= 5) {
+                $visiblePages = range(1, $lastPage);
+            } elseif ($currentPage === 1) {
+                $visiblePages = [1, 2, 3, $lastPage];
+            } elseif ($currentPage === 2) {
+                $visiblePages = [1, 2, 3, 4, $lastPage];
+            } elseif ($currentPage >= $lastPage - 1) {
+                $visiblePages = [1, $lastPage - 2, $lastPage - 1, $lastPage];
+            } else {
+                $visiblePages = [1, $currentPage - 1, $currentPage, $currentPage + 1, $lastPage];
+            }
+
+            $visiblePages = collect($visiblePages)
+                ->filter(fn($page) => $page >= 1 && $page <= $lastPage)
+                ->unique()
+                ->values();
+        @endphp
+
+        <div class="flex items-center justify-between mt-6">
+
+            {{-- Previous Button --}}
+            @if ($paginator->onFirstPage())
+                <span class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                    ‹
+                </span>
+            @else
+                <a href="{{ $paginator->previousPageUrl() }}" class="px-3 py-2 text-gray-600 hover:text-indigo-600">
+                    ‹
+                </a>
+            @endif
+
+            {{-- Page Numbers --}}
+            <div class="flex items-center space-x-2">
+                @php
+                    $previousVisiblePage = null;
+                @endphp
+
+                @foreach ($visiblePages as $page)
+                    @if ($previousVisiblePage !== null && $page - $previousVisiblePage > 1)
+                        <span class="px-3 py-2 text-gray-400">
+                            ...
+                        </span>
+                    @endif
+
+                    @if ($page === $currentPage)
+                        <span class="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg">
+                            {{ $page }}
+                        </span>
+                    @else
+                        <a href="{{ $paginator->url($page) }}" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-indigo-50 rounded-lg">
+                            {{ $page }}
+                        </a>
+                    @endif
+
+                    @php
+                        $previousVisiblePage = $page;
+                    @endphp
+                @endforeach
+            </div>
+
+            {{-- Next Button --}}
+            @if ($paginator->hasMorePages())
+                <a href="{{ $paginator->nextPageUrl() }}" class="px-3 py-2 text-gray-600 hover:text-indigo-600">
+                    ›
+                </a>
+            @else
+                <span class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                    ›
+                </span>
+            @endif
+        </div>
+    @endif
 
 </div>
