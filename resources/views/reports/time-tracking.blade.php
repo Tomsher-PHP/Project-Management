@@ -258,6 +258,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const exportForm = document.getElementById('time-tracking-report-export-form');
+            const columnManager = document.querySelector('.column-manager[data-report="time_tracking_report"]');
 
             if (!exportForm) {
                 return;
@@ -266,6 +267,7 @@
             const visibleColumnsInput = exportForm.querySelector('input[name="visible_columns"]');
             const columnOrder = JSON.parse(exportForm.dataset.columnOrder || '[]');
             const storageKey = 'column_manager_time_tracking_report';
+            const minimumVisibleColumns = 3;
 
             const syncVisibleColumns = () => {
                 let saved = {};
@@ -280,6 +282,96 @@
                 visibleColumnsInput.value = visibleColumns.join(',');
             };
 
+            const getColumnCheckboxes = () => columnManager
+                ? Array.from(columnManager.querySelectorAll('.cm-toggle'))
+                : [];
+
+            const getCheckedColumns = () => getColumnCheckboxes().filter((checkbox) => checkbox.checked);
+
+            const toggleColumnVisibility = (column, show) => {
+                document.querySelectorAll('.col-' + column).forEach((element) => {
+                    element.style.display = show ? '' : 'none';
+                });
+            };
+
+            const readSavedColumns = () => {
+                try {
+                    return JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+                } catch (error) {
+                    return {};
+                }
+            };
+
+            const writeSavedColumns = (saved) => {
+                localStorage.setItem(storageKey, JSON.stringify(saved));
+            };
+
+            const enforceMinimumColumns = () => {
+                if (!columnManager) {
+                    return;
+                }
+
+                const checkboxes = getColumnCheckboxes();
+                const checkedColumns = getCheckedColumns();
+
+                if (checkedColumns.length < minimumVisibleColumns) {
+                    const saved = readSavedColumns();
+
+                    checkboxes
+                        .filter((checkbox) => !checkbox.checked)
+                        .slice(0, minimumVisibleColumns - checkedColumns.length)
+                        .forEach((checkbox) => {
+                            checkbox.checked = true;
+                            saved[checkbox.dataset.column] = true;
+                            toggleColumnVisibility(checkbox.dataset.column, true);
+                        });
+
+                    writeSavedColumns(saved);
+                }
+
+                const nextCheckedColumns = getCheckedColumns();
+                const shouldLockChecked = nextCheckedColumns.length <= minimumVisibleColumns;
+
+                checkboxes.forEach((checkbox) => {
+                    checkbox.disabled = shouldLockChecked && checkbox.checked;
+                });
+
+                syncVisibleColumns();
+            };
+
+            if (columnManager) {
+                const checkboxes = getColumnCheckboxes();
+
+                checkboxes.forEach((checkbox) => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            enforceMinimumColumns();
+                            return;
+                        }
+
+                        if (getCheckedColumns().length < minimumVisibleColumns) {
+                            const saved = readSavedColumns();
+
+                            this.checked = true;
+                            saved[this.dataset.column] = true;
+                            toggleColumnVisibility(this.dataset.column, true);
+                            writeSavedColumns(saved);
+                        }
+
+                        enforceMinimumColumns();
+                    });
+                });
+
+                columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
+                });
+
+                columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
+                });
+            }
+
+            enforceMinimumColumns();
             syncVisibleColumns();
             exportForm.addEventListener('submit', syncVisibleColumns);
         });
