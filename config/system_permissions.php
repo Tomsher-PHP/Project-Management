@@ -143,16 +143,16 @@ return [
     ['name' => 'reports.task_export', 'sort_order' => 19011, 'default_checked' => false],
 
     // TIME TRACKING REPORT
-    ['name' => 'reports.time_tracking_view', 'sort_order' => 19020, 'default_checked' => false],
+    ['name' => 'reports.time_tracking_view', 'sort_order' => 19020, 'default_checked' => true],
     ['name' => 'reports.time_tracking_export', 'sort_order' => 19021, 'default_checked' => false],
 
     // ATTENDANCE REPORT
     ['name' => 'reports.attendance_view', 'sort_order' => 19030, 'default_checked' => false],
     ['name' => 'reports.attendance_export', 'sort_order' => 19031, 'default_checked' => false],
 
-    // DAILY REPORT
-    ['name' => 'reports.daily_view', 'sort_order' => 19040, 'default_checked' => false],
-    ['name' => 'reports.daily_export', 'sort_order' => 19041, 'default_checked' => false],
+    // DAILY TIME REPORT
+    ['name' => 'reports.daily_time_view', 'sort_order' => 19040, 'default_checked' => false],
+    ['name' => 'reports.daily_time_export', 'sort_order' => 19041, 'default_checked' => false],
 
     // SHIFT SCHEDULE REPORT
     ['name' => 'reports.shift_schedule_view', 'sort_order' => 19050, 'default_checked' => false],
@@ -173,7 +173,6 @@ return [
     // LEAVE REPORT
     ['name' => 'reports.leave_view', 'sort_order' => 19090, 'default_checked' => false],
     ['name' => 'reports.leave_export', 'sort_order' => 19091, 'default_checked' => false],
-
 
     // ACTIVITY LOG (20000)
     ['name' => 'activity_log.view',   'sort_order' => 20000, 'default_checked' => false],

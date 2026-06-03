@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectStatus;
 use App\Models\User;
 use App\Services\Reports\DailyReportService;
+use App\Services\Reports\DailyTimeReportService;
 use App\Services\Reports\MilestoneReportService;
 use App\Services\Reports\ProjectReportService;
 use App\Services\Reports\SprintReportService;
@@ -276,75 +277,23 @@ class ReportController extends Controller
             ->export($request);
     }
 
-    // Time Tracking report
-    public function timeTracking_old(Request $request, TaskFilterService $filterService)
+    // Daily Time report
+    public function dailyTime(Request $request)
     {
-        $this->pageTitle = 'Time Tracking Report';
-
-        $this->subTitle =
-            'Detailed time logs and productivity tracking overview';
+        $this->pageTitle = 'Daily Time Report';
 
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
 
-        $perPage = (int) $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $reportService = app(DailyTimeReportService::class);
+        $reportService->normalizeRequestFilters($request);
+        $reportData = $reportService->getReportData($request, $perPage);
 
-        // REPORT DATA
-        $timeLogs = $this->timeTrackingReportService
-            ->getLogs($request, $perPage);
-
-        // FILTERS
-        $user = $request->user();
-        $users = User::active()
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $baseQuery = app(TaskQueryService::class)
-            ->baseQuery($user);
-
-        $filters = $filterService
-            ->getFilters($user, $baseQuery);
-
-        /**
-         * COLUMN MANAGER
-         */
-        $columns = [
-            'user' => 'User',
-            'project' => 'Project',
-            'task' => 'Task',
-            'date' => 'Date',
-            'hours_logged' => 'Hours Logged',
-            'description' => 'Description',
-        ];
-
-        /**
-         * STATS
-         */
-        $statsQuery = clone $timeLogs;
-
-        $timeStats = [
-            'total_logs' => $statsQuery->total(),
-
-            'total_hours' => formatSecondsToHoursMinutes(
-                $timeLogs->getCollection()->sum('logged_seconds')
-            ),
-        ];
-
-        return view('reports.time-tracking', [
-            'timeLogs' => $timeLogs,
+        return view('reports.daily-time', array_merge($reportData, [
             'perPage' => $perPage,
-            'columns' => $columns,
-            'timeStats' => $timeStats,
-            'users' => $users,
-
-            ...$filters,
-        ]);
+        ]));
     }
 
     /**

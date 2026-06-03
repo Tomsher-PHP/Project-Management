@@ -468,9 +468,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
         Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');
 
-        // TIME TRACKING REPORT
-        // Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time.tracking');
-        // Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time.tracking.export');
+        // DAILY TIME REPORT
+        Route::get('/daily-time-report', [ReportController::class, 'dailyTime'])->middleware('permission.type:reports.daily_time_view')->name('daily_time');
+        Route::get('/reports/daily-time/export', [ReportController::class, 'dailyTimeExport'])->middleware('permission.type:reports.daily_time_export')->name('daily_time.export');
 
         // MILESTONE REPORT
         Route::get('/milestones-report', [ReportController::class, 'milestone'])->middleware('permission.type:reports.milestone_view')->name('milestones');
