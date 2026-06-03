@@ -91,17 +91,17 @@ const Alert = {
 
         return Swal.fire({
             target: normalized.options.target || document.body,
-            position: "top-end",
+            position: "bottom",
             icon: 'success',
-            title: normalized.title || 'Success',
+            // title: normalized.title || 'Success',
             text: message,
             showConfirmButton: false,
-            timer: 1500,
+            timer: 2500,
             toast: true,              // makes it small like a toast
-            width: 400,               // smaller width
-            padding: "0.75rem",       // reduce padding
+            width: 350,
+            padding: '0.5rem 0.75rem',
             customClass: {
-                popup: 'small-alert',
+                popup: 'small-alert small-alert-success',
                 title: 'small-alert-title',
                 htmlContainer: 'small-alert-text'
             }
@@ -113,15 +113,15 @@ const Alert = {
 
         return Swal.fire({
             target: normalized.options.target || document.body,
-            position: "top-end",
+            position: "bottom",
             icon: "error",
-            title: normalized.title || 'Error',
+            // title: normalized.title || 'Error',
             text: message,
             showConfirmButton: false,
             timer: 3000,
             toast: true,              // makes it small like a toast
-            width: 400,               // smaller width
-            padding: "0.75rem",       // reduce padding
+            width: 320,
+            padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
                 title: 'small-alert-title',
@@ -135,15 +135,15 @@ const Alert = {
 
         return Swal.fire({
             target: normalized.options.target || document.body,
-            position: "top-end",
+            position: "bottom",
             icon: 'info',
-            title: normalized.title || 'Info',
+            // title: normalized.title || 'Info',
             text: message,
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 400,               // smaller width
-            padding: "0.75rem",       // reduce padding
+            width: 320,
+            padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
                 title: 'small-alert-title',
@@ -156,15 +156,15 @@ const Alert = {
     successModal(message, title = 'Success', modalId) {
         return Swal.fire({
             target: `#${modalId}`,
-            position: "top-end",
+            position: "bottom",
             icon: 'success',
-            title: title,
+            // title: title,
             text: message,
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 400,               // smaller width
-            padding: "0.75rem",       // reduce padding
+            width: 320,
+            padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
                 title: 'small-alert-title',
@@ -176,15 +176,15 @@ const Alert = {
     errorModal(message, title = 'Error', modalId) {
         return Swal.fire({
             target: `#${modalId}`,
-            position: "top-end",
+            position: "bottom",
             icon: "error",
-            title: title,
+            // title: title,
             text: message,
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 400,               // smaller width
-            padding: "0.75rem",       // reduce padding
+            width: 320,
+            padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
                 title: 'small-alert-title',
