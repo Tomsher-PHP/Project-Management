@@ -2,12 +2,15 @@
 
 namespace App\Services\Reports;
 
+use App\Exports\DailyTimeReportExport;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DailyTimeReportService
 {
@@ -66,7 +69,31 @@ class DailyTimeReportService
                     (int) $rows->sum('total_worked_seconds')
                 ),
             ],
+            'canExport' => $this->hasAppliedFilters($request),
         ];
+    }
+
+    public function export(Request $request)
+    {
+        $this->normalizeRequestFilters($request);
+
+        if (! $this->hasAppliedFilters($request)) {
+            throw ValidationException::withMessages([
+                'export' => 'Apply at least one filter before exporting the Daily Time Report.',
+            ]);
+        }
+
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
+
+        return Excel::download(
+            new DailyTimeReportExport(
+                $this->buildRows($request),
+                $this->resolveExportColumns($request),
+                $request->all(),
+                $generatedAt
+            ),
+            $this->buildExportFilename($generatedAt)
+        );
     }
 
     public function getFilterUsers(Request $request): Collection
@@ -82,6 +109,46 @@ class DailyTimeReportService
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
+    }
+
+    public function hasAppliedFilters(Request $request): bool
+    {
+        $dateRange = $this->resolveDateRange($request);
+
+        return $dateRange['start'] !== null
+            || $dateRange['end'] !== null
+            || $this->resolveSelectedUserIds($request) !== [];
+    }
+
+    public function resolveExportColumns(Request $request): array
+    {
+        return $this->resolveExportColumnsFromFilters($request->all());
+    }
+
+    public function resolveExportColumnsFromFilters(array $filters): array
+    {
+        $allowedColumns = $this->getColumnLabels();
+        $requestedColumns = $filters['visible_columns'] ?? [];
+
+        if (is_string($requestedColumns)) {
+            $requestedColumns = array_filter(explode(',', $requestedColumns));
+        }
+
+        if (! is_array($requestedColumns)) {
+            $requestedColumns = [];
+        }
+
+        $requestedLookup = collect($requestedColumns)
+            ->map(fn($column) => (string) $column)
+            ->filter()
+            ->values()
+            ->flip();
+
+        $columns = collect($allowedColumns)
+            ->filter(fn($_label, $key) => $requestedLookup->has($key))
+            ->all();
+
+        return $columns !== [] ? $columns : $allowedColumns;
     }
 
     protected function buildRows(Request $request): Collection
@@ -365,6 +432,14 @@ class DailyTimeReportService
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function buildExportFilename(Carbon $generatedAt): string
+    {
+        return sprintf(
+            'daily_time_report_%s.xlsx',
+            $generatedAt->format('Ymd_His')
+        );
     }
 
     protected function resolveSelectedUserIds(Request $request): array

@@ -296,12 +296,11 @@ class ReportController extends Controller
         ]));
     }
 
-    /**
-     * Time Tracking EXPORT
-     */
-    public function timeTrackingExport_old(Request $request)
+    // Daily Time report export
+    public function dailyTimeExport(Request $request)
     {
-        return $this->timeTrackingReportService->exportLogs($request);
+        $reportService = app(DailyTimeReportService::class);
+        return $reportService->export($request);
     }
 
     public function milestone(Request $request)
