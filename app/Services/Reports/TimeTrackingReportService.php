@@ -111,7 +111,7 @@ class TimeTrackingReportService
             ->with([
                 'user:id,name',
                 'task:id,name,project_id,project_milestone_id,project_sprint_id',
-                'task.project:id,name,project_flow',
+                'task.project:id,name,project_flow,deleted_at',
                 'task.projectMilestone:id,project_id,name',
                 'task.projectSprint:id,project_id,project_milestone_id,name',
                 'task.projectSprint.projectMilestone:id,project_id,name',

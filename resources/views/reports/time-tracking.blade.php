@@ -173,8 +173,15 @@
                         @endif
                         @php
                             $report = $row['report'];
+                            $project = $report->task?->project;
                             $milestone = $report->task?->projectMilestone ?? $report->task?->projectSprint?->projectMilestone;
                             $sprint = $report->task?->projectSprint;
+                            $projectUrl = $project
+                                ? ($project->trashed()
+                                    ? route('projects.restore.show', $project->id)
+                                    : route('projects.edit', $project))
+                                : null;
+                            $taskUrl = $report->task ? route('tasks.edit', $report->task) : null;
                             $reportNumber++;
                         @endphp
 
@@ -185,8 +192,13 @@
                             </td>
 
                             <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
-                                <x-project-flow-icon :flow="$report->task?->project?->project_flow" size="sm" />
-                                {{ $report->task?->project?->name ?? '-' }}
+                                @if ($projectUrl)
+                                    <a href="{{ $projectUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
+                                        {{ $project?->name ?? '-' }}
+                                    </a>
+                                @else
+                                    {{ $project?->name ?? '-' }}
+                                @endif
                             </td>
 
                             <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
@@ -198,7 +210,13 @@
                             </td>
 
                             <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
-                                {{ $report->task?->name ?? '-' }}
+                                @if ($taskUrl)
+                                    <a href="{{ $taskUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
+                                        {{ $report->task?->name ?? '-' }}
+                                    </a>
+                                @else
+                                    {{ $report->task?->name ?? '-' }}
+                                @endif
                             </td>
 
                             <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
