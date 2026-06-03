@@ -126,28 +126,32 @@ class DashboardServices
         $formattedDate = Carbon::parse($date)->format($dateFormat);
 
         $timezone = config('constants.timezone', 'UTC');
+
         $selectedDate = Carbon::parse($date, $timezone)->timezone($timezone);
+
         $dayStartLocal = $selectedDate->copy()->startOfDay();
-        $dayEndExclusiveLocal = $dayStartLocal->copy()->addDay();
+        $dayEndLocal = $dayStartLocal->copy()->addDay();
 
         $dayStartUtc = $dayStartLocal->copy()->timezone('UTC');
-        $dayEndExclusiveUtc = $dayEndExclusiveLocal->copy()->timezone('UTC');
+        $dayEndUtc = $dayEndLocal->copy()->timezone('UTC');
 
         $logs = TaskTimeLog::query()
             ->whereIn('user_id', $accessibleUserIds)
-            ->where('started_at', '<', $dayEndExclusiveUtc)
+            ->where('started_at', '<', $dayEndUtc)
             ->where(function ($query) use ($dayStartUtc) {
                 $query->whereNull('ended_at')
                     ->orWhere('ended_at', '>', $dayStartUtc);
             })
             ->with(['user' => function ($q) {
-                $q->select('id', 'name')->with(['activeShift.weekends', 'primaryAttachment']);
+                $q->select('id', 'name')
+                    ->with(['activeShift.weekends', 'primaryAttachment']);
             }])
             ->get();
 
         $userTotalSeconds = [];
         $userEarliestStart = [];
         $userLatestEnd = [];
+        $userLatestActivity = [];
         $userHasRunning = [];
         $usersMap = [];
 
@@ -162,61 +166,83 @@ class DashboardServices
             $startedAtLocal = $log->started_at->copy()->timezone($timezone);
             $endedAtLocal = $log->ended_at ? $log->ended_at->copy()->timezone($timezone) : null;
 
-            $segmentStartLocal = $startedAtLocal->greaterThan($dayStartLocal)
+            // -------- Clamp start/end strictly within selected day --------
+            $segmentStart = $startedAtLocal->greaterThan($dayStartLocal)
                 ? $startedAtLocal
                 : $dayStartLocal->copy();
 
-            $compareEndLocal = $endedAtLocal ?? Carbon::now($timezone);
-            $segmentEndLocal = $compareEndLocal->lessThan($dayEndExclusiveLocal)
-                ? $compareEndLocal
-                : $dayEndExclusiveLocal->copy();
+            $rawEnd = $endedAtLocal ?? $dayEndLocal; // running tasks capped at end of day
 
-            if ($segmentEndLocal->greaterThan($segmentStartLocal)) {
+            $segmentEnd = $rawEnd->lessThan($dayEndLocal)
+                ? $rawEnd
+                : $dayEndLocal->copy();
+
+            if ($segmentEnd->greaterThan($segmentStart)) {
+
+                // only count finished logs
                 if (!$log->is_running) {
-                    $overlapSeconds = $segmentStartLocal->diffInSeconds($segmentEndLocal);
-                    if ($overlapSeconds > 0) {
-                        $userTotalSeconds[$userId] = ($userTotalSeconds[$userId] ?? 0) + $overlapSeconds;
-                    }
+                    $seconds = $segmentStart->diffInSeconds($segmentEnd);
+                    $userTotalSeconds[$userId] = ($userTotalSeconds[$userId] ?? 0) + $seconds;
                 }
 
-                if (!isset($userEarliestStart[$userId]) || $startedAtLocal->lessThan($userEarliestStart[$userId])) {
-                    $userEarliestStart[$userId] = $startedAtLocal;
+                // earliest start
+                if (
+                    !isset($userEarliestStart[$userId]) ||
+                    $segmentStart->lessThan($userEarliestStart[$userId])
+                ) {
+                    $userEarliestStart[$userId] = $segmentStart;
                 }
 
+                // latest activity (for sorting)
+                $activityAt = $segmentEnd;
+
+                if (
+                    !isset($userLatestActivity[$userId]) ||
+                    $activityAt->greaterThan($userLatestActivity[$userId])
+                ) {
+                    $userLatestActivity[$userId] = $activityAt;
+                }
+
+                // running flag
                 if ($log->is_running) {
                     $userHasRunning[$userId] = true;
-                } else {
-                    if ($endedAtLocal) {
-                        if (!isset($userLatestEnd[$userId]) || $endedAtLocal->greaterThan($userLatestEnd[$userId])) {
-                            $userLatestEnd[$userId] = $endedAtLocal;
-                        }
+                } elseif ($endedAtLocal) {
+                    if (
+                        !isset($userLatestEnd[$userId]) ||
+                        $segmentEnd->greaterThan($userLatestEnd[$userId])
+                    ) {
+                        $userLatestEnd[$userId] = $segmentEnd;
                     }
                 }
             }
         }
 
         $result = [];
+
         foreach ($usersMap as $userId => $userObj) {
+
             $totalSeconds = $userTotalSeconds[$userId] ?? 0;
 
             $timeFormat = config('constants.time_format', 'H:i');
+
             $startStr = isset($userEarliestStart[$userId])
                 ? $userEarliestStart[$userId]->format($timeFormat)
                 : '--';
 
-            if (!empty($userHasRunning[$userId])) {
-                $endStr = 'Running';
-            } else {
-                $endStr = isset($userLatestEnd[$userId])
+            $endStr = !empty($userHasRunning[$userId])
+                ? 'Running'
+                : (isset($userLatestEnd[$userId])
                     ? $userLatestEnd[$userId]->format($timeFormat)
-                    : '--';
-            }
+                    : '--');
 
-            $activeShift = $userObj->activeShift ?? null;
+            // shift calculation
             $shiftWorkingHour = '--';
 
-            if ($activeShift) {
+            if ($userObj->activeShift) {
+                $activeShift = $userObj->activeShift;
+
                 $weekNumber = (int) ceil($selectedDate->day / 7);
+
                 $isWeekend = $activeShift->weekends
                     ->where('weekday', $selectedDate->dayOfWeek)
                     ->where('week_number', $weekNumber)
@@ -233,8 +259,8 @@ class DashboardServices
                     }
 
                     $totalShiftSeconds = $start->diffInSeconds($end);
-                    $workingSeconds = $totalShiftSeconds - ($activeShift->break_duration ?? 0);
-                    $workingSeconds = max(0, $workingSeconds);
+                    $workingSeconds = max(0, $totalShiftSeconds - ($activeShift->break_duration ?? 0));
+
                     $shiftWorkingHour = formatSecondsToHMS($workingSeconds);
                 }
             }
@@ -243,7 +269,10 @@ class DashboardServices
                 'user_id' => $userId,
                 'user' => $userObj,
                 'user_name' => $userObj->name ?? 'Unknown',
-                'user_avatar_html' => view('components.user-avatar', ['user' => $userObj, 'size' => 'sm'])->render(),
+                'user_avatar_html' => view('components.user-avatar', [
+                    'user' => $userObj,
+                    'size' => 'sm'
+                ])->render(),
                 'date' => $formattedDate,
                 'start_time' => $startStr,
                 'end_time' => $endStr,
@@ -252,7 +281,21 @@ class DashboardServices
             ];
         }
 
-        return $result;
+        // -------- Sort by latest activity --------
+        usort($result, function ($a, $b) use ($userLatestActivity, $userEarliestStart) {
+
+            $aTime = ($userLatestActivity[$a['user_id']] ?? $userEarliestStart[$a['user_id']] ?? null)?->getTimestamp() ?? 0;
+            $bTime = ($userLatestActivity[$b['user_id']] ?? $userEarliestStart[$b['user_id']] ?? null)?->getTimestamp() ?? 0;
+
+            if ($aTime === $bTime) {
+                return strcmp($a['user_name'], $b['user_name']);
+            }
+
+            return $bTime <=> $aTime;
+        });
+
+        // -------- limit dashboard load --------
+        return array_slice($result, 0, 5);
     }
 
     /**
