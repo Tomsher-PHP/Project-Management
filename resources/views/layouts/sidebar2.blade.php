@@ -33,7 +33,7 @@
     $canViewTaskReports = $authUser?->can('reports.task_view');
     $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view');
     $canViewAttendanceReports = $authUser?->can('reports.attendance_view');
-    $canViewDailyReports = $authUser?->can('reports.daily_view');
+    $canViewDailyReports = $authUser?->can('reports.daily_time_view');
     $canViewShiftScheduleReports = $authUser?->can('reports.shift_schedule_view');
     $canViewProductivityReports = $authUser?->can('reports.productivity_view');
     $canViewSprintReports = $authUser?->can('reports.sprint_view');
@@ -64,7 +64,7 @@
 
     $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
     $isTimeTrackingReportActive = request()->routeIs('reports.time_tracking', 'reports.time_tracking.export');
-    $isDailyReportActive = request()->routeIs('reports.daily', 'reports.daily.export');
+    $isDailyReportActive = request()->routeIs('reports.daily_time', 'reports.daily_time.export');
     $isPerformanceReportsMenuActive = $isProductivityReportActive || $isTimeTrackingReportActive || $isDailyReportActive;
 
     $isAttendanceReportActive = request()->routeIs('reports.attendance', 'reports.attendance.*');
@@ -349,20 +349,20 @@
                                         </a>
                                         <span class="sidebar-tooltip">Performance Reports</span>
                                         <ul class="sub-menu min-w-[200px] rounded-lg border-l border-success-100 bg-white px-5 py-2 shadow-lg dark:bg-darkblack-600 dark:border-darkblack-400">
-                                            @if ($canViewProductivityReports)
+                                            {{-- @if ($canViewProductivityReports)
                                                 <li>
                                                     <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                         Productivity
                                                     </a>
                                                 </li>
-                                            @endif
-                                            {{-- @if ($canViewDailyReports)
+                                            @endif --}}
+                                            @if ($canViewDailyReports)
                                                 <li>
-                                                    <a href="{{ route('reports.time.tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                        Time Tracking
+                                                    <a href="{{ route('reports.daily_time') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDailyReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                        Daily Time
                                                     </a>
                                                 </li>
-                                            @endif --}}
+                                            @endif
                                             @if ($canViewTimeTrackingReports)
                                                 <li>
                                                     <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
