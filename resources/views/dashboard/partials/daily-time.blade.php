@@ -41,12 +41,12 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="border-b border-bgray-200 dark:border-darkblack-400">
-                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User Name</th>
+                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User</th>
                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Date</th>
                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Start</th>
                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">End</th>
-                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Hour</th>
-                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Shift Hour</th>
+                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Hours</th>
+                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Shift Hours</th>
                 </tr>
             </thead>
             <tbody id="worked-time-table-body" class="divide-y divide-bgray-100 dark:divide-darkblack-500">

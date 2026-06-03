@@ -10,8 +10,8 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="border-b border-bgray-200 dark:border-darkblack-400">
-                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User Name</th>
-                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Task Name</th>
+                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">User</th>
+                    <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Task</th>
                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Estimated Time</th>
                     <th class="pb-3 text-sm font-bold text-bgray-600 dark:text-bgray-50">Worked Time</th>
                 </tr>
