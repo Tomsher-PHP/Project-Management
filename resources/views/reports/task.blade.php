@@ -9,7 +9,8 @@
         <x-filters.button />
 
         <x-export-button
-            :href="route('reports.task.export', request()->query())"
+            :action="route('reports.task.export')"
+            :params="request()->query()"
             label="Export Excel"
         />
 

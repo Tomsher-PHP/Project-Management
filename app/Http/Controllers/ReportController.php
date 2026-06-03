@@ -45,9 +45,7 @@ class ReportController extends Controller
         $this->sprintReportService = $sprintReportService;
     }
 
-    /**
-     * PROJECT REPORT
-     */
+    // PROJECT REPORT
     public function project(Request $request)
     {
 
@@ -409,6 +407,7 @@ class ReportController extends Controller
             ->export($request);
     }
 
+    // TIME TRACKING REPORT
     public function timeTracking(Request $request)
     {
         $this->pageTitle = 'Time Tracking Report';
@@ -476,9 +475,7 @@ class ReportController extends Controller
         ));
     }
 
-    /**
-     * DAILY REPORT EXPORT
-     */
+    // TIME TRACKING REPORT EXPORT
     public function timeTrackingExport(Request $request)
     {
         return app(TimeTrackingReportService::class)->export($request);
