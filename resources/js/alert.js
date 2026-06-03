@@ -98,10 +98,10 @@ const Alert = {
             showConfirmButton: false,
             timer: 2500,
             toast: true,              // makes it small like a toast
-            width: 350,
+            // width: 350,
             padding: '0.5rem 0.75rem',
             customClass: {
-                popup: 'small-alert small-alert-success',
+                popup: 'small-alert',
                 title: 'small-alert-title',
                 htmlContainer: 'small-alert-text'
             }
@@ -120,7 +120,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 3000,
             toast: true,              // makes it small like a toast
-            width: 320,
+            // width: 550,
             padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
@@ -142,7 +142,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 320,
+            // width: 320,
             padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
@@ -163,7 +163,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 320,
+            // width: 320,
             padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',
@@ -183,7 +183,7 @@ const Alert = {
             showConfirmButton: false,
             timer: 1500,
             toast: true,              // makes it small like a toast
-            width: 320,
+            // width: 550,
             padding: '0.5rem 0.75rem',
             customClass: {
                 popup: 'small-alert',

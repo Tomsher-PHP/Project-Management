@@ -710,9 +710,9 @@ class TaskServices
     // Get restriction message and status if the task cannot be deleted, otherwise return null
     public function getDeleteRestriction(Task $task): ?array
     {
-        if ($task->activeTimeLog()->exists()) {
+        if ($task->timeLogs()->exists()) {
             return [
-                'message' => 'Stop the running timer before deleting this task.',
+                'message' => 'Sorry... Task logs exist.',
                 'status' => Response::HTTP_UNPROCESSABLE_ENTITY,
                 'reason' => 'running_timer_exists',
             ];
