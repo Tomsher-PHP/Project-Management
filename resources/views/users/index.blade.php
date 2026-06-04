@@ -2,21 +2,41 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[156px] xl:px-[48px] xl:pb-[48px]">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+                @can('user.create')
+                    <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-1.5
+                       rounded-md bg-success-300
+                       text-sm font-semibold text-white
+                       hover:bg-success-400
+                       transition duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
 
-        @canType('user.create')
-        <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-1.5
-               rounded-md bg-success-300
-               text-sm font-semibold text-white
-               hover:bg-success-400
-               transition duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+                        <span>New User</span>
+                    </a>
+                @endcan
 
-            <span>New User</span>
-        </a>
-        @endcanType
+                <x-filters.button />
+            </div>
+
+            @can('user.restore')
+                <a href="{{ route('users.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 17h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 8l5 4-5 4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12h-8" />
+                    </svg>
+                    <span>Restore Users</span>
+                </a>
+            @endcan
+        </div>
+        @php
+            session(['users_return_url' => url()->full()]);
+        @endphp
 
         <!-- write your code here-->
         <div class="2xl:flex 2xl:space-x-[48px]">
@@ -32,14 +52,7 @@
                                     </td>
                                     <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                                Name
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User Type</span>
+                                            <x-sorting.sortable-column column="name" label="Name" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -59,7 +72,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
@@ -68,164 +81,90 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @php
+                                    $startNumber = ($users->currentPage() - 1) * $users->perPage();
+                                @endphp
                                 @forelse ($users as $key => $user)
                                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $key + 1 }}</span>
+                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
-                                                <div class="h-[64px] w-[64px]">
-                                                    <img class="h-full w-full rounded-lg object-cover" src="{{ $user->profile_image_url }}" alt="" />
-                                                </div>
+                                                <x-user-avatar :user="$user" class="h-[64px] w-[64px] text-xl" />
                                                 <div class="flex-1">
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        {{ $user->name }}
+                                                        <a href="{{ route('users.show', $user->id) }}" class="transition hover:text-success-400">
+                                                            {{ $user->name }}
+                                                        </a>
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Role: {{ $user->role_name }}</span>
-                                                        <span class="text-gray-500">Email: {{ $user->email }}</span>
+                                                        <span class="text-gray-500 dark:text-bgray-50">Email: {{ $user->email }}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500">{{ config('constants.user_types')[$user->user_type] ?? 'Unknown' }}</span>
+                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $user->details->department->name ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500">{{ $user->details->department->name ?? '--' }}</span>
+                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $user->details?->designation?->name ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500">{{ $user->details?->designation?->name ?? '--' }}</span>
+                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">{{ $user->details?->phone ?? '--' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-bgray-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-bgray-700 dark:bg-darkblack-500">{{ $user->details?->phone ?? '--' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-
-                                                <button type="button" data-id="{{ $user->id }}" class="switch-btn relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                                                    {{ $user->status ? 'bg-green-600 active' : 'bg-gray-200' }}" role="switch" aria-checked="{{ $user->status ? 'true' : 'false' }}" @unlesscanType('user.edit') disabled @endcanType>
-
-                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                                                        {{ $user->status ? 'translate-x-5' : 'translate-x-0' }}">
-                                                    </span>
-                                                </button>
-
+                                                <x-status-toggle :model="$user" route="users.toggleStatus" entity="user" permission="user.edit" />
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center space-x-2">
-                                                @canType('user.edit')
-                                                <a href="{{ route('users.edit', $user->id) }}" class="inline-flex items-center justify-center w-8 h-8
-                                                    rounded-lg bg-gray-100 dark:bg-darkblack-500
-                                                    hover:bg-gray-200 dark:hover:bg-darkblack-400
-                                                    transition duration-200 group">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
-                                                @endcanType
+                                                @can('user.view')
+                                                    <x-view-button :action="route('users.show', $user->id)" />
+                                                @endcan
+                                                @can('user.edit')
+                                                    <x-edit-button :action="route('users.edit', $user->id)" />
+                                                @endcan
+                                                @if (auth()->id() != $user->id)
+                                                    @can('user.delete')
+                                                        <x-delete-form :action="route('users.destroy', $user->id)" />
+                                                    @endcan
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-sm text-gray-500 dark:text-gray-200">
-                                            No roles found.
-                                        </td>
-                                    </tr>
+                                    <x-table-no-data col-span="7" message="No users found." />
                                 @endforelse
                             </table>
                         </div>
+                        <x-pagination :paginator="$users" :per-page="$perPage" />
                     </div>
                 </div>
             </section>
         </div>
         <!-- write your code here-->
-    </main>
     <!-- Page ends -->
+
+    <!-- Filter drawer -->
+    <x-filters.drawer>
+        <x-filters.input-search name="search" label="Name" />
+        <x-filters.input name="email" label="Email" />
+        <x-filters.multi-select name="role_id" label="Role" :options="$roles" />
+        <x-filters.multi-select name="department_id" label="Departments" :options="$departments" />
+        <x-filters.multi-select name="designation_id" label="Designations" :options="$designations" />
+        <x-filters.select name="is_active" label="Is Active" :options="[
+            1 => 'Active',
+            0 => 'Inactive',
+        ]" />
+    </x-filters.drawer>
+    <!-- Filter drawer end -->
 @endsection
-
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-
-            $(document).on('click', '.switch-btn', function() {
-
-                let btn = $(this);
-
-                // Prevent multiple clicks while processing
-                if (btn.data('processing')) return;
-                btn.data('processing', true);
-
-                let userId = btn.data('id');
-                let isActive = btn.attr('aria-checked') === 'true';
-                let actionText = isActive ? 'deactivate' : 'activate';
-
-                if (!confirm(`Are you sure you want to ${actionText} this user?`)) {
-                    btn.data('processing', false);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/users/toggle-status',
-                    type: 'PATCH',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        userId: userId
-                    },
-                    success: function(response) {
-
-                        if (response.success) {
-
-                            let newStatus = response.status == 1;
-
-                            // Update switch UI
-                            btn.attr('aria-checked', newStatus);
-
-                            btn.toggleClass('bg-green-600', newStatus);
-                            btn.toggleClass('bg-gray-200', !newStatus);
-
-                            btn.find('span').toggleClass('translate-x-5', newStatus);
-                            btn.find('span').toggleClass('translate-x-0', !newStatus);
-
-                            // Update badge
-                            let badge = btn.closest('tr').find('.status-badge');
-
-                            if (newStatus) {
-                                badge.removeClass('bg-secondary')
-                                    .addClass('bg-success')
-                                    .text('Active');
-                            } else {
-                                badge.removeClass('bg-success')
-                                    .addClass('bg-secondary')
-                                    .text('Inactive');
-                            }
-
-                        } else {
-                            alert('Status update failed.');
-                        }
-
-                    },
-                    error: function() {
-                        alert('Something went wrong.');
-                    },
-                    complete: function() {
-                        btn.data('processing', false);
-                    }
-                });
-
-            });
-
-        });
-    </script>
-@endpush

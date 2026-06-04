@@ -1,6 +1,12 @@
 $(function () {
   //search
   $(document).on("keydown", (e) => {
+
+    // ✅ Allow typing inside inputs / textarea
+    if ($(e.target).is('input, textarea, select') || e.target.isContentEditable) {
+      return;
+    }
+
     switch (e.key) {
       case "k":
       case "Control":
@@ -18,12 +24,19 @@ $(function () {
     const checkClassExits = $(".layout-wrapper");
     if (checkClassExits.hasClass("active")) {
       checkClassExits.removeClass("active");
+      localStorage.setItem('sidebar_state', 'collapsed');
     } else {
       checkClassExits.addClass("active");
+      localStorage.setItem('sidebar_state', 'expanded');
     }
   });
   //drawer key access
   $(document).on("keydown", (e) => {
+    // ✅ Allow typing inside inputs / textarea
+    if ($(e.target).is('input, textarea, select') || e.target.isContentEditable) {
+      return;
+    }
+
     switch (e.key) {
       case "b":
       case "Control":
@@ -35,8 +48,10 @@ $(function () {
       const checkClassExits = $(".layout-wrapper");
       if (checkClassExits.hasClass("active")) {
         checkClassExits.removeClass("active");
+        localStorage.setItem('sidebar_state', 'collapsed');
       } else {
         checkClassExits.addClass("active");
+        localStorage.setItem('sidebar_state', 'expanded');
       }
     }
   });
@@ -50,7 +65,7 @@ function QuillIsExists() {
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ["bold", "italic", "underline"], // toggled buttons
     [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
+    ["link"],
   ];
   if (editorOne) {
     var editor = new Quill("#editor", {
@@ -104,9 +119,8 @@ accordionHeader.forEach((header) => {
     let accordionMaxHeight = accordionContent.style.maxHeight;
 
     if (accordionMaxHeight == "0px" || accordionMaxHeight.length == 0) {
-      accordionContent.style.maxHeight = `${
-        accordionContent.scrollHeight + 32
-      }px`;
+      accordionContent.style.maxHeight = `${accordionContent.scrollHeight + 32
+        }px`;
       header.querySelector(".fas").classList.remove("fa-plus");
       header.querySelector(".fas").classList.add("fa-minus");
       header.querySelector(".title").classList.add("font-bold");
@@ -150,16 +164,15 @@ function dateFilterAction(selector) {
 
 // Multi Step Modal in Signin Page
 function ModalExist() {
-  const modalContent = document.querySelector(".modal-content");
+  const modal = document.getElementById("multi-step-modal");
+  const modalContent = modal ? modal.querySelector(".modal-content") : null;
+  const modalOpen = document.querySelector('.modal-open[data-target="#multi-step-modal"]');
+  const modalOverlay = modal ? modal.querySelector(".modal-overlay") : null;
 
-  if (modalContent) {
-    // Multi Step Modal in Signin Page
-    const modal = document.getElementById("multi-step-modal");
+  if (modal && modalContent && modalOpen && modalOverlay) {
     const stepContents = modalContent.querySelectorAll(".step-content");
     const nextButtons = modalContent.querySelectorAll('[id$="-next"]');
     const cancelButtons = modalContent.querySelectorAll('[id$="-cancel"]');
-    const modalOpen = document.querySelector(".modal-open");
-    const modalOverlay = document.querySelector(".modal-overlay");
 
     // Show modal when trigger button is clicked
     modalOpen.addEventListener("click", () => {
@@ -184,7 +197,7 @@ function ModalExist() {
 
     function setCurrentStep(step) {
       currentStep = step;
-      showStep(currentStep);
+      // showStep(currentStep);
     }
 
     function nextStep() {
@@ -282,28 +295,65 @@ navSubmenu();
 
 
 
-  // Check the initial theme preference and apply the appropriate class
-  if (localStorage.theme === 'dark' || (window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
+// Check the initial theme preference and apply the appropriate class
+if (localStorage.theme === 'dark' || (window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
 
-  // Toggle the theme when the button is clicked
-  var themeToggle = document.getElementById('theme-toggle');
-  themeToggle.addEventListener('click', function() {
-    // Check the current theme and toggle it
-    if (localStorage.theme === 'dark') {
-      localStorage.theme = 'light';
+// // Toggle the theme when the button is clicked
+var themeToggle = document.getElementById('theme-toggle');
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
     } else {
-      localStorage.theme = 'dark';
+        document.documentElement.classList.remove('dark');
     }
+}
 
-    // Apply the new theme
-    if (localStorage.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  });
+function updateThemeInDB(theme,user_id) {
+    fetch('/users/general-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document
+                .querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            user_id: user_id,
+            field: 'theme',
+            value: theme
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('DB update failed');
+        }
+    })
+    .catch(() => {
+        console.error('Server error');
+    });
+}
+
+if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+
+        const current = localStorage.getItem('theme') || 'light';
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        const user_id =  this.dataset.user;
+
+        // 1. Instant UI update (no delay)
+        applyTheme(newTheme);
+
+        // 2. Update localStorage (frontend source)
+        localStorage.setItem('theme', newTheme);
+
+        // 3. Update DB (background)
+        updateThemeInDB(newTheme, user_id);
+    });
+}
+
 

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserRequest extends FormRequest
 {
@@ -24,24 +25,22 @@ class UserRequest extends FormRequest
     {
         $userId = $this->route('user') ?? null;
         // works if route model binding: users.update/{user}
+        $passwordRules = [
+            Password::min(8)->letters()->numbers(),
+        ];
 
-        return [
+        $email = !$userId ? [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->ignore($userId),
+        ] : [];
+
+        $rules = [
             // Basic Info
             'name' => ['required', 'string', 'max:255'],
 
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
-            ],
-
-            // Password
-            'password' => [
-                $this->isMethod('post') ? 'required' : 'nullable',
-                'string',
-                'min:6',
-            ],
+            'email' => $email,
 
             // Profile Image
             'profile_image' => [
@@ -58,7 +57,7 @@ class UserRequest extends FormRequest
 
             // Personal Info
             'gender' => ['nullable', 'in:male,female,other'],
-            'phone' => ['nullable','string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userId),],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userId),],
             'whatsapp' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'whatsapp')->ignore($userId)],
 
             // Emergency Contact
@@ -84,6 +83,26 @@ class UserRequest extends FormRequest
                 'max:50',
                 Rule::unique('user_details', 'employee_id')->ignore($userId),
             ],
+
+            'remove_profile_image' => 'nullable',
+
+            // KPI (multi select)
+            'kpi_id' => ['nullable', 'array'],
+            'kpi_id.*' => ['exists:kpis,id'],
+        ];
+
+        if ($this->isMethod('post')) {
+            $rules['password'] = array_merge(['required', 'confirmed'], $passwordRules);
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

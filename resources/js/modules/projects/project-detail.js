@@ -1,0 +1,12 @@
+import './project-ajax';
+import './project-team';
+import './project-files';
+import './project-checklist';
+import './project-overview';
+import './project-scope-files';
+import './project-milestones';
+import './project-tasks';
+import './project-tabs';
+import './project-header';
+import './project-insights-modal';
+import './project-comments';

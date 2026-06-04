@@ -1,0 +1,223 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\BreakRequestActionRequest;
+use App\Http\Requests\BreakRequestBulkActionRequest;
+use App\Http\Requests\BreakWorkStoreRequest;
+use App\Http\Requests\BreakWorkUpdateRequest;
+use App\Models\BreakWorkRequest;
+use App\Services\BreakRequestService;
+use App\Services\NotificationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+
+class BreakRequestController extends Controller
+{
+    protected string $pageTitle;
+    protected string $subTitle;
+
+    public function __construct()
+    {
+        $this->pageTitle = 'Break Requests Management';
+        $this->subTitle = 'Manage break work requests and approvals';
+        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+    }
+
+    public function index(Request $request, BreakRequestService $breakRequestService)
+    {
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $selectedStatus = in_array($request->input('request_status'), BreakWorkRequest::STATUSES, true)
+            ? $request->input('request_status')
+            : BreakWorkRequest::STATUS_PENDING;
+
+        return view('requests.break-requests.index', [
+            'breakRequests' => $breakRequestService->getRequestsForUser(
+                $request->user(),
+                $perPage,
+                $selectedStatus,
+                $request->all()
+            ),
+            'users' => $breakRequestService->getFilterOptions($request->user())['users'],
+            'selectedStatus' => $selectedStatus,
+            'perPage' => $perPage,
+        ]);
+    }
+
+    public function store(BreakWorkStoreRequest $request, BreakRequestService $breakRequestService): JsonResponse|RedirectResponse
+    {
+        $user = $request->user();
+
+        $startedAt = $request->normalizedStartedAt();
+        $endedAt = $request->normalizedEndedAt();
+
+        abort_unless($startedAt && $endedAt, Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        $breakWorkRequest = $breakRequestService->store(
+            $user,
+            $request->validated('work_date'),
+            $startedAt,
+            $endedAt,
+            $request->durationSeconds(),
+            $request->validated('description')
+        );
+
+        app(NotificationService::class)->notifyBreakRequestCreated($breakWorkRequest);
+
+        $message = 'Break work request submitted successfully.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+                'data' => [
+                    'id' => $breakWorkRequest->id,
+                    'status' => $breakWorkRequest->status,
+                    'processing_status' => $breakWorkRequest->processing_status,
+                ],
+            ], Response::HTTP_CREATED);
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function update(BreakWorkUpdateRequest $request, BreakWorkRequest $breakWorkRequest, BreakRequestService $breakRequestService): JsonResponse
+    {
+        abort_unless((int) $breakWorkRequest->user_id === (int) $request->user()?->id, Response::HTTP_FORBIDDEN);
+
+        if (! $breakWorkRequest->isPending()) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Only pending break work requests can be updated.');
+        }
+
+        $startedAt = $request->normalizedStartedAt();
+        $endedAt = $request->normalizedEndedAt();
+
+        abort_unless($startedAt && $endedAt, Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        $updatedRequest = $breakRequestService->updatePendingRequest(
+            $breakWorkRequest,
+            $startedAt,
+            $endedAt,
+            $request->durationSeconds(),
+            $request->validated('description'),
+            $request->validated('work_date'),
+            (int) $request->user()->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Break work request updated successfully.',
+            'data' => [
+                'id' => $updatedRequest->id,
+                'status' => $updatedRequest->status,
+                'processing_status' => $updatedRequest->processing_status,
+            ],
+        ]);
+    }
+
+    public function handleAction(BreakRequestActionRequest $request, BreakWorkRequest $breakWorkRequest, string $action, BreakRequestService $breakRequestService): RedirectResponse
+    {
+        abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
+
+        try {
+            $breakRequestService->handleAction(
+                $request->user(),
+                $breakWorkRequest,
+                $action,
+                $request->validated('reason')
+            );
+        } catch (ValidationException $exception) {
+            $firstMessage = collect($exception->errors())
+                ->flatten()
+                ->filter()
+                ->first();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $firstMessage ?: 'Unable to process the break work request.')
+                ->withErrors($exception->errors());
+        }
+
+        $breakWorkRequest = $breakWorkRequest->fresh();
+
+        if ($breakWorkRequest) {
+            $notificationService = app(NotificationService::class);
+
+            if ($action === 'approve') {
+                $notificationService->notifyBreakRequestApproved($breakWorkRequest);
+            } else {
+                $notificationService->notifyBreakRequestRejected($breakWorkRequest);
+            }
+        }
+
+        return redirect()
+            ->route('break-requests.index')
+            ->with('success', $action === 'approve'
+                ? 'Break work request approved successfully.'
+                : 'Break work request rejected successfully.');
+    }
+
+    public function handleBulkAction(BreakRequestBulkActionRequest $request, string $action, BreakRequestService $breakRequestService): RedirectResponse
+    {
+        abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
+
+        $selectedRequestIds = collect($request->validated('break_request_ids'))
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        try {
+            $processedCount = $breakRequestService->handleBulkAction(
+                $request->user(),
+                $selectedRequestIds,
+                $action,
+                $request->validated('reason')
+            );
+        } catch (ValidationException $exception) {
+            $firstMessage = collect($exception->errors())
+                ->flatten()
+                ->filter()
+                ->first();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $firstMessage ?: 'Unable to process the break work requests.')
+                ->withErrors($exception->errors());
+        }
+
+        $notificationService = app(NotificationService::class);
+        $updatedRequests = BreakWorkRequest::query()
+            ->whereIn('id', $selectedRequestIds)
+            ->when(
+                $action === 'approve',
+                fn($query) => $query
+                    ->where('status', BreakWorkRequest::STATUS_APPROVED)
+                    ->where('approved_by', $request->user()->id),
+                fn($query) => $query
+                    ->where('status', BreakWorkRequest::STATUS_REJECTED)
+                    ->where('rejected_by', $request->user()->id)
+            )
+            ->get();
+
+        foreach ($updatedRequests as $breakWorkRequest) {
+            if ($action === 'approve') {
+                $notificationService->notifyBreakRequestApproved($breakWorkRequest);
+                continue;
+            }
+
+            $notificationService->notifyBreakRequestRejected($breakWorkRequest);
+        }
+
+        return redirect()
+            ->route('break-requests.index')
+            ->with('success', $action === 'approve'
+                ? "{$processedCount} break work request(s) approved successfully."
+                : "{$processedCount} break work request(s) rejected successfully.");
+    }
+}

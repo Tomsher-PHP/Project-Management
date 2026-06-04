@@ -21,7 +21,6 @@ class RolePermissionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userTypes = implode(',', array_keys(config('constants.user_types')));
         $roleId = $this->role ?? null;
 
         $rules = [
@@ -29,11 +28,6 @@ class RolePermissionRequest extends FormRequest
             'permissions' => 'array',
             'permissions.*' => 'string',
         ];
-
-        // Only require user_type when creating
-        if ($this->isMethod('post')) {
-            $rules['user_type'] = "required|string|in:{$userTypes}";
-        }
 
         return $rules;
     }

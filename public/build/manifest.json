@@ -1,0 +1,409 @@
+{
+  "_alert-DZ9rIzyM.js": {
+    "file": "assets/alert-DZ9rIzyM.js",
+    "name": "alert",
+    "imports": [
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "_datepicker-CA2wRfma.js": {
+    "file": "assets/datepicker-CA2wRfma.js",
+    "name": "datepicker",
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "_estimated-time-input-CIuy8ceU.js": {
+    "file": "assets/estimated-time-input-CIuy8ceU.js",
+    "name": "estimated-time-input"
+  },
+  "_flatpickr-CksuuEqD.css": {
+    "file": "assets/flatpickr-CksuuEqD.css",
+    "src": "_flatpickr-CksuuEqD.css"
+  },
+  "_flatpickr.min-Cc3t1Oke.js": {
+    "file": "assets/flatpickr.min-Cc3t1Oke.js",
+    "name": "flatpickr.min",
+    "css": [
+      "assets/flatpickr-CksuuEqD.css"
+    ]
+  },
+  "_sweetalert2.esm.all-YZDMVk0e.js": {
+    "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
+    "name": "sweetalert2.esm.all"
+  },
+  "_timepicker-F_B7tF24.js": {
+    "file": "assets/timepicker-F_B7tF24.js",
+    "name": "timepicker",
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "_tom-select-CxiVPw-X.js": {
+    "file": "assets/tom-select-CxiVPw-X.js",
+    "name": "tom-select"
+  },
+  "_weekpicker-CPVHNp86.js": {
+    "file": "assets/weekpicker-CPVHNp86.js",
+    "name": "weekpicker",
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-K5UVCK9R.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/css/modules/kanban.css": {
+    "file": "assets/kanban-DFG_n4Vm.css",
+    "src": "resources/css/modules/kanban.css",
+    "isEntry": true,
+    "name": "kanban",
+    "names": [
+      "kanban.css"
+    ]
+  },
+  "resources/css/modules/task-running-timer.css": {
+    "file": "assets/task-running-timer-BmNl9u-d.css",
+    "src": "resources/css/modules/task-running-timer.css",
+    "isEntry": true,
+    "name": "task-running-timer",
+    "names": [
+      "task-running-timer.css"
+    ]
+  },
+  "resources/css/modules/user-timeline.css": {
+    "file": "assets/user-timeline-CER8jxqH.css",
+    "src": "resources/css/modules/user-timeline.css",
+    "isEntry": true,
+    "name": "user-timeline",
+    "names": [
+      "user-timeline.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-CJCg5uJg.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_alert-DZ9rIzyM.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-CxiVPw-X.js",
+      "_datepicker-CA2wRfma.js",
+      "_timepicker-F_B7tF24.js",
+      "_weekpicker-CPVHNp86.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ],
+    "css": [
+      "assets/app-CqGrDw4D.css",
+      "assets/task-running-timer-BmNl9u-d.css"
+    ]
+  },
+  "resources/js/dashboard.js": {
+    "file": "assets/dashboard-ZkkyQb9b.js",
+    "name": "dashboard",
+    "src": "resources/js/dashboard.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-CA2wRfma.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/image-draggable.js": {
+    "file": "assets/image-draggable-Bl5g2tu1.js",
+    "name": "image-draggable",
+    "src": "resources/js/image-draggable.js",
+    "isEntry": true
+  },
+  "resources/js/login/login.js": {
+    "file": "assets/login-C9Wnitmd.js",
+    "name": "login",
+    "src": "resources/js/login/login.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/activity-logs.js": {
+    "file": "assets/activity-logs-D4Mu3k-5.js",
+    "name": "activity-logs",
+    "src": "resources/js/modules/activity-logs.js",
+    "isEntry": true
+  },
+  "resources/js/modules/analytics/summary.js": {
+    "file": "assets/summary-DtiyeCeX.js",
+    "name": "summary",
+    "src": "resources/js/modules/analytics/summary.js",
+    "isEntry": true,
+    "imports": [
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_datepicker-CA2wRfma.js"
+    ]
+  },
+  "resources/js/modules/checklist-template-form.js": {
+    "file": "assets/checklist-template-form-Cqw0kBkE.js",
+    "name": "checklist-template-form",
+    "src": "resources/js/modules/checklist-template-form.js",
+    "isEntry": true
+  },
+  "resources/js/modules/create-schedule.js": {
+    "file": "assets/create-schedule-B1-a-NAp.js",
+    "name": "create-schedule",
+    "src": "resources/js/modules/create-schedule.js",
+    "isEntry": true
+  },
+  "resources/js/modules/customer-contact.js": {
+    "file": "assets/customer-contact-DTWoFvT6.js",
+    "name": "customer-contact",
+    "src": "resources/js/modules/customer-contact.js",
+    "isEntry": true
+  },
+  "resources/js/modules/customer-restore.js": {
+    "file": "assets/customer-restore-GQ6J6lex.js",
+    "name": "customer-restore",
+    "src": "resources/js/modules/customer-restore.js",
+    "isEntry": true
+  },
+  "resources/js/modules/kpi-form.js": {
+    "file": "assets/kpi-form-BL6DO7iw.js",
+    "name": "kpi-form",
+    "src": "resources/js/modules/kpi-form.js",
+    "isEntry": true
+  },
+  "resources/js/modules/projects/project-delete.js": {
+    "file": "assets/project-delete-WOHrl-AU.js",
+    "name": "project-delete",
+    "src": "resources/js/modules/projects/project-delete.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/projects/project-detail.js": {
+    "file": "assets/project-detail-Dx0T9RQU.js",
+    "name": "project-detail",
+    "src": "resources/js/modules/projects/project-detail.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-CxiVPw-X.js",
+      "resources/js/modules/projects/project-tasks.js",
+      "_timepicker-F_B7tF24.js",
+      "_weekpicker-CPVHNp86.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/projects/project-payment.js": {
+    "file": "assets/project-payment-CKl93k2U.js",
+    "name": "project-payment",
+    "src": "resources/js/modules/projects/project-payment.js",
+    "isEntry": true,
+    "imports": [
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/projects/project-restore.js": {
+    "file": "assets/project-restore-CRqppC6U.js",
+    "name": "project-restore",
+    "src": "resources/js/modules/projects/project-restore.js",
+    "isEntry": true
+  },
+  "resources/js/modules/projects/project-tasks.js": {
+    "file": "assets/project-tasks-Df1OuU9F.js",
+    "name": "project-tasks",
+    "src": "resources/js/modules/projects/project-tasks.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-CxiVPw-X.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/schedule-shift.js": {
+    "file": "assets/schedule-shift-D4mHRsjG.js",
+    "name": "schedule-shift",
+    "src": "resources/js/modules/schedule-shift.js",
+    "isEntry": true,
+    "imports": [
+      "_tom-select-CxiVPw-X.js",
+      "_weekpicker-CPVHNp86.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/task-detail.js": {
+    "file": "assets/task-detail-CEJlyjmM.js",
+    "name": "task-detail",
+    "src": "resources/js/modules/task-detail.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_tom-select-CxiVPw-X.js",
+      "_datepicker-CA2wRfma.js",
+      "_timepicker-F_B7tF24.js",
+      "_weekpicker-CPVHNp86.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "resources/js/modules/tasks/time-log-change-request.js",
+      "resources/js/modules/projects/project-tasks.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/task-list-create.js": {
+    "file": "assets/task-list-create-f9ZCT-LS.js",
+    "name": "task-list-create",
+    "src": "resources/js/modules/task-list-create.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-CA2wRfma.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-CxiVPw-X.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/task-list-subtasks.js": {
+    "file": "assets/task-list-subtasks-zO9FwpyV.js",
+    "name": "task-list-subtasks",
+    "src": "resources/js/modules/task-list-subtasks.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/handoff-blend.js": {
+    "file": "assets/handoff-blend-CyrkDy-D.js",
+    "name": "handoff-blend",
+    "src": "resources/js/modules/tasks/handoff-blend.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/tasks/handoff.js": {
+    "file": "assets/handoff-CVumuL0L.js",
+    "name": "handoff",
+    "src": "resources/js/modules/tasks/handoff.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/kanban-board.js": {
+    "file": "assets/kanban-board-YdosoUZR.js",
+    "name": "kanban-board",
+    "src": "resources/js/modules/tasks/kanban-board.js",
+    "isEntry": true
+  },
+  "resources/js/modules/tasks/time-log-change-request.js": {
+    "file": "assets/time-log-change-request-Da6ilbln.js",
+    "name": "time-log-change-request",
+    "src": "resources/js/modules/tasks/time-log-change-request.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/team.js": {
+    "file": "assets/team-BtdavKLX.js",
+    "name": "team",
+    "src": "resources/js/modules/team.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/change-password.js": {
+    "file": "assets/change-password-P_Qdav1S.js",
+    "name": "change-password",
+    "src": "resources/js/modules/users/change-password.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
+  "resources/js/modules/users/general-settings.js": {
+    "file": "assets/general-settings-Bx7X_IjL.js",
+    "name": "general-settings",
+    "src": "resources/js/modules/users/general-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-edit.js": {
+    "file": "assets/user-edit-vxzGAL30.js",
+    "name": "user-edit",
+    "src": "resources/js/modules/users/user-edit.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-notification-settings.js": {
+    "file": "assets/user-notification-settings-DXeJtXMb.js",
+    "name": "user-notification-settings",
+    "src": "resources/js/modules/users/user-notification-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-restore.js": {
+    "file": "assets/user-restore-H_EPGKwb.js",
+    "name": "user-restore",
+    "src": "resources/js/modules/users/user-restore.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/break-work-request.js": {
+    "file": "assets/break-work-request-KAI58_kH.js",
+    "name": "break-work-request",
+    "src": "resources/js/modules/workspace/break-work-request.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_timepicker-F_B7tF24.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/workspace/user-timeline.js": {
+    "file": "assets/user-timeline-CwplDh84.js",
+    "name": "user-timeline",
+    "src": "resources/js/modules/workspace/user-timeline.js",
+    "isEntry": true,
+    "imports": [
+      "_datepicker-CA2wRfma.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
+  },
+  "resources/js/modules/workspace/workspace-auto-refresh.js": {
+    "file": "assets/workspace-auto-refresh-BMdeCazp.js",
+    "name": "workspace-auto-refresh",
+    "src": "resources/js/modules/workspace/workspace-auto-refresh.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-kanban-filters.js": {
+    "file": "assets/workspace-kanban-filters-BoJkhQCR.js",
+    "name": "workspace-kanban-filters",
+    "src": "resources/js/modules/workspace/workspace-kanban-filters.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-kanban-heights.js": {
+    "file": "assets/workspace-kanban-heights-Cfjx3R8h.js",
+    "name": "workspace-kanban-heights",
+    "src": "resources/js/modules/workspace/workspace-kanban-heights.js",
+    "isEntry": true
+  },
+  "resources/js/modules/workspace/workspace-user-selector.js": {
+    "file": "assets/workspace-user-selector-t1Y2p1Mz.js",
+    "name": "workspace-user-selector",
+    "src": "resources/js/modules/workspace/workspace-user-selector.js",
+    "isEntry": true
+  },
+  "resources/js/project-flow.js": {
+    "file": "assets/project-flow-Ba6M30vJ.js",
+    "name": "project-flow",
+    "src": "resources/js/project-flow.js",
+    "isEntry": true
+  }
+}

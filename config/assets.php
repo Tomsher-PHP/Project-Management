@@ -4,8 +4,14 @@ return [
     'icons' => [
         'favicon' => 'assets/images/logo/favicon.ico',
         'logo' => 'assets/images/logo/logo.png',
-        'logo-white' => 'assets/images/logo/logo.png',
-        'logo-short' => 'assets/images/logo/logo-short.png',
+        'logo_white' => 'assets/images/logo/logo.png',
+        'logo_short' => 'assets/images/logo/logo-short.png',
+        'profile' => 'assets/images/avatar/profile-52x52.png',
+    ],
+
+    'images' => [
+        'default_avatar' => 'assets/images/avatar/default-avatar.jpeg',
+        'chart_no_data' => 'assets/images/chart/no-data.png',
     ],
 
     'css' => [
@@ -19,14 +25,10 @@ return [
         'jquery' => 'assets/js/jquery-3.6.0.min.js',
         'aos' => 'assets/js/aos.js',
         'slick' => 'assets/js/slick.min.js',
-        'quill' => 'assets/js/quill.min.js',
         'main' => 'assets/js/main.js',
         'chart' => 'assets/js/chart.js',
 
         //profile page js
-        'pages-profile' => 'assets/js/pages/profile.init.js',
-
-        //image-draggable
-        'image_draggable' => 'assets/js/image-draggable.js'
+        'pages_profile' => 'assets/js/pages/profile.init.js',
     ],
 ];

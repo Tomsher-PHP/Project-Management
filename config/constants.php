@@ -2,57 +2,13 @@
 
 return [
     // User Types constant
-    'user_types' => [
-        'super_admin' => 'Super Admin',
-        'admin' => 'Admin',
-        'manager' => 'Manager',
-        'team_leader' => 'Team Leader',
-        'normal_user' => 'Normal User',
-        'tester' => 'Tester',
-        // 'guest' => 'Guest',
-    ],
-
-    // Permission Types constant
-    'permission_types' => [
-        // Project Module
-        'project.view',
-        'project.create',
-        'project.edit',
-        'project.delete',
-
-        // Task Module
-        'task.view',
-        'task.create',
-        'task.edit',
-        'task.delete',
-
-        // User Module
-        'user.view',
-        'user.create',
-        'user.edit',
-        'user.delete',
-
-        //team Module
-        'team.view',
-        'team.create',
-        'team.edit',
-        'team.delete',
-
-        // Settings Module
-        'settings.view',
-        'settings.create',
-        'settings.edit',
-
-        // Reports Module
-        'reports.view',
-        'reports.download',
-
-        // Role Management Module
-        'role.view',
-        'role.create',
-        'role.edit',
-        'role.delete',
-    ],
+    // 'user_types' => [
+    //     'super_admin' => 'Super Admin',
+    //     'admin' => 'Admin',
+    //     'manager' => 'Manager',
+    //     'team_leader' => 'Team Leader',
+    //     'normal_user' => 'Normal User',
+    // ],
 
     // User Type Permissions constant
     'user_type_permissions' => [
@@ -104,5 +60,79 @@ return [
             'project.view',
             'task.view',
         ],
+    ],
+
+    // Default list data count per page
+    'per_page_count' => 10,
+
+    // Default team roles for team management
+    'team_roles' => [
+        'team_leader' => 'Team Leader',
+        'member' => 'Member',
+    ],
+
+    // Date format
+    'date_format' => 'Y-m-d',
+
+    // Time format    
+    'time_format' => 'H:i',
+
+    // Constant color code
+    'soft_colors' => [
+        '#f3f4f6',
+        '#fee2e2',
+        '#fde68a',
+        '#d1fae5',
+        '#dbeafe',
+        '#e9d5ff',
+        '#fbcfe8',
+        '#cffafe',
+    ],
+
+    // Emirates list
+    'emirates' => [
+        'abu_dhabi' => 'Abu Dhabi',
+        'ajman' => 'Ajman',
+        'dubai' => 'Dubai',
+        'fujairah' => 'Fujairah',
+        'ras_al_khaimah' => 'Ras Al Khaimah',
+        'sharjah' => 'Sharjah',
+        'umm_al_quwain' => 'Umm Al Quwain',
+    ],
+
+    // Date Format constant
+    'date_formats' => [
+        'Y-m-d',
+        'Y/m/d',
+        'Y.m.d',
+        'd-m-Y',
+        'd/m/Y',
+        'd.m.Y',
+        'Y-M-d',
+        'd-M-Y',
+    ],
+
+    // Time Format constant
+    'time_formats' => [
+        'H:i',
+        'h:i A',
+    ],
+
+    // Settings permissions list
+    'settings_permissions' => [
+        'department.view',
+        'designation.view',
+        'shift.view',
+        'technology.view',
+        'project_category.view',
+        'industry.view',
+        'project_status.view',
+        'project_stage.view',
+        'configuration.view',
+        'agile_milestone.view',
+        'agile_sprint.view',
+        'task_settings.view',
+        'kpi.view',
+        'checklist_template.view'
     ],
 ];

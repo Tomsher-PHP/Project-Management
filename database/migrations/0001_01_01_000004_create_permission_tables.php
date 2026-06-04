@@ -16,23 +16,21 @@ return new class extends Migration
         $columnNames = config('permission.column_names');
         $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
         $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
-        $userTypes = array_keys(config('constants.user_types'));
 
         throw_if(empty($tableNames), Exception::class, 'Error: config/permission.php not loaded. Run [php artisan config:clear] and try again.');
         throw_if($teams && empty($columnNames['team_foreign_key'] ?? null), Exception::class, 'Error: team_foreign_key on config/permission.php not loaded. Run [php artisan config:clear] and try again.');
 
-        Schema::create($tableNames['permissions'], static function (Blueprint $table) use ($userTypes) {
+        Schema::create($tableNames['permissions'], static function (Blueprint $table) {
             // $table->engine('InnoDB');
             $table->bigIncrements('id'); // permission id
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            $table->enum('user_type', $userTypes)->nullable()->index();
             $table->timestamps();
 
-            $table->unique(['name', 'guard_name', 'user_type']);
+            $table->unique(['name', 'guard_name']);
         });
 
-        Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames, $userTypes) {
+        Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
             // $table->engine('InnoDB');
             $table->bigIncrements('id'); // role id
             if ($teams || config('permission.testing')) { // permission.testing is a fix for sqlite testing
@@ -41,8 +39,7 @@ return new class extends Migration
             }
             $table->string('name');       // For MyISAM use string('name', 225); // (or 166 for InnoDB with Redundant/Compact row format)
             $table->string('guard_name'); // For MyISAM use string('guard_name', 25);
-            $table->enum('user_type', $userTypes)->default('normal_user')->index();
-            $table->boolean('status')->default(true)->index();
+            $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
             if ($teams || config('permission.testing')) {
                 $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);

@@ -11,17 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $userTypes = array_keys(config('constants.user_types'));
-
-        Schema::create('users', function (Blueprint $table) use ($userTypes) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->enum('user_type', $userTypes)->default('normal_user')->index();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->boolean('is_super_admin')->default(false);
+
+            $table->boolean('is_active')->default(true);
+            $table->boolean('delete_status')->default(false);
+
+            $table->unsignedBigInteger('added_by')->nullable()->comment('user id')->index();
+            $table->unsignedBigInteger('updated_by')->nullable()->comment('user id')->index();
+
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index(['is_active', 'delete_status'], 'users_is_active_delete_status_index');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

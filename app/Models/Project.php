@@ -1,0 +1,383 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\Filterable;
+use App\Traits\HasFormOptions;
+use App\Traits\LogsModelActivity;
+use App\Traits\Sortable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+
+class Project extends Model
+{
+    use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+
+    protected $fillable = [
+        'parent_project_id',
+        'project_code',
+        'name',
+        'customer_id',
+        'project_flow',
+        'priority',
+        'status_id',
+        'project_stage_id',
+        'start_date',
+        'end_date',
+        'customer_end_date',
+        'estimated_time_seconds',
+        'default_task_estimate_seconds',
+        'domain',
+        'project_category_id',
+        'default_billable',
+        'is_active',
+        'sales_person_id',
+        'added_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'customer_end_date' => 'date',
+        'estimated_time_seconds' => 'integer',
+        'default_task_estimate_seconds' => 'integer',
+        'default_billable' => 'boolean',
+        'added_by' => 'integer',
+        'updated_by' => 'integer',
+        'is_active' => 'boolean',
+    ];
+
+    protected $sortable = [
+        'name',
+        'customer.name',
+        'start_date',
+        'end_date',
+        'customer_end_date',
+    ];
+
+    protected $searchable = ['name', 'project_code'];
+
+    public static function booted()
+    {
+        static::creating(function ($model) {
+            $model->added_by = Auth::id();
+        });
+
+        static::updating(function ($model) {
+            $model->updated_by = Auth::id();
+        });
+    }
+
+    public static function generateProjectCode()
+    {
+        $lastProject = self::withTrashed()->orderBy('id', 'desc')->first();
+        $lastProjectCode = $lastProject ? $lastProject->project_code : 'PRJ00000';
+        $lastNumber = (int) substr($lastProjectCode, 3);
+        $newNumber = $lastNumber + 1;
+        return 'PRJ' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    public function scopeAccessibleBy($query, $user)
+    {
+        // Skip misc projects
+        $query->where('projects.is_system', false);
+        // Superadmin or view all projects permission
+        if ($user->is_super_admin || $user->can('project.view_all_projects')) {
+            return $query;
+        }
+
+        // Creator or member
+        return $query->where(function ($q) use ($user) {
+            $q->where('added_by', $user->id)
+                ->orWhereHas('members', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+        });
+    }
+
+    public function parentProject()
+    {
+        return $this->belongsTo(Project::class, 'parent_project_id')->withTrashed();
+    }
+
+    public function reworkProjects()
+    {
+        return $this->hasMany(Project::class, 'parent_project_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class)->withTrashed();
+    }
+
+    public function projectStatus()
+    {
+        return $this->belongsTo(ProjectStatus::class, 'status_id')->withTrashed();
+    }
+
+    public function projectStage()
+    {
+        return $this->belongsTo(ProjectStage::class)->withTrashed();
+    }
+
+    public function salesPerson()
+    {
+        return $this->belongsTo(User::class, 'sales_person_id');
+    }
+
+    public function addedBy()
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function technologies()
+    {
+        return $this->belongsToMany(Technology::class, 'project_technology')->withTrashed();
+    }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(ProjectStatusHistory::class)->orderBy('added_at', 'desc');
+    }
+
+    public function stageHistories()
+    {
+        return $this->hasMany(ProjectStageHistory::class)->orderBy('added_at', 'desc');
+    }
+
+    public function projectPayments()
+    {
+        return $this->hasMany(ProjectPayment::class)->orderByDesc('id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ProjectComment::class)->orderBy('created_at', 'desc');
+    }
+
+    public function projectNotes()
+    {
+        return $this->hasMany(ProjectNote::class)->orderBy('created_at', 'desc');
+    }
+
+    public function projectMilestones()
+    {
+        return $this->hasMany(ProjectMilestone::class)->orderForDisplay();
+    }
+
+    public function projectSprints()
+    {
+        return $this->hasMany(ProjectSprint::class)->orderForDisplay();
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class)->orderBy('sort_order');
+    }
+
+    public function projectChecklists()
+    {
+        return $this->hasMany(ProjectChecklist::class)->orderBy('id');
+    }
+
+    public function latestStatusHistory()
+    {
+        return $this->hasOne(ProjectStatusHistory::class)->latestOfMany();
+    }
+
+    public function getEstimatedTimeHoursAttribute()
+    {
+        return $this->estimated_time_seconds ? $this->estimated_time_seconds / 3600 : null;
+    }
+
+    public function setEstimatedTimeHoursAttribute($value)
+    {
+        $this->attributes['estimated_time_seconds'] = $value ? (int) ($value * 3600) : null;
+    }
+
+    public function getIsAgileAttribute()
+    {
+        return $this->project_flow === 'agile';
+    }
+
+    public function getIsLinearAttribute()
+    {
+        return $this->project_flow === 'linear';
+    }
+
+    public function getIsSimpleAttribute()
+    {
+        return $this->is_linear;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', true)
+                ->where('type', ProjectStatus::TYPE_COMPLETED);
+        });
+    }
+
+    public function scopeEligibleParentOptions($query, ?int $excludeProjectId = null, ?int $selectedParentProjectId = null)
+    {
+        return $query
+            ->withTrashed()
+            ->when($excludeProjectId, fn($q) => $q->whereKeyNot($excludeProjectId))
+            ->where(function ($q) use ($selectedParentProjectId) {
+                $q->where(function ($eligibleQuery) {
+                    $eligibleQuery->completed()
+                        ->whereNull('deleted_at');
+                });
+
+                if ($selectedParentProjectId) {
+                    $q->orWhere('id', $selectedParentProjectId);
+                }
+            })
+            ->orderBy('name')
+            ->orderBy('project_code');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('type', ProjectStatus::TYPE_ARCHIVED);
+        });
+    }
+
+    public function scopeInProgress($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', false)
+                ->where('type', ProjectStatus::TYPE_IN_PROGRESS);
+        });
+    }
+
+    public function scopeOpen($query)
+    {
+        return $query->whereHas('projectStatus', function ($q) {
+            $q->where('is_completed', false)
+                ->where('type', ProjectStatus::TYPE_OPEN);
+        });
+    }
+
+
+    /*----------------Attachments----------------*/
+
+    public function attachments()
+    {
+        return $this->morphMany(Attachment::class, 'link', 'link_type', 'link_id');
+    }
+
+    public function scopeFiles()
+    {
+        return $this->attachments()->where('category', 'scope_files');
+    }
+
+    /*----------------Members relationship----------------*/
+
+
+    // All members, including removed
+    public function membersAll()
+    {
+        return $this->belongsToMany(User::class, 'project_members')
+            ->withPivot(['project_role', 'is_active', 'removed_at', 'removed_by']);
+    }
+
+    // Only active members (default)
+    public function members()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at');
+    }
+
+    public function activeMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', true);
+    }
+
+    public function inactiveMembers()
+    {
+        return $this->membersAll()
+            ->whereNull('removed_at')
+            ->wherePivot('is_active', false);
+    }
+
+    public function removedMembers()
+    {
+        return $this->membersAll()
+            ->whereNotNull('removed_at');
+    }
+
+    public function teamLeader()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ProjectMember::class,
+            'project_id',
+            'id',
+            'id',
+            'user_id'
+        )
+            ->where('project_members.project_role', 'team_leader')
+            ->where('project_members.is_active', true)
+            ->whereNull('project_members.removed_at');
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'added_by',
+        'updated_by',
+        'actual_time_seconds',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'customer_id' => 'Customer',
+            'project_flow' => 'Project Flow',
+            'status_id' => 'Status',
+            'project_stage_id' => 'Project Stage',
+            'project_category_id' => 'Project Category',
+            'sales_person_id' => 'Sales Person',
+            'default_task_estimate_seconds' => 'Default Task Estimate',
+            'estimated_time_seconds' => 'Estimated Time',
+            'default_billable' => 'Default Billable',
+            'is_active' => 'Active',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'status_id' => ProjectStatus::find($value)?->name ?? $value,
+            'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
+            'project_category_id' => ProjectCategory::find($value)?->name ?? $value,
+            'sales_person_id' => User::find($value)?->name ?? $value,
+            'customer_id' => Customer::find($value)?->name ?? $value,
+            'default_billable' => $value ? 'Yes' : 'No',
+            'is_active' => $value ? 'Active' : 'Inactive',
+            'estimated_time_seconds' => $this->secondsToReadable($value),
+            'default_task_estimate_seconds' => $this->secondsToReadable($value),
+            default => $value,
+        };
+    }
+}
