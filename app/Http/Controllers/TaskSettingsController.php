@@ -131,7 +131,7 @@ class TaskSettingsController extends Controller
             $data = app(\App\Http\Requests\TaskModeRequest::class)->validated();
             $data['is_rework'] = $request->boolean('is_rework');
             $data['is_productive'] = $request->boolean('is_productive');
-            $data['track_performance'] = $request->boolean('track_performance');
+            $data['track_performance'] = $data['is_productive'];
             $data['customer_request'] = $request->boolean('customer_request');
             $data['is_default'] = $request->boolean('is_default');
             $taskMode = DB::transaction(function () use ($data) {
@@ -202,7 +202,7 @@ class TaskSettingsController extends Controller
             $data = app(\App\Http\Requests\TaskModeRequest::class)->validated();
             $data['is_rework'] = $request->boolean('is_rework');
             $data['is_productive'] = $request->boolean('is_productive');
-            $data['track_performance'] = $request->boolean('track_performance');
+            $data['track_performance'] = $data['is_productive'];
             $data['customer_request'] = $request->boolean('customer_request');
             $data['is_default'] = $request->boolean('is_default');
 
