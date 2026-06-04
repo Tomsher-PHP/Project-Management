@@ -473,19 +473,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
         Route::get('/reports/project/export', [ReportController::class, 'projectExport'])->middleware('permission.type:reports.project_export')->name('project.export');
 
-        // TASK:: PROJECT REPORT
-        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
-        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');
-        
         // MILESTONE:: PROJECT REPORT
         Route::get('/milestones-report', [ReportController::class, 'milestone'])->middleware('permission.type:reports.milestone_view')->name('milestones');
         Route::get('/reports/milestones/export', [ReportController::class, 'milestoneExport'])->middleware('permission.type:reports.milestone_export')->name('milestone.export');
-        
+
         // SPRINT:: PROJECT REPORT
         Route::get('/sprints-report', [ReportController::class, 'sprint'])->middleware('permission.type:reports.sprint_view')->name('sprints');
         Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
 
-        
+        // TASK:: PROJECT REPORT
+        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
+        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');        
     });
 });
 
