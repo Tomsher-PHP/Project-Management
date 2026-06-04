@@ -6,8 +6,6 @@ use App\Exports\ProjectReportExport;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectStatus;
-use App\Models\User;
-use App\Services\Reports\DailyReportService;
 use App\Services\Reports\DailyTimeReportService;
 use App\Services\Reports\MilestoneReportService;
 use App\Services\Reports\ProjectReportService;

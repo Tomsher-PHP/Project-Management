@@ -384,25 +384,25 @@ Route::middleware(['auth'])->group(function () {
     // Task Routes
     Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
-    Route::prefix('tasks/{task}')->group(function () {
-        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
-        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
-        Route::patch('overview/description', [TaskController::class, 'updateOverviewDescription'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.overview.description.update');
+    Route::prefix('tasks/{task}')->as('tasks.')->group(function () {
+        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tabs.show');
+        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('parent-options');
+        Route::patch('overview/description', [TaskController::class, 'updateOverviewDescription'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('overview.description.update');
 
-        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
-        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
-        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('activity.modal');
+        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.modal');
+        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.store');
 
         // Task notes and attachments routes
-        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
-        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
-        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('notes.store');
+        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.delete');
+        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.attachments.delete');
 
         // Task timer routes
-        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
-        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
+        Route::post('/start', [TaskController::class, 'start'])->name('start');
+        Route::post('/stop', [TaskController::class, 'stop'])->name('stop');
 
-        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -439,11 +439,11 @@ Route::middleware(['auth'])->group(function () {
     // End Task time log change request routes
 
     // Handoff Request routes
-    Route::prefix('handoff-requests')->group(function () {
-        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('handoff_requests.index');
-        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('handoff_requests.store');
-        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('handoff_requests.assign');
-        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('handoff_requests.note');
+    Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
+        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('index');
+        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('store');
+        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('assign');
+        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('note');
     });
     // End Handoff Request routes
 
