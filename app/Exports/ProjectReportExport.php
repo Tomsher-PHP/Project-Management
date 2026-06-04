@@ -77,6 +77,7 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
                 $this->writeHeaderSection($sheet, $lastColumn);
                 $this->styleTable($sheet, $lastColumn, $headerRow, $lastDataRow);
                 $this->applyColumnLayout($sheet, $headerRow, $lastDataRow);
+                $this->applyIndicatorStyles($sheet, $headerRow);
             },
         ];
     }
@@ -288,6 +289,74 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         }
     }
 
+    protected function applyIndicatorStyles($sheet, int $headerRow): void
+    {
+        $columnIndexes = array_flip(array_keys($this->columns));
+
+        $this->projects->values()->each(function ($project, $index) use ($sheet, $headerRow, $columnIndexes) {
+            $rowNumber = $headerRow + $index + 1;
+            $metrics = $this->resolveProjectMetrics($project);
+
+            if (isset($columnIndexes['actual_hours'])) {
+                $actualHoursColumn = Coordinate::stringFromColumnIndex($columnIndexes['actual_hours'] + 1);
+                $actualHoursColor = $metrics['actual_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';
+
+                $sheet->getStyle("{$actualHoursColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $actualHoursColor],
+                    ],
+                ]);
+            }
+
+            if (isset($columnIndexes['progress'])) {
+                $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
+                $progressPalette = $this->resolveProgressPalette(
+                    $metrics['estimated_seconds'],
+                    $metrics['actual_seconds']
+                );
+
+                $sheet->getStyle("{$progressColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $progressPalette['text']],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $progressPalette['fill']],
+                    ],
+                ]);
+            }
+
+            if (isset($columnIndexes['status'])) {
+                $statusColumn = Coordinate::stringFromColumnIndex($columnIndexes['status'] + 1);
+                $this->applyColorBadgeStyle(
+                    $sheet,
+                    "{$statusColumn}{$rowNumber}",
+                    $project->projectStatus?->color
+                );
+            }
+
+            if (isset($columnIndexes['stage'])) {
+                $stageColumn = Coordinate::stringFromColumnIndex($columnIndexes['stage'] + 1);
+                $this->applyColorBadgeStyle(
+                    $sheet,
+                    "{$stageColumn}{$rowNumber}",
+                    $project->projectStage?->color
+                );
+            }
+
+            if (isset($columnIndexes['priority'])) {
+                $priorityColumn = Coordinate::stringFromColumnIndex($columnIndexes['priority'] + 1);
+                $this->applyPriorityStyle(
+                    $sheet,
+                    "{$priorityColumn}{$rowNumber}",
+                    $project->priority
+                );
+            }
+        });
+    }
+
     protected function buildFilterSummary(): array
     {
         $summary = [];
@@ -461,6 +530,110 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         return $date && $date->format('Y-m-d') === trim($value)
             ? $date
             : null;
+    }
+
+    protected function resolveProgressPalette(int $estimatedSeconds, int $actualSeconds): array
+    {
+        if ($estimatedSeconds <= 0) {
+            return [
+                'fill' => 'E5E7EB',
+                'text' => '475569',
+            ];
+        }
+
+        $progressPercentage = $estimatedSeconds > 0
+            ? ($actualSeconds / $estimatedSeconds) * 100
+            : 0;
+
+        return match (true) {
+            $progressPercentage <= 50 => ['fill' => 'DCFCE7', 'text' => '16A34A'],
+            $progressPercentage <= 100 => ['fill' => 'FFEDD5', 'text' => 'EA580C'],
+            default => ['fill' => 'FEE2E2', 'text' => 'DC2626'],
+        };
+    }
+
+    protected function applyPriorityStyle($sheet, string $cell, ?string $priority): void
+    {
+        $palette = $this->resolvePriorityPalette($priority);
+
+        if ($palette === null) {
+            return;
+        }
+
+        $sheet->getStyle($cell)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => $palette['text']],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $palette['fill']],
+            ],
+        ]);
+    }
+
+    protected function resolvePriorityPalette(?string $priority): ?array
+    {
+        if (! filled($priority)) {
+            return null;
+        }
+
+        $configuredColor = (string) config('project_constants.project_priorities.' . $priority . '.color', '');
+
+        return match ($configuredColor) {
+            'red' => ['fill' => 'DC2626', 'text' => 'FFFFFF'],
+            'orange' => ['fill' => 'F97316', 'text' => 'FFFFFF'],
+            'yellow' => ['fill' => 'EAB308', 'text' => 'FFFFFF'],
+            'green' => ['fill' => '22C55E', 'text' => 'FFFFFF'],
+            default => ['fill' => 'E2E8F0', 'text' => '0F172A'],
+        };
+    }
+
+    protected function applyColorBadgeStyle($sheet, string $cell, ?string $rawColor): void
+    {
+        $color = $this->normalizeHexColor($rawColor) ?? '94A3B8';
+
+        $sheet->getStyle($cell)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => $this->resolveContrastTextColor($color)],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $color],
+            ],
+        ]);
+    }
+
+    protected function normalizeHexColor(?string $color): ?string
+    {
+        if (! is_string($color)) {
+            return null;
+        }
+
+        $normalized = ltrim(trim($color), '#');
+
+        if (preg_match('/^[0-9a-fA-F]{3}$/', $normalized) === 1) {
+            return strtoupper(implode('', array_map(
+                fn(string $char) => $char . $char,
+                str_split($normalized)
+            )));
+        }
+
+        if (preg_match('/^[0-9a-fA-F]{6}$/', $normalized) === 1) {
+            return strtoupper($normalized);
+        }
+
+        return null;
+    }
+
+    protected function resolveContrastTextColor(string $hexColor): string
+    {
+        [$red, $green, $blue] = sscanf($hexColor, '%02x%02x%02x');
+
+        $brightness = (($red * 299) + ($green * 587) + ($blue * 114)) / 1000;
+
+        return $brightness >= 160 ? '0F172A' : 'FFFFFF';
     }
 
     protected function resolveProjectMetrics($project): array

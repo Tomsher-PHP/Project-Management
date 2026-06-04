@@ -27,8 +27,8 @@ class ProjectReportService
                 'customer:id,name',
                 'projectMilestones:id,project_id,estimated_time_seconds,actual_time_seconds,status_id',
                 'salesPerson:id,name',
-                'projectStatus:id,name',
-                'projectStage:id,name',
+                'projectStatus:id,name,color',
+                'projectStage:id,name,color',
             ])
 
             ->withCount([
