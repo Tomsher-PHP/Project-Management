@@ -9,7 +9,33 @@
         <x-filters.button />
 
         <!-- EXPORT -->
-        <x-export-button :action="route('reports.time_tracking.export')" :params="request()->except('visible_columns')" :hidden-fields="['visible_columns' => '']" id="time-tracking-report-export-form" data-column-order='@json(array_keys($columns))' />
+        <form method="GET" action="{{ route('reports.time_tracking.export') }}" id="time-tracking-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
+            @foreach (request()->except('visible_columns') as $key => $value)
+                @if (is_array($value))
+                    @foreach ($value as $item)
+                        <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
+
+            <input type="hidden" name="visible_columns" value="">
+
+            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="Export report">
+                <span class="inline-flex items-center justify-center text-current">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
+
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                    </svg>
+                </span>
+
+                <span class="text-sm font-semibold">
+                    Export Excel
+                </span>
+            </button>
+        </form>
 
         <!-- COLUMN MANAGER -->
         <x-column-manager :columns="$columns" report="time_tracking_report" />
@@ -85,43 +111,43 @@
                 <!-- HEADER -->
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
                             #
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
                             Project
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-milestone">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-milestone">
                             Milestone
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-sprint">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-sprint">
                             Sprint
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
                             Task
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
                             User
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
                             Date
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
                             Start Time
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
                             End Time
                         </th>
 
-                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
                             Duration
                         </th>
 
@@ -157,11 +183,11 @@
 
                         <!-- DATA ROW -->
                         <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
-                            <td class="px-2 py-2 text-sm text-bgray-600 dark:text-bgray-300">
+                            <td class="px-5 py-2 text-sm text-bgray-600 dark:text-bgray-300">
                                 {{ $reportNumber }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
+                            <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
                                 @if ($projectUrl)
                                     <a href="{{ $projectUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
                                         {{ $project?->name ?? '-' }}
@@ -171,15 +197,15 @@
                                 @endif
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
                                 {{ $milestone?->name ?? '-' }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-sprint">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-sprint">
                                 {{ $sprint?->name ?? '-' }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
                                 @if ($taskUrl)
                                     <a href="{{ $taskUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
                                         {{ $report->task?->name ?? '-' }}
@@ -189,23 +215,23 @@
                                 @endif
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
                                 {{ $report->user?->name ?? '-' }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-date">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-date">
                                 @appDate($report->started_at)
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-start_time">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-start_time">
                                 @appTime($report->started_at)
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-end_time">
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-end_time">
                                 @appTime($report->ended_at)
                             </td>
 
-                            <td class="px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-duration">
+                            <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-duration">
                                 {{ formatSecondsToHMS($report->duration_seconds) }}
                             </td>
                         </tr>
@@ -244,26 +270,31 @@
             const exportForm = document.getElementById('time-tracking-report-export-form');
             const columnManager = document.querySelector('.column-manager[data-report="time_tracking_report"]');
 
-            if (!columnManager) {
+            if (!exportForm) {
                 return;
             }
 
+            const visibleColumnsInput = exportForm.querySelector('input[name="visible_columns"]');
+            const columnOrder = JSON.parse(exportForm.dataset.columnOrder || '[]');
             const storageKey = 'column_manager_time_tracking_report';
             const minimumVisibleColumns = 3;
-            const visibleColumnsInput = exportForm?.querySelector('input[name="visible_columns"]');
-            const columnOrder = JSON.parse(exportForm?.dataset.columnOrder || '[]');
 
             const syncVisibleColumns = () => {
-                if (!visibleColumnsInput) {
-                    return;
+                let saved = {};
+
+                try {
+                    saved = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+                } catch (error) {
+                    saved = {};
                 }
 
-                const saved = readSavedColumns();
                 const visibleColumns = columnOrder.filter((column) => saved[column] !== false);
                 visibleColumnsInput.value = visibleColumns.join(',');
             };
 
-            const getColumnCheckboxes = () => Array.from(columnManager.querySelectorAll('.cm-toggle'));
+            const getColumnCheckboxes = () => columnManager ?
+                Array.from(columnManager.querySelectorAll('.cm-toggle')) : [];
+
             const getCheckedColumns = () => getColumnCheckboxes().filter((checkbox) => checkbox.checked);
 
             const toggleColumnVisibility = (column, show) => {
@@ -285,6 +316,10 @@
             };
 
             const enforceMinimumColumns = () => {
+                if (!columnManager) {
+                    return;
+                }
+
                 const checkboxes = getColumnCheckboxes();
                 const checkedColumns = getCheckedColumns();
 
@@ -313,54 +348,41 @@
                 syncVisibleColumns();
             };
 
-            const applySavedColumns = () => {
-                const saved = readSavedColumns();
+            if (columnManager) {
+                const checkboxes = getColumnCheckboxes();
 
-                getColumnCheckboxes().forEach((checkbox) => {
-                    const isVisible = saved[checkbox.dataset.column] !== false;
-                    checkbox.checked = isVisible;
-                    toggleColumnVisibility(checkbox.dataset.column, isVisible);
-                });
+                checkboxes.forEach((checkbox) => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            enforceMinimumColumns();
+                            return;
+                        }
 
-                enforceMinimumColumns();
-            };
+                        if (getCheckedColumns().length < minimumVisibleColumns) {
+                            const saved = readSavedColumns();
 
-            getColumnCheckboxes().forEach((checkbox) => {
-                checkbox.addEventListener('change', function() {
-                    const saved = readSavedColumns();
-                    saved[this.dataset.column] = this.checked;
-                    writeSavedColumns(saved);
-                    toggleColumnVisibility(this.dataset.column, this.checked);
-                    enforceMinimumColumns();
-                });
-            });
+                            this.checked = true;
+                            saved[this.dataset.column] = true;
+                            toggleColumnVisibility(this.dataset.column, true);
+                            writeSavedColumns(saved);
+                        }
 
-            columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
-                window.requestAnimationFrame(() => {
-                    const saved = {};
-
-                    getColumnCheckboxes().forEach((checkbox) => {
-                        checkbox.checked = true;
-                        saved[checkbox.dataset.column] = true;
-                        toggleColumnVisibility(checkbox.dataset.column, true);
+                        enforceMinimumColumns();
                     });
-
-                    writeSavedColumns(saved);
-                    enforceMinimumColumns();
                 });
-            });
 
-            columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
-                window.requestAnimationFrame(() => {
-                    localStorage.removeItem(storageKey);
-                    applySavedColumns();
-                    syncVisibleColumns();
+                columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
                 });
-            });
 
-            applySavedColumns();
+                columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
+                });
+            }
+
+            enforceMinimumColumns();
             syncVisibleColumns();
-            exportForm?.addEventListener('submit', syncVisibleColumns);
+            exportForm.addEventListener('submit', syncVisibleColumns);
         });
     </script>
 

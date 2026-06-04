@@ -5,7 +5,35 @@
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-filters.button />
 
-        <x-export-button :action="route('reports.daily_time.export')" :params="request()->except('visible_columns')" :hidden-fields="['visible_columns' => '']" :show="$canExport" id="daily-time-report-export-form" data-column-order='@json(array_keys($columns))' />
+        @if ($canExport)
+            <form method="GET" action="{{ route('reports.daily_time.export') }}" id="daily-time-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
+                @foreach (request()->except('visible_columns') as $key => $value)
+                    @if (is_array($value))
+                        @foreach ($value as $item)
+                            <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
+                <input type="hidden" name="visible_columns" value="">
+
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="Export report">
+                    <span class="inline-flex items-center justify-center text-current">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                        </svg>
+                    </span>
+
+                    <span class="text-sm font-semibold">
+                        Export Excel
+                    </span>
+                </button>
+            </form>
+        @endif
+        {{-- <x-export-button :action="route('reports.daily_time.export')" :params="request()->except('visible_columns')" :hidden-fields="['visible_columns' => '']" :show="$canExport" id="daily-time-report-export-form" data-column-order='@json(array_keys($columns))' /> --}}
 
         <x-column-manager :columns="$columns" report="daily_time_report" />
     </div>
