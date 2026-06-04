@@ -458,31 +458,34 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('reports')->as('reports.')->group(function () {
 
+        // To get choosed projects by flow in report filters
         Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->name('projects.by-flow');
 
-        // PROJECT REPORT
-        Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
-        Route::get('/reports/project/export', [ReportController::class, 'export'])->middleware('permission.type:reports.project_export')->name('project.export');
+        // TIME TRACKING::PERFORMANCE REPORT
+        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time_tracking');
+        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time_tracking.export');
 
-        // TASK REPORT
-        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
-        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');
-
-        // DAILY TIME REPORT
+        // DAILY TIME::PERFORMANCE REPORT
         Route::get('/daily-time-report', [ReportController::class, 'dailyTime'])->middleware('permission.type:reports.daily_time_view')->name('daily_time');
         Route::get('/reports/daily-time/export', [ReportController::class, 'dailyTimeExport'])->middleware('permission.type:reports.daily_time_export')->name('daily_time.export');
 
-        // MILESTONE REPORT
+        // PROJECT:: PROJECT REPORT
+        Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
+        Route::get('/reports/project/export', [ReportController::class, 'projectExport'])->middleware('permission.type:reports.project_export')->name('project.export');
+
+        // TASK:: PROJECT REPORT
+        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
+        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');
+        
+        // MILESTONE:: PROJECT REPORT
         Route::get('/milestones-report', [ReportController::class, 'milestone'])->middleware('permission.type:reports.milestone_view')->name('milestones');
         Route::get('/reports/milestones/export', [ReportController::class, 'milestoneExport'])->middleware('permission.type:reports.milestone_export')->name('milestone.export');
-
-        // SPRINT REPORT
+        
+        // SPRINT:: PROJECT REPORT
         Route::get('/sprints-report', [ReportController::class, 'sprint'])->middleware('permission.type:reports.sprint_view')->name('sprints');
         Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
 
-        // TIME TRACKING REPORT
-        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time_tracking');
-        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time_tracking.export');
+        
     });
 });
 

@@ -151,13 +151,19 @@ class ReportController extends Controller
         ]);
     }
 
-    public function export(Request $request)
+    public function projectExport(Request $request)
     {
-        $projects = $this->projectReportService
-            ->exportProjects($request);
+        $projects = $this->projectReportService->exportProjects($request);
+        $columns = $this->projectReportService->resolveExportColumns($request);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
 
         return Excel::download(
-            new ProjectReportExport($projects),
+            new ProjectReportExport(
+                $projects,
+                $columns,
+                $request->all(),
+                $generatedAt
+            ),
             'project-report.xlsx'
         );
     }

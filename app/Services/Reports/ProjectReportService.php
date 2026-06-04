@@ -4,6 +4,7 @@ namespace App\Services\Reports;
 
 use App\Models\Project;
 use App\Services\ProjectServices;
+use Illuminate\Http\Request;
 
 class ProjectReportService
 {
@@ -24,6 +25,7 @@ class ProjectReportService
 
             ->with([
                 'customer:id,name',
+                'projectMilestones:id,project_id,estimated_time_seconds,actual_time_seconds,status_id',
                 'salesPerson:id,name',
                 'projectStatus:id,name',
                 'projectStage:id,name',
@@ -39,6 +41,55 @@ class ProjectReportService
 
             ->filter($request->all())
             ->sort($request->all());
+    }
+
+    public function getColumnLabels(): array
+    {
+        return [
+            'project_name' => 'Project Name',
+            'customer' => 'Customer',
+            'sales_person' => 'Sales Person',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'estimated_hours' => 'Estimated Hours',
+            'actual_hours' => 'Actual Hours',
+            'progress' => 'Progress',
+            'priority' => 'Priority',
+            'milestone_status' => 'Milestone Status',
+            'status' => 'Status',
+            'stage' => 'Stage',
+        ];
+    }
+
+    public function resolveExportColumns(Request $request): array
+    {
+        return $this->resolveExportColumnsFromFilters($request->all());
+    }
+
+    public function resolveExportColumnsFromFilters(array $filters): array
+    {
+        $allowedColumns = $this->getColumnLabels();
+        $requestedColumns = $filters['visible_columns'] ?? [];
+
+        if (is_string($requestedColumns)) {
+            $requestedColumns = array_filter(explode(',', $requestedColumns));
+        }
+
+        if (! is_array($requestedColumns)) {
+            $requestedColumns = [];
+        }
+
+        $requestedLookup = collect($requestedColumns)
+            ->map(fn($column) => (string) $column)
+            ->filter()
+            ->values()
+            ->flip();
+
+        $columns = collect($allowedColumns)
+            ->filter(fn($_label, $key) => $requestedLookup->has($key))
+            ->all();
+
+        return $columns !== [] ? $columns : $allowedColumns;
     }
 
     /**
