@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-K5UVCK9R.css",
+    "file": "assets/app-CKB7mjg0.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -176,6 +176,18 @@
     "file": "assets/kpi-form-BL6DO7iw.js",
     "name": "kpi-form",
     "src": "resources/js/modules/kpi-form.js",
+    "isEntry": true
+  },
+  "resources/js/modules/project-stage-form.js": {
+    "file": "assets/project-stage-form-DaUeFapW.js",
+    "name": "project-stage-form",
+    "src": "resources/js/modules/project-stage-form.js",
+    "isEntry": true
+  },
+  "resources/js/modules/project-status-form.js": {
+    "file": "assets/project-status-form-0Lc3Y0le.js",
+    "name": "project-status-form",
+    "src": "resources/js/modules/project-status-form.js",
     "isEntry": true
   },
   "resources/js/modules/projects/project-delete.js": {

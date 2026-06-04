@@ -45,36 +45,149 @@ class ReportController extends Controller
         $this->sprintReportService = $sprintReportService;
     }
 
-    // PROJECT REPORT
-    public function project(Request $request)
-    {
+    /** ============ Performance::Daily Time ============ */
 
-        $this->pageTitle = 'Project Report';
-        $this->subTitle = 'Detailed project performance and progress overview';
+    // Daily Time report
+    public function dailyTime(Request $request)
+    {
+        $this->pageTitle = 'Daily Time Report';
 
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
+        ]);
+
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $reportService = app(DailyTimeReportService::class);
+        $reportService->normalizeRequestFilters($request);
+        $reportData = $reportService->getReportData($request, $perPage);
+
+        return view('reports.daily-time', array_merge($reportData, [
+            'perPage' => $perPage,
+        ]));
+    }
+
+    // Daily Time report export
+    public function dailyTimeExport(Request $request)
+    {
+        $reportService = app(DailyTimeReportService::class);
+        return $reportService->export($request);
+    }
+
+    /** ============ Performance::Time Tracking ============ */
+
+    // TIME TRACKING REPORT
+    public function timeTracking(Request $request)
+    {
+        $this->pageTitle = 'Time Tracking Report';
+
+        view()->share([
+            'pageTitle' => $this->pageTitle,
+        ]);
+
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
+
+        $reportService = app(TimeTrackingReportService::class);
+
+        $reports = $reportService->getReports($request, $perPage);
+        $displayRows = $reportService->buildDisplayRows($reports, $request);
+
+        $projects = $reportService->getFilterProjects($request);
+        $projectMilestones = $reportService->getFilterMilestones($request);
+        $projectSprints = $reportService->getFilterSprints($request);
+        $users = $reportService->getFilterUsers($request);
+
+        $totalMinutes = $reportService->getTotalMinutes($request);
+
+        $columns = $reportService->getColumnLabels();
+
+        $dailyStats = [
+            'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
+
+            'approved_entries' => $reports->getCollection()
+                ->where('is_approved', true)
+                ->count(),
+
+            'pending_entries' => $reports->getCollection()
+                ->where('is_approved', false)
+                ->count(),
+
+            'active_users' => $reports->getCollection()
+                ->pluck('user_id')
+                ->unique()
+                ->count(),
+
+            'project_count' => $reports->getCollection()
+                ->pluck('task.project_id')
+                ->filter()
+                ->unique()
+                ->count(),
+
+            'task_count' => $reports->getCollection()
+                ->pluck('task_id')
+                ->filter()
+                ->unique()
+                ->count(),
+        ];
+
+        return view('reports.time-tracking', compact(
+            'reports',
+            'projects',
+            'projectMilestones',
+            'projectSprints',
+            'users',
+            'perPage',
+            'displayRows',
+            'totalMinutes',
+            'columns',
+            'dailyStats'
+        ));
+    }
+
+    // TIME TRACKING REPORT EXPORT
+    public function timeTrackingExport(Request $request)
+    {
+        return app(TimeTrackingReportService::class)->export($request);
+    }
+
+    /** ============ Project::Project ============ */
+
+    public function getProjectsByFlow(Request $request)
+    {
+
+        $flows = $request->project_flow;
+
+        $projects = Project::query();
+
+        if (!empty($flows)) {
+            $projects->whereIn('project_flow', $flows);
+        }
+
+        return response()->json([
+            'projects' => $projects
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+        ]);
+    }
+
+    // PROJECT REPORT
+    public function project(Request $request)
+    {
+        $this->pageTitle = 'Project Report';
+
+        view()->share([
+            'pageTitle' => $this->pageTitle,
         ]);
 
         $selectedFlows = (array) $request->input('project_flow', []);
 
-        $perPage = $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $projects = $this->projectReportService
-            ->getProjects($request, $perPage);
+        $projects = $this->projectReportService->getProjects($request, $perPage);
 
         $customers = Customer::active()->get();
-
-        $statuses = ProjectStatus::active()
-            ->orderBy('sort_order', 'asc')
-            ->get();
-
+        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('project_constants.project_priorities');
-
         $types = config('project_constants.project_flows');
 
         // Project dropdown filter
@@ -144,36 +257,79 @@ class ReportController extends Controller
         ));
     }
 
-    public function getProjectsByFlow(Request $request)
+    // PROJECT REPORT EXPORT
+    public function projectExport(Request $request)
     {
-
-        $flows = $request->project_flow;
-
-        $projects = Project::query();
-
-        if (!empty($flows)) {
-            $projects->whereIn('project_flow', $flows);
-        }
-
-        return response()->json([
-            'projects' => $projects
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get()
-        ]);
-    }
-
-    public function export(Request $request)
-    {
-        $projects = $this->projectReportService
-            ->exportProjects($request);
+        $projects = $this->projectReportService->exportProjects($request);
+        $columns = $this->projectReportService->resolveExportColumns($request);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
 
         return Excel::download(
-            new ProjectReportExport($projects),
+            new ProjectReportExport(
+                $projects,
+                $columns,
+                $request->all(),
+                $generatedAt
+            ),
             'project-report.xlsx'
         );
     }
 
+    /** ============ Project::Milestone ============ */
+
+    // MILESTONE REPORT
+    public function milestone(Request $request)
+    {
+        $this->pageTitle = 'Milestone Report';
+
+        $this->subTitle =
+            'Detailed milestone progress and delivery overview';
+
+        view()->share([
+            'pageTitle' => $this->pageTitle,
+            'subTitle' => $this->subTitle,
+        ]);
+
+        $perPage = (int) $request->input(
+            'per_page',
+            config('constants.per_page_count')
+        );
+
+        $milestones = $this->milestoneReportService
+            ->getMilestones($request, $perPage);
+
+        $projects = Project::accessibleBy(auth()->user())
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        $columns = [
+            'project' => 'Project',
+            'milestone' => 'Milestone Name',
+            'due_date' => 'Due Date',
+            'total_tasks' => 'Total Tasks',
+            'completed_tasks' => 'Deliverables Completed',
+            'status' => 'Status',
+            'progress' => 'Progress',
+        ];
+
+        return view('reports.milestone', compact(
+            'milestones',
+            'perPage',
+            'projects',
+            'columns'
+        ));
+    }
+
+    // MILESTONE REPORT EXPORT
+    public function milestoneExport(Request $request)
+    {
+        return $this->milestoneReportService->export($request);
+    }
+
+    /** ============ Project::Task ============ */
+
+    // TASK REPORT
     public function task(Request $request, TaskFilterService $filterService, TaskFormService $taskFormService)
     {
         $this->pageTitle = 'Task Report';
@@ -266,93 +422,16 @@ class ReportController extends Controller
         ]);
     }
 
-    /**
-     * TASK EXPORT
-     */
+    // TASK REPORT EXPORT
     public function taskExport(Request $request)
     {
         return $this->taskReportService
             ->export($request);
     }
 
-    // Daily Time report
-    public function dailyTime(Request $request)
-    {
-        $this->pageTitle = 'Daily Time Report';
+    /** ============ Project::SPRINT ============ */
 
-        view()->share([
-            'pageTitle' => $this->pageTitle,
-        ]);
-
-        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
-        $reportService = app(DailyTimeReportService::class);
-        $reportService->normalizeRequestFilters($request);
-        $reportData = $reportService->getReportData($request, $perPage);
-
-        return view('reports.daily-time', array_merge($reportData, [
-            'perPage' => $perPage,
-        ]));
-    }
-
-    // Daily Time report export
-    public function dailyTimeExport(Request $request)
-    {
-        $reportService = app(DailyTimeReportService::class);
-        return $reportService->export($request);
-    }
-
-    public function milestone(Request $request)
-    {
-        $this->pageTitle = 'Milestone Report';
-
-        $this->subTitle =
-            'Detailed milestone progress and delivery overview';
-
-        view()->share([
-            'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
-        ]);
-
-        $perPage = (int) $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
-
-        $milestones = $this->milestoneReportService
-            ->getMilestones($request, $perPage);
-
-        $projects = Project::accessibleBy(auth()->user())
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $columns = [
-            'project' => 'Project',
-            'milestone' => 'Milestone Name',
-            'due_date' => 'Due Date',
-            'total_tasks' => 'Total Tasks',
-            'completed_tasks' => 'Deliverables Completed',
-            'status' => 'Status',
-            'progress' => 'Progress',
-        ];
-
-        return view('reports.milestone', compact(
-            'milestones',
-            'perPage',
-            'projects',
-            'columns'
-        ));
-    }
-
-    /**
-     * MILESTONE EXPORT
-     */
-    public function milestoneExport(Request $request)
-    {
-        return $this->milestoneReportService
-            ->export($request);
-    }
-
+    // SPRINT REPORT
     public function sprint(Request $request)
     {
         $this->pageTitle = 'Sprint Report';
@@ -398,86 +477,10 @@ class ReportController extends Controller
         ));
     }
 
-    /**
-     * SPRINT EXPORT
-     */
+    // SPRINT REPORT EXPORT
     public function sprintExport(Request $request)
     {
         return $this->sprintReportService
             ->export($request);
-    }
-
-    // TIME TRACKING REPORT
-    public function timeTracking(Request $request)
-    {
-        $this->pageTitle = 'Time Tracking Report';
-
-        view()->share([
-            'pageTitle' => $this->pageTitle,
-        ]);
-
-        $perPage = $request->input('per_page', config('constants.per_page_count'));
-
-        $reportService = app(TimeTrackingReportService::class);
-
-        $reports = $reportService->getReports($request, $perPage);
-        $displayRows = $reportService->buildDisplayRows($reports, $request);
-
-        $projects = $reportService->getFilterProjects($request);
-        $projectMilestones = $reportService->getFilterMilestones($request);
-        $projectSprints = $reportService->getFilterSprints($request);
-        $users = $reportService->getFilterUsers($request);
-
-        $totalMinutes = $reportService->getTotalMinutes($request);
-
-        $columns = $reportService->getColumnLabels();
-
-        $dailyStats = [
-            'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
-
-            'approved_entries' => $reports->getCollection()
-                ->where('is_approved', true)
-                ->count(),
-
-            'pending_entries' => $reports->getCollection()
-                ->where('is_approved', false)
-                ->count(),
-
-            'active_users' => $reports->getCollection()
-                ->pluck('user_id')
-                ->unique()
-                ->count(),
-
-            'project_count' => $reports->getCollection()
-                ->pluck('task.project_id')
-                ->filter()
-                ->unique()
-                ->count(),
-
-            'task_count' => $reports->getCollection()
-                ->pluck('task_id')
-                ->filter()
-                ->unique()
-                ->count(),
-        ];
-
-        return view('reports.time-tracking', compact(
-            'reports',
-            'projects',
-            'projectMilestones',
-            'projectSprints',
-            'users',
-            'perPage',
-            'displayRows',
-            'totalMinutes',
-            'columns',
-            'dailyStats'
-        ));
-    }
-
-    // TIME TRACKING REPORT EXPORT
-    public function timeTrackingExport(Request $request)
-    {
-        return app(TimeTrackingReportService::class)->export($request);
     }
 }

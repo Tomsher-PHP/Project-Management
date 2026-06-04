@@ -34,6 +34,8 @@ export default defineConfig({
                 'resources/js/modules/workspace/workspace-auto-refresh.js',
                 'resources/js/modules/workspace/workspace-kanban-filters.js',
                 'resources/js/modules/workspace/workspace-user-selector.js',
+                'resources/js/modules/project-status-form.js',
+                'resources/js/modules/project-stage-form.js',
                 'resources/js/project-flow.js',
                 'resources/js/modules/tasks/handoff.js',
                 'resources/js/modules/tasks/handoff-blend.js',
