@@ -48,33 +48,21 @@ class ReportController extends Controller
     // PROJECT REPORT
     public function project(Request $request)
     {
-
         $this->pageTitle = 'Project Report';
-        $this->subTitle = 'Detailed project performance and progress overview';
 
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
 
         $selectedFlows = (array) $request->input('project_flow', []);
 
-        $perPage = $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+        $perPage = $request->input('per_page', config('constants.per_page_count'));
 
-        $projects = $this->projectReportService
-            ->getProjects($request, $perPage);
+        $projects = $this->projectReportService->getProjects($request, $perPage);
 
         $customers = Customer::active()->get();
-
-        $statuses = ProjectStatus::active()
-            ->orderBy('sort_order', 'asc')
-            ->get();
-
+        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('project_constants.project_priorities');
-
         $types = config('project_constants.project_flows');
 
         // Project dropdown filter

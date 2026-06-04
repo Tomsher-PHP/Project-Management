@@ -55,25 +55,25 @@
             <table class="daily-report-table w-full min-w-[1200px]">
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
                             #
                         </th>
-                        <th scope="col" class="col-user px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
+                        <th scope="col" class="col-user px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
                             User
                         </th>
-                        <th scope="col" class="col-date px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px]">
+                        <th scope="col" class="col-date px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px]">
                             Date
                         </th>
-                        <th scope="col" class="col-start_time px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
+                        <th scope="col" class="col-start_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
                             Start Time
                         </th>
-                        <th scope="col" class="col-end_time px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
+                        <th scope="col" class="col-end_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
                             End Time
                         </th>
-                        <th scope="col" class="col-worked_time px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
+                        <th scope="col" class="col-worked_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
                             Worked Hours
                         </th>
-                        <th scope="col" class="col-shift_hour px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
+                        <th scope="col" class="col-shift_hour px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
                             Shift Hours
                         </th>
                     </tr>
@@ -86,23 +86,23 @@
                         @endphp
 
                         <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
-                            <td class="px-5 py-3 text-sm text-bgray-600 dark:text-bgray-300">
+                            <td class="px-2 py-2 text-sm text-bgray-600 dark:text-bgray-300">
                                 {{ $reportNumber }}
                             </td>
 
-                            <td class="col-user px-5 py-3 text-sm font-medium text-bgray-900 dark:text-bgray-300">
+                            <td class="col-user px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300">
                                 {{ $row['user_name'] }}
                             </td>
 
-                            <td class="col-date px-5 py-3 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-date px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
                                 {{ $row['date'] }}
                             </td>
 
-                            <td class="col-start_time px-5 py-3 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-start_time px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
                                 {{ $row['start_time'] }}
                             </td>
 
-                            <td class="col-end_time px-5 py-3 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-end_time px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
                                 @if ($row['end_time'] === 'Running')
                                     <span class="font-semibold text-success-300">Running</span>
                                 @else
@@ -110,11 +110,11 @@
                                 @endif
                             </td>
 
-                            <td class="col-worked_time px-5 py-3 text-sm font-medium text-bgray-900 dark:text-bgray-300">
+                            <td class="col-worked_time px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300">
                                 {{ $row['total_worked_time'] }}
                             </td>
 
-                            <td class="col-shift_hour px-5 py-3 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-shift_hour px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
                                 @if ($row['shift_working_hour'] === 'Day Off')
                                     <span class="inline-flex items-center text-xs font-bold text-amber-700 dark:text-amber-400">Day Off</span>
                                 @else
@@ -123,11 +123,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="{{ $tableColumnCount }}" class="px-5 py-10 text-center text-sm text-bgray-500 dark:text-bgray-300">
-                                No records found.
-                            </td>
-                        </tr>
+                        <x-table-no-data col-span="{{ $tableColumnCount }}" message="No records found." />
                     @endforelse
                 </tbody>
             </table>
