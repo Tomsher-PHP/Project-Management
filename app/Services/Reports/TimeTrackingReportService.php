@@ -224,7 +224,7 @@ class TimeTrackingReportService
 
     public function shouldShowBreakRows(Request $request): bool
     {
-        return count($this->getSanitizedSelectedUserIds($request)) === 1;
+        return count($this->getVisibleReportUserIds($request)) === 1;
     }
 
     public function buildDisplayRows(LengthAwarePaginator $reports, Request $request): Collection
@@ -240,11 +240,13 @@ class TimeTrackingReportService
             'report' => $report,
         ]);
 
-        if (! $this->shouldShowBreakRows($request)) {
+        $visibleUserIds = $this->getVisibleReportUserIds($request);
+
+        if (count($visibleUserIds) !== 1) {
             return $rows;
         }
 
-        $selectedUserId = $this->getSanitizedSelectedUserIds($request)[0];
+        $selectedUserId = $visibleUserIds[0];
         $breaksByReportId = $this->buildBreakRowsByReportId($reportRows, $selectedUserId);
 
         return $rows->flatMap(function (array $row) use ($breaksByReportId) {
@@ -298,6 +300,18 @@ class TimeTrackingReportService
             $this->getAccessibleUserIds($request->user()),
             $this->getSelectedUserIds($request)
         ));
+    }
+
+    protected function getVisibleReportUserIds(Request $request): array
+    {
+        return $this->baseQuery($request)
+            ->select('user_id')
+            ->distinct()
+            ->pluck('user_id')
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
+            ->values()
+            ->all();
     }
 
     protected function getAccessibleUserIds(?User $user): array
