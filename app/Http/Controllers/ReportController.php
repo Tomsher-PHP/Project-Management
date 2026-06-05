@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\MilestoneReportExport;
 use App\Exports\ProjectReportExport;
 use App\Models\Customer;
 use App\Models\Project;
@@ -287,34 +288,39 @@ class ReportController extends Controller
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
         $milestones = $this->milestoneReportService->getMilestones($request, $perPage);
-
-        $projects = Project::accessibleBy(auth()->user())
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $columns = [
-            'project' => 'Project',
-            'milestone' => 'Milestone Name',
-            'due_date' => 'Due Date',
-            'total_tasks' => 'Total Tasks',
-            'completed_tasks' => 'Deliverables Completed',
-            'status' => 'Status',
-            'progress' => 'Progress',
-        ];
+        $projects = $this->milestoneReportService->getProjects($request);
+        $owners = $this->milestoneReportService->getOwners($request);
+        $statuses = $this->milestoneReportService->getStatuses();
+        $columns = $this->milestoneReportService->getColumnLabels();
+        $milestoneStats = $this->milestoneReportService->getStats($request);
 
         return view('reports.milestone', compact(
             'milestones',
             'perPage',
             'projects',
-            'columns'
+            'owners',
+            'statuses',
+            'columns',
+            'milestoneStats'
         ));
     }
 
     // MILESTONE REPORT EXPORT
     public function milestoneExport(Request $request)
     {
-        return $this->milestoneReportService->export($request);
+        $milestones = $this->milestoneReportService->exportMilestones($request);
+        $columns = $this->milestoneReportService->resolveExportColumns($request);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
+
+        return Excel::download(
+            new MilestoneReportExport(
+                $milestones,
+                $columns,
+                $request->all(),
+                $generatedAt
+            ),
+            'milestone-report_'.$generatedAt.'.xlsx'
+        );
     }
 
     /** ============ Project::Task ============ */
