@@ -269,7 +269,7 @@ class ReportController extends Controller
                 $request->all(),
                 $generatedAt
             ),
-            'project-report.xlsx'
+            'project-report_'.$generatedAt.'.xlsx'
         );
     }
 
@@ -280,21 +280,13 @@ class ReportController extends Controller
     {
         $this->pageTitle = 'Milestone Report';
 
-        $this->subTitle =
-            'Detailed milestone progress and delivery overview';
-
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
 
-        $perPage = (int) $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
-        $milestones = $this->milestoneReportService
-            ->getMilestones($request, $perPage);
+        $milestones = $this->milestoneReportService->getMilestones($request, $perPage);
 
         $projects = Project::accessibleBy(auth()->user())
             ->select('id', 'name')
