@@ -2,6 +2,15 @@
 <html lang="en">
 
 <head>
+    <script>
+        const theme = '{{ $userTheme ?? "light" }}';
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.theme = theme;
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
@@ -79,10 +88,6 @@
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 
     <script>
-        let theme = "{{ $userTheme ?? 'light' }}";
-        localStorage.theme = theme;
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-
         let dataSetsLight = [{
                 label: "My First Dataset",
                 data: [1, 5, 2, 2, 6, 7, 8, 7, 3, 4, 1, 3],
