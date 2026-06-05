@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\MilestoneReportExport;
 use App\Exports\ProjectReportExport;
 use App\Exports\SprintReportExport;
+use App\Exports\TaskReportExport;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectStatus;
@@ -14,9 +15,6 @@ use App\Services\Reports\ProjectReportService;
 use App\Services\Reports\SprintReportService;
 use App\Services\Reports\TaskReportService;
 use App\Services\Reports\TimeTrackingReportService;
-use App\Services\TaskFilterService;
-use App\Services\TaskFormService;
-use App\Services\TaskQueryService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -376,101 +374,69 @@ class ReportController extends Controller
     /** ============ Project::Task ============ */
 
     // TASK REPORT
-    public function task(Request $request, TaskFilterService $filterService, TaskFormService $taskFormService)
+    public function taskReport(Request $request)
     {
         $this->pageTitle = 'Task Report';
 
-        $this->subTitle =
-            'Detailed task progress and tracking overview';
-
         view()->share([
             'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
         ]);
 
-        $user = $request->user();
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
-        $perPage = (int) $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
-
-        // TASKS
-        $tasks = $this->taskReportService
-            ->getTasks($request, $perPage);
-
-        /**
-         * FILTERS
-         */
-        $baseQuery = app(TaskQueryService::class)
-            ->baseQuery($user);
-
-        $filters = $filterService
-            ->getFilters($user, $baseQuery);
-
-        $formData = $taskFormService
-            ->getCreateData($user);
-
-        /**
-         * COLUMN MANAGER
-         */
-        $columns = [
-            'task' => 'Task',
-            'project' => 'Project',
-            'milestone' => 'Milestone',
-            'sprint' => 'Sprint',
-            'assignee' => 'Assignee',
-            'estimated_hours' => 'Estimated Time',
-            'actual_hours' => 'Actual Time',
-            'progress' => 'Progress',
-            'status' => 'Status',
-        ];
-
-        /**
-         * TASK STATS
-         */
-        $taskBaseQuery = clone $baseQuery;
-
-        $taskStats = [
-            'total' => (clone $taskBaseQuery)->count(),
-
-            'completed' => (clone $taskBaseQuery)
-                ->whereHas('status', fn($q) => $q->where('is_completed', true))
-                ->count(),
-
-            'in_progress' => (clone $taskBaseQuery)
-                ->whereHas(
-                    'status',
-                    fn($q) =>
-                    $q->where('type', 'in_progress')
-                        ->where('is_completed', false)
-                )
-                ->count(),
-
-            'open' => (clone $taskBaseQuery)
-                ->whereHas(
-                    'status',
-                    fn($q) =>
-                    $q->where('type', 'open')
-                        ->where('is_completed', false)
-                )
-                ->count(),
-        ];
+        $tasks = $this->taskReportService->getTasks($request, $perPage);
+        $projects = $this->taskReportService->getProjects($request);
+        $projectMilestones = $this->taskReportService->getMilestones($request);
+        $projectSprints = $this->taskReportService->getSprints($request);
+        $assignees = $this->taskReportService->getAssignees($request);
+        $statuses = $this->taskReportService->getStatuses();
+        $priorities = $this->taskReportService->getPriorityOptions();
+        $taskTypeOptions = $this->taskReportService->getTaskTypes();
+        $taskModeOptions = $this->taskReportService->getTaskModes();
+        $columns = $this->taskReportService->getColumnLabels();
+        $taskStats = $this->taskReportService->getStats($request);
 
         return view('reports.task', [
             'tasks' => $tasks,
             'perPage' => $perPage,
             'columns' => $columns,
             'taskStats' => $taskStats,
-
-            ...$filters,
-            ...$formData,
+            'projects' => $projects,
+            'projectMilestones' => $projectMilestones,
+            'projectSprints' => $projectSprints,
+            'assignees' => $assignees,
+            'statuses' => $statuses,
+            'priorities' => $priorities,
+            'taskTypeOptions' => $taskTypeOptions,
+            'taskModeOptions' => $taskModeOptions,
         ]);
     }
 
     // TASK REPORT EXPORT
+    public function taskReportExport(Request $request)
+    {
+        $tasks = $this->taskReportService->exportTasks($request);
+        $columns = $this->taskReportService->resolveExportColumns($request);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
+
+        return Excel::download(
+            new TaskReportExport(
+                $tasks,
+                $columns,
+                $request->all(),
+                $generatedAt
+            ),
+            'task-report_' . $generatedAt . '.xlsx'
+        );
+    }
+
+    public function task(Request $request)
+    {
+        return $this->taskReport($request);
+    }
+
     public function taskExport(Request $request)
     {
-        return $this->taskReportService->export($request);
+        return $this->taskReportExport($request);
     }
 }

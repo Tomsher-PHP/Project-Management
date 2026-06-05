@@ -482,8 +482,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
 
         // TASK:: PROJECT REPORT
-        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
-        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');        
+        Route::get('/tasks-report', [ReportController::class, 'taskReport'])->middleware('permission.type:reports.task_view')->name('tasks');
+        Route::get('/reports/tasks/export', [ReportController::class, 'taskReportExport'])->middleware('permission.type:reports.task_export')->name('task.export');
     });
 });
 

@@ -2,378 +2,453 @@
 @section('main-class', 'w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px]')
 
 @section('page-content')
+    @php
+        $visibleColumnCount = collect($columns)->count() + 1;
+    @endphp
 
-    <!-- TOP ACTIONS -->
     <div class="mb-6 flex flex-wrap items-center gap-3">
-
         <x-filters.button />
 
-        <x-export-button
-            :action="route('reports.task.export')"
-            :params="request()->query()"
-            label="Export Excel"
-        />
+        <form method="GET" action="{{ route('reports.task.export') }}" id="task-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
+            @foreach (request()->except('visible_columns') as $key => $value)
+                @if (is_array($value))
+                    @foreach ($value as $item)
+                        <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endif
+            @endforeach
 
-        <x-column-manager
-            :columns="$columns"
-            report="task_report"
-        />
+            <input type="hidden" name="visible_columns" value="">
+
+            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="Export report">
+                <span class="inline-flex items-center justify-center text-current">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                    </svg>
+                </span>
+
+                <span class="text-sm font-semibold">
+                    Export Excel
+                </span>
+            </button>
+        </form>
+
+        <x-column-manager :columns="$columns" report="task_report" />
 
         <div class="inline-flex flex-wrap items-center gap-2 rounded-xl bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:ml-auto">
-            <x-table-search
-                target=".task-table"
-                placeholder="Search tasks..."
-            />
+            <x-table-search target=".task-table" placeholder="Search tasks..." />
         </div>
-
     </div>
 
-    <!-- REPORT STATS -->
-    <div class="mb-6 grid grid-cols-4 gap-4">
-
-        <!-- TOTAL -->
-        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-
-            <div class="text-sm text-gray-500 dark:text-gray-300">
-                Total Tasks
-            </div>
-
-            <div class="mt-2 text-3xl font-bold text-gray-800 dark:text-white">
-                {{ $taskStats['total'] ?? 0 }}
-            </div>
-
-        </div>
-
-        <!-- COMPLETED -->
-        <div class="rounded-xl border border-green-200 bg-green-50 p-5 shadow-sm dark:border-green-700 dark:bg-green-900/20">
-
-            <div class="text-sm text-gray-500 dark:text-gray-300">
-                Completed
-            </div>
-
-            <div class="mt-2 text-3xl font-bold text-green-700 dark:text-green-300">
-                {{ $taskStats['completed'] ?? 0 }}
-            </div>
-
-        </div>
-
-        <!-- IN PROGRESS -->
-        <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm dark:border-yellow-700 dark:bg-yellow-900/20">
-
-            <div class="text-sm text-gray-500 dark:text-gray-300">
-                In Progress
-            </div>
-
-            <div class="mt-2 text-3xl font-bold text-yellow-700 dark:text-yellow-300">
-                {{ $taskStats['in_progress'] ?? 0 }}
-            </div>
-
-        </div>
-
-        <!-- OPEN -->
-        <div class="rounded-xl border border-blue-200 bg-blue-50 p-5 shadow-sm dark:border-blue-700 dark:bg-blue-900/20">
-
-            <div class="text-sm text-gray-500 dark:text-gray-300">
-                Open
-            </div>
-
-            <div class="mt-2 text-3xl font-bold text-blue-700 dark:text-blue-300">
-                {{ $taskStats['open'] ?? 0 }}
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- TABLE -->
-    <div class="2xl:space-x-[48px]">
-
-        <section class="mb-6 2xl:mb-0 2xl:flex-1">
-
-            <div class="w-full rounded-lg bg-white dark:bg-darkblack-600">
-
-                <div class="flex-col space-y-5">
-
-                    <!-- TABLE -->
-                    <div class="table-content w-full overflow-x-auto">
-
-                        <table class="task-table w-full min-w-[1300px] text-sm">
-
-                            <!-- TABLE HEAD -->
-                            <thead>
-
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-
-                                    <!-- SL -->
-                                    <td class="px-6 py-5 xl:w-[80px]">
-                                        #
-                                    </td>
-
-                                    <!-- TASK -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-task">
-
-                                        <x-sorting.sortable-column
-                                            column="name"
-                                            label="Task"
-                                        />
-
-                                    </td>
-
-                                    <!-- PROJECT -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-project">
-
-                                        <x-sorting.sortable-column
-                                            column="project_id"
-                                            label="Project"
-                                        />
-
-                                    </td>
-
-                                    <!-- MILESTONE -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-milestone">
-                                        Milestone
-                                    </td>
-
-                                    <!-- SPRINT -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-sprint">
-                                        Sprint
-                                    </td>
-
-                                    <!-- ASSIGNEE -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-assignee">
-                                        Assignee
-                                    </td>
-
-                                    <!-- ESTIMATED -->
-                                    <td class="px-6 py-5 xl:w-[180px] col-estimated_hours">
-                                        Estimated <br> Time
-                                    </td>
-
-                                    <!-- ACTUAL -->
-                                    <td class="px-6 py-5 xl:w-[180px] col-actual_hours">
-                                        Actual <br> Time
-                                    </td>
-
-                                    <!-- PROGRESS -->
-                                    <td class="px-6 py-5 xl:w-[220px] col-progress">
-                                        Progress
-                                    </td>
-
-                                    <!-- STATUS -->
-                                    <td class="px-6 py-5 xl:w-[180px] col-status">
-
-                                        <x-sorting.sortable-column
-                                            column="status_id"
-                                            label="Status"
-                                        />
-
-                                    </td>
-
-                                </tr>
-
-                            </thead>
-
-                            <!-- TABLE BODY -->
-                            <tbody class="divide-y divide-gray-200">
-
-                                @forelse($tasks as $task)
-
-                                    <tr class="hover:bg-gray-50 transition">
-
-                                        <!-- SL -->
-                                        <td class="px-4 py-4">
-
-                                            {{ $tasks->firstItem() + $loop->index }}
-
-                                        </td>
-
-                                        <!-- TASK -->
-                                        <td class="px-4 py-4 font-medium text-gray-800 text-[12px] col-task">
-
-                                            <a
-                                                href="{{ route('tasks.edit', $task->id) }}"
-                                                target="_blank"
-                                                class="hover:text-blue-600"
-                                            >
-                                                {{ $task->name }}
-                                            </a>
-
-                                        </td>
-
-                                        <!-- PROJECT -->
-                                        <td class="px-4 py-4 text-[12px] col-project">
-
-                                            {{ $task->project->name ?? '-' }}
-
-                                        </td>
-
-                                        <!-- MILESTONE -->
-                                        <td class="px-4 py-4 text-[12px] col-milestone">
-
-                                            {{ $task->projectMilestone->name ?? '-' }}
-
-                                        </td>
-
-                                        <!-- SPRINT -->
-                                        <td class="px-4 py-4 text-[12px] col-sprint">
-
-                                            {{ $task->projectSprint->name ?? '-' }}
-
-                                        </td>
-
-                                        <!-- ASSIGNEE -->
-                                        <td class="px-4 py-4 text-[12px] col-assignee">
-
-                                            {{ $task->currentAssignee->name ?? '-' }}
-
-                                        </td>
-
-                                        <!-- ESTIMATED -->
-                                        <td class="px-4 py-4 whitespace-nowrap col-estimated_hours">
-
-                                            {{ formatSecondsToHoursMinutes($task->estimated_time_seconds ?? 0) }}
-
-                                        </td>
-
-                                        <!-- ACTUAL -->
-                                        <td class="px-4 py-4 whitespace-nowrap col-actual_hours">
-
-                                            {{ formatSecondsToHoursMinutes($task->actual_time_seconds ?? 0) }}
-
-                                        </td>
-
-                                        <!-- PROGRESS -->
-                                        <td class="px-4 py-4 min-w-[180px] col-progress">
-
-                                            <div class="flex items-center gap-3">
-
-                                                @php
-
-                                                    $estimatedSeconds = $task->estimated_time_seconds ?? 0;
-
-                                                    $actualSeconds = $task->actual_time_seconds ?? 0;
-
-                                                    $progress_percentage = $estimatedSeconds > 0
-                                                        ? round(($actualSeconds / $estimatedSeconds) * 100, 2)
-                                                        : 0;
-
-                                                    $display_progress = ($progress_percentage > 0 && $progress_percentage < 2)
-                                                        ? 2
-                                                        : min($progress_percentage, 100);
-
-                                                @endphp
-
-                                                <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-
-                                                    <div
-                                                        class="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
-                                                        style="width: {{ $display_progress }}%">
-                                                    </div>
-
-                                                </div>
-
-                                                <span class="text-xs font-medium text-gray-700 min-w-[36px]">
-
-                                                    {{ $progress_percentage }}%
-
-                                                </span>
-
-                                            </div>
-
-                                        </td>
-
-                                        <!-- STATUS -->
-                                        <td class="px-4 py-4 col-status">
-
-                                            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium {{ $task->status_badge_class }}">
-
-                                                {{ $task->status->name ?? 'No Status' }}
-
-                                            </span>
-
-                                        </td>
-
-                                    </tr>
-
-                                @empty
-
-                                    <tr>
-
-                                        <td colspan="10"
-                                            class="text-center py-10 text-gray-500">
-
-                                            No tasks found.
-
-                                        </td>
-
-                                    </tr>
-
-                                @endforelse
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                    <!-- PAGINATION -->
-                    <x-pagination
-                        :paginator="$tasks"
-                        :per-page="$perPage"
-                    />
-
+    <div class="custom-scroll mb-6 flex items-center gap-3 overflow-x-auto py-0">
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Total Tasks
                 </div>
 
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $taskStats['total'] }}
+                </div>
             </div>
+        </div>
 
-        </section>
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Pending Tasks
+                </div>
 
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $taskStats['pending'] }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Active Tasks
+                </div>
+
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $taskStats['active'] }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Archived Tasks
+                </div>
+
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $taskStats['archived'] }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Completed Tasks
+                </div>
+
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ $taskStats['completed'] }}
+                </div>
+            </div>
+        </div>
     </div>
 
-<!-- FILTERS -->
-<x-filters.drawer>
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <div class="overflow-x-auto">
+            <table class="task-table w-full min-w-[2800px]">
+                <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
+                    <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
+                            #
+                        </th>
 
-    <x-filters.input-search
-        name="search"
-        label="Task"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px] col-task">
+                            <x-sorting.sortable-column column="name" label="Task" />
+                        </th>
 
-    <x-filters.multi-select
-        name="project_id"
-        label="Project"
-        :options="$projects"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px] col-parent_task">
+                            Parent Task
+                        </th>
 
-    <x-filters.multi-select
-        name="project_milestone_id"
-        label="Milestone"
-        :options="$projectMilestones"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-project">
+                            <x-sorting.sortable-column column="project_id" label="Project" />
+                        </th>
 
-    <x-filters.multi-select
-        name="project_sprint_id"
-        label="Sprint"
-        :options="$projectSprints"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-milestone">
+                            <x-sorting.sortable-column column="project_milestone_id" label="Milestone" />
+                        </th>
 
-    <x-filters.multi-select
-        name="current_assignee_id"
-        label="Assignee"
-        :options="$assignees"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-sprint">
+                            <x-sorting.sortable-column column="project_sprint_id" label="Sprint" />
+                        </th>
 
-    <x-filters.multi-select
-        name="status_id"
-        label="Status"
-        :options="$statuses"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-status">
+                            <x-sorting.sortable-column column="status_id" label="Status" />
+                        </th>
 
-    <x-filters.date-range
-        label="Task Date Range"
-        startName="start_date"
-        endName="end_date"
-    />
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-type">
+                            <x-sorting.sortable-column column="task_type_id" label="Type" />
+                        </th>
 
-</x-filters.drawer>
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-mode">
+                            <x-sorting.sortable-column column="task_mode_id" label="Mode" />
+                        </th>
 
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-priority">
+                            <x-sorting.sortable-column column="priority" label="Priority" />
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-assignee">
+                            <x-sorting.sortable-column column="current_assignee_id" label="Assignee" />
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-due_date">
+                            <x-sorting.sortable-column column="due_date_time" label="Due Date" />
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-completed_at">
+                            <x-sorting.sortable-column column="completed_at" label="Completed At" />
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px] col-estimated">
+                            Estimated
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px] col-actual">
+                            Actual
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px] col-progress">
+                            Progress
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[120px] col-billable">
+                            Billable
+                        </th>
+
+                        <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px] col-created_at">
+                            <x-sorting.sortable-column column="created_at" label="Created At" />
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200 dark:divide-darkblack-400">
+                    @forelse($tasks as $task)
+                        @php
+                            $project = $task->project;
+                            $projectUrl = $project ? ($project->trashed() ? route('projects.restore.show', $project->id) : route('projects.edit', $project)) : null;
+                            $statusColor = $task->status?->color ?? '#94A3B8';
+                            $typeColor = $task->taskType?->color ?? '#CBD5E1';
+                            $modeColor = $task->taskMode?->color ?? '#CBD5E1';
+                            $priorityConfig = config('project_constants.task_priorities.' . ($task->priority ?: 'medium')) ?? config('project_constants.task_priorities.medium');
+                            $estimatedSeconds = (int) ($task->estimated_time_seconds ?? 0);
+                            $actualSeconds = (int) ($task->actual_time_seconds ?? 0);
+                            $progressPercentage = $estimatedSeconds > 0 ? round(($actualSeconds / $estimatedSeconds) * 100, 2) : 0;
+                            $progressLabel = rtrim(rtrim(number_format((float) $progressPercentage, 2, '.', ''), '0'), '.');
+                            $progressBarWidth = min($progressPercentage, 100);
+                            $actualTimeClasses = $actualSeconds <= $estimatedSeconds
+                                ? 'text-success-400 dark:text-success-300'
+                                : 'text-red-500 dark:text-red-400';
+                            $progressColorClasses = match (true) {
+                                $estimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
+                                $progressPercentage <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
+                                $progressPercentage <= 100 => 'bg-orange-400 text-orange-500 dark:text-orange-300',
+                                default => 'bg-red-500 text-red-500 dark:text-red-400',
+                            };
+                            [$progressBarClass, $progressTextClass] = explode(' ', $progressColorClasses, 2);
+                        @endphp
+
+                        <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
+                            <td class="px-2 py-2 text-sm text-bgray-600 dark:text-bgray-300">
+                                {{ $tasks->firstItem() + $loop->index }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-task">
+                                <a href="{{ route('tasks.edit', $task) }}" class="transition hover:text-success-300 dark:hover:text-success-300">
+                                    {{ $task->name ?? '-' }}
+                                </a>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-parent_task">
+                                {{ $task->parentTask?->name ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
+                                @if ($projectUrl)
+                                    <a href="{{ $projectUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
+                                        {{ $project?->name ?? '-' }}
+                                    </a>
+                                @else
+                                    {{ $project?->name ?? '-' }}
+                                @endif
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
+                                {{ $task->projectMilestone?->name ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-sprint">
+                                {{ $task->projectSprint?->name ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-status">
+                                <span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-medium text-white" style="border: 1px solid {{ $statusColor }}; background-color: {{ $statusColor }};">
+                                    {{ $task->status?->name ?? 'No Status' }}
+                                </span>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-type">
+                                <span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-medium text-white" style="border: 1px solid {{ $typeColor }}; background-color: {{ $typeColor }};">
+                                    {{ $task->taskType?->name ?? '-' }}
+                                </span>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-mode">
+                                <span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-medium text-white" style="border: 1px solid {{ $modeColor }}; background-color: {{ $modeColor }};">
+                                    {{ $task->taskMode?->name ?? '-' }}
+                                </span>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-priority">
+                                <span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-medium {{ $priorityConfig['bg_class'] ?? 'bg-bgray-100 dark:bg-darkblack-500' }} {{ $priorityConfig['bg_text'] ?? 'text-bgray-700 dark:text-bgray-300' }}">
+                                    {{ $priorityConfig['label'] ?? ucfirst(str_replace('_', ' ', $task->priority ?? '-')) }}
+                                </span>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-assignee">
+                                {{ $task->currentAssignee?->name ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-due_date">
+                                {{ $task->due_date_time?->format('d M Y h:i A') ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-completed_at">
+                                {{ $task->completed_at?->format('d M Y h:i A') ?? '-' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-estimated">
+                                {{ formatSecondsToHoursMinutes($task->estimated_time_seconds) }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm font-medium whitespace-nowrap col-actual {{ $actualTimeClasses }}">
+                                {{ formatSecondsToHoursMinutes($task->actual_time_seconds) }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 min-w-[220px] col-progress">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-400">
+                                        <div class="h-2.5 rounded-full transition-all duration-300 {{ $progressBarClass }}" style="width: {{ $progressBarWidth }}%"></div>
+                                    </div>
+
+                                    <span class="min-w-[48px] text-xs font-semibold {{ $progressTextClass }}">
+                                        {{ $progressLabel }}%
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-billable">
+                                {{ $task->is_billable ? 'Yes' : 'No' }}
+                            </td>
+
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-created_at">
+                                {{ $task->created_at?->format('d M Y h:i A') ?? '-' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <x-table-no-data col-span="{{ $visibleColumnCount }}" message="No tasks found." />
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <x-pagination :paginator="$tasks" :per-page="$perPage" />
+    </div>
+
+    <x-filters.drawer>
+        <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
+        <x-filters.multi-select name="project_milestone_id" label="Milestone" :options="$projectMilestones" />
+        <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
+        <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" />
+        <x-filters.multi-select name="status_id" label="Status" :options="$statuses" />
+        <x-filters.multi-select name="priority" label="Priority" :options="$priorities" />
+        <x-filters.multi-select name="task_type_id" label="Task Type" :options="$taskTypeOptions" />
+        <x-filters.multi-select name="task_mode_id" label="Task Mode" :options="$taskModeOptions" />
+        <x-filters.date-range label="Created Date Range" startName="start_date" endName="end_date" />
+    </x-filters.drawer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportForm = document.getElementById('task-report-export-form');
+            const columnManager = document.querySelector('.column-manager[data-report="task_report"]');
+
+            if (!exportForm) {
+                return;
+            }
+
+            const visibleColumnsInput = exportForm.querySelector('input[name="visible_columns"]');
+            const columnOrder = JSON.parse(exportForm.dataset.columnOrder || '[]');
+            const storageKey = 'column_manager_task_report';
+            const minimumVisibleColumns = 3;
+
+            const syncVisibleColumns = () => {
+                let saved = {};
+
+                try {
+                    saved = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+                } catch (error) {
+                    saved = {};
+                }
+
+                const visibleColumns = columnOrder.filter((column) => saved[column] !== false);
+                visibleColumnsInput.value = visibleColumns.join(',');
+            };
+
+            const getColumnCheckboxes = () => columnManager ?
+                Array.from(columnManager.querySelectorAll('.cm-toggle')) : [];
+
+            const getCheckedColumns = () => getColumnCheckboxes().filter((checkbox) => checkbox.checked);
+
+            const toggleColumnVisibility = (column, show) => {
+                document.querySelectorAll('.col-' + column).forEach((element) => {
+                    element.style.display = show ? '' : 'none';
+                });
+            };
+
+            const readSavedColumns = () => {
+                try {
+                    return JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+                } catch (error) {
+                    return {};
+                }
+            };
+
+            const writeSavedColumns = (saved) => {
+                localStorage.setItem(storageKey, JSON.stringify(saved));
+            };
+
+            const enforceMinimumColumns = () => {
+                if (!columnManager) {
+                    return;
+                }
+
+                const checkboxes = getColumnCheckboxes();
+                const checkedColumns = getCheckedColumns();
+
+                if (checkedColumns.length < minimumVisibleColumns) {
+                    const saved = readSavedColumns();
+
+                    checkboxes
+                        .filter((checkbox) => !checkbox.checked)
+                        .slice(0, minimumVisibleColumns - checkedColumns.length)
+                        .forEach((checkbox) => {
+                            checkbox.checked = true;
+                            saved[checkbox.dataset.column] = true;
+                            toggleColumnVisibility(checkbox.dataset.column, true);
+                        });
+
+                    writeSavedColumns(saved);
+                }
+
+                const nextCheckedColumns = getCheckedColumns();
+                const shouldLockChecked = nextCheckedColumns.length <= minimumVisibleColumns;
+
+                checkboxes.forEach((checkbox) => {
+                    checkbox.disabled = shouldLockChecked && checkbox.checked;
+                });
+
+                syncVisibleColumns();
+            };
+
+            if (columnManager) {
+                const checkboxes = getColumnCheckboxes();
+
+                checkboxes.forEach((checkbox) => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            enforceMinimumColumns();
+                            return;
+                        }
+
+                        if (getCheckedColumns().length < minimumVisibleColumns) {
+                            const saved = readSavedColumns();
+
+                            this.checked = true;
+                            saved[this.dataset.column] = true;
+                            toggleColumnVisibility(this.dataset.column, true);
+                            writeSavedColumns(saved);
+                        }
+
+                        enforceMinimumColumns();
+                    });
+                });
+
+                columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
+                });
+
+                columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
+                    window.requestAnimationFrame(enforceMinimumColumns);
+                });
+            }
+
+            enforceMinimumColumns();
+            syncVisibleColumns();
+            exportForm.addEventListener('submit', syncVisibleColumns);
+        });
+    </script>
 @endsection
