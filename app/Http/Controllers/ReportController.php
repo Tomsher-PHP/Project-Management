@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\MilestoneReportExport;
 use App\Exports\ProjectReportExport;
+use App\Exports\SprintReportExport;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectStatus;
@@ -270,7 +271,7 @@ class ReportController extends Controller
                 $request->all(),
                 $generatedAt
             ),
-            'project-report_'.$generatedAt.'.xlsx'
+            'project-report_' . $generatedAt . '.xlsx'
         );
     }
 
@@ -319,7 +320,56 @@ class ReportController extends Controller
                 $request->all(),
                 $generatedAt
             ),
-            'milestone-report_'.$generatedAt.'.xlsx'
+            'milestone-report_' . $generatedAt . '.xlsx'
+        );
+    }
+
+    /** ============ Project::SPRINT ============ */
+
+    // SPRINT REPORT
+    public function sprint(Request $request)
+    {
+        $this->pageTitle = 'Sprint Report';
+
+        view()->share([
+            'pageTitle' => $this->pageTitle,
+        ]);
+
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+
+        $sprints = $this->sprintReportService->getSprints($request, $perPage);
+        $projects = $this->sprintReportService->getProjects($request);
+        $milestones = $this->sprintReportService->getMilestones($request);
+        $statuses = $this->sprintReportService->getStatuses();
+        $columns = $this->sprintReportService->getColumnLabels();
+        $sprintStats = $this->sprintReportService->getStats($request);
+
+        return view('reports.sprint', compact(
+            'sprints',
+            'perPage',
+            'projects',
+            'milestones',
+            'statuses',
+            'columns',
+            'sprintStats'
+        ));
+    }
+
+    // SPRINT REPORT EXPORT
+    public function sprintExport(Request $request)
+    {
+        $sprints = $this->sprintReportService->exportSprints($request);
+        $columns = $this->sprintReportService->resolveExportColumns($request);
+        $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
+
+        return Excel::download(
+            new SprintReportExport(
+                $sprints,
+                $columns,
+                $request->all(),
+                $generatedAt
+            ),
+            'sprint-report_' . $generatedAt . '.xlsx'
         );
     }
 
@@ -421,62 +471,6 @@ class ReportController extends Controller
     // TASK REPORT EXPORT
     public function taskExport(Request $request)
     {
-        return $this->taskReportService
-            ->export($request);
-    }
-
-    /** ============ Project::SPRINT ============ */
-
-    // SPRINT REPORT
-    public function sprint(Request $request)
-    {
-        $this->pageTitle = 'Sprint Report';
-
-        $this->subTitle =
-            'Detailed sprint execution and completion overview';
-
-        view()->share([
-            'pageTitle' => $this->pageTitle,
-            'subTitle' => $this->subTitle,
-        ]);
-
-        $perPage = (int) $request->input(
-            'per_page',
-            config('constants.per_page_count')
-        );
-
-        $sprints = $this->sprintReportService
-            ->getSprints($request, $perPage);
-
-        $projects = Project::accessibleBy(auth()->user())
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
-
-        $columns = [
-            'project' => 'Project',
-            'sprint' => 'Sprint Name',
-            'start_date' => 'Start Date',
-            'end_date' => 'End Date',
-            'total_tasks' => 'Total Tasks',
-            'completed_tasks' => 'Completed',
-            'pending_tasks' => 'Pending',
-            'status' => 'Status',
-            'progress' => 'Progress',
-        ];
-
-        return view('reports.sprint', compact(
-            'sprints',
-            'perPage',
-            'projects',
-            'columns'
-        ));
-    }
-
-    // SPRINT REPORT EXPORT
-    public function sprintExport(Request $request)
-    {
-        return $this->sprintReportService
-            ->export($request);
+        return $this->taskReportService->export($request);
     }
 }
