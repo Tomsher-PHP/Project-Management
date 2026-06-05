@@ -200,7 +200,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-Dx0T9RQU.js",
+    "file": "assets/project-detail-C2n3zIhB.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -257,7 +257,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-CEJlyjmM.js",
+    "file": "assets/task-detail-BK4fpGvE.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
