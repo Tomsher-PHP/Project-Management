@@ -301,6 +301,18 @@ class MilestoneReportExport implements FromCollection, WithCustomStartCell, With
             $rowNumber = $headerRow + $index + 1;
             $metrics = $this->resolveMilestoneMetrics($milestone);
 
+            if (isset($columnIndexes['derived'])) {
+                $derivedColumn = Coordinate::stringFromColumnIndex($columnIndexes['derived'] + 1);
+                $derivedColor = $metrics['derived_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';
+
+                $sheet->getStyle("{$derivedColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $derivedColor],
+                    ],
+                ]);
+            }
+
             if (isset($columnIndexes['actual'])) {
                 $actualColumn = Coordinate::stringFromColumnIndex($columnIndexes['actual'] + 1);
                 $actualColor = $metrics['actual_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';

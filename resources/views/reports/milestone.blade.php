@@ -159,10 +159,14 @@
                             $projectUrl = $project ? ($project->trashed() ? route('projects.restore.show', $project->id) : route('projects.edit', $project)) : null;
                             $statusColor = $milestone->status?->color ?? '#94A3B8';
                             $estimatedSeconds = (int) ($milestone->estimated_time_seconds ?? 0);
+                            $derivedSeconds = (int) ($milestone->derived_time_seconds ?? 0);
                             $actualSeconds = (int) ($milestone->actual_time_seconds ?? 0);
                             $progressPercentage = $estimatedSeconds > 0 ? round(($actualSeconds / $estimatedSeconds) * 100, 2) : 0;
                             $progressLabel = rtrim(rtrim(number_format((float) $progressPercentage, 2, '.', ''), '0'), '.');
                             $progressBarWidth = min($progressPercentage, 100);
+                            $derivedTimeClasses = $derivedSeconds <= $estimatedSeconds
+                                ? 'text-success-400 dark:text-success-300'
+                                : 'text-red-500 dark:text-red-400';
                             $actualTimeClasses = $actualSeconds <= $estimatedSeconds
                                 ? 'text-success-400 dark:text-success-300'
                                 : 'text-red-500 dark:text-red-400';
@@ -218,7 +222,7 @@
                                 {{ formatSecondsToHoursMinutes($milestone->estimated_time_seconds) }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-derived">
+                            <td class="px-2 py-2 text-sm font-medium whitespace-nowrap col-derived {{ $derivedTimeClasses }}">
                                 {{ formatSecondsToHoursMinutes($milestone->derived_time_seconds) }}
                             </td>
 
