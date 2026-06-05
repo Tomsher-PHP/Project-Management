@@ -191,86 +191,88 @@
                     </li>
                 </ul>
             </div>
-            <div class="item-wrapper mb-5">
-                <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
-                    Access Control
-                </h4>
-                <ul class="mt-2.5">
-                    @if ($canViewRoles)
-                        <li class="item py-[11px] {{ $isRolesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                            <a href="{{ route('roles.index') }}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
-                                        <span class="item-ico">
-                                            <svg width="18" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 2L4 5V11C4 16.52 7.38 20.62 12 22C16.62 20.62 20 16.52 20 11V5L12 2ZM18 11C18 15.42 15.46 18.72 12 20C8.54 18.72 6 15.42 6 11V6.3L12 4.05L18 6.3V11Z" fill="#1A202C" class="path-1" />
-                                                <path d="M10 15.17L6.7 11.87L8.11 10.45L10 12.34L14.68 7.66L16.1 9.08L10 15.17Z" fill="#22C55E" class="path-2" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isRolesActive ? $sidebarItemActiveClass : '' }}">Roles</span>
+            @if ($hasManagementLinks)
+                <div class="item-wrapper mb-5">
+                    <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
+                        Access Control
+                    </h4>
+                    <ul class="mt-2.5">
+                        @if ($canViewRoles)
+                            <li class="item py-[11px] {{ $isRolesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('roles.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5">
+                                            <span class="item-ico">
+                                                <svg width="18" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 2L4 5V11C4 16.52 7.38 20.62 12 22C16.62 20.62 20 16.52 20 11V5L12 2ZM18 11C18 15.42 15.46 18.72 12 20C8.54 18.72 6 15.42 6 11V6.3L12 4.05L18 6.3V11Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M10 15.17L6.7 11.87L8.11 10.45L10 12.34L14.68 7.66L16.1 9.08L10 15.17Z" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isRolesActive ? $sidebarItemActiveClass : '' }}">Roles</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
-                        </li>
-                    @endif
-                    @if ($canViewUsers)
-                        <li class="item py-[11px] {{ $isUsersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                            <a href="{{ route('users.index') }}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
-                                        <span class="item-ico">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" class="path-1" fill="#1A202C" />
-                                                <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isUsersActive ? $sidebarItemActiveClass : '' }}">Users</span>
+                                </a>
+                            </li>
+                        @endif
+                        @if ($canViewUsers)
+                            <li class="item py-[11px] {{ $isUsersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('users.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5">
+                                            <span class="item-ico">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <ellipse cx="11.7778" cy="17.5555" rx="7.77778" ry="4.44444" class="path-1" fill="#1A202C" />
+                                                    <circle class="path-2" cx="11.7778" cy="6.44444" r="4.44444" fill="#22C55E" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isUsersActive ? $sidebarItemActiveClass : '' }}">Users</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
-                        </li>
-                    @endif
-                    @if ($canViewTeams)
-                        <li class="item py-[11px] {{ $isTeamsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                            <a href="{{ route('teams.index') }}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
-                                        <span class="item-ico">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="6" cy="8" r="2.5" fill="#1A202C" class="path-1" />
-                                                <path d="M6 12C4.2 12 0.5 12.9 0.5 14.7V18H11.5V14.7C11.5 12.9 7.8 12 6 12Z" fill="#1A202C" class="path-1" />
-                                                <circle cx="18" cy="8" r="2.5" fill="#1A202C" class="path-1" />
-                                                <path d="M18 12C16.2 12 12.5 12.9 12.5 14.7V18H23.5V14.7C23.5 12.9 19.8 12 18 12Z" fill="#1A202C" class="path-1" />
-                                                <path d="M12 11C9.5 11 4.5 12.2 4.5 14.8V18H19.5V14.8C19.5 12.2 14.5 11 12 11Z" fill="#1A202C" class="path-1" />
-                                                <circle cx="12" cy="6" r="3.5" fill="#22C55E" class="path-2" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isTeamsActive ? $sidebarItemActiveClass : '' }}">Teams</span>
+                                </a>
+                            </li>
+                        @endif
+                        @if ($canViewTeams)
+                            <li class="item py-[11px] {{ $isTeamsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('teams.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5">
+                                            <span class="item-ico">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle cx="6" cy="8" r="2.5" fill="#1A202C" class="path-1" />
+                                                    <path d="M6 12C4.2 12 0.5 12.9 0.5 14.7V18H11.5V14.7C11.5 12.9 7.8 12 6 12Z" fill="#1A202C" class="path-1" />
+                                                    <circle cx="18" cy="8" r="2.5" fill="#1A202C" class="path-1" />
+                                                    <path d="M18 12C16.2 12 12.5 12.9 12.5 14.7V18H23.5V14.7C23.5 12.9 19.8 12 18 12Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M12 11C9.5 11 4.5 12.2 4.5 14.8V18H19.5V14.8C19.5 12.2 14.5 11 12 11Z" fill="#1A202C" class="path-1" />
+                                                    <circle cx="12" cy="6" r="3.5" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isTeamsActive ? $sidebarItemActiveClass : '' }}">Teams</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
-                        </li>
-                    @endif
-                    @if ($canViewCustomers)
-                        <li class="item py-[11px] {{ $isCustomersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                            <a href="{{ route('customers.index') }}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
-                                        <span class="item-ico">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M9 12C6 12 1 13.2 1 15.8V19H17V15.8C17 13.2 12 12 9 12Z" fill="#1A202C" class="path-1" />
-                                                <circle cx="9" cy="7" r="3.5" fill="#22C55E" class="path-2" />
-                                                <path d="M19 2L20.25 5.82H24.27L21.02 8.18L22.26 12L19 9.63L15.74 12L16.98 8.18L12.98 5.82H17.75L19 2Z" fill="#22C55E" class="path-2" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isCustomersActive ? $sidebarItemActiveClass : '' }}">Customers</span>
+                                </a>
+                            </li>
+                        @endif
+                        @if ($canViewCustomers)
+                            <li class="item py-[11px] {{ $isCustomersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('customers.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5">
+                                            <span class="item-ico">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M9 12C6 12 1 13.2 1 15.8V19H17V15.8C17 13.2 12 12 9 12Z" fill="#1A202C" class="path-1" />
+                                                    <circle cx="9" cy="7" r="3.5" fill="#22C55E" class="path-2" />
+                                                    <path d="M19 2L20.25 5.82H24.27L21.02 8.18L22.26 12L19 9.63L15.74 12L16.98 8.18L12.98 5.82H17.75L19 2Z" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isCustomersActive ? $sidebarItemActiveClass : '' }}">Customers</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </a>
-                        </li>
-                    @endif
-                </ul>
-            </div>
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
+            @endif
             @if ($hasWorkspaceLinks)
                 <div class="item-wrapper mb-5">
                     <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">

@@ -13,7 +13,7 @@
         window.authUserId = {{ auth()->id() }};
     </script>
 
-    {{-- Vite Assets --}}
+    <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <link rel="icon" href="{{ asset(config('assets.icons.favicon')) }}" type="image/x-icon" />
@@ -23,17 +23,6 @@
     <link rel="stylesheet" href="{{ asset(config('assets.css.style')) }}" />
 
     @stack('styles')
-    <script>
-        (function() {
-            let theme = "{{ $userTheme ?? 'light' }}";
-            // overwrite stored value
-            localStorage.setItem('theme', theme);
-            // force apply AFTER other scripts
-            window.addEventListener('load', function() {
-                document.documentElement.classList.toggle('dark', theme === 'dark');
-            });
-        })();
-    </script>
 </head>
 
 <body>
@@ -90,8 +79,9 @@
     <script src="{{ asset(config('assets.js.chart')) }}"></script>
 
     <script>
-        // localStorage.theme = 'dark';
-        // document.documentElement.classList.remove('light');
+        let theme = "{{ $userTheme ?? 'light' }}";
+        localStorage.theme = theme;
+        document.documentElement.classList.toggle('dark', theme === 'dark');
 
         let dataSetsLight = [{
                 label: "My First Dataset",

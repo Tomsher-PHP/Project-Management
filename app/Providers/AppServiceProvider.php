@@ -85,14 +85,10 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         View::composer('*', function ($view) {
-
             $userTheme = '';
-
             if (auth()->check()) {
-                $userTheme = UserGeneralSetting::where('user_id', auth()->id())
-                    ->value('theme') ?? '';
+                $userTheme = UserGeneralSetting::where('user_id', auth()->id())->value('theme') ?? '';
             }
-
             $view->with('userTheme', $userTheme);
         });
 
@@ -117,11 +113,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->is_super_admin ? true : null;
         });
-        
+
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
-
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string
