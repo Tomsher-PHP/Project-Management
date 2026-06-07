@@ -136,43 +136,31 @@ return [
 
     // PROJECT REPORT
     ['name' => 'reports.project_view', 'sort_order' => 19000, 'default_checked' => false],
-    ['name' => 'reports.project_export', 'sort_order' => 19001, 'default_checked' => false],
-
-    // TASK REPORT
-    ['name' => 'reports.task_view', 'sort_order' => 19010, 'default_checked' => false],
-    ['name' => 'reports.task_export', 'sort_order' => 19011, 'default_checked' => false],
-
-    // TIME TRACKING REPORT
-    ['name' => 'reports.time_tracking_view', 'sort_order' => 19020, 'default_checked' => true],
-    ['name' => 'reports.time_tracking_export', 'sort_order' => 19021, 'default_checked' => false],
-
-    // ATTENDANCE REPORT
-    ['name' => 'reports.attendance_view', 'sort_order' => 19030, 'default_checked' => false],
-    ['name' => 'reports.attendance_export', 'sort_order' => 19031, 'default_checked' => false],
-
-    // DAILY TIME REPORT
-    ['name' => 'reports.daily_time_view', 'sort_order' => 19040, 'default_checked' => false],
-    ['name' => 'reports.daily_time_export', 'sort_order' => 19041, 'default_checked' => false],
-
-    // SHIFT SCHEDULE REPORT
-    ['name' => 'reports.shift_schedule_view', 'sort_order' => 19050, 'default_checked' => false],
-    ['name' => 'reports.shift_schedule_export', 'sort_order' => 19051, 'default_checked' => false],
-
-    // PRODUCTIVITY REPORT
-    ['name' => 'reports.productivity_view', 'sort_order' => 19060, 'default_checked' => false],
-    ['name' => 'reports.productivity_export', 'sort_order' => 19061, 'default_checked' => false],
-
-    // SPRINT REPORT
-    ['name' => 'reports.sprint_view', 'sort_order' => 19070, 'default_checked' => false],
-    ['name' => 'reports.sprint_export', 'sort_order' => 19071, 'default_checked' => false],
+    ['name' => 'reports.project_export', 'sort_order' => 19020, 'default_checked' => false],
 
     // MILESTONE REPORT
-    ['name' => 'reports.milestone_view', 'sort_order' => 19080, 'default_checked' => false],
-    ['name' => 'reports.milestone_export', 'sort_order' => 19081, 'default_checked' => false],
+    ['name' => 'reports.milestone_view', 'sort_order' => 19100, 'default_checked' => false],
+    ['name' => 'reports.milestone_export', 'sort_order' => 19120, 'default_checked' => false],
 
-    // LEAVE REPORT
-    ['name' => 'reports.leave_view', 'sort_order' => 19090, 'default_checked' => false],
-    ['name' => 'reports.leave_export', 'sort_order' => 19091, 'default_checked' => false],
+    // SPRINT REPORT
+    ['name' => 'reports.sprint_view', 'sort_order' => 19200, 'default_checked' => false],
+    ['name' => 'reports.sprint_export', 'sort_order' => 19220, 'default_checked' => false],
+
+    // TASK REPORT
+    ['name' => 'reports.task_view', 'sort_order' => 19300, 'default_checked' => false],
+    ['name' => 'reports.task_export', 'sort_order' => 19320, 'default_checked' => false],
+
+    // TIME TRACKING REPORT
+    ['name' => 'reports.time_tracking_view', 'sort_order' => 19400, 'default_checked' => true],
+    ['name' => 'reports.time_tracking_export', 'sort_order' => 19420, 'default_checked' => false],
+    
+    // DAILY TIME REPORT
+    ['name' => 'reports.daily_time_view', 'sort_order' => 19500, 'default_checked' => false],
+    ['name' => 'reports.daily_time_export', 'sort_order' => 19520, 'default_checked' => false],
+    
+    // PRODUCTIVITY REPORT
+    ['name' => 'reports.productivity_view', 'sort_order' => 19600, 'default_checked' => false],
+    ['name' => 'reports.productivity_export', 'sort_order' => 19620, 'default_checked' => false],
 
     // ACTIVITY LOG (20000)
     ['name' => 'activity_log.view',   'sort_order' => 20000, 'default_checked' => false],
