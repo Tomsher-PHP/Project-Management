@@ -79,7 +79,6 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
     {
         return match ($column) {
             'user' => (string) ($row['user_name'] ?? '-'),
-            'tasks_count' => (string) ($row['tasks_count'] ?? 0),
             'completed_tasks_count' => (string) ($row['completed_tasks_count'] ?? 0),
             'estimated_hours' => (string) ($row['estimated_hours'] ?? '--'),
             'spend_hours' => (string) ($row['spend_hours'] ?? '--'),
@@ -237,7 +236,7 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['tasks_count', 'completed_tasks_count', 'estimated_hours', 'spend_hours', 'saved_hours', 'efficiency'], true)
+                in_array($columnKey, ['completed_tasks_count', 'estimated_hours', 'spend_hours', 'saved_hours', 'efficiency'], true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );

@@ -52,17 +52,6 @@
         <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="min-w-0 flex-1">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
-                    Tasks
-                </div>
-                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
-                    {{ $summaryStats['tasks'] }}
-                </div>
-            </div>
-        </div>
-
-        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <div class="min-w-0 flex-1">
-                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
                     Completed
                 </div>
                 <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
@@ -112,7 +101,7 @@
                 $reportNumber = ($reports->currentPage() - 1) * $reports->perPage();
             @endphp
 
-            <table class="productivity-report-table w-full min-w-[1200px]">
+            <table class="productivity-report-table w-full min-w-[1000px]">
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
@@ -121,11 +110,8 @@
                         <th scope="col" class="col-user px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[240px]">
                             <x-sorting.sortable-column column="user" label="User" />
                         </th>
-                        <th scope="col" class="col-tasks_count px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[170px]">
-                            <x-sorting.sortable-column column="tasks_count" label="Tasks Count" />
-                        </th>
                         <th scope="col" class="col-completed_tasks_count px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
-                            <x-sorting.sortable-column column="completed_tasks_count" label="Completed Tasks Count" />
+                            <x-sorting.sortable-column column="completed_tasks_count" label="Completed Tasks" />
                         </th>
                         <th scope="col" class="col-estimated_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px]">
                             <x-sorting.sortable-column column="estimated_hours" label="Estimated Hours" />
@@ -191,10 +177,6 @@
 
                             <td class="col-user px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300">
                                 {{ $row['user_name'] }}
-                            </td>
-
-                            <td class="col-tasks_count px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                {{ $row['tasks_count'] }}
                             </td>
 
                             <td class="col-completed_tasks_count px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">

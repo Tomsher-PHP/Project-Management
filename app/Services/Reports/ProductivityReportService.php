@@ -4,6 +4,7 @@ namespace App\Services\Reports;
 
 use App\Exports\ProductivityReportExport;
 use App\Models\Task;
+use App\Models\TaskTimeLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,8 +18,7 @@ class ProductivityReportService
 
     protected const EXPORTABLE_COLUMNS = [
         'user' => 'User',
-        'tasks_count' => 'Tasks Count',
-        'completed_tasks_count' => 'Completed Tasks Count',
+        'completed_tasks_count' => 'Completed Tasks',
         'estimated_hours' => 'Estimated Hours',
         'spend_hours' => 'Spend Hours',
         'saved_hours' => 'Saved',
@@ -27,7 +27,6 @@ class ProductivityReportService
 
     protected const SORTABLE_COLUMNS = [
         'user',
-        'tasks_count',
         'completed_tasks_count',
         'estimated_hours',
         'spend_hours',
@@ -159,102 +158,101 @@ class ProductivityReportService
             return collect();
         }
 
-        $taskCounts = Task::query()
+        $completedTasksQuery = Task::query()
             ->accessibleBy($request->user())
             ->whereNull('tasks.deleted_at')
             ->whereNull('tasks.break_work_request_id')
-            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
-            ->whereIn('tasks.current_assignee_id', $userIds)
-            ->whereNotNull('tasks.current_assignee_id')
-            ->selectRaw('tasks.current_assignee_id as user_id, COUNT(*) as tasks_count')
-            ->groupBy('tasks.current_assignee_id')
-            ->pluck('tasks_count', 'user_id');
+            ->where(function ($query) {
+                $query
+                    ->whereNull('tasks.request_status')
+                    ->orWhere('tasks.request_status', '!=', Task::REQUEST_REJECTED);
+            })
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', true);
+            })
+            ->select('tasks.id', 'tasks.estimated_time_seconds', 'tasks.completed_at');
+
+        if ($dateRange['start'] && $dateRange['end']) {
+            $completedTasksQuery->whereBetween('tasks.completed_at', [
+                $dateRange['start']->copy()->startOfDay(),
+                $dateRange['end']->copy()->endOfDay(),
+            ]);
+        }
+
+        $completedTasks = $completedTasksQuery->get();
+        $taskEstimates = $completedTasks
+            ->mapWithKeys(fn(Task $task) => [
+                (int) $task->id => max(0, (int) ($task->estimated_time_seconds ?? 0)),
+            ]);
+
+        if ($taskEstimates->isEmpty()) {
+            return collect();
+        }
+
+        $contributorLogs = TaskTimeLog::query()
+            ->whereIn('task_id', $taskEstimates->keys())
+            ->where('is_approved', true)
+            ->where('is_running', false)
+            ->selectRaw('task_id, user_id, COALESCE(SUM(duration_seconds), 0) as spend_seconds')
+            ->groupBy('task_id', 'user_id')
+            ->get();
+
+        if ($contributorLogs->isEmpty()) {
+            return collect();
+        }
 
         $usersById = User::query()
-            ->whereIn('id', $taskCounts->keys())
+            ->withTrashed()
+            ->whereIn('id', $contributorLogs->pluck('user_id')->unique())
             ->select('id', 'name')
             ->get()
             ->keyBy('id');
 
         $aggregates = [];
+        $scopedUserLookup = array_flip($userIds);
 
-        foreach ($taskCounts as $userId => $tasksCount) {
-            $userId = (int) $userId;
-            $user = $usersById->get($userId);
+        $contributorLogs
+            ->groupBy('task_id')
+            ->each(function (Collection $taskLogs, int|string $taskId) use (&$aggregates, $taskEstimates, $usersById, $scopedUserLookup) {
+                $taskId = (int) $taskId;
+                $estimatedSeconds = (int) ($taskEstimates->get($taskId, 0));
+                $totalSpendSeconds = (int) $taskLogs->sum(fn($log) => max(0, (int) ($log->spend_seconds ?? 0)));
 
-            if (! $user) {
-                continue;
-            }
+                if ($totalSpendSeconds <= 0) {
+                    return;
+                }
 
-            $aggregates[$userId] = [
-                'user_id' => $userId,
-                'user' => $user,
-                'user_name' => $user->name ?? 'Unknown',
-                'tasks_count' => (int) $tasksCount,
-                'completed_tasks_count' => 0,
-                'estimated_seconds' => 0,
-                'spend_seconds' => 0,
-            ];
-        }
+                $estimatedShares = $this->allocateEstimateBySpend($estimatedSeconds, $taskLogs, $totalSpendSeconds);
 
-        $tasksQuery = Task::query()
-            ->accessibleBy($request->user())
-            ->whereNull('tasks.deleted_at')
-            ->whereNull('tasks.break_work_request_id')
-            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
-            ->whereIn('tasks.current_assignee_id', $userIds)
-            ->whereHas('status', function ($query) {
-                $query->where('is_completed', true);
-            })
-            ->select('tasks.id', 'tasks.current_assignee_id', 'tasks.status_id', 'tasks.estimated_time_seconds', 'tasks.completed_at')
-            ->with([
-                'currentAssignee:id,name',
-                'status' => fn($query) => $query
-                    ->withTrashed()
-                    ->select('id', 'name', 'type', 'is_completed'),
-            ])
-            ->withSum([
-                'timeLogs as approved_spend_seconds' => function ($query) {
-                    $query
-                        ->where('is_approved', true)
-                        ->where('is_running', false);
-                },
-            ], 'duration_seconds');
+                foreach ($taskLogs as $log) {
+                    $userId = (int) $log->user_id;
 
-        if ($dateRange['start'] && $dateRange['end']) {
-            $tasksQuery->whereBetween('tasks.completed_at', [
-                $dateRange['start']->copy()->startOfDay(),
-                $dateRange['end']->copy()->endOfDay(),
-            ]);
-        } elseif ($dateRange['start']) {
-            $tasksQuery->where('tasks.completed_at', '>=', $dateRange['start']->copy()->startOfDay());
-        } elseif ($dateRange['end']) {
-            $tasksQuery->where('tasks.completed_at', '<=', $dateRange['end']->copy()->endOfDay());
-        }
+                    if (! isset($scopedUserLookup[$userId])) {
+                        continue;
+                    }
 
-        foreach ($tasksQuery->get() as $task) {
-            if (! $task->currentAssignee) {
-                continue;
-            }
+                    $user = $usersById->get($userId);
 
-            $userId = (int) $task->current_assignee_id;
+                    if (! $user) {
+                        continue;
+                    }
 
-            if (! isset($aggregates[$userId])) {
-                $aggregates[$userId] = [
-                    'user_id' => $userId,
-                    'user' => $task->currentAssignee,
-                    'user_name' => $task->currentAssignee->name ?? 'Unknown',
-                    'tasks_count' => 1,
-                    'completed_tasks_count' => 0,
-                    'estimated_seconds' => 0,
-                    'spend_seconds' => 0,
-                ];
-            }
+                    if (! isset($aggregates[$userId])) {
+                        $aggregates[$userId] = [
+                            'user_id' => $userId,
+                            'user' => $user,
+                            'user_name' => $user->name ?? 'Unknown',
+                            'completed_task_ids' => [],
+                            'estimated_seconds' => 0,
+                            'spend_seconds' => 0,
+                        ];
+                    }
 
-            $aggregates[$userId]['completed_tasks_count']++;
-            $aggregates[$userId]['estimated_seconds'] += max(0, (int) ($task->estimated_time_seconds ?? 0));
-            $aggregates[$userId]['spend_seconds'] += max(0, (int) ($task->approved_spend_seconds ?? 0));
-        }
+                    $aggregates[$userId]['completed_task_ids'][$taskId] = true;
+                    $aggregates[$userId]['estimated_seconds'] += (int) ($estimatedShares[$userId] ?? 0);
+                    $aggregates[$userId]['spend_seconds'] += max(0, (int) ($log->spend_seconds ?? 0));
+                }
+            });
 
         $rows = collect($aggregates)
             ->map(function (array $row) {
@@ -267,8 +265,7 @@ class ProductivityReportService
                     'user_id' => $row['user_id'],
                     'user' => $row['user'],
                     'user_name' => $row['user_name'],
-                    'tasks_count' => (int) $row['tasks_count'],
-                    'completed_tasks_count' => (int) $row['completed_tasks_count'],
+                    'completed_tasks_count' => count($row['completed_task_ids']),
                     'estimated_seconds' => $estimatedSeconds,
                     'estimated_hours' => formatSecondsToHMS($estimatedSeconds),
                     'spend_seconds' => $spendSeconds,
@@ -285,6 +282,58 @@ class ProductivityReportService
             ->values();
 
         return $this->sortRows($rows, $request);
+    }
+
+    protected function allocateEstimateBySpend(int $estimatedSeconds, Collection $taskLogs, int $totalSpendSeconds): array
+    {
+        if ($estimatedSeconds <= 0 || $totalSpendSeconds <= 0) {
+            return $taskLogs
+                ->mapWithKeys(fn($log) => [(int) $log->user_id => 0])
+                ->all();
+        }
+
+        $allocations = [];
+        $remainders = [];
+        $allocatedSeconds = 0;
+
+        foreach ($taskLogs as $log) {
+            $userId = (int) $log->user_id;
+            $spendSeconds = max(0, (int) ($log->spend_seconds ?? 0));
+            $rawShare = ($estimatedSeconds * $spendSeconds) / $totalSpendSeconds;
+            $baseShare = (int) floor($rawShare);
+
+            $allocations[$userId] = $baseShare;
+            $allocatedSeconds += $baseShare;
+            $remainders[] = [
+                'user_id' => $userId,
+                'remainder' => $rawShare - $baseShare,
+                'spend_seconds' => $spendSeconds,
+            ];
+        }
+
+        $remainingSeconds = $estimatedSeconds - $allocatedSeconds;
+
+        if ($remainingSeconds <= 0) {
+            return $allocations;
+        }
+
+        usort($remainders, function (array $left, array $right) {
+            if ($left['remainder'] !== $right['remainder']) {
+                return $right['remainder'] <=> $left['remainder'];
+            }
+
+            if ($left['spend_seconds'] !== $right['spend_seconds']) {
+                return $right['spend_seconds'] <=> $left['spend_seconds'];
+            }
+
+            return $left['user_id'] <=> $right['user_id'];
+        });
+
+        foreach (array_slice($remainders, 0, $remainingSeconds) as $remainder) {
+            $allocations[(int) $remainder['user_id']]++;
+        }
+
+        return $allocations;
     }
 
     protected function calculateEfficiency(int $estimatedSeconds, int $spendSeconds): float
@@ -329,7 +378,6 @@ class ProductivityReportService
 
         return [
             'total_result' => $rows->count(),
-            'tasks' => (int) $rows->sum('tasks_count'),
             'completed' => (int) $rows->sum('completed_tasks_count'),
             'estimated_hours' => formatSecondsToHMS($estimatedSeconds),
             'spend_hours' => formatSecondsToHMS($spendSeconds),
@@ -374,7 +422,6 @@ class ProductivityReportService
     {
         return match ($sortBy) {
             'user' => (string) ($row['user_name'] ?? ''),
-            'tasks_count' => (int) ($row['tasks_count'] ?? 0),
             'completed_tasks_count' => (int) ($row['completed_tasks_count'] ?? 0),
             'estimated_hours' => (int) ($row['estimated_seconds'] ?? 0),
             'spend_hours' => (int) ($row['spend_seconds'] ?? 0),
