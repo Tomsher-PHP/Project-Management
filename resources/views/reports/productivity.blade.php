@@ -92,6 +92,17 @@
                 </div>
             </div>
         </div>
+
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Total Saved Hours
+                </div>
+                <div class="mt-2 text-2xl font-black leading-none {{ $summaryStats['saved_hours_color_class'] }}">
+                    {{ $summaryStats['saved_hours'] }}
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="relative z-20 overflow-visible rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -122,6 +133,9 @@
                         <th scope="col" class="col-spend_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
                             <x-sorting.sortable-column column="spend_hours" label="Spend Hours" />
                         </th>
+                        <th scope="col" class="col-saved_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
+                            <x-sorting.sortable-column column="saved_hours" label="Saved" />
+                        </th>
                         <th scope="col" class="col-efficiency px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
                             @php
                                 $currentSort = request('sort_by');
@@ -144,10 +158,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                         </svg>
                                         <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 hidden w-72 rounded-lg bg-bgray-600 px-3 py-2.5 text-left text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                                            Efficiency = (Spend Hours ÷ Estimated Hours) × 100<br>
-                                            100% = exactly on estimate<br>
-                                            Below 100% = under estimate<br>
-                                            Above 100% = exceeded estimate
+                                            Efficiency = (Estimated Hours / Spend Hours) × 100<br>
+                                            Above 100% = completed faster than estimated<br>
+                                            Below 100% = exceeded estimate<br>
                                         </span>
                                     </span>
                                 </span>
@@ -193,8 +206,14 @@
                             </td>
 
                             <td class="col-spend_hours px-2 py-2 text-sm">
-                                <span class="{{ $row['efficiency_color_class'] }}">
+                                <span class="{{ $row['spend_hours_color_class'] }}">
                                     {{ $row['spend_hours'] }}
+                                </span>
+                            </td>
+
+                            <td class="col-saved_hours px-2 py-2 text-sm">
+                                <span class="{{ $row['saved_color_class'] }}">
+                                    {{ $row['saved_hours'] }}
                                 </span>
                             </td>
 

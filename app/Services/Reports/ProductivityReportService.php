@@ -21,6 +21,7 @@ class ProductivityReportService
         'completed_tasks_count' => 'Completed Tasks Count',
         'estimated_hours' => 'Estimated Hours',
         'spend_hours' => 'Spend Hours',
+        'saved_hours' => 'Saved',
         'efficiency' => 'Efficiency (%)',
     ];
 
@@ -30,6 +31,7 @@ class ProductivityReportService
         'completed_tasks_count',
         'estimated_hours',
         'spend_hours',
+        'saved_hours',
         'efficiency',
     ];
 
@@ -295,6 +297,7 @@ class ProductivityReportService
             ->map(function (array $row) {
                 $estimatedSeconds = (int) array_sum($row['estimated_task_seconds']);
                 $spendSeconds = (int) $row['spend_seconds'];
+                $savedSeconds = $estimatedSeconds - $spendSeconds;
                 $efficiency = $this->calculateEfficiency($estimatedSeconds, $spendSeconds);
 
                 return [
@@ -307,10 +310,14 @@ class ProductivityReportService
                     'estimated_hours' => formatSecondsToHMS($estimatedSeconds),
                     'spend_seconds' => $spendSeconds,
                     'spend_hours' => formatSecondsToHMS($spendSeconds),
+                    'saved_seconds' => $savedSeconds,
+                    'saved_hours' => $this->formatSignedSeconds($savedSeconds),
                     'productive_spend_seconds' => (int) $row['productive_spend_seconds'],
                     'efficiency_percentage' => $efficiency,
                     'efficiency_label' => $this->formatPercentage($efficiency),
                     'efficiency_color_class' => $this->resolveEfficiencyColorClass($efficiency, $estimatedSeconds, $spendSeconds),
+                    'saved_color_class' => $this->resolveSavedColorClass($savedSeconds),
+                    'spend_hours_color_class' => $this->resolveSavedColorClass($savedSeconds),
                 ];
             })
             ->values();
@@ -331,7 +338,7 @@ class ProductivityReportService
             return 0.0;
         }
 
-        return round(($spendSeconds / $estimatedSeconds) * 100, 2);
+        return round(($estimatedSeconds / $spendSeconds) * 100, 2);
     }
 
     protected function resolveEfficiencyColorClass(float $efficiency, int $estimatedSeconds, int $spendSeconds): string
@@ -340,24 +347,40 @@ class ProductivityReportService
             return 'text-bgray-500 dark:text-bgray-300 font-bold';
         }
 
-        return $spendSeconds <= $estimatedSeconds
+        return match (true) {
+            $efficiency >= 120 => 'text-success-400 dark:text-success-300 font-bold',
+            $efficiency >= 100 => 'text-success-300 dark:text-success-300 font-bold',
+            $efficiency >= 80 => 'text-orange-500 dark:text-orange-300 font-bold',
+            default => 'text-red-500 dark:text-red-400 font-bold',
+        };
+    }
+
+    protected function resolveSavedColorClass(int $savedSeconds): string
+    {
+        if ($savedSeconds === 0) {
+            return 'text-bgray-500 dark:text-bgray-300 font-bold';
+        }
+
+        return $savedSeconds > 0
             ? 'text-success-400 dark:text-success-300 font-bold'
             : 'text-red-500 dark:text-red-400 font-bold';
     }
 
     protected function buildSummaryStats(Collection $rows): array
     {
+        $estimatedSeconds = (int) $rows->sum('estimated_seconds');
+        $spendSeconds = (int) $rows->sum('spend_seconds');
+        $savedSeconds = $estimatedSeconds - $spendSeconds;
+
         return [
             'total_result' => $rows->count(),
             'tasks' => (int) $rows->sum('tasks_count'),
             'completed' => (int) $rows->sum('completed_tasks_count'),
-            'estimated_hours' => formatSecondsToHMS((int) $rows->sum('estimated_seconds')),
-            'spend_hours' => formatSecondsToHMS((int) $rows->sum('spend_seconds')),
-            'spend_hours_color_class' => $this->resolveEfficiencyColorClass(
-                0,
-                (int) $rows->sum('estimated_seconds'),
-                (int) $rows->sum('spend_seconds')
-            ),
+            'estimated_hours' => formatSecondsToHMS($estimatedSeconds),
+            'spend_hours' => formatSecondsToHMS($spendSeconds),
+            'saved_hours' => $this->formatSignedSeconds($savedSeconds),
+            'spend_hours_color_class' => $this->resolveSavedColorClass($savedSeconds),
+            'saved_hours_color_class' => $this->resolveSavedColorClass($savedSeconds),
         ];
     }
 
@@ -400,6 +423,7 @@ class ProductivityReportService
             'completed_tasks_count' => (int) ($row['completed_tasks_count'] ?? 0),
             'estimated_hours' => (int) ($row['estimated_seconds'] ?? 0),
             'spend_hours' => (int) ($row['spend_seconds'] ?? 0),
+            'saved_hours' => (int) ($row['saved_seconds'] ?? 0),
             'efficiency' => (float) ($row['efficiency_percentage'] ?? 0),
             default => '',
         };
@@ -408,6 +432,15 @@ class ProductivityReportService
     protected function formatPercentage(float $value): string
     {
         return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.') . '%';
+    }
+
+    protected function formatSignedSeconds(int $seconds): string
+    {
+        if ($seconds === 0) {
+            return formatSecondsToHMS(0);
+        }
+
+        return ($seconds > 0 ? '+' : '-') . formatSecondsToHMS(abs($seconds));
     }
 
     protected function paginateRows(Collection $rows, int $perPage, Request $request): LengthAwarePaginator

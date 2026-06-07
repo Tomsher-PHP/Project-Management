@@ -83,6 +83,7 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             'completed_tasks_count' => (string) ($row['completed_tasks_count'] ?? 0),
             'estimated_hours' => (string) ($row['estimated_hours'] ?? '--'),
             'spend_hours' => (string) ($row['spend_hours'] ?? '--'),
+            'saved_hours' => (string) ($row['saved_hours'] ?? '--'),
             'efficiency' => (string) ($row['efficiency_label'] ?? '0%'),
             default => '-',
         };
@@ -236,7 +237,7 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['tasks_count', 'completed_tasks_count', 'estimated_hours', 'spend_hours', 'efficiency'], true)
+                in_array($columnKey, ['tasks_count', 'completed_tasks_count', 'estimated_hours', 'spend_hours', 'saved_hours', 'efficiency'], true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );
@@ -269,12 +270,10 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
 
         $this->rows->each(function (array $row, int $index) use ($sheet, $headerRow, $columnIndexes) {
             $rowNumber = $headerRow + $index + 1;
-            $palette = $this->resolvePerformancePalette(
-                (int) ($row['estimated_seconds'] ?? 0),
-                (int) ($row['spend_seconds'] ?? 0)
-            );
+            $savedPalette = $this->resolveSavedPalette((int) ($row['saved_seconds'] ?? 0));
+            $efficiencyPalette = $this->resolveEfficiencyPalette((float) ($row['efficiency_percentage'] ?? 0));
 
-            foreach (['spend_hours', 'efficiency'] as $columnKey) {
+            foreach (['spend_hours', 'saved_hours'] as $columnKey) {
                 if (! isset($columnIndexes[$columnKey])) {
                     continue;
                 }
@@ -284,29 +283,61 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
                 $sheet->getStyle("{$column}{$rowNumber}")->applyFromArray([
                     'font' => [
                         'bold' => true,
-                        'color' => ['rgb' => $palette['text']],
+                        'color' => ['rgb' => $savedPalette['text']],
                     ],
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => $palette['fill']],
+                        'startColor' => ['rgb' => $savedPalette['fill']],
+                    ],
+                ]);
+            }
+
+            if (isset($columnIndexes['efficiency'])) {
+                $column = Coordinate::stringFromColumnIndex($columnIndexes['efficiency'] + 1);
+
+                $sheet->getStyle("{$column}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $efficiencyPalette['text']],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $efficiencyPalette['fill']],
                     ],
                 ]);
             }
         });
     }
 
-    protected function resolvePerformancePalette(int $estimatedSeconds, int $spendSeconds): array
+    protected function resolveSavedPalette(int $savedSeconds): array
     {
-        if ($estimatedSeconds <= 0 || $spendSeconds <= 0) {
+        if ($savedSeconds === 0) {
             return [
                 'fill' => 'E5E7EB',
                 'text' => '475569',
             ];
         }
 
-        return $spendSeconds <= $estimatedSeconds
+        return $savedSeconds > 0
             ? ['fill' => 'DCFCE7', 'text' => '16A34A']
             : ['fill' => 'FEE2E2', 'text' => 'DC2626'];
+    }
+
+    protected function resolveEfficiencyPalette(float $efficiency): array
+    {
+        if ($efficiency <= 0) {
+            return [
+                'fill' => 'E5E7EB',
+                'text' => '475569',
+            ];
+        }
+
+        return match (true) {
+            $efficiency >= 120 => ['fill' => 'DCFCE7', 'text' => '16A34A'],
+            $efficiency >= 100 => ['fill' => 'ECFDF5', 'text' => '22C55E'],
+            $efficiency >= 80 => ['fill' => 'FFEDD5', 'text' => 'EA580C'],
+            default => ['fill' => 'FEE2E2', 'text' => 'DC2626'],
+        };
     }
 
     protected function buildFilterSummary(): array
