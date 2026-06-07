@@ -3,7 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Exports\ProductivityReportExport;
-use App\Models\TaskTimeLog;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -152,8 +152,6 @@ class ProductivityReportService
 
     protected function buildRows(Request $request): Collection
     {
-        $timezone = (string) config('constants.timezone', 'UTC');
-        $nowLocal = now($timezone);
         $dateRange = $this->resolveDateRange($request);
         $userIds = $this->getScopedUserIds($request);
 
@@ -161,141 +159,106 @@ class ProductivityReportService
             return collect();
         }
 
-        $rangeStartLocal = $dateRange['start']?->copy()->startOfDay();
-        $rangeEndExclusiveLocal = $dateRange['end']
-            ? $dateRange['end']->copy()->addDay()->startOfDay()
-            : $nowLocal->copy();
-        $queryEndLocal = $dateRange['end'] && $dateRange['end']->isSameDay($nowLocal)
-            ? $nowLocal->copy()
-            : ($dateRange['end'] ? $rangeEndExclusiveLocal->copy() : $nowLocal->copy());
+        $taskCounts = Task::query()
+            ->accessibleBy($request->user())
+            ->whereNull('tasks.deleted_at')
+            ->whereNull('tasks.break_work_request_id')
+            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
+            ->whereIn('tasks.current_assignee_id', $userIds)
+            ->whereNotNull('tasks.current_assignee_id')
+            ->selectRaw('tasks.current_assignee_id as user_id, COUNT(*) as tasks_count')
+            ->groupBy('tasks.current_assignee_id')
+            ->pluck('tasks_count', 'user_id');
 
-        $logsQuery = TaskTimeLog::query()
-            ->whereIn('user_id', $userIds)
-            ->where('started_at', '<=', $queryEndLocal->copy()->timezone('UTC'))
-            ->where('is_running', false)
-            ->with([
-                'user:id,name',
-                'task' => function ($query) {
-                    $query
-                        ->withTrashed()
-                        ->select('id', 'name', 'status_id', 'task_mode_id', 'estimated_time_seconds', 'actual_time_seconds', 'break_work_request_id', 'request_type', 'request_status')
-                        ->with([
-                            'status' => fn($statusQuery) => $statusQuery
-                                ->withTrashed()
-                                ->select('id', 'name', 'type', 'is_completed'),
-                            'taskMode' => fn($modeQuery) => $modeQuery
-                                ->withTrashed()
-                                ->select('id', 'name', 'is_productive', 'track_performance'),
-                        ]);
-                },
-            ]);
-
-        if ($rangeStartLocal) {
-            $logsQuery->where(function ($query) use ($rangeStartLocal) {
-                $query->whereNull('ended_at')
-                    ->orWhere('ended_at', '>', $rangeStartLocal->copy()->timezone('UTC'));
-            });
-        }
+        $usersById = User::query()
+            ->whereIn('id', $taskCounts->keys())
+            ->select('id', 'name')
+            ->get()
+            ->keyBy('id');
 
         $aggregates = [];
 
-        foreach ($logsQuery->get() as $log) {
-            if (! $log->user || ! $log->task || ! $log->started_at) {
+        foreach ($taskCounts as $userId => $tasksCount) {
+            $userId = (int) $userId;
+            $user = $usersById->get($userId);
+
+            if (! $user) {
                 continue;
             }
 
-            if ($this->shouldSkipTask($log->task)) {
+            $aggregates[$userId] = [
+                'user_id' => $userId,
+                'user' => $user,
+                'user_name' => $user->name ?? 'Unknown',
+                'tasks_count' => (int) $tasksCount,
+                'completed_tasks_count' => 0,
+                'estimated_seconds' => 0,
+                'spend_seconds' => 0,
+            ];
+        }
+
+        $tasksQuery = Task::query()
+            ->accessibleBy($request->user())
+            ->whereNull('tasks.deleted_at')
+            ->whereNull('tasks.break_work_request_id')
+            ->where('tasks.request_status', '!=', Task::REQUEST_REJECTED)
+            ->whereIn('tasks.current_assignee_id', $userIds)
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', true);
+            })
+            ->select('tasks.id', 'tasks.current_assignee_id', 'tasks.status_id', 'tasks.estimated_time_seconds', 'tasks.completed_at')
+            ->with([
+                'currentAssignee:id,name',
+                'status' => fn($query) => $query
+                    ->withTrashed()
+                    ->select('id', 'name', 'type', 'is_completed'),
+            ])
+            ->withSum([
+                'timeLogs as approved_spend_seconds' => function ($query) {
+                    $query
+                        ->where('is_approved', true)
+                        ->where('is_running', false);
+                },
+            ], 'duration_seconds');
+
+        if ($dateRange['start'] && $dateRange['end']) {
+            $tasksQuery->whereBetween('tasks.completed_at', [
+                $dateRange['start']->copy()->startOfDay(),
+                $dateRange['end']->copy()->endOfDay(),
+            ]);
+        } elseif ($dateRange['start']) {
+            $tasksQuery->where('tasks.completed_at', '>=', $dateRange['start']->copy()->startOfDay());
+        } elseif ($dateRange['end']) {
+            $tasksQuery->where('tasks.completed_at', '<=', $dateRange['end']->copy()->endOfDay());
+        }
+
+        foreach ($tasksQuery->get() as $task) {
+            if (! $task->currentAssignee) {
                 continue;
             }
 
-            $startedAtLocal = $log->started_at->copy()->timezone($timezone);
-            $endedAtLocal = $log->ended_at?->copy()->timezone($timezone);
+            $userId = (int) $task->current_assignee_id;
 
-            if (! $endedAtLocal || ! $endedAtLocal->greaterThan($startedAtLocal)) {
-                continue;
+            if (! isset($aggregates[$userId])) {
+                $aggregates[$userId] = [
+                    'user_id' => $userId,
+                    'user' => $task->currentAssignee,
+                    'user_name' => $task->currentAssignee->name ?? 'Unknown',
+                    'tasks_count' => 1,
+                    'completed_tasks_count' => 0,
+                    'estimated_seconds' => 0,
+                    'spend_seconds' => 0,
+                ];
             }
 
-            $cursor = $startedAtLocal->copy()->startOfDay();
-            if ($rangeStartLocal && $cursor->lessThan($rangeStartLocal)) {
-                $cursor = $rangeStartLocal->copy();
-            }
-
-            $effectiveEndLocal = $endedAtLocal->lessThan($nowLocal)
-                ? $endedAtLocal
-                : $nowLocal->copy();
-
-            if ($dateRange['end']) {
-                $rangeEndCapLocal = $dateRange['end']->isSameDay($nowLocal)
-                    ? $nowLocal->copy()
-                    : $rangeEndExclusiveLocal->copy();
-
-                if ($effectiveEndLocal->greaterThan($rangeEndCapLocal)) {
-                    $effectiveEndLocal = $rangeEndCapLocal;
-                }
-            }
-
-            while ($cursor->lt($rangeEndExclusiveLocal) && $cursor->lt($effectiveEndLocal)) {
-                $dayStartLocal = $cursor->copy();
-                $dayEndLocal = $dayStartLocal->copy()->addDay();
-                $dayEffectiveEndLocal = $dayStartLocal->isSameDay($nowLocal)
-                    ? $nowLocal->copy()
-                    : $dayEndLocal->copy();
-
-                $segmentStart = $startedAtLocal->greaterThan($dayStartLocal)
-                    ? $startedAtLocal
-                    : $dayStartLocal->copy();
-
-                $segmentEnd = $endedAtLocal->lessThan($dayEffectiveEndLocal)
-                    ? $endedAtLocal
-                    : $dayEffectiveEndLocal->copy();
-
-                if ($segmentEnd->greaterThan($segmentStart)) {
-                    $seconds = $segmentStart->diffInSeconds($segmentEnd);
-
-                    if ($seconds > 0) {
-                        $userId = (int) $log->user_id;
-
-                        if (! isset($aggregates[$userId])) {
-                            $aggregates[$userId] = [
-                                'user_id' => $userId,
-                                'user' => $log->user,
-                                'user_name' => $log->user->name ?? 'Unknown',
-                                'task_ids' => [],
-                                'completed_task_ids' => [],
-                                'estimated_task_seconds' => [],
-                                'spend_seconds' => 0,
-                                'productive_spend_seconds' => 0,
-                            ];
-                        }
-
-                        $task = $log->task;
-                        $taskId = (int) $task->id;
-
-                        $aggregates[$userId]['task_ids'][$taskId] = true;
-
-                        if ($task->status?->is_completed) {
-                            $aggregates[$userId]['completed_task_ids'][$taskId] = true;
-                        }
-
-                        if (! array_key_exists($taskId, $aggregates[$userId]['estimated_task_seconds'])) {
-                            $aggregates[$userId]['estimated_task_seconds'][$taskId] = max(0, (int) ($task->estimated_time_seconds ?? 0));
-                        }
-
-                        $aggregates[$userId]['spend_seconds'] += $seconds;
-
-                        if ($task->taskMode?->is_productive ?? true) {
-                            $aggregates[$userId]['productive_spend_seconds'] += $seconds;
-                        }
-                    }
-                }
-
-                $cursor->addDay();
-            }
+            $aggregates[$userId]['completed_tasks_count']++;
+            $aggregates[$userId]['estimated_seconds'] += max(0, (int) ($task->estimated_time_seconds ?? 0));
+            $aggregates[$userId]['spend_seconds'] += max(0, (int) ($task->approved_spend_seconds ?? 0));
         }
 
         $rows = collect($aggregates)
             ->map(function (array $row) {
-                $estimatedSeconds = (int) array_sum($row['estimated_task_seconds']);
+                $estimatedSeconds = (int) $row['estimated_seconds'];
                 $spendSeconds = (int) $row['spend_seconds'];
                 $savedSeconds = $estimatedSeconds - $spendSeconds;
                 $efficiency = $this->calculateEfficiency($estimatedSeconds, $spendSeconds);
@@ -304,15 +267,14 @@ class ProductivityReportService
                     'user_id' => $row['user_id'],
                     'user' => $row['user'],
                     'user_name' => $row['user_name'],
-                    'tasks_count' => count($row['task_ids']),
-                    'completed_tasks_count' => count($row['completed_task_ids']),
+                    'tasks_count' => (int) $row['tasks_count'],
+                    'completed_tasks_count' => (int) $row['completed_tasks_count'],
                     'estimated_seconds' => $estimatedSeconds,
                     'estimated_hours' => formatSecondsToHMS($estimatedSeconds),
                     'spend_seconds' => $spendSeconds,
                     'spend_hours' => formatSecondsToHMS($spendSeconds),
                     'saved_seconds' => $savedSeconds,
                     'saved_hours' => $this->formatSignedSeconds($savedSeconds),
-                    'productive_spend_seconds' => (int) $row['productive_spend_seconds'],
                     'efficiency_percentage' => $efficiency,
                     'efficiency_label' => $this->formatPercentage($efficiency),
                     'efficiency_color_class' => $this->resolveEfficiencyColorClass($efficiency, $estimatedSeconds, $spendSeconds),
@@ -323,13 +285,6 @@ class ProductivityReportService
             ->values();
 
         return $this->sortRows($rows, $request);
-    }
-
-    protected function shouldSkipTask($task): bool
-    {
-        return filled($task->break_work_request_id)
-            || $task->request_type === 'break'
-            || $task->request_status === 'rejected';
     }
 
     protected function calculateEfficiency(int $estimatedSeconds, int $spendSeconds): float
