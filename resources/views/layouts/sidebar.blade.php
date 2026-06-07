@@ -490,7 +490,7 @@
                         @endif
 
                         <!-- PERFORMANCE -->
-                        @if ($canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports)
+                        @if ($canViewTimeTrackingReports || $canViewDailyReports || $canViewProductivityReports)
                             <li class="item py-[11px] {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="index.html" aria-expanded="{{ $isPerformanceReportsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
@@ -515,11 +515,11 @@
                                     </div>
                                 </a>
                                 <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isPerformanceReportsMenuActive ? 'active' : '' }}">
-                                    @if ($canViewProductivityReports)
-                                        <!-- Productivity Report -->
+                                    @if ($canViewTimeTrackingReports)
+                                        <!-- Time Tracking Report -->
                                         <li>
-                                            <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Productivity
+                                            <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Time Tracking
                                             </a>
                                         </li>
                                     @endif
@@ -533,11 +533,11 @@
                                         </li>
                                     @endif
 
-                                    @if ($canViewTimeTrackingReports)
-                                        <!-- Time Tracking Report -->
+                                    @if ($canViewProductivityReports)
+                                        <!-- Productivity Report -->
                                         <li>
-                                            <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Time Tracking
+                                            <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Productivity
                                             </a>
                                         </li>
                                     @endif
@@ -597,7 +597,7 @@
                                 </ul>
                             </li>
                         @endif --}}
-                        
+
                     </ul>
                 </div>
             @endif
