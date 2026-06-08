@@ -3,7 +3,7 @@
 return [
     'icons' => [
         'favicon' => 'assets/images/logo/favicon.ico',
-        'logo' => 'assets/images/logo/logo.png',
+        'logo' => 'assets/images/logo/brand_logo.png',
         'logo_white' => 'assets/images/logo/logo.png',
         'logo_short' => 'assets/images/logo/logo-short.png',
         'profile' => 'assets/images/avatar/profile-52x52.png',
