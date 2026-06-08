@@ -363,6 +363,7 @@ class ReportController extends Controller
         $totalMinutes = $reportService->getTotalMinutes($request);
 
         $columns = $reportService->getColumnLabels();
+        $canExport = $reportService->canExport($request);
 
         $dailyStats = [
             'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
@@ -403,6 +404,7 @@ class ReportController extends Controller
             'displayRows',
             'totalMinutes',
             'columns',
+            'canExport',
             'dailyStats'
         ));
     }

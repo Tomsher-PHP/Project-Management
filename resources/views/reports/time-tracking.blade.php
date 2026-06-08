@@ -9,33 +9,35 @@
         <x-filters.button />
 
         <!-- EXPORT -->
-        <form method="GET" action="{{ route('reports.time_tracking.export') }}" id="time-tracking-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
-            @foreach (request()->except('visible_columns') as $key => $value)
-                @if (is_array($value))
-                    @foreach ($value as $item)
-                        <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
-                    @endforeach
-                @else
-                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                @endif
-            @endforeach
+        @if ($canExport)
+            <form method="GET" action="{{ route('reports.time_tracking.export') }}" id="time-tracking-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
+                @foreach (request()->except('visible_columns') as $key => $value)
+                    @if (is_array($value))
+                        @foreach ($value as $item)
+                            <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
 
-            <input type="hidden" name="visible_columns" value="">
+                <input type="hidden" name="visible_columns" value="">
 
-            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="Export report">
-                <span class="inline-flex items-center justify-center text-current">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-bgray-500 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="Export report">
+                    <span class="inline-flex items-center justify-center text-current">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 12l-4-4m4 4l4-4" />
 
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
-                    </svg>
-                </span>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h16" />
+                        </svg>
+                    </span>
 
-                <span class="text-sm font-semibold">
-                    Export Excel
-                </span>
-            </button>
-        </form>
+                    <span class="text-sm font-semibold">
+                        Export Excel
+                    </span>
+                </button>
+            </form>
+        @endif
 
         <!-- COLUMN MANAGER -->
         <x-column-manager :columns="$columns" report="time_tracking_report" />
@@ -270,16 +272,20 @@
             const exportForm = document.getElementById('time-tracking-report-export-form');
             const columnManager = document.querySelector('.column-manager[data-report="time_tracking_report"]');
 
-            if (!exportForm) {
+            if (!columnManager) {
                 return;
             }
 
-            const visibleColumnsInput = exportForm.querySelector('input[name="visible_columns"]');
-            const columnOrder = JSON.parse(exportForm.dataset.columnOrder || '[]');
+            const visibleColumnsInput = exportForm?.querySelector('input[name="visible_columns"]');
+            const columnOrder = JSON.parse(exportForm?.dataset.columnOrder || '@json(array_keys($columns))');
             const storageKey = 'column_manager_time_tracking_report';
             const minimumVisibleColumns = 3;
 
             const syncVisibleColumns = () => {
+                if (!visibleColumnsInput) {
+                    return;
+                }
+
                 let saved = {};
 
                 try {
@@ -292,8 +298,7 @@
                 visibleColumnsInput.value = visibleColumns.join(',');
             };
 
-            const getColumnCheckboxes = () => columnManager ?
-                Array.from(columnManager.querySelectorAll('.cm-toggle')) : [];
+            const getColumnCheckboxes = () => Array.from(columnManager.querySelectorAll('.cm-toggle'));
 
             const getCheckedColumns = () => getColumnCheckboxes().filter((checkbox) => checkbox.checked);
 
@@ -348,41 +353,39 @@
                 syncVisibleColumns();
             };
 
-            if (columnManager) {
-                const checkboxes = getColumnCheckboxes();
+            const checkboxes = getColumnCheckboxes();
 
-                checkboxes.forEach((checkbox) => {
-                    checkbox.addEventListener('change', function() {
-                        if (this.checked) {
-                            enforceMinimumColumns();
-                            return;
-                        }
-
-                        if (getCheckedColumns().length < minimumVisibleColumns) {
-                            const saved = readSavedColumns();
-
-                            this.checked = true;
-                            saved[this.dataset.column] = true;
-                            toggleColumnVisibility(this.dataset.column, true);
-                            writeSavedColumns(saved);
-                        }
-
+            checkboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
                         enforceMinimumColumns();
-                    });
-                });
+                        return;
+                    }
 
-                columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
-                    window.requestAnimationFrame(enforceMinimumColumns);
-                });
+                    if (getCheckedColumns().length < minimumVisibleColumns) {
+                        const saved = readSavedColumns();
 
-                columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
-                    window.requestAnimationFrame(enforceMinimumColumns);
+                        this.checked = true;
+                        saved[this.dataset.column] = true;
+                        toggleColumnVisibility(this.dataset.column, true);
+                        writeSavedColumns(saved);
+                    }
+
+                    enforceMinimumColumns();
                 });
-            }
+            });
+
+            columnManager.querySelector('.cm-select-all')?.addEventListener('click', () => {
+                window.requestAnimationFrame(enforceMinimumColumns);
+            });
+
+            columnManager.querySelector('.cm-reset')?.addEventListener('click', () => {
+                window.requestAnimationFrame(enforceMinimumColumns);
+            });
 
             enforceMinimumColumns();
             syncVisibleColumns();
-            exportForm.addEventListener('submit', syncVisibleColumns);
+            exportForm?.addEventListener('submit', syncVisibleColumns);
         });
     </script>
 

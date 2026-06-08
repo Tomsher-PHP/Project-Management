@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TimeTrackingReportService
@@ -65,9 +66,9 @@ class TimeTrackingReportService
             : $this->getScopedUserIds($request);
 
         $query = TaskTimeLog::query()
-            ->whereHas('task.project', function ($projectQuery) {
-                $projectQuery->where('projects.is_system', false);
-            })
+            // ->whereHas('task.project', function ($projectQuery) {
+            //     $projectQuery->where('projects.is_system', false);
+            // })
             ->when($projectIds !== [], function ($q) use ($projectIds) {
                 $q->whereHas('task', function ($taskQuery) use ($projectIds) {
                     $taskQuery->whereIn('project_id', $projectIds);
@@ -268,6 +269,12 @@ class TimeTrackingReportService
 
     public function export(Request $request)
     {
+        if (! $this->canExport($request)) {
+            throw ValidationException::withMessages([
+                'export' => 'Select a Date Range of 31 days or less before exporting the Time Tracking Report.',
+            ]);
+        }
+
         $columns = $this->resolveExportColumns($request);
         $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
 
@@ -280,6 +287,21 @@ class TimeTrackingReportService
             ),
             $this->buildExportFilename($request->user()?->id, $generatedAt)
         );
+    }
+
+    public function canExport(Request $request): bool
+    {
+        $dateRange = $this->resolveStartedAtDateRange($request);
+
+        if ($dateRange['type'] === 'single') {
+            return true;
+        }
+
+        if ($dateRange['type'] !== 'between') {
+            return false;
+        }
+
+        return $dateRange['start']->diffInDays($dateRange['end']) + 1 <= 31;
     }
 
     protected function getScopedUserIds(Request $request): array
