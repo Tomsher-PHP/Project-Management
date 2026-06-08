@@ -2,7 +2,9 @@
 
 namespace App\Exports;
 
+use App\Models\Shift;
 use App\Models\User;
+use App\Models\UserShiftAssignment;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -79,6 +81,9 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         return match ($column) {
             'user' => (string) ($row['user_name'] ?? '-'),
             'date' => (string) ($row['date'] ?? '-'),
+            'shift_name' => (string) ($row['shift_name'] ?? '--'),
+            'shift_time_from' => (string) ($row['shift_time_from'] ?? '--'),
+            'shift_time_to' => (string) ($row['shift_time_to'] ?? '--'),
             'start_time' => (string) ($row['start_time'] ?? '--'),
             'end_time' => (string) ($row['end_time'] ?? '--'),
             'worked_time' => (string) ($row['total_worked_time'] ?? '--'),
@@ -226,6 +231,8 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
                         ->setRGB('F8FAFC');
                 }
             }
+
+            $this->applyTimeStatusStyles($sheet, $headerRow);
         }
 
         $sheet->freezePane('A' . ($headerRow + 1));
@@ -235,7 +242,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['date', 'start_time', 'end_time', 'worked_time', 'shift_hour'], true)
+                in_array($columnKey, ['date', 'shift_time_from', 'shift_time_to', 'start_time', 'end_time', 'worked_time', 'shift_hour'], true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );
@@ -254,10 +261,48 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $sheet->getColumnDimension($columnLetter)->setAutoSize(false);
             $sheet->getColumnDimension($columnLetter)->setWidth($width);
 
-            if ($columnKey === 'user') {
+            if (in_array($columnKey, ['user', 'shift_name'], true)) {
                 $sheet->getStyle("{$columnLetter}{$headerRow}:{$columnLetter}" . max($headerRow, $lastDataRow))
                     ->getAlignment()
                     ->setWrapText(true);
+            }
+        }
+    }
+
+    protected function applyTimeStatusStyles($sheet, int $headerRow): void
+    {
+        $columnIndexes = array_flip(array_keys($this->columns));
+
+        foreach ([
+            'start_time' => 'start_time_status',
+            'end_time' => 'end_time_status',
+            'worked_time' => 'worked_time_status',
+        ] as $columnKey => $statusKey) {
+            if (! array_key_exists($columnKey, $columnIndexes)) {
+                continue;
+            }
+
+            $columnLetter = Coordinate::stringFromColumnIndex($columnIndexes[$columnKey] + 1);
+
+            foreach ($this->rows as $index => $row) {
+                $status = $row[$statusKey] ?? null;
+
+                if (! in_array($status, ['success', 'danger'], true)) {
+                    continue;
+                }
+
+                $cell = $columnLetter . ($headerRow + $index + 1);
+
+                $sheet->getStyle($cell)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $status === 'success' ? '166534' : 'B91C1C'],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $status === 'success' ? 'DCFCE7' : 'FEE2E2'],
+                    ],
+                ]);
             }
         }
     }
@@ -283,6 +328,12 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $summary['Users'] = implode(', ', $userNames);
         }
 
+        $shiftNames = $this->resolveShiftFilterNames();
+
+        if ($shiftNames !== []) {
+            $summary['Shift'] = implode(', ', $shiftNames);
+        }
+
         return $summary;
     }
 
@@ -302,6 +353,45 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         $namesById = User::query()
             ->whereIn('id', $selectedIds)
             ->pluck('name', 'id');
+
+        return $selectedIds
+            ->map(fn(int $id) => $namesById->get($id))
+            ->filter(fn($name) => filled($name))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function resolveShiftFilterNames(): array
+    {
+        $selectedIds = collect($this->filters['shift_id'] ?? [])
+            ->flatten()
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            return [];
+        }
+
+        $namesById = UserShiftAssignment::query()
+            ->whereIn('shift_id', $selectedIds)
+            ->select('shift_id', 'shift_name')
+            ->get()
+            ->pluck('shift_name', 'shift_id');
+
+        $missingIds = $selectedIds
+            ->filter(fn(int $id) => ! $namesById->has($id))
+            ->values();
+
+        if ($missingIds->isNotEmpty()) {
+            $fallbackNames = Shift::withTrashed()
+                ->whereIn('id', $missingIds)
+                ->pluck('name', 'id');
+
+            $namesById = $namesById->merge($fallbackNames);
+        }
 
         return $selectedIds
             ->map(fn(int $id) => $namesById->get($id))

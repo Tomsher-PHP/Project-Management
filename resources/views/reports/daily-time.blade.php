@@ -79,7 +79,7 @@
                 $reportNumber = ($reports->currentPage() - 1) * $reports->perPage();
             @endphp
 
-            <table class="daily-report-table w-full min-w-[1200px]">
+            <table class="daily-report-table w-full min-w-[1450px]">
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
@@ -90,6 +90,15 @@
                         </th>
                         <th scope="col" class="col-date px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px]">
                             Date
+                        </th>
+                        <th scope="col" class="col-shift_name px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[190px]">
+                            Shift Name
+                        </th>
+                        <th scope="col" class="col-shift_time_from px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[130px]">
+                            Shift Start
+                        </th>
+                        <th scope="col" class="col-shift_time_to px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[130px]">
+                            Shift End
                         </th>
                         <th scope="col" class="col-start_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
                             Start Time
@@ -110,6 +119,25 @@
                     @forelse($reports as $row)
                         @php
                             $reportNumber++;
+                            $shiftColor = $row['shift_color_code'] ?? null;
+                            $safeShiftColor = is_string($shiftColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $shiftColor)
+                                ? $shiftColor
+                                : '#6b7280';
+                            $startTimeStatusClass = match ($row['start_time_status'] ?? null) {
+                                'success' => 'font-semibold text-success-400 dark:text-success-300',
+                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
+                                default => 'text-bgray-700 dark:text-bgray-300',
+                            };
+                            $endTimeStatusClass = match ($row['end_time_status'] ?? null) {
+                                'success' => 'font-semibold text-success-400 dark:text-success-300',
+                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
+                                default => 'text-bgray-700 dark:text-bgray-300',
+                            };
+                            $workedTimeStatusClass = match ($row['worked_time_status'] ?? null) {
+                                'success' => 'font-semibold text-success-400 dark:text-success-300',
+                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
+                                default => 'font-medium text-bgray-900 dark:text-bgray-300',
+                            };
                         @endphp
 
                         <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
@@ -125,11 +153,30 @@
                                 {{ $row['date'] }}
                             </td>
 
-                            <td class="col-start_time px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-shift_name px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                @if (($row['shift_name'] ?? '--') !== '--')
+                                    <span class="inline-flex items-center gap-2">
+                                        <span class="h-3 w-3 shrink-0 rounded-sm border border-black/10" style="background-color: {{ $safeShiftColor }}"></span>
+                                        <span>{{ $row['shift_name'] }}</span>
+                                    </span>
+                                @else
+                                    --
+                                @endif
+                            </td>
+
+                            <td class="col-shift_time_from px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                {{ $row['shift_time_from'] }}
+                            </td>
+
+                            <td class="col-shift_time_to px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                {{ $row['shift_time_to'] }}
+                            </td>
+
+                            <td class="col-start_time px-2 py-2 text-sm {{ $startTimeStatusClass }}">
                                 {{ $row['start_time'] }}
                             </td>
 
-                            <td class="col-end_time px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                            <td class="col-end_time px-2 py-2 text-sm {{ $endTimeStatusClass }}">
                                 @if ($row['end_time'] === 'Running')
                                     <span class="font-semibold text-success-300">Running</span>
                                 @else
@@ -137,7 +184,7 @@
                                 @endif
                             </td>
 
-                            <td class="col-worked_time px-2 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300">
+                            <td class="col-worked_time px-2 py-2 text-sm {{ $workedTimeStatusClass }}">
                                 {{ $row['total_worked_time'] }}
                             </td>
 
@@ -164,6 +211,7 @@
     <x-filters.drawer>
         <x-filters.date-range label="Date Range" startName="from_date" endName="to_date" />
         <x-filters.multi-select name="user_id" label="Users" :options="$users" />
+        <x-filters.multi-select name="shift_id" label="Shift" :options="$shifts" />
     </x-filters.drawer>
 
     <script>
