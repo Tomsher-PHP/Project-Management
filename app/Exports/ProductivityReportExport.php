@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Project;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
@@ -354,6 +355,12 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             $summary['Date To'] = AppServiceProvider::formatAppDate($dateTo->toDateString());
         }
 
+        $projectNames = $this->resolveProjectFilterNames();
+
+        if ($projectNames !== []) {
+            $summary['Projects'] = implode(', ', $projectNames);
+        }
+
         $userNames = $this->resolveUserFilterNames();
 
         if ($userNames !== []) {
@@ -361,6 +368,32 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
         }
 
         return $summary;
+    }
+
+    protected function resolveProjectFilterNames(): array
+    {
+        $selectedIds = collect($this->filters['project_id'] ?? [])
+            ->flatten()
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            return [];
+        }
+
+        $namesById = Project::query()
+            ->withTrashed()
+            ->whereIn('id', $selectedIds)
+            ->pluck('name', 'id');
+
+        return $selectedIds
+            ->map(fn(int $id) => $namesById->get($id))
+            ->filter(fn($name) => filled($name))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function resolveUserFilterNames(): array

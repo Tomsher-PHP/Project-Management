@@ -219,6 +219,7 @@
 
     <x-filters.drawer>
         <x-filters.date-range label="Date Range" startName="from_date" endName="to_date" />
+        <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
         <x-filters.multi-select name="user_id" label="Users" :options="$users" />
     </x-filters.drawer>
 

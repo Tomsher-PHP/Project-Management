@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Exports\ProductivityReportExport;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskTimeLog;
 use App\Models\User;
@@ -70,6 +71,7 @@ class ProductivityReportService
 
         return [
             'reports' => $this->paginateRows($rows, (int) $perPage, $request),
+            'projects' => $this->getFilterProjects($request),
             'users' => $this->getFilterUsers($request),
             'columns' => $this->getColumnLabels(),
             'summaryStats' => $summaryStats,
@@ -109,12 +111,43 @@ class ProductivityReportService
             ->get();
     }
 
+    public function getFilterProjects(Request $request): Collection
+    {
+        $projectIds = Task::query()
+            ->accessibleBy($request->user())
+            ->whereNull('tasks.deleted_at')
+            ->whereNull('tasks.break_work_request_id')
+            ->where(function ($query) {
+                $query
+                    ->whereNull('tasks.request_status')
+                    ->orWhere('tasks.request_status', '!=', Task::REQUEST_REJECTED);
+            })
+            ->whereHas('status', function ($query) {
+                $query->where('is_completed', true);
+            })
+            ->distinct()
+            ->pluck('tasks.project_id')
+            ->filter()
+            ->values();
+
+        if ($projectIds->isEmpty()) {
+            return collect();
+        }
+
+        return Project::query()
+            ->whereIn('id', $projectIds)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+    }
+
     public function hasAppliedFilters(Request $request): bool
     {
         $dateRange = $this->resolveDateRange($request);
 
         return $dateRange['start'] !== null
             || $dateRange['end'] !== null
+            || $this->resolveSelectedProjectIds($request) !== []
             || $this->resolveSelectedUserIds($request) !== [];
     }
 
@@ -153,6 +186,7 @@ class ProductivityReportService
     {
         $dateRange = $this->resolveDateRange($request);
         $userIds = $this->getScopedUserIds($request);
+        $projectIds = $this->resolveSelectedProjectIds($request);
 
         if ($userIds === [] || ! $dateRange['has_data']) {
             return collect();
@@ -169,6 +203,9 @@ class ProductivityReportService
             })
             ->whereHas('status', function ($query) {
                 $query->where('is_completed', true);
+            })
+            ->when($projectIds !== [], function ($query) use ($projectIds) {
+                $query->whereIn('tasks.project_id', $projectIds);
             })
             ->select('tasks.id', 'tasks.estimated_time_seconds', 'tasks.completed_at');
 
@@ -499,6 +536,23 @@ class ProductivityReportService
     protected function resolveSelectedUserIds(Request $request): array
     {
         $value = $request->input('user_id', []);
+
+        if (! is_array($value)) {
+            $value = [$value];
+        }
+
+        return collect($value)
+            ->filter(fn($item) => filled($item))
+            ->map(fn($item) => (int) $item)
+            ->filter(fn(int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function resolveSelectedProjectIds(Request $request): array
+    {
+        $value = $request->input('project_id', []);
 
         if (! is_array($value)) {
             $value = [$value];
