@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CKB7mjg0.css",
+    "file": "assets/app-42pFk0Lw.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -87,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CJCg5uJg.js",
+    "file": "assets/app-Cj2PiUtp.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -364,6 +364,12 @@
     "file": "assets/user-restore-H_EPGKwb.js",
     "name": "user-restore",
     "src": "resources/js/modules/users/user-restore.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-shift.js": {
+    "file": "assets/user-shift-DDjjsXfC.js",
+    "name": "user-shift",
+    "src": "resources/js/modules/users/user-shift.js",
     "isEntry": true
   },
   "resources/js/modules/workspace/break-work-request.js": {

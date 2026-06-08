@@ -14,6 +14,7 @@ use App\Models\UserNotificationSetting;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
@@ -280,5 +281,48 @@ class UserController extends Controller
         return response()->json([
             'message' => 'User updated successfully.'
         ]);
+    }
+
+    /**
+     * Get shift assignment data for the calendar.
+     */
+    public function shifts(User $user)
+    {
+        if (auth()->id() !== $user->id && !auth()->user()->is_super_admin) {
+            $this->authorize('view', $user);
+        }
+
+        $shifts = $user->shiftAssignments()
+            ->select(['id', 'user_id', 'shift_id', 'shift_name', 'color_code', 'date_from', 'date_to', 'time_from', 'time_to'])
+            ->get();
+
+        $events = $shifts->map(function ($assignment) {
+            $start = $assignment->date_from;
+
+            if ($assignment->date_to) {
+                $end = Carbon::parse($assignment->date_to)->addDay()->toDateString();
+            } else {
+                $end = Carbon::parse($assignment->date_from)->addYears(5)->toDateString();
+            }
+
+            $title = $assignment->shift_name;
+            if ($assignment->time_from && $assignment->time_to) {
+                $timeFrom = Carbon::parse($assignment->time_from)->format('h:i A');
+                $timeTo = Carbon::parse($assignment->time_to)->format('h:i A');
+                $title .= " ({$timeFrom} - {$timeTo})";
+            }
+
+            return [
+                'title' => $title,
+                'start' => $start,
+                'end' => $end,
+                'backgroundColor' => $assignment->color_code ?? '#e5e7eb',
+                'borderColor' => $assignment->color_code ?? '#e5e7eb',
+                'textColor' => '#000000',
+                'allDay' => true,
+            ];
+        });
+
+        return response()->json($events);
     }
 }
