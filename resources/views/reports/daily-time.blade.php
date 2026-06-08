@@ -33,7 +33,6 @@
                 </button>
             </form>
         @endif
-        {{-- <x-export-button :action="route('reports.daily_time.export')" :params="request()->except('visible_columns')" :hidden-fields="['visible_columns' => '']" :show="$canExport" id="daily-time-report-export-form" data-column-order='@json(array_keys($columns))' /> --}}
 
         <x-column-manager :columns="$columns" report="daily_time_report" />
     </div>
