@@ -44,8 +44,8 @@ class ShiftRequest extends FormRequest
             'weekend_days.*' => ['array'],
         ];
 
-        // Apply time rules for create OR update when no assignments exist
-        if ($this->isMethod('post') || !$hasAssignments) {
+        // Apply time rules ONLY for create (POST)
+        if ($this->isMethod('post')) {
             $rules = array_merge($rules, $timeRules);
         }
 
