@@ -14,6 +14,40 @@
         </div>
         
         <!-- The actual calendar el -->
-        <div id="user-shift-calendar" data-url="{{ route('users.shifts', $user->id) }}" class="hidden"></div>
+        <div id="user-shift-calendar" data-url="{{ route('users.shift-calendar', $user->id) }}" class="hidden"></div>
     </div>
 </div>
+
+@push('styles')
+<style>
+.fc-event.fc-event-day-off,
+.fc-daygrid-event.fc-event-day-off {
+  background-color: #fef3c7 !important;
+  border: 1px dashed #d97706 !important;
+  border-radius: 4px !important;
+}
+.fc-event.fc-event-day-off,
+.fc-event.fc-event-day-off .fc-event-title,
+.fc-event.fc-event-day-off .fc-event-main,
+.fc-daygrid-event.fc-event-day-off,
+.fc-daygrid-event.fc-event-day-off .fc-event-title,
+.fc-daygrid-event.fc-event-day-off .fc-event-main {
+  color: #b45309 !important;
+  font-weight: 600 !important;
+}
+
+.dark .fc-event.fc-event-day-off,
+.dark .fc-daygrid-event.fc-event-day-off {
+  background-color: #451a03 !important;
+  border: 1px dashed #b45309 !important;
+}
+.dark .fc-event.fc-event-day-off,
+.dark .fc-event.fc-event-day-off .fc-event-title,
+.dark .fc-event.fc-event-day-off .fc-event-main,
+.dark .fc-daygrid-event.fc-event-day-off,
+.dark .fc-daygrid-event.fc-event-day-off .fc-event-title,
+.dark .fc-daygrid-event.fc-event-day-off .fc-event-main {
+  color: #fef3c7 !important;
+}
+</style>
+@endpush

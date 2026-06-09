@@ -9,8 +9,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingEl = document.getElementById('shift-calendar-loading');
     
     let isInitialized = false;
+    let calendarInstance = null;
+    let abortController = null;
 
-    // Helper to initialize calendar when tab becomes active (either on click, or on load if active)
+    function fetchEventsForMonth(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // 0-indexed to 1-indexed
+
+        // Abort any pending requests
+        if (abortController) {
+            abortController.abort();
+        }
+        abortController = new AbortController();
+
+        // Show loading state
+        if (loadingEl) {
+            loadingEl.classList.remove('hidden');
+        }
+        calendarEl.classList.add('hidden');
+
+        const fetchUrl = `${url}?year=${year}&month=${month}`;
+
+        fetch(fetchUrl, {
+            signal: abortController.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(events => {
+            // Hide loading state
+            if (loadingEl) {
+                loadingEl.classList.add('hidden');
+            }
+            calendarEl.classList.remove('hidden');
+
+            if (calendarInstance) {
+                calendarInstance.removeAllEvents();
+                if (events && events.length > 0) {
+                    calendarInstance.addEventSource(events);
+                }
+            }
+        })
+        .catch(error => {
+            if (error.name === 'AbortError') {
+                return; // Suppress abort error
+            }
+            console.error('Error fetching shift assignments:', error);
+            
+            // Hide loading state and show calendar on error
+            if (loadingEl) {
+                loadingEl.classList.add('hidden');
+            }
+            calendarEl.classList.remove('hidden');
+        });
+    }
+
+    // Helper to initialize calendar when tab becomes active
     function checkAndInit() {
         if (isInitialized) return;
         
@@ -19,53 +80,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isActive) return;
 
         isInitialized = true;
-        
-        // Show loading state
-        if (loadingEl) loadingEl.classList.remove('hidden');
-        calendarEl.classList.add('hidden');
 
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(events => {
-            // Hide loading state
-            if (loadingEl) loadingEl.classList.add('hidden');
-            calendarEl.classList.remove('hidden');
-
-            // Render calendar with events
-            if (window.initCalendar) {
-                window.initCalendar(calendarEl, {
-                    events: events,
-                    initialView: 'dayGridMonth',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth'
-                    },
-                    editable: false,
-                    selectable: false
-                });
-            } else {
-                console.error("initCalendar function not found on window object.");
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching shift assignments:', error);
-            if (loadingEl) loadingEl.classList.add('hidden');
-            calendarEl.classList.remove('hidden');
-        });
+        if (window.initCalendar) {
+            calendarInstance = window.initCalendar(calendarEl, {
+                events: [],
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth'
+                },
+                editable: false,
+                selectable: false,
+                datesSet: function (dateInfo) {
+                    fetchEventsForMonth(dateInfo.view.currentStart);
+                }
+            });
+        } else {
+            console.error("initCalendar function not found on window object.");
+        }
     }
 
     // 1. Listen for click on the Shift Calendar tab button
     tabBtn?.addEventListener('click', () => {
-        // We use setTimeout to ensure active tab classes are updated first by main.js
         setTimeout(checkAndInit, 50);
     });
 
-    // 2. Also check on DOMContentLoaded in case the active tab stored in localStorage is shiftCalendarTab
+    // 2. Also check on DOMContentLoaded in case active tab is stored
     setTimeout(checkAndInit, 100);
 });
