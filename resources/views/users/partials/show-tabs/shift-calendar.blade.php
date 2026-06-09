@@ -12,42 +12,45 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
         </div>
-        
+
         <!-- The actual calendar el -->
         <div id="user-shift-calendar" data-url="{{ route('users.shift-calendar', $user->id) }}" class="hidden"></div>
     </div>
 </div>
 
 @push('styles')
-<style>
-.fc-event.fc-event-day-off,
-.fc-daygrid-event.fc-event-day-off {
-  background-color: #fef3c7 !important;
-  border: 1px dashed #d97706 !important;
-  border-radius: 4px !important;
-}
-.fc-event.fc-event-day-off,
-.fc-event.fc-event-day-off .fc-event-title,
-.fc-event.fc-event-day-off .fc-event-main,
-.fc-daygrid-event.fc-event-day-off,
-.fc-daygrid-event.fc-event-day-off .fc-event-title,
-.fc-daygrid-event.fc-event-day-off .fc-event-main {
-  color: #b45309 !important;
-  font-weight: 600 !important;
-}
+    <style>
+        .fc-event.fc-event-day-off,
+        .fc-daygrid-event.fc-event-day-off {
+            background-color: #fef3c7 !important;
+            border: 1px dashed #d97706 !important;
+            border-radius: 4px !important;
+            opacity: 0.6;
+        }
 
-.dark .fc-event.fc-event-day-off,
-.dark .fc-daygrid-event.fc-event-day-off {
-  background-color: #451a03 !important;
-  border: 1px dashed #b45309 !important;
-}
-.dark .fc-event.fc-event-day-off,
-.dark .fc-event.fc-event-day-off .fc-event-title,
-.dark .fc-event.fc-event-day-off .fc-event-main,
-.dark .fc-daygrid-event.fc-event-day-off,
-.dark .fc-daygrid-event.fc-event-day-off .fc-event-title,
-.dark .fc-daygrid-event.fc-event-day-off .fc-event-main {
-  color: #fef3c7 !important;
-}
-</style>
+        .fc-event.fc-event-day-off,
+        .fc-event.fc-event-day-off .fc-event-title,
+        .fc-event.fc-event-day-off .fc-event-main,
+        .fc-daygrid-event.fc-event-day-off,
+        .fc-daygrid-event.fc-event-day-off .fc-event-title,
+        .fc-daygrid-event.fc-event-day-off .fc-event-main {
+            color: #b45309 !important;
+            font-weight: 600 !important;
+        }
+
+        .dark .fc-event.fc-event-day-off,
+        .dark .fc-daygrid-event.fc-event-day-off {
+            background-color: #451a03 !important;
+            border: 1px dashed #b45309 !important;
+        }
+
+        .dark .fc-event.fc-event-day-off,
+        .dark .fc-event.fc-event-day-off .fc-event-title,
+        .dark .fc-event.fc-event-day-off .fc-event-main,
+        .dark .fc-daygrid-event.fc-event-day-off,
+        .dark .fc-daygrid-event.fc-event-day-off .fc-event-title,
+        .dark .fc-daygrid-event.fc-event-day-off .fc-event-main {
+            color: #fef3c7 !important;
+        }
+    </style>
 @endpush
