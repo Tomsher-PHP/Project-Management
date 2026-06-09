@@ -289,7 +289,7 @@ class UserController extends Controller
     public function shifts(User $user)
     {
         if (auth()->id() !== $user->id && !auth()->user()->is_super_admin) {
-            $this->authorize('view', $user);
+            Gate::authorize('view', $user);
         }
 
         $startLimit = request('start') ? Carbon::parse(request('start'))->startOfDay() : Carbon::now()->startOfMonth();
@@ -311,7 +311,7 @@ class UserController extends Controller
     public function shiftCalendarData(User $user)
     {
         if (auth()->id() !== $user->id && !auth()->user()->is_super_admin) {
-            $this->authorize('view', $user);
+            Gate::authorize('view', $user);
         }
 
         $year = request('year') ? (int) request('year') : (int) date('Y');

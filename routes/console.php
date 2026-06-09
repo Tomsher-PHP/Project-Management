@@ -12,4 +12,4 @@ Schedule::command('task:notify-start')->everyMinute()->withoutOverlapping();
 Schedule::command('projects:recalculate-times')->everySixHours()->withoutOverlapping();
 
 Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
-Schedule::command('reverb:start --stop-when-empty')->everyMinute()->withoutOverlapping();
+// Schedule::command('reverb:start --stop-when-empty')->everyMinute()->withoutOverlapping();
