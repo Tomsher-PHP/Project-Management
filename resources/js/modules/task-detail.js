@@ -594,7 +594,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const taskId = tabsRoot.dataset.taskId;
     const defaultTab = tabsRoot.dataset.defaultTab || 'overview';
     const tabsUrlTemplate = tabsRoot.dataset.tabsUrlTemplate;
-    const storageKey = `taskTab_${taskId}`;
+    // const storageKey = `taskTab_${taskId}`;
+    const storageKey = `taskTab`;
     const triggers = Array.from(tabsRoot.querySelectorAll('[data-task-tab-trigger]'));
     const panels = Array.from(tabsRoot.querySelectorAll('[data-task-tab-panel]'));
     const availableTabs = triggers.map((trigger) => trigger.dataset.taskTabTrigger);

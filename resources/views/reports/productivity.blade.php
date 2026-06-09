@@ -6,7 +6,7 @@
         <x-filters.button />
 
         @if ($canExport)
-            <form method="GET" action="{{ route('reports.daily_time.export') }}" id="daily-time-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
+            <form method="GET" action="{{ route('reports.productivity.export') }}" id="productivity-report-export-form" data-column-order='@json(array_keys($columns))' class="inline-flex">
                 @foreach (request()->except('visible_columns') as $key => $value)
                     @if (is_array($value))
                         @foreach ($value as $item)
@@ -34,83 +34,132 @@
             </form>
         @endif
 
-        <x-column-manager :columns="$columns" report="daily_time_report" />
+        <x-column-manager :columns="$columns" report="productivity_report" />
     </div>
 
     <div class="custom-scroll mb-6 flex items-center gap-3 overflow-x-auto py-0">
-        <div class="flex min-w-[180px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="min-w-0 flex-1">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
-                    Total Worked Time
+                    Total Result
                 </div>
                 <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
-                    {{ $summaryStats['total_worked_time'] }}
+                    {{ $summaryStats['total_result'] }}
                 </div>
             </div>
         </div>
 
-        <div class="flex min-w-[180px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="min-w-0 flex-1">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
-                    Total Users
+                    Completed
                 </div>
                 <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
-                    {{ $summaryStats['total_users'] }}
+                    {{ $summaryStats['completed'] }}
                 </div>
             </div>
         </div>
 
-        <div class="flex min-w-[180px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="min-w-0 flex-1">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
-                    Total Records
+                    Estimated Hours
                 </div>
                 <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
-                    {{ $summaryStats['total_records'] }}
+                    {{ $summaryStats['estimated_hours'] }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Spend Hours
+                </div>
+                <div class="mt-2 text-2xl font-black leading-none {{ $summaryStats['spend_hours_color_class'] }}">
+                    {{ $summaryStats['spend_hours'] }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[170px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Total Saved Hours
+                </div>
+                <div class="mt-2 text-2xl font-black leading-none {{ $summaryStats['saved_hours_color_class'] }}">
+                    {{ $summaryStats['saved_hours'] }}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+    <div class="relative z-20 overflow-visible rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <div class="overflow-x-auto">
             @php
                 $tableColumnCount = count($columns) + 1;
                 $reportNumber = ($reports->currentPage() - 1) * $reports->perPage();
             @endphp
 
-            <table class="daily-report-table w-full min-w-[1450px]">
+            <table class="productivity-report-table w-full min-w-[1000px]">
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
                         <th scope="col" class="px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
                             #
                         </th>
-                        <th scope="col" class="col-user px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
-                            User
+                        <th scope="col" class="col-user px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[240px]">
+                            <x-sorting.sortable-column column="user" label="User" />
                         </th>
-                        <th scope="col" class="col-date px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px]">
-                            Date
+                        <th scope="col" class="col-completed_tasks_count px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
+                            <x-sorting.sortable-column column="completed_tasks_count" label="Completed Tasks" />
                         </th>
-                        <th scope="col" class="col-shift_name px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[190px]">
-                            Shift Name
+                        <th scope="col" class="col-estimated_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[180px]">
+                            <x-sorting.sortable-column column="estimated_hours" label="Estimated Hours" />
                         </th>
-                        <th scope="col" class="col-shift_time_from px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[130px]">
-                            Shift Start
+                        <th scope="col" class="col-spend_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
+                            <x-sorting.sortable-column column="spend_hours" label="Spend Hours" />
                         </th>
-                        <th scope="col" class="col-shift_time_to px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[130px]">
-                            Shift End
+                        <th scope="col" class="col-saved_hours px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
+                            <x-sorting.sortable-column column="saved_hours" label="Saved" />
                         </th>
-                        <th scope="col" class="col-start_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
-                            Start Time
-                        </th>
-                        <th scope="col" class="col-end_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
-                            End Time
-                        </th>
-                        <th scope="col" class="col-worked_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
-                            Worked Hours
-                        </th>
-                        <th scope="col" class="col-shift_hour px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
-                            Shift Hours
+                        <th scope="col" class="col-efficiency px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
+                            @php
+                                $currentSort = request('sort_by');
+                                $currentDir = request('sort_dir', 'asc');
+                                $isEfficiencySortActive = $currentSort === 'efficiency';
+                                $nextEfficiencyDir = $isEfficiencySortActive && $currentDir === 'asc' ? 'desc' : 'asc';
+                                $efficiencyIconColor = $isEfficiencySortActive ? '#2563EB' : '#718096';
+                            @endphp
+
+                            <a href="{{ request()->fullUrlWithQuery([
+                                'sort_by' => 'efficiency',
+                                'sort_dir' => $nextEfficiencyDir,
+                            ]) }}" class="flex w-full cursor-pointer items-center space-x-2.5">
+                                <span class="inline-flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    <span>Efficiency (%)</span>
+                                    <span class="group relative inline-flex h-4 w-4 shrink-0 items-center justify-center text-bgray-400 transition hover:text-success-300 dark:text-bgray-300 dark:hover:text-success-300" aria-label="Efficiency formula">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25h.75v5.25h.75" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h.01" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 hidden w-72 rounded-lg bg-bgray-600 px-3 py-2.5 text-left text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                            Efficiency = (Estimated Hours / Spend Hours) × 100<br>
+                                            Above 100% = completed faster than estimated<br>
+                                            Below 100% = exceeded estimate<br>
+                                        </span>
+                                    </span>
+                                </span>
+
+                                <span>
+                                    <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10.332 1.31567V13.3157" stroke="{{ $efficiencyIconColor }}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M5.66602 11.3157L3.66602 13.3157L1.66602 11.3157" stroke="{{ $efficiencyIconColor }}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M3.66602 13.3157V1.31567" stroke="{{ $efficiencyIconColor }}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        <path d="M12.332 3.31567L10.332 1.31567L8.33203 3.31567" stroke="{{ $efficiencyIconColor }}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
+                            </a>
                         </th>
                     </tr>
                 </thead>
@@ -119,25 +168,6 @@
                     @forelse($reports as $row)
                         @php
                             $reportNumber++;
-                            $shiftColor = $row['shift_color_code'] ?? null;
-                            $safeShiftColor = is_string($shiftColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $shiftColor)
-                                ? $shiftColor
-                                : '#6b7280';
-                            $startTimeStatusClass = match ($row['start_time_status'] ?? null) {
-                                'success' => 'font-semibold text-success-400 dark:text-success-300',
-                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
-                                default => 'text-bgray-700 dark:text-bgray-300',
-                            };
-                            $endTimeStatusClass = match ($row['end_time_status'] ?? null) {
-                                'success' => 'font-semibold text-success-400 dark:text-success-300',
-                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
-                                default => 'text-bgray-700 dark:text-bgray-300',
-                            };
-                            $workedTimeStatusClass = match ($row['worked_time_status'] ?? null) {
-                                'success' => 'font-semibold text-success-400 dark:text-success-300',
-                                'danger' => 'font-semibold text-error-300 dark:text-error-300',
-                                default => 'font-medium text-bgray-900 dark:text-bgray-300',
-                            };
                         @endphp
 
                         <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
@@ -149,51 +179,30 @@
                                 {{ $row['user_name'] }}
                             </td>
 
-                            <td class="col-date px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                {{ $row['date'] }}
+                            <td class="col-completed_tasks_count px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                {{ $row['completed_tasks_count'] }}
                             </td>
 
-                            <td class="col-shift_name px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                @if (($row['shift_name'] ?? '--') !== '--')
-                                    <span class="inline-flex items-center gap-2">
-                                        <span class="h-3 w-3 shrink-0 rounded-sm border border-black/10" style="background-color: {{ $safeShiftColor }}"></span>
-                                        <span>{{ $row['shift_name'] }}</span>
-                                    </span>
-                                @else
-                                    --
-                                @endif
+                            <td class="col-estimated_hours px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                {{ $row['estimated_hours'] }}
                             </td>
 
-                            <td class="col-shift_time_from px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                {{ $row['shift_time_from'] }}
+                            <td class="col-spend_hours px-2 py-2 text-sm">
+                                <span class="{{ $row['spend_hours_color_class'] }}">
+                                    {{ $row['spend_hours'] }}
+                                </span>
                             </td>
 
-                            <td class="col-shift_time_to px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                {{ $row['shift_time_to'] }}
+                            <td class="col-saved_hours px-2 py-2 text-sm">
+                                <span class="{{ $row['saved_color_class'] }}">
+                                    {{ $row['saved_hours'] }}
+                                </span>
                             </td>
 
-                            <td class="col-start_time px-2 py-2 text-sm {{ $startTimeStatusClass }}">
-                                {{ $row['start_time'] }}
-                            </td>
-
-                            <td class="col-end_time px-2 py-2 text-sm {{ $endTimeStatusClass }}">
-                                @if ($row['end_time'] === 'Running')
-                                    <span class="font-semibold text-success-300">Running</span>
-                                @else
-                                    {{ $row['end_time'] }}
-                                @endif
-                            </td>
-
-                            <td class="col-worked_time px-2 py-2 text-sm {{ $workedTimeStatusClass }}">
-                                {{ $row['total_worked_time'] }}
-                            </td>
-
-                            <td class="col-shift_hour px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300">
-                                @if ($row['shift_working_hour'] === 'Day Off')
-                                    <span class="inline-flex items-center text-xs font-bold text-amber-700 dark:text-amber-400">Day Off</span>
-                                @else
-                                    {{ $row['shift_working_hour'] }}
-                                @endif
+                            <td class="col-efficiency px-2 py-2 text-sm">
+                                <span class="{{ $row['efficiency_color_class'] }}">
+                                    {{ $row['efficiency_label'] }}
+                                </span>
                             </td>
                         </tr>
                     @empty
@@ -210,23 +219,23 @@
 
     <x-filters.drawer>
         <x-filters.date-range label="Date Range" startName="from_date" endName="to_date" />
+        <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
         <x-filters.multi-select name="user_id" label="Users" :options="$users" />
-        <x-filters.multi-select name="shift_id" label="Shift" :options="$shifts" />
     </x-filters.drawer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const exportForm = document.getElementById('daily-time-report-export-form');
-            const columnManager = document.querySelector('.column-manager[data-report="daily_time_report"]');
+            const exportForm = document.getElementById('productivity-report-export-form');
+            const columnManager = document.querySelector('.column-manager[data-report="productivity_report"]');
 
             if (!columnManager) {
                 return;
             }
 
-            const storageKey = 'column_manager_daily_time_report';
+            const storageKey = 'column_manager_productivity_report';
             const minimumVisibleColumns = 3;
             const visibleColumnsInput = exportForm?.querySelector('input[name="visible_columns"]');
-            const columnOrder = JSON.parse(exportForm?.dataset.columnOrder || '[]');
+            const columnOrder = JSON.parse(exportForm?.dataset.columnOrder || '@json(array_keys($columns))');
 
             const getColumnCheckboxes = () => Array.from(columnManager.querySelectorAll('.cm-toggle'));
             const getCheckedColumns = () => getColumnCheckboxes().filter((checkbox) => checkbox.checked);
@@ -339,5 +348,4 @@
             exportForm?.addEventListener('submit', syncVisibleColumns);
         });
     </script>
-
 @endsection

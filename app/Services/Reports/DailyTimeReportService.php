@@ -5,6 +5,7 @@ namespace App\Services\Reports;
 use App\Exports\DailyTimeReportExport;
 use App\Models\TaskTimeLog;
 use App\Models\User;
+use App\Models\UserShiftAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -19,6 +20,9 @@ class DailyTimeReportService
     protected const EXPORTABLE_COLUMNS = [
         'user' => 'User',
         'date' => 'Date',
+        'shift_name' => 'Shift Name',
+        'shift_time_from' => 'Shift Start',
+        'shift_time_to' => 'Shift End',
         'start_time' => 'Start Time',
         'end_time' => 'End Time',
         'worked_time' => 'Worked Hours',
@@ -61,6 +65,7 @@ class DailyTimeReportService
         return [
             'reports' => $this->paginateRows($rows, (int) $perPage, $request),
             'users' => $this->getFilterUsers($request),
+            'shifts' => $this->getFilterShifts($request),
             'columns' => $this->getColumnLabels(),
             'summaryStats' => [
                 'total_users' => $rows->pluck('user_id')->unique()->count(),
@@ -117,7 +122,8 @@ class DailyTimeReportService
 
         return $dateRange['start'] !== null
             || $dateRange['end'] !== null
-            || $this->resolveSelectedUserIds($request) !== [];
+            || $this->resolveSelectedUserIds($request) !== []
+            || $this->resolveSelectedShiftIds($request) !== [];
     }
 
     public function resolveExportColumns(Request $request): array
@@ -160,6 +166,7 @@ class DailyTimeReportService
 
         $dateRange = $this->resolveDateRange($request);
         $userIds = $this->getScopedUserIds($request);
+        $selectedShiftIds = $this->resolveSelectedShiftIds($request);
 
         if ($userIds === [] || ! $dateRange['has_data']) {
             return collect();
@@ -292,25 +299,49 @@ class DailyTimeReportService
             /** @var Carbon $selectedDate */
             $selectedDate = $row['date'];
             $user = $row['user'];
+            $shiftDetails = $this->resolveShiftDetails(
+                $user,
+                $selectedDate,
+                $row['earliest_start'],
+                $row['latest_end'],
+                $row['has_running'],
+                $timeFormat
+            );
+            $totalWorkedSeconds = (int) $row['total_worked_seconds'];
 
             return [
                 'user_id' => $row['user_id'],
                 'user' => $user,
                 'user_name' => $user->name ?? 'Unknown',
                 'date' => $selectedDate->format($dateFormat),
+                'shift_id' => $shiftDetails['shift_id'],
+                'shift_name' => $shiftDetails['shift_name'],
+                'shift_color_code' => $shiftDetails['shift_color_code'],
+                'shift_time_from' => $shiftDetails['shift_time_from'],
+                'shift_time_to' => $shiftDetails['shift_time_to'],
                 'start_time' => $row['earliest_start']
                     ? $row['earliest_start']->format($timeFormat)
                     : '--',
+                'start_time_status' => $shiftDetails['start_time_status'],
                 'end_time' => $row['has_running']
                     ? 'Running'
                     : ($row['latest_end'] ? $row['latest_end']->format($timeFormat) : '--'),
-                'shift_working_hour' => $this->resolveShiftWorkingHour($user, $selectedDate),
-                'total_worked_time' => formatSecondsToHMS((int) $row['total_worked_seconds']),
-                'total_worked_seconds' => (int) $row['total_worked_seconds'],
+                'end_time_status' => $shiftDetails['end_time_status'],
+                'shift_working_hour' => $shiftDetails['shift_working_hour'],
+                'shift_working_seconds' => $shiftDetails['shift_working_seconds'],
+                'total_worked_time' => formatSecondsToHMS($totalWorkedSeconds),
+                'total_worked_seconds' => $totalWorkedSeconds,
+                'worked_time_status' => $shiftDetails['shift_working_seconds'] !== null
+                    ? ($totalWorkedSeconds >= $shiftDetails['shift_working_seconds'] ? 'success' : 'danger')
+                    : null,
                 'sort_date' => $selectedDate->toDateString(),
                 'latest_activity_timestamp' => $row['latest_activity_at']?->getTimestamp() ?? 0,
             ];
-        })->values();
+        })
+            ->when($selectedShiftIds !== [], function (Collection $rows) use ($selectedShiftIds) {
+                return $rows->filter(fn(array $row) => in_array((int) ($row['shift_id'] ?? 0), $selectedShiftIds, true));
+            })
+            ->values();
 
         return $rows->sort(function (array $left, array $right) {
             if ($left['sort_date'] !== $right['sort_date']) {
@@ -329,12 +360,51 @@ class DailyTimeReportService
         });
     }
 
-    protected function resolveShiftWorkingHour(User $user, Carbon $selectedDate): string
+    public function getFilterShifts(Request $request): Collection
+    {
+        $userIds = $this->getAccessibleUserIds($request->user());
+
+        if ($userIds === []) {
+            return collect();
+        }
+
+        return UserShiftAssignment::query()
+            ->whereIn('user_id', $userIds)
+            ->whereNotNull('shift_id')
+            ->select('shift_id', 'shift_name')
+            ->get()
+            ->map(fn(UserShiftAssignment $assignment) => (object) [
+                'id' => (int) $assignment->shift_id,
+                'name' => $assignment->shift_name,
+            ])
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+    }
+
+    protected function resolveShiftDetails(
+        User $user,
+        Carbon $selectedDate,
+        ?Carbon $actualStart,
+        ?Carbon $actualEnd,
+        bool $hasRunning,
+        string $timeFormat
+    ): array
     {
         $assignment = $this->resolveShiftAssignmentForDate($user, $selectedDate);
 
         if (! $assignment) {
-            return '--';
+            return [
+                'shift_id' => null,
+                'shift_name' => '--',
+                'shift_color_code' => null,
+                'shift_time_from' => '--',
+                'shift_time_to' => '--',
+                'shift_working_hour' => '--',
+                'shift_working_seconds' => null,
+                'start_time_status' => null,
+                'end_time_status' => null,
+            ];
         }
 
         $weekNumber = (int) ceil($selectedDate->day / 7);
@@ -343,23 +413,49 @@ class DailyTimeReportService
             ->where('week_number', $weekNumber)
             ->isNotEmpty();
 
+        $shiftStart = $this->resolveShiftBoundary($selectedDate, $assignment->time_from);
+        $shiftEnd = $this->resolveShiftBoundary($selectedDate, $assignment->time_to);
+
+        if ($shiftEnd->lessThanOrEqualTo($shiftStart)) {
+            $shiftEnd->addDay();
+        }
+
         if ($isWeekend) {
-            return 'Day Off';
+            $shiftWorkingHour = 'Day Off';
+            $workingSeconds = null;
+        } else {
+            $workingSeconds = max(
+                0,
+                $shiftStart->diffInSeconds($shiftEnd) - (int) ($assignment->break_duration ?? 0)
+            );
+
+            $shiftWorkingHour = formatSecondsToHMS($workingSeconds);
         }
 
-        $start = Carbon::parse($assignment->time_from);
-        $end = Carbon::parse($assignment->time_to);
+        return [
+            'shift_id' => $assignment->shift_id ? (int) $assignment->shift_id : null,
+            'shift_name' => $assignment->shift_name ?: '--',
+            'shift_color_code' => $assignment->color_code ?: null,
+            'shift_time_from' => $shiftStart->format($timeFormat),
+            'shift_time_to' => $shiftEnd->format($timeFormat),
+            'shift_working_hour' => $shiftWorkingHour,
+            'shift_working_seconds' => $workingSeconds,
+            'start_time_status' => $actualStart
+                ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
+                : null,
+            'end_time_status' => (! $hasRunning && $actualEnd)
+                ? ($actualEnd->greaterThanOrEqualTo($shiftEnd) ? 'success' : 'danger')
+                : null,
+        ];
+    }
 
-        if ($end->lessThan($start)) {
-            $end->addDay();
-        }
+    protected function resolveShiftBoundary(Carbon $selectedDate, mixed $time): Carbon
+    {
+        $timeValue = $time instanceof Carbon
+            ? $time->format('H:i:s')
+            : Carbon::parse($time)->format('H:i:s');
 
-        $workingSeconds = max(
-            0,
-            $start->diffInSeconds($end) - (int) ($assignment->break_duration ?? 0)
-        );
-
-        return formatSecondsToHMS($workingSeconds);
+        return $selectedDate->copy()->setTimeFromTimeString($timeValue);
     }
 
     protected function resolveShiftAssignmentForDate(User $user, Carbon $selectedDate)
@@ -445,6 +541,23 @@ class DailyTimeReportService
     protected function resolveSelectedUserIds(Request $request): array
     {
         $value = $request->input('user_id', []);
+
+        if (! is_array($value)) {
+            $value = [$value];
+        }
+
+        return collect($value)
+            ->filter(fn($item) => filled($item))
+            ->map(fn($item) => (int) $item)
+            ->filter(fn(int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function resolveSelectedShiftIds(Request $request): array
+    {
+        $value = $request->input('shift_id', []);
 
         if (! is_array($value)) {
             $value = [$value];

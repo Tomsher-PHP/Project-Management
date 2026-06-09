@@ -2,9 +2,9 @@
 
 namespace App\Exports;
 
-use App\Models\Shift;
+use App\Models\Project;
+use App\Models\AgileMilestoneStatus;
 use App\Models\User;
-use App\Models\UserShiftAssignment;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -18,20 +18,25 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class DailyTimeReportExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
+class MilestoneReportExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
 {
     protected const MIN_COLUMN_WIDTH_INCHES = 1.45;
     protected const MAX_COLUMN_WIDTH_INCHES = 3.06;
 
-    protected Collection $rows;
+    protected Collection $milestones;
     protected array $columns;
     protected array $filters;
     protected array $filterSummary;
+    protected array $milestoneMetricCache = [];
     protected Carbon $generatedAt;
 
-    public function __construct(Collection $rows, array $columns, array $filters = [], ?Carbon $generatedAt = null)
-    {
-        $this->rows = $rows->values();
+    public function __construct(
+        Collection $milestones,
+        array $columns,
+        array $filters = [],
+        ?Carbon $generatedAt = null
+    ) {
+        $this->milestones = $milestones->values();
         $this->columns = $columns;
         $this->filters = $filters;
         $this->generatedAt = $generatedAt?->copy()
@@ -41,10 +46,10 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
 
     public function collection()
     {
-        return $this->rows->map(function (array $row) {
+        return $this->milestones->map(function ($milestone) {
             return collect($this->columns)
-                ->mapWithKeys(function ($label, $key) use ($row) {
-                    return [$label => $this->resolveColumnValue($row, $key)];
+                ->mapWithKeys(function ($label, $key) use ($milestone) {
+                    return [$label => $this->resolveColumnValue($milestone, $key)];
                 })
                 ->all();
         });
@@ -67,27 +72,36 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
                 $sheet = $event->sheet->getDelegate();
                 $lastColumn = $this->lastColumnLetter();
                 $headerRow = $this->tableStartRow();
-                $lastDataRow = $headerRow + $this->rows->count();
+                $lastDataRow = $headerRow + $this->milestones->count();
 
                 $this->writeHeaderSection($sheet, $lastColumn);
                 $this->styleTable($sheet, $lastColumn, $headerRow, $lastDataRow);
                 $this->applyColumnLayout($sheet, $headerRow, $lastDataRow);
+                $this->applyIndicatorStyles($sheet, $headerRow);
             },
         ];
     }
 
-    protected function resolveColumnValue(array $row, string $column): string
+    protected function resolveColumnValue($milestone, string $column): string
     {
+        $metrics = $this->resolveMilestoneMetrics($milestone);
+
         return match ($column) {
-            'user' => (string) ($row['user_name'] ?? '-'),
-            'date' => (string) ($row['date'] ?? '-'),
-            'shift_name' => (string) ($row['shift_name'] ?? '--'),
-            'shift_time_from' => (string) ($row['shift_time_from'] ?? '--'),
-            'shift_time_to' => (string) ($row['shift_time_to'] ?? '--'),
-            'start_time' => (string) ($row['start_time'] ?? '--'),
-            'end_time' => (string) ($row['end_time'] ?? '--'),
-            'worked_time' => (string) ($row['total_worked_time'] ?? '--'),
-            'shift_hour' => (string) ($row['shift_working_hour'] ?? '--'),
+            'milestone' => $milestone->name ?? '-',
+            'project' => $milestone->project?->name ?? '-',
+            'owner' => $milestone->owner?->name ?? '-',
+            'start' => AppServiceProvider::formatAppDate($milestone->start_date, '-'),
+            'end' => AppServiceProvider::formatAppDate($milestone->end_date, '-'),
+            'total_sprints' => (string) $metrics['total_sprints'],
+            'total_tasks' => (string) $metrics['total_tasks'],
+            'estimated' => formatSecondsToHoursMinutes($metrics['estimated_seconds']),
+            'derived' => formatSecondsToHoursMinutes($metrics['derived_seconds']),
+            'actual' => formatSecondsToHoursMinutes($metrics['actual_seconds']),
+            'progress' => $this->calculateProgressPercentage(
+                $metrics['estimated_seconds'],
+                $metrics['actual_seconds']
+            ) . '%',
+            'status' => $milestone->status?->name ?? '-',
             default => '-',
         };
     }
@@ -104,7 +118,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
 
     protected function writeHeaderSection($sheet, string $lastColumn): void
     {
-        $sheet->setCellValue('A1', 'Daily Time Report');
+        $sheet->setCellValue('A1', 'Milestone Report');
         $sheet->mergeCells("A1:{$lastColumn}1");
 
         $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
@@ -203,7 +217,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         $sheet->getRowDimension($headerRow)->setRowHeight(24);
 
         if ($lastDataRow > $headerRow) {
-            $bodyRange = "A" . ($headerRow + 1) . ":{$lastColumn}{$lastDataRow}";
+            $bodyRange = 'A' . ($headerRow + 1) . ":{$lastColumn}{$lastDataRow}";
 
             $sheet->getStyle($bodyRange)->applyFromArray([
                 'font' => [
@@ -231,18 +245,27 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
                         ->setRGB('F8FAFC');
                 }
             }
-
-            $this->applyTimeStatusStyles($sheet, $headerRow);
         }
 
         $sheet->freezePane('A' . ($headerRow + 1));
+
+        $centerAlignedColumns = [
+            'start',
+            'end',
+            'total_sprints',
+            'total_tasks',
+            'estimated',
+            'derived',
+            'actual',
+            'progress',
+        ];
 
         foreach (array_keys($this->columns) as $index => $columnKey) {
             $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['date', 'shift_time_from', 'shift_time_to', 'start_time', 'end_time', 'worked_time', 'shift_hour'], true)
+                in_array($columnKey, $centerAlignedColumns, true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );
@@ -253,6 +276,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
     {
         $minWidth = $this->convertInchesToColumnWidth(self::MIN_COLUMN_WIDTH_INCHES);
         $maxWidth = $this->convertInchesToColumnWidth(self::MAX_COLUMN_WIDTH_INCHES);
+        $wrapColumns = ['milestone', 'project', 'owner', 'status'];
 
         foreach (array_keys($this->columns) as $index => $columnKey) {
             $columnLetter = Coordinate::stringFromColumnIndex($index + 1);
@@ -261,7 +285,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $sheet->getColumnDimension($columnLetter)->setAutoSize(false);
             $sheet->getColumnDimension($columnLetter)->setWidth($width);
 
-            if (in_array($columnKey, ['user', 'shift_name'], true)) {
+            if (in_array($columnKey, $wrapColumns, true)) {
                 $sheet->getStyle("{$columnLetter}{$headerRow}:{$columnLetter}" . max($headerRow, $lastDataRow))
                     ->getAlignment()
                     ->setWrapText(true);
@@ -269,77 +293,133 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         }
     }
 
-    protected function applyTimeStatusStyles($sheet, int $headerRow): void
+    protected function applyIndicatorStyles($sheet, int $headerRow): void
     {
         $columnIndexes = array_flip(array_keys($this->columns));
 
-        foreach ([
-            'start_time' => 'start_time_status',
-            'end_time' => 'end_time_status',
-            'worked_time' => 'worked_time_status',
-        ] as $columnKey => $statusKey) {
-            if (! array_key_exists($columnKey, $columnIndexes)) {
-                continue;
-            }
+        $this->milestones->each(function ($milestone, $index) use ($sheet, $headerRow, $columnIndexes) {
+            $rowNumber = $headerRow + $index + 1;
+            $metrics = $this->resolveMilestoneMetrics($milestone);
 
-            $columnLetter = Coordinate::stringFromColumnIndex($columnIndexes[$columnKey] + 1);
+            if (isset($columnIndexes['derived'])) {
+                $derivedColumn = Coordinate::stringFromColumnIndex($columnIndexes['derived'] + 1);
+                $derivedColor = $metrics['derived_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';
 
-            foreach ($this->rows as $index => $row) {
-                $status = $row[$statusKey] ?? null;
-
-                if (! in_array($status, ['success', 'danger'], true)) {
-                    continue;
-                }
-
-                $cell = $columnLetter . ($headerRow + $index + 1);
-
-                $sheet->getStyle($cell)->applyFromArray([
+                $sheet->getStyle("{$derivedColumn}{$rowNumber}")->applyFromArray([
                     'font' => [
                         'bold' => true,
-                        'color' => ['rgb' => $status === 'success' ? '166534' : 'B91C1C'],
-                    ],
-                    'fill' => [
-                        'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => $status === 'success' ? 'DCFCE7' : 'FEE2E2'],
+                        'color' => ['rgb' => $derivedColor],
                     ],
                 ]);
             }
-        }
+
+            if (isset($columnIndexes['actual'])) {
+                $actualColumn = Coordinate::stringFromColumnIndex($columnIndexes['actual'] + 1);
+                $actualColor = $metrics['actual_seconds'] <= $metrics['estimated_seconds'] ? '16A34A' : 'DC2626';
+
+                $sheet->getStyle("{$actualColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $actualColor],
+                    ],
+                ]);
+            }
+
+            if (isset($columnIndexes['progress'])) {
+                $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
+                $progressPalette = $this->resolveProgressPalette(
+                    $metrics['estimated_seconds'],
+                    $metrics['actual_seconds']
+                );
+
+                $sheet->getStyle("{$progressColumn}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $progressPalette['text']],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $progressPalette['fill']],
+                    ],
+                ]);
+            }
+
+            if (isset($columnIndexes['status'])) {
+                $statusColumn = Coordinate::stringFromColumnIndex($columnIndexes['status'] + 1);
+                $this->applyColorBadgeStyle(
+                    $sheet,
+                    "{$statusColumn}{$rowNumber}",
+                    $milestone->status?->color
+                );
+            }
+        });
     }
 
     protected function buildFilterSummary(): array
     {
         $summary = [];
 
-        $dateFrom = $this->parseDateInput($this->filters['from_date'] ?? null);
-        $dateTo = $this->parseDateInput($this->filters['to_date'] ?? null);
+        $dateSummary = $this->buildDateRangeSummary();
 
-        if ($dateFrom) {
-            $summary['Date From'] = AppServiceProvider::formatAppDate($dateFrom->toDateString());
+        if ($dateSummary !== null) {
+            $summary['Date Range'] = $dateSummary;
         }
 
-        if ($dateTo) {
-            $summary['Date To'] = AppServiceProvider::formatAppDate($dateTo->toDateString());
+        $projectNames = $this->resolveFilterNames(
+            collect($this->filters['project_id'] ?? []),
+            Project::query()->withTrashed()
+        );
+
+        if ($projectNames !== []) {
+            $summary['Project'] = implode(', ', $projectNames);
         }
 
-        $userNames = $this->resolveUserFilterNames();
+        $ownerNames = $this->resolveFilterNames(
+            collect($this->filters['owner_id'] ?? []),
+            User::query()->withTrashed()
+        );
 
-        if ($userNames !== []) {
-            $summary['Users'] = implode(', ', $userNames);
+        if ($ownerNames !== []) {
+            $summary['Owner'] = implode(', ', $ownerNames);
         }
 
-        $shiftNames = $this->resolveShiftFilterNames();
+        $statusNames = $this->resolveFilterNames(
+            collect($this->filters['status_id'] ?? []),
+            AgileMilestoneStatus::query()
+        );
 
-        if ($shiftNames !== []) {
-            $summary['Shift'] = implode(', ', $shiftNames);
+        if ($statusNames !== []) {
+            $summary['Status'] = implode(', ', $statusNames);
         }
 
         return $summary;
     }
 
-    protected function resolveUserFilterNames(): array
+    protected function buildDateRangeSummary(): ?string
     {
-        $selectedIds = collect($this->filters['user_id'] ?? [])
+        $startDate = $this->parseDateInput($this->filters['start_date'] ?? null);
+        $endDate = $this->parseDateInput($this->filters['end_date'] ?? null);
+
+        if ($startDate && $endDate) {
+            if ($startDate->gt($endDate)) {
+                [$startDate, $endDate] = [$endDate, $startDate];
+            }
+
+            return AppServiceProvider::formatAppDate($startDate->toDateString())
+                . ' - ' .
+                AppServiceProvider::formatAppDate($endDate->toDateString());
+        }
+
+        $singleDate = $startDate ?? $endDate;
+
+        return $singleDate
+            ? AppServiceProvider::formatAppDate($singleDate->toDateString())
+            : null;
+    }
+
+    protected function resolveFilterNames(Collection $selectedValues, $query): array
+    {
+        $selectedIds = $selectedValues
             ->flatten()
             ->filter(fn($value) => filled($value))
             ->map(fn($value) => (int) $value)
@@ -350,7 +430,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             return [];
         }
 
-        $namesById = User::query()
+        $namesById = $query
             ->whereIn('id', $selectedIds)
             ->pluck('name', 'id');
 
@@ -362,43 +442,13 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             ->all();
     }
 
-    protected function resolveShiftFilterNames(): array
+    protected function calculateProgressPercentage(int $estimatedSeconds, int $actualSeconds): string
     {
-        $selectedIds = collect($this->filters['shift_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $percentage = $estimatedSeconds > 0
+            ? round(($actualSeconds / $estimatedSeconds) * 100, 2)
+            : 0;
 
-        if ($selectedIds->isEmpty()) {
-            return [];
-        }
-
-        $namesById = UserShiftAssignment::query()
-            ->whereIn('shift_id', $selectedIds)
-            ->select('shift_id', 'shift_name')
-            ->get()
-            ->pluck('shift_name', 'shift_id');
-
-        $missingIds = $selectedIds
-            ->filter(fn(int $id) => ! $namesById->has($id))
-            ->values();
-
-        if ($missingIds->isNotEmpty()) {
-            $fallbackNames = Shift::withTrashed()
-                ->whereIn('id', $missingIds)
-                ->pluck('name', 'id');
-
-            $namesById = $namesById->merge($fallbackNames);
-        }
-
-        return $selectedIds
-            ->map(fn(int $id) => $namesById->get($id))
-            ->filter(fn($name) => filled($name))
-            ->unique()
-            ->values()
-            ->all();
+        return rtrim(rtrim(number_format((float) $percentage, 2, '.', ''), '0'), '.');
     }
 
     protected function generatedAtLabel(): string
@@ -427,9 +477,91 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             : null;
     }
 
+    protected function resolveProgressPalette(int $estimatedSeconds, int $actualSeconds): array
+    {
+        if ($estimatedSeconds <= 0) {
+            return [
+                'fill' => 'E5E7EB',
+                'text' => '475569',
+            ];
+        }
+
+        $progressPercentage = ($actualSeconds / $estimatedSeconds) * 100;
+
+        return match (true) {
+            $progressPercentage <= 50 => ['fill' => 'DCFCE7', 'text' => '16A34A'],
+            $progressPercentage <= 100 => ['fill' => 'FFEDD5', 'text' => 'EA580C'],
+            default => ['fill' => 'FEE2E2', 'text' => 'DC2626'],
+        };
+    }
+
+    protected function applyColorBadgeStyle($sheet, string $cell, ?string $rawColor): void
+    {
+        $color = $this->normalizeHexColor($rawColor) ?? '94A3B8';
+
+        $sheet->getStyle($cell)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => $this->resolveContrastTextColor($color)],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $color],
+            ],
+        ]);
+    }
+
+    protected function normalizeHexColor(?string $color): ?string
+    {
+        if (! is_string($color)) {
+            return null;
+        }
+
+        $normalized = ltrim(trim($color), '#');
+
+        if (preg_match('/^[0-9a-fA-F]{3}$/', $normalized) === 1) {
+            return strtoupper(implode('', array_map(
+                fn(string $char) => $char . $char,
+                str_split($normalized)
+            )));
+        }
+
+        if (preg_match('/^[0-9a-fA-F]{6}$/', $normalized) === 1) {
+            return strtoupper($normalized);
+        }
+
+        return null;
+    }
+
+    protected function resolveContrastTextColor(string $hexColor): string
+    {
+        [$red, $green, $blue] = sscanf($hexColor, '%02x%02x%02x');
+
+        $brightness = (($red * 299) + ($green * 587) + ($blue * 114)) / 1000;
+
+        return $brightness >= 160 ? '0F172A' : 'FFFFFF';
+    }
+
+    protected function resolveMilestoneMetrics($milestone): array
+    {
+        $cacheKey = (string) ($milestone->id ?? spl_object_id($milestone));
+
+        if (isset($this->milestoneMetricCache[$cacheKey])) {
+            return $this->milestoneMetricCache[$cacheKey];
+        }
+
+        return $this->milestoneMetricCache[$cacheKey] = [
+            'estimated_seconds' => (int) ($milestone->estimated_time_seconds ?? 0),
+            'derived_seconds' => (int) ($milestone->derived_time_seconds ?? 0),
+            'actual_seconds' => (int) ($milestone->actual_time_seconds ?? 0),
+            'total_sprints' => (int) ($milestone->total_sprints ?? 0),
+            'total_tasks' => (int) ($milestone->total_tasks ?? 0),
+        ];
+    }
+
     protected function resolveColumnWidth(string $columnKey, float $minWidth, float $maxWidth): float
     {
-        $values = $this->rows->map(fn(array $row) => $this->resolveColumnValue($row, $columnKey))
+        $values = $this->milestones->map(fn($milestone) => $this->resolveColumnValue($milestone, $columnKey))
             ->push($this->columns[$columnKey] ?? '')
             ->filter(fn($value) => is_string($value));
 

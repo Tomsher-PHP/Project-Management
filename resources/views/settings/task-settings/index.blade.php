@@ -347,7 +347,7 @@
                     </span>
                 </label>
 
-                <label for="track_performance" class="flex cursor-pointer items-center gap-2">
+                {{-- <label for="track_performance" class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" name="track_performance" id="track_performance" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
                     <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
                         <span>Track Performance?</span>
@@ -360,7 +360,7 @@
                             </span>
                         </span>
                     </span>
-                </label>
+                </label> --}}
 
                 <label for="customer_request" class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" name="customer_request" id="customer_request" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">

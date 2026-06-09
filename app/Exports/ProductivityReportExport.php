@@ -2,9 +2,8 @@
 
 namespace App\Exports;
 
-use App\Models\Shift;
+use App\Models\Project;
 use App\Models\User;
-use App\Models\UserShiftAssignment;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -18,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class DailyTimeReportExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
+class ProductivityReportExport implements FromCollection, WithCustomStartCell, WithEvents, WithHeadings
 {
     protected const MIN_COLUMN_WIDTH_INCHES = 1.45;
     protected const MAX_COLUMN_WIDTH_INCHES = 3.06;
@@ -72,6 +71,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
                 $this->writeHeaderSection($sheet, $lastColumn);
                 $this->styleTable($sheet, $lastColumn, $headerRow, $lastDataRow);
                 $this->applyColumnLayout($sheet, $headerRow, $lastDataRow);
+                $this->applyIndicatorStyles($sheet, $headerRow);
             },
         ];
     }
@@ -80,14 +80,11 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
     {
         return match ($column) {
             'user' => (string) ($row['user_name'] ?? '-'),
-            'date' => (string) ($row['date'] ?? '-'),
-            'shift_name' => (string) ($row['shift_name'] ?? '--'),
-            'shift_time_from' => (string) ($row['shift_time_from'] ?? '--'),
-            'shift_time_to' => (string) ($row['shift_time_to'] ?? '--'),
-            'start_time' => (string) ($row['start_time'] ?? '--'),
-            'end_time' => (string) ($row['end_time'] ?? '--'),
-            'worked_time' => (string) ($row['total_worked_time'] ?? '--'),
-            'shift_hour' => (string) ($row['shift_working_hour'] ?? '--'),
+            'completed_tasks_count' => (string) ($row['completed_tasks_count'] ?? 0),
+            'estimated_hours' => (string) ($row['estimated_hours'] ?? '--'),
+            'spend_hours' => (string) ($row['spend_hours'] ?? '--'),
+            'saved_hours' => (string) ($row['saved_hours'] ?? '--'),
+            'efficiency' => (string) ($row['efficiency_label'] ?? '0%'),
             default => '-',
         };
     }
@@ -104,7 +101,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
 
     protected function writeHeaderSection($sheet, string $lastColumn): void
     {
-        $sheet->setCellValue('A1', 'Daily Time Report');
+        $sheet->setCellValue('A1', 'Productivity Report');
         $sheet->mergeCells("A1:{$lastColumn}1");
 
         $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
@@ -203,7 +200,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         $sheet->getRowDimension($headerRow)->setRowHeight(24);
 
         if ($lastDataRow > $headerRow) {
-            $bodyRange = "A" . ($headerRow + 1) . ":{$lastColumn}{$lastDataRow}";
+            $bodyRange = 'A' . ($headerRow + 1) . ":{$lastColumn}{$lastDataRow}";
 
             $sheet->getStyle($bodyRange)->applyFromArray([
                 'font' => [
@@ -231,8 +228,6 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
                         ->setRGB('F8FAFC');
                 }
             }
-
-            $this->applyTimeStatusStyles($sheet, $headerRow);
         }
 
         $sheet->freezePane('A' . ($headerRow + 1));
@@ -242,7 +237,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $range = "{$columnLetter}{$headerRow}:{$columnLetter}" . max($lastDataRow, $headerRow);
 
             $sheet->getStyle($range)->getAlignment()->setHorizontal(
-                in_array($columnKey, ['date', 'shift_time_from', 'shift_time_to', 'start_time', 'end_time', 'worked_time', 'shift_hour'], true)
+                in_array($columnKey, ['completed_tasks_count', 'estimated_hours', 'spend_hours', 'saved_hours', 'efficiency'], true)
                     ? Alignment::HORIZONTAL_CENTER
                     : Alignment::HORIZONTAL_LEFT
             );
@@ -261,7 +256,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $sheet->getColumnDimension($columnLetter)->setAutoSize(false);
             $sheet->getColumnDimension($columnLetter)->setWidth($width);
 
-            if (in_array($columnKey, ['user', 'shift_name'], true)) {
+            if ($columnKey === 'user') {
                 $sheet->getStyle("{$columnLetter}{$headerRow}:{$columnLetter}" . max($headerRow, $lastDataRow))
                     ->getAlignment()
                     ->setWrapText(true);
@@ -269,42 +264,80 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         }
     }
 
-    protected function applyTimeStatusStyles($sheet, int $headerRow): void
+    protected function applyIndicatorStyles($sheet, int $headerRow): void
     {
         $columnIndexes = array_flip(array_keys($this->columns));
 
-        foreach ([
-            'start_time' => 'start_time_status',
-            'end_time' => 'end_time_status',
-            'worked_time' => 'worked_time_status',
-        ] as $columnKey => $statusKey) {
-            if (! array_key_exists($columnKey, $columnIndexes)) {
-                continue;
-            }
+        $this->rows->each(function (array $row, int $index) use ($sheet, $headerRow, $columnIndexes) {
+            $rowNumber = $headerRow + $index + 1;
+            $savedPalette = $this->resolveSavedPalette((int) ($row['saved_seconds'] ?? 0));
+            $efficiencyPalette = $this->resolveEfficiencyPalette((float) ($row['efficiency_percentage'] ?? 0));
 
-            $columnLetter = Coordinate::stringFromColumnIndex($columnIndexes[$columnKey] + 1);
-
-            foreach ($this->rows as $index => $row) {
-                $status = $row[$statusKey] ?? null;
-
-                if (! in_array($status, ['success', 'danger'], true)) {
+            foreach (['spend_hours', 'saved_hours'] as $columnKey) {
+                if (! isset($columnIndexes[$columnKey])) {
                     continue;
                 }
 
-                $cell = $columnLetter . ($headerRow + $index + 1);
+                $column = Coordinate::stringFromColumnIndex($columnIndexes[$columnKey] + 1);
 
-                $sheet->getStyle($cell)->applyFromArray([
+                $sheet->getStyle("{$column}{$rowNumber}")->applyFromArray([
                     'font' => [
                         'bold' => true,
-                        'color' => ['rgb' => $status === 'success' ? '166534' : 'B91C1C'],
+                        'color' => ['rgb' => $savedPalette['text']],
                     ],
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => $status === 'success' ? 'DCFCE7' : 'FEE2E2'],
+                        'startColor' => ['rgb' => $savedPalette['fill']],
                     ],
                 ]);
             }
+
+            if (isset($columnIndexes['efficiency'])) {
+                $column = Coordinate::stringFromColumnIndex($columnIndexes['efficiency'] + 1);
+
+                $sheet->getStyle("{$column}{$rowNumber}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => $efficiencyPalette['text']],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => $efficiencyPalette['fill']],
+                    ],
+                ]);
+            }
+        });
+    }
+
+    protected function resolveSavedPalette(int $savedSeconds): array
+    {
+        if ($savedSeconds === 0) {
+            return [
+                'fill' => 'E5E7EB',
+                'text' => '475569',
+            ];
         }
+
+        return $savedSeconds > 0
+            ? ['fill' => 'DCFCE7', 'text' => '16A34A']
+            : ['fill' => 'FEE2E2', 'text' => 'DC2626'];
+    }
+
+    protected function resolveEfficiencyPalette(float $efficiency): array
+    {
+        if ($efficiency <= 0) {
+            return [
+                'fill' => 'E5E7EB',
+                'text' => '475569',
+            ];
+        }
+
+        return match (true) {
+            $efficiency >= 120 => ['fill' => 'DCFCE7', 'text' => '16A34A'],
+            $efficiency >= 100 => ['fill' => 'ECFDF5', 'text' => '22C55E'],
+            $efficiency >= 80 => ['fill' => 'FFEDD5', 'text' => 'EA580C'],
+            default => ['fill' => 'FEE2E2', 'text' => 'DC2626'],
+        };
     }
 
     protected function buildFilterSummary(): array
@@ -322,19 +355,45 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $summary['Date To'] = AppServiceProvider::formatAppDate($dateTo->toDateString());
         }
 
+        $projectNames = $this->resolveProjectFilterNames();
+
+        if ($projectNames !== []) {
+            $summary['Projects'] = implode(', ', $projectNames);
+        }
+
         $userNames = $this->resolveUserFilterNames();
 
         if ($userNames !== []) {
             $summary['Users'] = implode(', ', $userNames);
         }
 
-        $shiftNames = $this->resolveShiftFilterNames();
+        return $summary;
+    }
 
-        if ($shiftNames !== []) {
-            $summary['Shift'] = implode(', ', $shiftNames);
+    protected function resolveProjectFilterNames(): array
+    {
+        $selectedIds = collect($this->filters['project_id'] ?? [])
+            ->flatten()
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            return [];
         }
 
-        return $summary;
+        $namesById = Project::query()
+            ->withTrashed()
+            ->whereIn('id', $selectedIds)
+            ->pluck('name', 'id');
+
+        return $selectedIds
+            ->map(fn(int $id) => $namesById->get($id))
+            ->filter(fn($name) => filled($name))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function resolveUserFilterNames(): array
@@ -353,45 +412,6 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
         $namesById = User::query()
             ->whereIn('id', $selectedIds)
             ->pluck('name', 'id');
-
-        return $selectedIds
-            ->map(fn(int $id) => $namesById->get($id))
-            ->filter(fn($name) => filled($name))
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    protected function resolveShiftFilterNames(): array
-    {
-        $selectedIds = collect($this->filters['shift_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
-
-        if ($selectedIds->isEmpty()) {
-            return [];
-        }
-
-        $namesById = UserShiftAssignment::query()
-            ->whereIn('shift_id', $selectedIds)
-            ->select('shift_id', 'shift_name')
-            ->get()
-            ->pluck('shift_name', 'shift_id');
-
-        $missingIds = $selectedIds
-            ->filter(fn(int $id) => ! $namesById->has($id))
-            ->values();
-
-        if ($missingIds->isNotEmpty()) {
-            $fallbackNames = Shift::withTrashed()
-                ->whereIn('id', $missingIds)
-                ->pluck('name', 'id');
-
-            $namesById = $namesById->merge($fallbackNames);
-        }
 
         return $selectedIds
             ->map(fn(int $id) => $namesById->get($id))

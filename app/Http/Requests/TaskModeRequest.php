@@ -45,7 +45,6 @@ class TaskModeRequest extends FormRequest
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_rework' => ['boolean'],
             'is_productive' => ['boolean'],
-            'track_performance' => ['boolean'],
             'customer_request' => ['boolean'],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],

@@ -384,25 +384,25 @@ Route::middleware(['auth'])->group(function () {
     // Task Routes
     Route::get('tasks/quick-create/parent-options', [TaskController::class, 'quickCreateParentOptions'])->name('tasks.quick-create-parent-options');
 
-    Route::prefix('tasks/{task}')->group(function () {
-        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.tabs.show');
-        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.parent-options');
-        Route::patch('overview/description', [TaskController::class, 'updateOverviewDescription'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('tasks.overview.description.update');
+    Route::prefix('tasks/{task}')->as('tasks.')->group(function () {
+        Route::get('tabs/{tab}', [TaskController::class, 'tab'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tabs.show');
+        Route::get('parent-options', [TaskController::class, 'parentTaskOptions'])->middleware(['permission.type:task.view', 'can:view,task'])->name('parent-options');
+        Route::patch('overview/description', [TaskController::class, 'updateOverviewDescription'])->middleware(['permission.type:task.edit', 'can:update,task'])->name('overview.description.update');
 
-        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('tasks.activity.modal');
-        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.modal');
-        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.comments.store');
+        Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('activity.modal');
+        Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.modal');
+        Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.store');
 
         // Task notes and attachments routes
-        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('tasks.notes.store');
-        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.delete');
-        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('tasks.notes.attachments.delete');
+        Route::post('notes', [TaskController::class, 'storeNote'])->middleware(['permission.type:task.add_notes_files'])->name('notes.store');
+        Route::delete('notes/{note}', [TaskController::class, 'deleteNote'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.delete');
+        Route::delete('notes/{note}/attachments/{attachment}', [TaskController::class, 'deleteNoteAttachment'])->middleware(['permission.type:task.remove_notes_files'])->name('notes.attachments.delete');
 
         // Task timer routes
-        Route::post('/start', [TaskController::class, 'start'])->name('tasks.start');
-        Route::post('/stop', [TaskController::class, 'stop'])->name('tasks.stop');
+        Route::post('/start', [TaskController::class, 'start'])->name('start');
+        Route::post('/stop', [TaskController::class, 'stop'])->name('stop');
 
-        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('tasks.edit');
+        Route::get('edit', [TaskController::class, 'edit'])->middleware(['permission.type:task.view', 'can:view,task'])->name('edit');
     });
 
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.view'])->only(['index']);
@@ -439,11 +439,11 @@ Route::middleware(['auth'])->group(function () {
     // End Task time log change request routes
 
     // Handoff Request routes
-    Route::prefix('handoff-requests')->group(function () {
-        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('handoff_requests.index');
-        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('handoff_requests.store');
-        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('handoff_requests.assign');
-        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('handoff_requests.note');
+    Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
+        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('index');
+        Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('store');
+        Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('assign');
+        Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('note');
     });
     // End Handoff Request routes
 
@@ -461,29 +461,33 @@ Route::middleware(['auth'])->group(function () {
         // To get choosed projects by flow in report filters
         Route::get('/projects/by-flow', [ReportController::class, 'getProjectsByFlow'])->name('projects.by-flow');
 
-        // TIME TRACKING::PERFORMANCE REPORT
-        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time_tracking');
-        Route::get('/reports/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time_tracking.export');
-
-        // DAILY TIME::PERFORMANCE REPORT
-        Route::get('/daily-time-report', [ReportController::class, 'dailyTime'])->middleware('permission.type:reports.daily_time_view')->name('daily_time');
-        Route::get('/reports/daily-time/export', [ReportController::class, 'dailyTimeExport'])->middleware('permission.type:reports.daily_time_export')->name('daily_time.export');
-
         // PROJECT:: PROJECT REPORT
         Route::get('/projects-report', [ReportController::class, 'project'])->middleware('permission.type:reports.project_view')->name('projects');
-        Route::get('/reports/project/export', [ReportController::class, 'projectExport'])->middleware('permission.type:reports.project_export')->name('project.export');
+        Route::get('/project/export', [ReportController::class, 'projectExport'])->middleware('permission.type:reports.project_export')->name('project.export');
 
         // MILESTONE:: PROJECT REPORT
         Route::get('/milestones-report', [ReportController::class, 'milestone'])->middleware('permission.type:reports.milestone_view')->name('milestones');
-        Route::get('/reports/milestones/export', [ReportController::class, 'milestoneExport'])->middleware('permission.type:reports.milestone_export')->name('milestone.export');
+        Route::get('/milestones/export', [ReportController::class, 'milestoneExport'])->middleware('permission.type:reports.milestone_export')->name('milestone.export');
 
         // SPRINT:: PROJECT REPORT
         Route::get('/sprints-report', [ReportController::class, 'sprint'])->middleware('permission.type:reports.sprint_view')->name('sprints');
-        Route::get('/reports/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
+        Route::get('/sprints/export', [ReportController::class, 'sprintExport'])->middleware('permission.type:reports.sprint_export')->name('sprint.export');
 
         // TASK:: PROJECT REPORT
-        Route::get('/tasks-report', [ReportController::class, 'task'])->middleware('permission.type:reports.task_view')->name('tasks');
-        Route::get('/reports/tasks/export', [ReportController::class, 'taskExport'])->middleware('permission.type:reports.task_export')->name('task.export');        
+        Route::get('/tasks-report', [ReportController::class, 'taskReport'])->middleware('permission.type:reports.task_view')->name('tasks');
+        Route::get('/tasks/export', [ReportController::class, 'taskReportExport'])->middleware('permission.type:reports.task_export')->name('task.export');
+
+        // TIME TRACKING::PERFORMANCE REPORT
+        Route::get('/time-tracking-report', [ReportController::class, 'timeTracking'])->middleware('permission.type:reports.time_tracking_view')->name('time_tracking');
+        Route::get('/time-tracking/export', [ReportController::class, 'timeTrackingExport'])->middleware('permission.type:reports.time_tracking_export')->name('time_tracking.export');
+
+        // DAILY TIME::PERFORMANCE REPORT
+        Route::get('/daily-time-report', [ReportController::class, 'dailyTime'])->middleware('permission.type:reports.daily_time_view')->name('daily_time');
+        Route::get('/daily-time/export', [ReportController::class, 'dailyTimeExport'])->middleware('permission.type:reports.daily_time_export')->name('daily_time.export');
+
+        // PRODUCTIVITY::PERFORMANCE REPORT
+        Route::get('/productivity-report', [ReportController::class, 'productivity'])->middleware('permission.type:reports.productivity_view')->name('productivity');
+        Route::get('/productivity/export', [ReportController::class, 'productivityExport'])->middleware('permission.type:reports.productivity_export')->name('productivity.export');
     });
 });
 

@@ -6,12 +6,14 @@ use App\Exports\TimeTrackingReportExport;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\TaskTimeLog;
+use App\Models\User;
 use App\Services\UserTimelineService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TimeTrackingReportService
@@ -60,20 +62,17 @@ class TimeTrackingReportService
             : $this->resolveFilterIds($request, ['project_sprint_id', 'sprint_id']);
         $userIds = in_array('user_id', $excludedFilters, true)
             || in_array('staff_id', $excludedFilters, true)
-            ? []
-            : $this->getSelectedUserIds($request);
+            ? $this->getAccessibleUserIds($request->user())
+            : $this->getScopedUserIds($request);
 
-        return TaskTimeLog::query()
-            ->whereHas('task.project', function ($projectQuery) {
-                $projectQuery->where('projects.is_system', false);
-            })
+        $query = TaskTimeLog::query()
+            // ->whereHas('task.project', function ($projectQuery) {
+            //     $projectQuery->where('projects.is_system', false);
+            // })
             ->when($projectIds !== [], function ($q) use ($projectIds) {
                 $q->whereHas('task', function ($taskQuery) use ($projectIds) {
                     $taskQuery->whereIn('project_id', $projectIds);
                 });
-            })
-            ->when($userIds !== [], function ($q) use ($userIds) {
-                $q->whereIn('user_id', $userIds);
             })
             ->when($taskIds !== [], function ($q) use ($taskIds) {
                 $q->whereIn('task_id', $taskIds);
@@ -103,6 +102,14 @@ class TimeTrackingReportService
             ->when($dateRange['type'] === 'single', function ($q) use ($dateRange) {
                 $q->whereDate('started_at', $dateRange['date']->toDateString());
             });
+
+        if ($userIds === []) {
+            $query->whereRaw('1 = 0');
+        } else {
+            $query->whereIn('user_id', $userIds);
+        }
+
+        return $query;
     }
 
     protected function query(Request $request)
@@ -218,7 +225,7 @@ class TimeTrackingReportService
 
     public function shouldShowBreakRows(Request $request): bool
     {
-        return count($this->getSelectedUserIds($request)) === 1;
+        return count($this->getVisibleReportUserIds($request)) === 1;
     }
 
     public function buildDisplayRows(LengthAwarePaginator $reports, Request $request): Collection
@@ -234,11 +241,13 @@ class TimeTrackingReportService
             'report' => $report,
         ]);
 
-        if (! $this->shouldShowBreakRows($request)) {
+        $visibleUserIds = $this->getVisibleReportUserIds($request);
+
+        if (count($visibleUserIds) !== 1) {
             return $rows;
         }
 
-        $selectedUserId = $this->getSelectedUserIds($request)[0];
+        $selectedUserId = $visibleUserIds[0];
         $breaksByReportId = $this->buildBreakRowsByReportId($reportRows, $selectedUserId);
 
         return $rows->flatMap(function (array $row) use ($breaksByReportId) {
@@ -260,6 +269,12 @@ class TimeTrackingReportService
 
     public function export(Request $request)
     {
+        if (! $this->canExport($request)) {
+            throw ValidationException::withMessages([
+                'export' => 'Select a Date Range of 31 days or less before exporting the Time Tracking Report.',
+            ]);
+        }
+
         $columns = $this->resolveExportColumns($request);
         $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
 
@@ -267,11 +282,91 @@ class TimeTrackingReportService
             new TimeTrackingReportExport(
                 $this->query($request)->get(),
                 $columns,
-                $request->all(),
+                $this->resolveScopedFilters($request),
                 $generatedAt
             ),
             $this->buildExportFilename($request->user()?->id, $generatedAt)
         );
+    }
+
+    public function canExport(Request $request): bool
+    {
+        $dateRange = $this->resolveStartedAtDateRange($request);
+
+        if ($dateRange['type'] === 'single') {
+            return true;
+        }
+
+        if ($dateRange['type'] !== 'between') {
+            return false;
+        }
+
+        return $dateRange['start']->diffInDays($dateRange['end']) + 1 <= 31;
+    }
+
+    protected function getScopedUserIds(Request $request): array
+    {
+        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
+        $selectedUserIds = $this->getSelectedUserIds($request);
+
+        if ($selectedUserIds === []) {
+            return $accessibleUserIds;
+        }
+
+        return array_values(array_intersect($accessibleUserIds, $selectedUserIds));
+    }
+
+    protected function getSanitizedSelectedUserIds(Request $request): array
+    {
+        return array_values(array_intersect(
+            $this->getAccessibleUserIds($request->user()),
+            $this->getSelectedUserIds($request)
+        ));
+    }
+
+    protected function getVisibleReportUserIds(Request $request): array
+    {
+        return $this->baseQuery($request)
+            ->select('user_id')
+            ->distinct()
+            ->pluck('user_id')
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
+            ->values()
+            ->all();
+    }
+
+    protected function getAccessibleUserIds(?User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        return User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function resolveScopedFilters(Request $request): array
+    {
+        $filters = $request->all();
+        $selectedUserIds = $this->getSanitizedSelectedUserIds($request);
+
+        if ($request->has('user_id')) {
+            $filters['user_id'] = $selectedUserIds;
+        }
+
+        if ($request->has('staff_id')) {
+            $filters['staff_id'] = $selectedUserIds;
+        }
+
+        return $filters;
     }
 
     public function resolveExportColumns(Request $request): array

@@ -37,7 +37,6 @@
                 </span>
             </button>
         </form>
-        {{-- <x-export-button :action="route('reports.project.export')" :params="request()->query()" label="Export Excel" /> --}}
 
         <!-- COLUMN MANAGER -->
         <x-column-manager :columns="$columns" report="project_report" />

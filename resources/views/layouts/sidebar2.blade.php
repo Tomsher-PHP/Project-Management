@@ -351,7 +351,7 @@
                                         <ul class="sub-menu min-w-[200px] rounded-lg border-l border-success-100 bg-white px-5 py-2 shadow-lg dark:bg-darkblack-600 dark:border-darkblack-400">
                                             {{-- @if ($canViewProductivityReports)
                                                 <li>
-                                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                    <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                         Productivity
                                                     </a>
                                                 </li>

@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const projectId = tabsRoot.dataset.projectId;
     const defaultTab = tabsRoot.dataset.defaultTab || 'overview';
     const tabsUrlTemplate = tabsRoot.dataset.tabsUrlTemplate || window.ProjectApp?.tabsUrlTemplate;
-    const storageKey = `projectTab_${projectId}`;
+    // const storageKey = `projectTab_${projectId}`;
+    const storageKey = `projectTab`;
     const triggers = Array.from(tabsRoot.querySelectorAll('[data-project-tab-trigger]'));
     const panels = Array.from(tabsRoot.querySelectorAll('[data-project-tab-panel]'));
     const availableTabs = triggers.map((trigger) => trigger.dataset.projectTabTrigger);
