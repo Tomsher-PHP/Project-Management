@@ -2,26 +2,28 @@
     $isRejectedTask = $task->isRejectedRequest();
     $rejectionReason = $task->rejection_reason ?? 'No reason provided';
     $authUser = auth()->user();
-    $canOpenTaskDetailPage = $authUser
-        && $authUser->can('task.view')
-        && $authUser->can('view', $task);
+    $canOpenTaskDetailPage = $authUser && $authUser->can('task.view') && $authUser->can('view', $task);
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
     $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
     $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
     $isPlacementLockedForSubtask = $canEditTask && filled($task->parent_task_id);
     $taskPlacementOptions = [
         'milestones' => $projectMilestones
-            ->map(fn($projectMilestone) => [
-                'value' => (string) $projectMilestone->id,
-                'text' => $projectMilestone->name,
-            ])
+            ->map(
+                fn($projectMilestone) => [
+                    'value' => (string) $projectMilestone->id,
+                    'text' => $projectMilestone->name,
+                ],
+            )
             ->values(),
         'sprints' => $projectSprints
-            ->map(fn($projectSprint) => [
-                'value' => (string) $projectSprint->id,
-                'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
-                'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
-            ])
+            ->map(
+                fn($projectSprint) => [
+                    'value' => (string) $projectSprint->id,
+                    'text' => $projectSprint->name . ($projectSprint->projectMilestone?->name ? ' - ' . $projectSprint->projectMilestone->name : ''),
+                    'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
+                ],
+            )
             ->values(),
     ];
 @endphp
@@ -188,6 +190,16 @@
                 <div>
                     <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" help-text="Enter time naturally. We’ll convert it automatically for calculation." />
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
+                    @if ($authUser && (int) $authUser->id === (int) $task->current_assignee_id)
+                        <div class="mt-2">
+                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-400 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-store-url="{{ route('tasks.exceed-time-requests.store', $task) }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Request Estimate Change</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 <div>
@@ -223,7 +235,7 @@
             <div class="min-h-0 flex-1 overflow-y-auto pr-1">
                 <div class="space-y-4">
                     <div class="rounded-2xl border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-400 dark:text-bgray-300">Summary</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Summary</p>
                         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
                                 <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Estimated</p>
@@ -237,7 +249,7 @@
                     </div>
 
                     <div class="rounded-2xl border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-400 dark:text-bgray-300">Context</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Context</p>
                         <dl class="mt-4 space-y-3 text-sm">
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-bgray-700 dark:text-bgray-300">Milestone</dt>

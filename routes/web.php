@@ -35,6 +35,7 @@ use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskExceedTimeController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use App\Http\Controllers\TaskTimeLogChangeRequestController;
@@ -448,6 +449,10 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('note');
     });
     // End Handoff Request routes
+
+    // Task Exceed Time Request routes
+    Route::post('tasks/{task}/exceed-time-requests', [TaskExceedTimeController::class, 'store'])->name('tasks.exceed-time-requests.store');
+    // End Task Exceed Time Request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

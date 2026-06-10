@@ -7,7 +7,7 @@
     'hoursPlaceholder' => 'e.g. 10',
     'minutesPlaceholder' => 'e.g. 30',
     'panel' => false,
-    'helpText' => 'Enter time naturally. We’ll convert it automatically for calculation.',
+    'helpText' => null,
     'showLabel' => true,
     'disabled' => false,
 ])
