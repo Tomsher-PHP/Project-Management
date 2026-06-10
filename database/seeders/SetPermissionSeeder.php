@@ -20,6 +20,7 @@ class SetPermissionSeeder extends Seeder
                 'guard_name' => 'web',
             ], [
                 'sort_order' => $permission['sort_order'],
+                'default_checked' => $permission['default_checked'],
             ]);
         }
 
