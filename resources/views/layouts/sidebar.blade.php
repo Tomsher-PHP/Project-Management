@@ -428,6 +428,62 @@
 
                     <ul class="mt-2.5">
 
+                        <!-- PERFORMANCE -->
+                        @if ($canViewTimeTrackingReports || $canViewDailyReports || $canViewProductivityReports)
+                            <li class="item py-[11px] {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="index.html" aria-expanded="{{ $isPerformanceReportsMenuActive ? 'true' : 'false' }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2.5">
+                                            <span class="item-ico">
+                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M2 14L6 10L9 13L15 6L18 8" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="path-2" />
+                                                    <circle cx="2" cy="14" r="2" fill="#1A202C" class="path-1" />
+                                                    <circle cx="6" cy="10" r="2" fill="#1A202C" class="path-1" />
+                                                    <circle cx="9" cy="13" r="2" fill="#1A202C" class="path-1" />
+                                                    <circle cx="15" cy="6" r="2" fill="#1A202C" class="path-1" />
+                                                    <circle cx="18" cy="8" r="2" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-lg font-medium leading-none {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : '' }}">Performance</span>
+                                        </div>
+                                        <span class="flex items-center gap-2">
+                                            <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isPerformanceReportsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                </a>
+                                <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isPerformanceReportsMenuActive ? 'active' : '' }}">
+                                    @if ($canViewTimeTrackingReports)
+                                        <!-- Time Tracking Report -->
+                                        <li>
+                                            <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Time Tracking
+                                            </a>
+                                        </li>
+                                    @endif
+
+                                    @if ($canViewDailyReports)
+                                        <!-- Daily Time Report -->
+                                        <li>
+                                            <a href="{{ route('reports.daily_time') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDailyReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Daily Time
+                                            </a>
+                                        </li>
+                                    @endif
+
+                                    @if ($canViewProductivityReports)
+                                        <!-- Productivity Report -->
+                                        <li>
+                                            <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                Productivity
+                                            </a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </li>
+                        @endif
+
                         <!-- PROJECTS -->
                         @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
                             <li class="item py-[11px] {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
@@ -482,62 +538,6 @@
                                         <li>
                                             <a href="{{ route('reports.tasks') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTaskReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 Task
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif
-
-                        <!-- PERFORMANCE -->
-                        @if ($canViewTimeTrackingReports || $canViewDailyReports || $canViewProductivityReports)
-                            <li class="item py-[11px] {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="index.html" aria-expanded="{{ $isPerformanceReportsMenuActive ? 'true' : 'false' }}">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2.5">
-                                            <span class="item-ico">
-                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M2 14L6 10L9 13L15 6L18 8" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="path-2" />
-                                                    <circle cx="2" cy="14" r="2" fill="#1A202C" class="path-1" />
-                                                    <circle cx="6" cy="10" r="2" fill="#1A202C" class="path-1" />
-                                                    <circle cx="9" cy="13" r="2" fill="#1A202C" class="path-1" />
-                                                    <circle cx="15" cy="6" r="2" fill="#1A202C" class="path-1" />
-                                                    <circle cx="18" cy="8" r="2" fill="#22C55E" class="path-2" />
-                                                </svg>
-                                            </span>
-                                            <span class="item-text text-lg font-medium leading-none {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : '' }}">Performance</span>
-                                        </div>
-                                        <span class="flex items-center gap-2">
-                                            <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isPerformanceReportsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </a>
-                                <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isPerformanceReportsMenuActive ? 'active' : '' }}">
-                                    @if ($canViewTimeTrackingReports)
-                                        <!-- Time Tracking Report -->
-                                        <li>
-                                            <a href="{{ route('reports.time_tracking') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isTimeTrackingReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Time Tracking
-                                            </a>
-                                        </li>
-                                    @endif
-
-                                    @if ($canViewDailyReports)
-                                        <!-- Daily Time Report -->
-                                        <li>
-                                            <a href="{{ route('reports.daily_time') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDailyReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Daily Time
-                                            </a>
-                                        </li>
-                                    @endif
-
-                                    @if ($canViewProductivityReports)
-                                        <!-- Productivity Report -->
-                                        <li>
-                                            <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Productivity
                                             </a>
                                         </li>
                                     @endif
