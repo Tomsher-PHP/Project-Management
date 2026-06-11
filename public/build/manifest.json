@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-nyGWj8kv.css",
+    "file": "assets/app-Disa-5mE.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -87,7 +87,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CJCg5uJg.js",
+    "file": "assets/app-Cj2PiUtp.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -294,6 +294,16 @@
     "src": "resources/js/modules/task-list-subtasks.js",
     "isEntry": true
   },
+  "resources/js/modules/tasks/extend-task.js": {
+    "file": "assets/extend-task-CLNANQ2N.js",
+    "name": "extend-task",
+    "src": "resources/js/modules/tasks/extend-task.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/tasks/handoff-blend.js": {
     "file": "assets/handoff-blend-CyrkDy-D.js",
     "name": "handoff-blend",
@@ -364,6 +374,12 @@
     "file": "assets/user-restore-H_EPGKwb.js",
     "name": "user-restore",
     "src": "resources/js/modules/users/user-restore.js",
+    "isEntry": true
+  },
+  "resources/js/modules/users/user-shift.js": {
+    "file": "assets/user-shift-tEhc6GBY.js",
+    "name": "user-shift",
+    "src": "resources/js/modules/users/user-shift.js",
     "isEntry": true
   },
   "resources/js/modules/workspace/break-work-request.js": {

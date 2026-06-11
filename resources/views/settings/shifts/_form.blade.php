@@ -4,7 +4,11 @@
         @method('PUT')
     @endif
 
-    {{-- ================= BASIC INFORMATION ================= --}}
+    @php
+        $isDisabled = isset($shift);
+    @endphp
+
+    <!-- ================= BASIC INFORMATION ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Shift Information
@@ -12,7 +16,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-            {{-- Shift Name --}}
+            <!-- Shift Name -->
             <div class="flex flex-col gap-2">
                 <label for="name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Shift Name <x-red-star />
@@ -30,7 +34,7 @@
                 @enderror
             </div>
 
-            {{-- Color --}}
+            <!-- Color -->
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Color
@@ -72,7 +76,7 @@
         </div>
     </div>
 
-    {{-- ================= Shift Information ================= --}}
+    <!-- ================= Shift Information ================= -->
     <div>
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Time Information
@@ -82,7 +86,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time <x-red-star /></label>
-                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
+                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}" class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('start_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('start_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -94,7 +98,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time <x-red-star /></label>
-                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}" class="timepicker w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
+                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}" class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('end_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('end_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -113,7 +117,7 @@
                     $shiftBreakMin = ($shift?->break_duration ?? 3600) / 60;
                 @endphp
 
-                <input type="text" name="break_duration" value="{{ old('break_duration', $shiftBreakMin ?? '60') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" {{ $editable }}>
+                <input type="text" name="break_duration" value="{{ old('break_duration', $shiftBreakMin ?? '60') }}" class="w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('break_duration') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('break_duration')
                     <p class="mt-2 text-sm text-error-300">
@@ -164,26 +168,26 @@
 
                     <div class="flex items-center gap-6">
 
-                        {{-- Day label --}}
+                        <!-- Day label -->
                         <label class="flex items-center gap-2 w-28 cursor-pointer">
                             <span class="font-medium text-gray-700 dark:text-bgray-50">
                                 {{ $dayLabel }}
                             </span>
                         </label>
 
-                        {{-- Select All Day --}}
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" class="day-toggle h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-day="{{ $daySlug }}" {{ count($oldWeeks) === 5 ? 'checked' : '' }} {{ $editable }}>
+                        <!-- Select All Day -->
+                        <label class="flex items-center gap-2 {{ $isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer' }}">
+                            <input type="checkbox" class="day-toggle h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 disabled:cursor-not-allowed disabled:opacity-50 {{ $isDisabled ? '' : 'cursor-pointer' }}" data-day="{{ $daySlug }}" {{ count($oldWeeks) === 5 ? 'checked' : '' }} @disabled($isDisabled)>
                             <span class="text-sm text-gray-600 dark:text-bgray-50">
                                 All
                             </span>
                         </label>
 
-                        {{-- Weeks --}}
+                        <!-- Weeks -->
                         <div class="flex gap-4">
                             @for ($week = 1; $week <= 5; $week++)
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" {{ in_array($week, $oldWeeks) ? 'checked' : '' }} {{ $editable }}>
+                                <label class="flex items-center gap-2 {{ $isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer' }}">
+                                    <input type="checkbox" name="weekend_days[{{ $dayKey }}][]" value="{{ $week }}" class="week-checkbox {{ $daySlug . '_check' }} h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 disabled:cursor-not-allowed disabled:opacity-50 {{ $isDisabled ? '' : 'cursor-pointer' }}" {{ in_array($week, $oldWeeks) ? 'checked' : '' }} @disabled($isDisabled)>
                                     <span class="text-sm text-gray-600 dark:text-bgray-50">
                                         W{{ $week }}
                                     </span>
@@ -211,7 +215,7 @@
 
     </div>
 
-    {{-- Submit Button --}}
+    <!-- Submit Button -->
     <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($shift))

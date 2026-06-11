@@ -35,13 +35,23 @@ class RolePermissionSeeder extends Seeder
 
         // Create Roles
         $owner = Role::create(['name' => 'Owner']);
-        Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Manager']);
-        Role::create(['name' => 'Team Leader']);
-        Role::create(['name' => 'Team Member']);
+        $admin = Role::create(['name' => 'Admin']);
+        $manager = Role::create(['name' => 'Manager']);
+        $teamLeader = Role::create(['name' => 'Team Leader']);
+        $teamMember = Role::create(['name' => 'Team Member']);
 
         // Assign Permissions to Roles
         $owner->givePermissionTo(Permission::all());
+
+        // Assign all default_checked permissions to other roles
+        $defaultPermissions = collect($permissions)
+            ->filter(fn($permission) => $permission['default_checked'] ?? false)
+            ->pluck('name')
+            ->toArray();
+
+        foreach ([$admin, $manager, $teamLeader, $teamMember] as $role) {
+            $role->givePermissionTo($defaultPermissions);
+        }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

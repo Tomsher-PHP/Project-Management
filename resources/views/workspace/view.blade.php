@@ -53,6 +53,9 @@
             <!-- Break Work Request Modal -->
             @include('workspace.partials._break-request-modal')
 
+            <!-- Request Estimate Change Modal -->
+            @include('tasks.partials.exceed-time-modal')
+
             <script id="task-filter-dependencies" type="application/json">
                 @json([
                     'milestones' => $projectMilestones->values(),
@@ -78,4 +81,5 @@
     @vite('resources/js/modules/workspace/workspace-auto-refresh.js')
     @vite('resources/js/modules/workspace/break-work-request.js')
     @vite('resources/js/modules/tasks/handoff.js')
+    @vite('resources/js/modules/tasks/extend-task.js')
 @endpush

@@ -153,11 +153,11 @@ return [
     // TIME TRACKING REPORT
     ['name' => 'reports.time_tracking_view', 'sort_order' => 19400, 'default_checked' => true],
     ['name' => 'reports.time_tracking_export', 'sort_order' => 19420, 'default_checked' => false],
-    
+
     // DAILY TIME REPORT
     ['name' => 'reports.daily_time_view', 'sort_order' => 19500, 'default_checked' => false],
     ['name' => 'reports.daily_time_export', 'sort_order' => 19520, 'default_checked' => false],
-    
+
     // PRODUCTIVITY REPORT
     ['name' => 'reports.productivity_view', 'sort_order' => 19600, 'default_checked' => false],
     ['name' => 'reports.productivity_export', 'sort_order' => 19620, 'default_checked' => false],
@@ -207,5 +207,8 @@ return [
 
     // Break Request (28000)
     ['name' => 'break_request.approve_reject',     'sort_order' => 28000, 'default_checked' => false],
+
+    // Extend Task Time Request (29000)
+    ['name' => 'extend_time_request.approve_reject', 'sort_order' => 29000, 'default_checked' => false],
 
 ];

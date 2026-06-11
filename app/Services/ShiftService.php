@@ -56,41 +56,11 @@ class ShiftService
     {
         return DB::transaction(function () use ($shift, $data) {
 
-            $hasAssignments = $shift->assignments()->exists();
-
-            // Always editable
+            // Only Name and Color Code are editable during update
             $updateData = [
                 'name' => $data['name'],
                 'color_code' => $data['color_code'] ?? '#6b7280',
             ];
-
-            // Only editable if no assignments
-            if (!$hasAssignments) {
-
-                $updateData['time_from'] = Carbon::createFromFormat('g:i A', $data['start_time'])->format('H:i:s');
-                $updateData['time_to'] = Carbon::createFromFormat('g:i A', $data['end_time'])->format('H:i:s');
-                $updateData['break_duration'] = $data['break_duration'];
-
-                // Remove old weekends
-                $shift->weekends()->delete();
-
-                // Store new weekends
-                if (!empty($data['weekend_days']) && is_array($data['weekend_days'])) {
-
-                    $weekends = [];
-
-                    foreach ($data['weekend_days'] as $weekday => $weeks) {
-                        foreach ($weeks as $weekNumber) {
-                            $weekends[] = new ShiftWeekend([
-                                'weekday' => $weekday,
-                                'week_number' => $weekNumber,
-                            ]);
-                        }
-                    }
-
-                    $shift->weekends()->saveMany($weekends);
-                }
-            }
 
             $shift->update($updateData);
 

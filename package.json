@@ -17,6 +17,10 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@fullcalendar/core": "^6.1.20",
+        "@fullcalendar/daygrid": "^6.1.20",
+        "@fullcalendar/interaction": "^6.1.20",
+        "@fullcalendar/timegrid": "^6.1.20",
         "alpinejs": "^3.15.8",
         "flatpickr": "^4.6.13",
         "quill": "^2.0.3",

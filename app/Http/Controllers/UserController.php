@@ -14,6 +14,7 @@ use App\Models\UserNotificationSetting;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
@@ -280,5 +281,169 @@ class UserController extends Controller
         return response()->json([
             'message' => 'User updated successfully.'
         ]);
+    }
+
+    /**
+     * Get shift assignment data for the calendar.
+     */
+    public function shifts(User $user)
+    {
+        if (auth()->id() !== $user->id && !auth()->user()->is_super_admin) {
+            Gate::authorize('view', $user);
+        }
+
+        $startLimit = request('start') ? Carbon::parse(request('start'))->startOfDay() : Carbon::now()->startOfMonth();
+        $endLimit = request('end') ? Carbon::parse(request('end'))->endOfDay() : Carbon::now()->endOfMonth();
+
+        $shifts = $user->shiftAssignments()
+            ->with('weekends')
+            ->select(['id', 'user_id', 'shift_id', 'shift_name', 'color_code', 'date_from', 'date_to', 'time_from', 'time_to'])
+            ->get();
+
+        $events = $this->generateEventsForRange($shifts, $startLimit, $endLimit);
+
+        return response()->json($events);
+    }
+
+    /**
+     * Get shift calendar data for a specific user and month.
+     */
+    public function shiftCalendarData(User $user)
+    {
+        if (auth()->id() !== $user->id && !auth()->user()->is_super_admin) {
+            Gate::authorize('view', $user);
+        }
+
+        $year = request('year') ? (int) request('year') : (int) date('Y');
+        $month = request('month') ? (int) request('month') : (int) date('m');
+
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $shifts = $user->shiftAssignments()
+            ->with('weekends')
+            ->whereDate('date_from', '<=', $endOfMonth->toDateString())
+            ->where(function ($query) use ($startOfMonth) {
+                $query->whereNull('date_to')
+                    ->orWhereDate('date_to', '>=', $startOfMonth->toDateString());
+            })
+            ->select(['id', 'user_id', 'shift_id', 'shift_name', 'color_code', 'date_from', 'date_to', 'time_from', 'time_to'])
+            ->get();
+
+        $events = $this->generateEventsForRange($shifts, $startOfMonth, $endOfMonth);
+
+        return response()->json($events);
+    }
+
+    private function generateEventsForRange($shifts, $startLimit, $endLimit)
+    {
+        $events = collect();
+
+        foreach ($shifts as $assignment) {
+            $dateFrom = Carbon::parse($assignment->date_from)->startOfDay();
+            $dateTo = $assignment->date_to ? Carbon::parse($assignment->date_to)->endOfDay() : null;
+
+            // Determine the overlap range
+            $loopStart = $dateFrom->greaterThan($startLimit) ? $dateFrom->copy() : $startLimit->copy();
+            $loopEnd = $dateTo && $dateTo->lessThan($endLimit) ? $dateTo->copy() : $endLimit->copy();
+
+            if ($loopStart->greaterThan($loopEnd)) {
+                continue;
+            }
+
+            // Grouping state variables
+            $currentType = null; // 'working' or 'weekend'
+            $segmentStart = null;
+
+            $currentDate = $loopStart->copy();
+            while ($currentDate->lessThanOrEqualTo($loopEnd)) {
+                $weekOfMonth = (int) ceil($currentDate->day / 7);
+                $dayOfWeek = $currentDate->dayOfWeek; // 0 (Sunday) to 6 (Saturday)
+
+                // Check if weekend day-off
+                $isWeekend = $assignment->weekends
+                    ->where('weekday', $dayOfWeek)
+                    ->where('week_number', $weekOfMonth)
+                    ->isNotEmpty();
+
+                $dayType = $isWeekend ? 'weekend' : 'working';
+
+                if ($currentType === null) {
+                    $currentType = $dayType;
+                    $segmentStart = $currentDate->copy();
+                } elseif ($currentType !== $dayType) {
+                    // Type changed, push the previous segment
+                    $events->push(
+                        $this->createEventPayload($assignment, $currentType, $segmentStart, $currentDate)
+                    );
+                    $currentType = $dayType;
+                    $segmentStart = $currentDate->copy();
+                }
+
+                $currentDate->addDay();
+            }
+
+            // Push the final segment
+            if ($currentType !== null && $segmentStart !== null) {
+                $events->push(
+                    $this->createEventPayload($assignment, $currentType, $segmentStart, $currentDate)
+                );
+            }
+        }
+
+        return $events;
+    }
+
+    private function createEventPayload($assignment, $type, $start, $end)
+    {
+        if ($type === 'weekend') {
+            return [
+                'title' => 'Day Off',
+                'start' => $start->toDateString(),
+                'end' => $end->toDateString(),
+                'className' => 'fc-event-day-off',
+                'textColor' => '#b45309',
+                'allDay' => true,
+            ];
+        }
+
+        // Working day
+        $title = $assignment->shift_name;
+        if ($assignment->time_from && $assignment->time_to) {
+            $timeFrom = Carbon::parse($assignment->time_from)->format('h:i A');
+            $timeTo = Carbon::parse($assignment->time_to)->format('h:i A');
+            $title .= " ({$timeFrom} - {$timeTo})";
+        }
+
+        $rgbaColor = $this->hexToRgba($assignment->color_code ?? '#e5e7eb', 0.8);
+
+        return [
+            'title' => $title,
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString(),
+            'backgroundColor' => $rgbaColor,
+            'borderColor' => $assignment->color_code ?? '#e5e7eb',
+            'textColor' => '#000000',
+            'allDay' => true,
+        ];
+    }
+
+    private function hexToRgba($hex, $opacity = 0.8)
+    {
+        $hex = str_replace('#', '', $hex);
+        if (strlen($hex) === 3) {
+            $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+            $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+            $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+        } elseif (strlen($hex) === 6) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+        } else {
+            $r = 229;
+            $g = 231;
+            $b = 235;
+        }
+        return "rgba($r, $g, $b, $opacity)";
     }
 }
