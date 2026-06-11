@@ -1072,4 +1072,166 @@ class TaskExceedTimeRequestTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    /**
+     * Test notifications are sent to requester and approving user's reporter chain upon approval.
+     */
+    public function test_approved_notifications_sent_to_requester_and_reporter_chain()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $reporter = User::factory()->create();
+        $requester = User::factory()->create();
+
+        // Setup reporter chain for manager
+        \App\Models\UserDetail::create([
+            'user_id' => $manager->id,
+            'reporter_id' => $reporter->id,
+            'manager_id' => $reporter->id,
+        ]);
+
+        // Enable notifications for requester and reporter
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $requester->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => true,
+            'in_app' => true,
+        ]);
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $reporter->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => true,
+            'in_app' => true,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Notification Approve Task',
+            'code' => 'T-NOT-APP-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 120
+        ]);
+
+        $response->assertStatus(200);
+
+        // Assert notification sent to requester
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $requester,
+            \App\Notifications\TaskAssignedNotification::class,
+            function ($notification, $channels) use ($requester, $project, $task, $manager) {
+                $data = $notification->toArray($requester);
+                return str_contains($data['message'], 'approved')
+                    && str_contains($data['message'], $project->name)
+                    && str_contains($data['message'], $task->name)
+                    && str_contains($data['message'], '1 Hour')
+                    && str_contains($data['message'], '2 Hours')
+                    && str_contains($data['message'], $manager->name);
+            }
+        );
+
+        // Assert notification sent to reporter chain
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $reporter,
+            \App\Notifications\TaskAssignedNotification::class,
+            function ($notification, $channels) use ($reporter, $project, $task, $requester, $manager) {
+                $data = $notification->toArray($reporter);
+                return str_contains($data['message'], 'approved')
+                    && str_contains($data['message'], $project->name)
+                    && str_contains($data['message'], $task->name)
+                    && str_contains($data['message'], $requester->name)
+                    && str_contains($data['message'], '2 Hours')
+                    && str_contains($data['message'], $manager->name);
+            }
+        );
+    }
+
+    /**
+     * Test approved notifications respect settings.
+     */
+    public function test_approved_notifications_respect_settings()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $reporter = User::factory()->create();
+        $requester = User::factory()->create();
+
+        // Setup reporter chain for manager
+        \App\Models\UserDetail::create([
+            'user_id' => $manager->id,
+            'reporter_id' => $reporter->id,
+            'manager_id' => $reporter->id,
+        ]);
+
+        // Disable notifications for requester and reporter
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $requester->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => false,
+            'in_app' => false,
+        ]);
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $reporter->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => false,
+            'in_app' => false,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Notification Approve Task 2',
+            'code' => 'T-NOT-APP-2',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 120
+        ]);
+
+        $response->assertStatus(200);
+
+        // Assert notification NOT sent to requester
+        \Illuminate\Support\Facades\Notification::assertNotSentTo(
+            $requester,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+
+        // Assert notification NOT sent to reporter
+        \Illuminate\Support\Facades\Notification::assertNotSentTo(
+            $reporter,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+    }
 }

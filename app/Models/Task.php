@@ -500,6 +500,7 @@ class Task extends Model
     protected array $activityLogExceptAttributes = [
         'code',
         'description',
+        'initial_estimated_time_seconds',
         'derived_time_seconds',
         'actual_time_seconds',
         'added_by',

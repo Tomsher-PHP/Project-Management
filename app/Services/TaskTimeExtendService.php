@@ -188,5 +188,11 @@ class TaskTimeExtendService
             'rejected_by' => null,
             'rejected_at' => null,
         ]);
+
+        $request->loadMissing(['task', 'user']);
+        if ($request->task && $request->user) {
+            $this->notificationService->notifyTaskTimeExtendRequestApprovedToRequester($request, $request->task, $request->user);
+            $this->notificationService->notifyTaskTimeExtendRequestApprovedToReporterChain($request, $request->task, $user);
+        }
     }
 }
