@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Task;
+use App\Models\Project;
+use App\Models\User;
 use App\Models\TaskExtendTimeRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -57,5 +59,95 @@ class TaskTimeExtendService
         }
 
         return $request;
+    }
+
+    public function visibleRequestQuery(User $user): \Illuminate\Database\Eloquent\Builder
+    {
+        if ($user->is_super_admin) {
+            return TaskExtendTimeRequest::query();
+        }
+
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return TaskExtendTimeRequest::query()->whereIn('user_id', $accessibleUserIds);
+    }
+
+    public function getRequests(User $user, int $perPage, string $status, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $query = $this->visibleRequestQuery($user)
+            ->where('status', $status)
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'task:id,name,project_id,estimated_time_seconds',
+                'task.project:id,name',
+                'rejector:id,name',
+            ]);
+
+        // Apply filters
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('task', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        if (!empty($filters['project_id'])) {
+            $projectId = $filters['project_id'];
+            $query->whereHas('task', function ($q) use ($projectId) {
+                $q->where('project_id', $projectId);
+            });
+        }
+
+        if (!empty($filters['user_id'])) {
+            $query->whereIn('user_id', (array) $filters['user_id']);
+        }
+
+        return $query->latest('id')->paginate($perPage)->withQueryString();
+    }
+
+    public function getFilterOptions(User $user): array
+    {
+        $visibleQuery = $this->visibleRequestQuery($user);
+
+        $userIds = (clone $visibleQuery)->distinct()->pluck('user_id')->filter();
+
+        $taskIds = (clone $visibleQuery)->distinct()->pluck('task_id')->filter();
+        $projectIds = $taskIds->isEmpty()
+            ? collect()
+            : Task::query()->whereIn('id', $taskIds)->distinct()->pluck('project_id')->filter();
+
+        return [
+            'users' => $userIds->isEmpty()
+                ? collect()
+                : User::query()->whereIn('id', $userIds)->orderBy('name')->get(['id', 'name']),
+            'projects' => $projectIds->isEmpty()
+                ? collect()
+                : Project::query()->whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']),
+        ];
+    }
+
+    public function reject(User $user, TaskExtendTimeRequest $request, string $reason): void
+    {
+        if (!$request->isPending()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'extend_request' => 'Only pending extend requests can be reviewed.',
+            ]);
+        }
+
+        $request->update([
+            'status' => 'rejected',
+            'approved_by' => null,
+            'approved_at' => null,
+            'rejected_by' => $user->id,
+            'rejected_at' => now(),
+            'rejection_reason' => trim($reason),
+        ]);
     }
 }

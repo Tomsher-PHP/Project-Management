@@ -72,4 +72,23 @@ class TaskExtendTimeRequest extends Model
     {
         return $this->status === 'rejected';
     }
+
+    public function getEstimatedTimeFormattedAttribute(): string
+    {
+        return $this->formatSeconds($this->estimated_time_seconds);
+    }
+
+    public function getNewEstimatedTimeFormattedAttribute(): string
+    {
+        return $this->formatSeconds($this->new_estimated_time_seconds);
+    }
+
+    private function formatSeconds(?int $seconds): string
+    {
+        $totalSeconds = max(0, (int) ($seconds ?? 0));
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+
+        return sprintf('%02dh : %02dm', $hours, $minutes);
+    }
 }

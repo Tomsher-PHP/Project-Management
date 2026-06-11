@@ -208,7 +208,7 @@ return [
     // Break Request (28000)
     ['name' => 'break_request.approve_reject',     'sort_order' => 28000, 'default_checked' => false],
 
-    // Extend Task Time Request (29000)
-    ['name' => 'extend_time_request.approve_reject', 'sort_order' => 29000, 'default_checked' => false],
+    // Task Time Extend Request (29000)
+    ['name' => 'task_time_extend_request.approve_reject', 'sort_order' => 29000, 'default_checked' => false],
 
 ];

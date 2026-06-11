@@ -3,19 +3,67 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskTimeExtendStoreRequest;
+use App\Http\Requests\TaskTimeExtendRejectRequest;
 use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Services\TaskTimeExtendService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TaskTimeExtendController extends Controller
 {
     protected $service;
+    protected string $pageTitle;
+    protected string $subTitle;
 
     public function __construct(TaskTimeExtendService $service)
     {
         $this->service = $service;
+        $this->pageTitle = 'Task Time Extend Requests';
+        $this->subTitle = 'Manage task time extend requests';
+        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+    }
+
+    public function index(Request $request)
+    {
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $selectedStatus = in_array($request->input('request_status'), ['pending', 'approved', 'rejected'], true)
+            ? $request->input('request_status')
+            : 'pending';
+
+        $filterOptions = $this->service->getFilterOptions($request->user());
+
+        return view('requests.task-time-extend-request.index', [
+            'extendRequests' => $this->service->getRequests(
+                $request->user(),
+                $perPage,
+                $selectedStatus,
+                $request->all()
+            ),
+            'users' => $filterOptions['users'],
+            'projects' => $filterOptions['projects'],
+            'selectedStatus' => $selectedStatus,
+            'perPage' => $perPage,
+        ]);
+    }
+
+    public function reject(TaskTimeExtendRejectRequest $request, TaskExtendTimeRequest $extendTimeRequest)
+    {
+        $this->service->reject($request->user(), $extendTimeRequest, $request->validated('reason'));
+
+        $message = 'Task time extend request rejected successfully.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()
+            ->route('tasks.extend-time-requests.index')
+            ->with('success', $message);
     }
 
     public function store(TaskTimeExtendStoreRequest $request, Task $task): JsonResponse

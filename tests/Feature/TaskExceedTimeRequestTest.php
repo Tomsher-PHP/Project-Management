@@ -529,4 +529,187 @@ class TaskExceedTimeRequestTest extends TestCase
             \App\Notifications\TaskAssignedNotification::class
         );
     }
+
+    /**
+     * Test unauthorized user cannot access management page.
+     */
+    public function test_unauthorized_user_cannot_access_management_page()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.extend-time-requests.index'));
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test authorized user can access management page and see requests.
+     */
+    public function test_authorized_user_can_access_management_page()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $user = User::factory()->create();
+        $user->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Management Test Task',
+            'code' => 'T-MGMT-1',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time for testing'
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tasks.extend-time-requests.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Management Test Task');
+        $response->assertSee('Need more time for testing');
+    }
+
+    /**
+     * Test management page filters work correctly.
+     */
+    public function test_management_page_filters()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $user = User::factory()->create();
+        $user->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $project1 = Project::factory()->create();
+        $project2 = Project::factory()->create();
+
+        $task1 = Task::create([
+            'project_id' => $project1->id,
+            'name' => 'Filter Task Alpha',
+            'code' => 'T-FILT-1',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $task2 = Task::create([
+            'project_id' => $project2->id,
+            'name' => 'Filter Task Beta',
+            'code' => 'T-FILT-2',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request1 = TaskExtendTimeRequest::create([
+            'task_id' => $task1->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Alpha Reason'
+        ]);
+
+        $request2 = TaskExtendTimeRequest::create([
+            'task_id' => $task2->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Beta Reason'
+        ]);
+
+        // Search by task name
+        $response = $this->actingAs($user)->get(route('tasks.extend-time-requests.index', ['search' => 'Alpha']));
+        $response->assertStatus(200);
+        $response->assertSee('Filter Task Alpha');
+        $response->assertDontSee('Filter Task Beta');
+
+        // Filter by project
+        $response = $this->actingAs($user)->get(route('tasks.extend-time-requests.index', ['project_id' => [$project2->id]]));
+        $response->assertStatus(200);
+        $response->assertSee('Filter Task Beta');
+        $response->assertDontSee('Filter Task Alpha');
+    }
+
+    /**
+     * Test authorized user can reject request.
+     */
+    public function test_authorized_user_can_reject_request()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $user = User::factory()->create();
+        $user->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Reject Test Task',
+            'code' => 'T-REJ-1',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Reject me'
+        ]);
+
+        $response = $this->actingAs($user)->post(route('tasks.extend-time-requests.reject', $request), [
+            'reason' => 'Not justified'
+        ]);
+
+        $response->assertRedirect(route('tasks.extend-time-requests.index'));
+
+        $this->assertDatabaseHas('task_extend_time_requests', [
+            'id' => $request->id,
+            'status' => 'rejected',
+            'rejected_by' => $user->id,
+            'rejection_reason' => 'Not justified'
+        ]);
+
+        $this->assertNotNull($request->fresh()->rejected_at);
+    }
+
+    /**
+     * Test rejection validation reason is required.
+     */
+    public function test_rejection_validation_reason_required()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $user = User::factory()->create();
+        $user->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Validation Test Task',
+            'code' => 'T-VAL-1',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Validation check'
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.reject', $request), [
+            'reason' => ''
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['reason']);
+    }
 }
