@@ -415,4 +415,118 @@ class TaskExceedTimeRequestTest extends TestCase
             ]
         ]);
     }
+
+    /**
+     * Test notification is dispatched to reporter chain when time extend request is created or updated.
+     */
+    public function test_notification_dispatched_to_reporter_chain_on_create_and_update()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $reporter = User::factory()->create();
+        $assignee = User::factory()->create();
+
+        // Setup user details so reporter is assignee's manager/reporter
+        \App\Models\UserDetail::create([
+            'user_id' => $assignee->id,
+            'reporter_id' => $reporter->id,
+            'manager_id' => $reporter->id,
+        ]);
+
+        // Enable notifications for reporter
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $reporter->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => true,
+            'in_app' => true,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Test Notification Task',
+            'code' => 'T-NOTIF-1',
+            'current_assignee_id' => $assignee->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        // 1. Test notification on creation
+        $response = $this->actingAs($assignee)->postJson(route('tasks.extend-time-requests.store', $task), [
+            'new_estimated_time_minutes' => 120,
+            'reason' => 'Need time'
+        ]);
+
+        $response->assertStatus(200);
+
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $reporter,
+            \App\Notifications\TaskAssignedNotification::class,
+            function ($notification, $channels) use ($reporter) {
+                return str_contains($notification->toArray($reporter)['message'], 'requested to extend time for task');
+            }
+        );
+
+        // Reset notification fake
+        \Illuminate\Support\Facades\Notification::fake();
+
+        // 2. Test notification on update
+        $response = $this->actingAs($assignee)->postJson(route('tasks.extend-time-requests.store', $task), [
+            'new_estimated_time_minutes' => 150,
+            'reason' => 'Need more time'
+        ]);
+
+        $response->assertStatus(200);
+
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $reporter,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+    }
+
+    /**
+     * Test notification is NOT dispatched if settings are disabled.
+     */
+    public function test_notification_not_dispatched_if_setting_disabled()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $reporter = User::factory()->create();
+        $assignee = User::factory()->create();
+
+        // Setup user details so reporter is assignee's manager/reporter
+        \App\Models\UserDetail::create([
+            'user_id' => $assignee->id,
+            'reporter_id' => $reporter->id,
+            'manager_id' => $reporter->id,
+        ]);
+
+        // Disable notifications for reporter
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $reporter->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => false,
+            'in_app' => false,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Test Notification Task 2',
+            'code' => 'T-NOTIF-2',
+            'current_assignee_id' => $assignee->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $response = $this->actingAs($assignee)->postJson(route('tasks.extend-time-requests.store', $task), [
+            'new_estimated_time_minutes' => 120,
+            'reason' => 'Need time'
+        ]);
+
+        $response->assertStatus(200);
+
+        \Illuminate\Support\Facades\Notification::assertNotSentTo(
+            $reporter,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+    }
 }

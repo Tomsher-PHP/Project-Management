@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
+use App\Models\TaskExtendTimeRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -730,5 +731,36 @@ class NotificationService
         }
 
         return route('break-requests.index');
+    }
+
+    public function notifyTaskTimeExtendRequest(User $requestingUser, Task $task, TaskExtendTimeRequest $extendRequest): void
+    {
+        $reporterChainUserIds = User::getReporterChainUserIds($requestingUser->id);
+
+        $recipientIds = collect($reporterChainUserIds)
+            ->reject(fn($userId) => (int) $userId === (int) $requestingUser->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($recipientIds)) {
+            return;
+        }
+
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $requesterName = $requestingUser->name ?? 'A team member';
+        $title = 'Task Time Extend Request';
+        $message = "{$requesterName} requested to extend time for task '{$taskName}' in '{$projectName}'.";
+        $url = route('tasks.edit', $task);
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
     }
 }

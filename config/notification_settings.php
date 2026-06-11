@@ -178,21 +178,17 @@ return [
         'sort_order' => 8
     ],
 
-    'time_extension_request' => [
-        'label' => 'Time Extension Request',
-        'action' => 'time_extension_request',
+    'task_time_extension_request' => [
+        'label' => 'Task Time Extension Request',
+        'action' => 'task_time_extension_request',
         'icon_bg' => '#22C55E',
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="30" cy="30" r="30" fill="#22C55E"/>
-                <circle cx="22" cy="24" r="4" fill="white"/>
-                <circle cx="38" cy="36" r="4" fill="white"/>
-                <path d="M16 42c0-4 3.5-7 8-7h2" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M34 18h2c4.5 0 8 3 8 7" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M24 30h10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M31 27l3 3-3 3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M36 30H26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                <path d="M29 33l-3-3 3-3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="18" y="18" width="16" height="22" rx="3" fill="white"/>
+                <path d="M22 24h8M22 29h8M22 34h5" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="39" cy="31" r="8" stroke="white" stroke-width="2.5"/>
+                <path d="M39 27v4l3 2" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             ',
         'in_app' => true,
