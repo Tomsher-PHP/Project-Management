@@ -439,6 +439,7 @@ button.fc-button.fc-button-primary.fc-prev-button {
 
 .fc-day .fc-daygrid-day-frame {
   position: relative !important;
+  height: 100% !important;
 }
 .fc-day .fc-daygrid-day-frame .fc-daygrid-day-number {
   position: absolute !important;
@@ -451,6 +452,7 @@ button.fc-button.fc-button-primary.fc-prev-button {
   font-weight: 500;
   font-size: 18px;
   color: #2f3032;
+  z-index: 10 !important;
 }
 .dark .fc-day .fc-daygrid-day-frame .fc-daygrid-day-number {
   color: white;
@@ -498,6 +500,37 @@ button.fc-button.fc-button-primary.fc-prev-button {
   width: 100% !important;
   height: 100% !important;
 }
+
+.fc-event.fc-event-day-off,
+.fc-daygrid-event.fc-event-day-off {
+  background-color: #fef3c7 !important;
+  border: 1px dashed #d97706 !important;
+  border-radius: 4px !important;
+}
+.fc-event.fc-event-day-off,
+.fc-event.fc-event-day-off .fc-event-title,
+.fc-event.fc-event-day-off .fc-event-main,
+.fc-daygrid-event.fc-event-day-off,
+.fc-daygrid-event.fc-event-day-off .fc-event-title,
+.fc-daygrid-event.fc-event-day-off .fc-event-main {
+  color: #b45309 !important;
+  font-weight: 600 !important;
+}
+
+.dark .fc-event.fc-event-day-off,
+.dark .fc-daygrid-event.fc-event-day-off {
+  background-color: #451a03 !important;
+  border: 1px dashed #b45309 !important;
+}
+.dark .fc-event.fc-event-day-off,
+.dark .fc-event.fc-event-day-off .fc-event-title,
+.dark .fc-event-day-off .fc-event-main,
+.dark .fc-daygrid-event.fc-event-day-off,
+.dark .fc-daygrid-event.fc-event-day-off .fc-event-title,
+.dark .fc-daygrid-event.fc-event-day-off .fc-event-main {
+  color: #fef3c7 !important;
+}
+
 
 :is(.sidebar-wrapper, .sidebar-wrapper-collapse)
   .sidebar-body

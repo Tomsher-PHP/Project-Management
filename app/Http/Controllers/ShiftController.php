@@ -39,7 +39,7 @@ class ShiftController extends Controller
 
     public function store(ShiftRequest $request, ShiftService $service)
     {
-        activity()->withoutLogs(fn () => $service->createShift($request->validated()));
+        activity()->withoutLogs(fn() => $service->createShift($request->validated()));
 
         return redirect()->route('settings.shifts.index')->with('success', 'Shift created successfully.');
     }
@@ -55,7 +55,7 @@ class ShiftController extends Controller
 
     public function update(ShiftRequest $request, Shift $shift, ShiftService $service)
     {
-        activity()->withoutLogs(fn () => $service->updateShifts($shift, $request->validated()));
+        activity()->withoutLogs(fn() => $service->updateShifts($shift, $request->validated()));
 
         return redirect()->route('settings.shifts.index')->with('success', 'Shift updated successfully.');
     }
@@ -75,8 +75,14 @@ class ShiftController extends Controller
     public function toggleStatus(Request $request)
     {
         $shift = Shift::findOrFail($request->id);
+        if ($shift->is_default) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Default shift cannot be deactivated'
+            ], Response::HTTP_BAD_REQUEST);
+        }
         $shift->is_active = !$shift->is_active;
-        activity()->withoutLogs(fn () => $shift->save());
+        activity()->withoutLogs(fn() => $shift->save());
 
         return response()->json([
             'success' => true,

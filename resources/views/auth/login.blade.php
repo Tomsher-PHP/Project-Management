@@ -7,8 +7,8 @@
             <div class="lg:w-1/2 px-5 xl:pl-12 pt-10">
                 <header>
                     <a href="index.html" class="">
-                        <img src="{{ asset(config('assets.icons.logo')) }}" class="block dark:hidden" alt="Logo" />
-                        <img src="{{ asset(config('assets.icons.logo')) }}" class="hidden dark:block" alt="Logo" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="block h-10 w-auto dark:hidden" alt="Logo" />
+                        <img src="{{ asset(config('assets.icons.logo')) }}" class="hidden h-10 w-auto dark:block" alt="Logo" />
                     </a>
                 </header>
                 <div class="max-w-[450px] m-auto pt-24 pb-16">

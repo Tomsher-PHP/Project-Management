@@ -17,6 +17,7 @@ import './delete-alert';
 import './components/filterDrawer';
 import './components/estimated-time-input';
 import './modules/tasks/task-running-timer'
+import './components/calendar';
 
 import "tom-select/dist/css/tom-select.css";
 import 'quill/dist/quill.core.css';
