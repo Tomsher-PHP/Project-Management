@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskTimeExtendStoreRequest;
 use App\Http\Requests\TaskTimeExtendRejectRequest;
+use App\Http\Requests\TaskTimeExtendApproveRequest;
 use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Services\TaskTimeExtendService;
@@ -46,6 +47,41 @@ class TaskTimeExtendController extends Controller
             'selectedStatus' => $selectedStatus,
             'perPage' => $perPage,
         ]);
+    }
+
+    public function show(TaskExtendTimeRequest $extendTimeRequest): JsonResponse
+    {
+        $extendTimeRequest->loadMissing(['task.project', 'user']);
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'project_name' => $extendTimeRequest->task?->project?->name ?? '--',
+                'task_name' => $extendTimeRequest->task?->name ?? '--',
+                'user_name' => $extendTimeRequest->user?->name ?? '--',
+                'current_estimate_formatted' => $extendTimeRequest->estimated_time_formatted,
+                'new_estimated_time_minutes' => (int) ($extendTimeRequest->new_estimated_time_seconds / 60),
+                'reason' => $extendTimeRequest->reason ?? '--',
+            ]
+        ]);
+    }
+
+    public function approve(TaskTimeExtendApproveRequest $request, TaskExtendTimeRequest $extendTimeRequest)
+    {
+        $this->service->approve($request->user(), $extendTimeRequest, (int) $request->validated('new_estimated_time_minutes'));
+
+        $message = 'Task time extend request approved successfully.';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()
+            ->route('tasks.extend-time-requests.index')
+            ->with('success', $message);
     }
 
     public function reject(TaskTimeExtendRejectRequest $request, TaskExtendTimeRequest $extendTimeRequest)

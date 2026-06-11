@@ -155,4 +155,38 @@ class TaskTimeExtendService
             $this->notificationService->notifyTaskTimeExtendRequestRejected($request, $request->task, $request->user);
         }
     }
+
+    public function approve(User $user, TaskExtendTimeRequest $request, int $newEstimatedMinutes): void
+    {
+        if (!$request->isPending()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'extend_request' => 'Only pending extend requests can be reviewed.',
+            ]);
+        }
+
+        $request->loadMissing('task');
+        $task = $request->task;
+        if (!$task) {
+            throw new \Exception('Associated task not found.');
+        }
+
+        $newEstimatedSeconds = $newEstimatedMinutes * 60;
+
+        // Preserve initial_estimated_time_seconds
+        if ((int)$task->initial_estimated_time_seconds === 0) {
+            $task->initial_estimated_time_seconds = $task->estimated_time_seconds;
+        }
+
+        $task->estimated_time_seconds = $newEstimatedSeconds;
+        $task->save();
+
+        $request->update([
+            'status' => 'approved',
+            'new_estimated_time_seconds' => $newEstimatedSeconds,
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'rejected_by' => null,
+            'rejected_at' => null,
+        ]);
+    }
 }

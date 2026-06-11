@@ -108,13 +108,13 @@
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="min-w-[200px] text-sm text-bgray-700 dark:text-bgray-300">
-                                        {{ \Illuminate\Support\Str::limit($extendRequest->reason ?? '--', 90) }}
+                                        {{ limitStringChar($extendRequest->reason ?? '--', 90) }}
                                     </div>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     @if ($extendRequest->isPending() && $canApproveReject && !$isOwnRequest)
                                         <div class="flex min-w-[180px] flex-wrap items-center gap-2">
-                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white opacity-50 cursor-not-allowed" disabled>
+                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-extend-request-approve-open data-action="{{ route('tasks.extend-time-requests.approve', $extendRequest) }}" data-details-url="{{ route('tasks.extend-time-requests.show', $extendRequest) }}">
                                                 Approve
                                             </button>
 
@@ -194,9 +194,71 @@
             </div>
         </div>
     </div>
+
+    <!-- Approve Modal -->
+    <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-extend-request-approve-modal>
+        <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-approve-close></div>
+
+        <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+                    <div>
+                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Approve Task Time Extend Request</h3>
+                    </div>
+
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-extend-request-approve-close>
+                        ✕
+                    </button>
+                </div>
+
+                <form method="POST" action="#" class="space-y-4 px-5 py-5" data-extend-request-approve-form>
+                    @csrf
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">Project</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-project-name>--</span>
+                        </div>
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">Task</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-task-name>--</span>
+                        </div>
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">Requested By</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-user-name>--</span>
+                        </div>
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">Current Estimate Time</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-current-estimate>--</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <span class="block text-sm font-medium text-bgray-600 dark:text-bgray-300">Reason</span>
+                        <p class="mt-1 text-sm text-bgray-900 dark:text-white bg-bgray-50 dark:bg-darkblack-500 rounded-lg p-3 whitespace-pre-wrap" data-approve-reason>--</p>
+                    </div>
+
+                    <div class="border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <x-forms.estimated-time-input label="New Estimated Time" name="new_estimated_time_minutes" totalMinutes="0" errorKey="new_estimated_time_minutes" />
+                        <span class="text-xs text-error-300 hidden" data-extend-request-approve-error="new_estimated_time_minutes"></span>
+                    </div>
+
+                    <div class="flex justify-end gap-3 border-t border-bgray-100 pt-4 dark:border-darkblack-400">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-medium text-bgray-700 transition hover:border-bgray-300 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-extend-request-approve-close>
+                            Cancel
+                        </button>
+                        <button type="submit" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400" data-extend-request-approve-submit>
+                            Approve
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
+    @vite(['resources/js/modules/tasks/approve-extend-time.js'])
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const rejectModal = document.querySelector('[data-extend-request-reject-modal]');

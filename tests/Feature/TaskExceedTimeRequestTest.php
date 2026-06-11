@@ -829,4 +829,247 @@ class TaskExceedTimeRequestTest extends TestCase
             \App\Notifications\TaskAssignedNotification::class
         );
     }
+
+    /**
+     * Test unauthorized user cannot view details or approve request.
+     */
+    public function test_unauthorized_user_cannot_view_details_or_approve_request()
+    {
+        $user = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'View Details Task',
+            'code' => 'T-VD-1',
+            'current_assignee_id' => $user->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $responseGet = $this->actingAs($user)->get(route('tasks.extend-time-requests.show', $request));
+        $responseGet->assertStatus(403);
+
+        $responsePost = $this->actingAs($user)->post(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 120
+        ]);
+        $responsePost->assertStatus(403);
+    }
+
+    /**
+     * Test authorized user can view request details.
+     */
+    public function test_authorized_user_can_view_request_details()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Details View Task',
+            'code' => 'T-DV-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->getJson(route('tasks.extend-time-requests.show', $request));
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => true,
+                'data' => [
+                    'project_name' => $project->name,
+                    'task_name' => 'Details View Task',
+                    'user_name' => $requester->name,
+                    'new_estimated_time_minutes' => 120,
+                ]
+            ]);
+    }
+
+    /**
+     * Test authorized user can approve request and estimated times are updated correctly.
+     */
+    public function test_authorized_user_can_approve_request()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Approve Task',
+            'code' => 'T-APP-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'initial_estimated_time_seconds' => 0
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 180
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['status' => true]);
+
+        $task->refresh();
+        $request->refresh();
+
+        $this->assertEquals(180 * 60, $task->estimated_time_seconds);
+        $this->assertEquals(3600, $task->initial_estimated_time_seconds); // preserved original
+
+        $this->assertEquals('approved', $request->status);
+        $this->assertEquals($manager->id, $request->approved_by);
+        $this->assertNotNull($request->approved_at);
+        $this->assertNull($request->rejected_by);
+    }
+
+    /**
+     * Test second approval preserves the first initial estimated time.
+     */
+    public function test_second_approval_does_not_overwrite_initial_estimated_time()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Double Approve Task',
+            'code' => 'T-DAPP-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 5400,
+            'initial_estimated_time_seconds' => 1800 // already has preserved initial estimate
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 5400,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need even more time'
+        ]);
+
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 150
+        ]);
+
+        $response->assertStatus(200);
+
+        $task->refresh();
+        $this->assertEquals(150 * 60, $task->estimated_time_seconds);
+        $this->assertEquals(1800, $task->initial_estimated_time_seconds); // should remain unchanged (1800, not 5400)
+    }
+
+    /**
+     * Test approval validation rules.
+     */
+    public function test_approve_validation_rules()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Validation Task',
+            'code' => 'T-VAL-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        // missing field
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), []);
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['new_estimated_time_minutes']);
+
+        // non-integer
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 'invalid'
+        ]);
+        $response->assertStatus(422);
+
+        // zero
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 0
+        ]);
+        $response->assertStatus(422);
+    }
+
+    /**
+     * Test cannot approve non-pending request.
+     */
+    public function test_cannot_approve_non_pending_request()
+    {
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Non Pending Task',
+            'code' => 'T-NP-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'approved', // already approved
+            'reason' => 'Already done'
+        ]);
+
+        $response = $this->actingAs($manager)->postJson(route('tasks.extend-time-requests.approve', $request), [
+            'new_estimated_time_minutes' => 120
+        ]);
+
+        $response->assertStatus(422);
+    }
 }

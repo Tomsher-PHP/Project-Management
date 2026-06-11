@@ -459,6 +459,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['permission.type:task_time_extend_request.approve_reject'])->group(function () {
         Route::get('task-time-extend-requests', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
+        Route::get('task-time-extend-requests/{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
+        Route::post('task-time-extend-requests/{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])->name('tasks.extend-time-requests.approve');
         Route::post('task-time-extend-requests/{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])->name('tasks.extend-time-requests.reject');
     });
     // End Task Time Extend Request routes

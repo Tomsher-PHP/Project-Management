@@ -41,6 +41,7 @@ class Task extends Model
         'due_date_time',
         'completed_at',
         'estimated_time_seconds',
+        'initial_estimated_time_seconds',
         'derived_time_seconds',
         'actual_time_seconds',
         'is_billable',
