@@ -44,10 +44,11 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $subjectPrefix = filled(env('APP_NAME', '')) ? env('APP_NAME') . ' - ' : '';
         return (new MailMessage)
-            ->subject($this->title)
+            ->subject($subjectPrefix . $this->title)
             ->view('emails.notifications.custom', [
-                'title' => $this->title,
+                'title' => $subjectPrefix . $this->title,
                 'messageText' => $this->message,
                 'url' => $this->url,
             ]);

@@ -149,5 +149,10 @@ class TaskTimeExtendService
             'rejected_at' => now(),
             'rejection_reason' => trim($reason),
         ]);
+
+        $request->loadMissing(['task', 'user']);
+        if ($request->task && $request->user) {
+            $this->notificationService->notifyTaskTimeExtendRequestRejected($request, $request->task, $request->user);
+        }
     }
 }

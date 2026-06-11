@@ -712,4 +712,121 @@ class TaskExceedTimeRequestTest extends TestCase
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['reason']);
     }
+
+    /**
+     * Test notification is sent to original requester on rejection.
+     */
+    public function test_notification_sent_to_requester_on_rejection()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+
+        // Enable notifications for requester
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $requester->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => true,
+            'in_app' => true,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Notification Reject Task',
+            'code' => 'T-NOT-REJ-1',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('tasks.extend-time-requests.reject', $request), [
+            'reason' => 'Rejection reason text'
+        ]);
+
+        $response->assertRedirect(route('tasks.extend-time-requests.index'));
+
+        // Assert notification sent to requester with correct details
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $requester,
+            \App\Notifications\TaskAssignedNotification::class,
+            function ($notification, $channels) use ($requester, $manager) {
+                $data = $notification->toArray($requester);
+                return str_contains($data['message'], 'rejected your time extend request')
+                    && str_contains($data['message'], 'Notification Reject Task')
+                    && str_contains($data['message'], 'Rejection reason text')
+                    && str_contains($data['message'], $manager->name);
+            }
+        );
+
+        // Assert notification NOT sent to manager or other users
+        \Illuminate\Support\Facades\Notification::assertNotSentTo(
+            $manager,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+    }
+
+    /**
+     * Test rejection notification is not sent if user has disabled notification setting.
+     */
+    public function test_rejection_notification_not_sent_if_setting_disabled()
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+
+        \Spatie\Permission\Models\Permission::findOrCreate('task_time_extend_request.approve_reject');
+        $manager = User::factory()->create();
+        $manager->givePermissionTo('task_time_extend_request.approve_reject');
+
+        $requester = User::factory()->create();
+
+        // Disable notifications for requester
+        \App\Models\UserNotificationSetting::create([
+            'user_id' => $requester->id,
+            'action' => \App\Models\UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            'mail' => false,
+            'in_app' => false,
+        ]);
+
+        $project = Project::factory()->create();
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Notification Reject Task 2',
+            'code' => 'T-NOT-REJ-2',
+            'current_assignee_id' => $requester->id,
+            'estimated_time_seconds' => 3600
+        ]);
+
+        $request = TaskExtendTimeRequest::create([
+            'task_id' => $task->id,
+            'user_id' => $requester->id,
+            'estimated_time_seconds' => 3600,
+            'new_estimated_time_seconds' => 7200,
+            'status' => 'pending',
+            'reason' => 'Need more time'
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('tasks.extend-time-requests.reject', $request), [
+            'reason' => 'Rejection reason text'
+        ]);
+
+        $response->assertRedirect(route('tasks.extend-time-requests.index'));
+
+        // Assert notification NOT sent to requester
+        \Illuminate\Support\Facades\Notification::assertNotSentTo(
+            $requester,
+            \App\Notifications\TaskAssignedNotification::class
+        );
+    }
 }

@@ -763,4 +763,29 @@ class NotificationService
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
         );
     }
+
+    public function notifyTaskTimeExtendRequestRejected(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
+    {
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+
+        $extendRequest->loadMissing('rejector:id,name');
+        $rejectorName = $extendRequest->rejector?->name ?? 'A manager';
+
+        $title = 'Task Time Extend Request Rejected';
+        $message = "{$rejectorName} rejected your time extend request for task '{$taskName}' in '{$projectName}'.";
+
+        if (filled($extendRequest->rejection_reason)) {
+            $message .= ' Reason: ' . trim((string) $extendRequest->rejection_reason);
+        }
+
+        $this->send(
+            (int) $requestingUser->id,
+            $title,
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
+    }
 }
