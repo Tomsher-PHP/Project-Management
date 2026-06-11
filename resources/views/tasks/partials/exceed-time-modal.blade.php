@@ -36,20 +36,6 @@
 
                         <div>
                             <x-forms.estimated-time-input label="New Estimated Time" name="new_estimated_time_minutes" :total-minutes="0" :show-label="false" />
-                            {{-- <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">New Estimated Time <x-red-star /></label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="mb-1 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-700 dark:text-bgray-300">Hours</label>
-                                    <input type="number" min="0" step="1" name="hours" placeholder="e.g. 10" class="w-full rounded-lg border p-2.5 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white border-gray-300 dark:border-darkblack-400" required>
-                                    <p class="mt-1 hidden text-xs text-red-500" data-exceed-time-error="hours"></p>
-                                </div>
-
-                                <div>
-                                    <label class="mb-1 block text-left text-xs font-medium uppercase tracking-[0.15em] text-bgray-700 dark:text-bgray-300">Minutes</label>
-                                    <input type="number" min="0" max="59" step="1" name="minutes" placeholder="e.g. 30" class="w-full rounded-lg border p-2.5 focus:border-success-300 focus:ring-0 bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white border-gray-300 dark:border-darkblack-400" required>
-                                    <p class="mt-1 hidden text-xs text-red-500" data-exceed-time-error="minutes"></p>
-                                </div>
-                            </div> --}}
                         </div>
 
                         <div>
