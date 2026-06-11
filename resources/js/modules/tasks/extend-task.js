@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.textContent = '';
             el.classList.add('hidden');
         });
-        form.querySelectorAll('input, textarea').forEach(input => {
+        form.querySelectorAll('input, textarea, [data-estimated-hours], [data-estimated-extra-minutes]').forEach(input => {
             input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
         });
     };
@@ -30,15 +30,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) {
             input.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
         }
+        if (field === 'new_estimated_time_minutes') {
+            const timeInputs = form.querySelectorAll('[data-estimated-hours], [data-estimated-extra-minutes]');
+            timeInputs.forEach(el => {
+                el.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+            });
+        }
     };
     
-    const openModal = (trigger) => {
+    const openModal = async (trigger) => {
         resetErrors();
         form.reset();
         
         const taskName = trigger.dataset.taskName || '--';
         const currentEstimate = trigger.dataset.currentEstimate || '--';
         const storeUrl = trigger.dataset.storeUrl || '';
+        const pendingUrl = trigger.dataset.pendingUrl || '';
         
         if (taskNameNode) {
             taskNameNode.textContent = taskName;
@@ -47,10 +54,87 @@ document.addEventListener('DOMContentLoaded', () => {
             currentEstimateNode.textContent = currentEstimate;
         }
         form.action = storeUrl;
-        
+
+        const wrapper = form.querySelector('[data-estimated-time]');
+        const totalInput = wrapper ? wrapper.querySelector('[data-estimated-total-minutes]') : null;
+        const reasonTextarea = form.querySelector('[name="reason"]');
+        const hoursInput = wrapper ? wrapper.querySelector('[data-estimated-hours]') : null;
+        const minutesInput = wrapper ? wrapper.querySelector('[data-estimated-extra-minutes]') : null;
+
+        // Reset to default/empty values before fetching
+        if (totalInput) {
+            totalInput.value = '0';
+        }
+        if (reasonTextarea) {
+            reasonTextarea.value = '';
+        }
+        if (wrapper) {
+            wrapper.dispatchEvent(new CustomEvent('estimated-time:refresh'));
+        }
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         modal.setAttribute('aria-hidden', 'false');
+
+        if (!pendingUrl) {
+            return;
+        }
+
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Submit Request';
+
+        // Disable inputs and submit button during load
+        if (hoursInput) hoursInput.disabled = true;
+        if (minutesInput) minutesInput.disabled = true;
+        if (reasonTextarea) reasonTextarea.disabled = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Loading...';
+        }
+
+        try {
+            const response = await fetch(pendingUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const result = await response.json();
+
+            if (response.ok && result.status && result.data) {
+                if (totalInput) {
+                    totalInput.value = String(result.data.new_estimated_time_minutes);
+                }
+                if (reasonTextarea) {
+                    reasonTextarea.value = result.data.reason || '';
+                }
+            } else {
+                if (totalInput) {
+                    totalInput.value = '0';
+                }
+                if (reasonTextarea) {
+                    reasonTextarea.value = '';
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching pending request:', err);
+            if (totalInput) {
+                totalInput.value = '0';
+            }
+            if (reasonTextarea) {
+                reasonTextarea.value = '';
+            }
+        } finally {
+            if (wrapper) {
+                wrapper.dispatchEvent(new CustomEvent('estimated-time:refresh'));
+            }
+            if (hoursInput) hoursInput.disabled = false;
+            if (minutesInput) minutesInput.disabled = false;
+            if (reasonTextarea) reasonTextarea.disabled = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
     };
     
     const closeModal = () => {

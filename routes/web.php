@@ -451,6 +451,7 @@ Route::middleware(['auth'])->group(function () {
     // End Handoff Request routes
 
     // Task Exceed Time Request routes
+    Route::get('tasks/{task}/exceed-time-requests/pending', [TaskExceedTimeController::class, 'pending'])->name('tasks.exceed-time-requests.pending');
     Route::post('tasks/{task}/exceed-time-requests', [TaskExceedTimeController::class, 'store'])->name('tasks.exceed-time-requests.store');
     // End Task Exceed Time Request routes
 

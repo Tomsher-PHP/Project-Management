@@ -36,6 +36,7 @@
 
                         <div>
                             <x-forms.estimated-time-input label="New Estimated Time" name="new_estimated_time_minutes" :total-minutes="0" :show-label="false" />
+                            <p class="mt-1 hidden text-xs text-red-500" data-exceed-time-error="new_estimated_time_minutes"></p>
                         </div>
 
                         <div>

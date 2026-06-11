@@ -32,4 +32,20 @@ class TaskTimeExceedService
             'reason' => $data['reason'] ?? null,
         ]);
     }
+
+    /**
+     * Update an existing task exceed time request.
+     */
+    public function updateRequest(TaskExceedTimeRequest $request, array $data): TaskExceedTimeRequest
+    {
+        $request->update([
+            'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
+                ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
+                : 0,
+            'reason' => $data['reason'] ?? null,
+        ]);
+
+        return $request;
+    }
 }
+
