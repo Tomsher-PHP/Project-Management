@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\Task;
-use App\Models\TaskExceedTimeRequest;
+use App\Models\TaskExtendTimeRequest;
 use Illuminate\Support\Facades\Auth;
 
-class TaskTimeExceedService
+class TaskTimeExtendService
 {
     /**
      * Create a new class instance.
@@ -17,11 +17,11 @@ class TaskTimeExceedService
     }
 
     /**
-     * Create a task exceed time request.
+     * Create a task extend time request.
      */
-    public function createRequest(Task $task, array $data): TaskExceedTimeRequest
+    public function createRequest(Task $task, array $data): TaskExtendTimeRequest
     {
-        return TaskExceedTimeRequest::create([
+        return TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => Auth::id(),
             'estimated_time_seconds' => $task->estimated_time_seconds ?? 0,
@@ -34,9 +34,9 @@ class TaskTimeExceedService
     }
 
     /**
-     * Update an existing task exceed time request.
+     * Update an existing task extend time request.
      */
-    public function updateRequest(TaskExceedTimeRequest $request, array $data): TaskExceedTimeRequest
+    public function updateRequest(TaskExtendTimeRequest $request, array $data): TaskExtendTimeRequest
     {
         $request->update([
             'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
@@ -48,4 +48,3 @@ class TaskTimeExceedService
         return $request;
     }
 }
-

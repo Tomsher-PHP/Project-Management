@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Project;
-use App\Models\TaskExceedTimeRequest;
+use App\Models\TaskExtendTimeRequest;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -20,7 +20,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -29,7 +29,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'estimated_time_seconds' => 3600 // 1 hour
         ]);
 
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 150, // 2 hours 30 mins
             'reason' => 'Need extra time for integration testing.'
         ]);
@@ -40,7 +40,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'message' => 'Estimate change request submitted successfully.'
         ]);
 
-        $this->assertDatabaseHas('task_exceed_time_requests', [
+        $this->assertDatabaseHas('task_extend_time_requests', [
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -58,7 +58,7 @@ class TaskExceedTimeRequestTest extends TestCase
         $assignee = User::factory()->create();
         $otherUser = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -67,7 +67,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'estimated_time_seconds' => 3600
         ]);
 
-        $response = $this->actingAs($otherUser)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($otherUser)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 150,
             'reason' => 'Should not be allowed'
         ]);
@@ -78,7 +78,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'message' => 'Only the task assignee can request an estimate change.'
         ]);
 
-        $this->assertDatabaseMissing('task_exceed_time_requests', [
+        $this->assertDatabaseMissing('task_extend_time_requests', [
             'task_id' => $task->id
         ]);
     }
@@ -90,7 +90,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -100,21 +100,21 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Negative value
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => -10,
             'reason' => 'Negative'
         ]);
         $response->assertStatus(422);
 
         // Sum is 0
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 0,
             'reason' => 'Zero'
         ]);
         $response->assertStatus(422);
 
         // Null value
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => null,
             'reason' => 'Null value'
         ]);
@@ -128,7 +128,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -138,7 +138,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Pre-create pending request
-        $pendingRequest = TaskExceedTimeRequest::create([
+        $pendingRequest = TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -148,7 +148,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Update request
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 180, // 3 hours (10800 seconds)
             'reason' => 'Updated reason'
         ]);
@@ -160,8 +160,8 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Verify database is updated and no duplicates were created
-        $this->assertEquals(1, TaskExceedTimeRequest::where('task_id', $task->id)->count());
-        
+        $this->assertEquals(1, TaskExtendTimeRequest::where('task_id', $task->id)->count());
+
         $pendingRequest->refresh();
         $this->assertEquals(180 * 60, $pendingRequest->new_estimated_time_seconds);
         $this->assertEquals('Updated reason', $pendingRequest->reason);
@@ -175,7 +175,7 @@ class TaskExceedTimeRequestTest extends TestCase
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -185,7 +185,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Pre-create pending request under otherUser
-        TaskExceedTimeRequest::create([
+        TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $otherUser->id,
             'estimated_time_seconds' => 3600,
@@ -195,7 +195,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Try to update request as user
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 180,
             'reason' => 'Try updating'
         ]);
@@ -214,7 +214,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -224,7 +224,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Pre-create approved request
-        $approvedRequest = TaskExceedTimeRequest::create([
+        $approvedRequest = TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -234,7 +234,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Try to create new request
-        $response = $this->actingAs($user)->postJson(route('tasks.exceed-time-requests.store', $task), [
+        $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 180,
             'reason' => 'New pending reason'
         ]);
@@ -251,8 +251,8 @@ class TaskExceedTimeRequestTest extends TestCase
         $this->assertEquals('approved', $approvedRequest->status);
 
         // A new pending request should be created
-        $this->assertEquals(2, TaskExceedTimeRequest::where('task_id', $task->id)->count());
-        $this->assertDatabaseHas('task_exceed_time_requests', [
+        $this->assertEquals(2, TaskExtendTimeRequest::where('task_id', $task->id)->count());
+        $this->assertDatabaseHas('task_extend_time_requests', [
             'task_id' => $task->id,
             'user_id' => $user->id,
             'new_estimated_time_seconds' => 180 * 60,
@@ -268,7 +268,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -277,7 +277,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'estimated_time_seconds' => 3600
         ]);
 
-        $pendingRequest = TaskExceedTimeRequest::create([
+        $pendingRequest = TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -286,7 +286,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'reason' => 'Need more time for testing.'
         ]);
 
-        $response = $this->actingAs($user)->getJson(route('tasks.exceed-time-requests.pending', $task));
+        $response = $this->actingAs($user)->getJson(route('tasks.extend-time-requests.pending', $task));
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -306,7 +306,7 @@ class TaskExceedTimeRequestTest extends TestCase
         $assignee = User::factory()->create();
         $otherUser = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -315,7 +315,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'estimated_time_seconds' => 3600
         ]);
 
-        TaskExceedTimeRequest::create([
+        TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $assignee->id,
             'estimated_time_seconds' => 3600,
@@ -324,7 +324,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'reason' => 'Reason'
         ]);
 
-        $response = $this->actingAs($otherUser)->getJson(route('tasks.exceed-time-requests.pending', $task));
+        $response = $this->actingAs($otherUser)->getJson(route('tasks.extend-time-requests.pending', $task));
 
         $response->assertStatus(403);
         $response->assertJson([
@@ -340,7 +340,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -350,7 +350,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Create an approved request (not pending)
-        TaskExceedTimeRequest::create([
+        TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -359,7 +359,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'reason' => 'Approved'
         ]);
 
-        $response = $this->actingAs($user)->getJson(route('tasks.exceed-time-requests.pending', $task));
+        $response = $this->actingAs($user)->getJson(route('tasks.extend-time-requests.pending', $task));
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -375,7 +375,7 @@ class TaskExceedTimeRequestTest extends TestCase
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
-        
+
         $task = Task::create([
             'project_id' => $project->id,
             'name' => 'Test Task',
@@ -385,7 +385,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Create older pending request
-        TaskExceedTimeRequest::create([
+        TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -395,7 +395,7 @@ class TaskExceedTimeRequestTest extends TestCase
         ]);
 
         // Create newer pending request
-        TaskExceedTimeRequest::create([
+        TaskExtendTimeRequest::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
             'estimated_time_seconds' => 3600,
@@ -404,7 +404,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'reason' => 'Newer request'
         ]);
 
-        $response = $this->actingAs($user)->getJson(route('tasks.exceed-time-requests.pending', $task));
+        $response = $this->actingAs($user)->getJson(route('tasks.extend-time-requests.pending', $task));
 
         $response->assertStatus(200);
         $response->assertJson([

@@ -1,17 +1,17 @@
 import Alert from '../../alert';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.querySelector('[data-exceed-time-modal]');
-    const form = document.querySelector('[data-exceed-time-form]');
-    
+    const modal = document.querySelector('[data-extend-time-modal]');
+    const form = document.querySelector('[data-extend-time-form]');
+
     if (!modal || !form) return;
-    
-    const taskNameNode = modal.querySelector('[data-exceed-time-task-name]');
-    const currentEstimateNode = modal.querySelector('[data-exceed-time-current-estimate]');
-    const submitBtn = form.querySelector('[data-exceed-time-submit]');
-    
+
+    const taskNameNode = modal.querySelector('[data-extend-time-task-name]');
+    const currentEstimateNode = modal.querySelector('[data-extend-time-current-estimate]');
+    const submitBtn = form.querySelector('[data-extend-time-submit]');
+
     const resetErrors = () => {
-        form.querySelectorAll('[data-exceed-time-error]').forEach(el => {
+        form.querySelectorAll('[data-extend-time-error]').forEach(el => {
             el.textContent = '';
             el.classList.add('hidden');
         });
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
             input.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
         });
     };
-    
+
     const showFieldError = (field, message) => {
-        const errorEl = form.querySelector(`[data-exceed-time-error="${field}"]`);
+        const errorEl = form.querySelector(`[data-extend-time-error="${field}"]`);
         if (errorEl) {
             errorEl.textContent = message;
             errorEl.classList.remove('hidden');
@@ -37,16 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-    
+
     const openModal = async (trigger) => {
         resetErrors();
         form.reset();
-        
+
         const taskName = trigger.dataset.taskName || '--';
         const currentEstimate = trigger.dataset.currentEstimate || '--';
         const storeUrl = trigger.dataset.storeUrl || '';
         const pendingUrl = trigger.dataset.pendingUrl || '';
-        
+
         if (taskNameNode) {
             taskNameNode.textContent = taskName;
         }
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-    
+
     const closeModal = () => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetErrors();
         form.reset();
     };
-    
+
     // Delegation for dynamic triggers (since detail-content is loaded via AJAX)
     document.addEventListener('click', (e) => {
         const trigger = e.target.closest('[data-request-estimate-change-trigger]');
@@ -152,35 +152,35 @@ document.addEventListener('DOMContentLoaded', () => {
             openModal(trigger);
             return;
         }
-        
-        const closeBtn = e.target.closest('[data-exceed-time-modal-close]');
+
+        const closeBtn = e.target.closest('[data-extend-time-modal-close]');
         if (closeBtn) {
             closeModal();
         }
     });
-    
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal();
         }
     });
-    
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         if (form.dataset.submitting === 'true') return;
-        
+
         resetErrors();
         form.dataset.submitting = 'true';
-        
+
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Submitting...';
         submitBtn.disabled = true;
-        
+
         const formData = new FormData(form);
         const submitUrl = form.action;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        
+
         try {
             const response = await fetch(submitUrl, {
                 method: 'POST',
@@ -191,9 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: formData
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok && data.status) {
                 closeModal();
                 if (window.Toast && window.Toast.success) {

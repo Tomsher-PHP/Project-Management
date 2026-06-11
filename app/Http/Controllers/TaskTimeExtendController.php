@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\TaskExceedTimeStoreRequest;
+use App\Http\Requests\TaskTimeExtendStoreRequest;
 use App\Models\Task;
-use App\Models\TaskExceedTimeRequest;
-use App\Services\TaskTimeExceedService;
+use App\Models\TaskExtendTimeRequest;
+use App\Services\TaskTimeExtendService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
-class TaskExceedTimeController extends Controller
+class TaskTimeExtendController extends Controller
 {
     protected $service;
 
-    public function __construct(TaskTimeExceedService $service)
+    public function __construct(TaskTimeExtendService $service)
     {
         $this->service = $service;
     }
 
-    public function store(TaskExceedTimeStoreRequest $request, Task $task): JsonResponse
+    public function store(TaskTimeExtendStoreRequest $request, Task $task): JsonResponse
     {
         // Check if current user is assignee
         if ((int)Auth::id() !== (int)$task->current_assignee_id) {
@@ -29,7 +29,7 @@ class TaskExceedTimeController extends Controller
         }
 
         // Find existing pending request
-        $pendingRequest = TaskExceedTimeRequest::where('task_id', $task->id)
+        $pendingRequest = TaskExtendTimeRequest::where('task_id', $task->id)
             ->where('status', 'pending')
             ->first();
 
@@ -71,7 +71,7 @@ class TaskExceedTimeController extends Controller
         }
 
         // Find the latest pending request
-        $pendingRequest = TaskExceedTimeRequest::where('task_id', $task->id)
+        $pendingRequest = TaskExtendTimeRequest::where('task_id', $task->id)
             ->where('status', 'pending')
             ->latest('id')
             ->first();

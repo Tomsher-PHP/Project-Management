@@ -192,10 +192,10 @@
                     <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
                     @if ($authUser && (int) $authUser->id === (int) $task->current_assignee_id)
                         @php
-                            $pendingExceedRequest = \App\Models\TaskExceedTimeRequest::where('task_id', $task->id)->where('user_id', $authUser->id)->where('status', 'pending')->first();
+                            $pendingExceedRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->where('user_id', $authUser->id)->where('status', 'pending')->first();
                         @endphp
                         <div class="mt-2">
-                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-100 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-store-url="{{ route('tasks.exceed-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.exceed-time-requests.pending', $task) }}">
+                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-100 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>

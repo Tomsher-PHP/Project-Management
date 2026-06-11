@@ -35,7 +35,7 @@ use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskExceedTimeController;
+use App\Http\Controllers\TaskTimeExtendController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use App\Http\Controllers\TaskTimeLogChangeRequestController;
@@ -451,8 +451,8 @@ Route::middleware(['auth'])->group(function () {
     // End Handoff Request routes
 
     // Task Exceed Time Request routes
-    Route::get('tasks/{task}/exceed-time-requests/pending', [TaskExceedTimeController::class, 'pending'])->name('tasks.exceed-time-requests.pending');
-    Route::post('tasks/{task}/exceed-time-requests', [TaskExceedTimeController::class, 'store'])->name('tasks.exceed-time-requests.store');
+    Route::get('tasks/{task}/extend-time-requests/pending', [TaskTimeExtendController::class, 'pending'])->name('tasks.extend-time-requests.pending');
+    Route::post('tasks/{task}/extend-time-requests', [TaskTimeExtendController::class, 'store'])->name('tasks.extend-time-requests.store');
     // End Task Exceed Time Request routes
 
     // Activity Log Route
