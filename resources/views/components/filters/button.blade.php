@@ -1,5 +1,5 @@
 @php
-    $activeFilters = collect(request()->except(['page', 'search_condition', 'name_condition', 'sort_by', 'sort_dir', 'per_page', 'request_status']))
+    $activeFilters = collect(request()->except(['page', 'search_condition', 'name_condition', 'sort_by', 'sort_dir', 'per_page', 'request_status', 'read_status']))
         ->filter(function ($value) {
             return $value !== null && $value !== '';
         })

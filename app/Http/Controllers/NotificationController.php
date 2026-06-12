@@ -23,7 +23,7 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', config('constants.per_page_count', 10));
-        $selectedStatus = $request->input('status', 'unread');
+        $selectedStatus = $request->input('read_status', 'unread');
         if (!in_array($selectedStatus, ['unread', 'read'], true)) {
             $selectedStatus = 'unread';
         }
@@ -112,6 +112,35 @@ class NotificationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Selected notifications deleted successfully.',
+        ]);
+    }
+
+    public function bulkMarkAsRead(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'uuid|exists:notifications,id',
+        ]);
+
+        // Security constraint: only update notifications belonging to the logged-in user
+        auth()->user()->notifications()
+            ->whereIn('id', $request->ids)
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Selected notifications marked as read successfully.',
+        ]);
+    }
+
+    public function clearAll(Request $request): JsonResponse
+    {
+        // Security constraint: only delete notifications belonging to the logged-in user
+        auth()->user()->notifications()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications cleared successfully.',
         ]);
     }
 

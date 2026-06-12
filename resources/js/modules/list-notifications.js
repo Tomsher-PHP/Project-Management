@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const selectAllCheckbox = document.getElementById('select-all');
     const bulkDeleteButton = document.getElementById('bulk-delete-btn');
+    const bulkReadButton = document.getElementById('bulk-read-btn');
+    const clearAllButton = document.getElementById('clear-all-btn');
     const selectedCount = document.getElementById('selected-count');
 
     const getCheckboxes = () => Array.from(document.querySelectorAll('.notification-checkbox'));
@@ -15,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .filter((checkbox) => checkbox.checked)
         .map((checkbox) => checkbox.value);
 
-    const setButtonLoadingState = (button, isLoading, loadingText = 'Deleting...') => {
+    const setButtonLoadingState = (button, isLoading, loadingText = 'Processing...') => {
         if (!button) {
             return;
         }
@@ -47,6 +49,10 @@ document.addEventListener('DOMContentLoaded', function () {
             bulkDeleteButton.disabled = selectedTotal === 0;
         }
 
+        if (bulkReadButton) {
+            bulkReadButton.disabled = selectedTotal === 0;
+        }
+
         if (selectAllCheckbox) {
             selectAllCheckbox.checked = checkboxes.length > 0 && selectedTotal === checkboxes.length;
             selectAllCheckbox.indeterminate = selectedTotal > 0 && selectedTotal < checkboxes.length;
@@ -69,25 +75,25 @@ document.addEventListener('DOMContentLoaded', function () {
         return data;
     };
 
-    const confirmDelete = (title, text, confirmText) => Alert.confirm({
+    const confirmAction = (title, text, confirmText, icon = 'warning', confirmColor = '#ef4444') => Alert.confirm({
         title,
         text,
         confirmText,
         cancelText: 'Cancel',
-        icon: 'warning',
-        confirmColor: '#ef4444',
+        icon,
+        confirmColor,
         cancelColor: '#94a3b8',
     });
 
-    const sendDeleteRequest = async (url, ids = []) => {
+    const sendAjaxRequest = async (url, method, payload = {}) => {
         const requestOptions = {
-            method: 'DELETE',
+            method: method,
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ ids }),
+            body: JSON.stringify(payload),
         };
 
         const response = await fetch(url, requestOptions);
@@ -121,10 +127,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const result = await confirmDelete(
+            const result = await confirmAction(
                 'Delete Selected Notifications?',
                 `You are about to delete ${selectedIds.length} notification(s).`,
-                'Yes, delete them'
+                'Yes, delete them',
+                'warning',
+                '#ef4444'
             );
 
             if (!result.isConfirmed) {
@@ -134,11 +142,73 @@ document.addEventListener('DOMContentLoaded', function () {
             setButtonLoadingState(this, true, 'Deleting...');
 
             try {
-                const data = await sendDeleteRequest(this.dataset.bulkDeleteUrl, selectedIds);
+                const data = await sendAjaxRequest(this.dataset.bulkDeleteUrl, 'DELETE', { ids: selectedIds });
                 await Alert.success(data.message || 'Selected notifications deleted successfully.');
                 window.location.reload();
             } catch (error) {
                 Alert.error(error.message || 'Failed to delete selected notifications.');
+                setButtonLoadingState(this, false);
+                updateSelectionState();
+            }
+        });
+    }
+
+    if (bulkReadButton) {
+        bulkReadButton.addEventListener('click', async function () {
+            const selectedIds = getSelectedIds();
+
+            if (selectedIds.length === 0) {
+                return;
+            }
+
+            const result = await confirmAction(
+                'Mark Selected as Read?',
+                `You are about to mark ${selectedIds.length} notification(s) as read.`,
+                'Yes, mark as read',
+                'info',
+                '#22c55e'
+            );
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            setButtonLoadingState(this, true, 'Updating...');
+
+            try {
+                const data = await sendAjaxRequest(this.dataset.bulkReadUrl, 'POST', { ids: selectedIds });
+                await Alert.success(data.message || 'Selected notifications marked as read successfully.');
+                window.location.reload();
+            } catch (error) {
+                Alert.error(error.message || 'Failed to update selected notifications.');
+                setButtonLoadingState(this, false);
+                updateSelectionState();
+            }
+        });
+    }
+
+    if (clearAllButton) {
+        clearAllButton.addEventListener('click', async function () {
+            const result = await confirmAction(
+                'Clear All Notifications?',
+                'Are you sure you want to delete all your notifications? This action cannot be undone.',
+                'Yes, clear all',
+                'warning',
+                '#ef4444'
+            );
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            setButtonLoadingState(this, true, 'Clearing...');
+
+            try {
+                const data = await sendAjaxRequest(this.dataset.clearAllUrl, 'DELETE');
+                await Alert.success(data.message || 'All notifications cleared successfully.');
+                window.location.reload();
+            } catch (error) {
+                Alert.error(error.message || 'Failed to clear all notifications.');
                 setButtonLoadingState(this, false);
                 updateSelectionState();
             }

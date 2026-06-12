@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BWQpgcVj.css",
+    "file": "assets/app-VVDAdtsH.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -179,7 +179,7 @@
     "isEntry": true
   },
   "resources/js/modules/list-notifications.js": {
-    "file": "assets/list-notifications-Cg_3nycr.js",
+    "file": "assets/list-notifications-BCnvk9Xc.js",
     "name": "list-notifications",
     "src": "resources/js/modules/list-notifications.js",
     "isEntry": true

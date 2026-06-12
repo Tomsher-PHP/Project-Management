@@ -20,6 +20,23 @@
                         </svg>
                         <span>Bulk Delete</span>
                     </button>
+
+                    <button type="button" id="bulk-read-btn" data-bulk-read-url="{{ route('notifications.bulkMarkAsRead') }}"
+                        class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-success-200 bg-success-50 px-5 text-sm font-semibold leading-none text-success-600 shadow-sm transition duration-200 hover:border-success-500 hover:bg-success-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-success-200 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 disabled:shadow-none dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-400 dark:hover:border-success-500 dark:hover:bg-success-500 dark:hover:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-700"
+                        disabled>
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Bulk Mark as Read</span>
+                    </button>
+
+                    <button type="button" id="clear-all-btn" data-clear-all-url="{{ route('notifications.clearAll') }}"
+                        class="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-white px-5 text-sm font-semibold leading-none text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-red-900/40 dark:bg-darkblack-600 dark:text-red-400 dark:hover:bg-darkblack-500">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Clear All</span>
+                    </button>
                 </div>
             </div>
 
@@ -31,7 +48,7 @@
             @endphp
             <div class="inline-flex overflow-hidden rounded-lg border border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600">
                 @foreach ($tabs as $status => $label)
-                    <a href="{{ route('notifications.index', array_merge(request()->except(['page', 'status']), ['status' => $status])) }}"
+                    <a href="{{ route('notifications.index', array_merge(request()->except(['page', 'read_status']), ['read_status' => $status])) }}"
                        class="px-4 py-2 text-sm font-semibold transition {{ $selectedStatus === $status ? 'bg-success-300 text-white' : 'text-bgray-600 hover:bg-bgray-50 dark:text-bgray-300 dark:hover:bg-darkblack-500' }}">
                         {{ $label }}
                     </a>
@@ -130,7 +147,7 @@
     </main>
 
     <x-filters.drawer>
-        <input type="hidden" name="status" value="{{ $selectedStatus }}">
+        <input type="hidden" name="read_status" value="{{ $selectedStatus }}">
         <x-filters.select name="project_id" label="Project" :options="$projects" />
         <x-filters.select name="user_id" label="User" :options="$users" />
     </x-filters.drawer>
