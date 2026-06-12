@@ -188,7 +188,7 @@
                 </div>
 
                 <div>
-                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" help-text="Enter time naturally. We’ll convert it automatically for calculation." />
+                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" />
                     <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
                     @if ($authUser && (int) $authUser->id === (int) $task->current_assignee_id)
                         @php

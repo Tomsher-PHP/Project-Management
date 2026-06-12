@@ -191,7 +191,6 @@ const renderEstimatedTimeInput = (totalMinutes = 0) => {
                     <input type="number" min="0" step="1" value="${escapeHtml(minutes)}" data-estimated-extra-minutes class="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                 </div>
             </div>
-            <p class="text-xs text-bgray-700 dark:text-bgray-300">Enter time naturally. We’ll convert it automatically for calculation.</p>
         </div>
     `;
 };
@@ -2507,7 +2506,7 @@ const initializeProjectSprintBuilderModal = () => {
             await requestJson(config.reorderUrlTemplate.replace('__MILESTONE__', activeMilestoneId), 'PATCH', { sprint_ids: sprintIds });
             syncOrderBadges();
             clearProjectModuleSprintCache(activeMilestoneId);
-            fetchProjectModuleSprints(activeMilestoneId, { force: true, all: true }).catch(() => {});
+            fetchProjectModuleSprints(activeMilestoneId, { force: true, all: true }).catch(() => { });
         } catch (error) {
             showModalError(error.message || 'Unable to reorder project sprints.');
         }
@@ -3251,7 +3250,7 @@ const initializeProjectModuleSection = (section = document.querySelector('[data-
     section.querySelectorAll('[data-project-milestone-sprints-panel][data-autoload="true"]').forEach((panel) => {
         const milestoneId = Number(panel.dataset.milestoneId);
 
-        fetchProjectModuleSprints(milestoneId, { root: section }).catch(() => {});
+        fetchProjectModuleSprints(milestoneId, { root: section }).catch(() => { });
     });
 
     handleProjectModuleDeepLink(section).catch((error) => {
