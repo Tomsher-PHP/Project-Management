@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\TaskTimeLog;
+use App\Notifications\Channels\DatabaseChannel as AppDatabaseChannel;
 use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
@@ -17,6 +18,7 @@ use App\Policies\UserPolicy;
 use App\View\Composers\SidebarComposer;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
+use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        $notificationManager = $this->app->make(ChannelManager::class);
+        $notificationManager->extend('database', fn ($app) => $app->make(AppDatabaseChannel::class));
+        $notificationManager->forgetDrivers();
+
         $dateFormat = config('constants.date_format');
         $timeFormat = config('constants.time_format');
         $timezone = config('app.timezone');
