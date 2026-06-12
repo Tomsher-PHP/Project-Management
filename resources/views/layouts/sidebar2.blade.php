@@ -21,6 +21,7 @@
     $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
     $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
     $canViewBreakRequests = $authUser !== null;
+    $canViewTaskTimeExtendRequests = $authUser?->can('task_time_extend_request.approve_reject');
 
     $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
@@ -59,7 +60,8 @@
     $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
     $isHandoffsActive = request()->routeIs('handoff_requests.*');
     $isBreakRequestsActive = request()->routeIs('break-requests.*');
-    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive;
+    $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive;
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive;
 
     $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
@@ -317,6 +319,18 @@
                                                         @if (($requestMenuBadges['break_requests'] ?? 0) > 0)
                                                             <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                                                                 {{ $requestMenuBadges['break_requests'] }}
+                                                            </span>
+                                                        @endif
+                                                    </a>
+                                                </li>
+                                            @endif
+                                            @if ($canViewTaskTimeExtendRequests)
+                                                <li>
+                                                    <a href="{{ route('tasks.extend-time-requests.index') }}" class="text-md inline-flex items-center justify-between w-full py-1.5 font-medium transition-all {{ $isTaskTimeExtendRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                        <span>Time Extend</span>
+                                                        @if (($requestMenuBadges['task_time_extend_requests'] ?? 0) > 0)
+                                                            <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                                {{ $requestMenuBadges['task_time_extend_requests'] }}
                                                             </span>
                                                         @endif
                                                     </a>

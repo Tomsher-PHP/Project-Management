@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Disa-5mE.css",
+    "file": "assets/app-42pFk0Lw.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -294,8 +294,18 @@
     "src": "resources/js/modules/task-list-subtasks.js",
     "isEntry": true
   },
+  "resources/js/modules/tasks/approve-extend-time.js": {
+    "file": "assets/approve-extend-time-B8ILSxsU.js",
+    "name": "approve-extend-time",
+    "src": "resources/js/modules/tasks/approve-extend-time.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
+  },
   "resources/js/modules/tasks/extend-task.js": {
-    "file": "assets/extend-task-CLNANQ2N.js",
+    "file": "assets/extend-task-CEIZS9s-.js",
     "name": "extend-task",
     "src": "resources/js/modules/tasks/extend-task.js",
     "isEntry": true,

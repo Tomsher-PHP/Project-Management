@@ -41,6 +41,7 @@ export default defineConfig({
                 'resources/js/modules/tasks/handoff.js',
                 'resources/js/modules/tasks/handoff-blend.js',
                 'resources/js/modules/tasks/extend-task.js',
+                'resources/js/modules/tasks/approve-extend-time.js',
                 'resources/js/modules/workspace/workspace-kanban-heights.js',
                 'resources/js/modules/analytics/summary.js',
                 'resources/js/dashboard.js',

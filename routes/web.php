@@ -35,7 +35,7 @@ use App\Http\Controllers\ScheduleShiftController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskExceedTimeController;
+use App\Http\Controllers\TaskTimeExtendController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
 use App\Http\Controllers\TaskTimeLogChangeRequestController;
@@ -85,19 +85,6 @@ Route::middleware(['auth'])->group(function () {
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
     Route::get('/workspace/daily-timeline/refresh', [UserWorkspaceController::class, 'refreshDailyTimeline'])->name('workspace.daily-timeline.refresh');
-    Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
-    Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
-    Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
-
-    Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])
-        ->middleware(['permission.type:break_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('break-requests.bulk-action');
-
-    Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])
-        ->middleware(['permission.type:break_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('break-requests.action');
 
     Route::prefix('user-analytics')->group(function () {
         Route::get('/', [AnalyticsController::class, 'index'])->name('user.analytics');
@@ -450,9 +437,33 @@ Route::middleware(['auth'])->group(function () {
     });
     // End Handoff Request routes
 
-    // Task Exceed Time Request routes
-    Route::post('tasks/{task}/exceed-time-requests', [TaskExceedTimeController::class, 'store'])->name('tasks.exceed-time-requests.store');
-    // End Task Exceed Time Request routes
+    // Break Request routes
+    Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
+    Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
+    Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
+
+    Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])
+        ->middleware(['permission.type:break_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('break-requests.bulk-action');
+
+    Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])
+        ->middleware(['permission.type:break_request.approve_reject'])
+        ->whereIn('action', ['approve', 'reject'])
+        ->name('break-requests.action');
+    // End Break Request routes
+
+    // Task Time Extend Request routes
+    Route::get('tasks/{task}/extend-time-requests/pending', [TaskTimeExtendController::class, 'pending'])->name('tasks.extend-time-requests.pending');
+    Route::post('tasks/{task}/extend-time-requests', [TaskTimeExtendController::class, 'store'])->name('tasks.extend-time-requests.store');
+
+    Route::middleware(['permission.type:task_time_extend_request.approve_reject'])->group(function () {
+        Route::get('task-time-extend-requests', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
+        Route::get('task-time-extend-requests/{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
+        Route::post('task-time-extend-requests/{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])->name('tasks.extend-time-requests.approve');
+        Route::post('task-time-extend-requests/{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])->name('tasks.extend-time-requests.reject');
+    });
+    // End Task Time Extend Request routes
 
     // Activity Log Route
     Route::get('activity-log', [ActivityLogController::class, 'activityLog'])->middleware('permission.type:activity_log.view')->name('activity.log');

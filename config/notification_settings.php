@@ -178,4 +178,22 @@ return [
         'sort_order' => 8
     ],
 
+    'task_time_extension_request' => [
+        'label' => 'Task Time Extension Request',
+        'action' => 'task_time_extension_request',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <rect x="18" y="18" width="16" height="22" rx="3" fill="white"/>
+                <path d="M22 24h8M22 29h8M22 34h5" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="39" cy="31" r="8" stroke="white" stroke-width="2.5"/>
+                <path d="M39 27v4l3 2" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 9
+    ],
+
 ];

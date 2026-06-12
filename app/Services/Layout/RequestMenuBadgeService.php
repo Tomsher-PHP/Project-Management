@@ -5,6 +5,7 @@ namespace App\Services\Layout;
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Task;
+use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,11 +32,16 @@ class RequestMenuBadgeService
 
         $breakRequests = $this->breakRequestCount($user);
 
+        $taskTimeExtendRequests = $user->can('task_time_extend_request.approve_reject')
+            ? $this->taskTimeExtendRequestCount($user)
+            : 0;
+
         return [
             'task_requests' => $taskRequests,
             'task_time' => $taskTime,
             'task_handoff' => $taskHandoff,
             'break_requests' => $breakRequests,
+            'task_time_extend_requests' => $taskTimeExtendRequests,
             'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff + $breakRequests) > 0,
         ];
     }
@@ -65,6 +71,13 @@ class RequestMenuBadgeService
     {
         return $this->visibleBreakRequestQuery($user)
             ->where('status', BreakWorkRequest::STATUS_PENDING)
+            ->count();
+    }
+
+    private function taskTimeExtendRequestCount(User $user): int
+    {
+        return $this->visibleTaskTimeExtendRequestQuery($user)
+            ->where('status', 'pending')
             ->count();
     }
 
@@ -142,6 +155,24 @@ class RequestMenuBadgeService
             ->whereIn('user_id', $accessibleUserIds);
     }
 
+    private function visibleTaskTimeExtendRequestQuery(User $user): Builder
+    {
+        if ($user->is_super_admin) {
+            return TaskExtendTimeRequest::query();
+        }
+
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return TaskExtendTimeRequest::query()
+            ->whereIn('user_id', $accessibleUserIds);
+    }
+
     private function applyAccountableUserScope(Builder $query, User $user): void
     {
         $query
@@ -165,6 +196,7 @@ class RequestMenuBadgeService
             'task_time' => 0,
             'task_handoff' => 0,
             'break_requests' => 0,
+            'task_time_extend_requests' => 0,
             'has_any_pending' => false,
         ];
     }

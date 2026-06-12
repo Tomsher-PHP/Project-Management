@@ -1,6 +1,6 @@
 @php
     //get project edit permission
-    $canEdit = auth()->user()->can('project.edit') && ! $project->trashed();
+    $canEdit = auth()->user()->can('project.edit') && !$project->trashed();
     $isDeletedProjectView = $project->trashed();
 @endphp
 <form id="project-settings-form" action="{{ route('projects.update', $project->id) }}" method="POST" class="space-y-10" x-data="projectForm()" data-can-edit="{{ $canEdit ? 'true' : 'false' }}">
@@ -140,7 +140,6 @@
 
         </div>
     </div>
-
 
     <!-- ================= Other Information ================= -->
     <div class="flex flex-col md:flex-row gap-8 pb-4 dark:border-darkblack-400 dark:text-white items-start md:items-center">

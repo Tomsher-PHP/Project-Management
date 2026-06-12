@@ -188,18 +188,21 @@
                 </div>
 
                 <div>
-                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" help-text="Enter time naturally. We’ll convert it automatically for calculation." />
-                    <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="estimated_time_minutes"></p>
-                    {{-- @if ($authUser && (int) $authUser->id === (int) $task->current_assignee_id)
+                    <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$task->estimated_time_seconds ? (int) round($task->estimated_time_seconds / 60) : 0" :show-label="false" :disabled="!$canEditTask" />
+                    <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
+                    @if ($authUser && (int) $authUser->id === (int) $task->current_assignee_id)
+                        @php
+                            $pendingExceedRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->where('user_id', $authUser->id)->where('status', 'pending')->first();
+                        @endphp
                         <div class="mt-2">
-                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-400 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-store-url="{{ route('tasks.exceed-time-requests.store', $task) }}">
+                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-100 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span>Request Estimate Change</span>
+                                <span>{{ $pendingExceedRequest ? 'Edit Estimate Change Request' : 'Request Estimate Change' }}</span>
                             </button>
                         </div>
-                    @endif --}}
+                    @endif
                 </div>
 
                 <div>
@@ -265,11 +268,11 @@
                             </div>
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-bgray-700 dark:text-bgray-300">Created At</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ \App\Providers\AppServiceProvider::formatAppDateTime($task->created_at) }}</dd>
+                                <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->created_at)</dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-bgray-700 dark:text-bgray-300">Updated At</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at) }}</dd>
+                                <dd class="text-right font-medium text-bgray-900 dark:text-white">@appDateTime($task->updated_at)</dd>
                             </div>
                         </dl>
                     </div>
