@@ -70,6 +70,9 @@
         </div>
 
         @include('tasks.partials.create-modal')
+
+        <!-- Request Estimate Change Modal -->
+        @include('tasks.partials.extend-time-modal')
     </main>
 
     <x-filters.drawer>
@@ -103,4 +106,5 @@
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/kanban-board.js')
+    @vite('resources/js/modules/tasks/extend-task.js')
 @endpush

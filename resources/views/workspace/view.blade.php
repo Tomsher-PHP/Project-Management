@@ -21,10 +21,7 @@
             </div>
 
             <!-- Daily Timeline Section -->
-            <div id="workspace-daily-timeline-container"
-                data-refresh-url="{{ route('workspace.daily-timeline.refresh') }}"
-                data-selected-date="{{ $selectedDateValue }}"
-                data-user-id="{{ $workspaceTimelineUserId }}">
+            <div id="workspace-daily-timeline-container" data-refresh-url="{{ route('workspace.daily-timeline.refresh') }}" data-selected-date="{{ $selectedDateValue }}" data-user-id="{{ $workspaceTimelineUserId }}">
                 @include('workspace.partials.daily-timeline')
             </div>
 
@@ -54,7 +51,7 @@
             @include('workspace.partials._break-request-modal')
 
             <!-- Request Estimate Change Modal -->
-            @include('tasks.partials.exceed-time-modal')
+            @include('tasks.partials.extend-time-modal')
 
             <script id="task-filter-dependencies" type="application/json">
                 @json([

@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
+use App\Models\TaskExtendTimeRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -730,5 +731,139 @@ class NotificationService
         }
 
         return route('break-requests.index');
+    }
+
+    public function notifyTaskTimeExtendRequest(User $requestingUser, Task $task, TaskExtendTimeRequest $extendRequest): void
+    {
+        $reporterChainUserIds = User::getReporterChainUserIds($requestingUser->id);
+
+        $recipientIds = collect($reporterChainUserIds)
+            ->reject(fn($userId) => (int) $userId === (int) $requestingUser->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($recipientIds)) {
+            return;
+        }
+
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+        $requesterName = $requestingUser->name ?? 'A team member';
+        $title = 'Task Time Extend Request';
+        $message = "{$requesterName} requested to extend time for task '{$taskName}' in '{$projectName}'.";
+        $url = route('tasks.edit', $task);
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
+    }
+
+    public function notifyTaskTimeExtendRequestRejected(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
+    {
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+
+        $extendRequest->loadMissing('rejector:id,name');
+        $rejectorName = $extendRequest->rejector?->name ?? 'A manager';
+
+        $title = 'Task Time Extend Request Rejected';
+        $message = "{$rejectorName} rejected your time extend request for task '{$taskName}' in '{$projectName}'.";
+
+        if (filled($extendRequest->rejection_reason)) {
+            $message .= ' Reason: ' . trim((string) $extendRequest->rejection_reason);
+        }
+
+        $this->send(
+            (int) $requestingUser->id,
+            $title,
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
+    }
+
+    public function notifyTaskTimeExtendRequestApprovedToRequester(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
+    {
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+
+        $extendRequest->loadMissing('approver:id,name');
+        $approverName = $extendRequest->approver?->name ?? 'A manager';
+
+        $previousEstimatedTime = $this->formatEstimatedTime((int) $extendRequest->estimated_time_seconds);
+        $newApprovedEstimatedTime = $this->formatEstimatedTime((int) $extendRequest->new_estimated_time_seconds);
+
+        $title = 'Task Time Extend Request Approved';
+
+        $message = "'{$taskName}' in '{$projectName}' approved by {$approverName}.\n\n"
+            . "Time changed from {$previousEstimatedTime} to {$newApprovedEstimatedTime}";
+
+        $this->send(
+            (int) $requestingUser->id,
+            $title,
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
+    }
+
+    public function notifyTaskTimeExtendRequestApprovedToReporterChain(TaskExtendTimeRequest $extendRequest, Task $task, User $approvedByUser): void
+    {
+        $task->loadMissing('project:id,name');
+        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $projectName = $task->project?->name ?? 'Project';
+
+        $extendRequest->loadMissing('user');
+        $requesterName = $extendRequest->user?->name ?? 'A team member';
+        $previousEstimatedTime = $this->formatEstimatedTime((int) $extendRequest->estimated_time_seconds);
+        $newApprovedEstimatedTime = $this->formatEstimatedTime((int) $extendRequest->new_estimated_time_seconds);
+
+        $reporterChainUserIds = User::getReporterChainUserIds($approvedByUser->id);
+
+        $recipientIds = collect($reporterChainUserIds)
+            ->reject(fn($userId) => (int) $userId === (int) $approvedByUser->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($recipientIds)) {
+            return;
+        }
+
+        $title = 'Task Time Extend Request Approved';
+        $message = "'{$taskName}' in '{$projectName}' requested by {$requesterName} has been approved by {$approvedByUser->name}.\n\n"
+            . "Time changed from {$previousEstimatedTime} to {$newApprovedEstimatedTime}";
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+        );
+    }
+
+    private function formatEstimatedTime(int $seconds): string
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = $hours . ' ' . Str::plural('Hour', $hours);
+        }
+        if ($minutes > 0 || empty($parts)) {
+            $parts[] = $minutes . ' ' . Str::plural('Minute', $minutes);
+        }
+
+        return implode(' ', $parts);
     }
 }

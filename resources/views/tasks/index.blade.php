@@ -130,6 +130,9 @@
             @json($taskCreateDependencies)
         </script>
     @endcan
+
+    <!-- Request Estimate Change Modal -->
+    @include('tasks.partials.extend-time-modal')
 @endsection
 
 @push('scripts')
@@ -138,4 +141,5 @@
     @can('task.create')
         @vite('resources/js/modules/task-list-create.js')
     @endcan
+    @vite('resources/js/modules/tasks/extend-task.js')
 @endpush
