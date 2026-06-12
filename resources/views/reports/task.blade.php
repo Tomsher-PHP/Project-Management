@@ -103,6 +103,41 @@
                 </div>
             </div>
         </div>
+
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Total Estimated
+                </div>
+
+                <div class="mt-2 text-2xl font-black leading-none text-bgray-900 dark:text-bgray-100">
+                    {{ formatSecondsToHoursMinutes($taskStats['total_estimated'] ?? 0) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-100">
+                    Total Actual
+                </div>
+
+                @php
+                    $totalActual = (int) ($taskStats['total_actual'] ?? 0);
+                    $totalEstimated = (int) ($taskStats['total_estimated'] ?? 0);
+                    $actualColorClass = 'text-bgray-900 dark:text-bgray-100';
+                    if ($totalActual < $totalEstimated) {
+                        $actualColorClass = 'text-success-400 dark:text-success-300';
+                    } elseif ($totalActual > $totalEstimated) {
+                        $actualColorClass = 'text-red-500 dark:text-red-400';
+                    }
+                @endphp
+
+                <div class="mt-2 text-2xl font-black leading-none {{ $actualColorClass }}">
+                    {{ formatSecondsToHoursMinutes($totalActual) }}
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">

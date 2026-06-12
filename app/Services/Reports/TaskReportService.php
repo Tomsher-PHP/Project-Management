@@ -305,6 +305,8 @@ class TaskReportService
             'completed' => (clone $filteredQuery)
                 ->whereHas('status', fn(Builder $query) => $query->where('type', TaskStatus::TYPE_COMPLETED))
                 ->count(),
+            'total_estimated' => (int) (clone $filteredQuery)->sum('tasks.estimated_time_seconds'),
+            'total_actual' => (int) (clone $filteredQuery)->sum('tasks.actual_time_seconds'),
         ];
     }
 
