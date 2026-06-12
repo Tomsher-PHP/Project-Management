@@ -203,14 +203,14 @@
                                 $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                                <div class="flex min-w-0 items-center gap-3">
+                                <a href="{{ route('reports.tasks', ['project_id' => [$project->id], 'current_assignee_id' => [$assignee['id']]]) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
                                     <x-user-avatar :name="$assignee['name']" :image="$assignee['profile_image_url']" class="h-10 w-10 flex-shrink-0" />
 
                                     <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white">{{ $assignee['name'] }}</p>
-                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">{{ $assignee['count'] }} {{ \Illuminate\Support\Str::plural('task', $assignee['count']) }} involved</p>
+                                        <p class="truncate text-sm font-semibold text-bgray-900 dark:text-white group-hover:text-success-300 transition">{{ $assignee['name'] }}</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300 group-hover:text-success-300/80 transition">{{ $assignee['count'] }} {{ \Illuminate\Support\Str::plural('task', $assignee['count']) }} involved</p>
                                     </div>
-                                </div>
+                                </a>
 
                                 <div class="flex items-center justify-end gap-4 text-right">
                                     <div>
