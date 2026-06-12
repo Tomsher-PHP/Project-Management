@@ -180,10 +180,14 @@
         <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
             <div class="space-y-4">
                 <div class="rounded-xl border border-bgray-200 bg-bgray-50/60 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40">
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer</p>
                             <p class="mt-1 truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $project->customer->name ?? '--' }}</p>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Sales Person</p>
+                            <p class="mt-1 truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $project->salesPerson->name ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Project Flow</p>
@@ -256,13 +260,14 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 px-1 py-1">
-                <x-user-avatar :user="$project->addedBy" :name="$project->addedBy->name ?? '--'" size="sm" />
-
+            <div class="flex justify-end px-1 py-1">
                 <div class="text-right">
-                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">
-                        {{ $project->addedBy->name ?? '--' }}
-                    </p>
+                    <div class="flex items-center justify-end gap-1">
+                        <x-user-avatar :user="$project->addedBy" :name="$project->addedBy->name ?? '--'" size="sm" />
+                        <p class="text-sm font-semibold text-bgray-900 dark:text-white">
+                            {{ $project->addedBy->name ?? '--' }}
+                        </p>
+                    </div>
                     <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
                         @appDateTime($project->created_at)
                     </p>
