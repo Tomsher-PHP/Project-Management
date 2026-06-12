@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BW3YunaN.css",
+    "file": "assets/app-BWQpgcVj.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -176,6 +176,12 @@
     "file": "assets/kpi-form-BL6DO7iw.js",
     "name": "kpi-form",
     "src": "resources/js/modules/kpi-form.js",
+    "isEntry": true
+  },
+  "resources/js/modules/list-notifications.js": {
+    "file": "assets/list-notifications-Cg_3nycr.js",
+    "name": "list-notifications",
+    "src": "resources/js/modules/list-notifications.js",
     "isEntry": true
   },
   "resources/js/modules/project-stage-form.js": {
