@@ -1,6 +1,91 @@
+@php
+    $authUser = auth()->user();
+    $isSuperAdmin = $authUser?->is_super_admin;
+    $requestMenuBadges = $requestMenuBadges ?? [
+        'task_requests' => 0,
+        'task_time' => 0,
+        'task_handoff' => 0,
+        'break_requests' => 0,
+        'task_time_extend_requests' => 0,
+        'has_any_pending' => false,
+    ];
+
+    $canViewDashboard = $authUser?->can('dashboard.view');
+    $canViewRoles = $authUser?->can('role.view');
+    $canViewUsers = $authUser?->canAny(['user.view', 'user.view_all_users']);
+    $canViewTeams = $authUser?->canAny(['team.view', 'team.view_all_teams']);
+    $canViewCustomers = $authUser?->can('customer.view');
+
+    $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']);
+    $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']);
+    $canViewTaskRequests = $canViewTasks;
+    $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
+    $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
+    $canViewBreakRequests = $authUser !== null;
+    $canViewTaskTimeExtendRequests = $authUser?->can('task_time_extend_request.approve_reject');
+
+    $canViewScheduleShift = $authUser?->can('schedule_shift.view');
+
+    $settingsPermissions = config('constants.settings_permissions');
+    $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+
+    $canViewActivityLog = $authUser?->can('activity_log.view');
+
+    $canViewProjectReports = $authUser?->can('reports.project_view');
+    $canViewMilestoneReports = $authUser?->can('reports.milestone_view');
+    $canViewSprintReports = $authUser?->can('reports.sprint_view');
+    $canViewTaskReports = $authUser?->can('reports.task_view');
+
+    $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view');
+    $canViewDailyReports = $authUser?->can('reports.daily_time_view');
+    $canViewProductivityReports = $authUser?->can('reports.productivity_view');
+
+    $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
+    $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
+    $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
+
+    $isDashboardActive = request()->routeIs('dashboard');
+    $isWorkspaceActive = request()->routeIs('user.workspace');
+    $isAnalyticsActive = request()->routeIs('user.analytics');
+    $isRolesActive = request()->routeIs('roles.*');
+    $isUsersActive = request()->routeIs('users.*');
+    $isTeamsActive = request()->routeIs('teams.*');
+    $isCustomersActive = request()->routeIs('customers.*');
+    $isProjectsActive = request()->routeIs('projects.*');
+    $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
+
+    $isTaskRequestsActive = request()->routeIs('tasks.requests.*');
+    $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
+    $isHandoffsActive = request()->routeIs('handoff_requests.*');
+    $isBreakRequestsActive = request()->routeIs('break-requests.*');
+    $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive;
+    $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
+
+    $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
+    $isMilestoneReportActive = request()->routeIs('reports.milestones', 'reports.milestone.export');
+    $isSprintReportActive = request()->routeIs('reports.sprints', 'reports.sprint.export');
+    $isTaskReportActive = request()->routeIs('reports.tasks', 'reports.task.export');
+    $isProjectsReportsMenuActive = $isProjectReportActive || $isMilestoneReportActive || $isSprintReportActive || $isTaskReportActive;
+
+    $isTimeTrackingReportActive = request()->routeIs('reports.time_tracking', 'reports.time_tracking.export');
+    $isDailyReportActive = request()->routeIs('reports.daily_time', 'reports.daily_time.export');
+    $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
+    $isPerformanceReportsMenuActive = $isProductivityReportActive || $isTimeTrackingReportActive || $isDailyReportActive;
+
+    $isScheduleShiftActive = request()->routeIs('schedule.shift.*');
+    $isSettingsActive = request()->routeIs('settings.*');
+    $isActivityLogActive = request()->routeIs('activity.log*');
+
+    $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
+    $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
+    $sidebarSubLinkActiveClass = 'text-success-400 dark:text-success-300';
+    $sidebarSubLinkInactiveClass = 'text-bgray-600 dark:text-bgray-50 hover:text-bgray-800 hover:dark:text-success-300';
+@endphp
 <aside class="sidebar-wrapper fixed top-0 z-30 block h-full bg-white dark:bg-darkblack-600 sm:hidden xl:block">
     <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 pb-4 dark:border-darkblack-400">
-        <a href="{{ route('dashboard') }}" class="flex items-center">
+        <a href="{{ $canViewDashboard ? route('dashboard') : route('user.workspace') }}" class="flex items-center">
             <span class="relative inline-flex">
                 <img src="{{ asset(config('assets.icons.logo')) }}" class="block h-10 w-auto dark:hidden" alt="logo" />
                 <img src="{{ asset(config('assets.icons.logo_white')) }}" class="hidden h-10 w-auto dark:block" alt="logo" />
@@ -20,91 +105,6 @@
         </button>
     </div>
     <div class="sidebar-body overflow-style-none relative z-30 h-screen w-full overflow-y-scroll pb-[200px] pl-8 pt-3">
-        @php
-            $authUser = auth()->user();
-            $isSuperAdmin = $authUser?->is_super_admin;
-            $requestMenuBadges = $requestMenuBadges ?? [
-                'task_requests' => 0,
-                'task_time' => 0,
-                'task_handoff' => 0,
-                'break_requests' => 0,
-                'task_time_extend_requests' => 0,
-                'has_any_pending' => false,
-            ];
-
-            $canViewDashboard = $authUser?->can('dashboard.view');
-            $canViewRoles = $authUser?->can('role.view');
-            $canViewUsers = $authUser?->canAny(['user.view', 'user.view_all_users']);
-            $canViewTeams = $authUser?->canAny(['team.view', 'team.view_all_teams']);
-            $canViewCustomers = $authUser?->can('customer.view');
-
-            $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']);
-            $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']);
-            $canViewTaskRequests = $canViewTasks;
-            $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
-            $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
-            $canViewBreakRequests = $authUser !== null;
-            $canViewTaskTimeExtendRequests = $authUser?->can('task_time_extend_request.approve_reject');
-
-            $canViewScheduleShift = $authUser?->can('schedule_shift.view');
-
-            $settingsPermissions = config('constants.settings_permissions');
-            $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
-
-            $canViewActivityLog = $authUser?->can('activity_log.view');
-
-            $canViewProjectReports = $authUser?->can('reports.project_view');
-            $canViewMilestoneReports = $authUser?->can('reports.milestone_view');
-            $canViewSprintReports = $authUser?->can('reports.sprint_view');
-            $canViewTaskReports = $authUser?->can('reports.task_view');
-
-            $canViewTimeTrackingReports = $authUser?->can('reports.time_tracking_view');
-            $canViewDailyReports = $authUser?->can('reports.daily_time_view');
-            $canViewProductivityReports = $authUser?->can('reports.productivity_view');
-
-            $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
-            $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
-            $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
-            $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
-
-            $isDashboardActive = request()->routeIs('dashboard');
-            $isWorkspaceActive = request()->routeIs('user.workspace');
-            $isAnalyticsActive = request()->routeIs('user.analytics');
-            $isRolesActive = request()->routeIs('roles.*');
-            $isUsersActive = request()->routeIs('users.*');
-            $isTeamsActive = request()->routeIs('teams.*');
-            $isCustomersActive = request()->routeIs('customers.*');
-            $isProjectsActive = request()->routeIs('projects.*');
-            $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
-
-            $isTaskRequestsActive = request()->routeIs('tasks.requests.*');
-            $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
-            $isHandoffsActive = request()->routeIs('handoff_requests.*');
-            $isBreakRequestsActive = request()->routeIs('break-requests.*');
-            $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
-            $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive;
-            $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
-
-            $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
-            $isMilestoneReportActive = request()->routeIs('reports.milestones', 'reports.milestone.export');
-            $isSprintReportActive = request()->routeIs('reports.sprints', 'reports.sprint.export');
-            $isTaskReportActive = request()->routeIs('reports.tasks', 'reports.task.export');
-            $isProjectsReportsMenuActive = $isProjectReportActive || $isMilestoneReportActive || $isSprintReportActive || $isTaskReportActive;
-
-            $isTimeTrackingReportActive = request()->routeIs('reports.time_tracking', 'reports.time_tracking.export');
-            $isDailyReportActive = request()->routeIs('reports.daily_time', 'reports.daily_time.export');
-            $isProductivityReportActive = request()->routeIs('reports.productivity', 'reports.productivity.*');
-            $isPerformanceReportsMenuActive = $isProductivityReportActive || $isTimeTrackingReportActive || $isDailyReportActive;
-
-            $isScheduleShiftActive = request()->routeIs('schedule.shift.*');
-            $isSettingsActive = request()->routeIs('settings.*');
-            $isActivityLogActive = request()->routeIs('activity.log*');
-
-            $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
-            $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
-            $sidebarSubLinkActiveClass = 'text-success-400 dark:text-success-300';
-            $sidebarSubLinkInactiveClass = 'text-bgray-600 dark:text-bgray-50 hover:text-bgray-800 hover:dark:text-success-300';
-        @endphp
 
         <div class="nav-wrapper mb-[36px] pr-8">
             <div class="item-wrapper mb-5">
@@ -127,30 +127,30 @@
                         </li>
 
                         {{-- <li class="item py-[11px] {{ $isDashboardActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                            <a href="index.html" aria-expanded="{{ $isDashboardActive ? 'true' : 'false' }}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2.5">
-                                        <span class="item-ico">
-                                            <svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path class="path-1" d="M0 8.84719C0 7.99027 0.366443 7.17426 1.00691 6.60496L6.34255 1.86217C7.85809 0.515019 10.1419 0.515019 11.6575 1.86217L16.9931 6.60496C17.6336 7.17426 18 7.99027 18 8.84719V17C18 19.2091 16.2091 21 14 21H4C1.79086 21 0 19.2091 0 17V8.84719Z" fill="#1A202C" />
-                                                <path class="path-2" d="M5 17C5 14.7909 6.79086 13 9 13C11.2091 13 13 14.7909 13 17V21H5V17Z" fill="#22C55E" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-lg font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboards</span>
-                                    </div>
-                                    <span>
-                                        <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isDashboardActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                        </svg>
-                                    </span>
-                                </div>
-                            </a>
-                            <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isDashboardActive ? 'active' : '' }}">
-                                <li>
-                                    <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDashboardActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">Dashboard Default</a>
-                                </li>
-                            </ul>
-                        </li> --}}
+                    <a href="index.html" aria-expanded="{{ $isDashboardActive ? 'true' : 'false' }}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="item-ico">
+                                    <svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path class="path-1" d="M0 8.84719C0 7.99027 0.366443 7.17426 1.00691 6.60496L6.34255 1.86217C7.85809 0.515019 10.1419 0.515019 11.6575 1.86217L16.9931 6.60496C17.6336 7.17426 18 7.99027 18 8.84719V17C18 19.2091 16.2091 21 14 21H4C1.79086 21 0 19.2091 0 17V8.84719Z" fill="#1A202C" />
+                                        <path class="path-2" d="M5 17C5 14.7909 6.79086 13 9 13C11.2091 13 13 14.7909 13 17V21H5V17Z" fill="#22C55E" />
+                                    </svg>
+                                </span>
+                                <span class="item-text text-lg font-medium leading-none {{ $isDashboardActive ? $sidebarItemActiveClass : '' }}">Dashboards</span>
+                            </div>
+                            <span>
+                                <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isDashboardActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
+                                </svg>
+                            </span>
+                        </div>
+                    </a>
+                    <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isDashboardActive ? 'active' : '' }}">
+                        <li>
+                            <a href="{{ route('dashboard') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDashboardActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">Dashboard Default</a>
+                        </li>
+                    </ul>
+                </li> --}}
                     @endif
                     <li class="item py-[11px] {{ $isWorkspaceActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                         <a href="{{ route('user.workspace') }}">
@@ -563,56 +563,56 @@
 
                         <!-- RESOURCES -->
                         {{-- @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
-                            <li class="item py-[11px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="index.html" aria-expanded="{{ $isResourcesReportsMenuActive ? 'true' : 'false' }}">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-2.5">
-                                            <span class="item-ico">
-                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <circle cx="7" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                                    <circle cx="14" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                                    <path d="M3 16C4.5 13 15.5 13 17 16" stroke="#22C55E" stroke-width="2" stroke-linecap="round" class="path-2" />
-                                                </svg>
-                                            </span>
-                                            <span class="item-text text-lg font-medium leading-none {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : '' }}">Resources</span>
-                                        </div>
-                                        <span class="flex items-center gap-2">
-                                            <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isResourcesReportsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </a>
-                                <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isResourcesReportsMenuActive ? 'active' : '' }}">
-                                    @if ($canViewAttendanceReports)
-                                        <!-- Attendance Report -->
-                                        <li>
-                                            <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isAttendanceReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Attendance
-                                            </a>
-                                        </li>
-                                    @endif
+                    <li class="item py-[11px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                        <a href="index.html" aria-expanded="{{ $isResourcesReportsMenuActive ? 'true' : 'false' }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2.5">
+                                    <span class="item-ico">
+                                        <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="7" cy="6" r="3" fill="#1A202C" class="path-1" />
+                                            <circle cx="14" cy="6" r="3" fill="#1A202C" class="path-1" />
+                                            <path d="M3 16C4.5 13 15.5 13 17 16" stroke="#22C55E" stroke-width="2" stroke-linecap="round" class="path-2" />
+                                        </svg>
+                                    </span>
+                                    <span class="item-text text-lg font-medium leading-none {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : '' }}">Resources</span>
+                                </div>
+                                <span class="flex items-center gap-2">
+                                    <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isResourcesReportsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+                        <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isResourcesReportsMenuActive ? 'active' : '' }}">
+                            @if ($canViewAttendanceReports)
+                                <!-- Attendance Report -->
+                                <li>
+                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isAttendanceReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                        Attendance
+                                    </a>
+                                </li>
+                            @endif
 
-                                    @if ($canViewLeaveReports)
-                                        <!-- Leave Report -->
-                                        <li>
-                                            <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isLeaveReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Leave
-                                            </a>
-                                        </li>
-                                    @endif
+                            @if ($canViewLeaveReports)
+                                <!-- Leave Report -->
+                                <li>
+                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isLeaveReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                        Leave
+                                    </a>
+                                </li>
+                            @endif
 
-                                    @if ($canViewShiftScheduleReports)
-                                        <!-- Shift Schedule Report -->
-                                        <li>
-                                            <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isShiftScheduleReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                Shift Schedule
-                                            </a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </li>
-                        @endif --}}
+                            @if ($canViewShiftScheduleReports)
+                                <!-- Shift Schedule Report -->
+                                <li>
+                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isShiftScheduleReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                        Shift Schedule
+                                    </a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif --}}
 
                     </ul>
                 </div>
