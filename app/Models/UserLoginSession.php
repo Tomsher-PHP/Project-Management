@@ -11,6 +11,7 @@ class UserLoginSession extends Model
         'session_id',
         'login_at',
         'logout_at',
+        'last_activity_at',
         'ip_address',
         'country',
         'city',
@@ -26,6 +27,7 @@ class UserLoginSession extends Model
             'user_id' => 'integer',
             'login_at' => 'datetime',
             'logout_at' => 'datetime',
+            'last_activity_at' => 'datetime',
         ];
     }
 

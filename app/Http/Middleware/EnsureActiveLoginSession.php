@@ -24,7 +24,17 @@ class EnsureActiveLoginSession
             ->whereNull('logout_at')
             ->exists();
 
-        if ($hasActiveSession || ! UserLoginSession::query()->where('user_id', $userId)->exists()) {
+        if ($hasActiveSession) {
+            UserLoginSession::query()
+                ->where('user_id', $userId)
+                ->where('session_id', $sessionId)
+                ->whereNull('logout_at')
+                ->update(['last_activity_at' => now()]);
+
+            return $next($request);
+        }
+
+        if (! UserLoginSession::query()->where('user_id', $userId)->exists()) {
             return $next($request);
         }
 

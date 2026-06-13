@@ -118,6 +118,32 @@ class UserLoginSessionTrackingTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_authenticated_request_updates_only_the_current_session_activity(): void
+    {
+        Carbon::setTestNow('2026-06-13 14:00:00');
+
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $this->actingAs($user);
+        $currentSession = UserLoginSession::create([
+            'user_id' => $user->id,
+            'session_id' => session()->getId(),
+            'login_at' => now()->subHour(),
+        ]);
+        $otherSession = UserLoginSession::create([
+            'user_id' => $otherUser->id,
+            'session_id' => 'other-session-id',
+            'login_at' => now()->subHour(),
+            'last_activity_at' => now()->subMinutes(30),
+        ]);
+
+        $this->get(route('user.workspace'))->assertSuccessful();
+
+        $this->assertTrue($currentSession->fresh()->last_activity_at->equalTo(now()));
+        $this->assertTrue($otherSession->fresh()->last_activity_at->equalTo(now()->subMinutes(30)));
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();
