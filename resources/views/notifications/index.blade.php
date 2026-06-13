@@ -125,8 +125,9 @@
 
     <x-filters.drawer>
         <input type="hidden" name="read_status" value="{{ $selectedStatus }}">
-        <x-filters.select name="project_id" label="Project" :options="$projects" />
-        <x-filters.select name="user_id" label="User" :options="$users" />
+        <x-filters.date-range label="Date Range" startName="from_date" endName="to_date" />
+        <x-filters.multi-select name="project_id" label="Projects" :options="$projects" />
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" />
     </x-filters.drawer>
 @endsection
 

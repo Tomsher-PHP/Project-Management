@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DatabaseNotification;
 use App\Models\Project;
 use App\Models\User;
-use App\Models\DatabaseNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
     protected string $pageTitle;
+
     protected string $subTitle;
 
     public function __construct()
@@ -24,7 +25,7 @@ class NotificationController extends Controller
     {
         $perPage = $request->input('per_page', config('constants.per_page_count', 10));
         $selectedStatus = $request->input('read_status', 'unread');
-        if (!in_array($selectedStatus, ['unread', 'read'], true)) {
+        if (! in_array($selectedStatus, ['unread', 'read'], true)) {
             $selectedStatus = 'unread';
         }
 
@@ -41,14 +42,23 @@ class NotificationController extends Controller
             $query->whereNotNull('read_at');
         }
 
+        // Date range filter
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->input('from_date'));
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->input('to_date'));
+        }
+
         // Project filter
         if ($request->filled('project_id')) {
-            $query->where('project_id', $request->input('project_id'));
+            $query->whereIn('project_id', (array) $request->input('project_id'));
         }
 
         // User filter
         if ($request->filled('user_id')) {
-            $query->where('user_id', $request->input('user_id'));
+            $query->whereIn('user_id', (array) $request->input('user_id'));
         }
 
         // Order by created_at desc (standard/default order for notifications)
@@ -56,11 +66,11 @@ class NotificationController extends Controller
         $sortDir = $request->input('sort_dir', 'desc');
         $allowedSorts = ['created_at'];
 
-        if (!in_array($sortBy, $allowedSorts, true)) {
+        if (! in_array($sortBy, $allowedSorts, true)) {
             $sortBy = 'created_at';
         }
 
-        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+        if (! in_array($sortDir, ['asc', 'desc'], true)) {
             $sortDir = 'desc';
         }
 
@@ -77,7 +87,7 @@ class NotificationController extends Controller
                 ->where('notifiable_type', auth()->user()->getMorphClass())
                 ->whereNotNull('project_id')
                 ->distinct();
-        })->orderBy('name')->pluck('name', 'id');
+        })->orderBy('name')->get(['id', 'name']);
 
         $users = User::whereIn('id', function ($q) {
             $q->select('user_id')
@@ -86,7 +96,7 @@ class NotificationController extends Controller
                 ->where('notifiable_type', auth()->user()->getMorphClass())
                 ->whereNotNull('user_id')
                 ->distinct();
-        })->orderBy('name')->pluck('name', 'id');
+        })->orderBy('name')->get(['id', 'name']);
 
         return view('notifications.index', compact(
             'notifications',
@@ -147,6 +157,7 @@ class NotificationController extends Controller
     public function markAllRead(Request $request)
     {
         auth()->user()->unreadNotifications->markAsRead();
+
         return redirect()->back();
     }
 
