@@ -1,0 +1,79 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use App\Models\UserLoginSession;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+class UserLoginSessionTrackingTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_successful_login_records_the_current_session(): void
+    {
+        Carbon::setTestNow('2026-06-13 12:00:00');
+
+        $user = User::factory()->create();
+        $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            .'AppleWebKit/537.36 (KHTML, like Gecko) '
+            .'Chrome/137.0.0.0 Safari/537.36';
+
+        $response = $this
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
+            ->withHeader('User-Agent', $userAgent)
+            ->post(route('login.post'), [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect(route('user.workspace'));
+        $this->assertAuthenticatedAs($user);
+
+        $loginSession = UserLoginSession::query()->sole();
+
+        $this->assertSame($user->id, $loginSession->user_id);
+        $this->assertSame(session()->getId(), $loginSession->session_id);
+        $this->assertTrue($loginSession->login_at->equalTo(now()));
+        $this->assertNull($loginSession->logout_at);
+        $this->assertSame('203.0.113.10', $loginSession->ip_address);
+        $this->assertSame('Chrome', $loginSession->browser);
+        $this->assertSame('Windows', $loginSession->platform);
+        $this->assertSame('Desktop', $loginSession->device);
+        $this->assertSame($userAgent, $loginSession->user_agent);
+        $this->assertNull($loginSession->country);
+        $this->assertNull($loginSession->city);
+    }
+
+    public function test_normal_logout_updates_the_matching_session(): void
+    {
+        Carbon::setTestNow('2026-06-13 12:00:00');
+
+        $user = User::factory()->create();
+
+        $this->post(route('login.post'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $loginSession = UserLoginSession::query()->sole();
+
+        Carbon::setTestNow('2026-06-13 13:00:00');
+
+        $response = $this->post(route('logout'));
+
+        $response->assertRedirect(route('login'));
+        $this->assertGuest();
+        $this->assertTrue($loginSession->fresh()->logout_at->equalTo(now()));
+        $this->assertSame(1, UserLoginSession::query()->count());
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+}

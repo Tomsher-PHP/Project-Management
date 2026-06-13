@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Models\User;
+use App\Services\UserLoginSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly UserLoginSessionService $loginSessionService) {}
+
     private function getPostLoginRoute(): string
     {
         $user = Auth::user();
@@ -77,6 +80,8 @@ class AuthController extends Controller
 
         // Prevent session fixation
         $request->session()->regenerate();
+
+        $this->loginSessionService->recordLogin(Auth::user(), $request);
 
         return redirect()->intended($this->getPostLoginRoute())
             ->with('success', 'Welcome back!');
@@ -171,6 +176,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $this->loginSessionService->recordLogout($request);
+
         Auth::logout();
 
         $request->session()->invalidate();
