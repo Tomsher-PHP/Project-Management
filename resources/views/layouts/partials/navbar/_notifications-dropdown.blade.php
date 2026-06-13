@@ -50,6 +50,11 @@
                         </div>
                     </a>
                 </div>
+                <div>
+                    <a href="{{ route('notifications.index') }}" class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 hover:text-blue-600 transition-colors duration-200">
+                        View all
+                    </a>
+                </div>
             </div>
         </div>
     </div>

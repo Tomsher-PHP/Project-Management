@@ -12,20 +12,24 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected $title;
-    protected $message;
-    protected $url;
+    protected string $title;
+    protected string $message;
+    protected ?string $url;
     protected array $channels = [];
+    protected ?int $userId;
+    protected ?int $projectId;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $title, string $message, ?string $url = null, array $channels = [])
+    public function __construct(string $title, string $message, ?string $url = null, array $channels = [], ?int $userId = null, ?int $projectId = null)
     {
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;
         $this->channels = $channels;
+        $this->userId = $userId;
+        $this->projectId = $projectId;
         $this->afterCommit();
     }
 
@@ -74,6 +78,14 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'title' => $this->title,
             'message' => $this->message,
             'url' => $this->url,
+        ];
+    }
+
+    public function databaseColumns(object $notifiable): array
+    {
+        return [
+            'user_id' => $this->userId,
+            'project_id' => $this->projectId,
         ];
     }
 }

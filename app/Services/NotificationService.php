@@ -48,7 +48,7 @@ class NotificationService
     }
 
     // Single user
-    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null): void
+    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null): void
     {
         $user = User::find($userId);
 
@@ -66,15 +66,17 @@ class NotificationService
             $title,
             $message,
             $url,
-            $channels
+            $channels,
+            $actorUserId,
+            $projectId
         ));
     }
 
     // Multiple users
-    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null): void
+    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null): void
     {
         User::whereIn('id', $userIds)
-            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType) {
+            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId) {
                 foreach ($users as $user) {
                     $channels = $this->getNotificationChannels($user->id, $notificationType);
 
@@ -86,7 +88,9 @@ class NotificationService
                         $title,
                         $message,
                         $url,
-                        $channels
+                        $channels,
+                        $actorUserId,
+                        $projectId
                     ));
                 }
             });
@@ -141,7 +145,9 @@ class NotificationService
             'Project Assigned',
             $message,
             $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED
+            UserNotificationSetting::PROJECT_ASSIGNED,
+            auth()->id(),
+            (int) $project->id
         );
     }
 
@@ -156,7 +162,9 @@ class NotificationService
             'Project Removed',
             $message,
             $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED
+            UserNotificationSetting::PROJECT_ASSIGNED,
+            auth()->id(),
+            (int) $project->id
         );
     }
 
@@ -172,7 +180,9 @@ class NotificationService
             $title,
             $message,
             $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED
+            UserNotificationSetting::PROJECT_ASSIGNED,
+            auth()->id(),
+            (int) $project->id
         );
     }
 
@@ -189,7 +199,9 @@ class NotificationService
             'Project Role Updated',
             $message,
             $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED
+            UserNotificationSetting::PROJECT_ASSIGNED,
+            auth()->id(),
+            (int) $project->id
         );
     }
 
@@ -215,7 +227,7 @@ class NotificationService
 
         $message = "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--');
 
-        $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED);
+        $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED, auth()->id());
     }
 
     private function dispatchTeamNotification(array $userIds, string $title, string $message): void
@@ -229,7 +241,8 @@ class NotificationService
                 $title,
                 $message,
                 $url,
-                UserNotificationSetting::TEAM_ASSIGNED
+                UserNotificationSetting::TEAM_ASSIGNED,
+                auth()->id()
             );
 
             return;
@@ -240,7 +253,8 @@ class NotificationService
             $title,
             $message,
             $url,
-            UserNotificationSetting::TEAM_ASSIGNED
+            UserNotificationSetting::TEAM_ASSIGNED,
+            auth()->id()
         );
     }
 
@@ -294,7 +308,9 @@ class NotificationService
             $title,
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_ASSIGNED
+            UserNotificationSetting::TASK_ASSIGNED,
+            $authUser?->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -311,15 +327,16 @@ class NotificationService
 
         $taskName = Str::limit($task->name ?? 'Task', 50, '...');
         $projectName = $task->project?->name ?? 'Project';
+        $projectId = $task->project_id ? (int) $task->project_id : null;
 
         $title = "Task Status Updated";
         $url = url('tasks/' . $task->id . '/edit');
 
-        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $taskName, $projectName, $oldStatus, $newStatus, $title, $url) {
+        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url) {
             foreach ($users as $user) {
                 $actorLabel = $user->id === $actor->id ? 'You' : $actor->name;
                 $message = "{$actorLabel} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
-                $this->send($user->id, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED);
+                $this->send($user->id, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED, (int) $actor->id, $projectId);
             }
         });
     }
@@ -353,7 +370,9 @@ class NotificationService
             'Task Request Created',
             "{$requesterName} requested task '{$taskName}' in '{$projectName}'.",
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_REQUEST
+            UserNotificationSetting::TASK_REQUEST,
+            $task->current_assignee_id ? (int) $task->current_assignee_id : null,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -386,7 +405,9 @@ class NotificationService
             $isRejected ? 'Task Request Rejected' : 'Task Request Approved',
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_REQUEST
+            UserNotificationSetting::TASK_REQUEST,
+            (int) $reviewer->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -417,7 +438,8 @@ class NotificationService
             'Break Work Request Created',
             "{$userName} submitted a break work request for {$workDate} from {$startTime} to {$endTime}.",
             $this->getBreakRequestNotificationUrl($breakWorkRequest),
-            UserNotificationSetting::BREAK_REQUEST
+            UserNotificationSetting::BREAK_REQUEST,
+            $breakWorkRequest->user_id ? (int) $breakWorkRequest->user_id : null
         );
     }
 
@@ -434,7 +456,8 @@ class NotificationService
             'Break Work Request Approved',
             "Your break work request for {$workDate} from {$startTime} to {$endTime} has been approved.",
             $this->getBreakRequestNotificationUrl($breakWorkRequest, true),
-            UserNotificationSetting::BREAK_REQUEST
+            UserNotificationSetting::BREAK_REQUEST,
+            auth()->id()
         );
     }
 
@@ -456,7 +479,8 @@ class NotificationService
             'Break Work Request Rejected',
             $message,
             $this->getBreakRequestNotificationUrl($breakWorkRequest),
-            UserNotificationSetting::BREAK_REQUEST
+            UserNotificationSetting::BREAK_REQUEST,
+            auth()->id()
         );
     }
 
@@ -498,7 +522,9 @@ class NotificationService
             'Task Time Log Change Request Created',
             "{$requesterName} requested a time log change for task '{$taskName}' in '{$projectName}'.",
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_LOG_REQUEST
+            UserNotificationSetting::TASK_LOG_REQUEST,
+            $changeRequest->user_id ? (int) $changeRequest->user_id : null,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -537,7 +563,9 @@ class NotificationService
             $isRejected ? 'Task Time Log Change Request Rejected' : 'Task Time Log Change Request Approved',
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_LOG_REQUEST
+            UserNotificationSetting::TASK_LOG_REQUEST,
+            (int) $reviewer->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -564,7 +592,9 @@ class NotificationService
             'Task Timer Stopped',
             "{$actorName} stopped your running timer for task '{$taskName}' in project '{$projectName}'.",
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_STATUS_CHANGED
+            UserNotificationSetting::TASK_STATUS_CHANGED,
+            (int) $actor->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -591,7 +621,9 @@ class NotificationService
             'Task Timer Stopped',
             "{$actorName} changed task '{$taskName}' in project '{$projectName}' to '{$statusName}', so your running timer was stopped.",
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_STATUS_CHANGED
+            UserNotificationSetting::TASK_STATUS_CHANGED,
+            (int) $actor->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -628,7 +660,15 @@ class NotificationService
         $message = "Please start task '{$taskName}' in project '{$projectName}' by {$startAtLabel} to stay on track for the due time {$dueAtLabel}.";
         $url = route('tasks.edit', $task);
 
-        $this->send($assigneeId, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED);
+        $this->send(
+            $assigneeId,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::TASK_STATUS_CHANGED,
+            null,
+            $task->project_id ? (int) $task->project_id : null
+        );
 
         return true;
     }
@@ -661,7 +701,15 @@ class NotificationService
         $message = "{$requester->name} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
         $url = route('handoff_requests.index', ['request_status' => 'pending']);
 
-        $this->sendToMany($recipientIds, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::HANDOFF_REQUEST,
+            (int) $requester->id,
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
+        );
     }
 
     // Handoff request: Notify related users when a handoff request is assigned and a task is created
@@ -687,7 +735,9 @@ class NotificationService
             $title,
             $message,
             route('tasks.edit', $createdTask),
-            UserNotificationSetting::HANDOFF_REQUEST
+            UserNotificationSetting::HANDOFF_REQUEST,
+            (int) $actor->id,
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
         );
     }
 
@@ -707,7 +757,15 @@ class NotificationService
         $message = "{$actor->name} marked your handoff request (#{$handoffRequest->id}) in project '{$projectName}' as noted.";
         $url = route('handoff_requests.index', ['request_status' => 'noted']);
 
-        $this->send($requesterId, $title, $message, $url, UserNotificationSetting::HANDOFF_REQUEST);
+        $this->send(
+            $requesterId,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::HANDOFF_REQUEST,
+            (int) $actor->id,
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
+        );
     }
 
     private function formatBreakRequestDateTimeParts(BreakWorkRequest $breakWorkRequest): array
@@ -760,7 +818,9 @@ class NotificationService
             $title,
             $message,
             $url,
-            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            (int) $requestingUser->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -785,7 +845,9 @@ class NotificationService
             $title,
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            $extendRequest->rejected_by ? (int) $extendRequest->rejected_by : auth()->id(),
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -811,7 +873,9 @@ class NotificationService
             $title,
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            $extendRequest->approved_by ? (int) $extendRequest->approved_by : auth()->id(),
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 
@@ -847,7 +911,9 @@ class NotificationService
             $title,
             $message,
             route('tasks.edit', $task),
-            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST
+            UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
+            (int) $approvedByUser->id,
+            $task->project_id ? (int) $task->project_id : null
         );
     }
 

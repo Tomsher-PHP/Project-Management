@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Task;
+use App\Models\TaskStatus;
 use App\Services\ProjectTimeService;
 use App\Services\TaskStatusSyncService;
 
@@ -17,6 +18,28 @@ class TaskObserver
     {
         $this->projectTimeService->recalculateByTask($task->id);
         $this->taskStatusSyncService->syncAgileParentStatus($task);
+    }
+
+    public function updating(Task $task): void
+    {
+        if (! $task->isDirty('status_id')) {
+            return;
+        }
+
+        $originalStatusId = $task->getOriginal('status_id');
+        $newStatusId = $task->status_id;
+        $completionStates = TaskStatus::withTrashed()
+            ->whereKey(array_filter([$originalStatusId, $newStatusId]))
+            ->pluck('is_completed', 'id');
+
+        $wasCompleted = (bool) $completionStates->get($originalStatusId, false);
+        $isCompleted = (bool) $completionStates->get($newStatusId, false);
+
+        if ($wasCompleted === $isCompleted) {
+            return;
+        }
+
+        $task->completed_at = $isCompleted ? now() : null;
     }
 
     public function updated(Task $task): void

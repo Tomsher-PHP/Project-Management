@@ -503,6 +503,8 @@ class Task extends Model
         'initial_estimated_time_seconds',
         'derived_time_seconds',
         'actual_time_seconds',
+        'sort_order',
+        'start_notify_at',
         'added_by',
         'updated_by',
     ];

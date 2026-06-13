@@ -16,7 +16,6 @@ export function initDatepicker(selector = ".datepicker", config = {}, root = doc
         if (el._flatpickr) return;
 
         const mode = el.dataset.mode || "single"; // "single" or "range"
-        const dateFormat = el.dataset.format || "Y-m-d";
         const minDate = el.dataset.minDate || null;
         const maxDate = el.dataset.maxDate || null;
         const openToDate = el.dataset.openToDate || null;
@@ -24,8 +23,12 @@ export function initDatepicker(selector = ".datepicker", config = {}, root = doc
         const enableSeconds = parseBoolean(el.dataset.enableSeconds, false);
         const noCalendar = parseBoolean(el.dataset.noCalendar, false);
         const time24hr = parseBoolean(el.dataset.time24hr, true);
-        const altInput = parseBoolean(el.dataset.altInput, false);
-        const altFormat = el.dataset.altFormat || null;
+        const dateFormat = noCalendar
+            ? (enableSeconds ? "H:i:S" : "H:i")
+            : (enableTime ? `Y-m-d H:i${enableSeconds ? ":S" : ""}` : "Y-m-d");
+        const displayFormat = el.dataset.format || null;
+        const altFormat = el.dataset.altFormat || displayFormat || null;
+        const altInput = parseBoolean(el.dataset.altInput, Boolean(altFormat && altFormat !== dateFormat));
         const minuteIncrement = Number(el.dataset.minuteIncrement || 5);
         const defaultHour = Number(el.dataset.defaultHour || 9);
         const defaultMinute = Number(el.dataset.defaultMinute || 0);

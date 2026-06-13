@@ -94,6 +94,26 @@
             </a>
         @endif
 
+        <!-- Notification: Task Time Extend Requests -->
+        @if ($task_time_extend_request_count > 0)
+            <a href="{{ route('tasks.extend-time-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-emerald-200 bg-slate-50/50 hover:bg-emerald-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-emerald-900/50 dark:bg-darkblack-500/20 dark:hover:bg-emerald-950/10">
+                <div class="flex space-x-3">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-emerald-500 dark:text-emerald-400">
+                        <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-bgray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400">Task Time Extend</span>
+                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                        </div>
+                        <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-50">{{ $task_time_extend_request_count }} pending task time extend requests</p>
+                    </div>
+                </div>
+            </a>
+        @endif
+
         @if ($total_request_count === 0)
             <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-success-50 text-success-300 dark:bg-success-950/30 dark:text-success-300 mb-3">
