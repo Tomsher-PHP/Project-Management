@@ -14,10 +14,30 @@ class UserLoginSessionService
     {
         try {
             $userAgent = $request->userAgent();
+            $currentSessionId = $request->session()->getId();
+
+            $previousSessions = UserLoginSession::query()
+                ->where('user_id', $user->id)
+                ->whereNull('logout_at')
+                ->where('session_id', '!=', $currentSessionId)
+                ->get();
+
+            UserLoginSession::query()
+                ->whereKey($previousSessions->modelKeys())
+                ->update(['logout_at' => now()]);
+
+            foreach ($previousSessions as $previousSession) {
+                if (! $request->session()->getHandler()->destroy($previousSession->session_id)) {
+                    Log::warning('Unable to destroy previous user session.', [
+                        'user_id' => $user->id,
+                        'session_id' => $previousSession->session_id,
+                    ]);
+                }
+            }
 
             UserLoginSession::create([
                 'user_id' => $user->id,
-                'session_id' => $request->session()->getId(),
+                'session_id' => $currentSessionId,
                 'login_at' => now(),
                 'logout_at' => null,
                 'ip_address' => $request->ip(),

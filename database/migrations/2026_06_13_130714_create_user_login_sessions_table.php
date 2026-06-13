@@ -22,6 +22,7 @@ return new class extends Migration
             // Login / Logout tracking
             $table->timestamp('login_at');
             $table->timestamp('logout_at')->nullable();
+            $table->timestamp('last_activity_at')->nullable();
 
             // Client information
             $table->string('ip_address', 45)->nullable();
@@ -42,8 +43,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('session_id');
             $table->index('login_at');
-            $table->index('logout_at');
-            $table->index(['user_id', 'logout_at']);
+            $table->index('last_activity_at');
         });
     }
 

@@ -70,6 +70,54 @@ class UserLoginSessionTrackingTest extends TestCase
         $this->assertSame(1, UserLoginSession::query()->count());
     }
 
+    public function test_new_login_closes_and_invalidates_the_previous_session(): void
+    {
+        Carbon::setTestNow('2026-06-13 12:00:00');
+
+        $user = User::factory()->create();
+        $previousSessionId = 'previous-session-id';
+        $sessionHandler = app('session')->driver()->getHandler();
+        $sessionHandler->write($previousSessionId, 'previous-session-data');
+
+        $previousLogin = UserLoginSession::create([
+            'user_id' => $user->id,
+            'session_id' => $previousSessionId,
+            'login_at' => now()->subHour(),
+        ]);
+
+        $this->post(route('login.post'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('user.workspace'));
+
+        $this->assertNotNull($previousLogin->fresh()->logout_at);
+        $this->assertSame('', $sessionHandler->read($previousSessionId));
+        $this->assertTrue(
+            UserLoginSession::query()
+                ->where('user_id', $user->id)
+                ->where('session_id', session()->getId())
+                ->whereNull('logout_at')
+                ->exists()
+        );
+        $this->assertSame(1, UserLoginSession::query()->whereNull('logout_at')->count());
+    }
+
+    public function test_stale_authenticated_session_is_logged_out_on_its_next_request(): void
+    {
+        $user = User::factory()->create();
+
+        UserLoginSession::create([
+            'user_id' => $user->id,
+            'session_id' => 'newer-session-id',
+            'login_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.workspace'));
+
+        $response->assertRedirect(route('login'));
+        $this->assertGuest();
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();
