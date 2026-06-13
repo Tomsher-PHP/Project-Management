@@ -44,6 +44,24 @@
                         </a>
                     </li>
                     <li class="w-full">
+                        <a href="{{ route('user.login.activity') }}">
+                            <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 hover:dark:bg-darkblack-500">
+                                <div class="w-[20px]">
+                                    <span>
+                                        <svg class="stroke-bgray-900 dark:stroke-bgray-50" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 8V12L14.5 14.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M4.93 4.93C8.84 1.02 15.16 1.02 19.07 4.93C22.98 8.84 22.98 15.16 19.07 19.07C15.16 22.98 8.84 22.98 4.93 19.07C2.84 16.98 1.87 14.19 2.02 11.45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M2 6V11.5H7.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="text-sm font-semibold text-bgray-900 dark:text-white">Login Activity</span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="w-full">
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf

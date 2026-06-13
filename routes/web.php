@@ -43,6 +43,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
+use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -511,6 +512,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/productivity-report', [ReportController::class, 'productivity'])->middleware('permission.type:reports.productivity_view')->name('productivity');
         Route::get('/productivity/export', [ReportController::class, 'productivityExport'])->middleware('permission.type:reports.productivity_export')->name('productivity.export');
     });
+
+    // User login activity routes
+    Route::get('user-login-activity', [UserLoginActivityController::class, 'index'])->name('user.login.activity');
 });
 
 Route::get('api-test', function () {
