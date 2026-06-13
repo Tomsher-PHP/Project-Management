@@ -13,14 +13,17 @@ class UserDetail extends Model
         'user_id',
         'department_id',
         'designation_id',
+
         'reporter_id',
         'manager_id',
         'employee_id',
+        
         'gender',
         'phone',
         'whatsapp',
         'contact_person',
         'contact_person_number',
+
         'joining_date',
         'leaving_date',
         'dob',
@@ -35,9 +38,10 @@ class UserDetail extends Model
             'designation_id' => 'integer',
             'reporter_id' => 'integer',
             'manager_id' => 'integer',
-            'joining_date' => 'datetime',
-            'leaving_date' => 'datetime',
-            'dob' => 'datetime',
+
+            'joining_date' => 'date',
+            'leaving_date' => 'date',
+            'dob' => 'date',
         ];
     }
 

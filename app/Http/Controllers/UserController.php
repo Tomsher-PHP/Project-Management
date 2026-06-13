@@ -134,9 +134,10 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user, UserService $service)
     {
+        // dd($request->all());
         $service->updateUser($user, $request->validated());
 
-        return redirect()->back()->with('success', 'User updated successfully.');
+        return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)

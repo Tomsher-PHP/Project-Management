@@ -187,6 +187,7 @@ class UserService
                 ->only((new UserDetail())->getFillable())
                 ->toArray();
 
+            // dd($detailsData);
             $user->details()->updateOrCreate([], $detailsData);
 
             // kpis
