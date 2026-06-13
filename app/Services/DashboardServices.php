@@ -6,6 +6,7 @@ use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskTimeLog;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
@@ -94,13 +95,21 @@ class DashboardServices
             ->where('status', 'pending')
             ->count();
 
-        $totalRequestCount = $taskRequests + $taskTime + $taskHandoff + $breakRequests;
+        $taskTimeExtendRequests = 0;
+        if ($user->can('task_time_extend_request.approve_reject')) {
+            $taskTimeExtendRequests = $this->visibleTaskTimeExtendRequestQuery($user)
+                ->where('status', 'pending')
+                ->count();
+        }
+
+        $totalRequestCount = $taskRequests + $taskTime + $taskHandoff + $breakRequests + $taskTimeExtendRequests;
 
         return [
             'task_request_count' => $taskRequests,
             'task_log_time_request_count' => $taskTime,
             'handoff_request_count' => $taskHandoff,
             'break_request_count' => $breakRequests,
+            'task_time_extend_request_count' => $taskTimeExtendRequests,
             'total_request_count' => $totalRequestCount,
         ];
     }
@@ -426,6 +435,24 @@ class DashboardServices
             ->all();
 
         return BreakWorkRequest::query()
+            ->whereIn('user_id', $accessibleUserIds);
+    }
+
+    private function visibleTaskTimeExtendRequestQuery(User $user): Builder
+    {
+        if ($user->is_super_admin) {
+            return TaskExtendTimeRequest::query();
+        }
+
+        $accessibleUserIds = User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return TaskExtendTimeRequest::query()
             ->whereIn('user_id', $accessibleUserIds);
     }
 
