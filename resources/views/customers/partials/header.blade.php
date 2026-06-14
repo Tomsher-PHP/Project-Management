@@ -12,9 +12,9 @@
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="break-words text-xl font-bold text-bgray-900 dark:text-white">{{ $customer->name }}</h2>
-                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $customer->is_active ? 'bg-success-50 text-success-400 dark:bg-success-300/10 dark:text-success-300' : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' }}">
-                            {{ $customer->is_active ? 'Active' : 'Inactive' }}
-                        </span>
+                        @if ($customer->profileGrade)
+                            <x-profile-grade-badge :grade="$customer->profileGrade" size="md" />
+                        @endif
                     </div>
                     <p class="text-sm text-bgray-700 dark:text-bgray-300">Customer Code: {{ $customer->customer_code }}</p>
                 </div>

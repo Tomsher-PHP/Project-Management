@@ -30,15 +30,7 @@
         @else
             <div class="rounded-xl border p-5" style="border-color: {{ $gradeColor }}">
                 <div class="flex flex-wrap items-center gap-3">
-                    @if ($profileGrade->badge_svg)
-                        <span class="inline-flex h-10 w-10 items-center justify-center [&_svg]:h-8 [&_svg]:w-8" style="color: {{ $gradeColor }}">
-                            {!! $profileGrade->badge_svg !!}
-                        </span>
-                    @else
-                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style="background-color: {{ $gradeColor }}">
-                            {{ strtoupper(substr($profileGrade->name, 0, 1)) }}
-                        </span>
-                    @endif
+                    <x-profile-grade-badge :grade="$profileGrade" size="lg" />
 
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
