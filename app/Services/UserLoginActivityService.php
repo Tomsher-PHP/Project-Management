@@ -58,11 +58,5 @@ class UserLoginActivityService
         if (! empty($filters['date_to'])) {
             $query->whereDate('login_at', '<=', $filters['date_to']);
         }
-
-        foreach (['browser', 'platform', 'device', 'ip_address', 'country', 'city'] as $field) {
-            if (! empty($filters[$field])) {
-                $query->where($field, 'like', '%'.trim((string) $filters[$field]).'%');
-            }
-        }
     }
 }

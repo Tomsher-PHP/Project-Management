@@ -23,7 +23,7 @@ class UserLoginActivityController extends Controller
         return view('user-login-activities.index', [
             'activities' => $this->userLoginActivityService->getActivities(
                 $request->user(),
-                $request->all(),
+                $request->only(['date_from', 'date_to', 'user_id']),
                 $perPage
             ),
             'users' => $this->userLoginActivityService->getAccessibleUsers($request->user()),
