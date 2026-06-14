@@ -17,7 +17,10 @@
                     <article class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <p class="break-words text-sm font-semibold text-bgray-900 dark:text-white">{{ $contact->name }}</p>
+                                <div class="flex items-center gap-2">
+                                    <x-user-avatar :name="$contact->name" size="xs" />
+                                    <p class="break-words text-sm font-semibold text-bgray-900 dark:text-white">{{ $contact->name }}</p>
+                                </div>
                                 <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">{{ $contact->designation ?: 'Designation not specified' }}</p>
                             </div>
 
@@ -31,19 +34,27 @@
                                 <dt class="text-bgray-600 dark:text-bgray-300">Email</dt>
                                 <dd class="break-all text-right font-medium text-bgray-900 dark:text-white">
                                     @if ($contact->email)
-                                        <a href="mailto:{{ $contact->email }}" class="transition hover:text-success-400">{{ $contact->email }}</a>
+                                        <span class="inline-flex max-w-full items-center justify-end gap-1.5">
+                                            <a href="mailto:{{ $contact->email }}" class="break-all transition hover:text-success-400">{{ $contact->email }}</a>
+                                            <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" onclick="copyProfileEmail(event, @js($contact->email))" aria-label="Copy {{ $contact->name }} email" title="Copy email">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                    <path d="M8 7V6C8 4.89543 8.89543 4 10 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M6 8H14C15.1046 8 16 8.89543 16 10V18C16 19.1046 15.1046 20 14 20H6C4.89543 20 4 19.1046 4 18V10C4 8.89543 4.89543 8 6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </span>
                                     @else
                                         --
                                     @endif
                                 </dd>
                             </div>
                             <div class="flex items-start justify-between gap-4">
-                                <dt class="text-bgray-600 dark:text-bgray-300">Phone</dt>
-                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $contact->landline ?: '--' }}</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-4">
                                 <dt class="text-bgray-600 dark:text-bgray-300">Mobile</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $contact->mobile ?: '--' }}</dd>
+                            </div>
+                            <div class="flex items-start justify-between gap-4">
+                                <dt class="text-bgray-600 dark:text-bgray-300">Landline</dt>
+                                <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $contact->landline ?: '--' }}</dd>
                             </div>
                             <div class="flex items-start justify-between gap-4">
                                 <dt class="text-bgray-600 dark:text-bgray-300">WhatsApp</dt>
