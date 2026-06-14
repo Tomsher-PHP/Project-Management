@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\CustomerProfileGrade;
 use Illuminate\Support\Facades\DB;
 
 class CustomerServices
@@ -13,10 +14,46 @@ class CustomerServices
             'industry',
             'country',
             'salesPerson',
+            'profileGrade',
+            'profileDescriptions',
             'contacts' => fn ($query) => $query
                 ->orderByDesc('is_primary')
                 ->orderBy('name'),
         ]);
+    }
+
+    public function updateProfileGrade(Customer $customer, array $data): Customer
+    {
+        return DB::transaction(function () use ($customer, $data) {
+            $grade = CustomerProfileGrade::query()
+                ->where(function ($query) use ($customer) {
+                    $query->active();
+
+                    if ($customer->customer_profile_grade_id) {
+                        $query->orWhere('id', $customer->customer_profile_grade_id);
+                    }
+                })
+                ->lockForUpdate()
+                ->findOrFail($data['customer_profile_grade_id']);
+
+            $customer->update(['customer_profile_grade_id' => $grade->id]);
+
+            $descriptions = collect($data['descriptions'] ?? [])
+                ->filter(fn ($description) => filled($description))
+                ->map(fn ($description) => trim($description))
+                ->values();
+
+            $customer->profileDescriptions()->delete();
+
+            $customer->profileDescriptions()->createMany(
+                $descriptions->map(fn ($description, $index) => [
+                    'description' => $description,
+                    'sort_order' => $index + 1,
+                ])->all(),
+            );
+
+            return $customer->fresh()->load(['profileGrade', 'profileDescriptions']);
+        });
     }
 
     public function create(array $data)

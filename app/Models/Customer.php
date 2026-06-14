@@ -20,6 +20,7 @@ class Customer extends Model
         'name',
         'email',
         'industry_id',
+        'customer_profile_grade_id',
         'website',
         'registered_country_id',
         'emirate',
@@ -76,6 +77,16 @@ class Customer extends Model
     public function industry()
     {
         return $this->belongsTo(Industry::class)->withTrashed();
+    }
+
+    public function profileGrade()
+    {
+        return $this->belongsTo(CustomerProfileGrade::class, 'customer_profile_grade_id');
+    }
+
+    public function profileDescriptions()
+    {
+        return $this->hasMany(CustomerProfileDescription::class)->orderBy('sort_order');
     }
 
     public function country()

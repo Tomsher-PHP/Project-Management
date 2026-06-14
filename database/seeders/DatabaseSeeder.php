@@ -32,8 +32,9 @@ class DatabaseSeeder extends Seeder
             TechnologySeeder::class,
             ProjectCategorySeeder::class,
             IndustrySeeder::class,
+            CustomerProfileGradeSeeder::class,
 
-            // Project related seeders            
+            // Project related seeders
             ProjectStatusSeeder::class,
             TaskStatusSeeder::class,
             TaskTypeSeeder::class,

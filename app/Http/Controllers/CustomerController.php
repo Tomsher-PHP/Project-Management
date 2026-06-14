@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CustomerProfileGradeRequest;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
+use App\Models\CustomerProfileGrade;
 use App\Models\Industry;
 use App\Models\User;
 use App\Services\CustomerServices;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -63,8 +66,29 @@ class CustomerController extends Controller
     public function show(Customer $customer, CustomerServices $service)
     {
         $customer = $service->loadForDetail($customer);
+        $profileGrades = CustomerProfileGrade::query()
+            ->where(function ($query) use ($customer) {
+                $query->active();
 
-        return view('customers.show', compact('customer'));
+                if ($customer->customer_profile_grade_id) {
+                    $query->orWhere('id', $customer->customer_profile_grade_id);
+                }
+            })
+            ->ordered()
+            ->get();
+
+        return view('customers.show', compact('customer', 'profileGrades'));
+    }
+
+    public function updateProfileGrade(CustomerProfileGradeRequest $request, Customer $customer, CustomerServices $service): JsonResponse
+    {
+        $customer = $service->updateProfileGrade($customer, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer profile grade updated successfully.',
+            'html' => view('customers.partials.tabs.profile-grade', compact('customer'))->render(),
+        ]);
     }
 
     public function edit(Customer $customer)
