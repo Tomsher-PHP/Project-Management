@@ -20,7 +20,10 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    <p class="mt-1 truncate text-xs font-medium uppercase tracking-wide text-success-400">{{ $userRoleName }} @if($authUser->is_super_admin) (Super Admin) @endif</p>
+                                    <p class="mt-1 truncate text-xs font-medium uppercase tracking-wide text-success-400">{{ $userRoleName }} @if ($authUser->is_super_admin)
+                                            (Super Admin)
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -61,21 +64,25 @@
                             </div>
                         </a>
                     </li>
+                </ul>
+            </div>
+            <div class="my-[14px] h-[1px] w-full bg-bgray-300"></div>
+            <div>
+                <ul>
                     <li class="w-full">
-
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="w-full text-left">
-                                <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-success-300 hover:bg-gray-100 transition">
+                                <div class="flex items-center space-x-[18px] rounded-lg p-[14px] text-error-300 hover:bg-gray-100 transition">
 
                                     <div class="w-[20px]">
                                         <span>
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M15 10L13.7071 11.2929C13.3166 11.6834 13.3166 12.3166 13.7071 12.7071L15 14M14 12L22 12M6 20C3.79086 20 2 18.2091 2 16V8C2 5.79086 3.79086 4 6 4M6 20C8.20914 20 10 18.2091 10 16V8C10 5.79086 8.20914 4 6 4M6 20H14C16.2091 20 18 18.2091 18 16M6 4H14C16.2091 4 18 5.79086 18 8" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" />
+                                                <path d="M15 10L13.7071 11.2929C13.3166 11.6834 13.3166 12.3166 13.7071 12.7071L15 14M14 12L22 12M6 20C3.79086 20 2 18.2091 2 16V8C2 5.79086 3.79086 4 6 4M6 20C8.20914 20 10 18.2091 10 16V8C10 5.79086 8.20914 4 6 4M6 20H14C16.2091 20 18 18.2091 18 16M6 4H14C16.2091 4 18 5.79086 18 8" stroke="#FB2C36" stroke-width="1.5" stroke-linecap="round" />
                                             </svg>
                                         </span>
                                     </div>
-
+<
                                     <div class="flex-1">
                                         <span class="text-sm font-semibold">Log Out</span>
                                     </div>
@@ -83,18 +90,6 @@
                                 </div>
                             </button>
                         </form>
-                    </li>
-                </ul>
-            </div>
-            <div class="my-[14px] h-[1px] w-full bg-bgray-300"></div>
-            <div>
-                <ul>
-                    <li class="w-full">
-                        <a href="{{ route('settings.index') }}">
-                            <div class="rounded-lg p-[14px] text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-50 dark:hover:bg-darkblack-500">
-                                <span class="text-sm font-semibold">Settings</span>
-                            </div>
-                        </a>
                     </li>
                 </ul>
             </div>

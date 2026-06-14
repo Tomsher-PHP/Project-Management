@@ -527,7 +527,7 @@
                                     </li>
                                 @endif
 
-                                <li class="item px-[43px] py-[11px] text-bgray-900 dark:text-white">
+                                {{-- <li class="item px-[43px] py-[11px] text-bgray-900 dark:text-white">
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
                                         <button type="submit" class="w-full text-center flex justify-center">
@@ -541,7 +541,7 @@
                                         </button>
                                         <span class="sidebar-tooltip">Logout</span>
                                     </form>
-                                </li>
+                                </li> --}}
                             </ul>
                         </div>
                     @endif
