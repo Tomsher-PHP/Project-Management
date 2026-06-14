@@ -277,7 +277,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Customer Routes
     Route::patch('/customers/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus')->middleware('permission.type:customer.edit');
-    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index']);
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index', 'show']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);

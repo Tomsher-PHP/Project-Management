@@ -3,11 +3,22 @@
 namespace App\Services;
 
 use App\Models\Customer;
-use App\Models\CustomerContact;
 use Illuminate\Support\Facades\DB;
 
 class CustomerServices
 {
+    public function loadForDetail(Customer $customer): Customer
+    {
+        return $customer->load([
+            'industry',
+            'country',
+            'salesPerson',
+            'contacts' => fn ($query) => $query
+                ->orderByDesc('is_primary')
+                ->orderBy('name'),
+        ]);
+    }
+
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
@@ -78,7 +89,7 @@ class CustomerServices
         $existingIds[] = $primary->id;
 
         // Additional Contacts
-        if (!empty($data['contacts'])) {
+        if (! empty($data['contacts'])) {
             foreach ($data['contacts'] as $contact) {
                 $record = $customer->contacts()->updateOrCreate(
                     ['id' => $contact['id'] ?? null], // important for edit

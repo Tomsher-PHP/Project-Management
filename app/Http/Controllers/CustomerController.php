@@ -12,8 +12,8 @@ use Illuminate\Http\Response;
 
 class CustomerController extends Controller
 {
-
     protected string $pageTitle;
+
     protected string $subTitle;
 
     public function __construct()
@@ -60,10 +60,17 @@ class CustomerController extends Controller
             ->with('success', 'Customer created successfully.');
     }
 
+    public function show(Customer $customer, CustomerServices $service)
+    {
+        $customer = $service->loadForDetail($customer);
+
+        return view('customers.show', compact('customer'));
+    }
+
     public function edit(Customer $customer)
     {
         $selectedIndustryId = $customer->industry_id;
-        
+
         $industries = Industry::forForm($selectedIndustryId, ['order_by' => 'sort_order', 'direction' => 'asc'])->get();
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
@@ -104,13 +111,13 @@ class CustomerController extends Controller
     public function toggleStatus(Request $request)
     {
         $customer = Customer::findOrFail($request->id);
-        $customer->is_active = !$customer->is_active;
+        $customer->is_active = ! $customer->is_active;
         $customer->save();
 
         return response()->json([
             'success' => true,
             'is_active' => $customer->is_active,
-            'message' => 'Status updated successfully'
+            'message' => 'Status updated successfully',
         ], Response::HTTP_OK);
     }
 }
