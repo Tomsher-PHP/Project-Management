@@ -101,9 +101,7 @@
             </div>
         </div>
 
-        @can('task.create')
-            @include('tasks.partials.create-modal')
-        @endcan
+        @include('tasks.partials.create-modal')
     </main>
 
     <x-filters.drawer>
@@ -125,11 +123,9 @@
         ])
     </script>
 
-    @can('task.create')
-        <script id="task-create-dependencies" type="application/json">
-            @json($taskCreateDependencies)
-        </script>
-    @endcan
+    <script id="task-create-dependencies" type="application/json">
+        @json($taskCreateDependencies)
+    </script>
 
     <!-- Request Estimate Change Modal -->
     @include('tasks.partials.extend-time-modal')
@@ -138,8 +134,6 @@
 @push('scripts')
     @vite('resources/js/modules/projects/project-tasks.js')
     @vite('resources/js/modules/task-list-subtasks.js')
-    @can('task.create')
-        @vite('resources/js/modules/task-list-create.js')
-    @endcan
+    @vite('resources/js/modules/task-list-create.js')
     @vite('resources/js/modules/tasks/extend-task.js')
 @endpush

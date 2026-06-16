@@ -692,7 +692,7 @@
                     </ul>
                 </div>
             @endif
-            <div class="item-wrapper mb-5">
+            {{-- <div class="item-wrapper mb-5">
                 <h4 class="border-b border-bgray-200 text-sm font-medium leading-7 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
 
                 </h4>
@@ -719,7 +719,7 @@
                         </form>
                     </li>
                 </ul>
-            </div>
+            </div> --}}
         </div>
         <div class="copy-write-text">
             <p class="text-sm text-[#969BA0]">© {{ date('Y') }} All Rights Reserved</p>

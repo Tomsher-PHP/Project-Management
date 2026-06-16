@@ -43,6 +43,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserHierarchyController;
+use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -276,7 +277,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Customer Routes
     Route::patch('/customers/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus')->middleware('permission.type:customer.edit');
-    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index']);
+    Route::patch('/customers/{customer}/profile-grade', [CustomerController::class, 'updateProfileGrade'])->name('customers.profile-grade.update')->middleware('permission.type:customer.edit');
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index', 'show']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);
@@ -511,6 +513,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/productivity-report', [ReportController::class, 'productivity'])->middleware('permission.type:reports.productivity_view')->name('productivity');
         Route::get('/productivity/export', [ReportController::class, 'productivityExport'])->middleware('permission.type:reports.productivity_export')->name('productivity.export');
     });
+
+    // User login activity routes
+    Route::get('user-login-activity', [UserLoginActivityController::class, 'index'])->name('user.login.activity');
 });
 
 Route::get('api-test', function () {

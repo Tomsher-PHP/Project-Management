@@ -97,7 +97,7 @@
                                     $isEndChanged = optional($changeRequest->old_ended_at)?->equalTo($changeRequest->new_ended_at) === false;
                                     $statusClasses = $changeRequest->status === 'approved' ? 'bg-success-50 text-success-300' : ($changeRequest->status === 'rejected' ? 'bg-error-50 text-error-300' : 'bg-warning-50 text-warning-300');
                                 @endphp
-                                <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                     @if ($selectedStatus === 'pending')
                                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                             <input type="checkbox" value="{{ $changeRequest->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-checkbox>

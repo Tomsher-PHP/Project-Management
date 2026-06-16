@@ -155,6 +155,11 @@ class User extends Authenticatable
         return $this->hasOne(UserDetail::class);
     }
 
+    public function loginSessions()
+    {
+        return $this->hasMany(UserLoginSession::class);
+    }
+
     public function reporter()
     {
         return $this->hasOneThrough(

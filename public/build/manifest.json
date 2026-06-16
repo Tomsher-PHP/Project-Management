@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-K15Qq7gj.css",
+    "file": "assets/app-BRXXH2q7.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -171,6 +171,17 @@
     "name": "customer-restore",
     "src": "resources/js/modules/customer-restore.js",
     "isEntry": true
+  },
+  "resources/js/modules/customer/profile-grade.js": {
+    "file": "assets/profile-grade-DeZ8VZHN.js",
+    "name": "profile-grade",
+    "src": "resources/js/modules/customer/profile-grade.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_tom-select-CxiVPw-X.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/kpi-form.js": {
     "file": "assets/kpi-form-BL6DO7iw.js",

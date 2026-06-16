@@ -62,6 +62,7 @@ class ProjectController extends Controller
         $perPage = $request->input('per_page', config('constants.per_page_count'));
 
         $projects = Project::accessibleBy(auth()->user())
+            ->with(['customer.profileGrade'])
             ->filter($request->all())
             ->sort($request->all())
             ->paginate($perPage)

@@ -25,7 +25,7 @@
                             $previewQuestions = $checklist->items->take(3);
                             $questionList = $checklist->items->pluck('question')->values();
                         @endphp
-                        <tr class="border-b border-bgray-200 align-top last:border-b-0 dark:border-darkblack-400">
+                        <tr class="border-b border-bgray-200 align-top last:border-b-0 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
                             <td class="px-2 py-5 text-sm font-medium text-bgray-600 dark:text-bgray-50">
                                 {{ $startNumber + $loop->iteration }}
                             </td>

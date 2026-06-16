@@ -11,6 +11,7 @@ class CustomerRestoreService
     public function getDeletedCustomers(int $perPage): LengthAwarePaginator
     {
         return Customer::onlyTrashed()
+            ->with('profileGrade')
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
             ->withQueryString();

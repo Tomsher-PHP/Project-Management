@@ -183,31 +183,42 @@
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer</p>
-                            <p class="mt-1 truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $project->customer->name ?? '--' }}</p>
+                            <div class="mt-1 flex min-w-0 items-center gap-1 text-md font-medium text-bgray-900 dark:text-white">
+                                @if ($project->customer)
+                                    <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
+                                @endif
+                                @if ($project->customer && ! $project->customer->trashed())
+                                    <a href="{{ route('customers.show', $project->customer) }}" class="truncate transition hover:text-success-400">
+                                        {{ $project->customer->name }}
+                                    </a>
+                                @else
+                                    <span class="truncate">{{ $project->customer->name ?? '--' }}</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Sales Person</p>
-                            <p class="mt-1 truncate text-sm font-medium text-bgray-900 dark:text-white">{{ $project->salesPerson->name ?? '--' }}</p>
+                            <p class="mt-1 truncate text-md font-medium text-bgray-900 dark:text-white">{{ $project->salesPerson->name ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Project Flow</p>
-                            <div class="mt-1 flex items-center gap-2 text-sm font-medium text-bgray-900 dark:text-white">
+                            <div class="mt-1 flex items-center gap-2 text-md font-medium text-bgray-900 dark:text-white">
                                 <x-project-flow-icon :flow="$project->project_flow" size="sm" />
                                 <span>{{ strtoupper($project->project_flow ?? '--') }}</span>
                             </div>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Start Date</p>
-                            <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</p>
+                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->start_date)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">End Date</p>
-                            <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</p>
+                            <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->end_date)->format($globalDateFormat) ?? '--' }}</p>
                         </div>
                         @if ($canCustomerEndDate)
                             <div class="min-w-0">
                                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-bgray-700 dark:text-bgray-300">Customer End Date</p>
-                                <p class="mt-1 text-sm font-medium text-bgray-900 dark:text-white">{{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}</p>
+                                <p class="mt-1 text-md font-medium text-bgray-900 dark:text-white">{{ optional($project->customer_end_date)->format($globalDateFormat) ?? '--' }}</p>
                             </div>
                         @endif
                     </div>
@@ -215,10 +226,15 @@
 
                 <div class="grid gap-4 xl:grid-cols-2">
                     <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                        <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
+                        <div>
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">Project Timeline</p>
+                                <span class="text-sm font-bold {{ $projectTimeline['text_class'] }}">
+                                    {{ $projectTimeline['percentage'] }}%
+                                </span>
+                            </div>
 
-                        <div class="flex items-center gap-3">
-                            <div class="flex-1">
+                            <div>
                                 <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
                                     <div class="h-full rounded-full transition-all duration-300 {{ $projectTimeline['bar_class'] }}" style="width: {{ $projectTimeline['percentage'] }}%;"></div>
                                 </div>
@@ -228,19 +244,20 @@
                                     <span>{{ $projectTimeline['end_label'] }}</span>
                                 </div>
                             </div>
-
-                            <span class="shrink-0 text-sm font-bold {{ $projectTimeline['text_class'] }}">
-                                {{ $projectTimeline['percentage'] }}%
-                            </span>
                         </div>
                     </div>
 
                     @if ($canCustomerEndDate)
                         <div class="rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                            <p class="mb-2 text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
+                            <div>
+                                <div class="mb-2 flex items-center justify-between gap-3">
+                                    <p class="text-sm font-semibold text-bgray-900 dark:text-white">Customer Timeline</p>
+                                    <span class="text-sm font-bold {{ $customerTimeline['text_class'] }}">
+                                        {{ $customerTimeline['percentage'] }}%
+                                    </span>
+                                </div>
 
-                            <div class="flex items-center gap-3">
-                                <div class="flex-1">
+                                <div>
                                     <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
                                         <div class="h-full rounded-full transition-all duration-300 {{ $customerTimeline['bar_class'] }}" style="width: {{ $customerTimeline['percentage'] }}%;"></div>
                                     </div>
@@ -250,10 +267,6 @@
                                         <span>{{ $customerTimeline['end_label'] }}</span>
                                     </div>
                                 </div>
-
-                                <span class="shrink-0 text-sm font-bold {{ $customerTimeline['text_class'] }}">
-                                    {{ $customerTimeline['percentage'] }}%
-                                </span>
                             </div>
                         </div>
                     @endif

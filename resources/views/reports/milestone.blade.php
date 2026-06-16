@@ -179,7 +179,7 @@
                             [$progressBarClass, $progressTextClass] = explode(' ', $progressColorClasses, 2);
                         @endphp
 
-                        <tr class="text-bgray-700 transition hover:bg-bgray-50 dark:text-bgray-50 dark:hover:bg-darkblack-500/80">
+                        <tr class="text-bgray-700 transition dark:text-bgray-50 {{ config('assets.classes.table_row_hover') }}">
                             <td class="px-2 py-2 text-sm text-bgray-600 dark:text-bgray-300">
                                 {{ $loop->iteration }}
                             </td>

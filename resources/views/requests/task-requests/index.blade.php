@@ -73,7 +73,7 @@
 
                         <tbody class="bg-white dark:bg-darkblack-600">
                             @forelse ($tasks as $task)
-                                <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                     @if ($selectedStatus === 'pending')
                                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                             @if ($task->request_status === 'pending' && ! $task->is_self_requested)

@@ -530,7 +530,7 @@ class TaskController extends Controller
     {
         $task->load([
             'project:id,name,project_code,project_flow,customer_id',
-            'project.customer:id,name',
+            'project.customer:id,name,customer_profile_grade_id',
             'projectMilestone:id,name',
             'projectSprint:id,name,project_milestone_id',
             'projectSprint.projectMilestone:id,name',

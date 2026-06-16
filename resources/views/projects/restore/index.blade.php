@@ -66,7 +66,18 @@
                                             <span class="text-xs text-bgray-700">Code: {{ $project->project_code ?? '--' }}</span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base text-bgray-600 dark:text-bgray-50 font-semibold">{{ $project->customer->name ?? '--' }}</span>
+                                            <span class="inline-flex max-w-full items-center gap-1 text-base font-semibold text-bgray-600 dark:text-bgray-50">
+                                                @if ($project->customer)
+                                                    <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
+                                                @endif
+                                                @if ($project->customer && ! $project->customer->trashed())
+                                                    <a href="{{ route('customers.show', $project->customer) }}" class="break-words transition hover:text-success-400">
+                                                        {{ $project->customer->name }}
+                                                    </a>
+                                                @else
+                                                    <span class="break-words">{{ $project->customer->name ?? '--' }}</span>
+                                                @endif
+                                            </span>
                                         </td>
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base text-bgray-600 dark:text-bgray-50">@appDateTime($project->deleted_at)</span>

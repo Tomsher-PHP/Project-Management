@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveLoginSession;
+use App\Http\Middleware\PermissionByType;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Http\Middleware\PermissionByType;
 use Illuminate\Validation\ValidationException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -16,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            EnsureActiveLoginSession::class,
+        ]);
+
         $middleware->alias([
             'permission.type' => PermissionByType::class,
         ]);

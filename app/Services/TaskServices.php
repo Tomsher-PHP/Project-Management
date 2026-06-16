@@ -259,7 +259,7 @@ class TaskServices
     private function relations()
     {
         return [
-            'project:id,name,project_code,project_flow',
+            'project:id,name,project_code,project_flow,customer_id',
             'projectMilestone:id,name',
             'projectSprint:id,name',
             'currentAssignee:id,name',

@@ -21,6 +21,10 @@ return [
         'style' => 'assets/css/style.css',
     ],
 
+    'classes' => [
+        'table_row_hover' => 'hover:bg-bgray-100 dark:hover:bg-darkblack-500',
+    ],
+
     'js' => [
         'jquery' => 'assets/js/jquery-3.6.0.min.js',
         'aos' => 'assets/js/aos.js',

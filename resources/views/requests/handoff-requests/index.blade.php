@@ -72,7 +72,7 @@
                                     $currentStatusClass = $statusClasses[$request->status] ?? 'bg-gray-50 text-gray-500';
                                     $currentStatusLabel = $statusLabels[$request->status] ?? 'Unknown';
                                 @endphp
-                                <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
                                             @appDateTime($request->created_at)

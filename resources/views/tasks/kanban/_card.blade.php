@@ -3,6 +3,7 @@
     $authUserId = $authUser?->id;
     $taskTimerService = app(\App\Services\TaskServices::class);
     $project = $task->project;
+    $customer = $project?->customer;
     $milestone = $task->projectMilestone;
     $sprint = $task->projectSprint;
     $canOpenTask = $project && $authUser && ($authUser->is_super_admin || $authUser->can('task.view_all_tasks') || $authUser->can('task.view') || (int) ($task->current_assignee_id ?? 0) === (int) $authUserId);
@@ -79,9 +80,11 @@
                 title="Open task" @endif>
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 text-[11px] font-medium text-bgray-900 dark:text-bgray-300">
+                    <div class="flex items-center gap-1 text-[11px] font-medium text-bgray-900 dark:text-bgray-300">
                         @if ($project)
-                            <x-project-flow-icon :flow="$project->project_flow" size="sm" />
+                            @if ($customer)
+                                <x-profile-grade-badge :grade="$customer->profileGrade" size="sm" class="mt-0.5" />
+                            @endif
                             <span class="truncate" title="{{ $projectName }}">{{ $limitText($projectName, 16) }}</span>
                         @endif
 
@@ -100,7 +103,7 @@
             </div>
 
             <div class="mt-3" title="{{ $taskName }}">
-                <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="34" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}" name-class="block" class="max-w-full" />
+                <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}" name-class="block" class="max-w-full" />
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
