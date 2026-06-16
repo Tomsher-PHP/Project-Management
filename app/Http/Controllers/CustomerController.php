@@ -88,6 +88,9 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Customer profile grade updated successfully.',
             'html' => view('customers.partials.tabs.profile-grade', compact('customer'))->render(),
+            'badge_html' => \Illuminate\Support\Facades\Blade::render('<x-profile-grade-badge :grade="$grade" size="md" class="mt-0.5" />', [
+                'grade' => $customer->profileGrade,
+            ]),
         ]);
     }
 
@@ -120,7 +123,7 @@ class CustomerController extends Controller
     {
         $service->update($customer, $request->validated());
 
-        return redirect()->back()->with('success', 'Customer updated successfully.');
+        return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
     }
 
     public function destroy(Customer $customer)
