@@ -8,7 +8,7 @@
 ])
 
 @php
-    $resolvedName = $name ?? data_get($grade, 'name') ?? 'Profile Grade';
+    $resolvedName = $name ?? (data_get($grade, 'name') ?? 'Profile Grade');
     $resolvedSvg = filled($svg) ? $svg : data_get($grade, 'badge_svg');
     $resolvedColor = $color ?? data_get($grade, 'color');
     $safeColor = preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) $resolvedColor) ? $resolvedColor : '#22C55E';
@@ -35,11 +35,7 @@
     $baseClasses = 'inline-flex shrink-0 items-center justify-center';
 @endphp
 
-<span
-    {{ $attributes->class([$baseClasses, $sizeClasses]) }}
-    @if ($tooltip) title="{{ $resolvedName }}" @endif
-    aria-label="Profile grade: {{ $resolvedName }}"
->
+<span {{ $attributes->class([$baseClasses, $sizeClasses]) }} @if ($tooltip) title="{{ $resolvedName }}" @endif aria-label="Profile grade: {{ $resolvedName }}">
     @if (filled($resolvedSvg))
         {!! $resolvedSvg !!}
     @else
