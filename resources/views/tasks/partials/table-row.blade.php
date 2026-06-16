@@ -19,7 +19,7 @@
 
             <div class="min-w-0">
                 <a href="{{ route('tasks.edit', $task) }}" class="block">
-                    <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="20" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
+                    <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="30" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
                     <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
                     </p>
@@ -42,10 +42,10 @@
                 @if ($task->project?->project_flow === 'agile')
                     <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-bgray-700 dark:text-bgray-300">
                         <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectMilestone?->name ?? '--' }}">
-                            Milestone: {{ \Illuminate\Support\Str::limit($task->projectMilestone?->name ?? '--', 20, '..') }}
+                            Milestone: {{ limitStringChar($task->projectMilestone?->name ?? '--', 20, '..') }}
                         </span>
                         <span class="rounded-full bg-bgray-100 px-2.5 py-1 dark:bg-darkblack-500" title="{{ $task->projectSprint?->name ?? '--' }}">
-                            Sprint: {{ \Illuminate\Support\Str::limit($task->projectSprint?->name ?? '--', 20, '..') }}
+                            Sprint: {{ limitStringChar($task->projectSprint?->name ?? '--', 20, '..') }}
                         </span>
                     </div>
                 @endif
@@ -60,7 +60,7 @@
                     <a href="{{ route('projects.edit', $task->project) }}" class="inline-flex min-w-0 flex-col items-start gap-1 transition duration-200 hover:text-success-400 dark:hover:text-success-300">
                         <span class="inline-flex min-w-0 items-center gap-2">
                             <x-project-flow-icon :flow="$task->project->project_flow" size="sm" />
-                            <span class="truncate" title="{{ $task->project->name }}">{{ \Illuminate\Support\Str::limit($task->project->name, 20, '..') }}</span>
+                            <span class="truncate" title="{{ $task->project->name }}">{{ limitStringChar($task->project->name, 20, '..') }}</span>
                         </span>
                         <span class="pl-6 text-xs font-normal text-[#7C97C1] dark:text-bgray-300">
                             {{ $task->project->project_code ?: '--' }}

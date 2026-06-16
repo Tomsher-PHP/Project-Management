@@ -1,4 +1,4 @@
-@props(['name', 'requestType' => null, 'requestStatus' => null, 'limit' => null, 'limitEnd' => '...', 'truncate' => true, 'display' => 'inline-flex', 'textClass' => 'text-gray-900', 'nameClass' => '', 'showPriorityDot' => false, 'showPriorityIndicator' => false, 'priorityIndicator' => 'dot', 'priorityClass' => 'bg-primary'])
+@props(['name', 'requestType' => null, 'requestStatus' => null, 'limit' => null, 'limitEnd' => '..', 'truncate' => true, 'display' => 'inline-flex', 'textClass' => 'text-gray-900', 'nameClass' => '', 'showPriorityDot' => false, 'showPriorityIndicator' => false, 'priorityIndicator' => 'dot', 'priorityClass' => 'bg-primary'])
 
 @php
     $isSelf = $requestType === 'self';
@@ -19,7 +19,7 @@
         }
     }
 
-    $displayName = filled($limit) ? \Illuminate\Support\Str::limit($name ?? '', (int) $limit, $limitEnd) : $name ?? '';
+    $displayName = filled($limit) ? limitStringChar($name ?? '', (int) $limit, $limitEnd) : $name ?? '';
 
     $resolvedTitle = $tooltip ?: $name ?? '';
     $containerClasses = trim($display . ' min-w-0 items-center gap-1 ' . $textClass . ' ' . $statusTextClass);

@@ -98,7 +98,7 @@ if (!function_exists('limitStringChar')) {
      * @param string $end
      * @return string
      */
-    function limitStringChar(?string $string, int $count, string $end = '...'): string
+    function limitStringChar(?string $string, int $count, string $end = '..'): string
     {
         return \Illuminate\Support\Str::limit($string ?? '', $count, $end);
     }
