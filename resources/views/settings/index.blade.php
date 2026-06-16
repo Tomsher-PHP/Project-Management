@@ -5,7 +5,7 @@
 
     <!-- write your code here-->
     @if ($hasSettingsAccess)
-        <div class="flex flex-wrap items-center gap-5 px-5 py-0 dark:bg-darkblack-700">
+        <div class="flex flex-wrap items-center gap-5 dark:bg-darkblack-700">
 
             @can('department.view')
                 <a href="{{ route('settings.departments.index') }}" class="block group transition duration-300">
