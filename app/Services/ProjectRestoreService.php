@@ -54,7 +54,7 @@ class ProjectRestoreService
             ->accessibleBy(auth()->user())
             ->filter(request()->all())
             ->sort(request()->all())
-            ->with(['customer', 'addedBy', 'teamLeader'])
+            ->with(['customer.profileGrade', 'addedBy', 'teamLeader'])
             ->orderByDesc('deleted_at')
             ->paginate($perPage)
             ->withQueryString();

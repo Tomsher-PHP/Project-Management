@@ -132,11 +132,17 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="inline-flex max-w-full items-center gap-2 rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                <span class="inline-flex max-w-full items-center gap-1 rounded-md px-1.5 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">
                                                     @if ($project->customer)
                                                         <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
                                                     @endif
-                                                    <span class="break-words">{{ $project->customer->name ?? '--' }}</span>
+                                                    @if ($project->customer && ! $project->customer->trashed())
+                                                        <a href="{{ route('customers.show', $project->customer) }}" class="break-words transition hover:text-success-400">
+                                                            {{ $project->customer->name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="break-words">{{ $project->customer->name ?? '--' }}</span>
+                                                    @endif
                                                 </span>
                                             </div>
                                         </td>

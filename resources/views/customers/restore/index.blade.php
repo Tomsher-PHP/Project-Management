@@ -58,8 +58,9 @@
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
                                                 <div class="flex-1">
-                                                    <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                        {{ $customer->name }}
+                                                    <h4 class="flex items-center gap-1 text-base font-semibold text-bgray-900 dark:text-white">
+                                                        <x-profile-grade-badge :grade="$customer->profileGrade" size="sm" />
+                                                        <span class="min-w-0 break-words">{{ $customer->name }}</span>
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-sm text-gray-500 dark:text-bgray-300">Customer Code: {{ $customer->customer_code }}</span>
