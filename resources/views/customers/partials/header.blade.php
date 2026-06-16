@@ -12,9 +12,7 @@
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="break-words text-xl font-bold text-bgray-900 dark:text-white">{{ $customer->name }}</h2>
-                        @if ($customer->profileGrade)
-                            <x-profile-grade-badge :grade="$customer->profileGrade" size="md" />
-                        @endif
+                        <x-profile-grade-badge :grade="$customer->profileGrade" size="md" class="mt-0.5" />
                     </div>
                     <p class="text-sm text-bgray-700 dark:text-bgray-300">Customer Code: {{ $customer->customer_code }}</p>
                 </div>

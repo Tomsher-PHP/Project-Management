@@ -89,14 +89,28 @@
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-center gap-5">
                                                 <div class="flex-1">
-                                                    <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
-                                                        <a href="{{ route('customers.show', $customer) }}" class="transition hover:text-success-400">
+                                                    <h4 class="flex items-center gap-2 text-lg font-bold text-bgray-900 dark:text-white">
+                                                        <a href="{{ route('customers.show', $customer) }}" class="min-w-0 transition hover:text-success-400">
                                                             {{ $customer->name }}
                                                         </a>
+                                                        <x-profile-grade-badge :grade="$customer->profileGrade" size="sm" class="mt-0.5" />
                                                     </h4>
                                                     <div class="flex flex-col">
                                                         <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Customer Code: {{ $customer->customer_code }}</span>
-                                                        <span class="text-gray-500 dark:text-bgray-50">Email: {{ $customer->email }}</span>
+                                                        <span class="inline-flex max-w-full items-center gap-1.5 text-gray-500 dark:text-bgray-50">
+                                                            <span>Email:</span>
+                                                            @if (filled($customer->email))
+                                                                <a href="mailto:{{ $customer->email }}" class="break-all transition hover:text-success-400">{{ $customer->email }}</a>
+                                                                <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" onclick="copyProfileEmail(event, @js($customer->email))" aria-label="Copy customer email" title="Copy email">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                                        <path d="M8 7V6C8 4.89543 8.89543 4 10 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                                        <path d="M6 8H14C15.1046 8 16 8.89543 16 10V18C16 19.1046 15.1046 20 14 20H6C4.89543 20 4 19.1046 4 18V10C4 8.89543 4.89543 8 6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    </svg>
+                                                                </button>
+                                                            @else
+                                                                <span>--</span>
+                                                            @endif
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

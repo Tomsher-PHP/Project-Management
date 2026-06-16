@@ -132,7 +132,12 @@
                                         </td>
                                         <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                             <div class="flex w-full items-center">
-                                                <span class="block rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">{{ $project->customer->name ?? '--' }}</span>
+                                                <span class="inline-flex max-w-full items-center gap-2 rounded-md px-4 py-1.5 text-sm font-bold leading-[22px] text-bgray-700 dark:text-bgray-50">
+                                                    @if ($project->customer)
+                                                        <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
+                                                    @endif
+                                                    <span class="break-words">{{ $project->customer->name ?? '--' }}</span>
+                                                </span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-5 xl:w-[220px] xl:px-0">
