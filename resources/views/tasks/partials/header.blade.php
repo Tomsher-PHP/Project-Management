@@ -1,5 +1,6 @@
 @php
     $priorityBarClass = $taskPriorityConfig['bg_class'] ?? 'bg-primary';
+    $customer = $project?->customer;
 @endphp
 
 <div class="rounded-lg bg-white p-5 dark:bg-darkblack-600">
@@ -88,6 +89,10 @@
         @endphp
 
         <div class="flex flex-wrap items-center gap-3 xl:justify-end">
+            @if ($customer)
+                <x-profile-grade-badge :grade="$customer->profileGrade" size="lg" />
+            @endif
+
             <div class="min-w-0">
                 @if ($task->currentAssignee)
                     <x-user-avatar :user="$task->currentAssignee" size="md" title="Assignee: {{ $task->currentAssignee->name }}" />
