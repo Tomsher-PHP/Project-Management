@@ -55,7 +55,7 @@
                                     $startNumber = ($technologies->currentPage() - 1) * $technologies->perPage();
                                 @endphp
                                 @forelse ($technologies as $key => $technology)
-                                    <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                    <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
                                         <td class="px-6 py-5 xl:px-0">
                                             <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                         </td>

@@ -10,7 +10,7 @@
     $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
 @endphp
 
-<tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isSubtask ? 'hidden bg-bgray-50/40 dark:bg-darkblack-500/20' : '' }}" data-task-id="{{ $task->id }}" @if ($isSubtask) data-task-parent-id="{{ $parentTaskId }}" hidden @endif>
+<tr class="transition {{ config('assets.classes.table_row_hover') }} {{ $isSubtask ? 'hidden bg-bgray-50/40 dark:bg-darkblack-500/20' : '' }}" data-task-id="{{ $task->id }}" @if ($isSubtask) data-task-parent-id="{{ $parentTaskId }}" hidden @endif>
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <div class="flex items-start gap-3">
             @if ($isSubtask)

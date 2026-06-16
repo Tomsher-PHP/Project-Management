@@ -87,7 +87,7 @@
                                         $projectStatusColor = $project->projectStatus->color ?? '#CBD5E1';
                                         $projectStageColor = $project->projectStage->color ?? '#CBD5E1';
                                     @endphp
-                                    <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                    <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
                                         <td class="px-6 py-5 xl:px-0">
                                             <div class="flex items-stretch">
                                                 <!-- Priority Vertical Line -->

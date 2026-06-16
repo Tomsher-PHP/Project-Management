@@ -64,7 +64,7 @@
                                 $requestUser = $extendRequest->user;
                                 $isOwnRequest = (int) $extendRequest->user_id === (int) auth()->id();
                             @endphp
-                            <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                            <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="flex min-w-[180px] items-center gap-3">
                                         <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />

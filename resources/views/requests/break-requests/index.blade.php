@@ -88,7 +88,7 @@
                                         ? 'bg-success-50 text-success-300'
                                         : ($breakRequest->isRejected() ? 'bg-error-50 text-error-300' : 'bg-warning-50 text-warning-300');
                                 @endphp
-                                <tr class="group hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                                <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                     @if ($showBulkActions)
                                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                             @if ($breakRequest->isPending() && ! $isOwnRequest)
