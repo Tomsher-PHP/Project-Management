@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\UserLoginSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -15,6 +16,8 @@ class UserLoginSessionService
         try {
             $userAgent = $request->userAgent();
             $currentSessionId = $request->session()->getId();
+            $ipAddress = $request->ip();
+            $location = $this->getLocation($ipAddress);
 
             $previousSessions = UserLoginSession::query()
                 ->where('user_id', $user->id)
@@ -40,9 +43,9 @@ class UserLoginSessionService
                 'session_id' => $currentSessionId,
                 'login_at' => now(),
                 'logout_at' => null,
-                'ip_address' => $request->ip(),
-                'country' => null,
-                'city' => null,
+                'ip_address' => $ipAddress,
+                'country' => $location['country'],
+                'city' => $location['city'],
                 'browser' => $this->detectBrowser($userAgent),
                 'platform' => $this->detectPlatform($userAgent),
                 'device' => $this->detectDevice($userAgent),
@@ -72,6 +75,50 @@ class UserLoginSessionService
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function getLocation(?string $ipAddress): array
+    {
+        $location = [
+            'country' => null,
+            'city' => null,
+        ];
+
+        if (! $this->isPublicIp($ipAddress)) {
+            return $location;
+        }
+
+        try {
+            $response = Http::acceptJson()
+                ->timeout(3)
+                ->get("https://ipwho.is/{$ipAddress}");
+
+            if (! $response->successful() || $response->json('success') === false) {
+                return $location;
+            }
+
+            return [
+                'country' => $response->json('country'),
+                'city' => $response->json('city'),
+            ];
+        } catch (Throwable $exception) {
+            Log::warning('Unable to fetch login session location.', [
+                'ip_address' => $ipAddress,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return $location;
+        }
+    }
+
+    private function isPublicIp(?string $ipAddress): bool
+    {
+        return is_string($ipAddress)
+            && filter_var(
+                $ipAddress,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            ) !== false;
     }
 
     private function detectBrowser(?string $userAgent): ?string
