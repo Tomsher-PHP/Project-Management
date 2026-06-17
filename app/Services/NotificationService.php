@@ -152,72 +152,55 @@ class NotificationService
 
     public function notifyProjectMemberAdded(int $userId, Project $project, ?string $roleName = null): void
     {
-        $message = $roleName
-            ? "You have been added to project '{$project->name}' as '{$roleName}'."
-            : "You have been added to project '{$project->name}'.";
-
-        $this->send(
-            $userId,
+        $this->dispatchProjectAssignmentNotification(
             'Project Assigned',
-            $message,
-            $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED,
-            auth()->id(),
-            (int) $project->id
+            $userId,
+            $project,
+            fn(User $recipient, User $targetUser, ?User $actor) => (int) $recipient->id === (int) $targetUser->id
+                ? "{$this->actorName($actor)} assigned you to project '{$project->name}'."
+                : "{$this->actorName($actor)} added {$targetUser->name} to project '{$project->name}'."
         );
     }
 
     public function notifyProjectMemberRemoved(int $userId, Project $project, ?string $roleName = null): void
     {
-        $message = $roleName
-            ? "You have been removed from project '{$project->name}' where your role was '{$roleName}'."
-            : "You have been removed from project '{$project->name}'.";
-
-        $this->send(
+        $this->dispatchProjectAssignmentNotification(
+            'Project Unassigned',
             $userId,
-            'Project Removed',
-            $message,
-            $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED,
-            auth()->id(),
-            (int) $project->id
+            $project,
+            fn(User $recipient, User $targetUser, ?User $actor) => (int) $recipient->id === (int) $targetUser->id
+                ? "{$this->actorName($actor)} removed you from project '{$project->name}'."
+                : "{$this->actorName($actor)} removed {$targetUser->name} from project '{$project->name}'."
         );
     }
 
     public function notifyProjectMemberStatusChanged(int $userId, Project $project, bool $isEnabled, ?string $roleName = null): void
     {
-        $title = $isEnabled ? 'Project Access Enabled' : 'Project Access Disabled';
-        $message = $isEnabled
-            ? "Your access to project '{$project->name}' has been enabled."
-            : "Your access to project '{$project->name}' has been disabled.";
+        $oldStatus = $isEnabled ? 'Inactive' : 'Active';
+        $newStatus = $isEnabled ? 'Active' : 'Inactive';
 
-        $this->send(
+        $this->dispatchProjectAssignmentNotification(
+            'Project Member Status Updated',
             $userId,
-            $title,
-            $message,
-            $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED,
-            auth()->id(),
-            (int) $project->id
+            $project,
+            fn(User $recipient, User $targetUser, ?User $actor) => (int) $recipient->id === (int) $targetUser->id
+                ? "{$this->actorName($actor)} changed your status in project '{$project->name}' from {$oldStatus} to {$newStatus}."
+                : "{$this->actorName($actor)} changed {$targetUser->name}'s status in project '{$project->name}' from {$oldStatus} to {$newStatus}."
         );
     }
 
     public function notifyProjectMemberRoleUpdated(int $userId, Project $project, ?string $oldRoleName = null, ?string $newRoleName = null): void
     {
-        $message = match (true) {
-            filled($oldRoleName) && filled($newRoleName) => "Your role in project '{$project->name}' has been updated from '{$oldRoleName}' to '{$newRoleName}'.",
-            filled($newRoleName) => "Your role in project '{$project->name}' has been updated to '{$newRoleName}'.",
-            default => "Your role in project '{$project->name}' has been updated.",
-        };
+        $oldRole = filled($oldRoleName) ? $oldRoleName : 'Unassigned';
+        $newRole = filled($newRoleName) ? $newRoleName : 'Unassigned';
 
-        $this->send(
+        $this->dispatchProjectAssignmentNotification(
+            'Project Member Role Updated',
             $userId,
-            'Project Role Updated',
-            $message,
-            $this->getProjectNotificationUrl($project),
-            UserNotificationSetting::PROJECT_ASSIGNED,
-            auth()->id(),
-            (int) $project->id
+            $project,
+            fn(User $recipient, User $targetUser, ?User $actor) => (int) $recipient->id === (int) $targetUser->id
+                ? "{$this->actorName($actor)} changed your role in project '{$project->name}' from {$oldRole} to {$newRole}."
+                : "{$this->actorName($actor)} changed {$targetUser->name}'s role in project '{$project->name}' from {$oldRole} to {$newRole}."
         );
     }
 
@@ -442,6 +425,63 @@ class NotificationService
     private function getProjectNotificationUrl(Project $project): ?string
     {
         return route('projects.edit', $project);
+    }
+
+    private function dispatchProjectAssignmentNotification(string $title, int $targetUserId, Project $project, callable $messageBuilder): void
+    {
+        $actor = auth()->user();
+        $targetUser = User::find($targetUserId);
+
+        if (! $targetUser) {
+            return;
+        }
+
+        $recipients = $this->getProjectAssignmentRecipientUsers($project, $targetUserId, $actor);
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        foreach ($recipients as $recipient) {
+            $this->send(
+                (int) $recipient->id,
+                $title,
+                $messageBuilder($recipient, $targetUser, $actor),
+                $this->getProjectNotificationUrl($project),
+                UserNotificationSetting::PROJECT_ASSIGNED,
+                $actor?->id ? (int) $actor->id : null,
+                (int) $project->id
+            );
+        }
+    }
+
+    private function getProjectAssignmentRecipientUsers(Project $project, int $targetUserId, ?User $actor)
+    {
+        $project->loadMissing('teamLeader');
+
+        $recipientIds = collect([$targetUserId])
+            ->merge($actor ? User::getReporterChainUserIds((int) $actor->id) : [])
+            ->push($project->teamLeader?->id)
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->get(['id', 'name']);
+    }
+
+    private function actorName(?User $actor): string
+    {
+        return $actor?->name ?? 'A team member';
     }
 
     private function getProjectChangeRecipientIds(Project $project, User $actor): array
