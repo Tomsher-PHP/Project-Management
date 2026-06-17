@@ -16,6 +16,7 @@ use App\Models\ProjectStatusHistory;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
+use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -26,6 +27,12 @@ class ProjectServices
     private const BACKLOG_SPRINT_NAME = 'Backlog';
     private const BACKLOG_MILESTONE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
     private const BACKLOG_SPRINT_DESCRIPTION = 'Contains pending tasks waiting to be scheduled into an active sprint.';
+    private const PROJECT_TIMELINE_FIELDS = [
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+        'customer_end_date' => 'Customer End Date',
+        'estimated_time_seconds' => 'Estimated Time',
+    ];
 
     protected $attachmentService;
     protected $notificationService;
@@ -105,8 +112,7 @@ class ProjectServices
             $data['customer_id'] = $data['customer_id'] ?? null;
             $data['default_billable'] = $data['default_billable'] ?? 0;
 
-            // Update project
-            $project->update([
+            $projectData = [
                 'parent_project_id' => $data['parent_project_id'] ?? null,
                 'name' => $data['name'],
                 'customer_id' => $data['customer_id'],
@@ -120,15 +126,56 @@ class ProjectServices
                 'sales_person_id' => $data['sales_person_id'] ?? null,
                 'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
-            ]);
+            ];
+
+            $originalTimelineValues = $project->only(array_keys(self::PROJECT_TIMELINE_FIELDS));
+
+            // Update project
+            $project->fill($projectData);
+            $timelineChanges = $this->buildProjectTimelineChanges($project, $originalTimelineValues);
+            $project->save();
 
             // Attach project technologies
             if (isset($data['project_technology_ids'])) {
                 $project->technologies()->sync($data['project_technology_ids']);
             }
 
-            return $project->fresh(); // return updated model
+            $updatedProject = $project->fresh();
+
+            if ($timelineChanges !== [] && ($actor = auth()->user())) {
+                $this->notificationService->notifyProjectTimelineChanged(
+                    $updatedProject,
+                    $actor,
+                    $timelineChanges
+                );
+            }
+
+            return $updatedProject; // return updated model
         });
+    }
+
+    private function buildProjectTimelineChanges(Project $project, array $originalTimelineValues): array
+    {
+        return collect(self::PROJECT_TIMELINE_FIELDS)
+            ->filter(fn($label, $field) => $project->isDirty($field))
+            ->map(function ($label, $field) use ($project, $originalTimelineValues) {
+                return [
+                    'field' => $label,
+                    'old' => $this->formatProjectTimelineValue($field, $originalTimelineValues[$field] ?? null),
+                    'new' => $this->formatProjectTimelineValue($field, $project->getAttribute($field)),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function formatProjectTimelineValue(string $field, mixed $value): string
+    {
+        if ($field === 'estimated_time_seconds') {
+            return $value === null ? '--' : formatSecondsToHoursMinutes((int) $value);
+        }
+
+        return AppServiceProvider::formatAppDate($value);
     }
 
     public function updateStatus(Project $project, int $statusId, ?string $statusDate = null, ?string $remarks = null): Project

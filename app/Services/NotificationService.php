@@ -249,6 +249,39 @@ class NotificationService
         );
     }
 
+    public function notifyProjectTimelineChanged(Project $project, User $actor, array $changes): void
+    {
+        if ($changes === []) {
+            return;
+        }
+
+        $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $projectName = $project->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+        $changeSummary = collect($changes)
+            ->map(fn($change) => "{$change['field']} from {$change['old']} to {$change['new']}")
+            ->implode('; ');
+
+        $message = count($changes) === 1
+            ? "{$actorName} changed project '{$projectName}' {$changeSummary}."
+            : "{$actorName} changed project '{$projectName}' timeline: {$changeSummary}.";
+
+        $this->sendToMany(
+            $recipientIds,
+            'Project Timeline Updated',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
+            (int) $actor->id,
+            (int) $project->id
+        );
+    }
+
     // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
