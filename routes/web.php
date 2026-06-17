@@ -331,7 +331,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('milestones/{projectMilestone}/sprints', [ProjectSprintController::class, 'store'])->middleware(['permission.type:project_sprint.create', 'can:update,project'])->name('projects.milestones.sprints.store');
         Route::put('sprints/{projectSprint}', [ProjectSprintController::class, 'update'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.sprints.update');
         Route::delete('sprints/{projectSprint}', [ProjectSprintController::class, 'destroy'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.destroy');
-        Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.delete', 'can:update,project'])->name('projects.sprints.restore');
+        Route::post('sprints/{projectSprint}/restore', [ProjectSprintController::class, 'restore'])->middleware(['permission.type:project_sprint.restore', 'can:update,project'])->name('projects.sprints.restore');
         Route::patch('milestones/{projectMilestone}/sprints/reorder', [ProjectSprintController::class, 'reorder'])->middleware(['permission.type:project_sprint.edit', 'can:update,project'])->name('projects.milestones.sprints.reorder');
         Route::patch('milestones/reorder', [ProjectMilestoneController::class, 'reorder'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.reorder');
         Route::put('milestones/{projectMilestone}', [ProjectMilestoneController::class, 'update'])->middleware(['permission.type:project_milestone.edit', 'can:update,project'])->name('projects.milestones.update');

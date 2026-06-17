@@ -8,7 +8,7 @@
         $canEditProjectModules = auth()->user()->can('project_milestone.edit');
         $projectModuleReorderUrl = $canEditProjectModules && ! $isDeletedProjectView ? route('projects.milestones.reorder', $project) : null;
         $trashedCount = $trashedProjectMilestones->count();
-        $trashedProjectSprintsByModule = $trashedProjectSprintsByModule ?? collect();
+        $trashedProjectSprintsByModule = $trashedProjectSprintsByMilestone ?? collect();
         $projectModuleBuilderSource = $editableProjectModules->map(fn ($milestone) => [
             'id' => $milestone->id,
             'name' => $milestone->name,
@@ -189,7 +189,7 @@
                                 @endif
 
                                 @if ($canManageAdditionalSprints && ! $isDeletedProjectView)
-                                    @can('project_sprint.delete')
+                                    @can('project_sprint.restore')
                                         <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-bgray-200 bg-white px-2.5 py-1 text-xs font-medium text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:bg-bgray-100 disabled:text-bgray-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300 dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-500 dark:disabled:text-bgray-700"
                                             data-project-sprint-restore-open="{{ $milestone->id }}" @disabled($trashedSprintCount === 0)>
                                             <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -239,7 +239,7 @@
                     </div>
                 </div>
 
-                @can('project_sprint.delete')
+                @can('project_sprint.restore')
                     <div class="modal fixed inset-0 z-50 hidden overflow-y-auto" data-project-sprint-restore-modal="{{ $milestone->id }}">
                         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-sprint-restore-close></div>
 
