@@ -205,6 +205,28 @@ class NotificationService
         );
     }
 
+    public function notifyProjectStatusChanged(Project $project, User $actor, string $oldStatus, string $newStatus): void
+    {
+        $recipientIds = $this->getProjectStatusChangeRecipientIds($project, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $projectName = $project->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+
+        $this->sendToMany(
+            $recipientIds,
+            'Project Status Updated',
+            "{$actorName} changed project '{$projectName}' status from {$oldStatus} to {$newStatus}.",
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_STATUS_CHANGED,
+            (int) $actor->id,
+            (int) $project->id
+        );
+    }
+
     // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
@@ -271,6 +293,32 @@ class NotificationService
     private function getProjectNotificationUrl(Project $project): ?string
     {
         return route('projects.edit', $project);
+    }
+
+    private function getProjectStatusChangeRecipientIds(Project $project, User $actor): array
+    {
+        $project->loadMissing('teamLeader');
+
+        $recipientIds = collect(User::getReporterChainUserIds((int) $actor->id))
+            ->push($project->teamLeader?->id)
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->reject(fn($userId) => $userId === (int) $actor->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->pluck('id')
+            ->map(fn($userId) => (int) $userId)
+            ->all();
     }
 
     // Task assignment: Notify assignee when task is created or updated

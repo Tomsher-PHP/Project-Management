@@ -28,10 +28,12 @@ class ProjectServices
     private const BACKLOG_SPRINT_DESCRIPTION = 'Contains pending tasks waiting to be scheduled into an active sprint.';
 
     protected $attachmentService;
+    protected $notificationService;
 
-    public function __construct(AttachmentService $attachmentService)
+    public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
+        $this->notificationService = $notificationService;
     }
 
     public function create(array $data)
@@ -134,6 +136,9 @@ class ProjectServices
         return DB::transaction(function () use ($project, $statusId, $statusDate, $remarks) {
             if ((int) $project->status_id !== $statusId) {
                 $fromStatusId = $project->status_id;
+                $statusNames = ProjectStatus::withTrashed()
+                    ->whereIn('id', [$fromStatusId, $statusId])
+                    ->pluck('name', 'id');
 
                 $project->update([
                     'status_id' => $statusId,
@@ -148,6 +153,15 @@ class ProjectServices
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
+
+                if ($actor = auth()->user()) {
+                    $this->notificationService->notifyProjectStatusChanged(
+                        $project->fresh(),
+                        $actor,
+                        $statusNames->get($fromStatusId, 'Unknown'),
+                        $statusNames->get($statusId, 'Unknown')
+                    );
+                }
             }
 
             return $project->fresh();

@@ -27,7 +27,7 @@
         @endphp
         @foreach ($notificationGroupOrder as $notificationGroup)
             @if ($groupedNotificationSettings->has($notificationGroup))
-                <div class="!mt-0 border-b border-bgray-200 px-4 py-3 text-base font-semibold text-bgray-900 dark:border-darkblack-400 dark:text-white">
+                <div class="!mt-0 border-b border-bgray-200 px-4 py-3 text-base font-semibold text-bgray-900 dark:border-darkblack-400 dark:text-white" style="background-color: rgba(0, 0, 0, 0.02); text-align: center;">
                     {{ $notificationGroup }}
                 </div>
 
