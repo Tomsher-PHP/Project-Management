@@ -211,7 +211,7 @@
                                     @endcan
 
                                     @can('project_milestone.delete')
-                                        <x-delete-form :action="route('projects.milestones.destroy', [$project, $milestone])" formClass="inline-flex" ajax render-target="[data-project-milestone-section]" render-mode="replace_outer" class="h-8 w-8" />
+                                        <x-delete-form :action="route('projects.milestones.destroy', [$project, $milestone])" formClass="delete-form inline-flex" ajax render-target="[data-project-milestone-section]" render-mode="replace_outer" class="h-8 w-8" />
                                     @endcan
                                 @endif
 
