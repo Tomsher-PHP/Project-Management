@@ -428,7 +428,7 @@ class NotificationService
             ->values()
             ->all();
 
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $projectId = $task->project_id ? (int) $task->project_id : null;
 
@@ -464,7 +464,7 @@ class NotificationService
             return;
         }
 
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $requesterName = $task->currentAssignee?->name ?? 'A team member';
         $projectName = $task->project?->name ?? 'Project';
 
@@ -492,7 +492,7 @@ class NotificationService
         ]);
 
         $isRejected = $action === 'reject';
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $reviewerName = $reviewer->name ?? 'A team member';
         $reviewLabel = $isRejected ? 'rejected' : 'approved';
@@ -616,7 +616,7 @@ class NotificationService
             return;
         }
 
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $requesterName = $changeRequest->user?->name ?? 'A team member';
 
@@ -650,7 +650,7 @@ class NotificationService
         }
 
         $isRejected = $action === 'reject';
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $reviewerName = $reviewer->name ?? 'A team member';
         $reviewLabel = $isRejected ? 'rejected' : 'approved';
@@ -686,7 +686,7 @@ class NotificationService
             'currentAssignee:id,name',
         ]);
 
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
 
@@ -715,7 +715,7 @@ class NotificationService
             'currentAssignee:id,name',
         ]);
 
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
 
@@ -756,7 +756,7 @@ class NotificationService
 
         $startAt = $task->due_date_time->copy()->subSeconds((int) $task->estimated_time_seconds);
         $title = 'Task Start Reminder';
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $startAtLabel = $startAt->timezone(config('constants.timezone', config('app.timezone')))->format('d-M-Y h:i A');
         $dueAtLabel = $task->due_date_time->copy()->timezone(config('constants.timezone', config('app.timezone')))->format('d-M-Y h:i A');
@@ -826,7 +826,7 @@ class NotificationService
 
         $handoffRequest->loadMissing('project:id,name');
 
-        $taskName = Str::limit($createdTask->name ?? 'Task', 50, '...');
+        $taskName = $createdTask->name ?? 'Task';
         $projectName = $handoffRequest->project?->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
 
@@ -909,7 +909,7 @@ class NotificationService
         }
 
         $task->loadMissing('project:id,name');
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $requesterName = $requestingUser->name ?? 'A team member';
         $title = 'Task Time Extend Request';
@@ -930,7 +930,7 @@ class NotificationService
     public function notifyTaskTimeExtendRequestRejected(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
     {
         $task->loadMissing('project:id,name');
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
 
         $extendRequest->loadMissing('rejector:id,name');
@@ -957,7 +957,7 @@ class NotificationService
     public function notifyTaskTimeExtendRequestApprovedToRequester(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
     {
         $task->loadMissing('project:id,name');
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
 
         $extendRequest->loadMissing('approver:id,name');
@@ -985,7 +985,7 @@ class NotificationService
     public function notifyTaskTimeExtendRequestApprovedToReporterChain(TaskExtendTimeRequest $extendRequest, Task $task, User $approvedByUser): void
     {
         $task->loadMissing('project:id,name');
-        $taskName = Str::limit($task->name ?? 'Task', 50, '...');
+        $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
 
         $extendRequest->loadMissing('user');
