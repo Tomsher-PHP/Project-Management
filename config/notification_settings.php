@@ -9,6 +9,7 @@ return [
 
     'shift_assigned' => [
         'label' => 'Shift Scheduled',
+        'group' => 'Team & Shift',
         'action' => 'shift_scheduled',
         'icon_bg' => '#22C55E',
         'icon' => '
@@ -24,6 +25,7 @@ return [
 
     'project_assigned' => [
         'label' => 'Project Assigned',
+        'group' => 'Project Management',
         'action' => 'project_assigned',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -39,6 +41,7 @@ return [
 
     'task_assigned' => [
         'label' => 'Task Assigned',
+        'group' => 'Task Management',
         'action' => 'task_assigned',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -63,6 +66,7 @@ return [
 
     'team_assigned' => [
         'label' => 'Team Assigned',
+        'group' => 'Team & Shift',
         'action' => 'team_assigned',
         'icon_bg' => '#22C55E',
         'icon' => '
@@ -78,6 +82,7 @@ return [
 
     'task_status_changed' => [
         'label' => 'Task Status Updated',
+        'group' => 'Task Management',
         'action' => 'task_status_changed',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -99,6 +104,7 @@ return [
 
     'task_request' => [
         'label' => 'Task Request',
+        'group' => 'Requests & Approvals',
         'action' => 'task_request',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -118,6 +124,7 @@ return [
 
     'task_log_request' => [
         'label' => 'Task Log Request',
+        'group' => 'Requests & Approvals',
         'action' => 'task_log_request',
         'icon_bg' => '#22C55E',
         'icon' => '
@@ -136,6 +143,7 @@ return [
 
     'handoff_request' => [
         'label' => 'Handoff Request',
+        'group' => 'Requests & Approvals',
         'action' => 'handoff_request',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -158,6 +166,7 @@ return [
 
     'break_request' => [
         'label' => 'Break Request',
+        'group' => 'Requests & Approvals',
         'action' => 'break_request',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -180,6 +189,7 @@ return [
 
     'task_time_extension_request' => [
         'label' => 'Task Time Extension Request',
+        'group' => 'Requests & Approvals',
         'action' => 'task_time_extension_request',
         'icon_bg' => '#22C55E',
         'icon' => '
