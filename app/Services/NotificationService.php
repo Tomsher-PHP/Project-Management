@@ -207,7 +207,7 @@ class NotificationService
 
     public function notifyProjectStatusChanged(Project $project, User $actor, string $oldStatus, string $newStatus): void
     {
-        $recipientIds = $this->getProjectStatusChangeRecipientIds($project, $actor);
+        $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
 
         if ($recipientIds === []) {
             return;
@@ -222,6 +222,28 @@ class NotificationService
             "{$actorName} changed project '{$projectName}' status from {$oldStatus} to {$newStatus}.",
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_STATUS_CHANGED,
+            (int) $actor->id,
+            (int) $project->id
+        );
+    }
+
+    public function notifyProjectStageChanged(Project $project, User $actor, string $oldStage, string $newStage): void
+    {
+        $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $projectName = $project->name ?? 'Project';
+        $actorName = $actor->name ?? 'A team member';
+
+        $this->sendToMany(
+            $recipientIds,
+            'Project Stage Updated',
+            "{$actorName} moved project '{$projectName}' stage from {$oldStage} to {$newStage}.",
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_STAGE_CHANGED,
             (int) $actor->id,
             (int) $project->id
         );
@@ -295,7 +317,7 @@ class NotificationService
         return route('projects.edit', $project);
     }
 
-    private function getProjectStatusChangeRecipientIds(Project $project, User $actor): array
+    private function getProjectChangeRecipientIds(Project $project, User $actor): array
     {
         $project->loadMissing('teamLeader');
 

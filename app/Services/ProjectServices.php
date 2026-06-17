@@ -173,6 +173,9 @@ class ProjectServices
         return DB::transaction(function () use ($project, $projectStageId, $changeDate, $remarks) {
             if ((int) ($project->project_stage_id ?? 0) !== (int) ($projectStageId ?? 0)) {
                 $fromStageId = $project->project_stage_id;
+                $stageNames = ProjectStage::withTrashed()
+                    ->whereIn('id', [$fromStageId, $projectStageId])
+                    ->pluck('name', 'id');
 
                 $project->update([
                     'project_stage_id' => $projectStageId,
@@ -187,6 +190,15 @@ class ProjectServices
                     'added_at' => $historyAddedAt,
                     'remarks' => blank($remarks) ? null : $remarks,
                 ]);
+
+                if ($actor = auth()->user()) {
+                    $this->notificationService->notifyProjectStageChanged(
+                        $project->fresh(),
+                        $actor,
+                        $stageNames->get($fromStageId, 'Unknown'),
+                        $stageNames->get($projectStageId, 'Unknown')
+                    );
+                }
             }
 
             return $project->fresh();
