@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\ProjectStatus;
+use App\Services\NotificationService;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -126,6 +127,11 @@ class ProjectSprintController extends Controller
 
         $originalProjectMilestone = $projectSprint->projectMilestone;
         $milestoneChanged = (int) $projectSprint->project_milestone_id !== (int) $targetProjectMilestone->id;
+        $originalTimelineValues = $projectSprint->only([
+            'estimated_time_seconds',
+            'start_date',
+            'end_date',
+        ]);
 
         DB::transaction(function () use ($request, $projectSprint, $targetProjectMilestone, $originalProjectMilestone, $milestoneChanged) {
             $updateData = $this->prepareData($request, [
@@ -147,6 +153,14 @@ class ProjectSprintController extends Controller
         });
 
         $projectSprint->refresh();
+
+        if ($actor = $request->user()) {
+            app(NotificationService::class)->notifySprintTimelineChanged(
+                $projectSprint,
+                $actor,
+                $originalTimelineValues
+            );
+        }
 
         return response()->json([
             'status' => true,

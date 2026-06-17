@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
+use App\Models\ProjectMilestone;
+use App\Models\ProjectSprint;
 use App\Models\Shift;
 use App\Models\Task;
 use App\Models\TaskTimeLogChangeRequest;
@@ -13,11 +15,25 @@ use App\Models\User;
 use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
 use App\Models\TaskExtendTimeRequest;
+use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class NotificationService
 {
+    private const MILESTONE_TIMELINE_FIELDS = [
+        'owner_id' => 'Owner',
+        'estimated_time_seconds' => 'Estimated Time',
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+    ];
+
+    private const SPRINT_TIMELINE_FIELDS = [
+        'estimated_time_seconds' => 'Estimated Time',
+        'start_date' => 'Start Date',
+        'end_date' => 'End Date',
+    ];
+
     private function getNotificationChannels(int $userId, ?string $notificationType): array
     {
         if (blank($notificationType)) {
@@ -282,6 +298,84 @@ class NotificationService
         );
     }
 
+    public function notifyMilestoneTimelineChanged(ProjectMilestone $projectMilestone, User $actor, array $originalValues): void
+    {
+        $projectMilestone->loadMissing(['project.teamLeader']);
+        $project = $projectMilestone->project;
+
+        if (! $project) {
+            return;
+        }
+
+        $changes = $this->buildTimelineChanges($projectMilestone, self::MILESTONE_TIMELINE_FIELDS, $originalValues);
+
+        if ($changes === []) {
+            return;
+        }
+
+        $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $projectName = $project->name ?? 'Project';
+        $milestoneName = $projectMilestone->name ?? 'Milestone';
+        $actorName = $actor->name ?? 'A team member';
+
+        $message = "{$actorName} updated milestone '{$milestoneName}' in project '{$projectName}'.\n\n"
+            . $this->formatTimelineChangeSummary($changes);
+
+        $this->sendToMany(
+            $recipientIds,
+            'Milestone Timeline Updated',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
+            (int) $actor->id,
+            (int) $project->id
+        );
+    }
+
+    public function notifySprintTimelineChanged(ProjectSprint $projectSprint, User $actor, array $originalValues): void
+    {
+        $projectSprint->loadMissing(['project.teamLeader']);
+        $project = $projectSprint->project;
+
+        if (! $project) {
+            return;
+        }
+
+        $changes = $this->buildTimelineChanges($projectSprint, self::SPRINT_TIMELINE_FIELDS, $originalValues);
+
+        if ($changes === []) {
+            return;
+        }
+
+        $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $projectName = $project->name ?? 'Project';
+        $sprintName = $projectSprint->name ?? 'Sprint';
+        $actorName = $actor->name ?? 'A team member';
+
+        $message = "{$actorName} updated sprint '{$sprintName}' in project '{$projectName}'.\n\n"
+            . $this->formatTimelineChangeSummary($changes);
+
+        $this->sendToMany(
+            $recipientIds,
+            'Sprint Timeline Updated',
+            $message,
+            $this->getProjectNotificationUrl($project),
+            UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
+            (int) $actor->id,
+            (int) $project->id
+        );
+    }
+
     // ShiftSchedule: Notify users about shift assignment with shift details
     public function sendShiftAssigned(array|int $userIds, int $shiftId, Carbon|string $dateFrom, Carbon|string|null $dateTo = null, ?string $url = null): void
     {
@@ -374,6 +468,80 @@ class NotificationService
             ->pluck('id')
             ->map(fn($userId) => (int) $userId)
             ->all();
+    }
+
+    private function buildTimelineChanges(ProjectMilestone|ProjectSprint $model, array $fields, array $originalValues): array
+    {
+        return collect($fields)
+            ->filter(fn($label, $field) => $this->timelineValueChanged(
+                $field,
+                $originalValues[$field] ?? null,
+                $model->getAttribute($field)
+            ))
+            ->map(function ($label, $field) use ($model, $originalValues) {
+                return [
+                    'field' => $label,
+                    'old' => $this->formatTimelineValue($field, $originalValues[$field] ?? null),
+                    'new' => $this->formatTimelineValue($field, $model->getAttribute($field)),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function timelineValueChanged(string $field, mixed $oldValue, mixed $newValue): bool
+    {
+        if ($field === 'estimated_time_seconds' || $field === 'owner_id') {
+            return $this->normalizeNullableInteger($oldValue) !== $this->normalizeNullableInteger($newValue);
+        }
+
+        return $this->normalizeDateValue($oldValue) !== $this->normalizeDateValue($newValue);
+    }
+
+    private function formatTimelineValue(string $field, mixed $value): string
+    {
+        if ($field === 'estimated_time_seconds') {
+            $seconds = $this->normalizeNullableInteger($value);
+
+            return $seconds === null
+                ? '--'
+                : formatMinutesToHoursMinutes((int) round($seconds / 60));
+        }
+
+        if ($field === 'owner_id') {
+            $userId = $this->normalizeNullableInteger($value);
+
+            return $userId ? (User::find($userId)?->name ?? 'Unknown User') : 'Unassigned';
+        }
+
+        return AppServiceProvider::formatAppDate($value);
+    }
+
+    private function formatTimelineChangeSummary(array $changes): string
+    {
+        return collect($changes)
+            ->map(fn($change) => "{$change['field']}:\n{$change['old']} → {$change['new']}")
+            ->implode("\n\n");
+    }
+
+    private function normalizeNullableInteger(mixed $value): ?int
+    {
+        return filled($value) ? (int) $value : null;
+    }
+
+    private function normalizeDateValue(mixed $value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return $value instanceof Carbon
+                ? $value->toDateString()
+                : Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return trim((string) $value) ?: null;
+        }
     }
 
     // Task assignment: Notify assignee when task is created or updated
