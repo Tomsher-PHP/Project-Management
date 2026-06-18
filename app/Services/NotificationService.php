@@ -21,6 +21,8 @@ use Illuminate\Support\Str;
 
 class NotificationService
 {
+    private static array $handledTaskAssignmentNotifications = [];
+
     private const MILESTONE_TIMELINE_FIELDS = [
         'owner_id' => 'Owner',
         'estimated_time_seconds' => 'Estimated Time',
@@ -512,8 +514,15 @@ class NotificationService
 
     private function getTaskTimelineRecipientIds(Task $task, User $actor): array
     {
+        $task->loadMissing([
+            'project.teamLeader',
+            'projectMilestone.owner',
+        ]);
+
         $recipientIds = collect([$task->current_assignee_id])
             ->merge(User::getReporterChainUserIds((int) $actor->id))
+            ->push($task->project?->teamLeader?->id)
+            ->push($task->projectMilestone?->owner?->id)
             ->filter()
             ->map(fn($userId) => (int) $userId)
             ->reject(fn($userId) => $userId === (int) $actor->id)
@@ -618,6 +627,10 @@ class NotificationService
             return;
         }
 
+        if ($this->wasTaskAssignmentNotificationHandled($task, $previousAssigneeId, $currentAssigneeId)) {
+            return;
+        }
+
         $task->loadMissing('project:id,name');
 
         $authUser = auth()->user();
@@ -647,6 +660,8 @@ class NotificationService
             $authUser?->id,
             $task->project_id ? (int) $task->project_id : null
         );
+
+        $this->markTaskAssignmentNotificationHandled($task, $previousAssigneeId, $currentAssigneeId);
     }
 
     public function notifyTaskTimelineChanged(Task $task, User $actor, array $changes): void
@@ -682,6 +697,82 @@ class NotificationService
             (int) $actor->id,
             $task->project_id ? (int) $task->project_id : null
         );
+    }
+
+    public function notifyTaskAssigneeChanged(Task $task, User $actor, ?int $previousAssigneeId, ?int $newAssigneeId): void
+    {
+        $previousAssigneeId = filled($previousAssigneeId) ? (int) $previousAssigneeId : null;
+        $newAssigneeId = filled($newAssigneeId) ? (int) $newAssigneeId : null;
+
+        if ($previousAssigneeId === $newAssigneeId) {
+            return;
+        }
+
+        $this->markTaskAssignmentNotificationHandled($task, $previousAssigneeId, $newAssigneeId);
+
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $recipientIds = $this->getTaskTimelineRecipientIds($task, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $assigneeNames = User::query()
+            ->whereIn('id', array_filter([$previousAssigneeId, $newAssigneeId]))
+            ->pluck('name', 'id');
+
+        $actorName = $actor->name ?? 'A team member';
+        $taskName = $task->name ?? 'Task';
+        $projectName = $task->project?->name ?? 'Project';
+        $previousAssigneeName = $previousAssigneeId
+            ? ($assigneeNames->get($previousAssigneeId) ?? 'Unknown User')
+            : 'Unassigned';
+        $newAssigneeName = $newAssigneeId
+            ? ($assigneeNames->get($newAssigneeId) ?? $task->currentAssignee?->name ?? 'Unknown User')
+            : 'Unassigned';
+        $url = route('tasks.edit', $task);
+        $projectId = $task->project_id ? (int) $task->project_id : null;
+
+        foreach ($recipientIds as $recipientId) {
+            $message = match ((int) $recipientId) {
+                $newAssigneeId => "{$actorName} assigned you to task '{$taskName}' in project '{$projectName}'.",
+                $previousAssigneeId => "{$actorName} reassigned task '{$taskName}' in project '{$projectName}' from you to {$newAssigneeName}.",
+                default => "{$actorName} reassigned task '{$taskName}' in project '{$projectName}' from {$previousAssigneeName} to {$newAssigneeName}.",
+            };
+
+            $this->send(
+                (int) $recipientId,
+                'Task Assigned',
+                $message,
+                $url,
+                UserNotificationSetting::TASK_ASSIGNED,
+                (int) $actor->id,
+                $projectId
+            );
+        }
+    }
+
+    private function markTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): void
+    {
+        self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] = true;
+    }
+
+    private function wasTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): bool
+    {
+        return self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] ?? false;
+    }
+
+    private function taskAssignmentNotificationKey(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): string
+    {
+        return implode(':', [
+            (int) $task->id,
+            $previousAssigneeId ?? 'none',
+            $newAssigneeId ?? 'none',
+        ]);
     }
 
     // Task status change: Notify assignee, reporter, manager and super admins

@@ -498,12 +498,23 @@ class TaskServices
 
             $updatedTask = $task->fresh();
 
-            if ($timelineChanges !== [] && ($actor = auth()->user())) {
-                $this->notificationService->notifyTaskTimelineChanged(
-                    $updatedTask,
-                    $actor,
-                    $timelineChanges
-                );
+            if ($actor = auth()->user()) {
+                if ($previousAssigneeId !== $newAssigneeId) {
+                    $this->notificationService->notifyTaskAssigneeChanged(
+                        $updatedTask,
+                        $actor,
+                        $previousAssigneeId,
+                        $newAssigneeId
+                    );
+                }
+
+                if ($timelineChanges !== []) {
+                    $this->notificationService->notifyTaskTimelineChanged(
+                        $updatedTask,
+                        $actor,
+                        $timelineChanges
+                    );
+                }
             }
 
             return $updatedTask;
