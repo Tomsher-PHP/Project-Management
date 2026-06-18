@@ -347,7 +347,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Project task routes with policy can:view,task
-    Route::prefix('projects/{project}')->group(function () {
+    Route::prefix('projects/{project}')->middleware('can:view,task')->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
