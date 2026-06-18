@@ -347,13 +347,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Project task routes with policy can:view,task
-    Route::prefix('projects/{project}')->middleware('can:view,task')->group(function () {
-        Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware('permission.type:project.view')->name('projects.tasks.groups.index');
-        Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware('permission.type:project.view')->name('projects.tasks.groups.show');
+    Route::prefix('projects/{project}')->group(function () {
+        Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.index');
+        Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
-        Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware('permission.type:task.create')->name('projects.tasks.store');
-        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit'])->name('projects.tasks.update');
+        Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
+        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:view,task'])->name('projects.tasks.update');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
         Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
     });

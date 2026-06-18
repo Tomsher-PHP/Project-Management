@@ -12,6 +12,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\TaskType;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,11 @@ class TaskServices
     public const KANBAN_SORT_PRIORITY_DESC = 'priority_desc';
 
     public const KANBAN_SORT_PRIORITY_ASC = 'priority_asc';
+
+    private const TASK_TIMELINE_FIELDS = [
+        'due_date_time' => 'Due Date',
+        'estimated_time_seconds' => 'Estimated Time',
+    ];
 
     // Initialize task service dependencies
     public function __construct(
@@ -448,6 +454,7 @@ class TaskServices
             $previousAssigneeId = $task->current_assignee_id ? (int) $task->current_assignee_id : null;
             $previousMilestoneId = filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null;
             $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
+            $originalTimelineValues = $task->only(array_keys(self::TASK_TIMELINE_FIELDS));
 
             $placement = $this->finalizePlacement(
                 $project,
@@ -461,7 +468,9 @@ class TaskServices
                 placement: $placement
             );
 
-            $task->update($payload);
+            $task->fill($payload);
+            $timelineChanges = $this->buildTaskTimelineChanges($task, $originalTimelineValues);
+            $task->save();
 
             if (
                 $previousMilestoneId !== (filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null)
@@ -487,8 +496,44 @@ class TaskServices
             );
             $this->syncAssignmentIfChanged($task, $previousAssigneeId, $newAssigneeId);
 
-            return $task->fresh();
+            $updatedTask = $task->fresh();
+
+            if ($timelineChanges !== [] && ($actor = auth()->user())) {
+                $this->notificationService->notifyTaskTimelineChanged(
+                    $updatedTask,
+                    $actor,
+                    $timelineChanges
+                );
+            }
+
+            return $updatedTask;
         });
+    }
+
+    private function buildTaskTimelineChanges(Task $task, array $originalTimelineValues): array
+    {
+        return collect(self::TASK_TIMELINE_FIELDS)
+            ->filter(fn($label, $field) => $task->isDirty($field))
+            ->map(function ($label, $field) use ($task, $originalTimelineValues) {
+                return [
+                    'field' => $label,
+                    'old' => $this->formatTaskTimelineValue($field, $originalTimelineValues[$field] ?? null),
+                    'new' => $this->formatTaskTimelineValue($field, $task->getAttribute($field)),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function formatTaskTimelineValue(string $field, mixed $value): string
+    {
+        if ($field === 'estimated_time_seconds') {
+            return $value === null
+                ? '--'
+                : formatMinutesToHoursMinutes((int) round((int) $value / 60));
+        }
+
+        return AppServiceProvider::formatAppDateTime($value);
     }
 
     // Determine project milestone and sprint placement for a task

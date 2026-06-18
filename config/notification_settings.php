@@ -165,6 +165,26 @@ return [
         'sort_order' => 5
     ],
 
+    'task_timeline_changed' => [
+        'label' => 'Task Timeline',
+        'group' => 'Task Management',
+        'action' => 'task_timeline_changed',
+        'icon_bg' => '#FFC837',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#FFC837"/>
+                <rect x="18" y="20" width="24" height="20" rx="3" fill="white"/>
+                <path d="M18 27h24" stroke="#FFC837" stroke-width="2"/>
+                <path d="M24 17v6M36 17v6" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M24 33h12" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
+                <path d="M24 38h8" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 6
+    ],
+
     'task_request' => [
         'label' => 'Task Request',
         'group' => 'Requests & Approvals',

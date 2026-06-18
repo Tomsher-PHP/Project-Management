@@ -13,6 +13,7 @@ class UserNotificationSetting extends Model
     
     public const TASK_ASSIGNED = 'task_assigned';
     public const TASK_STATUS_CHANGED = 'task_status_changed';
+    public const TASK_TIMELINE_CHANGED = 'task_timeline_changed';
     
     public const SHIFT_SCHEDULED = 'shift_scheduled';
     public const TEAM_ASSIGNED = 'team_assigned';

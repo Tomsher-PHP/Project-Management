@@ -510,6 +510,30 @@ class NotificationService
             ->all();
     }
 
+    private function getTaskTimelineRecipientIds(Task $task, User $actor): array
+    {
+        $recipientIds = collect([$task->current_assignee_id])
+            ->merge(User::getReporterChainUserIds((int) $actor->id))
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->reject(fn($userId) => $userId === (int) $actor->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->pluck('id')
+            ->map(fn($userId) => (int) $userId)
+            ->all();
+    }
+
     private function buildTimelineChanges(ProjectMilestone|ProjectSprint $model, array $fields, array $originalValues): array
     {
         return collect($fields)
@@ -621,6 +645,41 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_ASSIGNED,
             $authUser?->id,
+            $task->project_id ? (int) $task->project_id : null
+        );
+    }
+
+    public function notifyTaskTimelineChanged(Task $task, User $actor, array $changes): void
+    {
+        if ($changes === []) {
+            return;
+        }
+
+        $task->loadMissing([
+            'project:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $recipientIds = $this->getTaskTimelineRecipientIds($task, $actor);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $actorName = $actor->name ?? 'A team member';
+        $taskName = $task->name ?? 'Task';
+        $projectName = $task->project?->name ?? 'Project';
+
+        $message = "{$actorName} updated task '{$taskName}' in project '{$projectName}'.\n\n"
+            . $this->formatTimelineChangeSummary($changes);
+
+        $this->sendToMany(
+            $recipientIds,
+            'Task Timeline Updated',
+            $message,
+            route('tasks.edit', $task),
+            UserNotificationSetting::TASK_TIMELINE_CHANGED,
+            (int) $actor->id,
             $task->project_id ? (int) $task->project_id : null
         );
     }
