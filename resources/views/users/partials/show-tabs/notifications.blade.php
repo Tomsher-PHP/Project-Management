@@ -41,9 +41,11 @@
                                 <h4 class="text-base font-semibold text-bgray-900 dark:text-white">
                                     {{ $setting['label'] }}
                                 </h4>
-                                <p class="text-sm text-bgray-700 dark:text-darkblack-300">
-                                    Manage notifications for {{ $setting['label'] }}
-                                </p>
+                                @if (!empty($setting['subtitle']))
+                                    <p class="mt-1 text-sm font-normal leading-5 text-bgray-500 dark:text-bgray-400">
+                                        {{ $setting['subtitle'] }}
+                                    </p>
+                                @endif
                             </div>
                         </div>
 
