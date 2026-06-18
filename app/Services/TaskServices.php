@@ -456,6 +456,18 @@ class TaskServices
             $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
             $originalTimelineValues = $task->only(array_keys(self::TASK_TIMELINE_FIELDS));
 
+            $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
+
+            if ($previousAssigneeId !== $newAssigneeId) {
+                $hasRunningTimer = TaskTimeLog::where('task_id', $task->id)
+                    ->where('is_running', 1)
+                    ->exists();
+
+                if ($hasRunningTimer && $actor = auth()->user()) {
+                    $this->stopTimer($task, $actor);
+                }
+            }
+
             $placement = $this->finalizePlacement(
                 $project,
                 ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
@@ -484,7 +496,6 @@ class TaskServices
             }
 
             $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
-            $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
             $newStatus = $this->findTaskStatus($newStatusId);
 
             $this->recordStatusHistoryIfChanged($task, $previousStatusId, $newStatusId);
