@@ -24,7 +24,7 @@
     $baseClasses = 'inline-flex shrink-0 items-center justify-center';
 @endphp
 
-<span {{ $attributes->class([$baseClasses, $sizeClasses]) }} @if ($tooltip) title="Profile grade: {{ $resolvedName }}" @endif aria-label="Profile grade: {{ $resolvedName }}">
+<span {{ $attributes->class([$baseClasses, $sizeClasses]) }} @if ($tooltip) title="Customer grade: {{ $resolvedName }}" @endif aria-label="Customer grade: {{ $resolvedName }}">
     @if (filled($resolvedSvg))
         {!! $resolvedSvg !!}
     @else

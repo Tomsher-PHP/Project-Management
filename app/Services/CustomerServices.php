@@ -16,6 +16,7 @@ class CustomerServices
             'salesPerson',
             'profileGrade',
             'profileDescriptions',
+            'addedBy',
             'contacts' => fn ($query) => $query
                 ->orderByDesc('is_primary')
                 ->orderBy('name'),

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\UserLoginSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class UserLoginSessionTrackingTest extends TestCase
@@ -15,6 +16,7 @@ class UserLoginSessionTrackingTest extends TestCase
     public function test_successful_login_records_the_current_session(): void
     {
         Carbon::setTestNow('2026-06-13 12:00:00');
+        Http::preventStrayRequests();
 
         $user = User::factory()->create();
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
@@ -45,6 +47,33 @@ class UserLoginSessionTrackingTest extends TestCase
         $this->assertSame($userAgent, $loginSession->user_agent);
         $this->assertNull($loginSession->country);
         $this->assertNull($loginSession->city);
+    }
+
+    public function test_successful_login_records_public_ip_location(): void
+    {
+        Http::fake([
+            'https://ipwho.is/8.8.8.8' => Http::response([
+                'success' => true,
+                'country' => 'United States',
+                'city' => 'Mountain View',
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this
+            ->withServerVariables(['REMOTE_ADDR' => '8.8.8.8'])
+            ->post(route('login.post'), [
+                'email' => $user->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect(route('user.workspace'));
+
+        $loginSession = UserLoginSession::query()->sole();
+
+        $this->assertSame('8.8.8.8', $loginSession->ip_address);
+        $this->assertSame('United States', $loginSession->country);
+        $this->assertSame('Mountain View', $loginSession->city);
     }
 
     public function test_normal_logout_updates_the_matching_session(): void

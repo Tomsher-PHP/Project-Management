@@ -9,11 +9,13 @@ return [
 
     'shift_assigned' => [
         'label' => 'Shift Scheduled',
+        'subtitle' => 'Receive notifications when shifts are assigned or updated.',
+        'group' => 'Team & Shift',
         'action' => 'shift_scheduled',
-        'icon_bg' => '#22C55E',
+        'icon_bg' => '#2DD4BF',
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <circle cx="30" cy="30" r="30" fill="#2DD4BF"/>
                 <path d="M18 20h24v4H18v-4zm0 8h24v4H18v-4zm0 8h18v4H18v-4z" fill="white"/>
             </svg>
         ',
@@ -24,6 +26,8 @@ return [
 
     'project_assigned' => [
         'label' => 'Project Assigned',
+        'subtitle' => 'Receive notifications for project team and membership changes.',
+        'group' => 'Project Management',
         'action' => 'project_assigned',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -37,8 +41,76 @@ return [
         'sort_order' => 2
     ],
 
+    'project_status_changed' => [
+        'label' => 'Project Status Change',
+        'subtitle' => "Receive notifications when a project's status is updated.",
+        'group' => 'Project Management',
+        'action' => 'project_status_changed',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <path d="M20 31a10 10 0 0 1 17-7" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M37 24v6h-6" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M40 29a10 10 0 0 1-17 7" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M23 36v-6h6" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="30" cy="30" r="3.5" fill="white"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 3
+    ],
+
+    'project_stage_changed' => [
+        'label' => 'Project Stage Change',
+        'subtitle' => 'Receive notifications when a project moves between stages.',
+        'group' => 'Project Management',
+        'action' => 'project_stage_changed',
+        'icon_bg' => '#2DD4BF',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#2DD4BF"/>
+                <rect x="17" y="22" width="8" height="8" rx="2" fill="white"/>
+                <rect x="34" y="22" width="8" height="8" rx="2" fill="white"/>
+                <rect x="25.5" y="36" width="8" height="8" rx="2" fill="white"/>
+                <path d="M25 26h9" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M38 30v3c0 3-2 5-5 5h-.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M31 34.5l2.5 3.5-3.5 2.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 4
+    ],
+
+    'project_timeline_changed' => [
+        'label' => 'Project Timeline',
+        'subtitle' => 'Receive notifications for project, milestone, and sprint timeline updates.',
+        'group' => 'Project Management',
+        'action' => 'project_timeline_changed',
+        'icon_bg' => '#FFC837',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#FFC837"/>
+                <rect x="18" y="20" width="24" height="20" rx="3" fill="white"/>
+                <path d="M18 27h24" stroke="#FFC837" stroke-width="2"/>
+                <path d="M24 17v6M36 17v6" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="24" cy="33" r="2" fill="#FFC837"/>
+                <circle cx="30" cy="33" r="2" fill="#FFC837"/>
+                <circle cx="36" cy="33" r="2" fill="#FFC837"/>
+                <path d="M24 38h12" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 5
+    ],
+
     'task_assigned' => [
         'label' => 'Task Assigned',
+        'subtitle' => 'Receive notifications when tasks are assigned or reassigned.',
+        'group' => 'Task Management',
         'action' => 'task_assigned',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -63,6 +135,8 @@ return [
 
     'team_assigned' => [
         'label' => 'Team Assigned',
+        'subtitle' => 'Receive notifications when you are assigned to a team.',
+        'group' => 'Team & Shift',
         'action' => 'team_assigned',
         'icon_bg' => '#22C55E',
         'icon' => '
@@ -78,6 +152,8 @@ return [
 
     'task_status_changed' => [
         'label' => 'Task Status Updated',
+        'subtitle' => 'Receive notifications when task status changes.',
+        'group' => 'Task Management',
         'action' => 'task_status_changed',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -97,8 +173,31 @@ return [
         'sort_order' => 5
     ],
 
+    'task_timeline_changed' => [
+        'label' => 'Task Timeline',
+        'subtitle' => 'Receive notifications when task due dates or estimated time are updated.',
+        'group' => 'Task Management',
+        'action' => 'task_timeline_changed',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <rect x="18" y="20" width="24" height="20" rx="3" fill="white"/>
+                <path d="M18 27h24" stroke="#22C55E" stroke-width="2"/>
+                <path d="M24 17v6M36 17v6" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M24 33h12" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+                <path d="M24 38h8" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 6
+    ],
+
     'task_request' => [
         'label' => 'Task Request',
+        'subtitle' => 'Receive notifications for task-related requests requiring attention.',
+        'group' => 'Requests & Approvals',
         'action' => 'task_request',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -118,6 +217,8 @@ return [
 
     'task_log_request' => [
         'label' => 'Task Log Request',
+        'subtitle' => 'Receive notifications for task log review or approval requests.',
+        'group' => 'Requests & Approvals',
         'action' => 'task_log_request',
         'icon_bg' => '#22C55E',
         'icon' => '
@@ -136,6 +237,8 @@ return [
 
     'handoff_request' => [
         'label' => 'Handoff Request',
+        'subtitle' => 'Receive notifications when task handoff requests are submitted.',
+        'group' => 'Requests & Approvals',
         'action' => 'handoff_request',
         'icon_bg' => '#FFC837',
         'icon' => '
@@ -158,6 +261,8 @@ return [
 
     'break_request' => [
         'label' => 'Break Request',
+        'subtitle' => 'Receive notifications when break requests are submitted or updated.',
+        'group' => 'Requests & Approvals',
         'action' => 'break_request',
         'icon_bg' => '#2DD4BF',
         'icon' => '
@@ -180,6 +285,8 @@ return [
 
     'task_time_extension_request' => [
         'label' => 'Task Time Extension Request',
+        'subtitle' => 'Receive notifications when task time extension requests are submitted or updated.',
+        'group' => 'Requests & Approvals',
         'action' => 'task_time_extension_request',
         'icon_bg' => '#22C55E',
         'icon' => '

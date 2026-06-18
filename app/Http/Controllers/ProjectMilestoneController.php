@@ -8,6 +8,7 @@ use App\Models\AgileSprint;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Services\NotificationService;
 use App\Services\ProjectTimeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,7 +50,23 @@ class ProjectMilestoneController extends Controller
         $this->ensureAgileProject($project);
         abort_unless($projectMilestone->project_id === $project->id, 404);
 
+        $originalTimelineValues = $projectMilestone->only([
+            'owner_id',
+            'estimated_time_seconds',
+            'start_date',
+            'end_date',
+        ]);
+
         $projectMilestone->update($this->prepareData($request));
+        $projectMilestone->refresh();
+
+        if ($actor = $request->user()) {
+            app(NotificationService::class)->notifyMilestoneTimelineChanged(
+                $projectMilestone,
+                $actor,
+                $originalTimelineValues
+            );
+        }
 
         return response()->json([
             'status' => true,

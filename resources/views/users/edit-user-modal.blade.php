@@ -1,5 +1,5 @@
 <!-- ================= MODAL ================= -->
-<div x-show="openEdit" x-transition.opacity x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+<div x-show="openEdit" x-transition.opacity x-cloak style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div @click.outside="openEdit = false" class="w-full max-w-4xl rounded-xl bg-white p-6 dark:bg-darkblack-600">
 
         <!-- HEADER -->

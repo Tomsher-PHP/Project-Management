@@ -42,7 +42,7 @@
                         </div>
                     </form>
                 @elseif (filled($description))
-                    <div class="mt-4 rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 whitespace-pre-line dark:bg-darkblack-500 dark:text-bgray-300">{{ $description }}</div>
+                    <div class="mt-4 min-h-[8rem] max-h-[24rem] overflow-y-auto rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 whitespace-pre-line dark:bg-darkblack-500 dark:text-bgray-300">{{ $description }}</div>
                 @else
                     <p class="mt-4 {{ $emptyTextClasses }}">No task description added yet.</p>
                 @endif

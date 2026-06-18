@@ -12,6 +12,7 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\TaskType;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\Task\RunningTaskNavbarService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,11 @@ class TaskServices
     public const KANBAN_SORT_PRIORITY_DESC = 'priority_desc';
 
     public const KANBAN_SORT_PRIORITY_ASC = 'priority_asc';
+
+    private const TASK_TIMELINE_FIELDS = [
+        'due_date_time' => 'Due Date',
+        'estimated_time_seconds' => 'Estimated Time',
+    ];
 
     // Initialize task service dependencies
     public function __construct(
@@ -448,6 +454,19 @@ class TaskServices
             $previousAssigneeId = $task->current_assignee_id ? (int) $task->current_assignee_id : null;
             $previousMilestoneId = filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null;
             $previousSprintId = filled($task->project_sprint_id) ? (int) $task->project_sprint_id : null;
+            $originalTimelineValues = $task->only(array_keys(self::TASK_TIMELINE_FIELDS));
+
+            $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
+
+            if ($previousAssigneeId !== $newAssigneeId) {
+                $hasRunningTimer = TaskTimeLog::where('task_id', $task->id)
+                    ->where('is_running', 1)
+                    ->exists();
+
+                if ($hasRunningTimer && $actor = auth()->user()) {
+                    $this->stopTimer($task, $actor);
+                }
+            }
 
             $placement = $this->finalizePlacement(
                 $project,
@@ -461,7 +480,9 @@ class TaskServices
                 placement: $placement
             );
 
-            $task->update($payload);
+            $task->fill($payload);
+            $timelineChanges = $this->buildTaskTimelineChanges($task, $originalTimelineValues);
+            $task->save();
 
             if (
                 $previousMilestoneId !== (filled($task->project_milestone_id) ? (int) $task->project_milestone_id : null)
@@ -475,7 +496,6 @@ class TaskServices
             }
 
             $newStatusId = ! empty($validated['status_id']) ? (int) $validated['status_id'] : null;
-            $newAssigneeId = ! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null;
             $newStatus = $this->findTaskStatus($newStatusId);
 
             $this->recordStatusHistoryIfChanged($task, $previousStatusId, $newStatusId);
@@ -487,8 +507,55 @@ class TaskServices
             );
             $this->syncAssignmentIfChanged($task, $previousAssigneeId, $newAssigneeId);
 
-            return $task->fresh();
+            $updatedTask = $task->fresh();
+
+            if ($actor = auth()->user()) {
+                if ($previousAssigneeId !== $newAssigneeId) {
+                    $this->notificationService->notifyTaskAssigneeChanged(
+                        $updatedTask,
+                        $actor,
+                        $previousAssigneeId,
+                        $newAssigneeId
+                    );
+                }
+
+                if ($timelineChanges !== []) {
+                    $this->notificationService->notifyTaskTimelineChanged(
+                        $updatedTask,
+                        $actor,
+                        $timelineChanges
+                    );
+                }
+            }
+
+            return $updatedTask;
         });
+    }
+
+    private function buildTaskTimelineChanges(Task $task, array $originalTimelineValues): array
+    {
+        return collect(self::TASK_TIMELINE_FIELDS)
+            ->filter(fn($label, $field) => $task->isDirty($field))
+            ->map(function ($label, $field) use ($task, $originalTimelineValues) {
+                return [
+                    'field' => $label,
+                    'old' => $this->formatTaskTimelineValue($field, $originalTimelineValues[$field] ?? null),
+                    'new' => $this->formatTaskTimelineValue($field, $task->getAttribute($field)),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function formatTaskTimelineValue(string $field, mixed $value): string
+    {
+        if ($field === 'estimated_time_seconds') {
+            return $value === null
+                ? '--'
+                : formatMinutesToHoursMinutes((int) round((int) $value / 60));
+        }
+
+        return AppServiceProvider::formatAppDateTime($value);
     }
 
     // Determine project milestone and sprint placement for a task

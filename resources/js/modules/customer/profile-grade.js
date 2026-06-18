@@ -241,9 +241,14 @@ const initializeCustomerProfileGrade = () => {
             }
 
             const profileGradePanel = root.querySelector('[data-customer-tab-panel="profile-grade"]');
+            const profileGradeBadge = root.querySelector('#customer-profile-grade-badge');
 
             if (profileGradePanel && result.html) {
                 profileGradePanel.innerHTML = result.html;
+            }
+
+            if (profileGradeBadge && result.badge_html) {
+                profileGradeBadge.innerHTML = result.badge_html;
             }
 
             initialGradeId = selectedGradeId;

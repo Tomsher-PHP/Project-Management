@@ -1234,4 +1234,106 @@ class TaskExceedTimeRequestTest extends TestCase
             \App\Notifications\TaskAssignedNotification::class
         );
     }
+
+    /**
+     * Test running timer is automatically stopped when assignee changes.
+     */
+    public function test_timer_stopped_automatically_when_assignee_changes()
+    {
+        $actor = User::factory()->create();
+        $oldAssignee = User::factory()->create();
+        $newAssignee = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'Timer Test Task',
+            'code' => 'T-TIMER-1',
+            'current_assignee_id' => $oldAssignee->id,
+            'estimated_time_seconds' => 3600,
+        ]);
+
+        $assignmentLog = \App\Models\TaskAssignmentLog::create([
+            'task_id' => $task->id,
+            'user_id' => $oldAssignee->id,
+            'assigned_from' => now()->subHours(2),
+            'is_current' => true,
+        ]);
+
+        $startedAt = now()->subMinutes(30);
+        $timeLog = \App\Models\TaskTimeLog::create([
+            'task_id' => $task->id,
+            'user_id' => $oldAssignee->id,
+            'task_assignment_log_id' => $assignmentLog->id,
+            'started_at' => $startedAt,
+            'is_running' => 1,
+            'is_approved' => true,
+        ]);
+
+        $validated = [
+            'name' => 'Timer Test Task Updated',
+            'task_type_id' => $task->task_type_id,
+            'task_mode_id' => $task->task_mode_id,
+            'priority' => 'medium',
+            'current_assignee_id' => $newAssignee->id,
+            'estimated_time_minutes' => 60,
+        ];
+
+        $service = app(\App\Services\TaskServices::class);
+
+        $this->actingAs($actor);
+
+        $updatedTask = $service->updateTask($task, $validated);
+
+        $this->assertEquals($newAssignee->id, $updatedTask->current_assignee_id);
+
+        $timeLog->refresh();
+        $this->assertEquals(0, $timeLog->is_running);
+        $this->assertNotNull($timeLog->ended_at);
+        $this->assertGreaterThan(0, $timeLog->duration_seconds);
+
+        $assignmentLog->refresh();
+        $this->assertGreaterThan(0, $assignmentLog->worked_time_seconds);
+        $this->assertEquals($timeLog->duration_seconds, $assignmentLog->worked_time_seconds);
+
+        $this->assertEquals($timeLog->duration_seconds, $updatedTask->actual_time_seconds);
+    }
+
+    /**
+     * Test assignee changes with no running timer.
+     */
+    public function test_assignee_changes_with_no_running_timer()
+    {
+        $actor = User::factory()->create();
+        $oldAssignee = User::factory()->create();
+        $newAssignee = User::factory()->create();
+        $project = Project::factory()->create();
+
+        $task = Task::create([
+            'project_id' => $project->id,
+            'name' => 'No Timer Test Task',
+            'code' => 'T-TIMER-2',
+            'current_assignee_id' => $oldAssignee->id,
+            'estimated_time_seconds' => 3600,
+        ]);
+
+        $validated = [
+            'name' => 'No Timer Test Task Updated',
+            'task_type_id' => $task->task_type_id,
+            'task_mode_id' => $task->task_mode_id,
+            'priority' => 'medium',
+            'current_assignee_id' => $newAssignee->id,
+            'estimated_time_minutes' => 60,
+        ];
+
+        $service = app(\App\Services\TaskServices::class);
+
+        $this->actingAs($actor);
+
+        $updatedTask = $service->updateTask($task, $validated);
+
+        $this->assertEquals($newAssignee->id, $updatedTask->current_assignee_id);
+
+        $this->assertEquals(0, \App\Models\TaskTimeLog::where('task_id', $task->id)->count());
+    }
 }
