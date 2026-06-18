@@ -1,37 +1,48 @@
 @props(['paginator', 'perPage'])
 
-<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6 @if ($paginator->total() < 10) hidden @endif">
+@php
+    $firstItem = $paginator->firstItem() ?? 0;
+    $lastItem = $paginator->lastItem() ?? 0;
+    $total = $paginator->total();
+@endphp
+
+<div class="flex flex-col lg:flex-row items-center justify-between gap-4 mt-6">
 
     <!-- Per Page Selector -->
-    <div class="flex items-center gap-3">
-        <span class="text-sm font-medium text-gray-600">
-            Show result:
-        </span>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-gray-600">
+                Show result:
+            </span>
 
-        <form method="GET">
-            <!-- Preserve other query parameters -->
-            @foreach (request()->query() as $key => $value)
-                @if ($key !== 'per_page' && $key !== 'page')
-                    @if (is_array($value))
-                        @foreach ($value as $v)
-                            <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
-                        @endforeach
-                    @else
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+            <form method="GET">
+                <!-- Preserve other query parameters -->
+                @foreach (request()->query() as $key => $value)
+                    @if ($key !== 'per_page' && $key !== 'page')
+                        @if (is_array($value))
+                            @foreach ($value as $v)
+                                <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
                     @endif
-                @endif
-            @endforeach
-
-            <select name="per_page" onchange="this.form.submit()" class="appearance-none rounded-lg border border-gray-300 px-3 pr-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-darkblack-500 dark:text-white w-full">
-
-                @foreach ([5, 10, 15, 25, 50, 100] as $size)
-                    <option value="{{ $size }}" {{ $perPage == $size ? 'selected' : '' }}>
-                        {{ $size }}
-                    </option>
                 @endforeach
 
-            </select>
-        </form>
+                <select name="per_page" onchange="this.form.submit()" class="appearance-none rounded-lg border border-gray-300 px-3 pr-10 py-2 text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-darkblack-500 dark:text-white w-full">
+
+                    @foreach ([5, 10, 15, 25, 50, 100] as $size)
+                        <option value="{{ $size }}" {{ $perPage == $size ? 'selected' : '' }}>
+                            {{ $size }}
+                        </option>
+                    @endforeach
+
+                </select>
+            </form>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            Showing {{ $firstItem }} to {{ $lastItem }} of {{ $total }} results
+        </p>
     </div>
 
     <!-- Laravel Pagination Links -->
@@ -52,15 +63,12 @@
                 $visiblePages = [1, $currentPage - 1, $currentPage, $currentPage + 1, $lastPage];
             }
 
-            $visiblePages = collect($visiblePages)
-                ->filter(fn($page) => $page >= 1 && $page <= $lastPage)
-                ->unique()
-                ->values();
+            $visiblePages = collect($visiblePages)->filter(fn($page) => $page >= 1 && $page <= $lastPage)->unique()->values();
         @endphp
 
         <div class="flex items-center justify-between mt-6">
 
-            {{-- Previous Button --}}
+            <!-- Previous Button -->
             @if ($paginator->onFirstPage())
                 <span class="px-3 py-2 text-gray-400 cursor-not-allowed">
                     ‹
@@ -71,7 +79,7 @@
                 </a>
             @endif
 
-            {{-- Page Numbers --}}
+            <!-- Page Numbers -->
             <div class="flex items-center space-x-2">
                 @php
                     $previousVisiblePage = null;
@@ -100,7 +108,7 @@
                 @endforeach
             </div>
 
-            {{-- Next Button --}}
+            <!-- Next Button -->
             @if ($paginator->hasMorePages())
                 <a href="{{ $paginator->nextPageUrl() }}" class="px-3 py-2 text-gray-600 hover:text-indigo-600">
                     ›
