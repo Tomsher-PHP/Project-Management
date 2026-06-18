@@ -41,6 +41,26 @@
                                 {{ $messageText }}
                             </p>
 
+                            @if (!empty($details))
+                                <div style="margin:24px 0;">
+                                    <h3 style="margin:0 0 12px; font-size:15px; color:#111827;">
+                                        Details
+                                    </h3>
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;">
+                                        @foreach ($details as $detail)
+                                            <tr>
+                                                <td style="width:34%; padding:10px 12px 10px 0; border-bottom:1px solid #f3f4f6; font-size:13px; font-weight:bold; color:#374151; vertical-align:top;">
+                                                    {{ $detail['label'] }}
+                                                </td>
+                                                <td style="padding:10px 0; border-bottom:1px solid #f3f4f6; font-size:13px; line-height:1.5; color:#4b5563; vertical-align:top;">
+                                                    {!! nl2br(e($detail['value'])) !!}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            @endif
+
                             @if ($url)
                                 <div style="margin:25px 0;">
                                     <a href="{{ $url }}" style="background:#0CAF60; color:#ffffff; padding:10px 18px; text-decoration:none; border-radius:5px; font-size:14px; font-weight:bold; display:inline-block;">

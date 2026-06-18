@@ -66,7 +66,7 @@ class NotificationService
     }
 
     // Single user
-    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null): void
+    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = []): void
     {
         $user = User::find($userId);
 
@@ -86,15 +86,16 @@ class NotificationService
             $url,
             $channels,
             $actorUserId,
-            $projectId
+            $projectId,
+            $this->buildEmailDetails($emailDetails, $actorUserId, $projectId)
         ));
     }
 
     // Multiple users
-    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null): void
+    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = []): void
     {
         User::whereIn('id', $userIds)
-            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId) {
+            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails) {
                 foreach ($users as $user) {
                     $channels = $this->getNotificationChannels($user->id, $notificationType);
 
@@ -108,10 +109,69 @@ class NotificationService
                         $url,
                         $channels,
                         $actorUserId,
-                        $projectId
+                        $projectId,
+                        $this->buildEmailDetails($emailDetails, $actorUserId, $projectId)
                     ));
                 }
             });
+    }
+
+    private function buildEmailDetails(array $details, ?int $actorUserId = null, ?int $projectId = null): array
+    {
+        $baseDetails = [];
+
+        if ($projectId) {
+            $baseDetails['Project'] = Project::withTrashed()->whereKey($projectId)->value('name');
+        }
+
+        if ($actorUserId) {
+            $baseDetails['Actor'] = User::whereKey($actorUserId)->value('name');
+        }
+
+        return $this->normalizeEmailDetails(array_merge($baseDetails, $details));
+    }
+
+    private function normalizeEmailDetails(array $details): array
+    {
+        return collect($details)
+            ->map(function ($value, $label) {
+                if (is_array($value)) {
+                    $label = $value['label'] ?? $label;
+                    $value = $value['value'] ?? null;
+                }
+
+                if (is_array($value)) {
+                    $value = collect($value)
+                        ->filter(fn($item) => filled($item))
+                        ->implode("\n");
+                }
+
+                return [
+                    'label' => (string) $label,
+                    'value' => is_scalar($value) ? (string) $value : null,
+                ];
+            })
+            ->filter(fn($detail) => filled($detail['label']) && filled($detail['value']))
+            ->values()
+            ->all();
+    }
+
+    private function taskEmailDetails(Task $task, array $details = []): array
+    {
+        $task->loadMissing([
+            'projectMilestone:id,name',
+            'projectSprint:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $baseDetails = [
+            'Task' => $task->name,
+            'Milestone' => $task->projectMilestone?->name,
+            'Sprint' => $task->projectSprint?->name,
+            'Assignee' => $task->currentAssignee?->name,
+        ];
+
+        return array_merge($baseDetails, $details);
     }
 
     public function notifyTeamMemberAdded(int|array $userIds, Team $team, ?string $roleName = null): void
@@ -224,7 +284,10 @@ class NotificationService
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_STATUS_CHANGED,
             (int) $actor->id,
-            (int) $project->id
+            (int) $project->id,
+            [
+                'Status' => "{$oldStatus} to {$newStatus}",
+            ]
         );
     }
 
@@ -246,7 +309,10 @@ class NotificationService
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_STAGE_CHANGED,
             (int) $actor->id,
-            (int) $project->id
+            (int) $project->id,
+            [
+                'Stage' => "{$oldStage} to {$newStage}",
+            ]
         );
     }
 
@@ -279,7 +345,10 @@ class NotificationService
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
             (int) $actor->id,
-            (int) $project->id
+            (int) $project->id,
+            [
+                'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
+            ]
         );
     }
 
@@ -318,7 +387,11 @@ class NotificationService
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
             (int) $actor->id,
-            (int) $project->id
+            (int) $project->id,
+            [
+                'Milestone' => $milestoneName,
+                'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
+            ]
         );
     }
 
@@ -357,7 +430,11 @@ class NotificationService
             $this->getProjectNotificationUrl($project),
             UserNotificationSetting::PROJECT_TIMELINE_CHANGED,
             (int) $actor->id,
-            (int) $project->id
+            (int) $project->id,
+            [
+                'Sprint' => $sprintName,
+                'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
+            ]
         );
     }
 
@@ -383,7 +460,20 @@ class NotificationService
 
         $message = "You have been assigned to shift '{$shift->name}' from {$dateFrom->format('Y-m-d')} to " . ($dateTo ? $dateTo->format('Y-m-d') : '--');
 
-        $this->sendToMany($userIds, $title, $message, $url, UserNotificationSetting::SHIFT_SCHEDULED, auth()->id());
+        $this->sendToMany(
+            $userIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::SHIFT_SCHEDULED,
+            auth()->id(),
+            null,
+            [
+                'Shift' => $shift->name,
+                'From' => $dateFrom->format('Y-m-d'),
+                'To' => $dateTo ? $dateTo->format('Y-m-d') : '--',
+            ]
+        );
     }
 
     private function dispatchTeamNotification(array $userIds, string $title, string $message): void
@@ -658,7 +748,10 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_ASSIGNED,
             $authUser?->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Assignee' => $task->currentAssignee?->name,
+            ])
         );
 
         $this->markTaskAssignmentNotificationHandled($task, $previousAssigneeId, $currentAssigneeId);
@@ -695,7 +788,10 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_TIMELINE_CHANGED,
             (int) $actor->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
+            ])
         );
     }
 
@@ -751,7 +847,11 @@ class NotificationService
                 $url,
                 UserNotificationSetting::TASK_ASSIGNED,
                 (int) $actor->id,
-                $projectId
+                $projectId,
+                $this->taskEmailDetails($task, [
+                    'Previous Assignee' => $previousAssigneeName,
+                    'Assignee' => $newAssigneeName,
+                ])
             );
         }
     }
@@ -793,11 +893,22 @@ class NotificationService
         $title = "Task Status Updated";
         $url = url('tasks/' . $task->id . '/edit');
 
-        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url) {
+        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $task, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url) {
             foreach ($users as $user) {
                 $actorLabel = $user->id === $actor->id ? 'You' : $actor->name;
                 $message = "{$actorLabel} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
-                $this->send($user->id, $title, $message, $url, UserNotificationSetting::TASK_STATUS_CHANGED, (int) $actor->id, $projectId);
+                $this->send(
+                    $user->id,
+                    $title,
+                    $message,
+                    $url,
+                    UserNotificationSetting::TASK_STATUS_CHANGED,
+                    (int) $actor->id,
+                    $projectId,
+                    $this->taskEmailDetails($task, [
+                        'Status' => "{$oldStatus} to {$newStatus}",
+                    ])
+                );
             }
         });
     }
@@ -833,7 +944,10 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_REQUEST,
             $task->current_assignee_id ? (int) $task->current_assignee_id : null,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Request',
+            ])
         );
     }
 
@@ -868,7 +982,11 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_REQUEST,
             (int) $reviewer->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Request',
+                'Status' => ucfirst($reviewLabel),
+            ])
         );
     }
 
@@ -900,7 +1018,14 @@ class NotificationService
             "{$userName} submitted a break work request for {$workDate} from {$startTime} to {$endTime}.",
             $this->getBreakRequestNotificationUrl($breakWorkRequest),
             UserNotificationSetting::BREAK_REQUEST,
-            $breakWorkRequest->user_id ? (int) $breakWorkRequest->user_id : null
+            $breakWorkRequest->user_id ? (int) $breakWorkRequest->user_id : null,
+            null,
+            [
+                'Request Type' => 'Break Request',
+                'Work Date' => $workDate,
+                'Start Time' => $startTime,
+                'End Time' => $endTime,
+            ]
         );
     }
 
@@ -918,7 +1043,15 @@ class NotificationService
             "Your break work request for {$workDate} from {$startTime} to {$endTime} has been approved.",
             $this->getBreakRequestNotificationUrl($breakWorkRequest, true),
             UserNotificationSetting::BREAK_REQUEST,
-            auth()->id()
+            auth()->id(),
+            null,
+            [
+                'Request Type' => 'Break Request',
+                'Work Date' => $workDate,
+                'Start Time' => $startTime,
+                'End Time' => $endTime,
+                'Status' => 'Approved',
+            ]
         );
     }
 
@@ -941,7 +1074,15 @@ class NotificationService
             $message,
             $this->getBreakRequestNotificationUrl($breakWorkRequest),
             UserNotificationSetting::BREAK_REQUEST,
-            auth()->id()
+            auth()->id(),
+            null,
+            [
+                'Request Type' => 'Break Request',
+                'Work Date' => $workDate,
+                'Start Time' => $startTime,
+                'End Time' => $endTime,
+                'Status' => 'Rejected',
+            ]
         );
     }
 
@@ -985,7 +1126,10 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_LOG_REQUEST,
             $changeRequest->user_id ? (int) $changeRequest->user_id : null,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Log Change Request',
+            ])
         );
     }
 
@@ -1026,7 +1170,11 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_LOG_REQUEST,
             (int) $reviewer->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Log Change Request',
+                'Status' => ucfirst($reviewLabel),
+            ])
         );
     }
 
@@ -1055,7 +1203,8 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_STATUS_CHANGED,
             (int) $actor->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task)
         );
     }
 
@@ -1084,7 +1233,10 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_STATUS_CHANGED,
             (int) $actor->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Status' => $statusName,
+            ])
         );
     }
 
@@ -1128,7 +1280,11 @@ class NotificationService
             $url,
             UserNotificationSetting::TASK_STATUS_CHANGED,
             null,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Due Date' => $dueAtLabel,
+                'Start By' => $startAtLabel,
+            ])
         );
 
         return true;
@@ -1169,7 +1325,10 @@ class NotificationService
             $url,
             UserNotificationSetting::HANDOFF_REQUEST,
             (int) $requester->id,
-            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
+            [
+                'Request Type' => 'Handoff Request',
+            ]
         );
     }
 
@@ -1198,7 +1357,10 @@ class NotificationService
             route('tasks.edit', $createdTask),
             UserNotificationSetting::HANDOFF_REQUEST,
             (int) $actor->id,
-            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
+            $this->taskEmailDetails($createdTask, [
+                'Request Type' => 'Handoff Request',
+            ])
         );
     }
 
@@ -1225,7 +1387,10 @@ class NotificationService
             $url,
             UserNotificationSetting::HANDOFF_REQUEST,
             (int) $actor->id,
-            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null
+            $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
+            [
+                'Request Type' => 'Handoff Request',
+            ]
         );
     }
 
@@ -1281,7 +1446,10 @@ class NotificationService
             $url,
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
             (int) $requestingUser->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Time Extension Request',
+            ])
         );
     }
 
@@ -1308,7 +1476,11 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
             $extendRequest->rejected_by ? (int) $extendRequest->rejected_by : auth()->id(),
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Time Extension Request',
+                'Status' => 'Rejected',
+            ])
         );
     }
 
@@ -1336,7 +1508,13 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
             $extendRequest->approved_by ? (int) $extendRequest->approved_by : auth()->id(),
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Time Extension Request',
+                'Status' => 'Approved',
+                'Previous Estimate' => $previousEstimatedTime,
+                'New Estimate' => $newApprovedEstimatedTime,
+            ])
         );
     }
 
@@ -1374,7 +1552,13 @@ class NotificationService
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
             (int) $approvedByUser->id,
-            $task->project_id ? (int) $task->project_id : null
+            $task->project_id ? (int) $task->project_id : null,
+            $this->taskEmailDetails($task, [
+                'Request Type' => 'Task Time Extension Request',
+                'Status' => 'Approved',
+                'Previous Estimate' => $previousEstimatedTime,
+                'New Estimate' => $newApprovedEstimatedTime,
+            ])
         );
     }
 
