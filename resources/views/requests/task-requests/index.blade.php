@@ -61,7 +61,7 @@
                                     <x-sorting.sortable-column column="currentAssignee.name" label="Requested By" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Estimated Time</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="due_date_time" label="Due Date" />
@@ -111,12 +111,10 @@
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $task->request_status === 'pending' ? 'bg-warning-50 text-warning-300' : ($task->request_status === 'approved' ? 'bg-success-50 text-success-300' : 'bg-error-50 text-error-300') }}">
-                                            {{ ucfirst($task->request_status) }}
-                                        </span>
+                                        <span class="text-sm text-bgray-900 dark:text-bgray-300 font-semibold">{{ $task->estimated_time_seconds ? formatSecondsToHoursMinutes($task->estimated_time_seconds) : '--' }}</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm text-bgray-600 dark:text-bgray-300">@appDateTime($task->due_date_time)</span>
+                                        <span class="text-sm text-bgray-900 dark:text-bgray-300 font-semibold">@appDateTime($task->due_date_time)</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)
