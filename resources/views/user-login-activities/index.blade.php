@@ -11,7 +11,7 @@
                 <table class="min-w-full border-separate border-spacing-0">
                     <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                         <tr>
-                            @foreach (['User', 'Login At', 'Last Activity At', 'Browser', 'Platform', 'Device', 'IP Address', 'Country', 'City'] as $column)
+                            @foreach (['User', 'Login At', 'Last Activity At', 'Browser', 'Platform', 'IP Address', 'Country', 'City'] as $column)
                                 <th class="whitespace-nowrap border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50">{{ $column }}</span>
                                 </th>
@@ -34,7 +34,7 @@
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->last_activity_at ? \App\Providers\AppServiceProvider::formatAppDateTime($activity->last_activity_at) : '-' }}</td>
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->browser ?? '-' }}</td>
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->platform ?? '-' }}</td>
-                                <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->device ?? '-' }}</td>
+                                {{-- <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->device ?? '-' }}</td> --}}
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 font-mono text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->ip_address ?? '-' }}</td>
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->country ?? '-' }}</td>
                                 <td class="whitespace-nowrap border-b border-bgray-100 px-4 py-4 text-sm text-bgray-700 dark:border-darkblack-500 dark:text-bgray-300">{{ $activity->city ?? '-' }}</td>

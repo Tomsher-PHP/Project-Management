@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\NotificationService;
 use App\Services\ProjectServices;
+use App\Services\TaskRequestServices;
 use App\Services\TaskServices;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -177,10 +178,16 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function taskModal(Project $project, Task $task): JsonResponse
+    public function taskModal(Request $request, Project $project, Task $task, TaskRequestServices $taskRequestServices): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($this->canViewTaskModal($task), Response::HTTP_FORBIDDEN);
+
+        $approveMode = $request->boolean('approve_mode');
+        $user = $request->user();
+        $canApproveRequest = $approveMode && $user && $taskRequestServices->canHandleRequest($user, $task);
+
+        abort_if($approveMode && ! $canApproveRequest, Response::HTTP_FORBIDDEN);
 
         $task->load([
             'projectMilestone:id,name',
@@ -198,7 +205,8 @@ class ProjectTaskController extends Controller
             'html' => view('projects.partials.tasks.modals.detail-content', array_merge([
                 'project' => $project,
                 'task' => $task,
-            ], $this->getTaskModalData($project, $task)))->render(),
+                'approveMode' => $approveMode,
+            ], $this->getTaskModalData($project, $task, $canApproveRequest)))->render(),
         ], Response::HTTP_OK);
     }
 
@@ -777,7 +785,7 @@ class ProjectTaskController extends Controller
         ];
     }
 
-    private function getTaskModalData(Project $project, ?Task $task = null): array
+    private function getTaskModalData(Project $project, ?Task $task = null, bool $canApproveRequest = false): array
     {
         $selectedStatusId = $task->status_id ?: $this->getDefaultTaskStatusIdForFlow($project->project_flow);
         $selectedtypeId = $task->task_type_id ?: TaskType::query()->active()->where('is_default', true)->value('id');
@@ -812,7 +820,7 @@ class ProjectTaskController extends Controller
         }
 
         return [
-            'canEditTask' => $task ? $this->canEditTaskModal($task) : false,
+            'canEditTask' => $task ? ($canApproveRequest || $this->canEditTaskModal($task)) : false,
             'isLinearFlow' => $project->project_flow === 'linear',
             'projectMilestones' => ProjectMilestone::query()
                 ->where('project_id', $project->id)
