@@ -1589,6 +1589,8 @@ const initializeTasksRoot = (root) => {
         const submitButton = detailForm.querySelector('[data-project-task-detail-submit]');
         const modal = root.querySelector('[data-project-task-detail-modal]');
         const actionUrl = detailForm.getAttribute('action');
+        const submitLabel = detailForm.dataset.submitLabel || 'Update Task';
+        const submittingLabel = detailForm.dataset.submittingLabel || 'Updating...';
         
         if (!actionUrl) {
             Alert.errorModal('Unable to update the task right now.');
@@ -1598,7 +1600,7 @@ const initializeTasksRoot = (root) => {
         submitButton?.setAttribute('disabled', 'disabled');
 
         if (submitButton) {
-            submitButton.textContent = 'Updating...';
+            submitButton.textContent = submittingLabel;
         }
 
         try {
@@ -1634,7 +1636,7 @@ const initializeTasksRoot = (root) => {
             submitButton?.removeAttribute('disabled');
 
             if (submitButton) {
-                submitButton.textContent = 'Update Task';
+                submitButton.textContent = submitLabel;
             }
         }
     });

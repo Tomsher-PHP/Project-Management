@@ -1,6 +1,7 @@
 @extends('layouts.master')
 
 @section('page-content')
+    <div data-project-tasks-root data-project-task-response-mode="reload">
         @php
             $tabs = [
                 'pending' => 'Pending',
@@ -120,12 +121,9 @@
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         @if ($task->request_status === 'pending' && ! $task->is_self_requested)
                                             <div class="flex min-w-[180px] flex-wrap items-center gap-2">
-                                                <form method="POST" action="{{ route('tasks.requests.action', [$task, 'approve']) }}" data-task-request-action-form data-confirm-title="Approve task request?" data-confirm-text="This will approve the requested user's work logs for this task." data-confirm-text-button="Yes, approve">
-                                                    @csrf
-                                                    <button type="submit" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
-                                                        Approve
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', ['project' => $task->project_id, 'task' => $task->id, 'approve_mode' => 1, 'request_id' => $task->id, 'action' => 'approve']) }}">
+                                                    Approve
+                                                </button>
 
                                                 <button type="button" class="rounded-lg bg-error-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-error-400" data-task-request-reject-open data-action="{{ route('tasks.requests.action', [$task, 'reject']) }}" data-task-name="{{ $task->name }}">
                                                     Reject
@@ -204,9 +202,19 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fixed inset-0 z-[80] hidden overflow-y-auto" data-project-task-detail-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
+
+            <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
+    @vite('resources/js/modules/projects/project-tasks.js')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const rejectModal = document.querySelector('[data-task-request-reject-modal]');

@@ -1,8 +1,15 @@
 @php
+    $approveMode = (bool) ($approveMode ?? false);
     $isRejectedTask = $task->isRejectedRequest();
     $rejectionReason = $task->rejection_reason ?? 'No reason provided';
     $authUser = auth()->user();
     $canOpenTaskDetailPage = $authUser && $authUser->can('task.view') && $authUser->can('view', $task);
+    $modalTitle = $approveMode ? 'Review & Approve Task' : 'Manage Task';
+    $submitLabel = $approveMode ? 'Update & Approve' : 'Update Task';
+    $submittingLabel = $approveMode ? 'Updating & Approving...' : 'Updating...';
+    $formAction = $approveMode
+        ? route('projects.tasks.requests.update-approve', [$project, $task])
+        : route('projects.tasks.update', [$project, $task]);
     $selectedTagIds = $task->tags->pluck('id')->map(fn($id) => (string) $id)->all();
     $textInputClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
     $textareaClasses = $canEditTask ? 'w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white' : 'w-full rounded-lg border border-bgray-200 bg-bgray-50 p-3 text-sm text-bgray-600 focus:border-bgray-200 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300';
@@ -31,7 +38,7 @@
 <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
-            <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Manage Task</h3>
+            <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">{{ $modalTitle }}</h3>
             <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                 {{ $isRejectedTask ? 'Rejected tasks are read-only and cannot be updated.' : 'Review and update the working details for this task.' }}
             </p>
@@ -54,7 +61,7 @@
         </div>
     </div>
 
-    <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]" data-project-task-detail-form action="{{ route('projects.tasks.update', [$project, $task]) }}" method="POST" data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}" data-current-task-id="{{ $task->id }}" data-task-placement='@json($taskPlacementOptions)'>
+    <form class="flex max-h-[82vh] flex-col xl:grid xl:h-[82vh] xl:max-h-[82vh] xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]" data-project-task-detail-form action="{{ $formAction }}" method="POST" data-parent-task-url="{{ route('projects.tasks.parent-options', $project) }}" data-current-task-id="{{ $task->id }}" data-task-placement='@json($taskPlacementOptions)' data-submit-label="{{ $submitLabel }}" data-submitting-label="{{ $submittingLabel }}">
         @csrf
         @method('PUT')
 
@@ -286,7 +293,7 @@
 
                 @if ($canEditTask)
                     <button type="submit" class="rounded-lg bg-success-300 px-6 py-3 text-white transition duration-200 hover:bg-success-400" data-project-task-detail-submit>
-                        Update Task
+                        {{ $submitLabel }}
                     </button>
                 @endif
             </div>
