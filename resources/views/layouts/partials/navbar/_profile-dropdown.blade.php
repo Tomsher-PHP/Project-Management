@@ -82,11 +82,9 @@
                                             </svg>
                                         </span>
                                     </div>
-<
                                     <div class="flex-1">
                                         <span class="text-sm font-semibold">Log Out</span>
                                     </div>
-
                                 </div>
                             </button>
                         </form>

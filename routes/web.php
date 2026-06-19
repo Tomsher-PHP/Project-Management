@@ -346,7 +346,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('checklists/items/{itemId}/toggle', [ProjectChecklistController::class, 'toggleItemStatus'])->middleware('permission.type:project.view')->name('projects.checklists.toggleItem');
     });
 
-    // Project task routes with policy can:view,task
+    // Project task routes
     Route::prefix('projects/{project}')->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.show');
@@ -354,6 +354,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
         Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:view,task'])->name('projects.tasks.update');
+        Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
         Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
     });
@@ -417,23 +418,15 @@ Route::middleware(['auth'])->group(function () {
     // Task request routes
     Route::post('tasks/request', [TaskController::class, 'store'])->name('tasks.request.store');
     Route::get('tasks/requests', [TaskRequestController::class, 'index'])->name('tasks.requests.index');
-    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.requests.bulk-action');
-    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.requests.action');
+    Route::post('tasks/requests/bulk/{action}', [TaskRequestController::class, 'handleBulkAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.bulk-action');
+    Route::post('tasks/{task}/requests/{action}', [TaskRequestController::class, 'handleAction'])->whereIn('action', ['approve', 'reject'])->name('tasks.requests.action');
     // End Task request routes
 
     // Task time log change request routes
     Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
     Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
-    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.time-log-change-requests.bulk-action');
-    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('tasks.time-log-change-requests.action');
+    Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
+    Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
     // End Task time log change request routes
 
     // Handoff Request routes
@@ -450,15 +443,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
     Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
 
-    Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])
-        ->middleware(['permission.type:break_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('break-requests.bulk-action');
+    Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.bulk-action');
 
-    Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])
-        ->middleware(['permission.type:break_request.approve_reject'])
-        ->whereIn('action', ['approve', 'reject'])
-        ->name('break-requests.action');
+    Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.action');
     // End Break Request routes
 
     // Task Time Extend Request routes

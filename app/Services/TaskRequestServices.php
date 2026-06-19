@@ -107,7 +107,7 @@ class TaskRequestServices
         return $tasks->count();
     }
 
-    private function canHandleRequest(User $user, Task $task): bool
+    public function canHandleRequest(User $user, Task $task): bool
     {
         return $this->accountableRequestQuery($user)
             ->whereKey($task->id)
