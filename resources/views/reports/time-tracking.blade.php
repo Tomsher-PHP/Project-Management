@@ -258,6 +258,7 @@
         <x-filters.multi-select name="project_milestone_id" label="Milestone" :options="$projectMilestones" />
         <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
         <x-filters.multi-select name="user_id" label="Users" :options="$users" />
+        <x-filters.select name="request_status" label="Task Request Status" :options="$requestStatuses" />
     </x-filters.drawer>
 
     <script id="task-filter-dependencies" type="application/json">
