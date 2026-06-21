@@ -203,7 +203,7 @@
                                 $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                                <a href="{{ route('reports.tasks', ['project_id' => [$project->id], 'current_assignee_id' => [$assignee['id']]]) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
+                                <a href="{{ route('reports.time_tracking', ['project_id' => [$project->id], 'user_id' => [$assignee['id']], 'request_status' => 'approved']) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
                                     <x-user-avatar :name="$assignee['name']" :image="$assignee['profile_image_url']" class="h-10 w-10 flex-shrink-0" />
 
                                     <div class="min-w-0">
