@@ -125,7 +125,7 @@ class TimeTrackingReportService
         return $this->baseQuery($request)
             ->with([
                 'user:id,name',
-                'task:id,name,project_id,project_milestone_id,project_sprint_id',
+                'task:id,name,project_id,project_milestone_id,project_sprint_id,request_type,request_status',
                 'task.project:id,name,project_flow,deleted_at',
                 'task.projectMilestone:id,project_id,name',
                 'task.projectSprint:id,project_id,project_milestone_id,name',
