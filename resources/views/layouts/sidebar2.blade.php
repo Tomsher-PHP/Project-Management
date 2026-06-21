@@ -55,6 +55,7 @@
     $isCustomersActive = request()->routeIs('customers.*');
     $isProjectsActive = request()->routeIs('projects.*');
     $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
+    $isScheduleTasksActive = request()->routeIs('schedule-tasks.*');
 
     $isTaskRequestsActive = request()->routeIs('tasks.requests.*');
     $isTaskTimeChangeRequestsActive = request()->routeIs('tasks.time-log-change-requests.*');
@@ -258,6 +259,20 @@
                                             </span>
                                         </a>
                                         <span class="sidebar-tooltip">Kanban</span>
+                                    </li>
+                                @endif
+
+                                @if ($canViewTasks)
+                                    <li class="item px-[43px] py-[11px] {{ $isScheduleTasksActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                        <a href="{{ route('schedule-tasks.index') }}">
+                                            <span class="item-ico">
+                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="2" y="3" width="16" height="14" rx="2" fill="#1A202C" class="path-1" />
+                                                    <path d="M6 1V5M14 1V5M2 7H18M7 11H10V14H7V11Z" stroke="#22C55E" stroke-width="2" class="path-2" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                        <span class="sidebar-tooltip">Schedule Tasks</span>
                                     </li>
                                 @endif
 

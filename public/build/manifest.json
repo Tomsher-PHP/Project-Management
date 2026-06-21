@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-C7VnrLEb.css",
+    "file": "assets/app-CTwYw6nV.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -352,6 +352,20 @@
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true
+  },
+  "resources/js/modules/tasks/schedule-task.js": {
+    "file": "assets/schedule-task-DhuY63IR.js",
+    "name": "schedule-task",
+    "src": "resources/js/modules/tasks/schedule-task.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-C_SEo8OD.js",
+      "_estimated-time-input-CIuy8ceU.js",
+      "_tom-select-CxiVPw-X.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
+    ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
     "file": "assets/time-log-change-request-Da6ilbln.js",
