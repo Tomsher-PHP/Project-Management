@@ -394,9 +394,10 @@ class TaskServices
     // Create a simple task with default placement and tags
     public function createQuickTask(Project $project, array $validated): Task
     {
-        return DB::transaction(function () use ($project, $validated) {
+        $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
+
+        $task = DB::transaction(function () use ($project, $validated, $requestType) {
             $defaults = $this->resolveDefaults($project);
-            $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
             $assigneeId = $requestType === 'self'
                 ? auth()->id()
                 : (! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null);
@@ -443,6 +444,17 @@ class TaskServices
 
             return $task;
         });
+
+        if ($task->isApprovedRequest()) {
+            $this->notificationService->sendTaskAssignmentIfNeeded(
+                $task,
+                $task->current_assignee_id ? (int) $task->current_assignee_id : null
+            );
+        } elseif ($requestType === 'self') {
+            $this->notificationService->notifyTaskRequestCreated($task);
+        }
+
+        return $task;
     }
 
     // Update task data and record any status or assignment changes
@@ -595,6 +607,8 @@ class TaskServices
             'project_milestone_id' => $placement['project_milestone_id'],
             'project_sprint_id' => $resolvedSprintId,
             'parent_task_id' => ! empty($validated['parent_task_id']) ? (int) $validated['parent_task_id'] : null,
+            'task_schedule_id' => ! empty($validated['task_schedule_id']) ? (int) $validated['task_schedule_id'] : null,
+            'scheduled_for_date' => $validated['scheduled_for_date'] ?? null,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaults['status_id'],

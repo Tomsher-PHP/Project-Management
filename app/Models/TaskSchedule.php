@@ -37,6 +37,8 @@ class TaskSchedule extends Model
         'weekly_day',
         'month_days',
         'due_after_hours',
+        'last_generated_for',
+        'last_generated_at',
         'is_active',
         'added_by',
         'updated_by',
@@ -100,5 +102,10 @@ class TaskSchedule extends Model
     public function addedBy()
     {
         return $this->belongsTo(User::class, 'added_by');
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
     }
 }

@@ -30,6 +30,8 @@ class Task extends Model
         'project_milestone_id',
         'project_sprint_id',
         'parent_task_id',
+        'task_schedule_id',
+        'scheduled_for_date',
         'name',
         'code',
         'description',
@@ -83,6 +85,8 @@ class Task extends Model
         'project_milestone_id' => 'integer',
         'project_sprint_id' => 'integer',
         'parent_task_id' => 'integer',
+        'task_schedule_id' => 'integer',
+        'scheduled_for_date' => 'date',
         'status_id' => 'integer',
         'current_assignee_id' => 'integer',
         'due_date_time' => 'datetime',
@@ -203,6 +207,11 @@ class Task extends Model
     public function parentTask()
     {
         return $this->belongsTo(self::class, 'parent_task_id');
+    }
+
+    public function taskSchedule()
+    {
+        return $this->belongsTo(TaskSchedule::class);
     }
 
     public function childTasks()

@@ -149,20 +149,11 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function storeTask(TaskQuickStoreRequest $request, Project $project, NotificationService $notificationService, TaskServices $taskService): JsonResponse
+    public function storeTask(TaskQuickStoreRequest $request, Project $project, TaskServices $taskService): JsonResponse
     {
         $validated = $request->validated();
         $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
         $task = $taskService->createQuickTask($project, $validated);
-
-        if ($task->isApprovedRequest()) {
-            $notificationService->sendTaskAssignmentIfNeeded(
-                $task,
-                $task->current_assignee_id ? (int) $task->current_assignee_id : null
-            );
-        } elseif ($requestType === 'self') {
-            $notificationService->notifyTaskRequestCreated($task);
-        }
 
         $project->refresh();
 
