@@ -136,7 +136,7 @@
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After Hours</label>
-                                <input type="number" name="due_after_hours" value="{{ $schedule?->due_after_hours }}" min="0" step="1" placeholder="Example: 24" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                <input type="number" name="due_after_hours" value="{{ $schedule?->due_after_hours ?? 0 }}" min="0" step="1" placeholder="Example: 24" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                                 <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Number of hours after task generation to set the due date. Leave empty if no due date should be assigned.</p>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_hours"></p>
                             </div>
