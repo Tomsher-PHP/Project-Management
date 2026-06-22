@@ -58,6 +58,9 @@
                                                 <button type="button" class="rounded-lg border px-3 py-1.5 text-sm font-medium transition {{ $taskSchedule->is_active ? 'border-red-200 text-red-500 hover:bg-red-50' : 'border-success-200 text-success-400 hover:bg-success-50' }}" data-schedule-task-toggle data-url="{{ route('schedule-tasks.toggle-status', $taskSchedule) }}" data-active="{{ $taskSchedule->is_active ? 'true' : 'false' }}">
                                                     {{ $taskSchedule->is_active ? 'Disable' : 'Enable' }}
                                                 </button>
+                                                <button type="button" class="rounded-lg border border-bgray-200 px-3 py-1.5 text-sm font-medium text-red-500 transition hover:bg-red-50 dark:border-darkblack-400" data-schedule-task-delete data-url="{{ route('schedule-tasks.destroy', $taskSchedule) }}">
+                                                    Delete
+                                                </button>
                                             @endcan
                                         </div>
                                     </td>

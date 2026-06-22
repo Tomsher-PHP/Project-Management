@@ -418,6 +418,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{taskSchedule}/edit', [ScheduleTaskController::class, 'edit'])->middleware('permission.type:task.edit')->name('edit');
         Route::put('{taskSchedule}', [ScheduleTaskController::class, 'update'])->middleware('permission.type:task.edit')->name('update');
         Route::patch('{taskSchedule}/toggle-status', [ScheduleTaskController::class, 'toggleStatus'])->middleware('permission.type:task.delete')->name('toggle-status');
+        Route::delete('{taskSchedule}', [ScheduleTaskController::class, 'destroy'])->middleware('permission.type:task.delete')->name('destroy');
     });
 
     // Task status, order change route

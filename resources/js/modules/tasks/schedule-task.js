@@ -382,6 +382,26 @@ const initializeScheduleTasks = () => {
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to update the schedule.');
             }
+            return;
+        }
+
+        const deleteButton = event.target.closest('[data-schedule-task-delete]');
+        if (deleteButton) {
+            const confirmation = await Alert.confirm({
+                title: 'Are you sure you want to delete this Schedule Task?',
+                text: 'Future tasks will no longer be generated. Existing generated tasks will remain unchanged.',
+                confirmText: 'Yes, delete',
+                confirmColor: '#ef4444',
+            });
+            if (!confirmation.isConfirmed) return;
+
+            try {
+                const { response, result } = await requestJson(deleteButton.dataset.url, { method: 'DELETE' });
+                if (!response.ok || !result.status) throw new Error(result.message || 'Unable to delete the schedule.');
+                window.location.reload();
+            } catch (error) {
+                Alert.errorModal(error.message || 'Unable to delete the schedule.');
+            }
         }
     });
 
