@@ -69,6 +69,24 @@ class TaskSchedule extends Model
         });
     }
 
+    public function scopeAccessibleBy($query, User $user)
+    {
+        $query->whereHas('project', function ($q) use ($user) {
+            $q->accessibleBy($user);
+        });
+
+        if ($user->is_super_admin || $user->can('task.view_all_tasks')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('current_assignee_id', $user->id)
+                ->orWhereHas('currentAssignee', function ($q2) use ($user) {
+                    $q2->accessibleBy($user);
+                });
+        });
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class)->withTrashed();

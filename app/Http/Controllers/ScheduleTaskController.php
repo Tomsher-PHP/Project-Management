@@ -31,7 +31,7 @@ class ScheduleTaskController extends Controller
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
         $taskSchedules = TaskSchedule::query()
-            ->whereHas('project', fn($query) => $query->accessibleBy($user))
+            ->accessibleBy($user)
             ->with([
                 'project:id,name,project_code',
                 'projectMilestone:id,name',
@@ -69,6 +69,11 @@ class ScheduleTaskController extends Controller
 
     public function edit(Request $request, TaskSchedule $taskSchedule, TaskFormService $taskFormService): JsonResponse
     {
+        abort_unless(
+            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
+            Response::HTTP_FORBIDDEN
+        );
+
         $formData = $taskFormService->getCreateData($request->user());
         $projects = $formData['taskCreateProjects'] ?? collect();
 
@@ -84,6 +89,11 @@ class ScheduleTaskController extends Controller
 
     public function update(ScheduleTaskRequest $request, TaskSchedule $taskSchedule, ScheduleTaskService $service): JsonResponse
     {
+        abort_unless(
+            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
+            Response::HTTP_FORBIDDEN
+        );
+
         $taskSchedule = $service->update($taskSchedule, $request->validated());
 
         return response()->json([
@@ -95,6 +105,11 @@ class ScheduleTaskController extends Controller
 
     public function toggleStatus(TaskSchedule $taskSchedule, ScheduleTaskService $service): JsonResponse
     {
+        abort_unless(
+            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
+            Response::HTTP_FORBIDDEN
+        );
+
         $taskSchedule = $service->toggleStatus($taskSchedule);
 
         return response()->json([
