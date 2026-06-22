@@ -27,15 +27,21 @@ class ScheduleTaskRequest extends FormRequest
     {
         $projectId = $this->integer('project_id');
 
+        $startDateRules = ['required', 'date'];
+
+        if ($this->isMethod('POST')) {
+            $startDateRules[] = 'after_or_equal:' . now(config('constants.timezone'))->format('Y-m-d');
+        }
+
         return [
             'project_id' => ['required', 'integer', Rule::exists('projects', 'id')->whereNull('deleted_at')],
-            'project_milestone_id' => ['nullable', 'integer', Rule::exists('project_milestones', 'id')->where(fn ($query) => $query->where('project_id', $projectId))],
-            'project_sprint_id' => ['nullable', 'integer', Rule::exists('project_sprints', 'id')->where(fn ($query) => $query->where('project_id', $projectId))],
+            'project_milestone_id' => ['nullable', 'integer', Rule::exists('project_milestones', 'id')->where(fn($query) => $query->where('project_id', $projectId))],
+            'project_sprint_id' => ['nullable', 'integer', Rule::exists('project_sprints', 'id')->where(fn($query) => $query->where('project_id', $projectId))],
             'name' => ['required', 'string', 'max:255'],
             'current_assignee_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('project_members', 'user_id')->where(fn ($query) => $query
+                Rule::exists('project_members', 'user_id')->where(fn($query) => $query
                     ->where('project_id', $projectId)
                     ->whereNull('removed_at')
                     ->where('is_active', true)),
@@ -53,12 +59,22 @@ class ScheduleTaskRequest extends FormRequest
                 TaskSchedule::FREQUENCY_WEEKLY,
                 TaskSchedule::FREQUENCY_MONTHLY,
             ])],
-            'start_date' => ['required', 'date', 'after_or_equal:' . now(config('constants.timezone'))->format('Y-m-d')],
+            'start_date' => $startDateRules,
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'week_days' => ['required_if:frequency_type,'.TaskSchedule::FREQUENCY_WEEKDAYS, 'nullable', 'array', 'min:1'],
+            'week_days' => ['required_if:frequency_type,' . TaskSchedule::FREQUENCY_WEEKDAYS, 'nullable', 'array', 'min:1'],
             'week_days.*' => ['integer', 'between:1,7', 'distinct'],
-            'weekly_day' => ['required_if:frequency_type,'.TaskSchedule::FREQUENCY_WEEKLY, 'nullable', 'integer', 'between:1,7'],
-            'monthly_day' => ['required_if:frequency_type,'.TaskSchedule::FREQUENCY_MONTHLY, 'nullable', 'integer', 'between:1,31'],
+            'weekly_day' => ['required_if:frequency_type,' . TaskSchedule::FREQUENCY_WEEKLY, 'nullable', 'integer', 'between:1,7'],
+            'month_days' => [
+                'required_if:frequency_type,' . TaskSchedule::FREQUENCY_MONTHLY,
+                'nullable',
+                'array',
+                'min:1',
+            ],
+            'month_days.*' => [
+                'integer',
+                'between:1,31',
+                'distinct',
+            ],
         ];
     }
 
@@ -102,7 +118,7 @@ class ScheduleTaskRequest extends FormRequest
             'frequency_type.required' => 'Please choose a frequency.',
             'week_days.required_if' => 'Please choose at least one day.',
             'weekly_day.required_if' => 'Please choose a day of the week.',
-            'monthly_day.required_if' => 'Please choose a day of the month.',
+            'month_days.required_if' => 'Please choose at least one day.',
         ];
     }
 }

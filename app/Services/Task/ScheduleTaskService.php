@@ -51,8 +51,8 @@ class ScheduleTaskService
             'weekly_day' => $frequency === TaskSchedule::FREQUENCY_WEEKLY
                 ? (int) $data['weekly_day']
                 : null,
-            'monthly_day' => $frequency === TaskSchedule::FREQUENCY_MONTHLY
-                ? (int) $data['monthly_day']
+            'month_days' => $frequency === TaskSchedule::FREQUENCY_MONTHLY
+                ? array_values(array_map('intval', $data['month_days'] ?? []))
                 : null,
         ];
     }

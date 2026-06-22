@@ -170,14 +170,16 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="weekly_day"></p>
                             </div>
-                            <div data-schedule-frequency-section="monthly">
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Day Of Month</label>
-                                <select name="monthly_day" class="tom-select-no-search w-full">
+                            <div class="md:col-span-2" data-schedule-frequency-section="monthly">
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Days Of Month</label>
+                                <div class="flex flex-wrap gap-2">
                                     @for ($day = 1; $day <= 31; $day++)
-                                        <option value="{{ $day }}" @selected(($schedule?->monthly_day ?? 1) === $day)>{{ $day }}</option>
+                                        <label class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+                                            <input type="checkbox" name="month_days[]" value="{{ $day }}" @checked($isEdit ? in_array($day, $schedule->month_days ?? [], true) : $day === 1) class="rounded border-gray-300 text-success-300 focus:ring-success-300"> {{ $day }}
+                                        </label>
                                     @endfor
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="monthly_day"></p>
+                                </div>
+                                <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="month_days"></p>
                             </div>
                         </div>
                     </section>

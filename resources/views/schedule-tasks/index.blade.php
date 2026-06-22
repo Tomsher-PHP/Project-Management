@@ -30,7 +30,7 @@
                                     $frequencyLabel = match ($taskSchedule->frequency_type) {
                                         \App\Models\TaskSchedule::FREQUENCY_WEEKDAYS => collect($taskSchedule->week_days)->map(fn($day) => $shortDayNames[$day] ?? null)->filter()->join(', '),
                                         \App\Models\TaskSchedule::FREQUENCY_WEEKLY => 'Every ' . ($dayNames[$taskSchedule->weekly_day] ?? 'week'),
-                                        \App\Models\TaskSchedule::FREQUENCY_MONTHLY => 'Monthly (Day ' . $taskSchedule->monthly_day . ')',
+                                        \App\Models\TaskSchedule::FREQUENCY_MONTHLY => 'Monthly (Days: ' . collect($taskSchedule->month_days)->join(', ') . ')',
                                         default => 'Daily',
                                     };
                                 @endphp

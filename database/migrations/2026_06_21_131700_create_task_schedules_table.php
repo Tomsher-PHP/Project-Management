@@ -59,9 +59,9 @@ return new class extends Migration
             /**
              * monthly
              * Example:
-             * 15 = Every month on 15th
+             * [5, 15] = Every month on 5th and 15th
              */
-            $table->unsignedTinyInteger('monthly_day')->nullable();
+            $table->json('month_days')->nullable();
 
             // Generated Task Due Date
             $table->unsignedInteger('due_after_hours')->default(0);
