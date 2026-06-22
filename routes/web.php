@@ -412,11 +412,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/dropdown-options', [TaskController::class, 'dropdownOptions'])->name('tasks.dropdown-options');
 
     // schedule task routes
-    Route::get('schedule-tasks', [ScheduleTaskController::class, 'index'])->middleware('permission.type:task.view')->name('schedule-tasks.index');
-    Route::post('schedule-tasks', [ScheduleTaskController::class, 'store'])->middleware('permission.type:task.create')->name('schedule-tasks.store');
-    Route::get('schedule-tasks/{taskSchedule}/edit', [ScheduleTaskController::class, 'edit'])->middleware('permission.type:task.edit')->name('schedule-tasks.edit');
-    Route::put('schedule-tasks/{taskSchedule}', [ScheduleTaskController::class, 'update'])->middleware('permission.type:task.edit')->name('schedule-tasks.update');
-    Route::patch('schedule-tasks/{taskSchedule}/toggle-status', [ScheduleTaskController::class, 'toggleStatus'])->middleware('permission.type:task.delete')->name('schedule-tasks.toggle-status');
+    Route::prefix('schedule-tasks')->as('schedule-tasks.')->group(function () {
+        Route::get('', [ScheduleTaskController::class, 'index'])->middleware('permission.type:task.view')->name('index');
+        Route::post('', [ScheduleTaskController::class, 'store'])->middleware('permission.type:task.create')->name('store');
+        Route::get('{taskSchedule}/edit', [ScheduleTaskController::class, 'edit'])->middleware('permission.type:task.edit')->name('edit');
+        Route::put('{taskSchedule}', [ScheduleTaskController::class, 'update'])->middleware('permission.type:task.edit')->name('update');
+        Route::patch('{taskSchedule}/toggle-status', [ScheduleTaskController::class, 'toggleStatus'])->middleware('permission.type:task.delete')->name('toggle-status');
+    });
 
     // Task status, order change route
     Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');

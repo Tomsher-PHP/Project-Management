@@ -141,8 +141,8 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="start_date"></p>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">End Date</label>
-                                <input type="text" name="end_date" value="{{ $schedule?->end_date?->format('Y-m-d') }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-schedule-date="end" data-alt-input="true" data-alt-format="d-m-Y" placeholder="No End Date" autocomplete="off">
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">End Date <x-red-star /></label>
+                                <input type="text" name="end_date" value="{{ $schedule?->end_date?->format('Y-m-d') }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-schedule-date="end" data-alt-input="true" data-alt-format="d-m-Y" placeholder="No End Date" autocomplete="off" data-schedule-end-date-generated="false">
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="end_date"></p>
                             </div>
                             <div class="md:col-span-2" data-schedule-frequency-section="weekdays">

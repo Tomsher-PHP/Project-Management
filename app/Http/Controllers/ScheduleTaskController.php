@@ -31,7 +31,7 @@ class ScheduleTaskController extends Controller
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
         $taskSchedules = TaskSchedule::query()
-            ->whereHas('project', fn ($query) => $query->accessibleBy($user))
+            ->whereHas('project', fn($query) => $query->accessibleBy($user))
             ->with([
                 'project:id,name,project_code',
                 'projectMilestone:id,name',
@@ -82,11 +82,8 @@ class ScheduleTaskController extends Controller
         ]);
     }
 
-    public function update(
-        ScheduleTaskRequest $request,
-        TaskSchedule $taskSchedule,
-        ScheduleTaskService $service
-    ): JsonResponse {
+    public function update(ScheduleTaskRequest $request, TaskSchedule $taskSchedule, ScheduleTaskService $service): JsonResponse
+    {
         $taskSchedule = $service->update($taskSchedule, $request->validated());
 
         return response()->json([
@@ -113,25 +110,25 @@ class ScheduleTaskController extends Controller
     private function buildDependencies(Collection $projects): array
     {
         return [
-            'projects' => $projects->mapWithKeys(fn (Project $project) => [(string) $project->id => [
+            'projects' => $projects->mapWithKeys(fn(Project $project) => [(string) $project->id => [
                 'default_billable' => (bool) $project->default_billable,
                 'default_task_estimate_minutes' => intdiv((int) ($project->default_task_estimate_seconds ?? 0), 60),
                 'milestones' => $project->projectMilestones
-                    ->reject(fn (ProjectMilestone $milestone) => $milestone->is_backlog || $milestone->is_system)
-                    ->map(fn (ProjectMilestone $milestone) => [
+                    ->reject(fn(ProjectMilestone $milestone) => $milestone->is_backlog || $milestone->is_system)
+                    ->map(fn(ProjectMilestone $milestone) => [
                         'value' => (string) $milestone->id,
                         'text' => $milestone->name,
                     ])->values(),
                 'sprints' => $project->projectSprints
-                    ->reject(fn (ProjectSprint $sprint) => $sprint->is_backlog || $sprint->is_system)
-                    ->map(fn (ProjectSprint $sprint) => [
+                    ->reject(fn(ProjectSprint $sprint) => $sprint->is_backlog || $sprint->is_system)
+                    ->map(fn(ProjectSprint $sprint) => [
                         'value' => (string) $sprint->id,
                         'text' => $sprint->name,
                         'project_milestone_id' => (string) ($sprint->project_milestone_id ?? ''),
                     ])->values(),
                 'assignees' => $project->activeMembers
                     ->sortBy('name')
-                    ->map(fn (User $user) => [
+                    ->map(fn(User $user) => [
                         'value' => (string) $user->id,
                         'text' => $user->name,
                     ])->values(),
