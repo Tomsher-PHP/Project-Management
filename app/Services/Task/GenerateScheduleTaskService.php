@@ -5,6 +5,7 @@ namespace App\Services\Task;
 use App\Models\Task;
 use App\Models\TaskSchedule;
 use App\Models\User;
+use App\Models\UserShiftAssignment;
 use App\Services\TaskServices;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -37,13 +38,30 @@ class GenerateScheduleTaskService
             ->orderBy('id')
             ->chunkById(100, function ($taskSchedules) use ($scheduledFor, &$generatedCount) {
                 foreach ($taskSchedules as $taskSchedule) {
-                    if (! $this->isDueOn($taskSchedule, $scheduledFor)) {
+                    if ($taskSchedule->frequency_type === TaskSchedule::FREQUENCY_DAILY) {
+                        $skipReason = $this->getDailySkipReason($taskSchedule, $scheduledFor);
+
+                        if ($skipReason !== null) {
+                            Log::info('Skipped scheduled task generation.', [
+                                'task_schedule_id' => $taskSchedule->id,
+                                'scheduled_for_date' => $scheduledFor->toDateString(),
+                                'reason' => $skipReason,
+                            ]);
+
+                            continue;
+                        }
+                    } elseif (! $this->isDueOn($taskSchedule, $scheduledFor)) {
                         continue;
                     }
 
                     try {
                         if ($this->generateTask($taskSchedule, $scheduledFor)) {
                             $generatedCount++;
+
+                            Log::info('Generated scheduled task.', [
+                                'task_schedule_id' => $taskSchedule->id,
+                                'scheduled_for_date' => $scheduledFor->toDateString(),
+                            ]);
                         }
                     } catch (\Throwable $exception) {
                         Log::error('Scheduled task generation failed.', [
@@ -61,12 +79,59 @@ class GenerateScheduleTaskService
     public function isDueOn(TaskSchedule $taskSchedule, Carbon $date): bool
     {
         return match ($taskSchedule->frequency_type) {
-            TaskSchedule::FREQUENCY_DAILY => true,
+            TaskSchedule::FREQUENCY_DAILY => $this->getDailySkipReason($taskSchedule, $date) === null,
             TaskSchedule::FREQUENCY_WEEKDAYS => in_array($date->isoWeekday(), $taskSchedule->week_days ?? [], true),
             TaskSchedule::FREQUENCY_WEEKLY => (int) $taskSchedule->weekly_day === $date->isoWeekday(),
             TaskSchedule::FREQUENCY_MONTHLY => in_array($date->day, $taskSchedule->month_days ?? [], true),
             default => false,
         };
+    }
+
+    protected function getDailySkipReason(TaskSchedule $taskSchedule, Carbon $date): ?string
+    {
+        if (! $taskSchedule->current_assignee_id) {
+            return 'No assignee';
+        }
+
+        $assignment = $this->resolveShiftAssignmentForDate(
+            (int) $taskSchedule->current_assignee_id,
+            $date
+        );
+
+        if (! $assignment) {
+            return 'No active shift assignment';
+        }
+
+        if ($this->isWeekendForAssignment($assignment, $date)) {
+            return 'Weekend/Off Day';
+        }
+
+        return null;
+    }
+
+    protected function resolveShiftAssignmentForDate(int $userId, Carbon $date): ?UserShiftAssignment
+    {
+        return UserShiftAssignment::query()
+            ->with('weekends')
+            ->where('user_id', $userId)
+            ->whereDate('date_from', '<=', $date->toDateString())
+            ->where(function ($query) use ($date) {
+                $query->whereNull('date_to')
+                    ->orWhereDate('date_to', '>=', $date->toDateString());
+            })
+            ->latest('date_from')
+            ->latest('id')
+            ->first();
+    }
+
+    protected function isWeekendForAssignment(UserShiftAssignment $assignment, Carbon $date): bool
+    {
+        $weekNumber = (int) ceil($date->day / 7);
+
+        return $assignment->weekends
+            ->where('weekday', $date->dayOfWeek)
+            ->where('week_number', $weekNumber)
+            ->isNotEmpty();
     }
 
     private function generateTask(TaskSchedule $taskSchedule, Carbon $scheduledFor): ?Task
