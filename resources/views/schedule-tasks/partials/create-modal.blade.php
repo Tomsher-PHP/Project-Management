@@ -87,7 +87,7 @@
                                 <select name="task_type_id" class="tom-select-no-search w-full">
                                     <option value="">Select task type</option>
                                     @foreach ($taskTypeOptions as $option)
-                                        <option value="{{ $option->id }}" @selected($schedule?->task_type_id === $option->id)>{{ $option->name }}</option>
+                                        <option value="{{ $option->id }}" @selected($isEdit ? $schedule->task_type_id === $option->id : $loop->first)>{{ $option->name }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="task_type_id"></p>
@@ -97,7 +97,7 @@
                                 <select name="task_mode_id" class="tom-select-no-search w-full">
                                     <option value="">Select task mode</option>
                                     @foreach ($taskModeOptions as $option)
-                                        <option value="{{ $option->id }}" @selected($schedule?->task_mode_id === $option->id)>{{ $option->name }}</option>
+                                        <option value="{{ $option->id }}" @selected($isEdit ? $schedule->task_mode_id === $option->id : $loop->first)>{{ $option->name }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="task_mode_id"></p>
@@ -134,7 +134,12 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="frequency_type"></p>
                             </div>
-                            <div></div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After Hours</label>
+                                <input type="number" name="due_after_hours" value="{{ $schedule?->due_after_hours }}" min="0" step="1" placeholder="Example: 24" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Number of hours after task generation to set the due date. Leave empty if no due date should be assigned.</p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_hours"></p>
+                            </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Start Date <x-red-star /></label>
                                 <input type="text" name="start_date" value="{{ $schedule?->start_date?->format('Y-m-d') ?? now()->format('Y-m-d') }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-schedule-date="start" data-alt-input="true" data-alt-format="d-m-Y" autocomplete="off">

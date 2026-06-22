@@ -41,6 +41,7 @@ class ScheduleTaskRequest extends FormRequest
                     ->where('is_active', true)),
             ],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
+            'due_after_hours' => ['nullable', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
             'task_type_id' => ['nullable', 'integer', Rule::exists('task_types', 'id')->where('is_active', true)],
             'task_mode_id' => ['nullable', 'integer', Rule::exists('task_modes', 'id')->where('is_active', true)],

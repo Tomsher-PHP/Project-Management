@@ -41,6 +41,7 @@ class ScheduleTaskService
             'priority' => $data['priority'] ?? 'medium',
             'estimated_time_seconds' => ((int) ($data['estimated_time_minutes'] ?? 0)) * 60,
             'is_billable' => (bool) ($data['is_billable'] ?? false),
+            'due_after_hours' => is_numeric($data['due_after_hours'] ?? null) ? (int) $data['due_after_hours'] : null,
             'frequency_type' => $frequency,
             'start_date' => $data['start_date'],
             'end_date' => $data['end_date'] ?? null,
