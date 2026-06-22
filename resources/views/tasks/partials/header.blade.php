@@ -67,8 +67,8 @@
                 <span><strong>Mode:</strong> {{ $taskModeLabel }}</span>
                 <span>
                     <strong>Due Date:</strong>
-                    <span class="{{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task->status) }} inline-flex items-center gap-0.5">
-                        {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task->status) !!}
+                    <span class="{{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }} inline-flex items-center gap-0.5">
+                        {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task) !!}
                         @if ($task->due_date_time)
                             @appDateTime($task->due_date_time)
                         @else

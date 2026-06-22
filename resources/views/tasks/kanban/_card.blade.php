@@ -81,8 +81,8 @@
                 </span>
 
                 @if ($dueDate)
-                    <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $dueDateStatus) }}" title="{{ $dueDateDisplay }}">
-                        {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $dueDateStatus) !!}
+                    <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
+                        {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $task) !!}
                         <span class="truncate text-[11px] font-medium">{{ $dueDateDisplay }}</span>
                     </span>
                 @endif
