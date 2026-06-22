@@ -62,6 +62,13 @@ const parseJson = (node, fallback = {}) => {
 
 const dependencies = parseJson(document.getElementById('schedule-task-dependencies'), { projects: {} });
 
+const FREQUENCY_NOTES = {
+    daily: "A task will be generated every working day based on the assigned user's active shift. No task will be generated on shift week-off days or when no valid shift assignment exists.",
+    weekdays: 'A task will be generated only on the selected weekdays within the configured date range.',
+    weekly: 'A task will be generated once every week on the selected weekday within the configured date range.',
+    monthly: 'A task will be generated on the selected day(s) of each month within the configured date range.',
+};
+
 const setSelectOptions = (field, options, placeholder, value = '') => {
     if (!field) return;
 
@@ -151,11 +158,19 @@ const syncSprintFields = (form) => {
     );
 };
 
+const syncFrequencyNote = (form, frequency) => {
+    const note = form.querySelector('[data-schedule-frequency-note]');
+    if (!note) return;
+
+    note.textContent = FREQUENCY_NOTES[frequency] || FREQUENCY_NOTES.daily;
+};
+
 const syncFrequency = (form) => {
     const frequency = form.querySelector('[name="frequency_type"]')?.value || 'daily';
     form.querySelectorAll('[data-schedule-frequency-section]').forEach((section) => {
         section.hidden = section.dataset.scheduleFrequencySection !== frequency;
     });
+    syncFrequencyNote(form, frequency);
 };
 
 const initializeScheduleDates = (modal) => {

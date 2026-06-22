@@ -39,7 +39,7 @@ class ScheduleTaskRequest extends FormRequest
             'project_sprint_id' => ['nullable', 'integer', Rule::exists('project_sprints', 'id')->where(fn($query) => $query->where('project_id', $projectId))],
             'name' => ['required', 'string', 'max:255'],
             'current_assignee_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('project_members', 'user_id')->where(fn($query) => $query
                     ->where('project_id', $projectId)
@@ -115,6 +115,8 @@ class ScheduleTaskRequest extends FormRequest
         return [
             'project_id.required' => 'Please choose a project.',
             'name.required' => 'Please enter a task name.',
+            'current_assignee_id.required' => 'Please choose an assignee.',
+            'current_assignee_id.exists' => 'The selected assignee is invalid.',
             'frequency_type.required' => 'Please choose a frequency.',
             'week_days.required_if' => 'Please choose at least one day.',
             'weekly_day.required_if' => 'Please choose a day of the week.',

@@ -35,7 +35,7 @@ class ScheduleTaskService
             'project_sprint_id' => $data['project_sprint_id'] ?? null,
             'task_type_id' => $data['task_type_id'] ?? null,
             'task_mode_id' => $data['task_mode_id'] ?? null,
-            'current_assignee_id' => $data['current_assignee_id'] ?? null,
+            'current_assignee_id' => (int) $data['current_assignee_id'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'priority' => $data['priority'] ?? 'medium',

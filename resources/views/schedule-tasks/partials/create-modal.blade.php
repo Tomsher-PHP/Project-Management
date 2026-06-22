@@ -55,7 +55,7 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="project_sprint_id"></p>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee <x-red-star /></label>
                                 <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
                                     <option value="">Select project first</option>
                                 </select>
@@ -133,6 +133,11 @@
                                     <option value="monthly" @selected($schedule?->frequency_type === 'monthly')>Monthly</option>
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="frequency_type"></p>
+                                <div class="mt-1 rounded-lg bg-white/70 dark:border-darkblack-400 dark:bg-darkblack-600/70">
+                                    <p class="break-words text-xs leading-5 text-bgray-500 dark:text-bgray-400" data-schedule-frequency-note>
+                                        A task will be generated every working day based on the assigned user's active shift. No task will be generated on shift week-off days or when no valid shift assignment exists.
+                                    </p>
+                                </div>
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After Hours</label>
