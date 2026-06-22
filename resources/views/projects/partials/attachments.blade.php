@@ -19,7 +19,7 @@
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
-                    <div class="overflow-hidden rounded-[24px] bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                             <div>
                                 <h4 class="text-xl font-semibold text-bgray-900 dark:text-white">Add Note & Files</h4>
