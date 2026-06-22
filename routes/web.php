@@ -413,8 +413,8 @@ Route::middleware(['auth'])->group(function () {
 
     // schedule task routes
     Route::prefix('schedule-tasks')->as('schedule-tasks.')->group(function () {
-        Route::get('', [ScheduleTaskController::class, 'index'])->middleware('permission.type:task.view')->name('index');
-        Route::post('', [ScheduleTaskController::class, 'store'])->middleware('permission.type:task.create')->name('store');
+        Route::get('/', [ScheduleTaskController::class, 'index'])->middleware('permission.type:task.view')->name('index');
+        Route::post('/', [ScheduleTaskController::class, 'store'])->middleware('permission.type:task.create')->name('store');
         Route::get('{taskSchedule}/edit', [ScheduleTaskController::class, 'edit'])->middleware('permission.type:task.edit')->name('edit');
         Route::put('{taskSchedule}', [ScheduleTaskController::class, 'update'])->middleware('permission.type:task.edit')->name('update');
         Route::patch('{taskSchedule}/toggle-status', [ScheduleTaskController::class, 'toggleStatus'])->middleware('permission.type:task.delete')->name('toggle-status');
