@@ -1,3 +1,28 @@
+@keyframes task-timer-button-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.24);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+    }
+}
+
+.task-timer-btn--running {
+    background-color: #fee2e2 !important;
+    color: #dc2626 !important;
+    animation: task-timer-button-pulse 1.35s ease-in-out infinite;
+}
+
+.task-timer-btn--running:hover {
+    background-color: #fecaca !important;
+    color: #b91c1c !important;
+}
+
 .running-task-bar {
     min-width: 0;
     max-width: min(34vw, 420px);
