@@ -292,7 +292,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-BLJr2eW2.js",
+    "file": "assets/task-list-create-D6tBhePV.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -354,7 +354,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/schedule-task.js": {
-    "file": "assets/schedule-task-DDYNtzmr.js",
+    "file": "assets/schedule-task-CKuF9Bgo.js",
     "name": "schedule-task",
     "src": "resources/js/modules/tasks/schedule-task.js",
     "isEntry": true,

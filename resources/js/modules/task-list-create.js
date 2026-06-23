@@ -422,7 +422,7 @@ const setEmptyProjectState = (form) => {
         disabled: true,
     });
     setEstimatedTimeValue(form, 0);
-    setCheckboxValue(form.querySelector('[name="is_billable"]'), false);
+    setCheckboxValue(form.querySelector('input[type="checkbox"][name="is_billable"]'), false);
 };
 
 const applyProjectDefaults = async (form, dependencies) => {
@@ -432,7 +432,7 @@ const applyProjectDefaults = async (form, dependencies) => {
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
     const dueDateField = form.querySelector('[name="due_date_time"]');
-    const billableField = form.querySelector('[name="is_billable"]');
+    const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 
     if (!projectMeta) {

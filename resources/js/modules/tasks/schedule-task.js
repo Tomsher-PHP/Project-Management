@@ -4,6 +4,7 @@ import { initializeEstimatedTimeInputs } from '../../components/estimated-time-i
 import { initTomSelect } from '../../components/tom-select';
 
 const ADVANCED_FIELDS = new Set(['description', 'task_type_id', 'task_mode_id', 'priority', 'is_billable']);
+const scheduleTaskEditors = new WeakMap();
 
 /**
  * Calculate the last day of the month for a given date string (YYYY-MM-DD format)
@@ -251,6 +252,23 @@ const prepareModal = (modal) => {
             endDateField.dataset.scheduleEndDateGenerated = 'true';
         }
     }
+
+    const editorElement = modal.querySelector('#schedule_task_description_editor');
+    if (editorElement && !scheduleTaskEditors.has(modal)) {
+        const descInput = modal.querySelector('#schedule_task_description_input');
+        const initialValue = descInput ? descInput.value : '';
+
+        const quill = new window.Quill(editorElement, {
+            theme: 'snow',
+            placeholder: 'Enter schedule description...',
+        });
+
+        if (initialValue) {
+            quill.clipboard.dangerouslyPasteHTML(initialValue);
+        }
+
+        scheduleTaskEditors.set(modal, quill);
+    }
 };
 
 const resetCreateModal = (modal) => {
@@ -259,6 +277,15 @@ const resetCreateModal = (modal) => {
 
     form.reset();
     clearErrors(form);
+
+    const editor = scheduleTaskEditors.get(modal);
+    if (editor) {
+        editor.setContents([]);
+    }
+    const descInput = modal.querySelector('#schedule_task_description_input');
+    if (descInput) {
+        descInput.value = '';
+    }
 
     form.querySelectorAll('select').forEach((field) => {
         if (field.tomselect) {
@@ -447,6 +474,15 @@ const initializeScheduleTasks = () => {
         event.preventDefault();
         clearErrors(form);
         syncScheduleDateValues(form);
+
+        const editor = scheduleTaskEditors.get(form.closest('[data-schedule-task-modal]'));
+        if (editor) {
+            const descInput = form.querySelector('#schedule_task_description_input');
+            if (descInput) {
+                const html = editor.root.innerHTML;
+                descInput.value = (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+            }
+        }
 
         const submit = form.querySelector('[data-schedule-task-submit]');
         const originalText = submit?.textContent;

@@ -79,7 +79,10 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
-                                <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $schedule?->description }}</textarea>
+                                <input type="hidden" name="description" id="schedule_task_description_input" value="{{ $schedule?->description }}">
+                                <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                    <div id="schedule_task_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                </div>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="description"></p>
                             </div>
                             <div>
