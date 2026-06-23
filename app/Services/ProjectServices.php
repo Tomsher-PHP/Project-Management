@@ -49,41 +49,40 @@ class ProjectServices
             $data['project_flow'] = $data['project_flow'] ?? 'agile';
             $data['priority'] = $data['priority'] ?? 'medium';
 
-            // Handle default start date
             $startDate = $data['start_date'] ?? now(config('constants.timezone'))->toDateString();
 
-            // Handle end date logic
             if (empty($data['end_date'])) {
-                $data['end_date'] = Carbon::parse($startDate)->addDays(7)->toDateString();
+                $data['end_date'] = Carbon::parse($startDate)->addDays(30)->toDateString();
             }
 
-            // Fresh projects should fall back to the configured default status.
-            $data['status_id'] = $data['project_status']
-                ?? ProjectStatus::active()->where('is_default', true)->value('id');
-            unset($data['project_status']);
-
+            $defaultStatusId = ProjectStatus::active()->where('is_default', true)->value('id');
             $defaultProjectStageId = ProjectStage::active()->where('is_default', true)->value('id');
 
             $customer = Customer::find($data['customer_id']);
 
-            // Create project
             $project = Project::create([
                 'project_code' => Project::generateProjectCode(),
                 'name' => $data['name'],
-                'customer_id' => $data['customer_id'],
+                'customer_id' => $customer?->id,
                 'project_flow' => $data['project_flow'],
                 'priority' => $data['priority'],
-                'status_id' => $data['status_id'],
+                'status_id' => $defaultStatusId,
                 'project_stage_id' => $defaultProjectStageId,
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
                 'sales_person_id' => $customer ? $customer->sales_person_id : null,
             ]);
 
-            // Insert status history
+            //status history
             ProjectStatusHistory::create([
                 'project_id' => $project->id,
                 'status_id' => $project->status_id,
+            ]);
+
+            //stage history
+            ProjectStageHistory::create([
+                'project_id' => $project->id,
+                'stage_id' => $project->project_stage_id,
             ]);
 
             return $project;
