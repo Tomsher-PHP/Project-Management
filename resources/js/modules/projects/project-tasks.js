@@ -19,6 +19,7 @@ const taskGroupPaginationObservers = new WeakMap();
 const taskListPaginationObservers = new WeakMap();
 let taskRowMenuDocumentListenerBound = false;
 const projectTaskEditors = new WeakMap();
+const projectTaskDetailEditors = new WeakMap();
 
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
@@ -851,6 +852,23 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
             form.dataset.groupKey = groupKey || '';
             syncProjectTaskPlacement(form);
             loadParentTaskOptions(form).catch(() => {});
+
+            const editorElement = form.querySelector('#project_task_detail_description_editor');
+            if (editorElement && !projectTaskDetailEditors.has(form)) {
+                const descInput = form.querySelector('#project_task_detail_description_input');
+                const initialValue = descInput ? descInput.value : '';
+
+                const quill = new window.Quill(editorElement, {
+                    theme: 'snow',
+                    placeholder: 'Enter task description...',
+                });
+
+                if (initialValue) {
+                    quill.clipboard.dangerouslyPasteHTML(initialValue);
+                }
+
+                projectTaskDetailEditors.set(form, quill);
+            }
         }
     } catch (error) {
         closeTaskDetailModal(modal);
@@ -1618,6 +1636,15 @@ const initializeTasksRoot = (root) => {
 
         event.preventDefault();
         clearTaskDetailFormErrors(detailForm);
+
+        const editor = projectTaskDetailEditors.get(detailForm);
+        if (editor) {
+            const descInput = detailForm.querySelector('#project_task_detail_description_input');
+            if (descInput) {
+                const html = editor.root.innerHTML;
+                descInput.value = (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+            }
+        }
 
         const submitButton = detailForm.querySelector('[data-project-task-detail-submit]');
         const modal = root.querySelector('[data-project-task-detail-modal]');

@@ -24,6 +24,8 @@ const TASK_DETAIL_ERROR_HTML = (tab) => `
     </div>
 `;
 
+const taskOverviewEditors = new WeakMap();
+
 const getFieldErrorTarget = (field) => field?.tomselect?.control || field;
 
 const clearTaskSettingsErrors = (form) => {
@@ -484,11 +486,37 @@ const initializeOverviewDescriptionForm = (root = document) => {
         return;
     }
 
+    const editorElement = form.querySelector('#task_overview_description_editor');
+    if (editorElement && !taskOverviewEditors.has(form)) {
+        const descInput = form.querySelector('#task_overview_description_input');
+        const initialValue = descInput ? descInput.value : '';
+
+        const quill = new window.Quill(editorElement, {
+            theme: 'snow',
+            placeholder: 'Add a task description...',
+        });
+
+        if (initialValue) {
+            quill.clipboard.dangerouslyPasteHTML(initialValue);
+        }
+
+        taskOverviewEditors.set(form, quill);
+    }
+
     const errorNode = form.querySelector('[data-task-overview-description-error]');
     const submitButton = form.querySelector('[data-task-overview-description-submit]');
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        const editor = taskOverviewEditors.get(form);
+        if (editor) {
+            const descInput = form.querySelector('#task_overview_description_input');
+            if (descInput) {
+                const html = editor.root.innerHTML;
+                descInput.value = (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+            }
+        }
 
         if (errorNode) {
             errorNode.textContent = '';
