@@ -86,17 +86,12 @@
 
                     <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</label>
-                                <select name="status_id" class="tom-select-no-search w-full">
-                                    <option value="">Select project first</option>
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="status_id"></p>
-                            </div>
-
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
-                                <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add task details"></textarea>
+                                <input type="hidden" name="description" id="task_create_description_input">
+                                <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                    <div id="task_create_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                </div>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="description"></p>
                             </div>
 

@@ -611,7 +611,7 @@ class TaskServices
             'scheduled_for_date' => $validated['scheduled_for_date'] ?? null,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaults['status_id'],
+            'status_id' => $defaults['status_id'],
             'task_type_id' => $validated['task_type_id'] ?? $defaults['task_type_id'],
             'task_mode_id' => $validated['task_mode_id'] ?? $defaults['task_mode_id'],
             'priority' => $validated['priority'] ?? $defaults['priority'],
@@ -763,10 +763,7 @@ class TaskServices
         return TaskStatus::query()
             ->active()
             ->where('flow_type', $flowType)
-            ->orderByDesc('is_default')
-            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->where('is_default', 1)
             ->value('id');
     }
 

@@ -18,6 +18,7 @@ const ERROR_HTML = `
 const taskGroupPaginationObservers = new WeakMap();
 const taskListPaginationObservers = new WeakMap();
 let taskRowMenuDocumentListenerBound = false;
+const projectTaskEditors = new WeakMap();
 
 const getGroupElements = (group) => ({
     icon: group.querySelector('[data-project-task-group-icon]'),
@@ -319,6 +320,14 @@ const prepareTaskModal = async (root, {
     initializeEstimatedTimeInputs(form);
     initDatepicker('.datepicker', {}, form);
     form.reset();
+    const editor = projectTaskEditors.get(root);
+    if (editor) {
+        editor.setContents([]);
+    }
+    const descInput = form.querySelector('#project_task_description_input');
+    if (descInput) {
+        descInput.value = '';
+    }
     clearTaskFormErrors(form);
     setTaskModalAdvancedState(root, false);
     syncTaskFormSelectState(form);
@@ -1215,6 +1224,23 @@ const initializeTasksRoot = (root) => {
     initTomSelect(root);
     initializeTaskGroupPagination(root);
 
+    const editorElement = root.querySelector('#project_task_description_editor');
+    if (editorElement && !projectTaskEditors.has(root)) {
+        const editor = new window.Quill(editorElement, {
+            theme: 'snow',
+            placeholder: 'Add task details...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link']
+                ]
+            }
+        });
+        projectTaskEditors.set(root, editor);
+    }
+
     if (!taskRowMenuDocumentListenerBound) {
         document.addEventListener('click', (event) => {
             if (event.target.closest('[data-project-task-row-dropdown]')) {
@@ -1459,6 +1485,13 @@ const initializeTasksRoot = (root) => {
             event.preventDefault();
 
             clearTaskFormErrors(form);
+
+            const editor = projectTaskEditors.get(root);
+            const descInput = form.querySelector('#project_task_description_input');
+            if (editor && descInput) {
+                const content = editor.root.innerHTML.trim();
+                descInput.value = (content === '<p><br></p>') ? '' : content;
+            }
 
             const submitButton = form.querySelector('[data-project-task-submit]');
             const modal = root.querySelector('[data-project-task-modal]');

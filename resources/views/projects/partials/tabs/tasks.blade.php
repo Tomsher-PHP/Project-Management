@@ -186,20 +186,12 @@
 
                                 <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-project-task-advanced-section hidden>
                                     <div class="grid gap-4 md:grid-cols-2">
-                                        <div>
-                                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</label>
-                                            <select name="status_id" class="tom-select-no-search w-full">
-                                                <option value="" {{ blank($defaultTaskStatusId) ? 'selected' : '' }}>Select status</option>
-                                                @foreach ($taskStatuses as $status)
-                                                    <option value="{{ $status->id }}" {{ (int) $defaultTaskStatusId === (int) $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="status_id"></p>
-                                        </div>
-
                                         <div class="md:col-span-2">
                                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
-                                            <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add task details"></textarea>
+                                            <input type="hidden" name="description" id="project_task_description_input">
+                                            <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                                <div id="project_task_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                            </div>
                                             <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="description"></p>
                                         </div>
 

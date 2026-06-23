@@ -51,7 +51,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BSWxMDXC.css",
+    "file": "assets/app-emD9uZJN.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -217,7 +217,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BfAAc_Gr.js",
+    "file": "assets/project-detail-BF83_bbB.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -249,7 +249,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-Bjr9fE9a.js",
+    "file": "assets/project-tasks-Bv68XmfA.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -274,7 +274,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-BtKa4q0P.js",
+    "file": "assets/task-detail-Bh6RkFW1.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -292,7 +292,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-D8L6LfAH.js",
+    "file": "assets/task-list-create-BLJr2eW2.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,

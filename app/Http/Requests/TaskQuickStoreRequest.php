@@ -39,13 +39,6 @@ class TaskQuickStoreRequest extends FormRequest
             'request_type' => ['nullable', Rule::in($requestTypes)],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('task_statuses', 'id')->where(
-                    fn($query) => $query->where('flow_type', $project?->project_flow)->where('is_active', true)
-                ),
-            ],
             'project_milestone_id' => [
                 'nullable',
                 'integer',
@@ -96,7 +89,6 @@ class TaskQuickStoreRequest extends FormRequest
             'project_id.exists' => 'The selected project is invalid.',
             'request_type.in' => 'The selected request type is invalid.',
             'name.required' => 'Please enter a task name.',
-            'status_id.exists' => 'The selected task status is invalid.',
             'project_milestone_id.exists' => 'The selected milestone is invalid.',
             'project_sprint_id.exists' => 'The selected sprint is invalid.',
             'parent_task_id.exists' => 'The selected parent task is invalid.',
