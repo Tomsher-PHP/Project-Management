@@ -208,7 +208,7 @@
         }
     </style>
 
-    <x-form-modal modalId="task-create-type-modal" module="Task Type" formId="taskCreateTypeInlineForm" action="{{ route('settings.task-types.store') }}" button="Create Task Type" modalZIndex="1000">
+    <x-form-modal modal-id="task-create-type-modal" module="Task Type" form-id="taskCreateTypeInlineForm" action="{{ route('settings.task-types.store') }}" button="Create Task Type" modal-z-index="10050">
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
@@ -235,7 +235,7 @@
         </label>
     </x-form-modal>
 
-    <x-form-modal modalId="task-create-mode-modal" module="Task Mode" formId="taskCreateModeInlineForm" action="{{ route('settings.task-modes.store') }}" button="Create Task Mode" modalZIndex="1000">
+    <x-form-modal modal-id="task-create-mode-modal" module="Task Mode" form-id="taskCreateModeInlineForm" action="{{ route('settings.task-modes.store') }}" button="Create Task Mode" modal-z-index="10050">
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
