@@ -30,6 +30,7 @@ export function initTomSelect(root = document) {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['clear_button'],
+            dropdownParent: 'body',
         };
 
         if (el.dataset.renderSubtype === 'true') {
@@ -106,6 +107,7 @@ export function initTomSelect(root = document) {
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'clear_button', 'remove_button'],
             searchField: ['text', 'subtype'],
+            dropdownParent: 'body',
             render: {
                 option: function (data, escape) {
                     return `
@@ -144,6 +146,7 @@ export function initTomSelect(root = document) {
             plugins: ['remove_button', 'clear_button'],
             maxItems: maxItems,
             persist: false,
+            dropdownParent: 'body',
             createOnBlur: true,
             hideSelected: true,
             closeAfterSelect: false,
@@ -211,6 +214,7 @@ export function initTomSelect(root = document) {
         const instance = new TomSelect(el, {
             plugins: ['remove_button', 'dropdown_input', 'clear_button'],
             maxItems: null,
+            dropdownParent: 'body',
         });
 
         applyDisabledStyles(instance, el);
@@ -229,6 +233,7 @@ export function initTomSelect(root = document) {
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'clear_button'],
             sortField: sort ? { field: "text", direction: "asc" } : null,
+            dropdownParent: 'body',
 
             // Lazy load items via AJAX
             load: function (query, callback) {

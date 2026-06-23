@@ -290,37 +290,6 @@
             @enderror
         </div>
 
-        <!-- Project Status -->
-        {{-- <div>
-            <label for="project_status" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Project Status <x-red-star /></label>
-            <select name="project_status" id="project_status" class="tom-select-no-search w-full">
-                @php
-                    $defaultProjectStatusId = old('project_status', $statuses->firstWhere('is_default', true)?->id);
-                @endphp
-                @foreach ($statuses as $status)
-                    <option value="{{ $status->id }}" {{ (string) $defaultProjectStatusId === (string) $status->id ? 'selected' : '' }}>{{ $status->name }}{{ $status->type ? ' (' . str_replace('_', ' ', ucfirst($status->type)) . ')' : '' }}</option>
-                @endforeach
-            </select>
-            @error('project_status')
-                <p class="mt-2 text-sm text-error-300">
-                    {{ $message }}
-                </p>
-            @enderror
-        </div>
-
-        <!-- Start Date -->
-        <div>
-            <label for="start_date" class="mb-2.5 block text-left text-sm text-bgray-600 dark:text-bgray-50">Start Date</label>
-            <input type="date" name="start_date" id="start_date" class="datepicker w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400" value="{{ old('start_date', now($globalTimezone)->toDateString()) }}" data-format="{{ $globalDateFormat }}" placeholder="Select a date">
-
-            @error('start_date')
-                <p class="mt-2 text-sm text-error-300">
-                    {{ $message }}
-                </p>
-            @enderror
-        </div> --}}
-
     </x-form-modal>
     @vite('resources/js/modules/projects/project-delete.js')
 @endsection
