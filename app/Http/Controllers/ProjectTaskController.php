@@ -314,6 +314,9 @@ class ProjectTaskController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'color']);
 
+        $nextTaskTypeSortOrder = ((int) TaskType::max('sort_order')) + 1;
+        $nextTaskModeSortOrder = ((int) TaskMode::max('sort_order')) + 1;
+
         return view('projects.partials.tabs.tasks', [
             'project' => $project,
             'taskGroups' => $taskGroups,
@@ -332,6 +335,8 @@ class ProjectTaskController extends Controller
             'defaultTaskStatusId' => $defaultTaskStatusId,
             'taskTypeOptions' => $taskTypeOptions,
             'taskModeOptions' => $taskModeOptions,
+            'nextTaskTypeSortOrder' => $nextTaskTypeSortOrder,
+            'nextTaskModeSortOrder' => $nextTaskModeSortOrder,
             'taskPriorityOptions' => $taskPriorityOptions,
             'defaultTaskPriority' => $defaultTaskPriority,
             'defaultTaskEstimateMinutes' => $defaultTaskEstimateMinutes,
