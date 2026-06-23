@@ -117,6 +117,10 @@
                             #
                         </th>
 
+                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
+                            User
+                        </th>
+
                         <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
                             Project
                         </th>
@@ -131,10 +135,6 @@
 
                         <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
                             Task
-                        </th>
-
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
-                            User
                         </th>
 
                         <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
@@ -189,6 +189,10 @@
                                 {{ $reportNumber }}
                             </td>
 
+                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
+                                {{ $report->user?->name ?? '-' }}
+                            </td>
+
                             <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
                                 @if ($projectUrl)
                                     <a href="{{ $projectUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
@@ -208,17 +212,57 @@
                             </td>
 
                             <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
+                                @php
+                                    $taskRequestStatus = $report->task?->request_status;
+                                    $statusTextClass = '';
+                                    $icon = null;
+                                    $tooltip = '';
+
+                                    if ($taskRequestStatus === 'pending') {
+                                        $statusTextClass = 'text-warning-300';
+                                        $tooltip = 'Pending approval : ' . ($report->task?->name ?? '');
+                                        $icon = 'hourglass';
+                                    } elseif ($taskRequestStatus === 'rejected') {
+                                        $statusTextClass = 'text-error-300 font-medium';
+                                        $tooltip = 'Rejected : ' . ($report->task?->name ?? '');
+                                        $icon = 'lock';
+                                    }
+                                @endphp
                                 @if ($taskUrl)
-                                    <a href="{{ $taskUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
-                                        {{ $report->task?->name ?? '-' }}
+                                    <a href="{{ $taskUrl }}" class="inline-flex items-center gap-1 transition hover:text-success-300 dark:hover:text-success-300 min-w-0 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
+                                        @if ($icon === 'hourglass')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path d="M7 3H17" stroke-width="2" stroke-linecap="round" />
+                                                <path d="M7 21H17" stroke-width="2" stroke-linecap="round" />
+                                                <path d="M8 3C8 7 10.5 8.5 12 10C13.5 11.5 16 13 16 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M16 3C16 7 13.5 8.5 12 10C10.5 11.5 8 13 8 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        @elseif ($icon === 'lock')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <rect x="5" y="11" width="14" height="10" rx="2" stroke-width="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
+                                            </svg>
+                                        @endif
+                                        <span class="truncate min-w-0">{{ $report->task?->name ?? '-' }}</span>
                                     </a>
                                 @else
-                                    {{ $report->task?->name ?? '-' }}
+                                    <span class="inline-flex items-center gap-1 min-w-0 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
+                                        @if ($icon === 'hourglass')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path d="M7 3H17" stroke-width="2" stroke-linecap="round" />
+                                                <path d="M7 21H17" stroke-width="2" stroke-linecap="round" />
+                                                <path d="M8 3C8 7 10.5 8.5 12 10C13.5 11.5 16 13 16 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M16 3C16 7 13.5 8.5 12 10C10.5 11.5 8 13 8 17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        @elseif ($icon === 'lock')
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <rect x="5" y="11" width="14" height="10" rx="2" stroke-width="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
+                                            </svg>
+                                        @endif
+                                        <span class="truncate min-w-0">{{ $report->task?->name ?? '-' }}</span>
+                                    </span>
                                 @endif
-                            </td>
-
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
-                                {{ $report->user?->name ?? '-' }}
                             </td>
 
                             <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-date">
@@ -258,6 +302,7 @@
         <x-filters.multi-select name="project_milestone_id" label="Milestone" :options="$projectMilestones" />
         <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
         <x-filters.multi-select name="user_id" label="Users" :options="$users" />
+        <x-filters.select name="request_status" label="Task Request Status" :options="$requestStatuses" />
     </x-filters.drawer>
 
     <script id="task-filter-dependencies" type="application/json">

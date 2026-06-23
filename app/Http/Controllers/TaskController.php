@@ -16,7 +16,6 @@ use App\Models\TaskNote;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Services\AttachmentService;
-use App\Services\NotificationService;
 use App\Services\Task\RunningTaskNavbarService;
 use App\Services\TaskFilterService;
 use App\Services\TaskFormService;
@@ -204,7 +203,7 @@ class TaskController extends Controller
     }
 
     // Store newly created task with minimal required fields, used for quick create from various places in the app
-    public function store(TaskQuickStoreRequest $request, NotificationService $notificationService, TaskServices $taskServices): JsonResponse
+    public function store(TaskQuickStoreRequest $request, TaskServices $taskServices): JsonResponse
     {
         $validated = $request->validated();
         $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
@@ -214,15 +213,6 @@ class TaskController extends Controller
             ->findOrFail($validated['project_id']);
 
         $task = $taskServices->createQuickTask($project, $validated);
-
-        if ($task->isApprovedRequest()) {
-            $notificationService->sendTaskAssignmentIfNeeded(
-                $task,
-                $task->current_assignee_id ? (int) $task->current_assignee_id : null
-            );
-        } else if ($requestType === 'self') {
-            $notificationService->notifyTaskRequestCreated($task);
-        }
 
         return response()->json([
             'status' => true,

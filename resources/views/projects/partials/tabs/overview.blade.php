@@ -170,8 +170,8 @@
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <div class="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">User Wise</h4>
                 </div>
@@ -186,7 +186,7 @@
                 </div>
             </div>
 
-            <div class="max-h-[560px] min-h-[320px] overflow-y-auto p-5">
+            <div class="min-h-[320px] flex-1 overflow-y-auto p-5">
                 @if ($taskAssigneeOverview->isEmpty())
                     <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-8 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                         No task assignments recorded yet.
@@ -203,7 +203,7 @@
                                 $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
-                                <a href="{{ route('reports.tasks', ['project_id' => [$project->id], 'current_assignee_id' => [$assignee['id']]]) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
+                                <a href="{{ route('reports.time_tracking', ['project_id' => [$project->id], 'user_id' => [$assignee['id']], 'request_status' => 'approved']) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
                                     <x-user-avatar :name="$assignee['name']" :image="$assignee['profile_image_url']" class="h-10 w-10 flex-shrink-0" />
 
                                     <div class="min-w-0">

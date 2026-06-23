@@ -9,6 +9,7 @@ use App\Exports\TaskReportExport;
 use App\Models\Customer;
 use App\Models\Project;
 use App\Models\ProjectStatus;
+use App\Models\Task;
 use App\Services\Reports\DailyTimeReportService;
 use App\Services\Reports\MilestoneReportService;
 use App\Services\Reports\ProductivityReportService;
@@ -365,6 +366,12 @@ class ReportController extends Controller
         $columns = $reportService->getColumnLabels();
         $canExport = $reportService->canExport($request);
 
+        $requestStatuses = [
+            Task::REQUEST_PENDING => 'Pending',
+            Task::REQUEST_APPROVED => 'Approved',
+            Task::REQUEST_REJECTED => 'Rejected',
+        ];
+
         $dailyStats = [
             'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
 
@@ -405,7 +412,8 @@ class ReportController extends Controller
             'totalMinutes',
             'columns',
             'canExport',
-            'dailyStats'
+            'dailyStats',
+            'requestStatuses'
         ));
     }
 

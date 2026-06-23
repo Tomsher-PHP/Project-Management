@@ -93,6 +93,14 @@ class TimeTrackingReportService
                     $taskQuery->whereIn('project_sprint_id', $sprintIds);
                 });
             })
+            ->when(filled($request->input('request_status')), function ($q) use ($request) {
+                $requestStatus = trim((string) $request->input('request_status'));
+                if (!empty($requestStatus)) {
+                    $q->whereHas('task', function ($taskQuery) use ($requestStatus) {
+                        $taskQuery->where('tasks.request_status', $requestStatus);
+                    });
+                }
+            })
             ->when($dateRange['type'] === 'between', function ($q) use ($dateRange) {
                 $q->whereBetween('started_at', [
                     $dateRange['start']->toDateString() . ' 00:00:00',
@@ -117,7 +125,7 @@ class TimeTrackingReportService
         return $this->baseQuery($request)
             ->with([
                 'user:id,name',
-                'task:id,name,project_id,project_milestone_id,project_sprint_id',
+                'task:id,name,project_id,project_milestone_id,project_sprint_id,request_type,request_status',
                 'task.project:id,name,project_flow,deleted_at',
                 'task.projectMilestone:id,project_id,name',
                 'task.projectSprint:id,project_id,project_milestone_id,name',

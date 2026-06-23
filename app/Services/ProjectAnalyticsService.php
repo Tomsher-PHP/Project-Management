@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\Task;
-use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
 use App\Models\User;
@@ -138,18 +137,18 @@ class ProjectAnalyticsService
     // Get task assignment overview for a project, grouped by user
     public function getTaskAssigneeOverview(Project $project): Collection
     {
-        $taskMetricsByUser = TaskAssignmentLog::query()
-            ->join('tasks', 'tasks.id', '=', 'task_assignment_logs.task_id')
+        $taskMetricsByUser = TaskTimeLog::query()
+            ->join('tasks', 'tasks.id', '=', 'task_time_logs.task_id')
             ->selectRaw('
-            task_assignment_logs.user_id,
-            COALESCE(SUM(task_assignment_logs.worked_time_seconds), 0) as worked_time_seconds,
+            task_time_logs.user_id,
+            COALESCE(SUM(task_time_logs.duration_seconds), 0) as worked_time_seconds,
             COALESCE(MAX(tasks.estimated_time_seconds), 0) as estimated_time_seconds,
-            task_assignment_logs.task_id
+            task_time_logs.task_id
         ')
             ->where('tasks.project_id', $project->id)
             ->where('tasks.request_status', Task::REQUEST_APPROVED)
             ->whereNull('tasks.deleted_at')
-            ->groupBy('task_assignment_logs.user_id', 'task_assignment_logs.task_id');
+            ->groupBy('task_time_logs.user_id', 'task_time_logs.task_id');
 
         $assignmentMetricsByUserId = DB::query()
             ->fromSub($taskMetricsByUser, 'task_metrics_by_user')
@@ -163,11 +162,7 @@ class ProjectAnalyticsService
             ->get()
             ->keyBy('user_id');
 
-        if ($assignmentMetricsByUserId->isEmpty()) {
-            return collect();
-        }
-
-        return User::query()
+        $assigneeOverviewById = User::query()
             ->withTrashed()
             ->with('primaryAttachment')
             ->whereIn('id', $assignmentMetricsByUserId->keys())
@@ -185,6 +180,32 @@ class ProjectAnalyticsService
                     'profile_image_url' => $user->profile_image_url,
                 ];
             })
+            ->keyBy('id');
+
+        $displayAssigneeOverview = $assigneeOverviewById
+            ->filter(fn(array $assignee) => (int) ($assignee['worked_time_seconds'] ?? 0) > 0);
+
+        $project
+            ->membersAll()
+            ->with('primaryAttachment')
+            ->where('users.is_active', true)
+            ->wherePivot('is_active', true)
+            ->whereNull('project_members.removed_at')
+            ->get(['users.id', 'users.name'])
+            ->each(function (User $member) use ($assigneeOverviewById, $displayAssigneeOverview) {
+                $metrics = $assigneeOverviewById->get($member->id, []);
+
+                $displayAssigneeOverview->put($member->id, [
+                    'id' => $member->id,
+                    'name' => $metrics['name'] ?? $member->name,
+                    'count' => (int) ($metrics['count'] ?? 0),
+                    'worked_time_seconds' => (int) ($metrics['worked_time_seconds'] ?? 0),
+                    'estimated_time_seconds' => (int) ($metrics['estimated_time_seconds'] ?? 0),
+                    'profile_image_url' => $metrics['profile_image_url'] ?? $member->profile_image_url,
+                ]);
+            });
+
+        return $displayAssigneeOverview
             ->sort(function (array $left, array $right) {
                 $workedTimeComparison = $right['worked_time_seconds'] <=> $left['worked_time_seconds'];
 

@@ -10,13 +10,28 @@ if (!function_exists('taskStatusIsCompleted')) {
 }
 
 if (!function_exists('taskDueColor')) {
-    function taskDueColor($dueAt, $estimateSeconds = null, $status = null): string
+    function taskDueColor($dueAt, $estimateSeconds = null, $status = null, $completedAt = null): string
     {
+        if ($status instanceof \App\Models\Task) {
+            $completedAt = $status->completed_at;
+            $status = $status->status;
+        }
+
         if (!$dueAt) {
             return 'normal';
         }
 
-        if (taskStatusIsCompleted($status)) {
+        $isCompleted = taskStatusIsCompleted($status);
+
+        if ($isCompleted) {
+            if ($completedAt) {
+                $completedAtCarbon = \Illuminate\Support\Carbon::parse($completedAt);
+                $dueAtCarbon = \Illuminate\Support\Carbon::parse($dueAt);
+
+                if ($completedAtCarbon->gt($dueAtCarbon)) {
+                    return 'red';
+                }
+            }
             return 'normal';
         }
 
@@ -43,24 +58,30 @@ if (!function_exists('taskDueColor')) {
 }
 
 if (!function_exists('taskDueDateClass')) {
-    function taskDueDateClass($dueAt, $estimateSeconds = null, $status = null): string
+    function taskDueDateClass($dueAt, $estimateSeconds = null, $status = null, $completedAt = null): string
     {
         if (!$dueAt) {
             return 'task-due-date--normal';
         }
 
-        return 'task-due-date--' . taskDueColor($dueAt, $estimateSeconds, $status);
+        return 'task-due-date--' . taskDueColor($dueAt, $estimateSeconds, $status, $completedAt);
     }
 }
 
 if (!function_exists('taskDueDateIcon')) {
-    function taskDueDateIcon($dueAt, $estimateSeconds = null, $status = null): HtmlString
+    function taskDueDateIcon($dueAt, $estimateSeconds = null, $status = null, $completedAt = null): HtmlString
     {
+        if ($status instanceof \App\Models\Task) {
+            $completedAt = $status->completed_at;
+            $status = $status->status;
+        }
+
         if (!$dueAt) {
             return new HtmlString('');
         }
 
-        $dueColor = taskDueColor($dueAt, $estimateSeconds, $status);
+        $isCompleted = taskStatusIsCompleted($status);
+        $dueColor = taskDueColor($dueAt, $estimateSeconds, $status, $completedAt);
 
         if ($dueColor === 'orange') {
             return new HtmlString('
@@ -76,6 +97,17 @@ if (!function_exists('taskDueDateIcon')) {
         }
 
         if ($dueColor === 'red') {
+            if ($isCompleted) {
+                return new HtmlString('
+                    <svg class="task-due-date__icon task-due-date__icon--red" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M9 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M13.5 15.5C12.2 16.5 10.7 17 9 17C4.6 17 1 13.4 1 9C1 4.6 4.6 1 9 1C13.4 1 17 4.6 17 9C17 10.2 16.7 11.4 16.2 12.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        <path d="M16.5 12.5v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                        <circle cx="16.5" cy="17.5" r="0.9" fill="currentColor"/>
+                    </svg>
+                ');
+            }
+
             return new HtmlString('
                 <svg class="task-due-date__icon task-due-date__icon--red" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M10 2.75L17 15.25C17.1667 15.5278 17.1667 15.8611 17 16.1389C16.8056 16.3796 16.5093 16.5 16.1111 16.5H3.88889C3.49074 16.5 3.19444 16.3796 3 16.1389C2.83333 15.8611 2.83333 15.5278 3 15.25L10 2.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>

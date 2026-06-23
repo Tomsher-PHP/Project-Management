@@ -32,6 +32,7 @@ use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
+use App\Http\Controllers\ScheduleTaskController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TaskController;
@@ -409,6 +410,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class)->middleware(['permission.type:task.delete', 'can:delete,task'])->only(['destroy']);
     Route::get('tasks/kanban-view', [TaskController::class, 'kanbanView'])->middleware(['permission.type:task.view'])->name('tasks.kanban.view');
     Route::get('tasks/dropdown-options', [TaskController::class, 'dropdownOptions'])->name('tasks.dropdown-options');
+
+    // schedule task routes
+    Route::prefix('schedule-tasks')->as('schedule-tasks.')->group(function () {
+        Route::get('/', [ScheduleTaskController::class, 'index'])->middleware('permission.type:task.view')->name('index');
+        Route::post('/', [ScheduleTaskController::class, 'store'])->middleware('permission.type:task.create')->name('store');
+        Route::get('{taskSchedule}/edit', [ScheduleTaskController::class, 'edit'])->middleware('permission.type:task.edit')->name('edit');
+        Route::put('{taskSchedule}', [ScheduleTaskController::class, 'update'])->middleware('permission.type:task.edit')->name('update');
+        Route::patch('{taskSchedule}/toggle-status', [ScheduleTaskController::class, 'toggleStatus'])->middleware('permission.type:task.delete')->name('toggle-status');
+        Route::delete('{taskSchedule}', [ScheduleTaskController::class, 'destroy'])->middleware('permission.type:task.delete')->name('destroy');
+    });
 
     // Task status, order change route
     Route::get('/tasks/kanban', [TaskController::class, 'kanbanMode'])->name('tasks.kanbanMode');

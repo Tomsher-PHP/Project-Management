@@ -41,37 +41,6 @@
     $limitText = fn(?string $value, int $length = 20, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
 @endphp
 
-@once
-    @push('styles')
-        <style>
-            @keyframes task-timer-button-pulse {
-                0% {
-                    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.24);
-                }
-
-                70% {
-                    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
-                }
-
-                100% {
-                    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
-                }
-            }
-
-            .task-timer-btn--running {
-                background-color: #fee2e2 !important;
-                color: #dc2626 !important;
-                animation: task-timer-button-pulse 1.35s ease-in-out infinite;
-            }
-
-            .task-timer-btn--running:hover {
-                background-color: #fecaca !important;
-                color: #b91c1c !important;
-            }
-        </style>
-    @endpush
-@endonce
-
 <div class="card rounded-md bg-white shadow-sm transition hover:shadow-md dark:bg-darkblack-600" data-task-id="{{ $task->id }}">
     <div class="space-y-3 p-4">
         <div class="{{ $canOpenTask ? 'cursor-pointer' : 'cursor-default' }}" @if ($canOpenTask) data-project-task-detail-open
@@ -112,8 +81,8 @@
                 </span>
 
                 @if ($dueDate)
-                    <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $dueDateStatus) }}" title="{{ $dueDateDisplay }}">
-                        {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $dueDateStatus) !!}
+                    <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
+                        {!! taskDueDateIcon($dueDate, $task->estimated_time_seconds, $task) !!}
                         <span class="truncate text-[11px] font-medium">{{ $dueDateDisplay }}</span>
                     </span>
                 @endif
