@@ -30,8 +30,17 @@ class ScheduleTaskController extends Controller
         $user = $request->user();
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
 
-        $taskSchedules = TaskSchedule::query()
-            ->accessibleBy($user)
+        $baseQuery = TaskSchedule::query()->accessibleBy($user);
+
+        // Calculate dynamic filter options based on the base query before filtering
+        $projectIds = (clone $baseQuery)->distinct()->pluck('project_id')->filter();
+        $filterProjects = $projectIds->isEmpty() ? collect() : Project::whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']);
+
+        $assigneeIds = (clone $baseQuery)->whereNotNull('current_assignee_id')->distinct()->pluck('current_assignee_id')->filter();
+        $filterAssignees = $assigneeIds->isEmpty() ? collect() : User::whereIn('id', $assigneeIds)->orderBy('name')->get(['id', 'name']);
+
+        $taskSchedules = (clone $baseQuery)
+            ->filter($request->all())
             ->with([
                 'project:id,name,project_code',
                 'projectMilestone:id,name',
@@ -52,6 +61,8 @@ class ScheduleTaskController extends Controller
             'taskSchedules' => $taskSchedules,
             'perPage' => $perPage,
             'scheduleDependencies' => $this->buildDependencies($projects),
+            'filterProjects' => $filterProjects,
+            'filterAssignees' => $filterAssignees,
             ...$formData,
         ]);
     }

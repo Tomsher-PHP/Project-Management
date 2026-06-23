@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\ScheduleTaskFilterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class TaskSchedule extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, ScheduleTaskFilterable;
 
     public const FREQUENCY_DAILY = 'daily';
 

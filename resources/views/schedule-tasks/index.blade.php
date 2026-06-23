@@ -7,6 +7,8 @@
             @can('task.create')
                 <x-button.create-button type="button" data-schedule-task-open title="Schedule a recurring task" label="Schedule Task" />
             @endcan
+
+            <x-filters.button />
         </div>
 
         <section>
@@ -81,6 +83,14 @@
         @endcan
         <div data-schedule-task-edit-host></div>
     </main>
+
+    <x-filters.drawer>
+        <x-filters.input-search name="search" label="Name" />
+        <x-filters.date-range />
+        <x-filters.multi-select name="project_id" label="Project" :options="$filterProjects" />
+        <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$filterAssignees" />
+        <x-filters.select name="status" label="Status" :options="['active' => 'Active', 'disabled' => 'Disabled']" />
+    </x-filters.drawer>
 
     <script id="schedule-task-dependencies" type="application/json">@json($scheduleDependencies)</script>
 @endsection
