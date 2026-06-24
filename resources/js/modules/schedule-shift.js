@@ -73,6 +73,32 @@ const loadWeek = async (date, extraParams = {}) => {
         syncWeekPickerInput(date);
         updateScheduleUrl(params);
 
+        const toggleTodayHighlight = (dateStr) => {
+            const todayBtn = document.getElementById("todayWeek");
+            if (!todayBtn) return;
+            
+            const todayStr = todayBtn.dataset.today;
+            if (!todayStr) return;
+            
+            const todayDate = new Date(todayStr);
+            todayDate.setHours(0, 0, 0, 0);
+            
+            const startDate = new Date(dateStr);
+            startDate.setHours(0, 0, 0, 0);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+        
+            const isTodayInWeek = todayDate >= startDate && todayDate <= endDate;
+            
+            if (isTodayInWeek) {
+                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20";
+            } else {
+                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white";
+            }
+        };
+        toggleTodayHighlight(date);
+
     } catch (err) {
         console.error("Failed to load schedule:", err);
     } finally {
