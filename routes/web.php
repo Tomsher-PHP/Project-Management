@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/summary', [DashboardController::class, 'summary'])->middleware('permission.type:dashboard.view')->name('dashboard.summary');
     Route::get('/dashboard/worked-time', [DashboardController::class, 'workedTime'])->middleware('permission.type:dashboard.view')->name('dashboard.worked-time');
     Route::get('/dashboard/running-tasks', [DashboardController::class, 'runningTasks'])->middleware('permission.type:dashboard.view')->name('dashboard.running-tasks');
+    Route::get('/dashboard/tile-details', [DashboardController::class, 'tileDetails'])->middleware('permission.type:dashboard.view')->name('dashboard.tile-details');
     // End of Dashboard Routes
 
     // User workspace route

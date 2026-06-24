@@ -5,7 +5,7 @@
     <!-- KPI cards grid: custom-scroll flex items-center gap-3 overflow-x-auto py-1 -->
     <div class="custom-scroll flex items-center gap-3 overflow-x-auto py-1">
         <!-- Total Projects Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="total_projects">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Total Projects</span>
@@ -23,7 +23,7 @@
         </div>
 
         <!-- Open Projects Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="open_projects">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Open</span>
@@ -41,7 +41,7 @@
         </div>
 
         <!-- In Progress Projects Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="in_progress_projects">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">In Progress</span>
@@ -60,7 +60,7 @@
         </div>
 
         <!-- Archived Projects Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="archived_projects">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Archived</span>
@@ -78,7 +78,7 @@
         </div>
 
         <!-- Completed Projects Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="completed_projects">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Completed</span>
