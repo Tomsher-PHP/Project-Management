@@ -41,7 +41,7 @@
                         <div class="flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-bgray-300 bg-white p-1 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
 
                             <!-- Previous button -->
-                            <button id="prevWeek" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" aria-label="Previous week">
+                            <button id="prevWeek" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Previous week">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                                 </svg>
@@ -50,7 +50,7 @@
                             <!-- Week Picker (Calendar Icon + Label) -->
                             <div class="relative flex items-center gap-1">
                                 <!-- Calendar icon button -->
-                                <button type="button" id="weekPickerBtn" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" aria-label="Open calendar">
+                                <button type="button" id="weekPickerBtn" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Open calendar">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
                                     </svg>
@@ -66,7 +66,7 @@
                             </div>
 
                             <!-- Next button -->
-                            <button id="nextWeek" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" aria-label="Next week">
+                            <button id="nextWeek" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" aria-label="Next week">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                                 </svg>
@@ -78,7 +78,7 @@
                             @php
                                 $isTodayInWeek = \Carbon\Carbon::parse($startOfWeek)->lte(\Carbon\Carbon::parse($todayDate)) && \Carbon\Carbon::parse($endOfWeek)->gte(\Carbon\Carbon::parse($todayDate));
                             @endphp
-                            <button id="todayWeek" data-today="{{ $todayDate }}" class="rounded-md px-3 py-1.5 text-sm font-semibold transition {{ $isTodayInWeek ? 'bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20' : 'text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white' }}">
+                            <button id="todayWeek" data-today="{{ $todayDate }}" class="rounded-md px-3 py-1.5 text-sm font-semibold transition {{ $isTodayInWeek ? 'bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-300 dark:text-bgray-900' : 'text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400' }}">
                                 Today
                             </button>
 

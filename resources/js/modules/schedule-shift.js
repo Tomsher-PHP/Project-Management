@@ -92,9 +92,9 @@ const loadWeek = async (date, extraParams = {}) => {
             const isTodayInWeek = todayDate >= startDate && todayDate <= endDate;
             
             if (isTodayInWeek) {
-                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20";
+                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-300 dark:text-bgray-900";
             } else {
-                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white";
+                todayBtn.className = "rounded-md px-3 py-1.5 text-sm font-semibold transition text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400";
             }
         };
         toggleTodayHighlight(date);
