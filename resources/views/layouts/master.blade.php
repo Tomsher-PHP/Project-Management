@@ -3,7 +3,7 @@
 
 <head>
     <script>
-        const theme = '{{ $userTheme ?? "light" }}';
+        const theme = '{{ $userTheme ?? 'light' }}';
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -55,7 +55,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700 h-screen">
+            <div class="body-wrapper flex-1 overflow-x-hidden dark:bg-darkblack-700">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
