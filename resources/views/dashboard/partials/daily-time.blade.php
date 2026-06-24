@@ -2,8 +2,11 @@
 <div class="rounded-xl border border-bgray-100 bg-white p-6 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600" data-worked-time-section data-worked-time-url="{{ route('dashboard.worked-time') }}">
     <!-- Card Header -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-bgray-100 pb-4 dark:border-darkblack-500">
-        <div>
+        <div class="flex items-center gap-3">
             <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Daily Time</h3>
+            <a href="{{ route('reports.daily_time', ['from_date' => today()->toDateString(), 'to_date' => today()->toDateString()]) }}" id="view-all-daily-time" data-base-url="{{ route('reports.daily_time') }}" class="text-sm font-semibold text-success-300 hover:text-success-400 hover:underline transition-colors">
+                View All
+            </a>
         </div>
 
         <!-- Filters -->

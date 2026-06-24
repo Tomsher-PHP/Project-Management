@@ -185,6 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         };
 
+        const updateViewAllUrl = (dateString) => {
+            const viewAllBtn = document.getElementById('view-all-daily-time');
+            if (viewAllBtn) {
+                const baseUrl = viewAllBtn.getAttribute('data-base-url');
+                if (baseUrl) {
+                    viewAllBtn.href = `${baseUrl}?from_date=${dateString}&to_date=${dateString}`;
+                }
+            }
+        };
+
         // Initialize custom flatpickr on datepicker input
         if (datepickerInput) {
             initDatepicker('#worked-time-datepicker', {
@@ -200,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             setActiveFilterButton(null);
                         }
                         loadWorkedTime(dateStr);
+                        updateViewAllUrl(dateStr);
                     }
                 }
             });
@@ -219,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     setActiveFilterButton('today');
                     loadWorkedTime(todayStr);
+                    updateViewAllUrl(todayStr);
                 } else if (filter === 'yesterday') {
                     const yesterdayStr = getLocalDateString(-1);
                     if (datepickerInput) {
@@ -229,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     setActiveFilterButton('yesterday');
                     loadWorkedTime(yesterdayStr);
+                    updateViewAllUrl(yesterdayStr);
                 }
             });
         });
