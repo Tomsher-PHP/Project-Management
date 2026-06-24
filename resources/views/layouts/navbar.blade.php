@@ -16,6 +16,7 @@
                 </svg>
             </span>
         </button>
+        <!-- Page Title and User Selector -->
         @include('layouts.partials.navbar._page-title')
 
         <!-- quick access-->
