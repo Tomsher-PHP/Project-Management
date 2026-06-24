@@ -148,8 +148,8 @@
                             <span>{{ $shiftSegment['start_label'] }}</span>
                         @endif
 
-                        @if($assignedShift['is_weekend'] ?? false)
-                            <div class="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded bg-bgray-900/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm dark:bg-darkblack-600/60">Week Off</div>
+                        @if ($assignedShift['is_weekend'] ?? false)
+                            <div class="absolute left-1/2 top-2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500 shadow-sm dark:bg-darkblack-500 dark:text-red-400">Week Off</div>
                         @endif
 
                         @if (!empty($shiftSegment['end_label']))
