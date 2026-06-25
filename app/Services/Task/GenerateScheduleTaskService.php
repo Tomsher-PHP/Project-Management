@@ -33,7 +33,7 @@ class GenerateScheduleTaskService
                     ->whereNull('end_date')
                     ->orWhereDate('end_date', '>=', $scheduledFor->toDateString());
             })
-            ->whereHas('project', fn ($query) => $query->whereNull('projects.deleted_at'))
+            ->whereHas('project', fn($query) => $query->whereNull('projects.deleted_at'))
             ->with('project')
             ->orderBy('id')
             ->chunkById(100, function ($taskSchedules) use ($scheduledFor, &$generatedCount) {
@@ -195,7 +195,7 @@ class GenerateScheduleTaskService
             'task_mode_id' => $taskSchedule->task_mode_id,
             'priority' => $taskSchedule->priority,
             'current_assignee_id' => $taskSchedule->current_assignee_id,
-            'due_date_time' => $scheduledFor->copy()->addHours((int) $taskSchedule->due_after_hours),
+            'due_date_time' => $taskSchedule->due_after_seconds > 0 ? $scheduledFor->copy()->addSeconds($taskSchedule->due_after_seconds) : null,
             'estimated_time_minutes' => intdiv((int) $taskSchedule->estimated_time_seconds, 60),
             'is_billable' => (bool) $taskSchedule->is_billable,
         ];

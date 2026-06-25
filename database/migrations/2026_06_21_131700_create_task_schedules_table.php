@@ -64,7 +64,7 @@ return new class extends Migration
             $table->json('month_days')->nullable();
 
             // Generated Task Due Date
-            $table->unsignedInteger('due_after_hours')->default(0);
+            $table->unsignedBigInteger('due_after_seconds')->default(0);
 
             // Runtime Tracking
             $table->date('last_generated_for')->nullable();
