@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\Filterable;
-use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
@@ -61,7 +60,7 @@ class Shift extends Model
     {
         return $this->time_from
             ? $this->time_from
-                ->format(config('constants.time_format'))
+            ->format(config('constants.time_format'))
             : null;
     }
 
@@ -69,7 +68,7 @@ class Shift extends Model
     {
         return $this->time_to
             ? $this->time_to
-                ->format(config('constants.time_format'))
+            ->format(config('constants.time_format'))
             : null;
     }
 

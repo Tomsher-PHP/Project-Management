@@ -455,9 +455,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
     Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
     Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
-
     Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.bulk-action');
-
     Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.action');
     // End Break Request routes
 

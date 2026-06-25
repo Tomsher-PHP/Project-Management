@@ -39,7 +39,7 @@ class ShiftController extends Controller
 
     public function store(ShiftRequest $request, ShiftService $service)
     {
-        activity()->withoutLogs(fn() => $service->createShift($request->validated()));
+        $service->createShift($request->validated());
 
         return redirect()->route('settings.shifts.index')->with('success', 'Shift created successfully.');
     }
@@ -55,18 +55,16 @@ class ShiftController extends Controller
 
     public function update(ShiftRequest $request, Shift $shift, ShiftService $service)
     {
-        activity()->withoutLogs(fn() => $service->updateShifts($shift, $request->validated()));
+        $service->updateShifts($shift, $request->validated());
 
         return redirect()->route('settings.shifts.index')->with('success', 'Shift updated successfully.');
     }
 
     public function destroy(Shift $shift)
     {
-        activity()->withoutLogs(function () use ($shift) {
-            DB::transaction(function () use ($shift) {
-                $shift->weekends()->delete();
-                $shift->delete();
-            });
+        DB::transaction(function () use ($shift) {
+            $shift->weekends()->delete();
+            $shift->delete();
         });
 
         return redirect()->back()->with('success', 'Shift deleted successfully.');
@@ -82,7 +80,7 @@ class ShiftController extends Controller
             ], Response::HTTP_BAD_REQUEST);
         }
         $shift->is_active = !$shift->is_active;
-        activity()->withoutLogs(fn() => $shift->save());
+        $shift->save();
 
         return response()->json([
             'success' => true,

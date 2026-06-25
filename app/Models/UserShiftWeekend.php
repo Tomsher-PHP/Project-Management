@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class UserShiftWeekend extends Model
 {
-    use LogsModelActivity;
 
     protected $fillable = [
         'user_shift_assignment_id',

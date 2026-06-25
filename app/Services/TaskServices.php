@@ -239,8 +239,8 @@ class TaskServices
                     'value' => $task->updatedBy?->name
                         ? trim($task->updatedBy->name . (
                             $task->updated_at
-                                ? ' at ' . \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
-                                : ''
+                            ? ' at ' . \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
+                            : ''
                         ))
                         : '--',
                 ],
@@ -1327,6 +1327,4 @@ class TaskServices
             })
             ->values();
     }
-
-
 }
