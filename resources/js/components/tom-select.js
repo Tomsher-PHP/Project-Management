@@ -29,7 +29,7 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            plugins: ['clear_button'],
+            plugins: ['remove_button'],
             dropdownParent: 'body',
         };
 
@@ -105,7 +105,7 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            plugins: ['dropdown_input', 'clear_button', 'remove_button'],
+            plugins: ['dropdown_input', 'remove_button'],
             searchField: ['text', 'subtype'],
             dropdownParent: 'body',
             render: {
@@ -143,7 +143,7 @@ export function initTomSelect(root = document) {
         const maxItems = el.dataset.maxItems || null;
 
         const instance = new TomSelect(el, {
-            plugins: ['remove_button', 'clear_button'],
+            plugins: ['remove_button'],
             maxItems: maxItems,
             persist: false,
             dropdownParent: 'body',
@@ -212,7 +212,7 @@ export function initTomSelect(root = document) {
         if (el.tomselect) return; // Prevent double init
 
         const instance = new TomSelect(el, {
-            plugins: ['remove_button', 'dropdown_input', 'clear_button'],
+            plugins: ['remove_button', 'dropdown_input'],
             maxItems: null,
             dropdownParent: 'body',
         });
@@ -231,7 +231,7 @@ export function initTomSelect(root = document) {
             create: false,
             persist: false,
             hideDropdownArrow: false,
-            plugins: ['dropdown_input', 'clear_button'],
+            plugins: ['dropdown_input', 'remove_button'],
             sortField: sort ? { field: "text", direction: "asc" } : null,
             dropdownParent: 'body',
 
