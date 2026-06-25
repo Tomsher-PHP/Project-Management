@@ -17,12 +17,12 @@
 
                     <!-- Header -->
                     <tr>
-                        <td style="background:#949596; padding:20px; text-align:center;">
-                            <h1 style="color:#ffffff; margin:0; font-size:20px; letter-spacing:0.5px;">
+                        <td style="background:#c8c8c8; padding:20px; text-align:center;">
+                            <h1 style="color:#242424; margin:0; font-size:20px; letter-spacing:0.5px;">
                                 {{ config('app.name') }}
                             </h1>
                         </td>
-                        <td style="background:#949596; padding:20px; text-align:center;">
+                        <td style="background:#c8c8c8; padding:20px; text-align:center;">
                             <img src="{{ url(config('assets.icons.logo')) }}" alt="Logo" height="40">
                         </td>
                     </tr>
