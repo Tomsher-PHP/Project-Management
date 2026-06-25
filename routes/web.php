@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/general-settings', [UserController::class, 'updateGeneralSettings'])->name('users.general.settings');
     Route::post('/users/change-password', [UserController::class, 'changePassword'])->name('users.change.password');
     Route::get('/users/{user}/shifts', [UserController::class, 'shifts'])->name('users.shifts');
+    Route::post('/users/{user}/initial-shift', [UserController::class, 'storeInitialShift'])->name('users.initial-shift.store');
     Route::get('/users/{user}/shift-calendar', [UserController::class, 'shiftCalendarData'])->name('users.shift-calendar');
 
     Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])->name('users.modal.update');

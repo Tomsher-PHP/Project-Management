@@ -164,6 +164,15 @@
                 </div>
             </section>
         </div>
+        @if (session('initial_shift_user_id'))
+            @php
+                $initialShiftUser = \App\Models\User::find(session('initial_shift_user_id'));
+                $onboardingShifts = \App\Models\Shift::active()->orderBy('is_default', 'desc')->orderBy('name', 'asc')->get();
+            @endphp
+            @if ($initialShiftUser)
+                @include('users.partials.initial-shift-modal', ['user' => $initialShiftUser, 'shifts' => $onboardingShifts])
+            @endif
+        @endif
         <!-- write your code here-->
     <!-- Page ends -->
 

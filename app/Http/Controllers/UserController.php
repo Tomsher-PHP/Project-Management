@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\InitialShiftAssignmentRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
@@ -11,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
+use App\Services\ScheduleShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -83,10 +85,22 @@ class UserController extends Controller
 
     public function store(UserRequest $request, UserService $service)
     {
-        $service->createUser($request->validated());
+        $user = $service->createUser($request->validated());
 
         return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
+            ->with('success', 'User created successfully.')
+            ->with('initial_shift_user_id', $user->id);
+    }
+
+    public function storeInitialShift(InitialShiftAssignmentRequest $request, User $user, ScheduleShiftService $scheduleShiftService)
+    {
+        $data = $request->validated();
+        $data['users'] = [$user->id];
+
+        $scheduleShiftService->schedule($data);
+
+        return redirect()->route('users.index')
+            ->with('success', 'Initial shift assigned successfully.');
     }
 
     public function edit(User $user)

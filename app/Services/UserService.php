@@ -44,7 +44,6 @@ class UserService
                 'password'  => Hash::make($plainPassword),
             ]);
 
-            $this->assignDefaultShift($user);
             $this->createDefaultGeneralSettings($user);
             $this->createDefaultNotificationSettings($user);
 
