@@ -2,7 +2,7 @@
 
 @section('page-content')
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <x-back-button :url="session('users_return_url', route('users.index'))" />
+        <x-back-button label="Back" />
 
         <div class="flex flex-wrap items-center gap-3">
             <button type="button" class="rounded-md bg-success-300 px-4 py-1.5 text-sm font-semibold text-white transition duration-200 hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-user-restore-bulk-button disabled>

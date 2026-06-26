@@ -83,7 +83,7 @@ class TeamController extends Controller
             'members' => $request->input('members', []),
         ]);
 
-        return redirect()->back()->with('success', 'Team updated successfully.');
+        return redirect(session('teams_return_url', route('teams.index')))->with('success', 'Team updated successfully.');
     }
 
     public function destroy(Team $team, AttachmentService $attachmentService)
@@ -94,9 +94,7 @@ class TeamController extends Controller
             $team->forceDelete();
         });
 
-        return redirect()
-            ->route('teams.index')
-            ->with('success', 'Team deleted successfully.');
+        return redirect(session('teams_return_url', route('teams.index')))->with('success', 'Team deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

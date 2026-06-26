@@ -9,7 +9,10 @@
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,2fr)_minmax(220px,auto)] lg:items-start">
         <div class="min-w-0">
             <div class="flex h-full items-start gap-3">
-                <div class="mt-1 h-12 w-1.5 shrink-0 rounded {{ $customer->is_active ? 'bg-success-300' : 'bg-bgray-300' }}"></div>
+                <div class="shrink-0 mt-1">
+                    <x-back-button />
+                </div>
+                <div class="mt-1 h-10 w-1 shrink-0 rounded {{ $customer->is_active ? 'bg-success-300' : 'bg-bgray-300' }}"></div>
 
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
