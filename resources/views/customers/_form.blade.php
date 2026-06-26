@@ -1,4 +1,4 @@
-<form action="{{ isset($customer) ? route('customers.update', $customer->id) : route('customers.store') }}" method="POST" class="space-y-10">
+<form action="{{ isset($customer) ? route('customers.update', $customer->id) : route('customers.store') }}" method="POST">
     @csrf
     @if (isset($customer))
         @method('PUT')
@@ -250,7 +250,7 @@
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Parent Industry</label>
             <select name="parent_id" id="customer_industry_parent_id" class="tom-select w-full" data-sort="0">
                 <option value="">Select Parent Industry</option>
-                @foreach (($parentIndustries ?? []) as $parentIndustry)
+                @foreach ($parentIndustries ?? [] as $parentIndustry)
                     <option value="{{ $parentIndustry->id }}">{{ $parentIndustry->name }}</option>
                 @endforeach
             </select>

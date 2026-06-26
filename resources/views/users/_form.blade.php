@@ -1,4 +1,4 @@
-<form action="{{ isset($user) ? route('users.update', $user->id) : route('users.store') }}" method="POST" class="space-y-10" enctype="multipart/form-data">
+<form action="{{ isset($user) ? route('users.update', $user->id) : route('users.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @if (isset($user))
         @method('PUT')

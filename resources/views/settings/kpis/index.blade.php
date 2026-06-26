@@ -3,18 +3,13 @@
 @section('page-content')
     <!-- Page starts -->
         <div class="mb-6 flex flex-wrap items-center gap-3">
+            <x-back-button label="Back" />
 
-        @can('kpi.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="KPI" data-url="{{ route('settings.kpis.store') }}" data-method="POST">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+            @can('kpi.create')
+                <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="KPI" data-url="{{ route('settings.kpis.store') }}" data-method="POST" label="KPI" />
+            @endcan
 
-                <span>New KPI</span>
-            </a>
-        @endcan
-
-        <x-filters.button />
+            <x-filters.button />
         </div>
 
         <!-- write your code here-->

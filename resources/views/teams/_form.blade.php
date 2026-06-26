@@ -1,4 +1,4 @@
-<form action="{{ isset($team) ? route('teams.update', $team->id) : route('teams.store') }}" method="POST" class="space-y-10" enctype="multipart/form-data">
+<form action="{{ isset($team) ? route('teams.update', $team->id) : route('teams.store') }}" method="POST" enctype="multipart/form-data">
 
     @csrf
     @if (isset($team))
@@ -64,9 +64,7 @@
     {{-- ================= Team Members Information ================= --}}
     <div>
         @php
-            $oldMembers = session()->hasOldInput('members')
-                ? collect(old('members', []))->values()
-                : null;
+            $oldMembers = session()->hasOldInput('members') ? collect(old('members', []))->values() : null;
             $memberUserLookup = $users->concat($teamUsers)->keyBy('id');
             $displayMembers = $oldMembers
                 ? $oldMembers->map(function ($member) use ($memberUserLookup) {
@@ -75,7 +73,7 @@
 
                     return (object) [
                         'user_id' => $userId,
-                        'name' => $user->name ?? ('User #' . $userId),
+                        'name' => $user->name ?? 'User #' . $userId,
                         'email' => $user->email ?? '',
                         'profile_image_url' => $user?->profile_image_url ?? asset(config('assets.images.default_avatar')),
                         'team_role' => $member['team_role'] ?? 'member',
@@ -90,11 +88,9 @@
                         'team_role' => $teamUser->pivot->team_role,
                     ];
                 });
-            $selectedMemberIds = $displayMembers->pluck('user_id')->filter()->map(fn ($id) => (int) $id)->all();
+            $selectedMemberIds = $displayMembers->pluck('user_id')->filter()->map(fn($id) => (int) $id)->all();
             $availableUsers = $users->whereNotIn('id', $selectedMemberIds);
-            $defaultTeamRole = $displayMembers->contains(fn ($member) => $member->team_role === 'team_leader')
-                ? 'member'
-                : 'team_leader';
+            $defaultTeamRole = $displayMembers->contains(fn($member) => $member->team_role === 'team_leader') ? 'member' : 'team_leader';
         @endphp
 
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
@@ -180,8 +176,8 @@
                     <select id="team_member" class="tom-select-multiple w-full" multiple>
                         @foreach ($availableUsers as $user)
                             <option value="{{ $user->id }}" data-data='@json([
-                                "email" => $user->email,
-                                "profile_image_url" => $user->profile_image_url,
+                                'email' => $user->email,
+                                'profile_image_url' => $user->profile_image_url,
                             ])'>
                                 {{ $user->name }}
                             </option>

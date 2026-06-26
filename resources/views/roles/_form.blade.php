@@ -1,4 +1,4 @@
-<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST" class="space-y-10">
+<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST">
 
     @csrf
     @if (isset($role))

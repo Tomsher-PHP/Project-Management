@@ -7,23 +7,31 @@
 
     <!-- Page starts -->
 
-        <div class="2xl:flex 2xl:space-x-[48px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1">
-                <div class="w-full rounded-lg bg-white px-6 py-8 dark:bg-darkblack-600">
-                    <form action="{{ route('settings.configurations.update') }}" method="POST" class="space-y-10" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
+    <div class="2xl:flex 2xl:space-x-[48px]">
+        <section class="mb-6 2xl:mb-0 2xl:flex-1">
+            <div class="w-full rounded-lg bg-white px-6 py-8 dark:bg-darkblack-600">
+                <form action="{{ route('settings.configurations.update') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
 
-                        @if (!$canEdit)
-                            <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                                You have view-only access to this configuration.
-                            </div>
-                            <fieldset disabled class="opacity-60 cursor-not-allowed">
-                        @endif
+                    @if (!$canEdit)
+                        <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                            You have view-only access to this configuration.
+                        </div>
+                        <fieldset disabled class="opacity-60 cursor-not-allowed">
+                    @endif
+
+                    <!-- Company Information Section -->
+                    <div class="border-b pb-8 dark:border-darkblack-400">
+                        <div class="flex items-center gap-3 border-b pb-4 mb-6 dark:border-darkblack-400">
+                            <x-back-button />
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                                Company Information
+                            </h3>
+                        </div>
 
                         <!-- Basic Information Fields -->
-                        <div class="flex flex-col xl:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start xl:items-center">
-
+                        <div class="flex flex-col xl:flex-row gap-8 dark:text-white items-start">
                             <!-- Logos -->
                             <div class="flex flex-row gap-6">
                                 <!-- Logo Image -->
@@ -52,18 +60,14 @@
 
                             <!-- Company Details -->
                             <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 xl:mt-0">
-                                <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 mb-2 dark:border-darkblack-400 dark:text-white">
-                                    Company Information
-                                </h3>
-
                                 <!-- Company Name -->
                                 <div class="flex flex-col gap-2">
                                     <label for="company_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                                         Company Name
                                     </label>
                                     <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $config->company_name ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                                        @error('company_name') border-red-500 focus:ring-red-500 @enderror">
+                                            bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                            @error('company_name') border-red-500 focus:ring-red-500 @enderror">
                                     @error('company_name')
                                         <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                     @enderror
@@ -75,8 +79,8 @@
                                         Company Email
                                     </label>
                                     <input type="email" id="company_email" name="company_email" value="{{ old('company_email', $config->company_email ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                                        @error('company_email') border-red-500 focus:ring-red-500 @enderror">
+                                            bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                            @error('company_email') border-red-500 focus:ring-red-500 @enderror">
                                     @error('company_email')
                                         <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                     @enderror
@@ -88,8 +92,8 @@
                                         Website
                                     </label>
                                     <input type="text" id="website" name="website" value="{{ old('website', $config->website ?? '') }}" placeholder="Enter company website" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                                        @error('website') border-red-500 focus:ring-red-500 @enderror">
+                                            bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                            @error('website') border-red-500 focus:ring-red-500 @enderror">
                                     @error('website')
                                         <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                     @enderror
@@ -109,8 +113,8 @@
                                         </span>
                                     </label>
                                     <input type="text" id="email_suffix" name="email_suffix" value="{{ old('email_suffix', $config->email_suffix ?? '') }}" placeholder="Enter email suffix" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                                        @error('email_suffix') border-red-500 focus:ring-red-500 @enderror">
+                                            bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                            @error('email_suffix') border-red-500 focus:ring-red-500 @enderror">
                                     @error('email_suffix')
                                         <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                     @enderror
@@ -122,8 +126,8 @@
                                         Company Phone
                                     </label>
                                     <input type="text" id="company_phone" name="company_phone" value="{{ old('company_phone', $config->company_phone ?? '') }}" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0
-                                        bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
-                                        @error('company_phone') border-red-500 focus:ring-red-500 @enderror">
+                                            bg-white text-gray-900 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                                            @error('company_phone') border-red-500 focus:ring-red-500 @enderror">
                                     @error('company_phone')
                                         <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
                                     @enderror
@@ -132,125 +136,123 @@
                         </div>
 
                         <!-- Address -->
-                        <div class="border-b pb-8 dark:border-darkblack-400">
-                            <div class="grid grid-cols-1 gap-6">
-                                <div class="flex flex-col gap-2">
-                                    <label for="company_address" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        Company Address
-                                    </label>
-                                    <textarea name="company_address" id="company_address" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
+                        <div class="mt-6 grid grid-cols-1 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label for="company_address" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    Company Address
+                                </label>
+                                <textarea name="company_address" id="company_address" rows="3" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:border-darkblack-400
                                         @error('company_address') border-red-500 focus:ring-red-500 @enderror">{{ old('company_address', $config->company_address ?? '') }}</textarea>
-                                    @error('company_address')
-                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                                @error('company_address')
+                                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
+                    </div>
 
-                        <!-- System Settings -->
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
-                                System Settings
-                            </h3>
+                    <!-- System Settings -->
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+                            System Settings
+                        </h3>
 
-                            <div class="flex flex-col gap-6 xl:flex-row xl:items-start">
-                                <!-- Timezone -->
-                                <div class="flex-1 min-w-0">
-                                    <label for="timezone" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        <span>Timezone</span>
-                                        <span class="group relative inline-flex cursor-help">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                            </svg>
-                                            <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                                                This timezone is used when displaying dates and times across the application.
-                                            </span>
+                        <div class="flex flex-col gap-6 xl:flex-row xl:items-start">
+                            <!-- Timezone -->
+                            <div class="flex-1 min-w-0">
+                                <label for="timezone" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    <span>Timezone</span>
+                                    <span class="group relative inline-flex cursor-help">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                            This timezone is used when displaying dates and times across the application.
                                         </span>
-                                    </label>
-                                    <select name="timezone" id="timezone" class="tom-select w-full">
-                                        <option value="">Select Timezone</option>
-                                        @foreach ($timezones as $tz)
-                                            <option value="{{ $tz->zone_name }}" {{ old('timezone', $config->timezone ?? '') == $tz->zone_name ? 'selected' : '' }}>
-                                                {{ $tz->zone_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('timezone')
-                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                                    </span>
+                                </label>
+                                <select name="timezone" id="timezone" class="tom-select w-full">
+                                    <option value="">Select Timezone</option>
+                                    @foreach ($timezones as $tz)
+                                        <option value="{{ $tz->zone_name }}" {{ old('timezone', $config->timezone ?? '') == $tz->zone_name ? 'selected' : '' }}>
+                                            {{ $tz->zone_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('timezone')
+                                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                                <!-- Date Format -->
-                                <div class="flex-1 min-w-0">
-                                    <label for="date_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        <span>Date Format</span>
-                                        <span class="group relative inline-flex cursor-help">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                            </svg>
-                                            <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                                                Choose how calendar dates appear throughout the system, reports, and forms.
-                                            </span>
+                            <!-- Date Format -->
+                            <div class="flex-1 min-w-0">
+                                <label for="date_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    <span>Date Format</span>
+                                    <span class="group relative inline-flex cursor-help">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-64 -translate-x-1/2 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                            Choose how calendar dates appear throughout the system, reports, and forms.
                                         </span>
-                                    </label>
-                                    <select name="date_format" id="date_format" class="tom-select-no-search w-full" data-render-subtype="true">
-                                        <option value="">Select Date Format</option>
-                                        @foreach ($dateFormats as $format)
-                                            <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('date_format', $config->date_format ?? '') == $format ? 'selected' : '' }}>
-                                                {{ $format }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('date_format')
-                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                                    </span>
+                                </label>
+                                <select name="date_format" id="date_format" class="tom-select-no-search w-full" data-render-subtype="true">
+                                    <option value="">Select Date Format</option>
+                                    @foreach ($dateFormats as $format)
+                                        <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('date_format', $config->date_format ?? '') == $format ? 'selected' : '' }}>
+                                            {{ $format }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('date_format')
+                                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                                <!-- Time Format -->
-                                <div class="flex-1 min-w-0">
-                                    <label for="time_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
-                                        <span>Time Format</span>
-                                        <span class="group relative inline-flex cursor-help">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                            </svg>
-                                            <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                                                Choose whether times are shown in 12-hour or 24-hour format across the system.
-                                            </span>
+                            <!-- Time Format -->
+                            <div class="flex-1 min-w-0">
+                                <label for="time_format" class="flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                    <span>Time Format</span>
+                                    <span class="group relative inline-flex cursor-help">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                            Choose whether times are shown in 12-hour or 24-hour format across the system.
                                         </span>
-                                    </label>
-                                    <select name="time_format" id="time_format" class="tom-select-no-search w-full" data-render-subtype="true">
-                                        <option value="">Select Time Format</option>
-                                        @foreach ($timeFormats as $format)
-                                            <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('time_format', $config->time_format ?? '') == $format ? 'selected' : '' }}>
-                                                {{ $format }} ({{ str_contains($format, 'H') ? '24 hours' : '12 hours' }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('time_format')
-                                        <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
-                                    @enderror
-                                </div>
+                                    </span>
+                                </label>
+                                <select name="time_format" id="time_format" class="tom-select-no-search w-full" data-render-subtype="true">
+                                    <option value="">Select Time Format</option>
+                                    @foreach ($timeFormats as $format)
+                                        <option value="{{ $format }}" data-subtype="{{ date($format) }}" {{ old('time_format', $config->time_format ?? '') == $format ? 'selected' : '' }}>
+                                            {{ $format }} ({{ str_contains($format, 'H') ? '24 hours' : '12 hours' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('time_format')
+                                    <p class="mt-2 text-sm text-error-300">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
+                    </div>
 
-                        @if (!$canEdit)
-                            </fieldset>
-                        @endif
+                    @if (!$canEdit)
+                        </fieldset>
+                    @endif
 
-                        @if ($canEdit)
-                            <!-- Submit Button -->
-                            <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
-                                <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
-                                    Save Configuration
-                                </button>
-                            </div>
-                        @endif
-                    </form>
-                </div>
-            </section>
-        </div>
-        <!-- write your code here-->
+                    @if ($canEdit)
+                        <!-- Submit Button -->
+                        <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
+                            <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
+                                Save Configuration
+                            </button>
+                        </div>
+                    @endif
+                </form>
+            </div>
+        </section>
+    </div>
+    <!-- write your code here-->
     <!-- Page ends -->
-
 @endsection
