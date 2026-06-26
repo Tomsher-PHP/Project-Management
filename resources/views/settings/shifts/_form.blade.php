@@ -77,7 +77,7 @@
     </div>
 
     <!-- ================= Shift Information ================= -->
-    <div>
+    <div class="mt-5">
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Time Information
         </h3>
@@ -132,8 +132,8 @@
 
         </div>
 
-        <div class="mt-8">
-            <h4 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">
+        <div class="mt-5">
+            <h4 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
                 Mark Weekend Days
             </h4>
 
@@ -219,7 +219,7 @@
     </div>
 
     <!-- Submit Button -->
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
+    <div class="mt-5 pt-5 border-t border-gray-200 dark:border-darkblack-400 flex justify-end dark:border-darkblack-400 dark:text-white">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($shift))
                 Update Shift

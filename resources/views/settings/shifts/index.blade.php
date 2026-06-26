@@ -3,7 +3,7 @@
 @section('page-content')
     <!-- Page starts -->
     <div class="mb-6 flex flex-wrap items-center gap-3">
-        <x-back-button label="Back" />
+        <x-back-button :url="route('settings.index')" label="Back" />
 
         @can('shift.create')
             <x-button.create-button :href="route('settings.shifts.create')" label="Shift" />

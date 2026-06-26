@@ -10,6 +10,13 @@
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <div class="w-full rounded-lg bg-white px-6 py-8 dark:bg-darkblack-600">
+                <div class="border-b border-bgray-200 pb-5 mb-8 flex flex-row items-center gap-3 dark:border-darkblack-400">
+                    <x-back-button :url="route('settings.index')" />
+                    <h3 class="text-2xl font-bold text-bgray-900 dark:text-white">
+                        Configurations
+                    </h3>
+                </div>
+
                 <form action="{{ route('settings.configurations.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -24,7 +31,6 @@
                     <!-- Company Information Section -->
                     <div class="border-b pb-8 dark:border-darkblack-400">
                         <div class="flex items-center gap-3 border-b pb-4 mb-6 dark:border-darkblack-400">
-                            <x-back-button />
                             <h3 class="text-xl font-bold text-gray-800 dark:text-white">
                                 Company Information
                             </h3>
