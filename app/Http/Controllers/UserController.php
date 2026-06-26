@@ -149,10 +149,9 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user, UserService $service)
     {
-        // dd($request->all());
         $service->updateUser($user, $request->validated());
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect(session('users_return_url', route('users.index')))->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -166,9 +165,7 @@ class UserController extends Controller
             'is_active' => false,
         ]);
 
-        return redirect()
-            ->route('users.index')
-            ->with('success', 'User deleted successfully.');
+        return redirect(session('users_return_url', route('users.index')))->with('success', 'User deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

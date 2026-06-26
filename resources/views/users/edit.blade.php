@@ -8,11 +8,11 @@
                 <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
                     <div class="flex grid-cols-12 flex-col-reverse gap-12 xl:grid 2xl:flex-row">
                         <div class="col-span-12 w-full">
-                            <div class="border-b border-bgray-200 pb-5 flex flex-row justify-between">
+                            <div class="border-b border-bgray-200 pb-5 flex flex-row items-center gap-3">
+                                <x-back-button :url="session('users_return_url', route('users.index'))" />
                                 <h3 class="text-2xl font-bold text-bgray-900 dark:border-darkblack-400 dark:text-white">
                                     Edit User 
                                 </h3>
-                                <x-back-button :url="session('users_return_url', route('users.index'))" />
                             </div>
                             <div class="mt-8">
                                 @include('users._form')
