@@ -8,7 +8,7 @@
 @endphp
 
 <li class="org-node {{ !empty($children) ? 'org-node--branch' : '' }}">
-    <div class="org-card {{ $isAuthUser ? 'org-card--auth' : '' }}" data-user-card data-user-name="{{ $user->name }}" data-user-email="{{ $user->email ?? '-' }}" data-user-employee-id="{{ $user->details?->employee_id ?? '-' }}" data-user-role="{{ $roleName }}" data-user-designation="{{ $designationName }}" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="org-user-modal">
+    <div class="org-card {{ $isAuthUser ? 'org-card--auth' : '' }}" data-user-card data-user-name="{{ $user->name }}" data-user-email="{{ $user->email ?? '-' }}" data-user-employee-id="{{ $user->details?->employee_id ?? '-' }}" data-user-role="{{ $roleName }}" data-user-designation="{{ $designationName }}" data-user-reporting-to="{{ $user->details?->reporter?->name ?? '-' }}" data-user-is-super-admin="{{ $user->is_super_admin ? 'true' : 'false' }}" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="org-user-modal">
         <x-user-avatar :user="$user" class="org-avatar" />
 
         <div class="org-meta">
