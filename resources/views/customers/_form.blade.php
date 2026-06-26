@@ -5,9 +5,9 @@
     @endif
 
     <!-- ================= BASIC COMPANY INFORMATION ================= -->
-    <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
-        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+    <div class="flex flex-col md:flex-row gap-8 pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-2 mb-2 dark:border-darkblack-400 dark:text-white">
                 Company Information
             </h3>
 
@@ -83,8 +83,8 @@
     </div>
 
     <!-- ================= LOCATION DETAILS ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Location Details</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Location Details</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Registered Country -->
             <div class="flex flex-col gap-2">
@@ -132,8 +132,8 @@
     </div>
 
     <!-- ================= ADDITIONAL INFORMATION ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Additional Information</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Additional Information</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <!-- Company Address -->
@@ -160,8 +160,8 @@
     </div>
 
     <!-- ================= PRIMARY CONTACT ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Contact Information</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Contact Information</h3>
         <!-- para for primary contact -->
         <p class="text-base font-medium text-bgray-600 dark:text-bgray-50">Primary point of contact information for this customer.</p>
         <div class="h-4"></div>
@@ -215,7 +215,7 @@
             </div>
         </div>
 
-        <div class="pt-6 border-t flex justify-left dark:border-darkblack-400 dark:text-white">
+        <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white">
             <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
@@ -228,7 +228,7 @@
     </div>
 
     <!-- ================= SUBMIT BUTTON ================= -->
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white">
+    <div class="mt-5 pt-5 border-t border-gray-200 dark:border-darkblack-400 flex justify-end dark:border-darkblack-400 dark:text-white">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($customer))
                 Update Customer
