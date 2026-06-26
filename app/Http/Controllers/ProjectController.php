@@ -65,6 +65,7 @@ class ProjectController extends Controller
             ->with(['customer.profileGrade'])
             ->filter($request->all())
             ->sort($request->all())
+            ->orderBy('projects.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 

@@ -33,6 +33,7 @@ class CustomerController extends Controller
         $customers = Customer::with(['industry', 'country', 'salesPerson'])
             ->filter($request->all())
             ->sort($request->all())
+            ->orderBy('customers.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 

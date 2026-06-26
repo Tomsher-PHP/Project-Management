@@ -39,6 +39,7 @@ class UserController extends Controller
         $users = User::accessibleBy(auth()->user())
             ->filter($request->all())
             ->sort($request->all())
+            ->orderBy('users.id', 'desc')
             ->with([
                 'details',
                 'details.department',

@@ -31,6 +31,7 @@ class TeamController extends Controller
 
         $teams = Team::filter($request->all())
             ->sort($request->all())
+            ->orderBy('teams.id', 'desc')
             ->with([
                 'users',
                 'primaryAttachment'
@@ -115,9 +116,9 @@ class TeamController extends Controller
     {
         $assignedUserIds = TeamUser::query()
             ->whereNull('deleted_at')
-            ->when($team, fn ($query) => $query->where('team_id', '!=', $team->id))
+            ->when($team, fn($query) => $query->where('team_id', '!=', $team->id))
             ->pluck('user_id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
 
         return app(UserService::class)
