@@ -31,6 +31,7 @@ class TeamController extends Controller
 
         $teams = Team::filter($request->all())
             ->sort($request->all())
+            ->orderBy('teams.id', 'desc')
             ->with([
                 'users',
                 'primaryAttachment'
@@ -82,7 +83,7 @@ class TeamController extends Controller
             'members' => $request->input('members', []),
         ]);
 
-        return redirect()->back()->with('success', 'Team updated successfully.');
+        return redirect(session('teams_return_url', route('teams.index')))->with('success', 'Team updated successfully.');
     }
 
     public function destroy(Team $team, AttachmentService $attachmentService)
@@ -93,9 +94,7 @@ class TeamController extends Controller
             $team->forceDelete();
         });
 
-        return redirect()
-            ->route('teams.index')
-            ->with('success', 'Team deleted successfully.');
+        return redirect(session('teams_return_url', route('teams.index')))->with('success', 'Team deleted successfully.');
     }
 
     public function toggleStatus(Request $request)
@@ -115,9 +114,9 @@ class TeamController extends Controller
     {
         $assignedUserIds = TeamUser::query()
             ->whereNull('deleted_at')
-            ->when($team, fn ($query) => $query->where('team_id', '!=', $team->id))
+            ->when($team, fn($query) => $query->where('team_id', '!=', $team->id))
             ->pluck('user_id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->all();
 
         return app(UserService::class)

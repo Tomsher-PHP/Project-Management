@@ -5,7 +5,7 @@
     <!-- KPI cards grid: custom-scroll flex items-center gap-3 overflow-x-auto py-1 -->
     <div class="custom-scroll flex items-center gap-3 overflow-x-auto py-1">
         <!-- Total Tasks Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="total_tasks">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Total Tasks</span>
@@ -23,7 +23,7 @@
         </div>
 
         <!-- Pending Tasks Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="pending_tasks">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Pending Tasks</span>
@@ -41,7 +41,7 @@
         </div>
 
         <!-- Active Tasks Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="active_tasks">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Active Tasks</span>
@@ -59,7 +59,7 @@
         </div>
 
         <!-- Archived Tasks Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="archived_tasks">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Archived Tasks</span>
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Completed Tasks Card -->
-        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="group relative min-w-[160px] flex-1 shrink-0 overflow-hidden rounded-xl border border-bgray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-darkblack-500 dark:bg-darkblack-600 cursor-pointer" data-dashboard-tile="completed_tasks">
             <div class="flex items-center justify-between">
                 <div class="space-y-1">
                     <span class="text-sm font-semibold text-bgray-600 dark:text-bgray-50 uppercase tracking-wider">Completed Tasks</span>

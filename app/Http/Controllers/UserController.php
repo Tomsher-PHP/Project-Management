@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\InitialShiftAssignmentRequest;
 use App\Http\Requests\UserRequest;
 use App\Models\Department;
 use App\Models\Designation;
@@ -11,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
+use App\Services\ScheduleShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -37,6 +39,7 @@ class UserController extends Controller
         $users = User::accessibleBy(auth()->user())
             ->filter($request->all())
             ->sort($request->all())
+            ->orderBy('users.id', 'desc')
             ->with([
                 'details',
                 'details.department',
@@ -83,10 +86,22 @@ class UserController extends Controller
 
     public function store(UserRequest $request, UserService $service)
     {
-        $service->createUser($request->validated());
+        $user = $service->createUser($request->validated());
 
         return redirect()->route('users.index')
-            ->with('success', 'User created successfully.');
+            ->with('success', 'User created successfully.')
+            ->with('initial_shift_user_id', $user->id);
+    }
+
+    public function storeInitialShift(InitialShiftAssignmentRequest $request, User $user, ScheduleShiftService $scheduleShiftService)
+    {
+        $data = $request->validated();
+        $data['users'] = [$user->id];
+
+        $scheduleShiftService->schedule($data);
+
+        return redirect()->route('users.index')
+            ->with('success', 'Initial shift assigned successfully.');
     }
 
     public function edit(User $user)
@@ -134,10 +149,9 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user, UserService $service)
     {
-        // dd($request->all());
         $service->updateUser($user, $request->validated());
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        return redirect(session('users_return_url', route('users.index')))->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)
@@ -151,9 +165,7 @@ class UserController extends Controller
             'is_active' => false,
         ]);
 
-        return redirect()
-            ->route('users.index')
-            ->with('success', 'User deleted successfully.');
+        return redirect(session('users_return_url', route('users.index')))->with('success', 'User deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

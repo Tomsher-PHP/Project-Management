@@ -56,8 +56,8 @@ class UserShiftAssignment extends Model
     {
         return $this->time_from
             ? $this->time_from
-                ->timezone(config('constants.timezone'))
-                ->format(config('constants.time_format'))
+            ->timezone(config('constants.timezone'))
+            ->format(config('constants.time_format'))
             : null;
     }
 
@@ -65,8 +65,8 @@ class UserShiftAssignment extends Model
     {
         return $this->time_to
             ? $this->time_to
-                ->timezone(config('constants.timezone'))
-                ->format(config('constants.time_format'))
+            ->timezone(config('constants.timezone'))
+            ->format(config('constants.time_format'))
             : null;
     }
 
@@ -99,5 +99,42 @@ class UserShiftAssignment extends Model
         $workingSeconds = max(0, $workingSeconds);
 
         return CarbonInterval::seconds($workingSeconds)->cascade()->format('%h hr %i min');
+    }
+
+    /*----------------Activity Log Customization----------------*/
+
+    // Never show these fields in activity log details.
+    protected array $activityLogExceptAttributes = [
+        'shift_id',
+        'color_code',
+        'reason',
+    ];
+
+    // For activity log attribute labels
+    public function getActivityAttributeLabels(): array
+    {
+        return [
+            'user_id' => 'User',
+            'shift_name' => 'Shift Name',
+            'time_from' => 'Time From',
+            'time_to' => 'Time To',
+            'break_duration' => 'Break Duration',
+            'date_from' => 'Date From',
+            'date_to' => 'Date To',
+        ];
+    }
+
+    // For activity log attribute value display
+    public function getActivityAttributeDisplayValue(string $attribute, mixed $value): mixed
+    {
+        return match ($attribute) {
+            'user_id' => User::withTrashed()->find($value)?->name ?? $value,
+            'time_from' => Carbon::parse($value)->timezone(config('constants.timezone'))->format(config('constants.time_format')),
+            'time_to' => Carbon::parse($value)->timezone(config('constants.timezone'))->format(config('constants.time_format')),
+            'break_duration' => $this->secondsToReadable($value),
+            'date_from' => Carbon::parse($value)->timezone(config('constants.timezone'))->format(config('constants.date_format')),
+            'date_to' => Carbon::parse($value)->timezone(config('constants.timezone'))->format(config('constants.date_format')),
+            default => $value,
+        };
     }
 }

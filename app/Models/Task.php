@@ -540,8 +540,10 @@ class Task extends Model
             'status_id' => TaskStatus::find($value)?->name ?? $value,
             'task_type_id' => TaskType::find($value)?->name ?? $value,
             'task_mode_id' => TaskMode::find($value)?->name ?? $value,
-            'current_assignee_id' => User::find($value)?->name ?? $value,
+            'current_assignee_id' => User::withTrashed()->find($value)?->name ?? $value,
             'estimated_time_seconds' => $this->secondsToReadable($value),
+            'approved_by' => User::withTrashed()->find($value)?->name ?? $value,
+            'rejected_by' => User::withTrashed()->find($value)?->name ?? $value,
             default => $value,
         };
     }

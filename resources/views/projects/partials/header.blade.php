@@ -34,7 +34,10 @@
     <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div class="min-w-0 flex-1">
             <div class="flex items-center gap-3">
-                <div class="h-10 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
+                <div class="shrink-0">
+                    <x-back-button />
+                </div>
+                <div class="h-8 w-1 rounded {{ $priority['bg_class'] ?? 'bg-gray-300' }}"></div>
 
                 <div class="min-w-0">
                     @php
@@ -42,7 +45,7 @@
                         $parentProjectUrl = $parentProject ? ($parentProject->trashed() ? route('projects.restore.show', $parentProject->id) : route('projects.edit', $parentProject)) : null;
                     @endphp
                     <div class="flex min-w-0 items-center gap-2">
-                        <x-project-flow-icon :flow="$project->project_flow" size="sm" />
+                        <x-project-flow-icon :flow="$project->project_flow" size="md" />
                         <h2 class="min-w-0 truncate text-xl font-bold text-bgray-900 dark:text-white" id="project-name-display">
                             {{ $project->name }}
                             <span class="text-base font-semibold text-bgray-700 dark:text-bgray-300">({{ $project->project_code ?? '--' }})</span>
@@ -187,7 +190,7 @@
                                 @if ($project->customer)
                                     <x-profile-grade-badge :grade="$project->customer->profileGrade" size="sm" />
                                 @endif
-                                @if ($project->customer && ! $project->customer->trashed())
+                                @if ($project->customer && !$project->customer->trashed())
                                     <a href="{{ route('customers.show', $project->customer) }}" class="truncate transition hover:text-success-400">
                                         {{ $project->customer->name }}
                                     </a>

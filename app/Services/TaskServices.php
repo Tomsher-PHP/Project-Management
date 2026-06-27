@@ -105,6 +105,7 @@ class TaskServices
             ->with($this->relations())
             ->withCount([
                 'childTasks',
+                'comments',
                 'childTasks as completed_child_tasks_count' => function ($query) {
                     $query->where(function ($childTaskQuery) {
                         $childTaskQuery
@@ -239,8 +240,8 @@ class TaskServices
                     'value' => $task->updatedBy?->name
                         ? trim($task->updatedBy->name . (
                             $task->updated_at
-                                ? ' at ' . \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
-                                : ''
+                            ? ' at ' . \App\Providers\AppServiceProvider::formatAppDateTime($task->updated_at)
+                            : ''
                         ))
                         : '--',
                 ],
@@ -303,7 +304,7 @@ class TaskServices
             $task->setAttribute('kanban_timer_elapsed_seconds', (int) ($timerState['elapsedSeconds'] ?? 0));
             $task->setAttribute('kanban_timer_current_seconds', (int) ($timerState['currentSeconds'] ?? 0));
             $task->setAttribute('kanban_timer_estimated_seconds', (int) ($timerState['estimatedSeconds'] ?? 0));
-            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-bgray-700 dark:text-bgray-300'));
+            $task->setAttribute('kanban_timer_time_color_class', (string) ($timerState['timeColorClass'] ?? 'text-success-400 dark:text-success-300'));
             $task->setAttribute('kanban_timer_started_at_iso', $timerState['runningTimeLog']?->started_at?->toISOString());
             $task->setAttribute('kanban_timer_is_running', $timerState['runningTimeLog'] !== null);
         }
@@ -611,7 +612,7 @@ class TaskServices
             'scheduled_for_date' => $validated['scheduled_for_date'] ?? null,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'status_id' => ! empty($validated['status_id']) ? (int) $validated['status_id'] : $defaults['status_id'],
+            'status_id' => $defaults['status_id'],
             'task_type_id' => $validated['task_type_id'] ?? $defaults['task_type_id'],
             'task_mode_id' => $validated['task_mode_id'] ?? $defaults['task_mode_id'],
             'priority' => $validated['priority'] ?? $defaults['priority'],
@@ -763,10 +764,7 @@ class TaskServices
         return TaskStatus::query()
             ->active()
             ->where('flow_type', $flowType)
-            ->orderByDesc('is_default')
-            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->where('is_default', 1)
             ->value('id');
     }
 
@@ -1330,6 +1328,4 @@ class TaskServices
             })
             ->values();
     }
-
-
 }

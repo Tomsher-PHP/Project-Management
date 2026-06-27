@@ -86,17 +86,12 @@
 
                     <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</label>
-                                <select name="status_id" class="tom-select-no-search w-full">
-                                    <option value="">Select project first</option>
-                                </select>
-                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="status_id"></p>
-                            </div>
-
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
-                                <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Add task details"></textarea>
+                                <input type="hidden" name="description" id="task_create_description_input">
+                                <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                    <div id="task_create_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                </div>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="description"></p>
                             </div>
 
@@ -213,7 +208,7 @@
         }
     </style>
 
-    <x-form-modal modalId="task-create-type-modal" module="Task Type" formId="taskCreateTypeInlineForm" action="{{ route('settings.task-types.store') }}" button="Create Task Type" modalZIndex="1000">
+    <x-form-modal modal-id="task-create-type-modal" module="Task Type" form-id="taskCreateTypeInlineForm" action="{{ route('settings.task-types.store') }}" button="Create Task Type" modal-z-index="10050">
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
@@ -236,11 +231,21 @@
 
         <label class="flex cursor-pointer items-center gap-2">
             <input type="checkbox" name="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-            <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Is Default</span>
+            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                <span>Is Default</span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        The default option is preselected when creating a new task.
+                    </span>
+                </span>
+            </span>
         </label>
     </x-form-modal>
 
-    <x-form-modal modalId="task-create-mode-modal" module="Task Mode" formId="taskCreateModeInlineForm" action="{{ route('settings.task-modes.store') }}" button="Create Task Mode" modalZIndex="1000">
+    <x-form-modal modal-id="task-create-mode-modal" module="Task Mode" form-id="taskCreateModeInlineForm" action="{{ route('settings.task-modes.store') }}" button="Create Task Mode" modal-z-index="10050">
         <div>
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Name <x-red-star /></label>
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-auto-code-source required>
@@ -271,28 +276,63 @@
 
         <label class="flex cursor-pointer items-center gap-2">
             <input type="checkbox" name="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-            <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Is Default</span>
+            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                <span>Is Default</span>
+                <span class="group relative inline-flex cursor-help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                        The default option is preselected when creating a new task.
+                    </span>
+                </span>
+            </span>
         </label>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label class="flex cursor-pointer items-center gap-2">
                 <input type="checkbox" name="is_rework" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Is Rework?</span>
+                <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                    <span>Is Rework?</span>
+                    <span class="group relative inline-flex cursor-help">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                            Mark this mode when the work represents revisions or corrections to previous work.
+                        </span>
+                    </span>
+                </span>
             </label>
 
             <label class="flex cursor-pointer items-center gap-2">
                 <input type="checkbox" name="is_productive" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Is Productive?</span>
-            </label>
-
-            <label class="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" name="track_performance" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Track Performance?</span>
+                <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                    <span>Is Productive?</span>
+                    <span class="group relative inline-flex cursor-help">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                            Enable this when time logged under this mode should count as productive work.
+                        </span>
+                    </span>
+                </span>
             </label>
 
             <label class="flex cursor-pointer items-center gap-2">
                 <input type="checkbox" name="customer_request" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-sm font-semibold text-gray-700 dark:text-bgray-50">Customer Request?</span>
+                <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                    <span>Customer Request?</span>
+                    <span class="group relative inline-flex cursor-help">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                            Enable this when the mode is used for work introduced through a customer or change request.
+                        </span>
+                    </span>
+                </span>
             </label>
         </div>
     </x-form-modal>

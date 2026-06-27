@@ -13,7 +13,7 @@
                     <!-- TOP ACTIONS -->
                     <div class="flex items-center justify-between mb-4">
                         <!-- BACK BUTTON -->
-                        <x-back-button :url="session('users_return_url', route('users.index'))" />
+                        <x-back-button />
 
                         <!-- EDIT BUTTON (opens modal) -->
                         <x-modal-button @click="openEdit = true" />

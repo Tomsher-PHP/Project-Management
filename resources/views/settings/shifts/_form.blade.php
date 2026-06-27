@@ -1,4 +1,4 @@
-<form action="{{ isset($shift) ? route('settings.shifts.update', $shift->id) : route('settings.shifts.store') }}" method="POST" class="space-y-10">
+<form action="{{ isset($shift) ? route('settings.shifts.update', $shift->id) : route('settings.shifts.store') }}" method="POST">
     @csrf
     @if (isset($shift))
         @method('PUT')
@@ -77,7 +77,7 @@
     </div>
 
     <!-- ================= Shift Information ================= -->
-    <div>
+    <div class="mt-5">
         <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
             Time Information
         </h3>
@@ -86,7 +86,8 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time <x-red-star /></label>
-                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}" class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('start_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
+                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}"
+                    class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if ($isDisabled) bg-bgray-200 @else bg-white @endif @error('start_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('start_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -98,7 +99,8 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time <x-red-star /></label>
-                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}" class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('end_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
+                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}"
+                    class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if ($isDisabled) bg-bgray-200 @else bg-white @endif @error('end_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('end_time')
                     <p class="mt-2 text-sm text-error-300">
@@ -117,7 +119,8 @@
                     $shiftBreakMin = ($shift?->break_duration ?? 3600) / 60;
                 @endphp
 
-                <input type="text" name="break_duration" value="{{ old('break_duration', $shiftBreakMin ?? '60') }}" class="w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if($isDisabled) bg-bgray-200 @else bg-white @endif @error('break_duration') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
+                <input type="text" name="break_duration" value="{{ old('break_duration', $shiftBreakMin ?? '60') }}" class="w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-400 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if ($isDisabled) bg-bgray-200 @else bg-white @endif @error('break_duration') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror"
+                    @disabled($isDisabled)>
 
                 @error('break_duration')
                     <p class="mt-2 text-sm text-error-300">
@@ -129,8 +132,8 @@
 
         </div>
 
-        <div class="mt-8">
-            <h4 class="text-lg font-semibold text-gray-800 mb-4 dark:text-white">
+        <div class="mt-5">
+            <h4 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
                 Mark Weekend Days
             </h4>
 
@@ -216,7 +219,7 @@
     </div>
 
     <!-- Submit Button -->
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">
+    <div class="mt-5 pt-5 border-t border-gray-200 dark:border-darkblack-400 flex justify-end dark:border-darkblack-400 dark:text-white">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($shift))
                 Update Shift

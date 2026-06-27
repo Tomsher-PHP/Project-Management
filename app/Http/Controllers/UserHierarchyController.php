@@ -36,6 +36,7 @@ class UserHierarchyController extends Controller
                 'details.department:id,name',
                 'details.designation:id,name',
                 'details.manager:id,name',
+                'details.reporter:id,name',
                 'primaryAttachment',
                 'roles:id,name',
             ])

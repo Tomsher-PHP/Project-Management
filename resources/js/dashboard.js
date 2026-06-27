@@ -185,6 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         };
 
+        const updateViewAllUrl = (dateString) => {
+            const viewAllBtn = document.getElementById('view-all-daily-time');
+            if (viewAllBtn) {
+                const baseUrl = viewAllBtn.getAttribute('data-base-url');
+                if (baseUrl) {
+                    viewAllBtn.href = `${baseUrl}?from_date=${dateString}&to_date=${dateString}`;
+                }
+            }
+        };
+
         // Initialize custom flatpickr on datepicker input
         if (datepickerInput) {
             initDatepicker('#worked-time-datepicker', {
@@ -200,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             setActiveFilterButton(null);
                         }
                         loadWorkedTime(dateStr);
+                        updateViewAllUrl(dateStr);
                     }
                 }
             });
@@ -219,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     setActiveFilterButton('today');
                     loadWorkedTime(todayStr);
+                    updateViewAllUrl(todayStr);
                 } else if (filter === 'yesterday') {
                     const yesterdayStr = getLocalDateString(-1);
                     if (datepickerInput) {
@@ -229,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     setActiveFilterButton('yesterday');
                     loadWorkedTime(yesterdayStr);
+                    updateViewAllUrl(yesterdayStr);
                 }
             });
         });
@@ -349,5 +362,84 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loadMoreBtn) {
             loadMoreBtn.addEventListener('click', loadNextPage);
         }
+    }
+
+    // -------------------------------------------------------------
+    // 4. Dashboard Tile Drill-down Modal
+    // -------------------------------------------------------------
+    const tiles = document.querySelectorAll('[data-dashboard-tile]');
+    const tileModal = document.getElementById('dashboard-tile-modal');
+    const tileModalContent = document.getElementById('dashboard-tile-modal-content');
+    const summarySectionEl = document.querySelector('[data-dashboard-summary-section]');
+
+    if (tiles.length > 0 && tileModal && tileModalContent && summarySectionEl) {
+        const tileUrl = summarySectionEl.getAttribute('data-dashboard-tile-url');
+
+        tiles.forEach(tile => {
+            tile.addEventListener('click', async () => {
+                const type = tile.getAttribute('data-dashboard-tile');
+                
+                // Show modal loading state
+                tileModal.classList.remove('hidden');
+                tileModal.classList.add('flex');
+                tileModalContent.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Loading...</h3>
+                        <button type="button" data-dashboard-tile-close class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors duration-200">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 p-6 flex justify-center items-center">
+                        <span class="animate-pulse text-bgray-500 font-semibold text-lg">Fetching records...</span>
+                    </div>
+                `;
+
+                try {
+                    const response = await fetch(`${tileUrl}?type=${type}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load tile details');
+
+                    const result = await response.json();
+                    if (result.success && result.html) {
+                        tileModalContent.innerHTML = result.html;
+                    }
+                } catch (error) {
+                    console.error('Tile Details Load Error:', error);
+                    tileModalContent.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                            <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Error</h3>
+                            <button type="button" data-dashboard-tile-close class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors duration-200">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <div class="flex-1 p-6 flex justify-center items-center">
+                            <span class="text-red-500 font-semibold">Failed to load details. Please try again.</span>
+                        </div>
+                    `;
+                }
+            });
+        });
+
+        // Close modal logic
+        const tileModalOverlay = document.querySelector('[data-dashboard-tile-overlay]');
+        if (tileModalOverlay) {
+            tileModalOverlay.addEventListener('click', () => {
+                tileModal.classList.add('hidden');
+                tileModal.classList.remove('flex');
+            });
+        }
+
+        // Allow close buttons inside modal content to work dynamically
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-dashboard-tile-close]')) {
+                tileModal.classList.add('hidden');
+                tileModal.classList.remove('flex');
+            }
+        });
     }
 });

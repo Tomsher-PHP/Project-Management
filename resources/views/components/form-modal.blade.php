@@ -1,3 +1,12 @@
+@props([
+    'modalId',
+    'module',
+    'formId',
+    'action',
+    'button',
+    'modalZIndex' => null,
+])
+
 <style>
     #{{ $modalId }} .form-modal-fields {
         display: grid;

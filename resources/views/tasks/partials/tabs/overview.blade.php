@@ -33,7 +33,10 @@
                     <form class="mt-4 space-y-3" data-task-overview-description-form action="{{ route('tasks.overview.description.update', $task) }}" method="POST">
                         @csrf
                         @method('PATCH')
-                        <textarea name="description" rows="6" class="w-full rounded-xl border border-bgray-200 bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" placeholder="Add a task description...">{{ $description }}</textarea>
+                        <input type="hidden" name="description" id="task_overview_description_input" value="{{ $description }}">
+                        <div class="custom-quill-wrapper rounded-xl border border-bgray-200 dark:border-darkblack-400 overflow-hidden">
+                            <div id="task_overview_description_editor" class="h-48 bg-bgray-50 dark:bg-darkblack-500 dark:text-white"></div>
+                        </div>
                         <p class="hidden text-sm text-red-500" data-task-overview-description-error></p>
                         <div class="flex items-center justify-end">
                             <button type="submit" class="inline-flex items-center rounded-lg bg-success-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-300" data-task-overview-description-submit>
@@ -42,7 +45,7 @@
                         </div>
                     </form>
                 @elseif (filled($description))
-                    <div class="mt-4 min-h-[8rem] max-h-[24rem] overflow-y-auto rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 whitespace-pre-line dark:bg-darkblack-500 dark:text-bgray-300">{{ $description }}</div>
+                    <div class="mt-4 min-h-[8rem] max-h-[24rem] overflow-y-auto rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">{!! $description !!}</div>
                 @else
                     <p class="mt-4 {{ $emptyTextClasses }}">No task description added yet.</p>
                 @endif

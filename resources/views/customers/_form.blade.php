@@ -1,13 +1,13 @@
-<form action="{{ isset($customer) ? route('customers.update', $customer->id) : route('customers.store') }}" method="POST" class="space-y-10">
+<form action="{{ isset($customer) ? route('customers.update', $customer->id) : route('customers.store') }}" method="POST">
     @csrf
     @if (isset($customer))
         @method('PUT')
     @endif
 
     <!-- ================= BASIC COMPANY INFORMATION ================= -->
-    <div class="flex flex-col md:flex-row gap-8 border-b pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
-        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">
+    <div class="flex flex-col md:flex-row gap-8 pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <h3 class="col-span-full text-xl font-bold text-gray-800 border-b pb-2 mb-2 dark:border-darkblack-400 dark:text-white">
                 Company Information
             </h3>
 
@@ -42,7 +42,7 @@
                     </select>
 
                     @can('industry.create')
-                        <button type="button" data-target="#customer-industry-modal" data-select-target="industry_id" data-milestone="Industry" data-url="{{ route('settings.industries.store') }}" data-method="POST" data-sort_order="{{ $nextIndustrySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Industry" aria-label="Add Industry">
+                        <button type="button" data-target="#customer-industry-modal" data-select-target="industry_id" data-module="Industry" data-url="{{ route('settings.industries.store') }}" data-method="POST" data-sort_order="{{ $nextIndustrySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Industry" aria-label="Add Industry">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
@@ -83,8 +83,8 @@
     </div>
 
     <!-- ================= LOCATION DETAILS ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Location Details</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Location Details</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Registered Country -->
             <div class="flex flex-col gap-2">
@@ -132,8 +132,8 @@
     </div>
 
     <!-- ================= ADDITIONAL INFORMATION ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Additional Information</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Additional Information</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <!-- Company Address -->
@@ -160,8 +160,8 @@
     </div>
 
     <!-- ================= PRIMARY CONTACT ================= -->
-    <div>
-        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white">Contact Information</h3>
+    <div class="mt-5">
+        <h3 class="text-xl font-bold text-gray-800 border-b pb-4 mb-6 dark:border-darkblack-400 dark:text-white dark:border-darkblack-400">Contact Information</h3>
         <!-- para for primary contact -->
         <p class="text-base font-medium text-bgray-600 dark:text-bgray-50">Primary point of contact information for this customer.</p>
         <div class="h-4"></div>
@@ -215,7 +215,7 @@
             </div>
         </div>
 
-        <div class="pt-6 border-t flex justify-left dark:border-darkblack-400 dark:text-white">
+        <div class="pt-6 flex justify-left dark:border-darkblack-400 dark:text-white">
             <button type="button" data-target="#multi-step-modal" data-module="Extra Contact" class="modal-open px-4 py-2 bg-basicWhite text-white rounded-lg text-sm hover:bg-bgray-600 transition">
                 + Extra Contacts
             </button>
@@ -228,7 +228,7 @@
     </div>
 
     <!-- ================= SUBMIT BUTTON ================= -->
-    <div class="pt-6 border-t flex justify-end dark:border-darkblack-400 dark:text-white">
+    <div class="mt-5 pt-5 border-t border-gray-200 dark:border-darkblack-400 flex justify-end dark:border-darkblack-400 dark:text-white">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
             @if (isset($customer))
                 Update Customer
@@ -250,7 +250,7 @@
             <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Parent Industry</label>
             <select name="parent_id" id="customer_industry_parent_id" class="tom-select w-full" data-sort="0">
                 <option value="">Select Parent Industry</option>
-                @foreach (($parentIndustries ?? []) as $parentIndustry)
+                @foreach ($parentIndustries ?? [] as $parentIndustry)
                     <option value="{{ $parentIndustry->id }}">{{ $parentIndustry->name }}</option>
                 @endforeach
             </select>

@@ -40,7 +40,7 @@ class ProjectStageController extends Controller
                 $this->clearExistingDefaults();
             }
 
-            return activity()->withoutLogs(fn () => ProjectStage::create($data));
+            return ProjectStage::create($data);
         });
 
         return response()->json([
@@ -60,7 +60,7 @@ class ProjectStageController extends Controller
                 $this->clearExistingDefaults($projectStage->id);
             }
 
-            activity()->withoutLogs(fn () => $projectStage->update($data));
+            $projectStage->update($data);
 
             return $projectStage->refresh();
         });
@@ -80,7 +80,7 @@ class ProjectStageController extends Controller
                 ->with('error', 'System project stage cannot be deleted.');
         }
 
-        activity()->withoutLogs(fn () => $projectStage->delete());
+        $projectStage->delete();
 
         return redirect()
             ->route('settings.project-stages.index')
@@ -91,7 +91,7 @@ class ProjectStageController extends Controller
     {
         $projectStage = ProjectStage::findOrFail($request->id);
         $projectStage->is_active = !$projectStage->is_active;
-        activity()->withoutLogs(fn () => $projectStage->save());
+        $projectStage->save();
 
         return response()->json([
             'success' => true,

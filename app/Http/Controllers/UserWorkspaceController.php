@@ -235,7 +235,7 @@ class UserWorkspaceController extends Controller
         $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($userId, $selectedDate);
         $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $selectedDate);
         $breakTaskSegments = $this->splitBreakSegmentsForPendingRequests($workspaceUser, $selectedDate, $breakTaskSegments, $isOwnWorkspace);
-        $shiftSummaryDuration = (!empty($assignedShift['timeline_segments']) && ($assignedShift['is_working_day'] ?? false))
+        $shiftSummaryDuration = !empty($assignedShift['timeline_segments'])
             ? ($assignedShift['timeline_segments'][0]['duration_label'] ?? '--')
             : '--';
         $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($workedTaskSegments);

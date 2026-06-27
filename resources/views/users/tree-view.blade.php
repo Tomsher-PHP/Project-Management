@@ -583,6 +583,8 @@
                                 data-user-employee-id="{{ $rootEmployeeId }}"
                                 data-user-role="{{ $rootRole }}"
                                 data-user-designation="{{ $rootDesignation }}"
+                                data-user-reporting-to="-"
+                                data-user-is-super-admin="true"
                                 role="button"
                                 tabindex="0"
                                 aria-haspopup="dialog"
@@ -659,6 +661,10 @@
                     <span class="org-user-modal-label">Designation</span>
                     <span class="org-user-modal-value" data-org-user-designation>-</span>
                 </div>
+                <div class="org-user-modal-row" data-org-user-reporting-to-row>
+                    <span class="org-user-modal-label">Reporting To</span>
+                    <span class="org-user-modal-value" data-org-user-reporting-to>-</span>
+                </div>
             </div>
         </div>
     </div>
@@ -681,7 +687,9 @@
                 employeeId: modal.querySelector('[data-org-user-employee-id]'),
                 role: modal.querySelector('[data-org-user-role]'),
                 designation: modal.querySelector('[data-org-user-designation]'),
+                reportingTo: modal.querySelector('[data-org-user-reporting-to]'),
             };
+            const reportingToRow = modal.querySelector('[data-org-user-reporting-to-row]');
 
             const copyText = (value) => {
                 const fallbackCopy = (text) => {
@@ -716,6 +724,11 @@
                 fields.employeeId.textContent = card.dataset.userEmployeeId || '-';
                 fields.role.textContent = card.dataset.userRole || '-';
                 fields.designation.textContent = card.dataset.userDesignation || '-';
+                fields.reportingTo.textContent = card.dataset.userReportingTo || '-';
+
+                if (reportingToRow) {
+                    reportingToRow.style.display = card.dataset.userIsSuperAdmin === 'true' ? 'none' : '';
+                }
 
                 modal.classList.add('is-open');
                 modal.setAttribute('aria-hidden', 'false');

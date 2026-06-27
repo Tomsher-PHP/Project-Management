@@ -176,26 +176,8 @@ class DailyTimeReportService
         $rangeEndExclusiveLocal = $dateRange['end']
             ? $dateRange['end']->copy()->addDay()->startOfDay()
             : $nowLocal->copy();
-        $queryEndLocal = $dateRange['end'] && $dateRange['end']->isSameDay($nowLocal)
-            ? $nowLocal->copy()
-            : ($dateRange['end'] ? $rangeEndExclusiveLocal->copy() : $nowLocal->copy());
 
-        $logsQuery = TaskTimeLog::query()
-            ->whereIn('user_id', $userIds)
-            ->where('started_at', '<=', $queryEndLocal->copy()->timezone('UTC'))
-            ->with([
-                'user' => function ($query) {
-                    $query->select('id', 'name')
-                        ->with(['shiftAssignments.weekends', 'primaryAttachment']);
-                },
-            ]);
-
-        if ($rangeStartLocal) {
-            $logsQuery->where(function ($query) use ($rangeStartLocal) {
-                $query->whereNull('ended_at')
-                    ->orWhere('ended_at', '>', $rangeStartLocal->copy()->timezone('UTC'));
-            });
-        }
+        $logsQuery = $this->getBaseLogsQuery($dateRange, $userIds, $nowLocal);
 
         $logs = $logsQuery->get();
 
@@ -360,6 +342,38 @@ class DailyTimeReportService
         });
     }
 
+    protected function getBaseLogsQuery(array $dateRange, array $userIds, Carbon $nowLocal)
+    {
+        $rangeEndExclusiveLocal = $dateRange['end']
+            ? $dateRange['end']->copy()->addDay()->startOfDay()
+            : $nowLocal->copy();
+
+        $queryEndLocal = $dateRange['end'] && $dateRange['end']->isSameDay($nowLocal)
+            ? $nowLocal->copy()
+            : ($dateRange['end'] ? $rangeEndExclusiveLocal->copy() : $nowLocal->copy());
+
+        $logsQuery = TaskTimeLog::query()
+            ->whereIn('user_id', $userIds)
+            ->where('started_at', '<=', $queryEndLocal->copy()->timezone('UTC'))
+            ->with([
+                'user' => function ($query) {
+                    $query->select('id', 'name')
+                        ->with(['shiftAssignments.weekends', 'primaryAttachment']);
+                },
+            ]);
+
+        $rangeStartLocal = $dateRange['start']?->copy()->startOfDay();
+
+        if ($rangeStartLocal) {
+            $logsQuery->where(function ($query) use ($rangeStartLocal) {
+                $query->whereNull('ended_at')
+                    ->orWhere('ended_at', '>', $rangeStartLocal->copy()->timezone('UTC'));
+            });
+        }
+
+        return $logsQuery;
+    }
+
     public function getFilterShifts(Request $request): Collection
     {
         $userIds = $this->getAccessibleUserIds($request->user());
@@ -382,14 +396,7 @@ class DailyTimeReportService
             ->values();
     }
 
-    protected function resolveShiftDetails(
-        User $user,
-        Carbon $selectedDate,
-        ?Carbon $actualStart,
-        ?Carbon $actualEnd,
-        bool $hasRunning,
-        string $timeFormat
-    ): array
+    protected function resolveShiftDetails(User $user, Carbon $selectedDate, ?Carbon $actualStart, ?Carbon $actualEnd, bool $hasRunning, string $timeFormat): array
     {
         $assignment = $this->resolveShiftAssignmentForDate($user, $selectedDate);
 
@@ -432,9 +439,11 @@ class DailyTimeReportService
             $shiftWorkingHour = formatSecondsToHMS($workingSeconds);
         }
 
+        $baseShiftName = $assignment->shift_name ?: '--';
+
         return [
             'shift_id' => $assignment->shift_id ? (int) $assignment->shift_id : null,
-            'shift_name' => $assignment->shift_name ?: '--',
+            'shift_name' => $isWeekend ? $baseShiftName . ' (Week Off)' : $baseShiftName,
             'shift_color_code' => $assignment->color_code ?: null,
             'shift_time_from' => $shiftStart->format($timeFormat),
             'shift_time_to' => $shiftEnd->format($timeFormat),
@@ -464,13 +473,15 @@ class DailyTimeReportService
             return null;
         }
 
+        $timezone = (string) config('constants.timezone', 'UTC');
+
         return $user->shiftAssignments
-            ->filter(function ($assignment) use ($selectedDate) {
+            ->filter(function ($assignment) use ($selectedDate, $timezone) {
                 $dateFrom = $assignment->date_from
-                    ? Carbon::parse($assignment->date_from)->startOfDay()
+                    ? Carbon::parse($assignment->date_from, $timezone)->startOfDay()
                     : null;
                 $dateTo = $assignment->date_to
-                    ? Carbon::parse($assignment->date_to)->endOfDay()
+                    ? Carbon::parse($assignment->date_to, $timezone)->endOfDay()
                     : null;
 
                 if ($dateFrom && $selectedDate->lt($dateFrom)) {
@@ -633,6 +644,7 @@ class DailyTimeReportService
         }
 
         $rawValue = trim($value);
+        $timezone = (string) config('constants.timezone', 'UTC');
         $formats = collect([
             (string) config('constants.date_format', 'Y-m-d'),
             'Y-m-d',
@@ -645,7 +657,7 @@ class DailyTimeReportService
 
         foreach ($formats as $format) {
             try {
-                $date = Carbon::createFromFormat($format, $rawValue);
+                $date = Carbon::createFromFormat($format, $rawValue, $timezone);
             } catch (\Throwable) {
                 continue;
             }

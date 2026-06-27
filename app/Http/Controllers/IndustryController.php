@@ -32,7 +32,7 @@ class IndustryController extends Controller
 
     public function store(IndustryRequest $request)
     {
-        $industry = activity()->withoutLogs(fn () => Industry::create($request->validated()));
+        $industry = Industry::create($request->validated());
 
         return response()->json([
             'status' => true,
@@ -43,7 +43,7 @@ class IndustryController extends Controller
 
     public function update(IndustryRequest $request, Industry $industry)
     {
-        activity()->withoutLogs(fn () => $industry->update($request->validated()));
+        $industry->update($request->validated());
 
         return response()->json([
             'status' => true,
@@ -68,7 +68,7 @@ class IndustryController extends Controller
                 ->with('error', 'This industry has child, cannot be deleted.');
         }
 
-        activity()->withoutLogs(fn () => $industry->delete());
+        $industry->delete();
 
         return redirect()
             ->route('settings.industries.index')
@@ -79,7 +79,7 @@ class IndustryController extends Controller
     {
         $industry = Industry::findOrFail($request->id);
         $industry->is_active = !$industry->is_active;
-        activity()->withoutLogs(fn () => $industry->save());
+        $industry->save();
 
         return response()->json([
             'success' => true,

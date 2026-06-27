@@ -134,7 +134,14 @@
 
                 <div class="md:col-span-2">
                     <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                    <textarea name="description" rows="4" class="{{ $textareaClasses }}" @disabled(!$canEditTask)>{{ $task->description }}</textarea>
+                    @if ($canEditTask)
+                        <input type="hidden" name="description" id="project_task_detail_description_input" value="{{ $task->description }}">
+                        <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                            <div id="project_task_detail_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                        </div>
+                    @else
+                        <div class="mt-2 min-h-[8rem] max-h-[24rem] overflow-y-auto rounded-xl bg-bgray-50 px-4 py-4 text-sm leading-7 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">{!! $task->description !!}</div>
+                    @endif
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="description"></p>
                 </div>
 

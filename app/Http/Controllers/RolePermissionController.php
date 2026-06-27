@@ -90,7 +90,7 @@ class RolePermissionController extends Controller
             $role->syncPermissions($permissions);
         });
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
+        return redirect(session('roles_return_url', route('roles.index')))->with('success', 'Role updated successfully.');
     }
 
     public function toggleStatus(Request $request)

@@ -11,7 +11,7 @@
     <!-- Per Page Selector -->
     <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex items-center gap-3">
-            <span class="text-sm font-medium text-gray-600">
+            <span class="text-sm font-medium text-gray-600 dark:text-white">
                 Show result:
             </span>
 
@@ -40,7 +40,7 @@
                 </select>
             </form>
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
+        <p class="text-sm text-gray-500 dark:text-white">
             Showing {{ $firstItem }} to {{ $lastItem }} of {{ $total }} results
         </p>
     </div>
@@ -70,11 +70,11 @@
 
             <!-- Previous Button -->
             @if ($paginator->onFirstPage())
-                <span class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                <span class="px-3 py-2 text-gray-400 dark:text-white cursor-not-allowed">
                     ‹
                 </span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" class="px-3 py-2 text-gray-600 hover:text-indigo-600">
+                <a href="{{ $paginator->previousPageUrl() }}" class="px-3 py-2 text-gray-600 dark:text-white hover:text-indigo-600">
                     ‹
                 </a>
             @endif
@@ -87,7 +87,7 @@
 
                 @foreach ($visiblePages as $page)
                     @if ($previousVisiblePage !== null && $page - $previousVisiblePage > 1)
-                        <span class="px-3 py-2 text-gray-400">
+                        <span class="px-3 py-2 text-gray-400 dark:text-white">
                             ...
                         </span>
                     @endif
@@ -97,7 +97,7 @@
                             {{ $page }}
                         </span>
                     @else
-                        <a href="{{ $paginator->url($page) }}" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-indigo-50 rounded-lg">
+                        <a href="{{ $paginator->url($page) }}" class="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-white hover:bg-indigo-50 rounded-lg">
                             {{ $page }}
                         </a>
                     @endif
@@ -110,11 +110,11 @@
 
             <!-- Next Button -->
             @if ($paginator->hasMorePages())
-                <a href="{{ $paginator->nextPageUrl() }}" class="px-3 py-2 text-gray-600 hover:text-indigo-600">
+                <a href="{{ $paginator->nextPageUrl() }}" class="px-3 py-2 text-gray-600 dark:text-white hover:text-indigo-600">
                     ›
                 </a>
             @else
-                <span class="px-3 py-2 text-gray-400 cursor-not-allowed">
+                <span class="px-3 py-2 text-gray-400 dark:text-white cursor-not-allowed">
                     ›
                 </span>
             @endif

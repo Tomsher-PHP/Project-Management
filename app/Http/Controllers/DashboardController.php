@@ -64,5 +64,18 @@ class DashboardController extends Controller
             'total' => $runningTasksData->total(),
         ]);
     }
+
+    public function tileDetails(Request $request, DashboardServices $dashboardServices)
+    {
+        $user = $request->user();
+        $type = $request->query('type');
+        
+        $data = $dashboardServices->getTileDetails($user, $type);
+        
+        return response()->json([
+            'success' => true,
+            'html' => view('dashboard.partials.tile-details-modal-content', $data)->render(),
+        ]);
+    }
 }
 

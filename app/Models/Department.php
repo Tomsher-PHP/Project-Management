@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\LogsModelActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Filterable;
@@ -11,7 +10,7 @@ use App\Traits\Sortable;
 
 class Department extends Model
 {
-    use SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
+    use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
     protected $fillable = [
         'name',

@@ -31,7 +31,6 @@ class ProjectRequest extends FormRequest
 
         if ($this->isMethod('POST')) {
             $rules['project_flow'] = 'required|in:agile,linear';
-            $rules['project_status'] = 'required|exists:project_statuses,id';
         }
 
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {

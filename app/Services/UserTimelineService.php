@@ -138,7 +138,7 @@ class UserTimelineService
         $timelineSegments = [];
         $assignment = $selectedAssignment ?? $previousAssignment;
 
-        if ($previousAssignment && !$this->isWeekendForAssignment($previousAssignment, $previousDate)) {
+        if ($previousAssignment) {
             $timelineSegments = array_merge($timelineSegments, $this->buildShiftTimelineSegmentsForSelectedDate(
                 $previousAssignment,
                 $previousDate,
@@ -146,7 +146,7 @@ class UserTimelineService
             ));
         }
 
-        if ($selectedAssignment && !$this->isWeekendForAssignment($selectedAssignment, $selectedDate)) {
+        if ($selectedAssignment) {
             $timelineSegments = array_merge($timelineSegments, $this->buildShiftTimelineSegmentsForSelectedDate(
                 $selectedAssignment,
                 $selectedDate,
@@ -182,7 +182,7 @@ class UserTimelineService
             'date_to' => $assignment->date_to,
 
             'is_weekend' => $isWeekend,
-            'is_working_day' => !empty($timelineSegments),
+            'is_working_day' => !empty($timelineSegments) && !$isWeekend,
             'reason' => $assignment->reason,
             'timeline' => $timeline,
             'timeline_segments' => $timelineSegments,

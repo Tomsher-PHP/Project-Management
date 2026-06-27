@@ -4,13 +4,9 @@
         <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 
             <div class="flex flex-wrap items-center gap-3">
+                <x-back-button label="Back" />
                 @can('checklist_template.create')
-                    <button type="button" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-success-400" data-module="Checklist Template" data-url="{{ route('settings.checklists.store') }}" data-method="POST">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>New Checklist Template</span>
-                    </button>
+                    <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Checklist Template" data-url="{{ route('settings.checklists.store') }}" data-method="POST" label="Checklist Template" />
                 @endcan
 
                 <x-filters.button />

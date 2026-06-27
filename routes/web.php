@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/summary', [DashboardController::class, 'summary'])->middleware('permission.type:dashboard.view')->name('dashboard.summary');
     Route::get('/dashboard/worked-time', [DashboardController::class, 'workedTime'])->middleware('permission.type:dashboard.view')->name('dashboard.worked-time');
     Route::get('/dashboard/running-tasks', [DashboardController::class, 'runningTasks'])->middleware('permission.type:dashboard.view')->name('dashboard.running-tasks');
+    Route::get('/dashboard/tile-details', [DashboardController::class, 'tileDetails'])->middleware('permission.type:dashboard.view')->name('dashboard.tile-details');
     // End of Dashboard Routes
 
     // User workspace route
@@ -109,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/general-settings', [UserController::class, 'updateGeneralSettings'])->name('users.general.settings');
     Route::post('/users/change-password', [UserController::class, 'changePassword'])->name('users.change.password');
     Route::get('/users/{user}/shifts', [UserController::class, 'shifts'])->name('users.shifts');
+    Route::post('/users/{user}/initial-shift', [UserController::class, 'storeInitialShift'])->name('users.initial-shift.store');
     Route::get('/users/{user}/shift-calendar', [UserController::class, 'shiftCalendarData'])->name('users.shift-calendar');
 
     Route::put('/users/{user}/modal-update', [UserController::class, 'updateModal'])->name('users.modal.update');
@@ -279,8 +281,8 @@ Route::middleware(['auth'])->group(function () {
     // Customer Routes
     Route::patch('/customers/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggleStatus')->middleware('permission.type:customer.edit');
     Route::patch('/customers/{customer}/profile-grade', [CustomerController::class, 'updateProfileGrade'])->name('customers.profile-grade.update')->middleware('permission.type:customer.edit');
-    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index', 'show']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.create')->only(['create', 'store']);
+    Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.view')->only(['index', 'show']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.edit')->only(['edit', 'update']);
     Route::resource('customers', CustomerController::class)->middleware('permission.type:customer.delete')->only(['destroy']);
 
@@ -453,9 +455,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/break-work-requests', [BreakRequestController::class, 'index'])->name('break-requests.index');
     Route::post('/break-work-requests', [BreakRequestController::class, 'store'])->name('break-work-requests.store');
     Route::match(['put', 'patch'], '/break-work-requests/{breakWorkRequest}', [BreakRequestController::class, 'update'])->name('break-work-requests.update');
-
     Route::post('/break-work-requests/bulk/{action}', [BreakRequestController::class, 'handleBulkAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.bulk-action');
-
     Route::post('/break-work-requests/{breakWorkRequest}/{action}', [BreakRequestController::class, 'handleAction'])->middleware(['permission.type:break_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('break-requests.action');
     // End Break Request routes
 

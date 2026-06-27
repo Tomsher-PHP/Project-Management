@@ -32,7 +32,7 @@ class TechnologyController extends Controller
 
     public function store(TechnologyRequest $request)
     {
-        $technology = activity()->withoutLogs(fn () => Technology::create($request->validated()));
+        $technology = Technology::create($request->validated());
 
         return response()->json([
             'status' => true,
@@ -43,7 +43,7 @@ class TechnologyController extends Controller
 
     public function update(TechnologyRequest $request, Technology $technology)
     {
-        activity()->withoutLogs(fn () => $technology->update($request->validated()));
+        $technology->update($request->validated());
 
         return response()->json([
             'status' => true,
@@ -60,7 +60,7 @@ class TechnologyController extends Controller
                 ->with('error', 'System technology cannot be deleted.');
         }
 
-        activity()->withoutLogs(fn () => $technology->delete());
+        $technology->delete();
 
         return redirect()
             ->route('settings.technologies.index')
@@ -71,7 +71,7 @@ class TechnologyController extends Controller
     {
         $technology = Technology::findOrFail($request->id);
         $technology->is_active = !$technology->is_active;
-        activity()->withoutLogs(fn () => $technology->save());
+        $technology->save();
 
         return response()->json([
             'success' => true,

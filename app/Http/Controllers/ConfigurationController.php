@@ -45,32 +45,30 @@ class ConfigurationController extends Controller
     public function update(ConfigurationRequest $request, AttachmentService $attachmentService)
     {
         $config = $this->getConfiguration();
-        activity()->withoutLogs(function () use ($config, $request, $attachmentService) {
-            $oldTimezone = $config->timezone;
+        $oldTimezone = $config->timezone;
 
-            $config->update($request->only([
-                'company_name',
-                'company_email',
-                'website',
-                'email_suffix',
-                'company_phone',
-                'company_address',
-                'timezone',
-                'date_format',
-                'time_format',
-            ]));
+        $config->update($request->only([
+            'company_name',
+            'company_email',
+            'website',
+            'email_suffix',
+            'company_phone',
+            'company_address',
+            'timezone',
+            'date_format',
+            'time_format',
+        ]));
 
-            // clear cache only if timezone changed
-            if ($oldTimezone !== $config->timezone) {
-                Cache::forget('company_timezone');
-            }
+        // clear cache only if timezone changed
+        if ($oldTimezone !== $config->timezone) {
+            Cache::forget('company_timezone');
+        }
 
-            if ($request->hasFile('logo')) {
-                $this->replaceLogo($config, $request->file('logo'), $attachmentService);
-            } elseif ($request->boolean('remove_logo')) {
-                $this->deleteLogo($config, $attachmentService);
-            }
-        });
+        if ($request->hasFile('logo')) {
+            $this->replaceLogo($config, $request->file('logo'), $attachmentService);
+        } elseif ($request->boolean('remove_logo')) {
+            $this->deleteLogo($config, $attachmentService);
+        }
 
         return redirect()->back()->with('success', 'Configuration updated successfully!');
     }
@@ -95,6 +93,6 @@ class ConfigurationController extends Controller
 
     private function getConfiguration(): Configuration
     {
-        return activity()->withoutLogs(fn() => Configuration::firstOrCreate([]));
+        return Configuration::firstOrCreate([]);
     }
 }

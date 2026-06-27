@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
+use App\Models\ProjectStatus;
 use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
+use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
@@ -470,5 +472,63 @@ class DashboardServices
             ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
                 $milestoneQuery->where('owner_id', $user->id);
             });
+    }
+
+    /**
+     * Get details for a dashboard count tile
+     *
+     * @param User $user
+     * @param string $type
+     * @return array
+     */
+    public function getTileDetails(User $user, string $type): array
+    {
+        $isProject = str_ends_with($type, '_projects');
+        $isTask = str_ends_with($type, '_tasks');
+
+        if (!$isProject && !$isTask) {
+            abort(400, 'Invalid tile type');
+        }
+
+        $records = [];
+        $viewAllUrl = '';
+        $title = ucwords(str_replace('_', ' ', $type));
+
+        if ($isProject) {
+            $statusType = str_replace('_projects', '', $type); // 'total', 'open', 'in_progress', 'archived', 'completed'
+
+            $query = Project::accessibleBy($user)
+                ->with(['customer.profileGrade', 'projectStatus']);
+
+            $statusIds = [];
+            if ($statusType !== 'total') {
+                $statusIds = ProjectStatus::where('type', $statusType)->pluck('id')->toArray();
+                $query->whereIn('status_id', $statusIds);
+            }
+
+            $records = $query->latest('projects.created_at')->limit(15)->get();
+            $viewAllUrl = route('projects.index', $statusType !== 'total' ? ['status_id' => $statusIds] : []);
+        } else {
+            $statusType = str_replace('_tasks', '', $type); // 'total', 'pending', 'active', 'archived', 'completed'
+
+            $query = Task::accessibleBy($user)
+                ->with(['currentAssignee', 'status']);
+
+            $statusIds = [];
+            if ($statusType !== 'total') {
+                $statusIds = TaskStatus::where('type', $statusType)->pluck('id')->toArray();
+                $query->whereIn('status_id', $statusIds);
+            }
+
+            $records = $query->latest('tasks.created_at')->limit(15)->get();
+            $viewAllUrl = route('tasks.index', $statusType !== 'total' ? ['status_id' => $statusIds] : []);
+        }
+
+        return [
+            'records' => $records,
+            'title' => $title,
+            'viewAllUrl' => $viewAllUrl,
+            'isProject' => $isProject,
+        ];
     }
 }

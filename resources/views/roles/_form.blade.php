@@ -1,4 +1,4 @@
-<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST" class="space-y-10">
+<form action="{{ isset($role) ? route('roles.update', $role->id) : route('roles.store') }}" method="POST">
 
     @csrf
     @if (isset($role))
@@ -85,7 +85,7 @@
     </div>
 
     <!-- ================= SUBMIT ================= -->
-    <div class="sticky bottom-0 z-20 -mx-1 flex justify-end border-t border-bgray-200 bg-white/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-darkblack-400 dark:bg-darkblack-600/95">
+    <div class="sticky bottom-0 z-20 -mx-1 flex justify-end border-t border-bgray-200 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-darkblack-400 dark:bg-darkblack-600/95">
         <button type="submit" class="{{ $submitButtonClasses }}">
             {{ $submitLabel }}
         </button>

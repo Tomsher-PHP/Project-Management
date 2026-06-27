@@ -8,6 +8,7 @@
             'project_sprint_id' => (string) ($schedule->project_sprint_id ?? ''),
             'current_assignee_id' => (string) ($schedule->current_assignee_id ?? ''),
             'estimated_time_minutes' => intdiv((int) $schedule->estimated_time_seconds, 60),
+            'due_after_seconds' => (int) $schedule->due_after_seconds,
         ]
         : [];
 @endphp
@@ -79,7 +80,10 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
-                                <textarea name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $schedule?->description }}</textarea>
+                                <input type="hidden" name="description" id="schedule_task_description_input" value="{{ $schedule?->description }}">
+                                <div class="custom-quill-wrapper rounded-lg border border-gray-300 dark:border-darkblack-400 overflow-hidden">
+                                    <div id="schedule_task_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                </div>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="description"></p>
                             </div>
                             <div>
@@ -133,17 +137,16 @@
                                     <option value="monthly" @selected($schedule?->frequency_type === 'monthly')>Monthly</option>
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="frequency_type"></p>
-                                <div class="mt-1 rounded-lg bg-white/70 dark:border-darkblack-400 dark:bg-darkblack-600/70">
-                                    <p class="break-words text-xs leading-5 text-bgray-500 dark:text-bgray-400" data-schedule-frequency-note>
+                                <div class="mt-1 rounded-lg dark:border-darkblack-400 dark:bg-darkblack-600/70">
+                                    <p class="break-words text-xs leading-5 text-bgray-500 dark:text-bgray-300" data-schedule-frequency-note>
                                         A task will be generated every working day based on the assigned user's active shift. No task will be generated on shift week-off days or when no valid shift assignment exists.
                                     </p>
                                 </div>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After Hours</label>
-                                <input type="number" name="due_after_hours" value="{{ $schedule?->due_after_hours ?? 0 }}" min="0" step="1" placeholder="Example: 24" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Number of hours after task generation to set the due date. Leave empty if no due date should be assigned.</p>
-                                <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_hours"></p>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After</label>
+                                <x-forms.estimated-time-input name="due_after_seconds" :total-minutes="$isEdit ? intdiv((int) $schedule->due_after_seconds, 60) : 0" :show-label="false" help-text="Duration after task generation to set the due date. Leave empty if no due date should be assigned." />
+                                <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_seconds"></p>
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Start Date <x-red-star /></label>

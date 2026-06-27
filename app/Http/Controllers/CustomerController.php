@@ -33,6 +33,7 @@ class CustomerController extends Controller
         $customers = Customer::with(['industry', 'country', 'salesPerson'])
             ->filter($request->all())
             ->sort($request->all())
+            ->orderBy('customers.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -123,7 +124,7 @@ class CustomerController extends Controller
     {
         $service->update($customer, $request->validated());
 
-        return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
+        return redirect(session('customers_return_url', route('customers.index')))->with('success', 'Customer updated successfully.');
     }
 
     public function destroy(Customer $customer)
@@ -131,8 +132,7 @@ class CustomerController extends Controller
         $customer->contacts()->delete();
         $customer->delete();
 
-        return redirect()->route('customers.index')
-            ->with('success', 'Customer deleted successfully.');
+        return redirect(session('customers_return_url', route('customers.index')))->with('success', 'Customer deleted successfully.');
     }
 
     public function toggleStatus(Request $request)

@@ -6,7 +6,7 @@
 ])
 
 @php
-    $resolvedName = $name ?? data_get($user, 'name') ?? 'User';
+    $resolvedName = $name ?? (data_get($user, 'name') ?? 'User');
     $hasUserImage = (bool) data_get($user, 'hasProfileImage', false);
     $resolvedImage = filled($image) ? $image : ($hasUserImage ? data_get($user, 'profileImageUrl') : null);
     $initial = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr(\Illuminate\Support\Str::squish($resolvedName), 0, 2));
@@ -34,7 +34,7 @@
 
 <div {{ $attributes->merge(['class' => $baseClasses . ' ' . $sizeClasses]) }}>
     @if (filled($resolvedImage))
-        <img src="{{ $resolvedImage }}" alt="{{ $resolvedName }}" class="h-full w-full rounded-full object-cover">
+        <img src="{{ $resolvedImage }}" alt="{{ $initial }}" class="h-full w-full rounded-full object-cover">
     @else
         <span class="flex h-full w-full items-center justify-center {{ $initialSizeClasses }}">
             {{ $initial }}

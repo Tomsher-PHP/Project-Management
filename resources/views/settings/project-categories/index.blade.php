@@ -3,18 +3,13 @@
 @section('page-content')
     <!-- Page starts -->
         <div class="mb-6 flex flex-wrap items-center gap-3">
+            <x-back-button label="Back" />
 
-        @can('project_category.create')
-            <a href="javascript:void(0)" data-target="#multi-step-modal" class="modal-open inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success-300 text-sm font-semibold text-white hover:bg-success-400 transition duration-200 shadow-sm" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+            @can('project_category.create')
+                <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Project Category" />
+            @endcan
 
-                <span>New Project Category</span>
-            </a>
-        @endcan
-
-        <x-filters.button />
+            <x-filters.button />
         </div>
 
         <!-- write your code here-->

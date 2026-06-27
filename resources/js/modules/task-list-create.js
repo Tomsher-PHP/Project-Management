@@ -14,6 +14,8 @@ const ADVANCED_TASK_FIELDS = new Set([
     'is_billable',
 ]);
 
+const taskCreateEditors = new WeakMap();
+
 const parseDependencies = () => {
     const node = document.getElementById('task-create-dependencies');
 
@@ -420,7 +422,7 @@ const setEmptyProjectState = (form) => {
         disabled: true,
     });
     setEstimatedTimeValue(form, 0);
-    setCheckboxValue(form.querySelector('[name="is_billable"]'), false);
+    setCheckboxValue(form.querySelector('input[type="checkbox"][name="is_billable"]'), false);
 };
 
 const applyProjectDefaults = async (form, dependencies) => {
@@ -430,7 +432,7 @@ const applyProjectDefaults = async (form, dependencies) => {
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
     const dueDateField = form.querySelector('[name="due_date_time"]');
-    const billableField = form.querySelector('[name="is_billable"]');
+    const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 
     if (!projectMeta) {
@@ -553,6 +555,14 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     initializeEstimatedTimeInputs(form);
     initDatepicker('.datepicker', {}, root);
     form.reset();
+    const editor = taskCreateEditors.get(root);
+    if (editor) {
+        editor.setContents([]);
+    }
+    const descInput = form.querySelector('#task_create_description_input');
+    if (descInput) {
+        descInput.value = '';
+    }
     clearTaskCreateErrors(form);
     setTaskCreateAdvancedState(root, false);
     setTaskCreateMode(root, getTaskCreateMode(root));
@@ -594,6 +604,23 @@ const initializeTaskCreateRoot = (root, dependencies) => {
 
     root.dataset.taskCreateInitialized = 'true';
     initTomSelect(root);
+
+    const editorElement = root.querySelector('#task_create_description_editor');
+    if (editorElement && !taskCreateEditors.has(root)) {
+        const editor = new window.Quill(editorElement, {
+            theme: 'snow',
+            placeholder: 'Add task details...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['link']
+                ]
+            }
+        });
+        taskCreateEditors.set(root, editor);
+    }
 
     root.addEventListener('click', async (event) => {
         const openButton = event.target.closest('[data-task-create-open]');
@@ -699,6 +726,13 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         event.preventDefault();
 
         clearTaskCreateErrors(form);
+
+        const editor = taskCreateEditors.get(root);
+        const descInput = form.querySelector('#task_create_description_input');
+        if (editor && descInput) {
+            const content = editor.root.innerHTML.trim();
+            descInput.value = (content === '<p><br></p>') ? '' : content;
+        }
 
         const submitButton = form.querySelector('[data-task-create-submit]');
         const storeUrl = form.dataset.storeUrl;

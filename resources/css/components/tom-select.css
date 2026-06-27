@@ -19,7 +19,7 @@
 
 .ts-wrapper .ts-control .item,
 .ts-wrapper .ts-control .item *,
-.ts-wrapper .ts-control > div {
+.ts-wrapper .ts-control>div {
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
@@ -27,7 +27,7 @@
     white-space: nowrap;
 }
 
-.ts-wrapper .ts-control > input {
+.ts-wrapper .ts-control>input {
     min-width: 0 !important;
     height: 24px;
     line-height: 24px;
@@ -48,10 +48,19 @@
 .ts-dropdown {
     border-radius: 0.5rem;
     border-width: 1px;
+    z-index: 9999 !important;
 }
 
-.ts-wrapper .ts-control::after {
-    content: '';
+select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: none !important;
+    color: #1f1f1f;
+}
+
+/* .ts-wrapper .ts-control::after {
+    content: none;
     position: absolute;
     right: 1rem;
     top: 50%;
@@ -61,20 +70,11 @@
     border-bottom: 2px solid #9ca3af;
     transform: translateY(-50%) rotate(45deg);
     pointer-events: none;
-}
+    display: none;
+} */
 
 /* position clear button */
-.ts-wrapper .clear-button {
-    position: absolute;
-    top: 50%;
-    left: 90%;
-    /* right: 1rem; */
-    /* right corner */
-    transform: translateY(-50%);
-    z-index: 2;
-    pointer-events: auto;
-    /* only the button clickable */
-}
+
 
 /* Options in dropdown */
 .ts-dropdown .ts-option {

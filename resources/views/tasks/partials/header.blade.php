@@ -7,7 +7,10 @@
     <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div class="min-w-0 flex-1">
             <div class="flex items-start gap-3">
-                <div class="mt-1 h-12 w-1.5 rounded {{ $priorityBarClass }}"></div>
+                <div class="shrink-0 mt-1">
+                    <x-back-button />
+                </div>
+                <div class="mt-1 h-10 w-1 shrink-0 rounded {{ $priorityBarClass }}"></div>
 
                 <div class="min-w-0">
                     <h2 class="min-w-0">
