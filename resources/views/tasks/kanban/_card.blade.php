@@ -37,6 +37,7 @@
     $milestoneName = $milestone?->name;
     $sprintName = $sprint?->name;
     $assigneeName = $task->currentAssignee?->name;
+    $commentsCount = $task->comments_count ?? ($task->relationLoaded('comments') ? $task->comments->count() : 0);
 
     $limitText = fn(?string $value, int $length = 20, string $end = '...'): string => \Illuminate\Support\Str::limit($value ?? '', $length, $end);
 @endphp
@@ -76,9 +77,11 @@
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
-                <span class="inline-flex shrink-0 border bg-white px-1 py-0 font-semibold {{ $priorityTextClass }}" style="border-color: currentColor;" title="Priority: {{ $priorityLabel }}">
-                    {{ $priorityLabel }}
-                </span>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex shrink-0 border bg-white px-1 py-0 font-semibold {{ $priorityTextClass }}" style="border-color: currentColor;" title="Priority: {{ $priorityLabel }}">
+                        {{ $priorityLabel }}
+                    </span>
+                </div>
 
                 @if ($dueDate)
                     <span class="inline-flex min-w-0 items-center gap-1 text-right leading-5 {{ taskDueDateClass($dueDate, $task->estimated_time_seconds, $task) }}" title="{{ $dueDateDisplay }}">
@@ -90,14 +93,25 @@
         </div>
 
         <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2" title="{{ $assigneeName ?: 'Not Assigned' }}">
-                @if ($task->currentAssignee)
-                    <x-user-avatar :user="$task->currentAssignee" size="sm" />
-                @else
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold uppercase text-gray-600 dark:bg-darkblack-500 dark:text-gray-300">
-                        NA
-                    </div>
-                @endif
+            <div class="flex items-center gap-2">
+                <div title="{{ $assigneeName ?: 'Not Assigned' }}">
+                    @if ($task->currentAssignee)
+                        <x-user-avatar :user="$task->currentAssignee" size="sm" />
+                    @else
+                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold uppercase text-gray-600 dark:bg-darkblack-500 dark:text-gray-300">
+                            NA
+                        </div>
+                    @endif
+                </div>
+
+                <button type="button"
+                    class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors"
+                    title="View Comments"
+                    data-task-insights-trigger
+                    data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
+                    <span>💬</span>
+                    <span>{{ $commentsCount }}</span>
+                </button>
             </div>
 
             <div class="flex items-center gap-2 text-[12px] font-semibold">

@@ -105,6 +105,7 @@ class TaskServices
             ->with($this->relations())
             ->withCount([
                 'childTasks',
+                'comments',
                 'childTasks as completed_child_tasks_count' => function ($query) {
                     $query->where(function ($childTaskQuery) {
                         $childTaskQuery

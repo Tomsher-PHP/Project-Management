@@ -73,6 +73,9 @@
 
         <!-- Request Estimate Change Modal -->
         @include('tasks.partials.extend-time-modal')
+
+        <!-- Task Insights Modal -->
+        @include('tasks.partials.modals.insights-modal')
     </main>
 
     <x-filters.drawer>

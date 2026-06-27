@@ -535,7 +535,7 @@ class TaskController extends Controller
             'updatedBy:id,name',
             'currentAssignmentLog.user:id,name',
             'activeTimeLog.user:id,name',
-        ]);
+        ])->loadCount('comments');
 
         return $task;
     }

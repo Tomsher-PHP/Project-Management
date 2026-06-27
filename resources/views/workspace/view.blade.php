@@ -53,6 +53,9 @@
             <!-- Request Estimate Change Modal -->
             @include('tasks.partials.extend-time-modal')
 
+            <!-- Task Insights Modal -->
+            @include('tasks.partials.modals.insights-modal')
+
             <script id="task-filter-dependencies" type="application/json">
                 @json([
                     'milestones' => $projectMilestones->values(),
