@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class ResetPasswordRequest extends FormRequest
 {
@@ -21,9 +22,13 @@ class ResetPasswordRequest extends FormRequest
      */
     public function rules(): array
     {
+        $passwordRules = [
+            Password::min(8)->letters()->numbers(),
+        ];
+
         return [
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => array_merge(['required', 'confirmed'], $passwordRules),
         ];
     }
 }
