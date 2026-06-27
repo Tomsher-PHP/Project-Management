@@ -5,17 +5,7 @@
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-3">
             @can('user.create')
-                <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-1.5
-                       rounded-md bg-success-300
-                       text-sm font-semibold text-white
-                       hover:bg-success-400
-                       transition duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-
-                    <span>New User</span>
-                </a>
+                <x-button.create-button :href="route('users.create')" label="User" />
             @endcan
 
             <x-filters.button />
