@@ -6,7 +6,7 @@
     <!-- Select All Permissions Checkbox -->
     <div class="mb-4">
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="select-all-permissions" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            <input type="checkbox" id="select-all-permissions" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-bgray-300 dark:bg-darkblack-600">
             <span class="text-sm text-gray-700 dark:text-bgray-50 font-semibold">
                 Select All Permissions
             </span>
@@ -27,7 +27,7 @@
                 <!-- Module Header with Module Select All -->
                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl dark:bg-darkblack-600 dark:border-darkblack-400">
                     <div class="flex items-center gap-3">
-                        <input id="permission-module-toggle-{{ \Illuminate\Support\Str::slug($milestone) }}" type="checkbox" class="module-select-all h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}" aria-label="Select all permissions for {{ ucfirst(str_replace('_', ' ', $milestone)) }}">
+                        <input id="permission-module-toggle-{{ \Illuminate\Support\Str::slug($milestone) }}" type="checkbox" class="module-select-all h-5 w-5 rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-bgray-300 dark:bg-darkblack-600" data-module="{{ $milestone }}" aria-label="Select all permissions for {{ ucfirst(str_replace('_', ' ', $milestone)) }}">
                         <label for="permission-module-toggle-{{ \Illuminate\Support\Str::slug($milestone) }}" class="cursor-pointer">
                             <h3 id="permission-module-{{ \Illuminate\Support\Str::slug($milestone) }}" tabindex="-1" class="scroll-mt-28 rounded text-sm font-semibold text-gray-800 tracking-wide uppercase outline-none transition focus:ring-2 focus:ring-success-200 dark:text-white dark:focus:ring-success-900/50">
                                 {{ ucfirst(str_replace('_', ' ', $milestone)) }}
@@ -46,8 +46,8 @@
                                     $isChecked = $oldPermissions !== null ? in_array((string) $permission->id, array_map('strval', $oldPermissions), true) : (isset($role) ? in_array((string) $permission->id, $rolePermissionIds, true) : in_array($permission->name, $defaultCheckedPermissionNames, true));
                                 @endphp
 
-                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="permission-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-module="{{ $milestone }}" @checked($isChecked)>
-                                
+                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="permission-checkbox h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-bgray-300 dark:bg-darkblack-600" data-module="{{ $milestone }}" @checked($isChecked)>
+
                                 <span class="text-sm
                                              text-gray-700
                                              group-hover:text-indigo-600
