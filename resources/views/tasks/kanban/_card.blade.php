@@ -104,13 +104,13 @@
                     @endif
                 </div>
 
-                <button type="button"
-                    class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white transition-colors"
-                    title="View Comments"
-                    data-task-insights-trigger
-                    data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
-                    <span>💬</span>
-                    <span>{{ $commentsCount }}</span>
+                <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
+                    <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-400 dark:group-hover:text-bgray-200 transition-colors">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                        </svg>
+                    </span>
+                    <span class="font-medium text-[11px]">{{ $commentsCount }}</span>
                 </button>
             </div>
 
