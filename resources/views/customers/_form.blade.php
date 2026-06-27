@@ -42,7 +42,7 @@
                     </select>
 
                     @can('industry.create')
-                        <button type="button" data-target="#customer-industry-modal" data-select-target="industry_id" data-milestone="Industry" data-url="{{ route('settings.industries.store') }}" data-method="POST" data-sort_order="{{ $nextIndustrySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Industry" aria-label="Add Industry">
+                        <button type="button" data-target="#customer-industry-modal" data-select-target="industry_id" data-module="Industry" data-url="{{ route('settings.industries.store') }}" data-method="POST" data-sort_order="{{ $nextIndustrySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Industry" aria-label="Add Industry">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                             </svg>
