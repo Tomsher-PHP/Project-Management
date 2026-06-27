@@ -236,7 +236,7 @@ class RunningTaskNavbarService
     private function resolveTimeColorClass(int $currentSeconds, int $estimatedSeconds): string
     {
         if ($estimatedSeconds <= 0) {
-            return 'text-bgray-700 dark:text-bgray-300';
+            return 'text-success-400 dark:text-success-300';
         }
 
         return $currentSeconds <= $estimatedSeconds

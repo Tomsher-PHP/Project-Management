@@ -24,7 +24,7 @@
     $timerCurrentSeconds = (int) ($task->kanban_timer_current_seconds ?? $totalTrackedSeconds);
     $timerStartedAt = $task->kanban_timer_started_at_iso;
     $isTimerRunning = (bool) ($task->kanban_timer_is_running ?? false);
-    $timerTimeColorClass = (string) ($task->kanban_timer_time_color_class ?? 'text-bgray-700 dark:text-bgray-300');
+    $timerTimeColorClass = (string) ($task->kanban_timer_time_color_class ?? 'text-success-400 dark:text-success-300');
     $startRestriction = $authUser ? $taskTimerService->getStartRestriction($task, $authUser) : ['message' => 'Not allowed to start timer for this task.'];
     $canStartTimer = $authUser ? $startRestriction === null || in_array($startRestriction['reason'] ?? null, ['running_timer_exists', 'already_running'], true) : false;
     $canStopTimer = $authUser ? $taskTimerService->isAllowedToStop($task, $authUser) : false;
@@ -108,9 +108,9 @@
                     @endif
                 </div>
 
-                <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
+                <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300 hover:text-bgray-900 dark:hover:text-bgray-200 transition-colors" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
                     <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-400 dark:group-hover:text-bgray-200 transition-colors">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
                     </span>
