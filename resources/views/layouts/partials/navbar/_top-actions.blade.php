@@ -1,9 +1,9 @@
 <div class="flex items-center space-x-7">
     <div class="hidden items-center space-x-6 lg:flex">
-        
+
         <!-- Task Timer Bar -->
         <x-running-task-bar />
-        
+
         <button type="button" id="theme-toggle" class="relative flex h-5 w-5 items-center justify-center" data-user="{{ auth()->user()->id }}">
             <span class="block dark:hidden">
                 <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,6 +35,14 @@
                 {{ $unreadCount }}
             </span>
         </button>
+        <a href="{{ route('help-center.index') }}" title="Help Center" aria-label="Open Help Center"
+            class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
+            <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke-width="1.5" />
+                <path d="M9.75 9.25a2.35 2.35 0 0 1 4.5.95c0 1.65-2.25 1.9-2.25 3.3" stroke-width="1.5" stroke-linecap="round" />
+                <path d="M12 16.75h.01" stroke-width="2" stroke-linecap="round" />
+            </svg>
+        </a>
         @can('user.tree_view')
             <a href="{{ route('user.tree_view') }}" title="User Hierarchy" class="relative flex h-5 w-5 items-center justify-center  {{ request()->routeIs('user.tree_view') ? 'bg-success-50 dark:bg-darkblack-500' : '' }}">
                 <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -48,12 +56,6 @@
                 </svg>
             </a>
         @endcan
-        {{-- <button onclick="messageAction()" type="button" id="message-btn" class="relative flex h-[52px] w-[52px] items-center justify-center rounded-[12px] border border-success-300 dark:border-darkblack-400">
-            <span class="absolute -right-[5px] -top-[2px] h-3.5 w-3.5 rounded-full border-2 border-white bg-error-300 dark:border-none"></span>
-            <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 12V7C2 4.79086 3.79086 3 6 3H18C20.2091 3 22 4.79086 22 7V17C22 19.2091 20.2091 21 18 21H8M6 8L9.7812 10.5208C11.1248 11.4165 12.8752 11.4165 14.2188 10.5208L18 8M2 15H8M2 18H8" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-        </button> --}}
     </div>
     <!--author-->
     <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">

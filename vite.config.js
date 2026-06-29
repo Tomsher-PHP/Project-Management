@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/modules/customer/profile-grade.js',
                 'resources/js/modules/activity-logs.js',
                 'resources/js/modules/list-notifications.js',
+                'resources/js/modules/help-center.js',
                 'resources/js/image-draggable.js',
                 'resources/js/modules/projects/project-detail.js',
                 'resources/js/modules/task-list-create.js',
