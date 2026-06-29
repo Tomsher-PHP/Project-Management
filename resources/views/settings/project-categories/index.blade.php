@@ -2,110 +2,110 @@
 
 @section('page-content')
     <!-- Page starts -->
-        <div class="mb-6 flex flex-wrap items-center gap-3">
-            <x-back-button label="Back" />
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+        <x-back-button :url="route('settings.index')" label="Back" />
 
-            @can('project_category.create')
-                <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Project Category" />
-            @endcan
+        @can('project_category.create')
+            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Project Category" />
+        @endcan
 
-            <x-filters.button />
-        </div>
+        <x-filters.button />
+    </div>
 
-        <!-- write your code here-->
-        <div class="2xl:flex 2xl:space-x-[48px]">
-            <section class="mb-6 2xl:mb-0 2xl:flex-1">
-                <!--list table-->
-                <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-                    <div class="flex flex-col space-y-5">
+    <!-- write your code here-->
+    <div class="2xl:flex 2xl:space-x-[48px]">
+        <section class="mb-6 2xl:mb-0 2xl:flex-1">
+            <!--list table-->
+            <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+                <div class="flex flex-col space-y-5">
 
-                        <div class="table-content w-full overflow-x-auto">
-                            <table class="w-full">
-                                <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <td class="">
-                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">#</span>
+                    <div class="table-content w-full overflow-x-auto">
+                        <table class="w-full">
+                            <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                <td class="">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">#</span>
+                                </td>
+                                <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <x-sorting.sortable-column column="name" label="Name" />
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <x-sorting.sortable-column column="sort_order" label="Sort Order" />
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                    <div class="flex w-full items-center space-x-2.5">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            @php
+                                $startNumber = ($projectCategories->currentPage() - 1) * $projectCategories->perPage();
+                            @endphp
+                            @forelse ($projectCategories as $key => $projectCategory)
+                                <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
+                                    <td class="px-6 py-5 xl:px-0">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                     </td>
-                                    <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
+                                    <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2.5">
-                                            <x-sorting.sortable-column column="name" label="Name" />
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <p class="text-base font-semibold text-bgray-900 dark:text-white">
+                                                    {{ $projectCategory->name }}
+                                                </p>
+                                                @if ($projectCategory->is_system)
+                                                    <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
+                                                        System
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <x-sorting.sortable-column column="sort_order" label="Sort Order" />
+                                        <div class="flex w-full items-center">
+                                            <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $projectCategory->sort_order }}</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
+                                        <div class="flex w-full items-center">
+                                            <x-status-toggle :model="$projectCategory" route="settings.project_category.toggleStatus" entity="project_category" permission="project_category.edit" />
                                         </div>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                        <div class="flex w-full items-center space-x-2.5">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
+                                        <div class="flex w-full items-center space-x-2">
+                                            @can('project_category.edit')
+                                                <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-categories.update', $projectCategory->id) }}" data-name="{{ $projectCategory->name }}" data-sort_order="{{ $projectCategory->sort_order }}" data-method="PUT" data-module="Project Category">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
+                                                    </svg>
+                                                </a>
+                                            @endcan
+                                            @can('project_category.delete')
+                                                @if (!$projectCategory->is_system)
+                                                    <x-delete-form :action="route('settings.project-categories.destroy', $projectCategory->id)" />
+                                                @endif
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
-                                @php
-                                    $startNumber = ($projectCategories->currentPage() - 1) * $projectCategories->perPage();
-                                @endphp
-                                @forelse ($projectCategories as $key => $projectCategory)
-                                    <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
-                                        <td class="px-6 py-5 xl:px-0">
-                                            <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
-                                        </td>
-                                        <td class="px-6 py-5 xl:px-0">
-                                            <div class="flex w-full items-center space-x-2.5">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <p class="text-base font-semibold text-bgray-900 dark:text-white">
-                                                        {{ $projectCategory->name }}
-                                                    </p>
-                                                    @if ($projectCategory->is_system)
-                                                        <span class="inline-flex rounded-full bg-warning-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-warning-600 dark:bg-warning-900/30 dark:text-warning-300">
-                                                            System
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $projectCategory->sort_order }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center">
-                                                <x-status-toggle :model="$projectCategory" route="settings.project_category.toggleStatus" entity="project_category" permission="project_category.edit" />
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 xl:w-[165px] xl:px-0">
-                                            <div class="flex w-full items-center space-x-2">
-                                                @can('project_category.edit')
-                                                    <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-categories.update', $projectCategory->id) }}" data-name="{{ $projectCategory->name }}" data-sort_order="{{ $projectCategory->sort_order }}" data-method="PUT" data-module="Project Category">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                        </svg>
-                                                    </a>
-                                                @endcan
-                                                @can('project_category.delete')
-                                                    @if (!$projectCategory->is_system)
-                                                        <x-delete-form :action="route('settings.project-categories.destroy', $projectCategory->id)" />
-                                                    @endif
-                                                @endcan
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <x-table-no-data :col-span="5" message="No project categories found." />
-                                @endforelse
-                            </table>
-                        </div>
-                        <x-pagination :paginator="$projectCategories" :per-page="$perPage" />
+                            @empty
+                                <x-table-no-data :col-span="5" message="No project categories found." />
+                            @endforelse
+                        </table>
                     </div>
+                    <x-pagination :paginator="$projectCategories" :per-page="$perPage" />
                 </div>
-            </section>
-        </div>
-        <!-- write your code here-->
+            </div>
+        </section>
+    </div>
+    <!-- write your code here-->
     <!-- Page ends -->
 
     <!-- Modal content start -->
