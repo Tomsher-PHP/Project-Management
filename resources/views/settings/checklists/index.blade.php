@@ -1,47 +1,47 @@
 @extends('layouts.master')
 
 @section('page-content')
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 
-            <div class="flex flex-wrap items-center gap-3">
-                <x-back-button label="Back" />
-                @can('checklist_template.create')
-                    <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Checklist Template" data-url="{{ route('settings.checklists.store') }}" data-method="POST" label="Checklist Template" />
-                @endcan
+        <div class="flex flex-wrap items-center gap-3">
+            <x-back-button :url="route('settings.index')" label="Back" />
+            @can('checklist_template.create')
+                <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Checklist Template" data-url="{{ route('settings.checklists.store') }}" data-method="POST" label="Checklist Template" />
+            @endcan
 
-                <x-filters.button />
+            <x-filters.button />
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-3">
+
+            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
+                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Total</span>
+                <span class="text-lg font-bold text-bgray-900 dark:text-white">
+                    {{ $stats['total'] ?? 0 }}
+                </span>
             </div>
 
-            <div class="grid gap-3 md:grid-cols-3">
+            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
+                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Active</span>
+                <span class="text-lg font-bold text-success-400">
+                    {{ $stats['active'] ?? 0 }}
+                </span>
+            </div>
 
-                <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Total</span>
-                    <span class="text-lg font-bold text-bgray-900 dark:text-white">
-                        {{ $stats['total'] ?? 0 }}
-                    </span>
-                </div>
-
-                <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">Active</span>
-                    <span class="text-lg font-bold text-success-400">
-                        {{ $stats['active'] ?? 0 }}
-                    </span>
-                </div>
-
-                <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
-                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">System</span>
-                    <span class="text-lg font-bold text-warning-300">
-                        {{ $stats['system'] ?? 0 }}
-                    </span>
-                </div>
-
+            <div class="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-darkblack-600 gap-2">
+                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">System</span>
+                <span class="text-lg font-bold text-warning-300">
+                    {{ $stats['system'] ?? 0 }}
+                </span>
             </div>
 
         </div>
 
-        <div id="checklist-template-index-content">
-            @include('settings.checklists.partials.index-content')
-        </div>
+    </div>
+
+    <div id="checklist-template-index-content">
+        @include('settings.checklists.partials.index-content')
+    </div>
 
     <x-form-modal modalId="multi-step-modal" module="Checklist Template" formId="checklistForm" action="{{ route('settings.checklists.store') }}" button="Create Checklist Template" method="POST">
 

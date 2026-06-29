@@ -3,7 +3,7 @@
 @section('page-content')
     <!-- Page starts -->
     <div class="mb-2 flex flex-wrap items-center gap-3">
-        <x-back-button label="Back" />
+        <x-back-button :url="route('settings.index')" label="Back" />
 
         @can('department.create')
             <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Department" data-url="{{ route('settings.departments.store') }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" label="Department" />
