@@ -1,43 +1,43 @@
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Step 1: Open the Workspace</h4>
-    <p class="mt-2">Navigate to Workspace and locate your assigned task on the Kanban board. Tasks ready to begin are typically in the <strong>Open</strong> or <strong>To Do</strong> column.</p>
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Step 1: Open the Workspace</h4>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">Navigate to Workspace and locate your assigned task on the Kanban board. Tasks ready to begin are typically in the <strong>Open</strong> or <strong>To Do</strong> column.</p>
 </section>
 
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Step 2: Move the task to Progressing</h4>
-    <p class="mt-2">Drag the task card from Open or To Do to <strong>Progressing</strong>.</p>
-    <aside class="mt-4 rounded-xl border-l-4 border-warning-300 bg-warning-50 px-4 py-3 text-bgray-800 dark:bg-warning-300/10 dark:text-bgray-100">
-        <strong>Note:</strong> Tasks cannot be started while they remain in the Open or To Do column.
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Step 2: Move the task to Progressing</h4>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">Drag the task card from Open or To Do to <strong>Progressing</strong>.</p>
+    <aside class="mt-4 rounded-xl border-l-4 border-warning-300 bg-bamber-50 px-4 py-3 text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300">
+        <strong class="text-warning-300">Note:</strong> Tasks cannot be started while they remain in the Open or To Do column.
     </aside>
 </section>
 
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Step 3: Start the task timer</h4>
-    <p class="mt-2">Click the <strong>Play (▶)</strong> button on the task card. Once started:</p>
-    <ul class="mt-2 list-disc space-y-1 pl-6">
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Step 3: Start the task timer</h4>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">Click the <strong>Play (▶)</strong> button on the task card. Once started:</p>
+    <ul class="mt-2 list-disc space-y-1 pl-6 text-bgray-700 dark:text-bgray-300">
         <li>The running timer is displayed on the task card.</li>
         <li>The active timer is also shown in the top navigation bar.</li>
     </ul>
 </section>
 
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Step 4: Work on the task</h4>
-    <p class="mt-2">The timer records your working time while the task is in progress. If you need to take a break, stop the timer manually and resume it later.</p>
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Step 4: Work on the task</h4>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">The timer records your working time while the task is in progress. If you need to take a break, stop the timer manually and resume it later.</p>
 </section>
 
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Step 5: Complete or pause the task</h4>
-    <p class="mt-2">When you finish or temporarily stop working, move the task to:</p>
-    <ul class="mt-2 list-disc space-y-1 pl-6">
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Step 5: Complete or pause the task</h4>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">When you finish or temporarily stop working, move the task to:</p>
+    <ul class="mt-2 list-disc space-y-1 pl-6 text-bgray-700 dark:text-bgray-300">
         <li>Completed</li>
         <li>On Hold</li>
     </ul>
-    <p class="mt-2">The timer automatically stops when the task moves to either status.</p>
+    <p class="mt-2 text-bgray-700 dark:text-bgray-300">The timer automatically stops when the task moves to either status.</p>
 </section>
 
 <section>
-    <h4 class="font-semibold text-bgray-900 dark:text-white">Things to remember</h4>
-    <ul class="mt-2 list-disc space-y-1 pl-6">
+    <h4 class="font-semibold text-bgray-900 dark:text-bgray-300">Things to remember</h4>
+    <ul class="mt-2 list-disc space-y-1 pl-6 text-bgray-700 dark:text-bgray-300">
         <li>Always move the task to Progressing before starting work.</li>
         <li>Start the timer whenever you begin working.</li>
         <li>Time is tracked only while the timer is running.</li>
@@ -55,7 +55,7 @@
                     <path d="m4 17 4.5-4 3.5 3 2.5-2 5.5 4" stroke-width="1.5" stroke-linejoin="round" />
                 </svg>
                 <span class="mt-2 block text-xs font-semibold uppercase tracking-wide text-bgray-500">Screenshot placeholder</span>
-                <span class="block text-sm text-bgray-700 dark:text-bgray-200">{{ $screenshot }}</span>
+                <span class="block text-sm text-bgray-700 dark:text-bgray-300">{{ $screenshot }}</span>
             </figcaption>
         </figure>
     @endforeach

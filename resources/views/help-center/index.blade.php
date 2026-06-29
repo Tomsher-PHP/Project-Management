@@ -9,13 +9,8 @@
                 <div class="pointer-events-none absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-success-400/10 blur-3xl"></div>
                 <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                     <div class="max-w-2xl">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center rounded-md border border-success-300/20 bg-success-300/15 px-2.5 py-1 text-xs font-semibold tracking-wide text-success-300">
-                                Documentation
-                            </span>
-                        </div>
-                        <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Help Center</h1>
-                        <p class="mt-1.5 text-xs leading-5 text-bgray-300 sm:text-sm">
+                        <h1 class="mt-2 text-2xl font-bold tracking-tight text-bgray-700 dark:text-bgray-300 sm:text-3xl">Help Center</h1>
+                        <p class="mt-1.5 text-xs leading-5 text-bgray-300 dark:text-bgray-300 sm:text-sm">
                             Find answers, learn features, and quickly get help with using the project management system.
                         </p>
                     </div>
@@ -26,19 +21,15 @@
                             <circle cx="11" cy="11" r="7" stroke-width="1.7" />
                             <path d="m16.25 16.25 4 4" stroke-width="1.7" stroke-linecap="round" />
                         </svg>
-                        <input id="help-search" type="search" autocomplete="off" data-help-search
-                            class="h-11 w-full rounded-xl border border-white/10 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white shadow-inner backdrop-blur-md transition placeholder:text-bgray-300 focus:border-success-300 focus:bg-white focus:text-bgray-900 focus:placeholder:text-bgray-500 focus:outline-none focus:ring-2 focus:ring-success-300/40 dark:bg-darkblack-500 dark:focus:bg-darkblack-500 dark:focus:text-white"
-                            placeholder="Search articles, questions, or keywords..." />
-                        <button type="button" data-search-clear hidden aria-label="Clear search"
-                            class="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-bgray-400 transition hover:bg-white/20 hover:text-white dark:hover:bg-darkblack-400">
+                        <input id="help-search" type="search" autocomplete="off" data-help-search class="h-11 w-full rounded-xl border border-white/10 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-bgray-300 dark:text-bgray-300 shadow-inner backdrop-blur-md transition placeholder:text-bgray-300 focus:border-success-300 focus:bg-white focus:text-bgray-900 focus:placeholder:text-bgray-500 focus:outline-none focus:ring-2 focus:ring-success-300/40 dark:bg-darkblack-500 dark:focus:bg-darkblack-500 dark:focus:text-white" placeholder="Search articles, questions, or keywords..." />
+                        <button type="button" data-search-clear hidden aria-label="Clear search" class="absolute right-2.5 top-1.5 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-bgray-400 transition hover:bg-white/20 hover:text-white dark:hover:bg-darkblack-400">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                 </div>
             </header>
 
-            <button type="button" data-mobile-nav-toggle aria-expanded="false" aria-controls="help-mobile-navigation"
-                class="mt-6 flex w-full items-center justify-between rounded-xl border border-bgray-200 bg-white px-4 py-3 text-left text-sm font-semibold text-bgray-900 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white lg:hidden">
+            <button type="button" data-mobile-nav-toggle aria-expanded="false" aria-controls="help-mobile-navigation" class="mt-6 flex w-full items-center justify-between rounded-xl border border-bgray-200 bg-white px-4 py-3 text-left text-sm font-semibold text-bgray-900 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white lg:hidden">
                 Browse articles
                 <svg class="stroke-current" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="m6 9 6 6 6-6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
@@ -50,14 +41,10 @@
                     <nav aria-label="Help Center articles" class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                         @foreach ($categories as $category)
                             <div data-help-category class="{{ !$loop->first ? 'mt-5 border-t border-bgray-100 pt-4 dark:border-darkblack-400' : '' }}">
-                                <h2 class="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-bgray-500 dark:text-bgray-300">
-                                    {{ $category['title'] }}
-                                </h2>
                                 <ul class="space-y-1">
                                     @foreach ($category['articles'] as $article)
                                         <li>
-                                            <a href="#{{ $article['id'] }}" data-help-nav-item data-article-id="{{ $article['id'] }}"
-                                                class="block rounded-lg px-3 py-2 text-sm leading-5 text-bgray-700 transition hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:text-bgray-200 dark:hover:bg-darkblack-500 dark:hover:text-white">
+                                            <a href="#{{ $article['id'] }}" data-help-nav-item data-article-id="{{ $article['id'] }}" class="block rounded-lg px-3 py-2 text-sm leading-5 text-bgray-700 transition hover:bg-bgray-50 hover:text-bgray-900 focus:outline-none focus:ring-2 focus:ring-success-300 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white">
                                                 {{ $article['title'] }}
                                             </a>
                                         </li>
@@ -80,12 +67,11 @@
 
                             <div class="space-y-5">
                                 @foreach ($category['articles'] as $article)
-                                    <article id="{{ $article['id'] }}" data-help-article
-                                        class="scroll-mt-24 rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-7">
+                                    <article id="{{ $article['id'] }}" data-help-article class="scroll-mt-24 rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-7">
                                         <h3 class="border-b border-bgray-100 pb-4 text-lg font-bold leading-7 text-bgray-900 dark:border-darkblack-400 dark:text-white sm:text-xl">
                                             {{ $article['title'] }}
                                         </h3>
-                                        <div class="mt-5 space-y-5 text-sm leading-6 text-bgray-700 dark:text-bgray-200 sm:text-base">
+                                        <div class="mt-5 space-y-5 text-sm leading-6 text-bgray-700 dark:text-bgray-300 sm:text-base">
                                             @include($article['view'])
                                         </div>
                                     </article>

@@ -1,6 +1,6 @@
-<p>Use these practices to keep project reporting accurate and make task progress clear to your team:</p>
+<p class="text-bgray-700 dark:text-bgray-300">Use these practices to keep project reporting accurate and make task progress clear to your team:</p>
 
-<ul class="grid gap-3 sm:grid-cols-2">
+<ul class="grid gap-3 sm:grid-cols-2 text-bgray-700 dark:text-bgray-300">
     @foreach ([
         'Start the timer before beginning work.',
         'Stop the timer whenever you are not working.',
