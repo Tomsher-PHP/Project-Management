@@ -45,18 +45,22 @@
     </ul>
 </section>
 
-<div class="grid gap-4 sm:grid-cols-2">
-    @foreach (['Workspace Kanban Board', 'Running Task Timer'] as $screenshot)
-        <figure class="flex min-h-40 items-center justify-center rounded-xl border-2 border-dashed border-bgray-200 bg-bgray-50 p-6 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
-            <figcaption>
-                <svg class="mx-auto stroke-bgray-400" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="1.5" />
-                    <circle cx="8.5" cy="9" r="1.5" stroke-width="1.5" />
-                    <path d="m4 17 4.5-4 3.5 3 2.5-2 5.5 4" stroke-width="1.5" stroke-linejoin="round" />
-                </svg>
-                <span class="mt-2 block text-xs font-semibold uppercase tracking-wide text-bgray-500">Screenshot placeholder</span>
-                <span class="block text-sm text-bgray-700 dark:text-bgray-300">{{ $screenshot }}</span>
-            </figcaption>
-        </figure>
-    @endforeach
+<div class="mt-6 grid gap-6 sm:grid-cols-2">
+    <figure class="overflow-hidden rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <a href="{{ asset('assets/images/help/assigned_task_1.png') }}" target="_blank" rel="noopener noreferrer" class="block cursor-pointer overflow-hidden bg-bgray-50 dark:bg-darkblack-500">
+            <img src="{{ asset('assets/images/help/assigned_task_1.png') }}" alt="Workspace Kanban Board" class="h-auto w-full object-cover transition hover:opacity-90" />
+        </a>
+        <figcaption class="border-t border-bgray-100 px-4 py-2.5 text-center text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+            Click image to view full size — Workspace Kanban Board
+        </figcaption>
+    </figure>
+
+    <figure class="overflow-hidden rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <a href="{{ asset('assets/images/help/assigned_task_2.png') }}" target="_blank" rel="noopener noreferrer" class="block cursor-pointer overflow-hidden bg-bgray-50 dark:bg-darkblack-500">
+            <img src="{{ asset('assets/images/help/assigned_task_2.png') }}" alt="Running Task Timer" class="h-auto w-full object-cover transition hover:opacity-90" />
+        </a>
+        <figcaption class="border-t border-bgray-100 px-4 py-2.5 text-center text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+            Click image to view full size — Running Task Timer
+        </figcaption>
+    </figure>
 </div>

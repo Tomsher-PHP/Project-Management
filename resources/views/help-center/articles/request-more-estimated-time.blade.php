@@ -13,9 +13,11 @@
     <p class="mt-4 text-bgray-700 dark:text-bgray-300">The request is sent for approval.</p>
 </section>
 
-<figure class="flex min-h-44 items-center justify-center rounded-xl border-2 border-dashed border-bgray-200 bg-bgray-50 p-6 text-center dark:border-darkblack-400 dark:bg-darkblack-500">
-    <figcaption>
-        <span class="block text-xs font-semibold uppercase tracking-wide text-bgray-500">Screenshot placeholder</span>
-        <span class="block text-sm text-bgray-700 dark:text-bgray-300">Request Estimate Change</span>
+<figure class="mt-6 overflow-hidden rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+    <a href="{{ asset('assets/images/help/request_estimate.png') }}" target="_blank" rel="noopener noreferrer" class="block cursor-pointer overflow-hidden bg-bgray-50 dark:bg-darkblack-500">
+        <img src="{{ asset('assets/images/help/request_estimate.png') }}" alt="Request Estimate Change" class="h-auto w-full object-cover transition hover:opacity-90" />
+    </a>
+    <figcaption class="border-t border-bgray-100 px-4 py-2.5 text-center text-xs font-medium text-bgray-500 dark:border-darkblack-400 dark:text-bgray-300">
+        Click image to view full size — Request Estimate Change
     </figcaption>
 </figure>
