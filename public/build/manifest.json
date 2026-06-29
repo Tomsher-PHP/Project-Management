@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BYqR1Yfc.css",
+    "file": "assets/app-Cmbi57Zl.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -186,6 +186,12 @@
       "_tom-select-s4MTn30Z.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
+  },
+  "resources/js/modules/help-center.js": {
+    "file": "assets/help-center-CeSd8Msm.js",
+    "name": "help-center",
+    "src": "resources/js/modules/help-center.js",
+    "isEntry": true
   },
   "resources/js/modules/kpi-form.js": {
     "file": "assets/kpi-form-BL6DO7iw.js",

@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\HandoffController;
+use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\NotificationController;
@@ -516,6 +517,11 @@ Route::middleware(['auth'])->group(function () {
 
     // User login activity routes
     Route::get('user-login-activity', [UserLoginActivityController::class, 'index'])->name('user.login.activity');
+
+    // Help Center routes
+    Route::prefix('help-center')->as('help-center.')->group(function () {
+        Route::get('/', [HelpCenterController::class, 'index'])->name('index');
+    });
 });
 
 Route::get('api-test', function () {
