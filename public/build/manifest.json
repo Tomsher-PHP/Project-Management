@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DUijzOQc.css",
+    "file": "assets/app-ClSJjLKN.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -188,7 +188,7 @@
     ]
   },
   "resources/js/modules/help-center.js": {
-    "file": "assets/help-center-CeSd8Msm.js",
+    "file": "assets/help-center-M0La-rnH.js",
     "name": "help-center",
     "src": "resources/js/modules/help-center.js",
     "isEntry": true

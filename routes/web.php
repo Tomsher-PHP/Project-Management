@@ -521,6 +521,7 @@ Route::middleware(['auth'])->group(function () {
     // Help Center routes
     Route::prefix('help-center')->as('help-center.')->group(function () {
         Route::get('/', [HelpCenterController::class, 'index'])->name('index');
+        Route::get('/{article}', [HelpCenterController::class, 'show'])->name('show');
     });
 });
 
