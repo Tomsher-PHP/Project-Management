@@ -728,8 +728,6 @@ class NotificationService
             'type' => 'break_request_submitted',
             'actor_id' => $actor?->id,
             'actor_name' => $actor?->name ?? 'A team member',
-            'assignee_id' => (int) $breakWorkRequest->user_id,
-            'assignee_name' => $breakWorkRequest->user?->name ?? 'Unknown User',
         ];
 
         $this->sendToMany(

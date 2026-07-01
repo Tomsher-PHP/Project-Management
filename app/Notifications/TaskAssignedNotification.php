@@ -74,7 +74,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
 
         return match ($this->emailSubjectContext['type'] ?? null) {
             'task_assignment' => ucfirst("{$actor} assigned {$task} to {$assignee}"),
-            'break_request_submitted' => "Break Work Request Submitted by {$actor} ({$assignee})",
+            'break_request_submitted' => "Break Work Request Submitted by {$actor}",
             'break_request_approved' => "Break Work Request Approved by {$actor} ({$assignee})",
             'break_request_rejected' => "Break Work Request Rejected by {$actor} ({$assignee})",
             default => null,
