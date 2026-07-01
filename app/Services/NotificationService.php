@@ -859,6 +859,11 @@ class NotificationService
         $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
         $requesterName = $changeRequest->user?->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'task_time_log_change_request_submitted',
+            'actor_id' => $changeRequest->user_id ? (int) $changeRequest->user_id : null,
+            'actor_name' => $requesterName,
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -870,7 +875,8 @@ class NotificationService
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Log Change Request',
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -897,6 +903,15 @@ class NotificationService
         $projectName = $task->project?->name ?? 'Project';
         $reviewerName = $reviewer->name ?? 'A team member';
         $reviewLabel = $isRejected ? 'rejected' : 'approved';
+        $emailSubjectContext = [
+            'type' => $isRejected
+                ? 'task_time_log_change_request_rejected'
+                : 'task_time_log_change_request_approved',
+            'actor_id' => (int) $reviewer->id,
+            'actor_name' => $reviewerName,
+            'assignee_id' => (int) $changeRequest->user_id,
+            'assignee_name' => $changeRequest->user?->name ?? 'Unknown User',
+        ];
 
         $message = "{$reviewerName} {$reviewLabel} your time log change request for task '{$taskName}' in '{$projectName}'.";
 
@@ -915,7 +930,8 @@ class NotificationService
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Log Change Request',
                 'Status' => ucfirst($reviewLabel),
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 

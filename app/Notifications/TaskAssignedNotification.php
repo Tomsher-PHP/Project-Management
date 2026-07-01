@@ -77,6 +77,9 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'break_request_submitted' => "Break Work Request Submitted by {$actor}",
             'break_request_approved' => "Break Work Request Approved by {$actor} ({$assignee})",
             'break_request_rejected' => "Break Work Request Rejected by {$actor} ({$assignee})",
+            'task_time_log_change_request_submitted' => "Task Time Log Change Request Submitted by {$actor}",
+            'task_time_log_change_request_approved' => "Task Time Log Change Request Approved by {$actor} ({$assignee})",
+            'task_time_log_change_request_rejected' => "Task Time Log Change Request Rejected by {$actor} ({$assignee})",
             default => null,
         };
     }
