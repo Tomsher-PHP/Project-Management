@@ -53,7 +53,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $subjectPrefix = filled(env('APP_NAME', '')) ? env('APP_NAME') . ' - ' : '';
-        $subject = $this->taskAssignmentSubject($notifiable) ?? $this->title;
+        $subject = $this->contextualEmailSubject($notifiable) ?? $this->title;
 
         return (new MailMessage)
             ->subject($subjectPrefix . $subject)
@@ -65,22 +65,27 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             ]);
     }
 
-    private function taskAssignmentSubject(object $notifiable): ?string
+    private function contextualEmailSubject(object $notifiable): ?string
     {
-        if (($this->emailSubjectContext['type'] ?? null) !== 'task_assignment') {
-            return null;
-        }
-
         $recipientId = (int) $notifiable->getKey();
-        $actor = $recipientId === (int) ($this->emailSubjectContext['actor_id'] ?? 0)
-            ? 'you'
-            : ($this->emailSubjectContext['actor_name'] ?? 'A team member');
-        $assignee = $recipientId === (int) ($this->emailSubjectContext['assignee_id'] ?? 0)
-            ? 'you'
-            : ($this->emailSubjectContext['assignee_name'] ?? 'Unassigned');
+        $actor = $this->personalizedName($recipientId, 'actor', 'A team member');
+        $assignee = $this->personalizedName($recipientId, 'assignee', 'Unassigned');
         $task = $this->emailSubjectContext['task_name'] ?? 'Task';
 
-        return ucfirst("{$actor} assigned {$task} to {$assignee}");
+        return match ($this->emailSubjectContext['type'] ?? null) {
+            'task_assignment' => ucfirst("{$actor} assigned {$task} to {$assignee}"),
+            'break_request_submitted' => "Break Work Request Submitted by {$actor} ({$assignee})",
+            'break_request_approved' => "Break Work Request Approved by {$actor} ({$assignee})",
+            'break_request_rejected' => "Break Work Request Rejected by {$actor} ({$assignee})",
+            default => null,
+        };
+    }
+
+    private function personalizedName(int $recipientId, string $role, string $fallback): string
+    {
+        return $recipientId === (int) ($this->emailSubjectContext["{$role}_id"] ?? 0)
+            ? 'you'
+            : ($this->emailSubjectContext["{$role}_name"] ?? $fallback);
     }
 
     public function toBroadcast($notifiable)

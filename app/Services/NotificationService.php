@@ -723,6 +723,14 @@ class NotificationService
 
         [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
         $userName = $breakWorkRequest->user?->name ?? 'A team member';
+        $actor = auth()->user();
+        $emailSubjectContext = [
+            'type' => 'break_request_submitted',
+            'actor_id' => $actor?->id,
+            'actor_name' => $actor?->name ?? 'A team member',
+            'assignee_id' => (int) $breakWorkRequest->user_id,
+            'assignee_name' => $breakWorkRequest->user?->name ?? 'Unknown User',
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -737,7 +745,8 @@ class NotificationService
                 'Work Date' => $workDate,
                 'Start Time' => $startTime,
                 'End Time' => $endTime,
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -749,6 +758,15 @@ class NotificationService
         }
 
         [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
+        $breakWorkRequest->loadMissing('user:id,name');
+        $actor = auth()->user();
+        $emailSubjectContext = [
+            'type' => 'break_request_approved',
+            'actor_id' => $actor?->id,
+            'actor_name' => $actor?->name ?? 'A team member',
+            'assignee_id' => (int) $breakWorkRequest->user_id,
+            'assignee_name' => $breakWorkRequest->user?->name ?? 'Unknown User',
+        ];
 
         $this->send(
             (int) $breakWorkRequest->user_id,
@@ -764,7 +782,8 @@ class NotificationService
                 'Start Time' => $startTime,
                 'End Time' => $endTime,
                 'Status' => 'Approved',
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -776,6 +795,15 @@ class NotificationService
         }
 
         [$workDate, $startTime, $endTime] = $this->formatBreakRequestDateTimeParts($breakWorkRequest);
+        $breakWorkRequest->loadMissing('user:id,name');
+        $actor = auth()->user();
+        $emailSubjectContext = [
+            'type' => 'break_request_rejected',
+            'actor_id' => $actor?->id,
+            'actor_name' => $actor?->name ?? 'A team member',
+            'assignee_id' => (int) $breakWorkRequest->user_id,
+            'assignee_name' => $breakWorkRequest->user?->name ?? 'Unknown User',
+        ];
         $message = "Your break work request for {$workDate} from {$startTime} to {$endTime} has been rejected.";
 
         if (filled($breakWorkRequest->rejection_reason)) {
@@ -796,7 +824,8 @@ class NotificationService
                 'Start Time' => $startTime,
                 'End Time' => $endTime,
                 'Status' => 'Rejected',
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
