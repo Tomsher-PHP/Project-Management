@@ -71,6 +71,7 @@ class ProjectServices
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
                 'sales_person_id' => $customer ? $customer->sales_person_id : null,
+                'default_billable' => $data['default_billable'] ?? 1,
             ]);
 
             //status history
@@ -109,7 +110,6 @@ class ProjectServices
 
             // Default values
             $data['customer_id'] = $data['customer_id'] ?? null;
-            $data['default_billable'] = $data['default_billable'] ?? 0;
 
             $projectData = [
                 'parent_project_id' => $data['parent_project_id'] ?? null,

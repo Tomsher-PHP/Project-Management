@@ -361,7 +361,7 @@
                         @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests)
                             <!-- Requests -->
                             <li class="item py-[8px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="index.html" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
+                                <a href="javascript:void(0)" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -466,7 +466,7 @@
                         <!-- PERFORMANCE -->
                         @if ($canViewTimeTrackingReports || $canViewDailyReports || $canViewProductivityReports)
                             <li class="item py-[8px] {{ $isPerformanceReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="index.html" aria-expanded="{{ $isPerformanceReportsMenuActive ? 'true' : 'false' }}">
+                                <a href="javascript:void(0)" aria-expanded="{{ $isPerformanceReportsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -522,7 +522,7 @@
                         <!-- PROJECTS -->
                         @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
                             <li class="item py-[8px] {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="index.html" aria-expanded="{{ $isProjectsReportsMenuActive ? 'true' : 'false' }}">
+                                <a href="javascript:void(0)" aria-expanded="{{ $isProjectsReportsMenuActive ? 'true' : 'false' }}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center">
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">

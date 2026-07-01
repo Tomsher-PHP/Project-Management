@@ -66,7 +66,7 @@ class NotificationService
     }
 
     // Single user
-    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = []): void
+    public function send(int $userId, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = []): void
     {
         $user = User::find($userId);
 
@@ -87,15 +87,16 @@ class NotificationService
             $channels,
             $actorUserId,
             $projectId,
-            $this->buildEmailDetails($emailDetails, $actorUserId, $projectId)
+            $this->buildEmailDetails($emailDetails, $actorUserId, $projectId),
+            $emailSubjectContext
         ));
     }
 
     // Multiple users
-    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = []): void
+    public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = []): void
     {
         User::whereIn('id', $userIds)
-            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails) {
+            ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails, $emailSubjectContext) {
                 foreach ($users as $user) {
                     $channels = $this->getNotificationChannels($user->id, $notificationType);
 
@@ -110,7 +111,8 @@ class NotificationService
                         $channels,
                         $actorUserId,
                         $projectId,
-                        $this->buildEmailDetails($emailDetails, $actorUserId, $projectId)
+                        $this->buildEmailDetails($emailDetails, $actorUserId, $projectId),
+                        $emailSubjectContext
                     ));
                 }
             });
@@ -751,7 +753,8 @@ class NotificationService
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Assignee' => $task->currentAssignee?->name,
-            ])
+            ]),
+            $this->taskAssignmentEmailSubjectContext($task, $authUser, $currentAssigneeId)
         );
 
         $this->markTaskAssignmentNotificationHandled($task, $previousAssigneeId, $currentAssigneeId);
@@ -851,9 +854,22 @@ class NotificationService
                 $this->taskEmailDetails($task, [
                     'Previous Assignee' => $previousAssigneeName,
                     'Assignee' => $newAssigneeName,
-                ])
+                ]),
+                $this->taskAssignmentEmailSubjectContext($task, $actor, $newAssigneeId, $newAssigneeName)
             );
         }
+    }
+
+    private function taskAssignmentEmailSubjectContext(Task $task, ?User $actor, ?int $assigneeId, ?string $assigneeName = null): array
+    {
+        return [
+            'type' => 'task_assignment',
+            'actor_id' => $actor?->id,
+            'actor_name' => $actor?->name ?? 'A team member',
+            'assignee_id' => $assigneeId,
+            'assignee_name' => $assigneeName ?? $task->currentAssignee?->name ?? 'Unassigned',
+            'task_name' => $task->name ?? 'Task',
+        ];
     }
 
     private function markTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): void

@@ -19,11 +19,12 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
     protected ?int $userId;
     protected ?int $projectId;
     protected array $emailDetails;
+    protected array $emailSubjectContext;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $title, string $message, ?string $url = null, array $channels = [], ?int $userId = null, ?int $projectId = null, array $emailDetails = [])
+    public function __construct(string $title, string $message, ?string $url = null, array $channels = [], ?int $userId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = [])
     {
         $this->title = $title;
         $this->message = $message;
@@ -32,6 +33,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
         $this->userId = $userId;
         $this->projectId = $projectId;
         $this->emailDetails = $emailDetails;
+        $this->emailSubjectContext = $emailSubjectContext;
         $this->afterCommit();
     }
 
@@ -51,14 +53,34 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $subjectPrefix = filled(env('APP_NAME', '')) ? env('APP_NAME') . ' - ' : '';
+        $subject = $this->taskAssignmentSubject($notifiable) ?? $this->title;
+
         return (new MailMessage)
-            ->subject($subjectPrefix . $this->title)
+            ->subject($subjectPrefix . $subject)
             ->view('emails.notifications.custom', [
-                'title' => $subjectPrefix . $this->title,
+                'title' => $subjectPrefix . $subject,
                 'messageText' => $this->message,
                 'url' => $this->url,
                 'details' => $this->emailDetails,
             ]);
+    }
+
+    private function taskAssignmentSubject(object $notifiable): ?string
+    {
+        if (($this->emailSubjectContext['type'] ?? null) !== 'task_assignment') {
+            return null;
+        }
+
+        $recipientId = (int) $notifiable->getKey();
+        $actor = $recipientId === (int) ($this->emailSubjectContext['actor_id'] ?? 0)
+            ? 'you'
+            : ($this->emailSubjectContext['actor_name'] ?? 'A team member');
+        $assignee = $recipientId === (int) ($this->emailSubjectContext['assignee_id'] ?? 0)
+            ? 'you'
+            : ($this->emailSubjectContext['assignee_name'] ?? 'Unassigned');
+        $task = $this->emailSubjectContext['task_name'] ?? 'Task';
+
+        return ucfirst("{$actor} assigned {$task} to {$assignee}");
     }
 
     public function toBroadcast($notifiable)
