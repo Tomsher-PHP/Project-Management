@@ -80,6 +80,7 @@ class NotificationService
             return;
         }
 
+        info('send', $emailSubjectContext);
         $user->notify(new TaskAssignedNotification(
             $title,
             $message,
@@ -95,6 +96,7 @@ class NotificationService
     // Multiple users
     public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = []): void
     {
+        info('sendToMany', $emailSubjectContext);
         User::whereIn('id', $userIds)
             ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails, $emailSubjectContext) {
                 foreach ($users as $user) {
@@ -118,64 +120,7 @@ class NotificationService
             });
     }
 
-    private function buildEmailDetails(array $details, ?int $actorUserId = null, ?int $projectId = null): array
-    {
-        $baseDetails = [];
-
-        if ($projectId) {
-            $baseDetails['Project'] = Project::withTrashed()->whereKey($projectId)->value('name');
-        }
-
-        if ($actorUserId) {
-            $baseDetails['Actor'] = User::whereKey($actorUserId)->value('name');
-        }
-
-        return $this->normalizeEmailDetails(array_merge($baseDetails, $details));
-    }
-
-    private function normalizeEmailDetails(array $details): array
-    {
-        return collect($details)
-            ->map(function ($value, $label) {
-                if (is_array($value)) {
-                    $label = $value['label'] ?? $label;
-                    $value = $value['value'] ?? null;
-                }
-
-                if (is_array($value)) {
-                    $value = collect($value)
-                        ->filter(fn($item) => filled($item))
-                        ->implode("\n");
-                }
-
-                return [
-                    'label' => (string) $label,
-                    'value' => is_scalar($value) ? (string) $value : null,
-                ];
-            })
-            ->filter(fn($detail) => filled($detail['label']) && filled($detail['value']))
-            ->values()
-            ->all();
-    }
-
-    private function taskEmailDetails(Task $task, array $details = []): array
-    {
-        $task->loadMissing([
-            'projectMilestone:id,name',
-            'projectSprint:id,name',
-            'currentAssignee:id,name',
-        ]);
-
-        $baseDetails = [
-            'Task' => $task->name,
-            'Milestone' => $task->projectMilestone?->name,
-            'Sprint' => $task->projectSprint?->name,
-            'Assignee' => $task->currentAssignee?->name,
-        ];
-
-        return array_merge($baseDetails, $details);
-    }
-
+    // Team Member Added: Notify users when they are added to a team
     public function notifyTeamMemberAdded(int|array $userIds, Team $team, ?string $roleName = null): void
     {
         $userIds = $this->normalizeUserIds($userIds);
@@ -195,6 +140,7 @@ class NotificationService
         );
     }
 
+    // Team Member Removed: Notify users when they are removed from a team
     public function notifyTeamMemberRemoved(int|array $userIds, Team $team, ?string $roleName = null): void
     {
         $userIds = $this->normalizeUserIds($userIds);
@@ -214,6 +160,7 @@ class NotificationService
         );
     }
 
+    // Project Member Added: Notify users when they are added to a project
     public function notifyProjectMemberAdded(int $userId, Project $project, ?string $roleName = null): void
     {
         $this->dispatchProjectAssignmentNotification(
@@ -226,6 +173,7 @@ class NotificationService
         );
     }
 
+    // Project Member Removed: Notify users when they are removed from a project
     public function notifyProjectMemberRemoved(int $userId, Project $project, ?string $roleName = null): void
     {
         $this->dispatchProjectAssignmentNotification(
@@ -238,6 +186,7 @@ class NotificationService
         );
     }
 
+    // Project Member Status Changed: Notify users when their status in a project changes
     public function notifyProjectMemberStatusChanged(int $userId, Project $project, bool $isEnabled, ?string $roleName = null): void
     {
         $oldStatus = $isEnabled ? 'Inactive' : 'Active';
@@ -253,6 +202,7 @@ class NotificationService
         );
     }
 
+    // Project Member Role Updated: Notify users when their role in a project changes
     public function notifyProjectMemberRoleUpdated(int $userId, Project $project, ?string $oldRoleName = null, ?string $newRoleName = null): void
     {
         $oldRole = filled($oldRoleName) ? $oldRoleName : 'Unassigned';
@@ -268,6 +218,7 @@ class NotificationService
         );
     }
 
+    // Project Status Changed: Notify users when a project's status changes
     public function notifyProjectStatusChanged(Project $project, User $actor, string $oldStatus, string $newStatus): void
     {
         $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
@@ -293,6 +244,7 @@ class NotificationService
         );
     }
 
+    // Project Stage Changed: Notify users when a project's stage changes
     public function notifyProjectStageChanged(Project $project, User $actor, string $oldStage, string $newStage): void
     {
         $recipientIds = $this->getProjectChangeRecipientIds($project, $actor);
@@ -318,6 +270,7 @@ class NotificationService
         );
     }
 
+    // Project Timeline Changed: Notify users when a project's timeline changes
     public function notifyProjectTimelineChanged(Project $project, User $actor, array $changes): void
     {
         if ($changes === []) {
@@ -354,6 +307,7 @@ class NotificationService
         );
     }
 
+    // Milestone Timeline Changed: Notify assignee when task is created or updated
     public function notifyMilestoneTimelineChanged(ProjectMilestone $projectMilestone, User $actor, array $originalValues): void
     {
         $projectMilestone->loadMissing(['project.teamLeader']);
@@ -397,6 +351,7 @@ class NotificationService
         );
     }
 
+    // Sprint Timeline Changed: Notify assignee when task is created or updated
     public function notifySprintTimelineChanged(ProjectSprint $projectSprint, User $actor, array $originalValues): void
     {
         $projectSprint->loadMissing(['project.teamLeader']);
@@ -478,237 +433,6 @@ class NotificationService
         );
     }
 
-    private function dispatchTeamNotification(array $userIds, string $title, string $message): void
-    {
-        // There is no dedicated read-only team detail route, so avoid linking to the edit page here.
-        $url = null;
-
-        if (count($userIds) === 1) {
-            $this->send(
-                $userIds[0],
-                $title,
-                $message,
-                $url,
-                UserNotificationSetting::TEAM_ASSIGNED,
-                auth()->id()
-            );
-
-            return;
-        }
-
-        $this->sendToMany(
-            $userIds,
-            $title,
-            $message,
-            $url,
-            UserNotificationSetting::TEAM_ASSIGNED,
-            auth()->id()
-        );
-    }
-
-    private function normalizeUserIds(int|array $userIds): array
-    {
-        return collect(is_array($userIds) ? $userIds : [$userIds])
-            ->filter(fn($userId) => filled($userId))
-            ->map(fn($userId) => (int) $userId)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    private function getProjectNotificationUrl(Project $project): ?string
-    {
-        return route('projects.edit', $project);
-    }
-
-    private function dispatchProjectAssignmentNotification(string $title, int $targetUserId, Project $project, callable $messageBuilder): void
-    {
-        $actor = auth()->user();
-        $targetUser = User::find($targetUserId);
-
-        if (! $targetUser) {
-            return;
-        }
-
-        $recipients = $this->getProjectAssignmentRecipientUsers($project, $targetUserId, $actor);
-
-        if ($recipients->isEmpty()) {
-            return;
-        }
-
-        foreach ($recipients as $recipient) {
-            $this->send(
-                (int) $recipient->id,
-                $title,
-                $messageBuilder($recipient, $targetUser, $actor),
-                $this->getProjectNotificationUrl($project),
-                UserNotificationSetting::PROJECT_ASSIGNED,
-                $actor?->id ? (int) $actor->id : null,
-                (int) $project->id
-            );
-        }
-    }
-
-    private function getProjectAssignmentRecipientUsers(Project $project, int $targetUserId, ?User $actor)
-    {
-        $project->loadMissing('teamLeader');
-
-        $recipientIds = collect([$targetUserId])
-            ->merge($actor ? User::getReporterChainUserIds((int) $actor->id) : [])
-            ->push($project->teamLeader?->id)
-            ->filter()
-            ->map(fn($userId) => (int) $userId)
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($recipientIds === []) {
-            return collect();
-        }
-
-        return User::query()
-            ->whereIn('id', $recipientIds)
-            ->where('is_active', true)
-            ->where('delete_status', false)
-            ->get(['id', 'name']);
-    }
-
-    private function actorName(?User $actor): string
-    {
-        return $actor?->name ?? 'A team member';
-    }
-
-    private function getProjectChangeRecipientIds(Project $project, User $actor): array
-    {
-        $project->loadMissing('teamLeader');
-
-        $recipientIds = collect(User::getReporterChainUserIds((int) $actor->id))
-            ->push($project->teamLeader?->id)
-            ->filter()
-            ->map(fn($userId) => (int) $userId)
-            ->reject(fn($userId) => $userId === (int) $actor->id)
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($recipientIds === []) {
-            return [];
-        }
-
-        return User::query()
-            ->whereIn('id', $recipientIds)
-            ->where('is_active', true)
-            ->where('delete_status', false)
-            ->pluck('id')
-            ->map(fn($userId) => (int) $userId)
-            ->all();
-    }
-
-    private function getTaskTimelineRecipientIds(Task $task, User $actor): array
-    {
-        $task->loadMissing([
-            'project.teamLeader',
-            'projectMilestone.owner',
-        ]);
-
-        $recipientIds = collect([$task->current_assignee_id])
-            ->merge(User::getReporterChainUserIds((int) $actor->id))
-            ->push($task->project?->teamLeader?->id)
-            ->push($task->projectMilestone?->owner?->id)
-            ->filter()
-            ->map(fn($userId) => (int) $userId)
-            ->reject(fn($userId) => $userId === (int) $actor->id)
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($recipientIds === []) {
-            return [];
-        }
-
-        return User::query()
-            ->whereIn('id', $recipientIds)
-            ->where('is_active', true)
-            ->where('delete_status', false)
-            ->pluck('id')
-            ->map(fn($userId) => (int) $userId)
-            ->all();
-    }
-
-    private function buildTimelineChanges(ProjectMilestone|ProjectSprint $model, array $fields, array $originalValues): array
-    {
-        return collect($fields)
-            ->filter(fn($label, $field) => $this->timelineValueChanged(
-                $field,
-                $originalValues[$field] ?? null,
-                $model->getAttribute($field)
-            ))
-            ->map(function ($label, $field) use ($model, $originalValues) {
-                return [
-                    'field' => $label,
-                    'old' => $this->formatTimelineValue($field, $originalValues[$field] ?? null),
-                    'new' => $this->formatTimelineValue($field, $model->getAttribute($field)),
-                ];
-            })
-            ->values()
-            ->all();
-    }
-
-    private function timelineValueChanged(string $field, mixed $oldValue, mixed $newValue): bool
-    {
-        if ($field === 'estimated_time_seconds' || $field === 'owner_id') {
-            return $this->normalizeNullableInteger($oldValue) !== $this->normalizeNullableInteger($newValue);
-        }
-
-        return $this->normalizeDateValue($oldValue) !== $this->normalizeDateValue($newValue);
-    }
-
-    private function formatTimelineValue(string $field, mixed $value): string
-    {
-        if ($field === 'estimated_time_seconds') {
-            $seconds = $this->normalizeNullableInteger($value);
-
-            return $seconds === null
-                ? '--'
-                : formatMinutesToHoursMinutes((int) round($seconds / 60));
-        }
-
-        if ($field === 'owner_id') {
-            $userId = $this->normalizeNullableInteger($value);
-
-            return $userId ? (User::find($userId)?->name ?? 'Unknown User') : 'Unassigned';
-        }
-
-        return AppServiceProvider::formatAppDate($value);
-    }
-
-    private function formatTimelineChangeSummary(array $changes): string
-    {
-        return collect($changes)
-            ->map(fn($change) => "{$change['field']}:\n{$change['old']} → {$change['new']}")
-            ->implode("\n\n");
-    }
-
-    private function normalizeNullableInteger(mixed $value): ?int
-    {
-        return filled($value) ? (int) $value : null;
-    }
-
-    private function normalizeDateValue(mixed $value): ?string
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        try {
-            return $value instanceof Carbon
-                ? $value->toDateString()
-                : Carbon::parse($value)->toDateString();
-        } catch (\Throwable) {
-            return trim((string) $value) ?: null;
-        }
-    }
-
     // Task assignment: Notify assignee when task is created or updated
     public function sendTaskAssignmentIfNeeded(Task $task, ?int $currentAssigneeId, ?int $previousAssigneeId = null): void
     {
@@ -760,6 +484,7 @@ class NotificationService
         $this->markTaskAssignmentNotificationHandled($task, $previousAssigneeId, $currentAssigneeId);
     }
 
+    // Task Timeline Changes: Notify assignee when task timeline is updated
     public function notifyTaskTimelineChanged(Task $task, User $actor, array $changes): void
     {
         if ($changes === []) {
@@ -798,6 +523,7 @@ class NotificationService
         );
     }
 
+    // Task Assignment: Notify assignee when task is assigned or reassigned
     public function notifyTaskAssigneeChanged(Task $task, User $actor, ?int $previousAssigneeId, ?int $newAssigneeId): void
     {
         $previousAssigneeId = filled($previousAssigneeId) ? (int) $previousAssigneeId : null;
@@ -858,37 +584,6 @@ class NotificationService
                 $this->taskAssignmentEmailSubjectContext($task, $actor, $newAssigneeId, $newAssigneeName)
             );
         }
-    }
-
-    private function taskAssignmentEmailSubjectContext(Task $task, ?User $actor, ?int $assigneeId, ?string $assigneeName = null): array
-    {
-        return [
-            'type' => 'task_assignment',
-            'actor_id' => $actor?->id,
-            'actor_name' => $actor?->name ?? 'A team member',
-            'assignee_id' => $assigneeId,
-            'assignee_name' => $assigneeName ?? $task->currentAssignee?->name ?? 'Unassigned',
-            'task_name' => $task->name ?? 'Task',
-        ];
-    }
-
-    private function markTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): void
-    {
-        self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] = true;
-    }
-
-    private function wasTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): bool
-    {
-        return self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] ?? false;
-    }
-
-    private function taskAssignmentNotificationKey(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): string
-    {
-        return implode(':', [
-            (int) $task->id,
-            $previousAssigneeId ?? 'none',
-            $newAssigneeId ?? 'none',
-        ]);
     }
 
     // Task status change: Notify assignee, reporter, manager and super admins
@@ -1006,6 +701,7 @@ class NotificationService
         );
     }
 
+    // Break work request: Notify related users when a break work request is created
     public function notifyBreakRequestCreated(BreakWorkRequest $breakWorkRequest): void
     {
         $breakWorkRequest->loadMissing([
@@ -1045,6 +741,7 @@ class NotificationService
         );
     }
 
+    // Break work request: Notify only the requested user when their break work request is approved
     public function notifyBreakRequestApproved(BreakWorkRequest $breakWorkRequest): void
     {
         if (! $breakWorkRequest->user_id) {
@@ -1071,6 +768,7 @@ class NotificationService
         );
     }
 
+    // Break work request: Notify only the requested user when their break work request is rejected
     public function notifyBreakRequestRejected(BreakWorkRequest $breakWorkRequest): void
     {
         if (! $breakWorkRequest->user_id) {
@@ -1410,29 +1108,7 @@ class NotificationService
         );
     }
 
-    private function formatBreakRequestDateTimeParts(BreakWorkRequest $breakWorkRequest): array
-    {
-        $timezone = (string) config('constants.timezone', config('app.timezone'));
-        $workDate = $breakWorkRequest->work_date?->format('Y-m-d') ?: (string) $breakWorkRequest->getRawOriginal('work_date');
-        $startTime = $breakWorkRequest->started_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
-        $endTime = $breakWorkRequest->ended_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
-
-        return [$workDate, $startTime, $endTime];
-    }
-
-    private function getBreakRequestNotificationUrl(BreakWorkRequest $breakWorkRequest, bool $preferTaskUrl = false): ?string
-    {
-        if ($preferTaskUrl) {
-            $breakWorkRequest->loadMissing('task:id');
-
-            if ($breakWorkRequest->task_id && $breakWorkRequest->task) {
-                return route('tasks.edit', $breakWorkRequest->task);
-            }
-        }
-
-        return route('break-requests.index');
-    }
-
+    // Task time extension request: Notify reporter chain users when a task time extension request is created
     public function notifyTaskTimeExtendRequest(User $requestingUser, Task $task, TaskExtendTimeRequest $extendRequest): void
     {
         $reporterChainUserIds = User::getReporterChainUserIds($requestingUser->id);
@@ -1469,6 +1145,7 @@ class NotificationService
         );
     }
 
+    // Task time extension request: Notify requesting user when their task time extension request is rejected
     public function notifyTaskTimeExtendRequestRejected(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
     {
         $task->loadMissing('project:id,name');
@@ -1500,6 +1177,7 @@ class NotificationService
         );
     }
 
+    // Task time extension request: Notify requesting user when their task time extension request is approved
     public function notifyTaskTimeExtendRequestApprovedToRequester(TaskExtendTimeRequest $extendRequest, Task $task, User $requestingUser): void
     {
         $task->loadMissing('project:id,name');
@@ -1534,6 +1212,7 @@ class NotificationService
         );
     }
 
+    // Task time extension request: Notify reporter chain users when a task time extension request is approved
     public function notifyTaskTimeExtendRequestApprovedToReporterChain(TaskExtendTimeRequest $extendRequest, Task $task, User $approvedByUser): void
     {
         $task->loadMissing('project:id,name');
@@ -1578,6 +1257,34 @@ class NotificationService
         );
     }
 
+    /** ===========================================================================================================
+     *  Private Helper Methods
+     *  ===========================================================================================================
+     */
+
+    private function formatBreakRequestDateTimeParts(BreakWorkRequest $breakWorkRequest): array
+    {
+        $timezone = (string) config('constants.timezone', config('app.timezone'));
+        $workDate = $breakWorkRequest->work_date?->format('Y-m-d') ?: (string) $breakWorkRequest->getRawOriginal('work_date');
+        $startTime = $breakWorkRequest->started_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
+        $endTime = $breakWorkRequest->ended_at?->copy()->timezone($timezone)->format('H:i') ?? '--';
+
+        return [$workDate, $startTime, $endTime];
+    }
+
+    private function getBreakRequestNotificationUrl(BreakWorkRequest $breakWorkRequest, bool $preferTaskUrl = false): ?string
+    {
+        if ($preferTaskUrl) {
+            $breakWorkRequest->loadMissing('task:id');
+
+            if ($breakWorkRequest->task_id && $breakWorkRequest->task) {
+                return route('tasks.edit', $breakWorkRequest->task);
+            }
+        }
+
+        return route('break-requests.index');
+    }
+
     private function formatEstimatedTime(int $seconds): string
     {
         $hours = floor($seconds / 3600);
@@ -1592,5 +1299,325 @@ class NotificationService
         }
 
         return implode(' ', $parts);
+    }
+
+    private function dispatchTeamNotification(array $userIds, string $title, string $message): void
+    {
+        // There is no dedicated read-only team detail route, so avoid linking to the edit page here.
+        $url = null;
+
+        if (count($userIds) === 1) {
+            $this->send(
+                $userIds[0],
+                $title,
+                $message,
+                $url,
+                UserNotificationSetting::TEAM_ASSIGNED,
+                auth()->id()
+            );
+
+            return;
+        }
+
+        $this->sendToMany(
+            $userIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::TEAM_ASSIGNED,
+            auth()->id()
+        );
+    }
+
+    private function normalizeUserIds(int|array $userIds): array
+    {
+        return collect(is_array($userIds) ? $userIds : [$userIds])
+            ->filter(fn($userId) => filled($userId))
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function getProjectNotificationUrl(Project $project): ?string
+    {
+        return route('projects.edit', $project);
+    }
+
+    private function dispatchProjectAssignmentNotification(string $title, int $targetUserId, Project $project, callable $messageBuilder): void
+    {
+        $actor = auth()->user();
+        $targetUser = User::find($targetUserId);
+
+        if (! $targetUser) {
+            return;
+        }
+
+        $recipients = $this->getProjectAssignmentRecipientUsers($project, $targetUserId, $actor);
+
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        foreach ($recipients as $recipient) {
+            $this->send(
+                (int) $recipient->id,
+                $title,
+                $messageBuilder($recipient, $targetUser, $actor),
+                $this->getProjectNotificationUrl($project),
+                UserNotificationSetting::PROJECT_ASSIGNED,
+                $actor?->id ? (int) $actor->id : null,
+                (int) $project->id
+            );
+        }
+    }
+
+    private function getProjectAssignmentRecipientUsers(Project $project, int $targetUserId, ?User $actor)
+    {
+        $project->loadMissing('teamLeader');
+
+        $recipientIds = collect([$targetUserId])
+            ->merge($actor ? User::getReporterChainUserIds((int) $actor->id) : [])
+            ->push($project->teamLeader?->id)
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->get(['id', 'name']);
+    }
+
+    private function actorName(?User $actor): string
+    {
+        return $actor?->name ?? 'A team member';
+    }
+
+    private function getProjectChangeRecipientIds(Project $project, User $actor): array
+    {
+        $project->loadMissing('teamLeader');
+
+        $recipientIds = collect(User::getReporterChainUserIds((int) $actor->id))
+            ->push($project->teamLeader?->id)
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->reject(fn($userId) => $userId === (int) $actor->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->pluck('id')
+            ->map(fn($userId) => (int) $userId)
+            ->all();
+    }
+
+    private function getTaskTimelineRecipientIds(Task $task, User $actor): array
+    {
+        $task->loadMissing([
+            'project.teamLeader',
+            'projectMilestone.owner',
+        ]);
+
+        $recipientIds = collect([$task->current_assignee_id])
+            ->merge(User::getReporterChainUserIds((int) $actor->id))
+            ->push($task->project?->teamLeader?->id)
+            ->push($task->projectMilestone?->owner?->id)
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->reject(fn($userId) => $userId === (int) $actor->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($recipientIds === []) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('id', $recipientIds)
+            ->where('is_active', true)
+            ->where('delete_status', false)
+            ->pluck('id')
+            ->map(fn($userId) => (int) $userId)
+            ->all();
+    }
+
+    private function buildTimelineChanges(ProjectMilestone|ProjectSprint $model, array $fields, array $originalValues): array
+    {
+        return collect($fields)
+            ->filter(fn($label, $field) => $this->timelineValueChanged(
+                $field,
+                $originalValues[$field] ?? null,
+                $model->getAttribute($field)
+            ))
+            ->map(function ($label, $field) use ($model, $originalValues) {
+                return [
+                    'field' => $label,
+                    'old' => $this->formatTimelineValue($field, $originalValues[$field] ?? null),
+                    'new' => $this->formatTimelineValue($field, $model->getAttribute($field)),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function timelineValueChanged(string $field, mixed $oldValue, mixed $newValue): bool
+    {
+        if ($field === 'estimated_time_seconds' || $field === 'owner_id') {
+            return $this->normalizeNullableInteger($oldValue) !== $this->normalizeNullableInteger($newValue);
+        }
+
+        return $this->normalizeDateValue($oldValue) !== $this->normalizeDateValue($newValue);
+    }
+
+    private function formatTimelineValue(string $field, mixed $value): string
+    {
+        if ($field === 'estimated_time_seconds') {
+            $seconds = $this->normalizeNullableInteger($value);
+
+            return $seconds === null
+                ? '--'
+                : formatMinutesToHoursMinutes((int) round($seconds / 60));
+        }
+
+        if ($field === 'owner_id') {
+            $userId = $this->normalizeNullableInteger($value);
+
+            return $userId ? (User::find($userId)?->name ?? 'Unknown User') : 'Unassigned';
+        }
+
+        return AppServiceProvider::formatAppDate($value);
+    }
+
+    private function formatTimelineChangeSummary(array $changes): string
+    {
+        return collect($changes)
+            ->map(fn($change) => "{$change['field']}:\n{$change['old']} → {$change['new']}")
+            ->implode("\n\n");
+    }
+
+    private function normalizeNullableInteger(mixed $value): ?int
+    {
+        return filled($value) ? (int) $value : null;
+    }
+
+    private function normalizeDateValue(mixed $value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return $value instanceof Carbon
+                ? $value->toDateString()
+                : Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return trim((string) $value) ?: null;
+        }
+    }
+
+    private function taskAssignmentEmailSubjectContext(Task $task, ?User $actor, ?int $assigneeId, ?string $assigneeName = null): array
+    {
+        return [
+            'type' => 'task_assignment',
+            'actor_id' => $actor?->id,
+            'actor_name' => $actor?->name ?? 'A team member',
+            'assignee_id' => $assigneeId,
+            'assignee_name' => $assigneeName ?? $task->currentAssignee?->name ?? 'Unassigned',
+            'task_name' => $task->name ?? 'Task',
+        ];
+    }
+
+    private function markTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): void
+    {
+        self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] = true;
+    }
+
+    private function wasTaskAssignmentNotificationHandled(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): bool
+    {
+        return self::$handledTaskAssignmentNotifications[$this->taskAssignmentNotificationKey($task, $previousAssigneeId, $newAssigneeId)] ?? false;
+    }
+
+    private function taskAssignmentNotificationKey(Task $task, ?int $previousAssigneeId, ?int $newAssigneeId): string
+    {
+        return implode(':', [
+            (int) $task->id,
+            $previousAssigneeId ?? 'none',
+            $newAssigneeId ?? 'none',
+        ]);
+    }
+
+    private function buildEmailDetails(array $details, ?int $actorUserId = null, ?int $projectId = null): array
+    {
+        $baseDetails = [];
+
+        if ($projectId) {
+            $baseDetails['Project'] = Project::withTrashed()->whereKey($projectId)->value('name');
+        }
+
+        if ($actorUserId) {
+            $baseDetails['Actor'] = User::whereKey($actorUserId)->value('name');
+        }
+
+        return $this->normalizeEmailDetails(array_merge($baseDetails, $details));
+    }
+
+    private function normalizeEmailDetails(array $details): array
+    {
+        return collect($details)
+            ->map(function ($value, $label) {
+                if (is_array($value)) {
+                    $label = $value['label'] ?? $label;
+                    $value = $value['value'] ?? null;
+                }
+
+                if (is_array($value)) {
+                    $value = collect($value)
+                        ->filter(fn($item) => filled($item))
+                        ->implode("\n");
+                }
+
+                return [
+                    'label' => (string) $label,
+                    'value' => is_scalar($value) ? (string) $value : null,
+                ];
+            })
+            ->filter(fn($detail) => filled($detail['label']) && filled($detail['value']))
+            ->values()
+            ->all();
+    }
+
+    private function taskEmailDetails(Task $task, array $details = []): array
+    {
+        $task->loadMissing([
+            'projectMilestone:id,name',
+            'projectSprint:id,name',
+            'currentAssignee:id,name',
+        ]);
+
+        $baseDetails = [
+            'Task' => $task->name,
+            'Milestone' => $task->projectMilestone?->name,
+            'Sprint' => $task->projectSprint?->name,
+            'Assignee' => $task->currentAssignee?->name,
+        ];
+
+        return array_merge($baseDetails, $details);
     }
 }
