@@ -6,10 +6,10 @@
         : route('projects.tasks.groups.show', ['project' => $project, 'group' => $group['key']]);
 @endphp
 
-<article class="overflow-hidden rounded-none border border-bgray-200 bg-white shadow-sm transition dark:border-darkblack-400 dark:bg-darkblack-600" data-project-task-group data-group-key="{{ $group['key'] }}" data-expanded="{{ $isOpen ? 'true' : 'false' }}" data-load-url="{{ $taskGroupLoadUrl }}" style="border-left-width: 4px; border-left-color: {{ $group['accent_color'] }};">
+<article class="overflow-hidden rounded-none border border-bgray-200 bg-white shadow-sm transition dark:border-darkblack-400 dark:bg-darkblack-600" data-project-task-group data-group-key="{{ $group['key'] }}" data-expanded="{{ $isOpen ? 'true' : 'false' }}" data-load-url="{{ $taskGroupLoadUrl }}" style="border-left-width: 4px; border-left-color: {{ $group['accent_color'] }}; border-color: {{ $group['accent_color'] }};">
     <div class="flex items-center justify-between gap-4 overflow-x-auto px-4 py-3 text-left transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/70">
         <div class="flex min-w-0 flex-1 items-center gap-3 whitespace-nowrap">
-            <button type="button" class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-700 shadow-sm transition hover:border-primary hover:bg-bgray-50 hover:text-primary dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-task-group-toggle aria-label="Toggle sprint tasks">
+            <button type="button" class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-700 shadow-sm transition hover:border-primary hover:bg-bgray-50 hover:text-primary dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-task-group-toggle aria-label="Toggle sprint tasks" style="border-color: {{ $group['accent_color'] }}; color: {{ $group['accent_color'] }};">
                 <svg class="h-4.5 w-4.5 transition duration-200 {{ $isOpen ? 'rotate-90' : '' }}" data-project-task-group-icon viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.24a.75.75 0 010 1.06l-4.25 4.24a.75.75 0 01-1.06 0z" clip-rule="evenodd" />
                 </svg>
