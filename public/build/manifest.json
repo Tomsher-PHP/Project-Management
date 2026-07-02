@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DUijzOQc.css",
+    "file": "assets/app-BH9mMUQZ.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -188,7 +188,7 @@
     ]
   },
   "resources/js/modules/help-center.js": {
-    "file": "assets/help-center-CeSd8Msm.js",
+    "file": "assets/help-center-M0La-rnH.js",
     "name": "help-center",
     "src": "resources/js/modules/help-center.js",
     "isEntry": true
@@ -227,7 +227,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-falmwsUK.js",
+    "file": "assets/project-detail-DCoJaM7e.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,

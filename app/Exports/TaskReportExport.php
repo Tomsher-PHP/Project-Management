@@ -333,6 +333,42 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
                 ]);
             }
 
+            if (isset($columnIndexes['due_date'])) {
+                $dueDateColumn = Coordinate::stringFromColumnIndex($columnIndexes['due_date'] + 1);
+                $dueDateColor = match (taskDueColor(
+                    $task->due_date_time,
+                    $task->estimated_time_seconds,
+                    $task
+                )) {
+                    'orange' => 'EAB308',
+                    'red' => 'DD3333',
+                    default => null,
+                };
+
+                if ($dueDateColor) {
+                    $sheet->getStyle("{$dueDateColumn}{$rowNumber}")->applyFromArray([
+                        'font' => [
+                            'bold' => true,
+                            'color' => ['rgb' => $dueDateColor],
+                        ],
+                    ]);
+                }
+            }
+
+            if (isset($columnIndexes['completed_at'])) {
+                $completedAtColumn = Coordinate::stringFromColumnIndex($columnIndexes['completed_at'] + 1);
+                $isCompleted = (bool) $task->status?->is_completed;
+                $wasCompletedLate = $isCompleted
+                    && $task->completed_at
+                    && $task->due_date_time
+                    && $task->completed_at->gt($task->due_date_time);
+                $completedAtColor = $wasCompletedLate ? 'DC2626' : '16A34A';
+
+                $sheet->getStyle("{$completedAtColumn}{$rowNumber}")->getFont()
+                    ->getColor()
+                    ->setRGB($completedAtColor);
+            }
+
             if (isset($columnIndexes['progress'])) {
                 $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
                 $progressPalette = $this->resolveProgressPalette(

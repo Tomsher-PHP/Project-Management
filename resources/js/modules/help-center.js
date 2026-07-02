@@ -3,104 +3,105 @@ const helpCenter = document.querySelector('[data-help-center]');
 if (helpCenter) {
     const searchInput = helpCenter.querySelector('[data-help-search]');
     const clearButton = helpCenter.querySelector('[data-search-clear]');
-    const articles = [...helpCenter.querySelectorAll('[data-help-article]')];
-    const navItems = [...helpCenter.querySelectorAll('[data-help-nav-item]')];
-    const categoryGroups = [...helpCenter.querySelectorAll('[data-help-category]')];
-    const contentCategories = [...helpCenter.querySelectorAll('[data-help-content-category]')];
-    const noResults = helpCenter.querySelector('[data-no-results]');
+    const searchIndexScript = helpCenter.querySelector('[data-search-index]');
+    const resultsPanel = helpCenter.querySelector('[data-help-search-results]');
+    const resultsList = helpCenter.querySelector('[data-search-results-list]');
+    const searchNoResults = helpCenter.querySelector('[data-search-no-results]');
+    const homeCards = [...helpCenter.querySelectorAll('[data-help-card]')];
+    const cardNoResults = helpCenter.querySelector('[data-card-no-results]');
     const mobileToggle = helpCenter.querySelector('[data-mobile-nav-toggle]');
     const mobileNav = helpCenter.querySelector('[data-mobile-nav]');
-    let observer;
 
     const normalize = (value) => value.toLocaleLowerCase().trim();
 
-    const setActiveArticle = (id) => {
-        navItems.forEach((item) => {
-            const active = item.dataset.articleId === id;
-            item.classList.toggle('bg-success-50', active);
-            item.classList.toggle('text-success-400', active);
-            item.classList.toggle('dark:bg-darkblack-500', active);
-            item.classList.toggle('font-semibold', active);
-            item.setAttribute('aria-current', active ? 'true' : 'false');
+    const articles = searchIndexScript
+        ? JSON.parse(searchIndexScript.textContent)
+        : [];
+
+    const createResult = (article) => {
+        const result = document.createElement('a');
+        const title = document.createElement('span');
+        const description = document.createElement('span');
+
+        result.href = article.url;
+        result.className = 'block rounded-xl px-3 py-3 transition hover:bg-bgray-50 focus:outline-none focus:ring-2 focus:ring-success-300 dark:hover:bg-darkblack-500';
+
+        title.className = 'block text-sm font-semibold text-bgray-900 dark:text-white';
+        title.textContent = article.title;
+
+        description.className = 'mt-1 block text-xs leading-5 text-bgray-500 dark:text-bgray-300';
+        description.textContent = article.description;
+
+        result.append(title, description);
+
+        return result;
+    };
+
+    const filterHomeCards = (query) => {
+        if (!homeCards.length) {
+            return;
+        }
+
+        let visibleCards = 0;
+
+        homeCards.forEach((card) => {
+            const matches = !query || normalize(card.dataset.searchText || card.textContent).includes(query);
+
+            card.hidden = !matches;
+            card.classList.toggle('ring-2', Boolean(query && matches));
+            card.classList.toggle('ring-success-200', Boolean(query && matches));
+            visibleCards += Number(matches);
         });
+
+        if (cardNoResults) {
+            cardNoResults.hidden = visibleCards !== 0;
+        }
     };
 
-    const observeVisibleArticles = () => {
-        observer?.disconnect();
-        observer = new IntersectionObserver(
-            (entries) => {
-                const visible = entries
-                    .filter((entry) => entry.isIntersecting)
-                    .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-
-                if (visible.length) {
-                    setActiveArticle(visible[0].target.id);
-                }
-            },
-            { rootMargin: '-18% 0px -68% 0px', threshold: 0 },
-        );
-
-        articles
-            .filter((article) => !article.hidden)
-            .forEach((article) => observer.observe(article));
-    };
-
-    const filterArticles = () => {
+    const renderResults = () => {
         const query = normalize(searchInput.value);
-        let matches = 0;
+        const matchingArticles = query
+            ? articles.filter((article) => normalize(article.searchable).includes(query))
+            : [];
 
-        articles.forEach((article) => {
-            const match = !query || normalize(article.textContent).includes(query);
-            article.hidden = !match;
-            article.classList.toggle('ring-2', Boolean(query && match));
-            article.classList.toggle('ring-success-200', Boolean(query && match));
-            matches += Number(match);
-
-            navItems
-                .filter((item) => item.dataset.articleId === article.id)
-                .forEach((item) => {
-                    item.hidden = !match;
-                });
-        });
-
-        categoryGroups.forEach((category) => {
-            category.hidden = !category.querySelector('[data-help-nav-item]:not([hidden])');
-        });
-        contentCategories.forEach((category) => {
-            category.hidden = !category.querySelector('[data-help-article]:not([hidden])');
-        });
-
-        noResults.hidden = matches !== 0;
         clearButton.hidden = !query;
-        observeVisibleArticles();
+        resultsList.replaceChildren();
+
+        matchingArticles.forEach((article) => {
+            resultsList.appendChild(createResult(article));
+        });
+
+        filterHomeCards(query);
+
+        if (!resultsPanel) {
+            return;
+        }
+
+        resultsPanel.hidden = !query;
+        searchNoResults.hidden = matchingArticles.length !== 0;
+        resultsList.hidden = matchingArticles.length === 0;
     };
 
-    searchInput.addEventListener('input', filterArticles);
-    clearButton.addEventListener('click', () => {
+    searchInput?.addEventListener('input', renderResults);
+    searchInput?.addEventListener('focus', renderResults);
+
+    clearButton?.addEventListener('click', () => {
         searchInput.value = '';
         searchInput.focus();
-        filterArticles();
+        renderResults();
     });
 
-    navItems.forEach((item) => {
-        item.addEventListener('click', (event) => {
-            event.preventDefault();
-            setActiveArticle(item.dataset.articleId);
-            document.getElementById(item.dataset.articleId)?.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-                block: 'start',
-            });
-            window.history.replaceState(null, '', item.hash);
-            mobileNav?.classList.add('hidden');
-            mobileToggle?.setAttribute('aria-expanded', 'false');
-        });
+    document.addEventListener('click', (event) => {
+        if (!resultsPanel || helpCenter.contains(event.target)) {
+            return;
+        }
+
+        resultsPanel.hidden = true;
     });
 
     mobileToggle?.addEventListener('click', () => {
         const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
         mobileToggle.setAttribute('aria-expanded', String(!expanded));
-        mobileNav.classList.toggle('hidden', expanded);
+        mobileNav?.classList.toggle('hidden', expanded);
     });
-
-    observeVisibleArticles();
 }
