@@ -535,6 +535,11 @@ class NotificationService
         $actorName = $actor->name ?? 'A team member';
         $taskName = $task->name ?? 'Task';
         $projectName = $task->project?->name ?? 'Project';
+        $emailSubjectContext = [
+            'type' => 'task_timeline_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
 
         $message = "{$actorName} updated task '{$taskName}' in project '{$projectName}'.\n\n"
             . $this->formatTimelineChangeSummary($changes);
@@ -549,7 +554,8 @@ class NotificationService
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -633,8 +639,13 @@ class NotificationService
 
         $title = "Task Status Updated";
         $url = url('tasks/' . $task->id . '/edit');
+        $emailSubjectContext = [
+            'type' => 'task_status_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actor->name ?? 'A team member',
+        ];
 
-        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $task, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url) {
+        User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $task, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url, $emailSubjectContext) {
             foreach ($users as $user) {
                 $actorLabel = $user->id === $actor->id ? 'You' : $actor->name;
                 $message = "{$actorLabel} moved '{$taskName}' in '{$projectName}' from {$oldStatus} to {$newStatus}";
@@ -648,7 +659,8 @@ class NotificationService
                     $projectId,
                     $this->taskEmailDetails($task, [
                         'Status' => "{$oldStatus} to {$newStatus}",
-                    ])
+                    ]),
+                    $emailSubjectContext
                 );
             }
         });
