@@ -680,9 +680,9 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             <div class="xl:col-span-2">
                 <div class="mb-2 flex items-center justify-between gap-3">
                     <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
-                    <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>${escapeHtml(String((milestone.description || '').length))}</span>/100</span>
+                    <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>${escapeHtml(String((milestone.description || '').length))}</span>/250</span>
                 </div>
-                <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(milestone.description || '')}</textarea>
+                <textarea name="description" rows="2" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(milestone.description || '')}</textarea>
                 <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
             </div>
             </div>
@@ -1800,9 +1800,9 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
                 <div class="xl:col-span-2">
                     <div class="mb-2 flex items-center justify-between gap-3">
                         <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
-                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-builder-description-count>${escapeHtml(String((sprint.description || '').length))}</span>/100</span>
+                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-builder-description-count>${escapeHtml(String((sprint.description || '').length))}</span>/250</span>
                     </div>
-                    <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(sprint.description || '')}</textarea>
+                    <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">${escapeHtml(sprint.description || '')}</textarea>
                     <p class="mt-1 hidden text-xs text-red-500" data-project-sprint-builder-error="description"></p>
                 </div>
             </div>
