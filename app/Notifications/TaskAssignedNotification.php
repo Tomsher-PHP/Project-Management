@@ -83,6 +83,9 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'task_request_submitted' => "Task Request Submitted by {$actor}",
             'task_request_approved' => "Task Request Approved by {$actor} ({$assignee})",
             'task_request_rejected' => "Task Request Rejected by {$actor} ({$assignee})",
+            'handoff_request_submitted' => "Handoff Request Submitted by {$actor}",
+            'handoff_request_assigned' => "Handoff Request Assigned by {$actor} ({$assignee})",
+            'handoff_request_noted' => "Handoff Request Noted by {$actor} ({$assignee})",
             default => null,
         };
     }

@@ -1088,6 +1088,11 @@ class NotificationService
         $title = 'New Handoff Request';
         $message = "{$requester->name} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
         $url = route('handoff_requests.index', ['request_status' => 'pending']);
+        $emailSubjectContext = [
+            'type' => 'handoff_request_submitted',
+            'actor_id' => (int) $requester->id,
+            'actor_name' => $requester->name ?? 'A team member',
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -1099,7 +1104,8 @@ class NotificationService
             $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
             [
                 'Request Type' => 'Handoff Request',
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -1112,11 +1118,21 @@ class NotificationService
             return;
         }
 
-        $handoffRequest->loadMissing('project:id,name');
+        $handoffRequest->loadMissing([
+            'project:id,name',
+            'user:id,name',
+        ]);
 
         $taskName = $createdTask->name ?? 'Task';
         $projectName = $handoffRequest->project?->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'handoff_request_assigned',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+            'assignee_id' => $requesterId,
+            'assignee_name' => $handoffRequest->user?->name ?? 'Unknown User',
+        ];
 
         $title = 'Handoff Request Assigned';
         $message = "{$actorName} assigned your handoff request (#{$handoffRequest->id}) and a new task '{$taskName}' (#{$createdTask->id}) was created in project '{$projectName}'.";
@@ -1131,7 +1147,8 @@ class NotificationService
             $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
             $this->taskEmailDetails($createdTask, [
                 'Request Type' => 'Handoff Request',
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -1144,12 +1161,22 @@ class NotificationService
             return;
         }
 
-        $handoffRequest->loadMissing('project:id,name');
+        $handoffRequest->loadMissing([
+            'project:id,name',
+            'user:id,name',
+        ]);
 
         $projectName = $handoffRequest->project?->name ?? 'Project';
         $title = 'Handoff Request Noted';
         $message = "{$actor->name} marked your handoff request (#{$handoffRequest->id}) in project '{$projectName}' as noted.";
         $url = route('handoff_requests.index', ['request_status' => 'noted']);
+        $emailSubjectContext = [
+            'type' => 'handoff_request_noted',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actor->name ?? 'A team member',
+            'assignee_id' => $requesterId,
+            'assignee_name' => $handoffRequest->user?->name ?? 'Unknown User',
+        ];
 
         $this->send(
             $requesterId,
@@ -1161,7 +1188,8 @@ class NotificationService
             $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
             [
                 'Request Type' => 'Handoff Request',
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
