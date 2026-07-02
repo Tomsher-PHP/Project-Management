@@ -643,6 +643,8 @@ class NotificationService
             'type' => 'task_status_changed',
             'actor_id' => (int) $actor->id,
             'actor_name' => $actor->name ?? 'A team member',
+            'assignee_id' => (int) $task->current_assignee_id,
+            'assignee_name' => $task->currentAssignee?->name ?? 'Unknown User',
         ];
 
         User::whereIn('id', $userIds)->chunk(50, function ($users) use ($actor, $task, $taskName, $projectName, $projectId, $oldStatus, $newStatus, $title, $url, $emailSubjectContext) {

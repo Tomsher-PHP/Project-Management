@@ -95,7 +95,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'milestone_timeline_changed' => "Milestone Timeline Changed by {$actor}",
             'sprint_timeline_changed' => "Sprint Timeline Changed by {$actor}",
             'task_timeline_changed' => "Task Timeline Changed by {$actor}",
-            'task_status_changed' => "Task Status Changed by {$actor}",
+            'task_status_changed' => "Task Status Changed by {$actor} ({$assignee})",
             default => null,
         };
     }
