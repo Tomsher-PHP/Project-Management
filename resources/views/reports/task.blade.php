@@ -233,9 +233,7 @@
                             $progressPercentage = $estimatedSeconds > 0 ? round(($actualSeconds / $estimatedSeconds) * 100, 2) : 0;
                             $progressLabel = rtrim(rtrim(number_format((float) $progressPercentage, 2, '.', ''), '0'), '.');
                             $progressBarWidth = min($progressPercentage, 100);
-                            $actualTimeClasses = $actualSeconds <= $estimatedSeconds
-                                ? 'text-success-400 dark:text-success-300'
-                                : 'text-red-500 dark:text-red-400';
+                            $actualTimeClasses = $actualSeconds <= $estimatedSeconds ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
                             $progressColorClasses = match (true) {
                                 $estimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
                                 $progressPercentage <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
@@ -243,6 +241,9 @@
                                 default => 'bg-red-500 text-red-500 dark:text-red-400',
                             };
                             [$progressBarClass, $progressTextClass] = explode(' ', $progressColorClasses, 2);
+                            $isCompleted = (bool) $task->status?->is_completed;
+                            $wasCompletedLate = $isCompleted && $task->completed_at && $task->due_date_time && $task->completed_at->gt($task->due_date_time);
+                            $completedAtClasses = $wasCompletedLate ? 'text-red-500 dark:text-red-600' : 'text-success-400 dark:text-success-300';
                         @endphp
 
                         <tr class="text-bgray-700 transition dark:text-bgray-50 {{ config('assets.classes.table_row_hover') }}">
@@ -306,12 +307,12 @@
                                 {{ $task->currentAssignee?->name ?? '-' }}
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-due_date">
-                                {{ $task->due_date_time?->format('d M Y h:i A') ?? '-' }}
+                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-due_date {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
+                                @appDateTime($task->due_date_time)
                             </td>
 
-                            <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-completed_at">
-                                {{ $task->completed_at?->format('d M Y h:i A') ?? '-' }}
+                            <td class="px-2 py-2 text-sm whitespace-nowrap col-completed_at {{ $completedAtClasses }}">
+                                @appDateTime($task->completed_at)
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-estimated">

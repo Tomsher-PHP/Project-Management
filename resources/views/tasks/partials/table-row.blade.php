@@ -8,6 +8,9 @@
     $modeColor = $task->taskMode?->color ?: '#3B82F6';
     $typeLabel = $task->taskType?->name ?? ucfirst(str_replace('_', ' ', $task->task_type ?: 'feature'));
     $modeLabel = $task->taskMode?->name ?? ucfirst(str_replace('_', ' ', $task->task_mode ?: 'new'));
+    $isCompleted = (bool) $task->status?->is_completed;
+    $wasCompletedLate = $isCompleted && $task->completed_at && $task->due_date_time && $task->completed_at->gt($task->due_date_time);
+    $completedAtClasses = $wasCompletedLate ? 'text-red-500 dark:text-red-600' : 'text-success-400 dark:text-success-300';
 @endphp
 
 <tr class="transition {{ config('assets.classes.table_row_hover') }} {{ $isSubtask ? 'hidden bg-bgray-50/40 dark:bg-darkblack-500/20' : '' }}" data-task-id="{{ $task->id }}" @if ($isSubtask) data-task-parent-id="{{ $parentTaskId }}" hidden @endif>
@@ -85,16 +88,24 @@
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
-        @if ($task->status)
-            <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
-                <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
-                {{ $task->status->name }}
-            </span>
-        @else
-            <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
-                No status
-            </span>
-        @endif
+        <div class="flex flex-col items-start gap-1.5">
+            @if ($task->status)
+                <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
+                    <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $statusColor }}"></span>
+                    {{ $task->status->name }}
+                </span>
+            @else
+                <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                    No status
+                </span>
+            @endif
+
+            @if ($isCompleted)
+                <span class="text-xs font-medium {{ $completedAtClasses }}">
+                    @appDateTime($task->completed_at)
+                </span>
+            @endif
+        </div>
     </td>
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
