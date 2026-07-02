@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-ClSJjLKN.css",
+    "file": "assets/app-BH9mMUQZ.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -227,7 +227,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-falmwsUK.js",
+    "file": "assets/project-detail-DCoJaM7e.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
