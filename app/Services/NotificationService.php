@@ -1215,6 +1215,11 @@ class NotificationService
         $title = 'Task Time Extend Request';
         $message = "{$requesterName} requested to extend time for task '{$taskName}' in '{$projectName}'.";
         $url = route('tasks.edit', $task);
+        $emailSubjectContext = [
+            'type' => 'task_time_extension_request_submitted',
+            'actor_id' => (int) $requestingUser->id,
+            'actor_name' => $requesterName,
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -1226,7 +1231,8 @@ class NotificationService
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Time Extension Request',
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -1239,6 +1245,14 @@ class NotificationService
 
         $extendRequest->loadMissing('rejector:id,name');
         $rejectorName = $extendRequest->rejector?->name ?? 'A manager';
+        $rejectorId = $extendRequest->rejected_by ? (int) $extendRequest->rejected_by : auth()->id();
+        $emailSubjectContext = [
+            'type' => 'task_time_extension_request_rejected',
+            'actor_id' => $rejectorId,
+            'actor_name' => $rejectorName,
+            'assignee_id' => (int) $requestingUser->id,
+            'assignee_name' => $requestingUser->name ?? 'Unknown User',
+        ];
 
         $title = 'Task Time Extend Request Rejected';
         $message = "{$rejectorName} rejected your time extend request for task '{$taskName}' in '{$projectName}'.";
@@ -1253,12 +1267,13 @@ class NotificationService
             $message,
             route('tasks.edit', $task),
             UserNotificationSetting::TASK_TIME_EXTEND_REQUEST,
-            $extendRequest->rejected_by ? (int) $extendRequest->rejected_by : auth()->id(),
+            $rejectorId,
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Time Extension Request',
                 'Status' => 'Rejected',
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -1324,6 +1339,13 @@ class NotificationService
         $title = 'Task Time Extend Request Approved';
         $message = "'{$taskName}' in '{$projectName}' requested by {$requesterName} has been approved by {$approvedByUser->name}.\n\n"
             . "Time changed from {$previousEstimatedTime} to {$newApprovedEstimatedTime}";
+        $emailSubjectContext = [
+            'type' => 'task_time_extension_request_approved',
+            'actor_id' => (int) $approvedByUser->id,
+            'actor_name' => $approvedByUser->name ?? 'Unknown User',
+            'assignee_id' => $extendRequest->user?->id,
+            'assignee_name' => $requesterName,
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -1338,7 +1360,8 @@ class NotificationService
                 'Status' => 'Approved',
                 'Previous Estimate' => $previousEstimatedTime,
                 'New Estimate' => $newApprovedEstimatedTime,
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
