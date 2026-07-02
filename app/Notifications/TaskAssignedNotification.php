@@ -80,6 +80,9 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'task_time_log_change_request_submitted' => "Task Time Log Change Request Submitted by {$actor}",
             'task_time_log_change_request_approved' => "Task Time Log Change Request Approved by {$actor} ({$assignee})",
             'task_time_log_change_request_rejected' => "Task Time Log Change Request Rejected by {$actor} ({$assignee})",
+            'task_request_submitted' => "Task Request Submitted by {$actor}",
+            'task_request_approved' => "Task Request Approved by {$actor} ({$assignee})",
+            'task_request_rejected' => "Task Request Rejected by {$actor} ({$assignee})",
             default => null,
         };
     }

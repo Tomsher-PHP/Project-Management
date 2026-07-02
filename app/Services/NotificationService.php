@@ -624,7 +624,7 @@ class NotificationService
         });
     }
 
-    // Task request: Notify related users when a task request is created
+    // Task request: Notify reporters when a task request is created
     public function notifyTaskRequestCreated(Task $task): void
     {
         $task->loadMissing([
@@ -647,6 +647,11 @@ class NotificationService
         $taskName = $task->name ?? 'Task';
         $requesterName = $task->currentAssignee?->name ?? 'A team member';
         $projectName = $task->project?->name ?? 'Project';
+        $emailSubjectContext = [
+            'type' => 'task_request_submitted',
+            'actor_id' => $task->current_assignee_id ? (int) $task->current_assignee_id : null,
+            'actor_name' => $requesterName,
+        ];
 
         $this->sendToMany(
             $userIds,
@@ -658,7 +663,8 @@ class NotificationService
             $task->project_id ? (int) $task->project_id : null,
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Request',
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
@@ -679,6 +685,13 @@ class NotificationService
         $projectName = $task->project?->name ?? 'Project';
         $reviewerName = $reviewer->name ?? 'A team member';
         $reviewLabel = $isRejected ? 'rejected' : 'approved';
+        $emailSubjectContext = [
+            'type' => $isRejected ? 'task_request_rejected' : 'task_request_approved',
+            'actor_id' => (int) $reviewer->id,
+            'actor_name' => $reviewerName,
+            'assignee_id' => (int) $task->current_assignee_id,
+            'assignee_name' => $task->currentAssignee?->name ?? 'Unknown User',
+        ];
 
         $message = "{$reviewerName} {$reviewLabel} your task request '{$taskName}' in '{$projectName}'.";
 
@@ -697,7 +710,8 @@ class NotificationService
             $this->taskEmailDetails($task, [
                 'Request Type' => 'Task Request',
                 'Status' => ucfirst($reviewLabel),
-            ])
+            ]),
+            $emailSubjectContext
         );
     }
 
