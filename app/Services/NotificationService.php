@@ -229,6 +229,11 @@ class NotificationService
 
         $projectName = $project->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'project_status_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -240,7 +245,8 @@ class NotificationService
             (int) $project->id,
             [
                 'Status' => "{$oldStatus} to {$newStatus}",
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -255,6 +261,11 @@ class NotificationService
 
         $projectName = $project->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'project_stage_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
 
         $this->sendToMany(
             $recipientIds,
@@ -266,7 +277,8 @@ class NotificationService
             (int) $project->id,
             [
                 'Stage' => "{$oldStage} to {$newStage}",
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -285,6 +297,11 @@ class NotificationService
 
         $projectName = $project->name ?? 'Project';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'project_timeline_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
         $changeSummary = collect($changes)
             ->map(fn($change) => "{$change['field']} from {$change['old']} to {$change['new']}")
             ->implode('; ');
@@ -303,7 +320,8 @@ class NotificationService
             (int) $project->id,
             [
                 'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -332,6 +350,11 @@ class NotificationService
         $projectName = $project->name ?? 'Project';
         $milestoneName = $projectMilestone->name ?? 'Milestone';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'milestone_timeline_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
 
         $message = "{$actorName} updated milestone '{$milestoneName}' in project '{$projectName}'.\n\n"
             . $this->formatTimelineChangeSummary($changes);
@@ -347,7 +370,8 @@ class NotificationService
             [
                 'Milestone' => $milestoneName,
                 'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 
@@ -376,6 +400,11 @@ class NotificationService
         $projectName = $project->name ?? 'Project';
         $sprintName = $projectSprint->name ?? 'Sprint';
         $actorName = $actor->name ?? 'A team member';
+        $emailSubjectContext = [
+            'type' => 'sprint_timeline_changed',
+            'actor_id' => (int) $actor->id,
+            'actor_name' => $actorName,
+        ];
 
         $message = "{$actorName} updated sprint '{$sprintName}' in project '{$projectName}'.\n\n"
             . $this->formatTimelineChangeSummary($changes);
@@ -391,7 +420,8 @@ class NotificationService
             [
                 'Sprint' => $sprintName,
                 'Timeline Changes' => $this->formatTimelineChangeSummary($changes),
-            ]
+            ],
+            $emailSubjectContext
         );
     }
 

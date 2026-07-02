@@ -89,6 +89,11 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'task_time_extension_request_submitted' => "Task Time Extension Request Submitted by {$actor}",
             'task_time_extension_request_rejected' => "Task Time Extension Request Rejected by {$actor} ({$assignee})",
             'task_time_extension_request_approved' => "Task Time Extension Request Approved by {$actor} ({$assignee})",
+            'project_status_changed' => "Project Status Changed by {$actor}",
+            'project_stage_changed' => "Project Stage Changed by {$actor}",
+            'project_timeline_changed' => "Project Timeline Changed by {$actor}",
+            'milestone_timeline_changed' => "Milestone Timeline Changed by {$actor}",
+            'sprint_timeline_changed' => "Sprint Timeline Changed by {$actor}",
             default => null,
         };
     }
