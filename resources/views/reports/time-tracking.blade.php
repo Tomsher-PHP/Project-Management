@@ -113,43 +113,43 @@
                 <!-- HEADER -->
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
                             #
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
                             User
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
                             Project
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-milestone">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-milestone">
                             Milestone
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-sprint">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-sprint">
                             Sprint
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
                             Task
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
                             Date
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
                             Start Time
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
                             End Time
                         </th>
 
-                        <th scope="col" class="px-6 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
+                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
                             Duration
                         </th>
 
@@ -166,7 +166,7 @@
                         <!-- BREAK ROW -->
                         @if (($row['type'] ?? null) === 'break')
                             <tr class="border-y border-yellow-200 bg-yellow-50 dark:border-yellow-900/30 dark:bg-yellow-900/20">
-                                <td colspan="{{ $tableColumnCount }}" class="px-5 py-4 text-center text-sm font-medium text-black dark:text-bgray-50">
+                                <td colspan="{{ $tableColumnCount }}" class="px-4 py-1 text-center text-sm font-medium text-black dark:text-bgray-50">
                                     BREAK:
                                     {{ $row['break']['duration_label'] ?? formatSecondsToHMS($row['break']['duration_seconds'] ?? 0) }}
                                 </td>
@@ -185,15 +185,15 @@
 
                         <!-- DATA ROW -->
                         <tr class="text-bgray-700 transition dark:text-bgray-50 {{ config('assets.classes.table_row_hover') }}">
-                            <td class="px-5 py-2 text-sm text-bgray-600 dark:text-bgray-300">
+                            <td class="px-4 py-2 text-sm text-bgray-600 dark:text-bgray-300">
                                 {{ $reportNumber }}
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-user">
                                 {{ $report->user?->name ?? '-' }}
                             </td>
 
-                            <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
+                            <td class="px-4 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-project">
                                 @if ($projectUrl)
                                     <a href="{{ $projectUrl }}" class="transition hover:text-success-300 dark:hover:text-success-300">
                                         {{ $project?->name ?? '-' }}
@@ -203,15 +203,15 @@
                                 @endif
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-milestone">
                                 {{ $milestone?->name ?? '-' }}
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-sprint">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-sprint">
                                 {{ $sprint?->name ?? '-' }}
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
                                 @php
                                     $taskRequestStatus = $report->task?->request_status;
                                     $statusTextClass = '';
@@ -243,7 +243,7 @@
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
                                             </svg>
                                         @endif
-                                        <span class="truncate min-w-0">{{ $report->task?->name ?? '-' }}</span>
+                                        <span class="min-w-0">{{ $report->task?->name ?? '-' }}</span>
                                     </a>
                                 @else
                                     <span class="inline-flex items-center gap-1 min-w-0 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
@@ -260,24 +260,24 @@
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
                                             </svg>
                                         @endif
-                                        <span class="truncate min-w-0">{{ $report->task?->name ?? '-' }}</span>
+                                        <span class="min-w-0">{{ $report->task?->name ?? '-' }}</span>
                                     </span>
                                 @endif
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-date">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-date">
                                 @appDate($report->started_at)
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-start_time">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-start_time">
                                 @appTime($report->started_at)
                             </td>
 
-                            <td class="px-5 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-end_time">
+                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-end_time">
                                 @appTime($report->ended_at)
                             </td>
 
-                            <td class="px-5 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-duration">
+                            <td class="px-4 py-2 text-sm font-medium text-bgray-900 dark:text-bgray-300 col-duration">
                                 {{ formatSecondsToHMS($report->duration_seconds) }}
                             </td>
                         </tr>
