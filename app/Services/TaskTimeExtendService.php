@@ -109,8 +109,6 @@ class TaskTimeExtendService
             $query->whereIn('user_id', (array) $filters['user_id']);
         }
 
-        dd($query->get());
-
         return $query->latest('id')->paginate($perPage)->withQueryString();
     }
 
