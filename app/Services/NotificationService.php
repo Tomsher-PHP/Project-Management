@@ -80,7 +80,6 @@ class NotificationService
             return;
         }
 
-        info('send', $emailSubjectContext);
         $user->notify(new TaskAssignedNotification(
             $title,
             $message,
@@ -96,7 +95,6 @@ class NotificationService
     // Multiple users
     public function sendToMany(array $userIds, string $title, string $message, ?string $url = null, ?string $notificationType = null, ?int $actorUserId = null, ?int $projectId = null, array $emailDetails = [], array $emailSubjectContext = []): void
     {
-        info('sendToMany', $emailSubjectContext);
         User::whereIn('id', $userIds)
             ->chunk(50, function ($users) use ($title, $message, $url, $notificationType, $actorUserId, $projectId, $emailDetails, $emailSubjectContext) {
                 foreach ($users as $user) {
