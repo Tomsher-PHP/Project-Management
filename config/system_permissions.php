@@ -83,7 +83,7 @@ return [
     ['name' => 'shift.delete', 'sort_order' => 9060, 'default_checked' => false],
 
     // SCHEDULE SHIFT (10000)
-    ['name' => 'schedule_shift.view',   'sort_order' => 10000, 'default_checked' => true],
+    ['name' => 'schedule_shift.view',   'sort_order' => 10000, 'default_checked' => false],
     ['name' => 'schedule_shift.create', 'sort_order' => 10020, 'default_checked' => false],
     ['name' => 'schedule_shift.edit',   'sort_order' => 10040, 'default_checked' => false],
     ['name' => 'schedule_shift.delete', 'sort_order' => 10060, 'default_checked' => false],
