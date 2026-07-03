@@ -18,7 +18,10 @@
 
             @include('tasks.kanban._sort_dropdown')
 
-            @include('tasks.kanban._project_flow_btn')
+            @include('tasks.kanban._project_flow_btn', [
+                'agileNewTaskCount' => $agileNewTaskCount,
+                'linearNewTaskCount' => $linearNewTaskCount,
+            ])
         </div>
 
         @php

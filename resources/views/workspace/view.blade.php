@@ -26,7 +26,10 @@
             </div>
 
             <!-- Task Board Section -->
-            @include('workspace.partials.kanban-board')
+            @include('workspace.partials.kanban-board', [
+                'agileNewTaskCount' => $agileNewTaskCount,
+                'linearNewTaskCount' => $linearNewTaskCount,
+            ])
 
             <x-filters.drawer>
                 <div data-workspace-kanban-filters>
