@@ -108,48 +108,48 @@
                 $tableColumnCount = count($columns) + 1;
             @endphp
 
-            <table class="daily-report-table w-full min-w-[1650px]">
+            <table class="daily-report-table w-full min-w-[1615px] table-fixed">
 
                 <!-- HEADER -->
                 <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                     <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[50px]">
+                        <th scope="col" class="w-[55px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50">
                             #
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-user">
+                        <th scope="col" class="w-[170px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-user">
                             User
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-project">
+                        <th scope="col" class="w-[190px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-project">
                             Project
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-milestone">
+                        <th scope="col" class="w-[170px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-milestone">
                             Milestone
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-sprint">
+                        <th scope="col" class="w-[160px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-sprint">
                             Sprint
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-task">
+                        <th scope="col" class="w-[370px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-task">
                             Task
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-date">
+                        <th scope="col" class="w-[130px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-date">
                             Date
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-start_time">
+                        <th scope="col" class="w-[125px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-start_time">
                             Start Time
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-end_time">
+                        <th scope="col" class="w-[125px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-end_time">
                             End Time
                         </th>
 
-                        <th scope="col" class="px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[165px] col-duration">
+                        <th scope="col" class="w-[120px] px-4 py-2 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 col-duration">
                             Duration
                         </th>
 
@@ -211,7 +211,7 @@
                                 {{ $sprint?->name ?? '-' }}
                             </td>
 
-                            <td class="px-4 py-2 text-sm text-bgray-700 dark:text-bgray-300 col-task">
+                            <td class="break-words whitespace-normal px-4 py-2 align-top text-sm text-bgray-700 dark:text-bgray-300 col-task">
                                 @php
                                     $taskRequestStatus = $report->task?->request_status;
                                     $statusTextClass = '';
@@ -229,7 +229,7 @@
                                     }
                                 @endphp
                                 @if ($taskUrl)
-                                    <a href="{{ $taskUrl }}" class="inline-flex items-center gap-1 transition hover:text-success-300 dark:hover:text-success-300 min-w-0 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
+                                    <a href="{{ $taskUrl }}" class="inline-flex w-full min-w-0 items-start gap-1 whitespace-normal transition hover:text-success-300 dark:hover:text-success-300 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
                                         @if ($icon === 'hourglass')
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                 <path d="M7 3H17" stroke-width="2" stroke-linecap="round" />
@@ -243,10 +243,10 @@
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
                                             </svg>
                                         @endif
-                                        <span class="min-w-0">{{ $report->task?->name ?? '-' }}</span>
+                                        <span class="min-w-0 break-words">{{ $report->task?->name ?? '-' }}</span>
                                     </a>
                                 @else
-                                    <span class="inline-flex items-center gap-1 min-w-0 {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
+                                    <span class="inline-flex w-full min-w-0 items-start gap-1 whitespace-normal {{ $statusTextClass }}" @if ($tooltip) title="{{ $tooltip }}" @endif>
                                         @if ($icon === 'hourglass')
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                 <path d="M7 3H17" stroke-width="2" stroke-linecap="round" />
@@ -260,7 +260,7 @@
                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-width="2" />
                                             </svg>
                                         @endif
-                                        <span class="min-w-0">{{ $report->task?->name ?? '-' }}</span>
+                                        <span class="min-w-0 break-words">{{ $report->task?->name ?? '-' }}</span>
                                     </span>
                                 @endif
                             </td>

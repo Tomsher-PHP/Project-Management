@@ -361,7 +361,7 @@ class ReportController extends Controller
         $projectSprints = $reportService->getFilterSprints($request);
         $users = $reportService->getFilterUsers($request);
 
-        $totalMinutes = $reportService->getTotalMinutes($request);
+        $totalSeconds = $reportService->getTotalSeconds($request);
 
         $columns = $reportService->getColumnLabels();
         $canExport = $reportService->canExport($request);
@@ -373,7 +373,7 @@ class ReportController extends Controller
         ];
 
         $dailyStats = [
-            'total_hours' =>  formatMinutesToHoursMinutes($totalMinutes),
+            'total_hours' =>  formatSecondsToHMS($totalSeconds),
 
             'approved_entries' => $reports->getCollection()
                 ->where('is_approved', true)
@@ -409,7 +409,7 @@ class ReportController extends Controller
             'users',
             'perPage',
             'displayRows',
-            'totalMinutes',
+            'totalSeconds',
             'columns',
             'canExport',
             'dailyStats',
