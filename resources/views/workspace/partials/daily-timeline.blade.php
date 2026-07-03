@@ -103,7 +103,32 @@
 
                 <!-- Worked Task Start-->
                 @foreach ($workedTaskSegments ?? [] as $segment)
-                    <button type="button" class="daily-timeline__segment daily-timeline__segment--work" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}">
+                    @php
+                        $hasPendingTimeLogChangeRequest = !empty($segment['has_pending_time_log_change_request']);
+                        $canRequestOwnTimeLogChange = empty($workspaceTimelineShowsUser)
+                            && !empty($segment['can_request_time_log_change']);
+                        $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work'
+                            . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '')
+                            . ($canRequestOwnTimeLogChange ? ' modal-open' : ''));
+                    @endphp
+                    <button type="button" class="{{ $workSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $hasPendingTimeLogChangeRequest ? 'Pending time change request | ' : '' }}{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}{{ $hasPendingTimeLogChangeRequest ? ' pending time change request' : '' }}"
+                        @if ($canRequestOwnTimeLogChange)
+                            data-target="#timeLogChangeRequestModal"
+                            data-time-log-change-request-open
+                            data-task_id="{{ $segment['task_id'] }}"
+                            data-task_time_log_id="{{ $segment['task_time_log_id'] }}"
+                            data-new_started_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_started_at'] : $segment['original_started_at'] }}"
+                            data-new_ended_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_ended_at'] : $segment['original_ended_at'] }}"
+                            data-original_started_at="{{ $segment['original_started_at'] }}"
+                            data-original_ended_at="{{ $segment['original_ended_at'] }}"
+                            data-time_log_user_name="{{ $workspaceTimelineUserName }}"
+                            data-time_log_change_request_mode="{{ $hasPendingTimeLogChangeRequest ? 'edit' : 'create' }}"
+                            @if ($hasPendingTimeLogChangeRequest)
+                                data-time_log_change_request_id="{{ $segment['pending_change_request_id'] }}"
+                                data-time_log_change_request_update_url="{{ $segment['pending_change_request_update_url'] }}"
+                                data-time_log_change_request_reason="{{ $segment['pending_reason'] }}"
+                            @endif
+                        @endif>
                     </button>
                 @endforeach
                 <!-- Worked Task End-->

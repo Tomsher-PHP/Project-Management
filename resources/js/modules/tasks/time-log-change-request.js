@@ -167,6 +167,12 @@ const populateFromTrigger = (trigger) => {
     const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
     const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
     const reasonField = document.querySelector(fieldSelectors.reason);
+    const mode = readTriggerData(trigger, 'time_log_change_request_mode') === 'edit' ? 'edit' : 'create';
+    const storeUrl = form.dataset.storeUrl || form.getAttribute('action') || '';
+    const updateUrl = readTriggerData(trigger, 'time_log_change_request_update_url');
+
+    form.action = mode === 'edit' && updateUrl ? updateUrl : storeUrl;
+    form.dataset.requestMethod = mode === 'edit' ? 'PATCH' : 'POST';
 
     if (userNameNode) {
         const userName = readTriggerData(trigger, 'time_log_user_name') || 'Unknown User';
@@ -179,8 +185,19 @@ const populateFromTrigger = (trigger) => {
     setFieldValue(originalEndedAtField, readTriggerData(trigger, 'original_ended_at'));
     setFieldValue(newStartedAtField, readTriggerData(trigger, 'new_started_at'));
     setFieldValue(newEndedAtField, readTriggerData(trigger, 'new_ended_at'));
-    setFieldValue(reasonField, '');
+    setFieldValue(reasonField, mode === 'edit'
+        ? readTriggerData(trigger, 'time_log_change_request_reason')
+        : '');
     syncDurationDisplay();
+};
+
+export const openTimeLogChangeRequest = (trigger) => {
+    if (!trigger || trigger.disabled) {
+        return;
+    }
+
+    populateFromTrigger(trigger);
+    getModal()?.classList.remove('hidden');
 };
 
 const setSubmittingState = (isSubmitting) => {
@@ -309,7 +326,7 @@ const submitForm = async () => {
 
     try {
         const response = await fetch(form.action, {
-            method: 'POST',
+            method: form.dataset.requestMethod || 'POST',
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -345,9 +362,7 @@ document.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-time-log-change-request-open]');
 
     if (trigger && !trigger.disabled) {
-        window.setTimeout(() => {
-            populateFromTrigger(trigger);
-        }, 0);
+        openTimeLogChangeRequest(trigger);
 
         return;
     }
