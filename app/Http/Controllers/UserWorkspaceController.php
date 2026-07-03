@@ -52,6 +52,19 @@ class UserWorkspaceController extends Controller
 
         [$selectedFlowType, $boardStatuses, $tasksByStatus, $selectedKanbanSort] = $this->buildWorkspaceKanbanData($request, $taskServices, $workspaceUser);
         $filterViewData = $this->buildWorkspaceFilterViewData($request, $taskFilterService, $selectedFlowType, $workspaceUser);
+        $defaultStatus = $boardStatuses->first(fn($status) => (bool) $status->is_default);
+        $newTaskCount = $defaultStatus
+            ? (int) ($tasksByStatus[$defaultStatus->id]['total'] ?? 0)
+            : 0;
+        $otherFlowType = $selectedFlowType === 'agile' ? 'linear' : 'agile';
+        $otherFlowNewTaskCount = $taskServices->countDefaultStatusKanbanTasks(
+            $user,
+            $request->all(),
+            $otherFlowType,
+            $this->buildWorkspaceKanbanOptions($boardStatuses, $request, $taskServices, $workspaceUser)
+        );
+        $agileNewTaskCount = $selectedFlowType === 'agile' ? $newTaskCount : $otherFlowNewTaskCount;
+        $linearNewTaskCount = $selectedFlowType === 'linear' ? $newTaskCount : $otherFlowNewTaskCount;
 
         $formData = $taskFormService->getCreateData($user);
         $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
@@ -73,6 +86,8 @@ class UserWorkspaceController extends Controller
 
         return view('workspace.view', [
             'tasksByStatus' => $tasksByStatus,
+            'agileNewTaskCount' => $agileNewTaskCount,
+            'linearNewTaskCount' => $linearNewTaskCount,
             'boardStatuses' => $boardStatuses,
             'selectedFlowType' => $selectedFlowType,
             'selectedKanbanSort' => $selectedKanbanSort,

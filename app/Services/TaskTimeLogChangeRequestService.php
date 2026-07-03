@@ -68,6 +68,28 @@ class TaskTimeLogChangeRequestService
         return $changeRequest;
     }
 
+    public function updatePendingRequest(
+        User $user,
+        TaskTimeLogChangeRequest $changeRequest,
+        TaskTimeLog $timeLog,
+        array $payload
+    ): TaskTimeLogChangeRequest {
+        abort_unless(
+            $changeRequest->isPending()
+                && (int) $changeRequest->user_id === (int) $user->id
+                && (int) $changeRequest->task_time_log_id === (int) $timeLog->id,
+            Response::HTTP_FORBIDDEN
+        );
+
+        $changeRequest->update([
+            'new_started_at' => $payload['new_started_at'],
+            'new_ended_at' => $payload['new_ended_at'],
+            'reason' => trim((string) ($payload['reason'] ?? '')),
+        ]);
+
+        return $changeRequest->refresh();
+    }
+
     public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null): void
     {
         abort_unless($this->canHandleRequest($user, $changeRequest), Response::HTTP_FORBIDDEN);

@@ -14,7 +14,12 @@ class UserTimelineService
         $nowUtc = Carbon::now('UTC');
 
         return TaskTimeLog::query()
-            ->with('task:id,name')
+            ->with([
+                'task:id,name,request_status',
+                'changeRequests' => fn($query) => $query
+                    ->where('status', 'pending')
+                    ->latest('id'),
+            ])
             ->where('user_id', $userId)
             ->where('started_at', '<', $dayEndExclusiveUtc)
             ->where(function ($query) use ($dayStartUtc) {
@@ -407,9 +412,25 @@ class UserTimelineService
             return null;
         }
 
+        $pendingChangeRequest = $log->changeRequests->first();
+
         return [
             'task_id' => $log->task_id,
+            'task_time_log_id' => $log->id,
             'task_name' => $log->task?->name ?? ('Task #' . $log->task_id),
+            'original_started_at' => $startedAtLocal->format('Y-m-d H:i:s'),
+            'original_ended_at' => $log->ended_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
+            'can_request_time_log_change' => !$log->is_running
+                && $log->ended_at !== null
+                && ($log->task?->request_status ?? null) !== 'rejected',
+            'has_pending_time_log_change_request' => $pendingChangeRequest !== null,
+            'pending_change_request_id' => $pendingChangeRequest?->id,
+            'pending_change_request_update_url' => $pendingChangeRequest
+                ? route('tasks.time-log-change-requests.update', $pendingChangeRequest)
+                : null,
+            'pending_new_started_at' => $pendingChangeRequest?->new_started_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
+            'pending_new_ended_at' => $pendingChangeRequest?->new_ended_at?->copy()->timezone($timezone)->format('Y-m-d H:i:s'),
+            'pending_reason' => $pendingChangeRequest?->reason,
             'left' => round(($startSecondsFromDayStart / 86400) * 100, 4),
             'width' => max(round(($durationSeconds / 86400) * 100, 4), 0.01),
             'start_seconds' => $startSecondsFromDayStart,

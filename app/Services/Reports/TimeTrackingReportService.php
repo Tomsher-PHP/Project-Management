@@ -142,12 +142,9 @@ class TimeTrackingReportService
             ->withQueryString();
     }
 
-    public function getTotalMinutes(Request $request)
+    public function getTotalSeconds(Request $request)
     {
-        return round(
-            $this->query($request)
-                ->sum('duration_seconds') / 60
-        );
+        return round($this->query($request)->sum('duration_seconds'));
     }
 
     public function getSelectedUserIds(Request $request): array

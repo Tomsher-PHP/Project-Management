@@ -118,7 +118,6 @@ class ProjectServices
                 'priority' => $data['priority'],
                 'start_date' => $data['start_date'] ?? null,
                 'end_date' => $data['end_date'] ?? null,
-                'customer_end_date' => $data['customer_end_date'] ?? null,
                 'estimated_time_seconds' => $data['estimated_time_seconds'] ?? null,
                 'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
@@ -126,6 +125,10 @@ class ProjectServices
                 'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ];
+
+            if (array_key_exists('customer_end_date', $data)) {
+                $projectData['customer_end_date'] = $data['customer_end_date'];
+            }
 
             $originalTimelineValues = $project->only(array_keys(self::PROJECT_TIMELINE_FIELDS));
 

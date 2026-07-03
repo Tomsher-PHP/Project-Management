@@ -1,4 +1,5 @@
 import { initDatepicker } from '../../components/datepicker';
+import '../tasks/time-log-change-request';
 
 let activeTimelineRequest = null;
 const CONTROLLER_KEY = '__workspaceTimelineController';
@@ -208,4 +209,10 @@ function bindTimeline(root) {
 document.addEventListener('DOMContentLoaded', () => {
     bindTimeline(getTimelineRoot());
     window[CONTROLLER_KEY] = createTimelineController();
+});
+
+document.addEventListener('task-history:changed', (event) => {
+    if (event.detail?.source === 'time-log-change-request') {
+        refreshTimelineForCurrentDate();
+    }
 });

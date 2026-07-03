@@ -26,7 +26,10 @@
             </div>
 
             <!-- Task Board Section -->
-            @include('workspace.partials.kanban-board')
+            @include('workspace.partials.kanban-board', [
+                'agileNewTaskCount' => $agileNewTaskCount,
+                'linearNewTaskCount' => $linearNewTaskCount,
+            ])
 
             <x-filters.drawer>
                 <div data-workspace-kanban-filters>
@@ -49,6 +52,9 @@
 
             <!-- Break Work Request Modal -->
             @include('workspace.partials._break-request-modal')
+
+            <!-- Request Time Log Change Modal -->
+            @include('tasks.partials.time-log-change-request-modal', ['taskId' => null])
 
             <!-- Request Estimate Change Modal -->
             @include('tasks.partials.extend-time-modal')

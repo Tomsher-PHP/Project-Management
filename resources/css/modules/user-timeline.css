@@ -212,6 +212,19 @@
     background: #0866ff;
 }
 
+.daily-timeline__segment--work-request-pending {
+    background: #4f5bff;
+    box-shadow: 0 8px 16px rgba(79, 91, 255, 0.24);
+}
+
+.daily-timeline__segment--work-request-pending::before {
+    background: #4f5bff;
+}
+
+.daily-timeline__segment--work-request-pending::after {
+    border-top-color: #4f5bff;
+}
+
 .daily-timeline__segment--break {
     background: #ee9802;
     color: #fff;

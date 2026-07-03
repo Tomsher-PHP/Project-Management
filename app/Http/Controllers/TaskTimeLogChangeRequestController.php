@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\TaskTimeLogChangeRequestActionRequest;
 use App\Http\Requests\TaskTimeLogChangeRequestBulkActionRequest;
 use App\Http\Requests\StoreTaskTimeLogChangeRequest;
+use App\Http\Requests\UpdateTaskTimeLogChangeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Services\TaskTimeLogChangeRequestService;
 use Illuminate\Http\RedirectResponse;
@@ -65,6 +66,37 @@ class TaskTimeLogChangeRequestController extends Controller
                 'request_status' => $changeRequest->status,
             ],
         ], Response::HTTP_CREATED);
+    }
+
+    public function update(
+        UpdateTaskTimeLogChangeRequest $request,
+        TaskTimeLogChangeRequest $changeRequest,
+        TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService
+    ): JsonResponse {
+        $timeLog = $request->resolveTimeLog();
+
+        abort_unless($timeLog, Response::HTTP_NOT_FOUND);
+
+        $changeRequest = $taskTimeLogChangeRequestService->updatePendingRequest(
+            $request->user(),
+            $changeRequest,
+            $timeLog,
+            [
+                'new_started_at' => $request->normalizedNewStartedAt(),
+                'new_ended_at' => $request->normalizedNewEndedAt(),
+                'reason' => $request->validated('reason'),
+            ]
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Time change request updated successfully.',
+            'data' => [
+                'id' => $changeRequest->id,
+                'task_time_log_id' => $changeRequest->task_time_log_id,
+                'request_status' => $changeRequest->status,
+            ],
+        ]);
     }
 
     public function handleAction(TaskTimeLogChangeRequestActionRequest $request, TaskTimeLogChangeRequest $changeRequest, string $action, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): RedirectResponse

@@ -26,7 +26,7 @@
                             <select name="project_id" class="tom-select w-full" data-sort="0">
                                 <option value="">Select project</option>
                                 @foreach ($taskCreateProjects as $projectOption)
-                                    <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])' {{ (string) ($taskCreateDependencies['defaults']['project_id'] ?? '') === (string) $projectOption->id ? 'selected' : '' }}>
+                                    <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
                                         {{ $projectOption->name }}
                                     </option>
                                 @endforeach
