@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BH9mMUQZ.css",
+    "file": "assets/app-DICE-45e.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -82,7 +82,7 @@
     ]
   },
   "resources/css/modules/user-timeline.css": {
-    "file": "assets/user-timeline-CER8jxqH.css",
+    "file": "assets/user-timeline-CALvom10.css",
     "src": "resources/css/modules/user-timeline.css",
     "isEntry": true,
     "name": "user-timeline",
@@ -284,7 +284,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-C1tRgQ_S.js",
+    "file": "assets/task-detail-BDgO6Xmp.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -333,7 +333,7 @@
     ]
   },
   "resources/js/modules/tasks/extend-task.js": {
-    "file": "assets/extend-task-CEIZS9s-.js",
+    "file": "assets/extend-task-D0UOV-J3.js",
     "name": "extend-task",
     "src": "resources/js/modules/tasks/extend-task.js",
     "isEntry": true,
@@ -359,7 +359,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-CRupFrDU.js",
+    "file": "assets/kanban-board-8vEvQNGA.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,
@@ -382,7 +382,7 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-Da6ilbln.js",
+    "file": "assets/time-log-change-request-CH-Q82GI.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
@@ -450,13 +450,16 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-nt8b8R-a.js",
+    "file": "assets/user-timeline-Csmf2MQJ.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
     "imports": [
       "_datepicker-C_SEo8OD.js",
-      "_flatpickr.min-Cc3t1Oke.js"
+      "resources/js/modules/tasks/time-log-change-request.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
     ]
   },
   "resources/js/modules/workspace/workspace-auto-refresh.js": {
