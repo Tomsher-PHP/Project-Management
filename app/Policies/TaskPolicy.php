@@ -27,6 +27,10 @@ class TaskPolicy
             return true;
         }
 
+        if ((int) ($task->added_by ?? 0) === (int) $user->id) {
+            return true;
+        }
+
         $task->load([
             'project.teamLeader',
             'projectMilestone:id,owner_id,name',

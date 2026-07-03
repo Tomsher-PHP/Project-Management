@@ -11,7 +11,7 @@
         && $task->due_date_time
         && $task->completed_at->gt($task->due_date_time);
     $completedAtClasses = $wasCompletedLate
-        ? 'text-red-500 dark:text-red-300'
+        ? 'text-red-500 dark:text-red-600'
         : 'text-success-400 dark:text-success-300';
     $formatDuration = function (?int $seconds): string {
         $normalizedSeconds = max(0, (int) ($seconds ?? 0));

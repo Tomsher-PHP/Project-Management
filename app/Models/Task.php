@@ -160,6 +160,7 @@ class Task extends Model
         return $query->where(function ($taskQuery) use ($user) {
             $taskQuery
                 ->where('current_assignee_id', $user->id)
+                ->orWhere('added_by', $user->id)
                 ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
                     $teamLeaderQuery->whereKey($user->id);
                 })
