@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const sortDropdown = document.querySelector('[data-kanban-sort-dropdown]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     const kanbanEndpoint = container?.dataset.kanbanUrl || '/tasks/kanban';
+    const flowBadgeContainers = new Map(
+        [...buttons].map((button) => [button.dataset.flow, button.parentElement])
+    );
     let isKanbanLoading = false;
     let isDragInProgress = false;
 
@@ -54,6 +57,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const updateNewTaskBadge = (flow, delta) => {
+        const badgeContainer = flowBadgeContainers.get(flow);
+
+        if (!badgeContainer || !delta) {
+            return;
+        }
+
+        let badge = badgeContainer.querySelector('span');
+        const nextCount = Math.max(Number(badge?.textContent?.trim() || 0) + delta, 0);
+
+        if (nextCount === 0) {
+            badge?.remove();
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'pointer-events-none absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white z-10';
+            badgeContainer.appendChild(badge);
+        }
+
+        badge.textContent = String(nextCount);
+    };
+
     const initKanbanScroll = () => {
         document.querySelectorAll(".kanban-board").forEach(board => {
             board.addEventListener("scroll", () => {
@@ -69,6 +96,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const toColumn = evt.to;
         const statusId = toColumn.dataset.statusId;
         const movedTaskId = String(evt.item.dataset.taskId);
+        const movedBetweenStatuses = fromColumn !== toColumn;
+        const movedFromDefault = fromColumn.dataset.isDefault === '1';
+        const movedToDefault = toColumn.dataset.isDefault === '1';
+        const taskFlow = currentFlow;
 
         const previousFromTaskIds = [...getBoardTaskIds(fromColumn)];
         const previousToTaskIds = fromColumn === toColumn
@@ -103,6 +134,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(handleFetchError)
             .then((response) => {
                 syncAutoStoppedTimer(response.timer_stopped, response.navbar_timer);
+
+                if (movedBetweenStatuses && movedFromDefault !== movedToDefault) {
+                    updateNewTaskBadge(taskFlow, movedToDefault ? 1 : -1);
+                }
+
                 document.dispatchEvent(new CustomEvent('task-status:changed', {
                     detail: {
                         taskId: movedTaskId,
