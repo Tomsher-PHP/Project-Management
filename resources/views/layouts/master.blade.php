@@ -55,7 +55,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-clip dark:bg-darkblack-700">
+            <div class="body-wrapper flex-1 overflow-x-clip dark:bg-darkblack-700 h-[100vh]">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
