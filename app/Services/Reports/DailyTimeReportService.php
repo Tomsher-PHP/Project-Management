@@ -443,7 +443,7 @@ class DailyTimeReportService
 
         return [
             'shift_id' => $assignment->shift_id ? (int) $assignment->shift_id : null,
-            'shift_name' => $isWeekend ? $baseShiftName . ' (Week Off)' : $baseShiftName,
+            'shift_name' => $isWeekend ? $baseShiftName . ' (Day Off)' : $baseShiftName,
             'shift_color_code' => $assignment->color_code ?: null,
             'shift_time_from' => $shiftStart->format($timeFormat),
             'shift_time_to' => $shiftEnd->format($timeFormat),
