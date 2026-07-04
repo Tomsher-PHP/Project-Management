@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTaskTimeLogChangeRequest;
 use App\Http\Requests\TaskTimeLogChangeRequestActionRequest;
 use App\Http\Requests\TaskTimeLogChangeRequestBulkActionRequest;
-use App\Http\Requests\StoreTaskTimeLogChangeRequest;
 use App\Http\Requests\UpdateTaskTimeLogChangeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Services\TaskTimeLogChangeRequestService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 class TaskTimeLogChangeRequestController extends Controller
 {
     protected string $pageTitle;
+
     protected string $subTitle;
 
     public function __construct()
@@ -68,11 +69,8 @@ class TaskTimeLogChangeRequestController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    public function update(
-        UpdateTaskTimeLogChangeRequest $request,
-        TaskTimeLogChangeRequest $changeRequest,
-        TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService
-    ): JsonResponse {
+    public function update(UpdateTaskTimeLogChangeRequest $request, TaskTimeLogChangeRequest $changeRequest, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): JsonResponse
+    {
         $timeLog = $request->resolveTimeLog();
 
         abort_unless($timeLog, Response::HTTP_NOT_FOUND);
@@ -99,7 +97,7 @@ class TaskTimeLogChangeRequestController extends Controller
         ]);
     }
 
-    public function handleAction(TaskTimeLogChangeRequestActionRequest $request, TaskTimeLogChangeRequest $changeRequest, string $action, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): RedirectResponse
+    public function handleAction(TaskTimeLogChangeRequestActionRequest $request, TaskTimeLogChangeRequest $changeRequest, string $action, TaskTimeLogChangeRequestService $taskTimeLogChangeRequestService): RedirectResponse|JsonResponse
     {
         abort_unless(in_array($action, ['approve', 'reject'], true), Response::HTTP_NOT_FOUND);
 
@@ -108,9 +106,14 @@ class TaskTimeLogChangeRequestController extends Controller
                 $request->user(),
                 $changeRequest,
                 $action,
-                $request->validated('reason')
+                $request->validated('reason'),
+                $action === 'approve' ? $request->approvalTimeRange() : null
             );
         } catch (ValidationException $exception) {
+            if ($request->expectsJson()) {
+                throw $exception;
+            }
+
             $firstMessage = collect($exception->errors())
                 ->flatten()
                 ->filter()
@@ -121,6 +124,15 @@ class TaskTimeLogChangeRequestController extends Controller
                 ->withInput()
                 ->with('error', $firstMessage ?: 'Unable to process the time log change request.')
                 ->withErrors($exception->errors());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => $action === 'approve'
+                    ? 'Time log change request approved successfully.'
+                    : 'Time log change request rejected successfully.',
+            ]);
         }
 
         return redirect()

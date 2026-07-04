@@ -284,7 +284,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-BDgO6Xmp.js",
+    "file": "assets/task-detail-JJn_rhRq.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -382,13 +382,15 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-CH-Q82GI.js",
+    "file": "assets/time-log-change-request-t6lisTAL.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
     "imports": [
       "_alert-DZ9rIzyM.js",
-      "_sweetalert2.esm.all-YZDMVk0e.js"
+      "_datepicker-C_SEo8OD.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js"
     ]
   },
   "resources/js/modules/team.js": {
@@ -450,7 +452,7 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-Csmf2MQJ.js",
+    "file": "assets/user-timeline-BkZwi0R3.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,

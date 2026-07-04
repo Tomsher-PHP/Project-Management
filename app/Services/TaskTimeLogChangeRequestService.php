@@ -13,9 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class TaskTimeLogChangeRequestService
 {
-    public function __construct(private readonly NotificationService $notificationService)
-    {
-    }
+    public function __construct(private readonly NotificationService $notificationService) {}
 
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
@@ -68,12 +66,8 @@ class TaskTimeLogChangeRequestService
         return $changeRequest;
     }
 
-    public function updatePendingRequest(
-        User $user,
-        TaskTimeLogChangeRequest $changeRequest,
-        TaskTimeLog $timeLog,
-        array $payload
-    ): TaskTimeLogChangeRequest {
+    public function updatePendingRequest(User $user, TaskTimeLogChangeRequest $changeRequest, TaskTimeLog $timeLog, array $payload): TaskTimeLogChangeRequest
+    {
         abort_unless(
             $changeRequest->isPending()
                 && (int) $changeRequest->user_id === (int) $user->id
@@ -90,7 +84,7 @@ class TaskTimeLogChangeRequestService
         return $changeRequest->refresh();
     }
 
-    public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null): void
+    public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null, ?array $approvalTimeRange = null): void
     {
         abort_unless($this->canHandleRequest($user, $changeRequest), Response::HTTP_FORBIDDEN);
 
@@ -100,9 +94,9 @@ class TaskTimeLogChangeRequestService
             ]);
         }
 
-        DB::transaction(function () use ($user, $changeRequest, $action, $reason) {
+        DB::transaction(function () use ($user, $changeRequest, $action, $reason, $approvalTimeRange) {
             if ($action === 'approve') {
-                $this->approve($user, $changeRequest);
+                $this->approve($user, $changeRequest, $approvalTimeRange);
 
                 return;
             }
@@ -171,7 +165,7 @@ class TaskTimeLogChangeRequestService
             ->exists();
     }
 
-    private function approve(User $user, TaskTimeLogChangeRequest $changeRequest): void
+    private function approve(User $user, TaskTimeLogChangeRequest $changeRequest, ?array $approvalTimeRange = null): void
     {
         $timeLog = $changeRequest->timeLog()->first();
 
@@ -187,20 +181,25 @@ class TaskTimeLogChangeRequestService
             ]);
         }
 
-        $newStartedAt = $changeRequest->new_started_at;
-        $newEndedAt = $changeRequest->new_ended_at;
+        $isEditedApproval = $approvalTimeRange !== null;
+        $newStartedAt = $approvalTimeRange['new_started_at'] ?? $changeRequest->new_started_at;
+        $newEndedAt = $approvalTimeRange['new_ended_at'] ?? $changeRequest->new_ended_at;
 
         if (! $newStartedAt || ! $newEndedAt || ! $newEndedAt->greaterThan($newStartedAt)) {
             throw ValidationException::withMessages([
-                'change_request' => 'The requested time range is invalid.',
+                $isEditedApproval ? 'new_ended_at' : 'change_request' => $isEditedApproval
+                    ? 'The requested end date and time must be later than the requested start date and time.'
+                    : 'The requested time range is invalid.',
             ]);
         }
 
-        if ($this->hasOverlappingLog($timeLog, $newStartedAt, $newEndedAt)) {
+        if ($isEditedApproval && $newEndedAt->isFuture()) {
             throw ValidationException::withMessages([
-                'change_request' => 'The requested time overlaps with another time log.',
+                'new_ended_at' => 'The requested end date and time cannot be in the future.',
             ]);
         }
+
+        $this->validateOverlaps($timeLog, $changeRequest, $newStartedAt, $newEndedAt, $isEditedApproval);
 
         $approvedAt = now();
 
@@ -211,6 +210,8 @@ class TaskTimeLogChangeRequestService
         ]);
 
         $changeRequest->update([
+            'new_started_at' => $newStartedAt,
+            'new_ended_at' => $newEndedAt,
             'status' => 'approved',
             'approved_by' => $user->id,
             'approved_at' => $approvedAt,
@@ -238,25 +239,77 @@ class TaskTimeLogChangeRequestService
         $this->notificationService->notifyTaskTimeLogChangeRequestReviewed($changeRequest, $user, 'reject', $reason);
     }
 
-    private function hasOverlappingLog(TaskTimeLog $timeLog, $newStartedAt, $newEndedAt): bool
+    private function validateOverlaps(TaskTimeLog $timeLog, TaskTimeLogChangeRequest $changeRequest, $newStartedAt, $newEndedAt, bool $validateRequestOverlaps): void
     {
-        return TaskTimeLog::query()
+        $applyTimeRangeOverlapScope = function ($query) use ($newStartedAt, $newEndedAt) {
+            $query
+                ->where(function ($endedQuery) use ($newStartedAt, $newEndedAt) {
+                    $endedQuery
+                        ->whereNotNull('ended_at')
+                        ->where('started_at', '<', $newEndedAt)
+                        ->where('ended_at', '>', $newStartedAt);
+                })
+                ->orWhere(function ($runningQuery) use ($newEndedAt) {
+                    $runningQuery
+                        ->whereNull('ended_at')
+                        ->where('started_at', '<', $newEndedAt);
+                });
+        };
+
+        $hasUserOverlap = TaskTimeLog::query()
             ->where('user_id', $timeLog->user_id)
             ->whereKeyNot($timeLog->id)
+            ->where($applyTimeRangeOverlapScope)
+            ->exists();
+
+        if ($hasUserOverlap) {
+            throw ValidationException::withMessages([
+                $validateRequestOverlaps ? 'new_ended_at' : 'change_request' => $validateRequestOverlaps
+                    ? 'The requested time overlaps with another time log for this user.'
+                    : 'The requested time overlaps with another time log.',
+            ]);
+        }
+
+        if (! $validateRequestOverlaps) {
+            return;
+        }
+
+        $hasTaskOverlap = TaskTimeLog::query()
+            ->where('task_id', $timeLog->task_id)
+            ->whereKeyNot($timeLog->id)
+            ->where($applyTimeRangeOverlapScope)
+            ->exists();
+
+        if ($hasTaskOverlap) {
+            throw ValidationException::withMessages([
+                'new_ended_at' => 'The requested time range is already logged by another user.',
+            ]);
+        }
+
+        $hasPendingRequestOverlap = TaskTimeLogChangeRequest::query()
+            ->whereHas('timeLog', fn($query) => $query->where('task_id', $timeLog->task_id))
+            ->where('status', 'pending')
+            ->whereKeyNot($changeRequest->id)
             ->where(function ($query) use ($newStartedAt, $newEndedAt) {
                 $query
                     ->where(function ($endedQuery) use ($newStartedAt, $newEndedAt) {
                         $endedQuery
-                            ->whereNotNull('ended_at')
-                            ->where('started_at', '<', $newEndedAt)
-                            ->where('ended_at', '>', $newStartedAt);
+                            ->whereNotNull('new_ended_at')
+                            ->where('new_started_at', '<', $newEndedAt)
+                            ->where('new_ended_at', '>', $newStartedAt);
                     })
                     ->orWhere(function ($runningQuery) use ($newEndedAt) {
                         $runningQuery
-                            ->whereNull('ended_at')
-                            ->where('started_at', '<', $newEndedAt);
+                            ->whereNull('new_ended_at')
+                            ->where('new_started_at', '<', $newEndedAt);
                     });
             })
             ->exists();
+
+        if ($hasPendingRequestOverlap) {
+            throw ValidationException::withMessages([
+                'new_ended_at' => 'Another pending request exists in the requested time range.',
+            ]);
+        }
     }
 }
