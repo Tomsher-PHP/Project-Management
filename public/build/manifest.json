@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DICE-45e.css",
+    "file": "assets/app-BTE9KVim.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -359,7 +359,7 @@
     "isEntry": true
   },
   "resources/js/modules/tasks/kanban-board.js": {
-    "file": "assets/kanban-board-8vEvQNGA.js",
+    "file": "assets/kanban-board-CTMqVctk.js",
     "name": "kanban-board",
     "src": "resources/js/modules/tasks/kanban-board.js",
     "isEntry": true,

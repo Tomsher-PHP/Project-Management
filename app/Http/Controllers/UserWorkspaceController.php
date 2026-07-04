@@ -147,7 +147,25 @@ class UserWorkspaceController extends Controller
             ], Response::HTTP_OK);
         }
 
-        return view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render();
+        $defaultStatus = $boardStatuses->first(fn($status) => (bool) $status->is_default);
+        $selectedFlowNewTaskCount = $defaultStatus
+            ? (int) ($tasksByStatus[$defaultStatus->id]['total'] ?? 0)
+            : 0;
+        $otherFlowType = $selectedFlowType === 'agile' ? 'linear' : 'agile';
+        $otherFlowNewTaskCount = $taskServices->countDefaultStatusKanbanTasks(
+            $request->user(),
+            $request->all(),
+            $otherFlowType,
+            $this->buildWorkspaceKanbanOptions($boardStatuses, $request, $taskServices, $workspaceUser)
+        );
+
+        return response()->json([
+            'html' => view('tasks.kanban._board', compact('boardStatuses', 'tasksByStatus', 'priorities'))->render(),
+            'flowCounts' => [
+                $selectedFlowType => $selectedFlowNewTaskCount,
+                $otherFlowType => $otherFlowNewTaskCount,
+            ],
+        ]);
     }
 
     private function buildWorkspaceKanbanData(Request $request, TaskServices $taskServices, User $workspaceUser, bool $persistRequestedFlow = false): array
