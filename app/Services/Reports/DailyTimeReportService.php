@@ -313,9 +313,11 @@ class DailyTimeReportService
                 'shift_working_seconds' => $shiftDetails['shift_working_seconds'],
                 'total_worked_time' => formatSecondsToHMS($totalWorkedSeconds),
                 'total_worked_seconds' => $totalWorkedSeconds,
-                'worked_time_status' => $shiftDetails['shift_working_seconds'] !== null
-                    ? ($totalWorkedSeconds >= $shiftDetails['shift_working_seconds'] ? 'success' : 'danger')
-                    : null,
+                'worked_time_status' => $shiftDetails['is_non_working_day']
+                    ? 'success'
+                    : ($shiftDetails['shift_working_seconds'] !== null
+                        ? ($totalWorkedSeconds >= $shiftDetails['shift_working_seconds'] ? 'success' : 'danger')
+                        : null),
                 'sort_date' => $selectedDate->toDateString(),
                 'latest_activity_timestamp' => $row['latest_activity_at']?->getTimestamp() ?? 0,
             ];
@@ -409,8 +411,9 @@ class DailyTimeReportService
                 'shift_time_to' => '--',
                 'shift_working_hour' => '--',
                 'shift_working_seconds' => null,
-                'start_time_status' => null,
-                'end_time_status' => null,
+                'start_time_status' => 'success',
+                'end_time_status' => 'success',
+                'is_non_working_day' => true,
             ];
         }
 
@@ -443,18 +446,23 @@ class DailyTimeReportService
 
         return [
             'shift_id' => $assignment->shift_id ? (int) $assignment->shift_id : null,
-            'shift_name' => $isWeekend ? $baseShiftName . ' (Week Off)' : $baseShiftName,
+            'shift_name' => $isWeekend ? $baseShiftName . ' (Day Off)' : $baseShiftName,
             'shift_color_code' => $assignment->color_code ?: null,
-            'shift_time_from' => $shiftStart->format($timeFormat),
-            'shift_time_to' => $shiftEnd->format($timeFormat),
+            'shift_time_from' => $isWeekend ? '--' : $shiftStart->format($timeFormat),
+            'shift_time_to' => $isWeekend ? '--' : $shiftEnd->format($timeFormat),
             'shift_working_hour' => $shiftWorkingHour,
             'shift_working_seconds' => $workingSeconds,
-            'start_time_status' => $actualStart
-                ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
-                : null,
-            'end_time_status' => (! $hasRunning && $actualEnd)
-                ? ($actualEnd->greaterThanOrEqualTo($shiftEnd) ? 'success' : 'danger')
-                : null,
+            'start_time_status' => $isWeekend
+                ? 'success'
+                : ($actualStart
+                    ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
+                    : null),
+            'end_time_status' => $isWeekend
+                ? 'success'
+                : ((! $hasRunning && $actualEnd)
+                    ? ($actualEnd->greaterThanOrEqualTo($shiftEnd) ? 'success' : 'danger')
+                    : null),
+            'is_non_working_day' => $isWeekend,
         ];
     }
 
