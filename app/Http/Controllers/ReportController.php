@@ -360,6 +360,7 @@ class ReportController extends Controller
         $projectMilestones = $reportService->getFilterMilestones($request);
         $projectSprints = $reportService->getFilterSprints($request);
         $users = $reportService->getFilterUsers($request);
+        $teams = $reportService->getFilterTeams($request);
 
         $totalSeconds = $reportService->getTotalSeconds($request);
 
@@ -407,6 +408,7 @@ class ReportController extends Controller
             'projectMilestones',
             'projectSprints',
             'users',
+            'teams',
             'perPage',
             'displayRows',
             'totalSeconds',
