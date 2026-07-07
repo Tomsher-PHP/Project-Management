@@ -10,6 +10,10 @@
                     </span>
                     <h3 class="text-[17px] font-extrabold tracking-normal text-bgray-800 dark:text-bgray-50">Work Board</h3>
 
+                    @can('task.create')
+                        <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
+                    @endcan
+
                     <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
 
                     @can('handoff_request.create')
