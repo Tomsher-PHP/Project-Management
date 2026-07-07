@@ -10,26 +10,35 @@ trait ResolvesTeamUserFilters
 {
     public function getSelectedUserIds(Request $request): array
     {
-        return $this->resolveFilterIds($request, ['user_id', 'staff_id', 'users']);
+        return $this->resolveFilterIds($request, [
+            'user_id',
+            'staff_id',
+            'users',
+            'current_assignee_id',
+            'assignees',
+        ]);
     }
 
     public function getFilterTeams(Request $request): Collection
     {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
+        return $this->getTeamsForUsers($this->getAccessibleUserIds($request->user()));
+    }
 
-        if ($accessibleUserIds === []) {
+    protected function getTeamsForUsers(array $userIds): Collection
+    {
+        if ($userIds === []) {
             return collect();
         }
 
         return Team::query()
-            ->with(['users' => function ($query) use ($accessibleUserIds) {
+            ->with(['users' => function ($query) use ($userIds) {
                 $query
                     ->select('users.id', 'users.name')
-                    ->whereIn('users.id', $accessibleUserIds)
+                    ->whereIn('users.id', $userIds)
                     ->orderBy('users.name');
             }])
-            ->whereHas('users', function ($query) use ($accessibleUserIds) {
-                $query->whereIn('users.id', $accessibleUserIds);
+            ->whereHas('users', function ($query) use ($userIds) {
+                $query->whereIn('users.id', $userIds);
             })
             ->orderBy('name')
             ->get(['id', 'name']);

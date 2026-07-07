@@ -281,12 +281,14 @@ class ReportController extends Controller
         ]);
 
         $perPage = (int) $request->input('per_page', config('constants.per_page_count'));
+        $this->taskReportService->normalizeRequestFilters($request);
 
         $tasks = $this->taskReportService->getTasks($request, $perPage);
         $projects = $this->taskReportService->getProjects($request);
         $projectMilestones = $this->taskReportService->getMilestones($request);
         $projectSprints = $this->taskReportService->getSprints($request);
         $assignees = $this->taskReportService->getAssignees($request);
+        $teams = $this->taskReportService->getFilterTeams($request);
         $statuses = $this->taskReportService->getStatuses();
         $priorities = $this->taskReportService->getPriorityOptions();
         $taskTypeOptions = $this->taskReportService->getTaskTypes();
@@ -303,6 +305,7 @@ class ReportController extends Controller
             'projectMilestones' => $projectMilestones,
             'projectSprints' => $projectSprints,
             'assignees' => $assignees,
+            'teams' => $teams,
             'statuses' => $statuses,
             'priorities' => $priorities,
             'taskTypeOptions' => $taskTypeOptions,
@@ -313,6 +316,7 @@ class ReportController extends Controller
     // TASK REPORT EXPORT
     public function taskReportExport(Request $request)
     {
+        $this->taskReportService->normalizeRequestFilters($request);
         $tasks = $this->taskReportService->exportTasks($request);
         $columns = $this->taskReportService->resolveExportColumns($request);
         $generatedAt = now((string) config('constants.timezone', config('app.timezone')));
