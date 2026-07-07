@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\Team;
 use App\Models\Task;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
@@ -440,7 +441,8 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             'Project' => [Project::class, 'project_id', true],
             'Milestone' => [ProjectMilestone::class, 'project_milestone_id', true],
             'Sprint' => [ProjectSprint::class, 'project_sprint_id', true],
-            'Assignee' => [User::class, 'current_assignee_id', true],
+            'Teams' => [Team::class, ['teams', 'team_id'], true],
+            'Assignee' => [User::class, ['current_assignee_id', 'assignees'], true],
             'Status' => [TaskStatus::class, 'status_id', true],
             'Task Type' => [TaskType::class, 'task_type_id', true],
             'Task Mode' => [TaskMode::class, 'task_mode_id', true],
@@ -483,14 +485,9 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             : null;
     }
 
-    protected function resolveFilterNames(string $modelClass, string $requestKey, bool $useTrashed = false): array
+    protected function resolveFilterNames(string $modelClass, string|array $requestKeys, bool $useTrashed = false): array
     {
-        $selectedIds = collect($this->filters[$requestKey] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds((array) $requestKeys);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -512,6 +509,21 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function resolveFilterIds(array $keys): Collection
+    {
+        return collect($keys)
+            ->flatMap(function (string $key) {
+                $value = $this->filters[$key] ?? [];
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
     }
 
     protected function resolvePriorityLabelsFromFilters(): array

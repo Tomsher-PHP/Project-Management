@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Project;
+use App\Models\Team;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
@@ -367,17 +368,18 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             $summary['Users'] = implode(', ', $userNames);
         }
 
+        $teamNames = $this->resolveTeamFilterNames();
+
+        if ($teamNames !== []) {
+            $summary['Teams'] = implode(', ', $teamNames);
+        }
+
         return $summary;
     }
 
     protected function resolveProjectFilterNames(): array
     {
-        $selectedIds = collect($this->filters['project_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds(['project_id']);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -398,12 +400,7 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
 
     protected function resolveUserFilterNames(): array
     {
-        $selectedIds = collect($this->filters['user_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds(['user_id', 'staff_id', 'users']);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -419,6 +416,41 @@ class ProductivityReportExport implements FromCollection, WithCustomStartCell, W
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function resolveTeamFilterNames(): array
+    {
+        $selectedIds = $this->resolveFilterIds(['teams', 'team_id']);
+
+        if ($selectedIds->isEmpty()) {
+            return [];
+        }
+
+        $namesById = Team::query()
+            ->whereIn('id', $selectedIds)
+            ->pluck('name', 'id');
+
+        return $selectedIds
+            ->map(fn(int $id) => $namesById->get($id))
+            ->filter(fn($name) => filled($name))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function resolveFilterIds(array $keys): Collection
+    {
+        return collect($keys)
+            ->flatMap(function (string $key) {
+                $value = $this->filters[$key] ?? [];
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
     }
 
     protected function generatedAtLabel(): string

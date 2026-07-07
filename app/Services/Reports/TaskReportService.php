@@ -10,6 +10,7 @@ use App\Models\TaskMode;
 use App\Models\TaskStatus;
 use App\Models\TaskType;
 use App\Models\User;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,6 +18,28 @@ use Illuminate\Support\Facades\DB;
 
 class TaskReportService
 {
+    use ResolvesTeamUserFilters;
+
+    public function normalizeRequestFilters(Request $request): void
+    {
+        if ($this->hasExplicitUserFilter($request)) {
+            $request->merge([
+                'current_assignee_id' => $this->getSelectedUserIds($request),
+            ]);
+            return;
+        }
+
+        if ($request->has('user_filter_applied')) {
+            return;
+        }
+
+        if ($this->getSelectedTeamIds($request) !== []) {
+            $request->merge([
+                'current_assignee_id' => $this->getTeamScopedVisibleAssigneeIds($request),
+            ]);
+        }
+    }
+
     protected function baseVisibleQuery(Request $request): Builder
     {
         $user = $request->user();
@@ -229,7 +252,17 @@ class TaskReportService
 
     public function getAssignees(Request $request): Collection
     {
-        $assigneeIds = $this->baseVisibleQuery($request)
+        $query = $this->baseVisibleQuery($request);
+
+        if (! $this->hasExplicitUserFilter($request) && ! $request->has('user_filter_applied')) {
+            $teamScopedUserIds = $this->getTeamScopedVisibleAssigneeIds($request);
+
+            if ($teamScopedUserIds !== []) {
+                $query->whereIn('current_assignee_id', $teamScopedUserIds);
+            }
+        }
+
+        $assigneeIds = $query
             ->whereNotNull('current_assignee_id')
             ->distinct()
             ->pluck('current_assignee_id')
@@ -246,6 +279,11 @@ class TaskReportService
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
+    }
+
+    public function getFilterTeams(Request $request): Collection
+    {
+        return $this->getTeamsForUsers($this->getVisibleAssigneeIds($request));
     }
 
     public function getStatuses(): Collection
@@ -376,6 +414,17 @@ class TaskReportService
         foreach ($filterColumns as $requestKey => $column) {
             $ids = $this->normalizeIds($filters[$requestKey] ?? []);
 
+            if (
+                $requestKey === 'current_assignee_id'
+                && array_key_exists('current_assignee_id', $filters)
+                && $ids === []
+                && $this->normalizeIds($filters['teams'] ?? []) !== []
+                && ! array_key_exists('user_filter_applied', $filters)
+            ) {
+                $query->whereRaw('1 = 0');
+                continue;
+            }
+
             if ($ids !== []) {
                 $query->whereIn($column, $ids);
             }
@@ -504,5 +553,32 @@ class TaskReportService
             ->filter(fn(int $item) => $item > 0)
             ->values()
             ->all();
+    }
+
+    protected function getVisibleAssigneeIds(Request $request): array
+    {
+        return $this->baseVisibleQuery($request)
+            ->whereNotNull('current_assignee_id')
+            ->distinct()
+            ->pluck('current_assignee_id')
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function getTeamScopedVisibleAssigneeIds(Request $request): array
+    {
+        $teamUserIds = $this->getSelectedTeamUserIds($request);
+
+        if ($teamUserIds === []) {
+            return [];
+        }
+
+        return array_values(array_intersect(
+            $this->getVisibleAssigneeIds($request),
+            $teamUserIds
+        ));
     }
 }

@@ -65,7 +65,7 @@
                                                     {{ $team->name }}
                                                 </h4>
                                                 <div class="flex flex-col">
-                                                    <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Owner: {{ $team->leader->first()->name ?? '' }}</span>
+                                                    <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Team Leader: {{ $team->leader->first()->name ?? '' }}</span>
                                                 </div>
                                             </div>
                                         </div>

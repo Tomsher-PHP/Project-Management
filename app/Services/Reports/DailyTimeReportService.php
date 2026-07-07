@@ -6,6 +6,7 @@ use App\Exports\DailyTimeReportExport;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DailyTimeReportService
 {
+    use ResolvesTeamUserFilters;
+
     protected const DATE_RANGE_REQUEST_KEY = 'daily_time_report.date_range';
 
     protected const EXPORTABLE_COLUMNS = [
@@ -65,6 +68,7 @@ class DailyTimeReportService
         return [
             'reports' => $this->paginateRows($rows, (int) $perPage, $request),
             'users' => $this->getFilterUsers($request),
+            'teams' => $this->getFilterTeams($request),
             'shifts' => $this->getFilterShifts($request),
             'columns' => $this->getColumnLabels(),
             'summaryStats' => [
@@ -103,7 +107,7 @@ class DailyTimeReportService
 
     public function getFilterUsers(Request $request): Collection
     {
-        $userIds = $this->getAccessibleUserIds($request->user());
+        $userIds = $this->getUserIdsForExcludedUserFilter($request);
 
         if ($userIds === []) {
             return collect();
@@ -123,6 +127,7 @@ class DailyTimeReportService
         return $dateRange['start'] !== null
             || $dateRange['end'] !== null
             || $this->resolveSelectedUserIds($request) !== []
+            || $this->isTeamsFilterApplied($request)
             || $this->resolveSelectedShiftIds($request) !== [];
     }
 
@@ -524,20 +529,12 @@ class DailyTimeReportService
         );
     }
 
-    protected function getScopedUserIds(Request $request): array
+    protected function getAccessibleUserIds(?User $user): array
     {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-        $selectedUserIds = $this->resolveSelectedUserIds($request);
-
-        if ($selectedUserIds === []) {
-            return $accessibleUserIds;
+        if (! $user) {
+            return [];
         }
 
-        return array_values(array_intersect($accessibleUserIds, $selectedUserIds));
-    }
-
-    protected function getAccessibleUserIds(User $user): array
-    {
         return User::query()
             ->accessibleBy($user)
             ->pluck('users.id')
@@ -559,19 +556,14 @@ class DailyTimeReportService
 
     protected function resolveSelectedUserIds(Request $request): array
     {
-        $value = $request->input('user_id', []);
+        return $this->getSelectedUserIds($request);
+    }
 
-        if (! is_array($value)) {
-            $value = [$value];
-        }
-
-        return collect($value)
-            ->filter(fn($item) => filled($item))
-            ->map(fn($item) => (int) $item)
-            ->filter(fn(int $id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
+    protected function isTeamsFilterApplied(Request $request): bool
+    {
+        return $this->getSelectedTeamIds($request) !== []
+            && ! $request->has('user_filter_applied')
+            && ! $this->hasExplicitUserFilter($request);
     }
 
     protected function resolveSelectedShiftIds(Request $request): array

@@ -355,17 +355,52 @@
         <x-pagination :paginator="$tasks" :per-page="$perPage" />
     </div>
 
+    @php
+        $selectedAssigneeFilterIds = collect(['current_assignee_id', 'assignees', 'user_id', 'staff_id', 'users'])
+            ->flatMap(function (string $key) {
+                $value = request($key, []);
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
+
+        $isAssigneeFilterApplied = $selectedAssigneeFilterIds->isNotEmpty();
+
+        $taskFilterDependencies = [
+            'teams' => $teams->map(fn($team) => [
+                'id' => $team->id,
+                'name' => $team->name,
+                'users' => $team->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ])->values(),
+            ])->values(),
+            'hasExplicitAssigneeFilter' => $isAssigneeFilterApplied,
+            'hasAssigneeFilterAppliedParameter' => request()->has('user_filter_applied'),
+        ];
+    @endphp
+
     <x-filters.drawer>
         <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
         <x-filters.multi-select name="project_milestone_id" label="Milestone" :options="$projectMilestones" />
         <x-filters.multi-select name="project_sprint_id" label="Sprint" :options="$projectSprints" />
-        <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" />
+        <x-filters.multi-select name="teams" label="Teams" :options="$teams" id="task-report-team-filter" />
+        <input type="hidden" name="user_filter_applied" id="task-report-assignee-filter-applied" value="{{ $isAssigneeFilterApplied ? '1' : '0' }}">
+        <x-filters.multi-select name="current_assignee_id" label="Assignee" :options="$assignees" id="task-report-assignee-filter" />
         <x-filters.multi-select name="status_id" label="Status" :options="$statuses" />
         <x-filters.multi-select name="priority" label="Priority" :options="$priorities" />
         <x-filters.multi-select name="task_type_id" label="Task Type" :options="$taskTypeOptions" />
         <x-filters.multi-select name="task_mode_id" label="Task Mode" :options="$taskModeOptions" />
         <x-filters.date-range label="Created Date Range" startName="start_date" endName="end_date" />
     </x-filters.drawer>
+
+    <script id="task-report-filter-dependencies" type="application/json">
+        @json($taskFilterDependencies)
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -485,6 +520,180 @@
             enforceMinimumColumns();
             syncVisibleColumns();
             exportForm.addEventListener('submit', syncVisibleColumns);
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dependenciesNode = document.getElementById('task-report-filter-dependencies');
+            const teamSelect = document.getElementById('task-report-team-filter');
+            const assigneeSelect = document.getElementById('task-report-assignee-filter');
+            const assigneeFilterAppliedInput = document.getElementById('task-report-assignee-filter-applied');
+
+            if (!dependenciesNode || !teamSelect || !assigneeSelect) {
+                return;
+            }
+
+            let dependencies = {
+                teams: []
+            };
+
+            try {
+                dependencies = JSON.parse(dependenciesNode.textContent || '{}');
+            } catch (error) {
+                return;
+            }
+
+            const teams = Array.isArray(dependencies.teams) ? dependencies.teams : [];
+            const hasExplicitAssigneeFilter = dependencies.hasExplicitAssigneeFilter === true;
+            const hasAssigneeFilterAppliedParameter = dependencies.hasAssigneeFilterAppliedParameter === true;
+            let isSyncingAssigneesFromTeams = false;
+
+            const normalizeValues = (value) => {
+                if (Array.isArray(value)) {
+                    return value.map((item) => String(item)).filter(Boolean);
+                }
+
+                if (value === null || value === undefined || value === '') {
+                    return [];
+                }
+
+                return [String(value)];
+            };
+
+            const getSelectedValues = (select) => {
+                if (select.tomselect) {
+                    return normalizeValues(select.tomselect.getValue());
+                }
+
+                return Array.from(select.selectedOptions)
+                    .map((option) => String(option.value))
+                    .filter(Boolean);
+            };
+
+            const setSelectedValues = (select, values) => {
+                const normalizedValues = normalizeValues(values);
+
+                if (select.tomselect) {
+                    normalizedValues.forEach((value) => {
+                        if (!select.tomselect.options[value]) {
+                            const option = Array.from(select.options).find((item) => item.value === value);
+
+                            if (option) {
+                                select.tomselect.addOption({
+                                    value,
+                                    text: option.textContent
+                                });
+                            }
+                        }
+                    });
+
+                    select.tomselect.setValue(normalizedValues, true);
+                    select.tomselect.refreshItems();
+                    select.tomselect.refreshOptions(false);
+                }
+
+                Array.from(select.options).forEach((option) => {
+                    option.selected = normalizedValues.includes(String(option.value));
+                });
+
+                select.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
+            };
+
+            const syncAssigneeFilterApplied = () => {
+                if (assigneeFilterAppliedInput) {
+                    assigneeFilterAppliedInput.value = getSelectedValues(assigneeSelect).length ? '1' : '0';
+                }
+            };
+
+            const ensureAssigneeOptions = (users) => {
+                const existingOptions = new Set(Array.from(assigneeSelect.options).map((option) => String(option.value)));
+
+                users.forEach((user) => {
+                    const value = String(user.id);
+
+                    if (!existingOptions.has(value)) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = user.name;
+                        assigneeSelect.appendChild(option);
+                        existingOptions.add(value);
+                    }
+
+                    if (assigneeSelect.tomselect && !assigneeSelect.tomselect.options[value]) {
+                        assigneeSelect.tomselect.addOption({
+                            value,
+                            text: user.name
+                        });
+                    }
+                });
+
+                assigneeSelect.tomselect?.refreshOptions(false);
+            };
+
+            let previousTeamIds = getSelectedValues(teamSelect);
+            let savedAssigneeIds = previousTeamIds.length ? [] : getSelectedValues(assigneeSelect);
+
+            const syncAssigneesFromTeams = () => {
+                const selectedTeamIds = getSelectedValues(teamSelect);
+
+                if (!previousTeamIds.length && selectedTeamIds.length) {
+                    savedAssigneeIds = getSelectedValues(assigneeSelect);
+                }
+
+                if (!selectedTeamIds.length) {
+                    isSyncingAssigneesFromTeams = true;
+                    setSelectedValues(assigneeSelect, savedAssigneeIds);
+                    isSyncingAssigneesFromTeams = false;
+                    savedAssigneeIds = getSelectedValues(assigneeSelect);
+                    previousTeamIds = selectedTeamIds;
+                    syncAssigneeFilterApplied();
+                    return;
+                }
+
+                const usersById = new Map();
+
+                teams
+                    .filter((team) => selectedTeamIds.includes(String(team.id)))
+                    .forEach((team) => {
+                        (Array.isArray(team.users) ? team.users : []).forEach((user) => {
+                            usersById.set(String(user.id), user);
+                        });
+                    });
+
+                const users = Array.from(usersById.values()).sort((first, second) => {
+                    return String(first.name).localeCompare(String(second.name));
+                });
+
+                ensureAssigneeOptions(users);
+                isSyncingAssigneesFromTeams = true;
+                setSelectedValues(assigneeSelect, users.map((user) => String(user.id)));
+                isSyncingAssigneesFromTeams = false;
+                previousTeamIds = selectedTeamIds;
+                syncAssigneeFilterApplied();
+            };
+
+            teamSelect.addEventListener('change', syncAssigneesFromTeams);
+            assigneeSelect.addEventListener('change', () => {
+                if (!isSyncingAssigneesFromTeams) {
+                    savedAssigneeIds = getSelectedValues(assigneeSelect);
+                    syncAssigneeFilterApplied();
+                }
+            });
+
+            const initializeTeamAssigneeSync = () => {
+                if (!hasExplicitAssigneeFilter && !hasAssigneeFilterAppliedParameter && getSelectedValues(teamSelect).length) {
+                    syncAssigneesFromTeams();
+                }
+            };
+
+            document.addEventListener('tomselect:ready', initializeTeamAssigneeSync, {
+                once: true
+            });
+            window.requestAnimationFrame(initializeTeamAssigneeSync);
+            window.requestAnimationFrame(syncAssigneeFilterApplied);
         });
     </script>
 @endsection
