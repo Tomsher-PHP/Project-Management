@@ -217,11 +217,46 @@
         <x-pagination :paginator="$reports" :per-page="$perPage" />
     </div>
 
+    @php
+        $selectedUserFilterIds = collect(['user_id', 'staff_id', 'users'])
+            ->flatMap(function (string $key) {
+                $value = request($key, []);
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
+
+        $isUserFilterApplied = $selectedUserFilterIds->isNotEmpty();
+
+        $productivityFilterDependencies = [
+            'teams' => $teams->map(fn($team) => [
+                'id' => $team->id,
+                'name' => $team->name,
+                'users' => $team->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ])->values(),
+            ])->values(),
+            'hasExplicitUserFilter' => $isUserFilterApplied,
+            'hasUserFilterAppliedParameter' => request()->has('user_filter_applied'),
+        ];
+    @endphp
+
     <x-filters.drawer>
         <x-filters.date-range label="Date Range" startName="from_date" endName="to_date" />
         <x-filters.multi-select name="project_id" label="Project" :options="$projects" />
-        <x-filters.multi-select name="user_id" label="Users" :options="$users" />
+        <x-filters.multi-select name="teams" label="Teams" :options="$teams" id="productivity-team-filter" />
+        <input type="hidden" name="user_filter_applied" id="productivity-user-filter-applied" value="{{ $isUserFilterApplied ? '1' : '0' }}">
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" id="productivity-user-filter" />
     </x-filters.drawer>
+
+    <script id="productivity-filter-dependencies" type="application/json">
+        @json($productivityFilterDependencies)
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -346,6 +381,180 @@
             applySavedColumns();
             syncVisibleColumns();
             exportForm?.addEventListener('submit', syncVisibleColumns);
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dependenciesNode = document.getElementById('productivity-filter-dependencies');
+            const teamSelect = document.getElementById('productivity-team-filter');
+            const userSelect = document.getElementById('productivity-user-filter');
+            const userFilterAppliedInput = document.getElementById('productivity-user-filter-applied');
+
+            if (!dependenciesNode || !teamSelect || !userSelect) {
+                return;
+            }
+
+            let dependencies = {
+                teams: []
+            };
+
+            try {
+                dependencies = JSON.parse(dependenciesNode.textContent || '{}');
+            } catch (error) {
+                return;
+            }
+
+            const teams = Array.isArray(dependencies.teams) ? dependencies.teams : [];
+            const hasExplicitUserFilter = dependencies.hasExplicitUserFilter === true;
+            const hasUserFilterAppliedParameter = dependencies.hasUserFilterAppliedParameter === true;
+            let isSyncingUsersFromTeams = false;
+
+            const normalizeValues = (value) => {
+                if (Array.isArray(value)) {
+                    return value.map((item) => String(item)).filter(Boolean);
+                }
+
+                if (value === null || value === undefined || value === '') {
+                    return [];
+                }
+
+                return [String(value)];
+            };
+
+            const getSelectedValues = (select) => {
+                if (select.tomselect) {
+                    return normalizeValues(select.tomselect.getValue());
+                }
+
+                return Array.from(select.selectedOptions)
+                    .map((option) => String(option.value))
+                    .filter(Boolean);
+            };
+
+            const setSelectedValues = (select, values) => {
+                const normalizedValues = normalizeValues(values);
+
+                if (select.tomselect) {
+                    normalizedValues.forEach((value) => {
+                        if (!select.tomselect.options[value]) {
+                            const option = Array.from(select.options).find((item) => item.value === value);
+
+                            if (option) {
+                                select.tomselect.addOption({
+                                    value,
+                                    text: option.textContent
+                                });
+                            }
+                        }
+                    });
+
+                    select.tomselect.setValue(normalizedValues, true);
+                    select.tomselect.refreshItems();
+                    select.tomselect.refreshOptions(false);
+                }
+
+                Array.from(select.options).forEach((option) => {
+                    option.selected = normalizedValues.includes(String(option.value));
+                });
+
+                select.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
+            };
+
+            const syncUserFilterApplied = () => {
+                if (userFilterAppliedInput) {
+                    userFilterAppliedInput.value = getSelectedValues(userSelect).length ? '1' : '0';
+                }
+            };
+
+            const ensureUserOptions = (users) => {
+                const existingOptions = new Set(Array.from(userSelect.options).map((option) => String(option.value)));
+
+                users.forEach((user) => {
+                    const value = String(user.id);
+
+                    if (!existingOptions.has(value)) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = user.name;
+                        userSelect.appendChild(option);
+                        existingOptions.add(value);
+                    }
+
+                    if (userSelect.tomselect && !userSelect.tomselect.options[value]) {
+                        userSelect.tomselect.addOption({
+                            value,
+                            text: user.name
+                        });
+                    }
+                });
+
+                userSelect.tomselect?.refreshOptions(false);
+            };
+
+            let previousTeamIds = getSelectedValues(teamSelect);
+            let savedUserIds = previousTeamIds.length ? [] : getSelectedValues(userSelect);
+
+            const syncUsersFromTeams = () => {
+                const selectedTeamIds = getSelectedValues(teamSelect);
+
+                if (!previousTeamIds.length && selectedTeamIds.length) {
+                    savedUserIds = getSelectedValues(userSelect);
+                }
+
+                if (!selectedTeamIds.length) {
+                    isSyncingUsersFromTeams = true;
+                    setSelectedValues(userSelect, savedUserIds);
+                    isSyncingUsersFromTeams = false;
+                    savedUserIds = getSelectedValues(userSelect);
+                    previousTeamIds = selectedTeamIds;
+                    syncUserFilterApplied();
+                    return;
+                }
+
+                const usersById = new Map();
+
+                teams
+                    .filter((team) => selectedTeamIds.includes(String(team.id)))
+                    .forEach((team) => {
+                        (Array.isArray(team.users) ? team.users : []).forEach((user) => {
+                            usersById.set(String(user.id), user);
+                        });
+                    });
+
+                const users = Array.from(usersById.values()).sort((first, second) => {
+                    return String(first.name).localeCompare(String(second.name));
+                });
+
+                ensureUserOptions(users);
+                isSyncingUsersFromTeams = true;
+                setSelectedValues(userSelect, users.map((user) => String(user.id)));
+                isSyncingUsersFromTeams = false;
+                previousTeamIds = selectedTeamIds;
+                syncUserFilterApplied();
+            };
+
+            teamSelect.addEventListener('change', syncUsersFromTeams);
+            userSelect.addEventListener('change', () => {
+                if (!isSyncingUsersFromTeams) {
+                    savedUserIds = getSelectedValues(userSelect);
+                    syncUserFilterApplied();
+                }
+            });
+
+            const initializeTeamUserSync = () => {
+                if (!hasExplicitUserFilter && !hasUserFilterAppliedParameter && getSelectedValues(teamSelect).length) {
+                    syncUsersFromTeams();
+                }
+            };
+
+            document.addEventListener('tomselect:ready', initializeTeamUserSync, {
+                once: true
+            });
+            window.requestAnimationFrame(initializeTeamUserSync);
+            window.requestAnimationFrame(syncUserFilterApplied);
         });
     </script>
 @endsection
