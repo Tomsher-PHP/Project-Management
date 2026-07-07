@@ -6,8 +6,8 @@ use App\Exports\TimeTrackingReportExport;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\TaskTimeLog;
-use App\Models\Team;
 use App\Models\User;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
 use App\Services\UserTimelineService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,6 +19,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TimeTrackingReportService
 {
+    use ResolvesTeamUserFilters;
+
     protected const EXPORTABLE_COLUMNS = [
         'project' => 'Project',
         'milestone' => 'Milestone',
@@ -149,11 +151,6 @@ class TimeTrackingReportService
         return round($this->query($request)->sum('duration_seconds'));
     }
 
-    public function getSelectedUserIds(Request $request): array
-    {
-        return $this->resolveFilterIds($request, ['user_id', 'staff_id', 'users']);
-    }
-
     public function getFilterProjects(Request $request): Collection
     {
         return $this->baseQuery($request, ['project_id'])
@@ -173,28 +170,6 @@ class TimeTrackingReportService
             ->distinct()
             ->orderBy('users.name')
             ->get();
-    }
-
-    public function getFilterTeams(Request $request): Collection
-    {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-
-        if ($accessibleUserIds === []) {
-            return collect();
-        }
-
-        return Team::query()
-            ->with(['users' => function ($query) use ($accessibleUserIds) {
-                $query
-                    ->select('users.id', 'users.name')
-                    ->whereIn('users.id', $accessibleUserIds)
-                    ->orderBy('users.name');
-            }])
-            ->whereHas('users', function ($query) use ($accessibleUserIds) {
-                $query->whereIn('users.id', $accessibleUserIds);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
     }
 
     public function getFilterMilestones(Request $request): Collection
@@ -333,53 +308,6 @@ class TimeTrackingReportService
         return $dateRange['start']->diffInDays($dateRange['end']) + 1 <= 31;
     }
 
-    protected function getScopedUserIds(Request $request): array
-    {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-        $selectedUserIds = $this->getSelectedUserIds($request);
-
-        if ($this->hasExplicitUserFilter($request)) {
-            return array_values(array_intersect($accessibleUserIds, $selectedUserIds));
-        }
-
-        if ($request->has('user_filter_applied')) {
-            return $accessibleUserIds;
-        }
-
-        if ($this->getSelectedTeamIds($request) === []) {
-            return $accessibleUserIds;
-        }
-
-        return $this->getTeamScopedAccessibleUserIds($request);
-    }
-
-    protected function getUserIdsForExcludedUserFilter(Request $request): array
-    {
-        if ($this->hasExplicitUserFilter($request)) {
-            return $this->getAccessibleUserIds($request->user());
-        }
-
-        if ($request->has('user_filter_applied')) {
-            return $this->getAccessibleUserIds($request->user());
-        }
-
-        return $this->getTeamScopedAccessibleUserIds($request);
-    }
-
-    protected function getTeamScopedAccessibleUserIds(Request $request): array
-    {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-        $selectedTeamIds = $this->getSelectedTeamIds($request);
-
-        if ($selectedTeamIds === []) {
-            return $accessibleUserIds;
-        }
-
-        $selectedTeamUserIds = $this->getSelectedTeamUserIds($request);
-
-        return array_values(array_intersect($accessibleUserIds, $selectedTeamUserIds));
-    }
-
     protected function getSanitizedSelectedUserIds(Request $request): array
     {
         return array_values(array_intersect(
@@ -471,58 +399,6 @@ class TimeTrackingReportService
             $userId ? 'user_' . $userId : 'system',
             $generatedAt->format('Ymd_His')
         );
-    }
-
-    protected function resolveFilterIds(Request $request, array $keys): array
-    {
-        return collect($keys)
-            ->flatMap(function (string $key) use ($request) {
-                $value = $request->input($key, []);
-
-                if (! is_array($value)) {
-                    $value = [$value];
-                }
-
-                return $value;
-            })
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    protected function getSelectedTeamUserIds(Request $request): array
-    {
-        $teamIds = $this->getSelectedTeamIds($request);
-
-        if ($teamIds === []) {
-            return [];
-        }
-
-        return Team::query()
-            ->whereIn('id', $teamIds)
-            ->with('users:id')
-            ->get(['id'])
-            ->pluck('users')
-            ->flatten()
-            ->pluck('id')
-            ->map(fn($id) => (int) $id)
-            ->filter(fn(int $id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    protected function getSelectedTeamIds(Request $request): array
-    {
-        return $this->resolveFilterIds($request, ['teams', 'team_id']);
-    }
-
-    protected function hasExplicitUserFilter(Request $request): bool
-    {
-        return $this->getSelectedUserIds($request) !== [];
     }
 
     protected function shouldExcludeAnyFilter(array $excludedFilters, array $keys): bool
