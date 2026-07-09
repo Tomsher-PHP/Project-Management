@@ -274,7 +274,7 @@
                                 </svg>
                             </div>
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Appraisal
+                                Appraisals
                             </h3>
                         </div>
                     </div>

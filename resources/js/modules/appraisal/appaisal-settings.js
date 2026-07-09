@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    let draggedQuestionItem = null;
+    let dragHandleItem = null;
+
     const refreshNumbers = () => {
         list.querySelectorAll('[data-appraisal-question-item]').forEach((item, index) => {
             const number = item.querySelector('[data-appraisal-question-number]');
@@ -24,6 +27,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 removeButton.classList.toggle('cursor-not-allowed', list.children.length === 1);
             }
         });
+    };
+
+    const resetDraggedItemState = () => {
+        if (draggedQuestionItem) {
+            draggedQuestionItem.classList.remove('opacity-60', 'scale-[0.99]');
+            draggedQuestionItem.setAttribute('draggable', 'false');
+            draggedQuestionItem.style.boxShadow = '';
+        }
+
+        if (dragHandleItem) {
+            dragHandleItem.setAttribute('draggable', 'false');
+        }
+
+        draggedQuestionItem = null;
+        dragHandleItem = null;
     };
 
     const parseQuestions = (value) => {
@@ -164,6 +182,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('ajax-form:rendered', () => {
         setQuestions(['']);
+    });
+
+    list.addEventListener('mousedown', function (event) {
+        const handle = event.target.closest('[data-appraisal-question-handle]');
+
+        if (!handle) {
+            return;
+        }
+
+        const item = handle.closest('[data-appraisal-question-item]');
+
+        if (!item) {
+            return;
+        }
+
+        dragHandleItem = item;
+        item.setAttribute('draggable', 'true');
+    });
+
+    list.addEventListener('mouseup', function () {
+        if (!draggedQuestionItem && dragHandleItem) {
+            dragHandleItem.setAttribute('draggable', 'false');
+            dragHandleItem = null;
+        }
+    });
+
+    list.addEventListener('mouseleave', function () {
+        if (!draggedQuestionItem && dragHandleItem) {
+            dragHandleItem.setAttribute('draggable', 'false');
+            dragHandleItem = null;
+        }
+    });
+
+    list.addEventListener('dragstart', function (event) {
+        const item = event.target.closest('[data-appraisal-question-item]');
+
+        if (!item || item !== dragHandleItem) {
+            event.preventDefault();
+            return;
+        }
+
+        draggedQuestionItem = item;
+        item.classList.add('opacity-60', 'scale-[0.99]');
+        item.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', item.querySelector('[data-appraisal-question-id]')?.value || '');
+        }
+    });
+
+    list.addEventListener('dragover', function (event) {
+        if (draggedQuestionItem) {
+            event.preventDefault();
+        }
+
+        const targetItem = event.target.closest('[data-appraisal-question-item]');
+
+        if (!draggedQuestionItem || !targetItem || targetItem === draggedQuestionItem) {
+            return;
+        }
+
+        const targetBounds = targetItem.getBoundingClientRect();
+        const insertAfterTarget = event.clientY > targetBounds.top + (targetBounds.height / 2);
+
+        if (insertAfterTarget) {
+            list.insertBefore(draggedQuestionItem, targetItem.nextElementSibling);
+            return;
+        }
+
+        list.insertBefore(draggedQuestionItem, targetItem);
+    });
+
+    list.addEventListener('drop', function (event) {
+        if (!draggedQuestionItem) {
+            return;
+        }
+
+        event.preventDefault();
+        refreshNumbers();
+        resetDraggedItemState();
+    });
+
+    list.addEventListener('dragend', function () {
+        refreshNumbers();
+        resetDraggedItemState();
     });
 
     setQuestions(['']);
