@@ -83,7 +83,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[180px] xl:px-0">
                                         <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
-                                            {{ $appraisalCategory->created_at?->format('d M Y') }}
+                                            @appDateTime($appraisalCategory->created_at)
                                         </span>
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
