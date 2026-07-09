@@ -76,6 +76,13 @@ class TaskServices
         })->all();
     }
 
+    public function countDefaultStatusKanbanTasks(User $user, array $filters, string $flowType, array $options = []): int
+    {
+        return $this->buildKanbanBaseQuery($user, $filters, $flowType, null, $options)
+            ->whereHas('status', fn($query) => $query->where('is_default', true))
+            ->count();
+    }
+
     public function getKanbanStatusData(User $user, array $filters, string $flowType, int $statusId, int $page = 1, int $perPage = 5, array $options = []): array
     {
         $page = max($page, 1);

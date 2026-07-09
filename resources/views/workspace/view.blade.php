@@ -11,7 +11,7 @@
 @endpush
 
 @section('page-content')
-    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace data-task-create-root>
+    <main class="w-full bg-[#fbfcff] px-3 pb-5 pt-[74px] dark:bg-darkblack-700 sm:px-5 xl:px-4" data-user-workspace data-workspace-kanban-flow-counts data-task-create-root>
         <div class="space-y-2.5">
             <div class="hidden items-center justify-end" data-workspace-auto-refresh-indicator aria-live="polite">
                 <div class="inline-flex items-center gap-2 rounded-full border border-[#d9e4f5] bg-white/95 px-3 py-1.5 text-xs font-semibold text-[#52607a] shadow-[var(--workspace-soft-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
@@ -26,7 +26,10 @@
             </div>
 
             <!-- Task Board Section -->
-            @include('workspace.partials.kanban-board')
+            @include('workspace.partials.kanban-board', [
+                'agileNewTaskCount' => $agileNewTaskCount,
+                'linearNewTaskCount' => $linearNewTaskCount,
+            ])
 
             <x-filters.drawer>
                 <div data-workspace-kanban-filters>
@@ -49,6 +52,9 @@
 
             <!-- Break Work Request Modal -->
             @include('workspace.partials._break-request-modal')
+
+            <!-- Request Time Log Change Modal -->
+            @include('tasks.partials.time-log-change-request-modal', ['taskId' => null])
 
             <!-- Request Estimate Change Modal -->
             @include('tasks.partials.extend-time-modal')

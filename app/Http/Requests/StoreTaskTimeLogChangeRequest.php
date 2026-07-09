@@ -76,6 +76,10 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
 
                 $hasPendingChangeRequest = $timeLog->changeRequests()
                     ->where('status', 'pending')
+                    ->when(
+                        $this->currentChangeRequestId(),
+                        fn($query, $changeRequestId) => $query->whereKeyNot($changeRequestId)
+                    )
                     ->exists();
 
                 if ($hasPendingChangeRequest) {
@@ -135,6 +139,10 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
                         $query->where('task_id', $timeLog->task_id);
                     })
                     ->where('status', 'pending')
+                    ->when(
+                        $this->currentChangeRequestId(),
+                        fn($query, $changeRequestId) => $query->whereKeyNot($changeRequestId)
+                    )
                     ->where(function ($query) use ($newStartedAt, $newEndedAt) {
                         $query
                             ->where(function ($q) use ($newStartedAt, $newEndedAt) {
@@ -177,6 +185,11 @@ class StoreTaskTimeLogChangeRequest extends FormRequest
         return TaskTimeLog::query()
             ->with('task:id,request_status')
             ->find($timeLogId);
+    }
+
+    protected function currentChangeRequestId(): ?int
+    {
+        return null;
     }
 
     private function parseCompanyDateTime(mixed $value): ?Carbon

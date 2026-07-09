@@ -19,22 +19,24 @@ class UserLoginSessionService
             $ipAddress = $request->ip();
             $location = $this->getLocation($ipAddress);
 
-            $previousSessions = UserLoginSession::query()
-                ->where('user_id', $user->id)
-                ->whereNull('logout_at')
-                ->where('session_id', '!=', $currentSessionId)
-                ->get();
+            if (! $user->is_super_admin) {
+                $previousSessions = UserLoginSession::query()
+                    ->where('user_id', $user->id)
+                    ->whereNull('logout_at')
+                    ->where('session_id', '!=', $currentSessionId)
+                    ->get();
 
-            UserLoginSession::query()
-                ->whereKey($previousSessions->modelKeys())
-                ->update(['logout_at' => now()]);
+                UserLoginSession::query()
+                    ->whereKey($previousSessions->modelKeys())
+                    ->update(['logout_at' => now()]);
 
-            foreach ($previousSessions as $previousSession) {
-                if (! $request->session()->getHandler()->destroy($previousSession->session_id)) {
-                    Log::warning('Unable to destroy previous user session.', [
-                        'user_id' => $user->id,
-                        'session_id' => $previousSession->session_id,
-                    ]);
+                foreach ($previousSessions as $previousSession) {
+                    if (! $request->session()->getHandler()->destroy($previousSession->session_id)) {
+                        Log::warning('Unable to destroy previous user session.', [
+                            'user_id' => $user->id,
+                            'session_id' => $previousSession->session_id,
+                        ]);
+                    }
                 }
             }
 

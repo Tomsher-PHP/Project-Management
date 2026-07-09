@@ -6,6 +6,7 @@ use App\Exports\DailyTimeReportExport;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class DailyTimeReportService
 {
+    use ResolvesTeamUserFilters;
+
     protected const DATE_RANGE_REQUEST_KEY = 'daily_time_report.date_range';
 
     protected const EXPORTABLE_COLUMNS = [
@@ -65,6 +68,7 @@ class DailyTimeReportService
         return [
             'reports' => $this->paginateRows($rows, (int) $perPage, $request),
             'users' => $this->getFilterUsers($request),
+            'teams' => $this->getFilterTeams($request),
             'shifts' => $this->getFilterShifts($request),
             'columns' => $this->getColumnLabels(),
             'summaryStats' => [
@@ -103,7 +107,7 @@ class DailyTimeReportService
 
     public function getFilterUsers(Request $request): Collection
     {
-        $userIds = $this->getAccessibleUserIds($request->user());
+        $userIds = $this->getUserIdsForExcludedUserFilter($request);
 
         if ($userIds === []) {
             return collect();
@@ -123,6 +127,7 @@ class DailyTimeReportService
         return $dateRange['start'] !== null
             || $dateRange['end'] !== null
             || $this->resolveSelectedUserIds($request) !== []
+            || $this->isTeamsFilterApplied($request)
             || $this->resolveSelectedShiftIds($request) !== [];
     }
 
@@ -313,9 +318,11 @@ class DailyTimeReportService
                 'shift_working_seconds' => $shiftDetails['shift_working_seconds'],
                 'total_worked_time' => formatSecondsToHMS($totalWorkedSeconds),
                 'total_worked_seconds' => $totalWorkedSeconds,
-                'worked_time_status' => $shiftDetails['shift_working_seconds'] !== null
-                    ? ($totalWorkedSeconds >= $shiftDetails['shift_working_seconds'] ? 'success' : 'danger')
-                    : null,
+                'worked_time_status' => $shiftDetails['is_non_working_day']
+                    ? 'success'
+                    : ($shiftDetails['shift_working_seconds'] !== null
+                        ? ($totalWorkedSeconds >= $shiftDetails['shift_working_seconds'] ? 'success' : 'danger')
+                        : null),
                 'sort_date' => $selectedDate->toDateString(),
                 'latest_activity_timestamp' => $row['latest_activity_at']?->getTimestamp() ?? 0,
             ];
@@ -409,8 +416,9 @@ class DailyTimeReportService
                 'shift_time_to' => '--',
                 'shift_working_hour' => '--',
                 'shift_working_seconds' => null,
-                'start_time_status' => null,
-                'end_time_status' => null,
+                'start_time_status' => 'success',
+                'end_time_status' => 'success',
+                'is_non_working_day' => true,
             ];
         }
 
@@ -443,18 +451,23 @@ class DailyTimeReportService
 
         return [
             'shift_id' => $assignment->shift_id ? (int) $assignment->shift_id : null,
-            'shift_name' => $isWeekend ? $baseShiftName . ' (Week Off)' : $baseShiftName,
+            'shift_name' => $isWeekend ? $baseShiftName . ' (Day Off)' : $baseShiftName,
             'shift_color_code' => $assignment->color_code ?: null,
-            'shift_time_from' => $shiftStart->format($timeFormat),
-            'shift_time_to' => $shiftEnd->format($timeFormat),
+            'shift_time_from' => $isWeekend ? '--' : $shiftStart->format($timeFormat),
+            'shift_time_to' => $isWeekend ? '--' : $shiftEnd->format($timeFormat),
             'shift_working_hour' => $shiftWorkingHour,
             'shift_working_seconds' => $workingSeconds,
-            'start_time_status' => $actualStart
-                ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
-                : null,
-            'end_time_status' => (! $hasRunning && $actualEnd)
-                ? ($actualEnd->greaterThanOrEqualTo($shiftEnd) ? 'success' : 'danger')
-                : null,
+            'start_time_status' => $isWeekend
+                ? 'success'
+                : ($actualStart
+                    ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
+                    : null),
+            'end_time_status' => $isWeekend
+                ? 'success'
+                : ((! $hasRunning && $actualEnd)
+                    ? ($actualEnd->greaterThanOrEqualTo($shiftEnd) ? 'success' : 'danger')
+                    : null),
+            'is_non_working_day' => $isWeekend,
         ];
     }
 
@@ -516,20 +529,12 @@ class DailyTimeReportService
         );
     }
 
-    protected function getScopedUserIds(Request $request): array
+    protected function getAccessibleUserIds(?User $user): array
     {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-        $selectedUserIds = $this->resolveSelectedUserIds($request);
-
-        if ($selectedUserIds === []) {
-            return $accessibleUserIds;
+        if (! $user) {
+            return [];
         }
 
-        return array_values(array_intersect($accessibleUserIds, $selectedUserIds));
-    }
-
-    protected function getAccessibleUserIds(User $user): array
-    {
         return User::query()
             ->accessibleBy($user)
             ->pluck('users.id')
@@ -551,19 +556,14 @@ class DailyTimeReportService
 
     protected function resolveSelectedUserIds(Request $request): array
     {
-        $value = $request->input('user_id', []);
+        return $this->getSelectedUserIds($request);
+    }
 
-        if (! is_array($value)) {
-            $value = [$value];
-        }
-
-        return collect($value)
-            ->filter(fn($item) => filled($item))
-            ->map(fn($item) => (int) $item)
-            ->filter(fn(int $id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
+    protected function isTeamsFilterApplied(Request $request): bool
+    {
+        return $this->getSelectedTeamIds($request) !== []
+            && ! $request->has('user_filter_applied')
+            && ! $this->hasExplicitUserFilter($request);
     }
 
     protected function resolveSelectedShiftIds(Request $request): array

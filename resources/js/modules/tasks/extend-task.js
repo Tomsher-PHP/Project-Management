@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const taskName = trigger.dataset.taskName || '--';
         const currentEstimate = trigger.dataset.currentEstimate || '--';
+        const currentEstimateMinutes = Math.max(0, Number.parseInt(trigger.dataset.currentEstimateMinutes || '0', 10) || 0);
         const storeUrl = trigger.dataset.storeUrl || '';
         const pendingUrl = trigger.dataset.pendingUrl || '';
 
@@ -61,9 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const hoursInput = wrapper ? wrapper.querySelector('[data-estimated-hours]') : null;
         const minutesInput = wrapper ? wrapper.querySelector('[data-estimated-extra-minutes]') : null;
 
-        // Reset to default/empty values before fetching
+        // Default new requests to the task's current estimate. A pending request,
+        // when present, replaces this value with its previously requested estimate.
         if (totalInput) {
-            totalInput.value = '0';
+            totalInput.value = String(currentEstimateMinutes);
         }
         if (reasonTextarea) {
             reasonTextarea.value = '';
@@ -109,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 if (totalInput) {
-                    totalInput.value = '0';
+                    totalInput.value = String(currentEstimateMinutes);
                 }
                 if (reasonTextarea) {
                     reasonTextarea.value = '';
@@ -118,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Error fetching pending request:', err);
             if (totalInput) {
-                totalInput.value = '0';
+                totalInput.value = String(currentEstimateMinutes);
             }
             if (reasonTextarea) {
                 reasonTextarea.value = '';

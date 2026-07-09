@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
+use App\Models\Team;
 use App\Models\Task;
 use App\Models\TaskMode;
 use App\Models\TaskStatus;
@@ -333,6 +334,42 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
                 ]);
             }
 
+            if (isset($columnIndexes['due_date'])) {
+                $dueDateColumn = Coordinate::stringFromColumnIndex($columnIndexes['due_date'] + 1);
+                $dueDateColor = match (taskDueColor(
+                    $task->due_date_time,
+                    $task->estimated_time_seconds,
+                    $task
+                )) {
+                    'orange' => 'EAB308',
+                    'red' => 'DD3333',
+                    default => null,
+                };
+
+                if ($dueDateColor) {
+                    $sheet->getStyle("{$dueDateColumn}{$rowNumber}")->applyFromArray([
+                        'font' => [
+                            'bold' => true,
+                            'color' => ['rgb' => $dueDateColor],
+                        ],
+                    ]);
+                }
+            }
+
+            if (isset($columnIndexes['completed_at'])) {
+                $completedAtColumn = Coordinate::stringFromColumnIndex($columnIndexes['completed_at'] + 1);
+                $isCompleted = (bool) $task->status?->is_completed;
+                $wasCompletedLate = $isCompleted
+                    && $task->completed_at
+                    && $task->due_date_time
+                    && $task->completed_at->gt($task->due_date_time);
+                $completedAtColor = $wasCompletedLate ? 'DC2626' : '16A34A';
+
+                $sheet->getStyle("{$completedAtColumn}{$rowNumber}")->getFont()
+                    ->getColor()
+                    ->setRGB($completedAtColor);
+            }
+
             if (isset($columnIndexes['progress'])) {
                 $progressColumn = Coordinate::stringFromColumnIndex($columnIndexes['progress'] + 1);
                 $progressPalette = $this->resolveProgressPalette(
@@ -404,7 +441,8 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             'Project' => [Project::class, 'project_id', true],
             'Milestone' => [ProjectMilestone::class, 'project_milestone_id', true],
             'Sprint' => [ProjectSprint::class, 'project_sprint_id', true],
-            'Assignee' => [User::class, 'current_assignee_id', true],
+            'Teams' => [Team::class, ['teams', 'team_id'], true],
+            'Assignee' => [User::class, ['current_assignee_id', 'assignees'], true],
             'Status' => [TaskStatus::class, 'status_id', true],
             'Task Type' => [TaskType::class, 'task_type_id', true],
             'Task Mode' => [TaskMode::class, 'task_mode_id', true],
@@ -447,14 +485,9 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             : null;
     }
 
-    protected function resolveFilterNames(string $modelClass, string $requestKey, bool $useTrashed = false): array
+    protected function resolveFilterNames(string $modelClass, string|array $requestKeys, bool $useTrashed = false): array
     {
-        $selectedIds = collect($this->filters[$requestKey] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds((array) $requestKeys);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -476,6 +509,21 @@ class TaskReportExport implements FromCollection, WithCustomStartCell, WithEvent
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function resolveFilterIds(array $keys): Collection
+    {
+        return collect($keys)
+            ->flatMap(function (string $key) {
+                $value = $this->filters[$key] ?? [];
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
     }
 
     protected function resolvePriorityLabelsFromFilters(): array

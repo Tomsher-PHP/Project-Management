@@ -1,4 +1,5 @@
 import Alert from '../../alert';
+import { initDatepicker } from '../../components/datepicker';
 
 const modalSelector = '#timeLogChangeRequestModal';
 const formSelector = '#timeLogChangeRequestForm';
@@ -167,6 +168,12 @@ const populateFromTrigger = (trigger) => {
     const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
     const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
     const reasonField = document.querySelector(fieldSelectors.reason);
+    const mode = readTriggerData(trigger, 'time_log_change_request_mode') === 'edit' ? 'edit' : 'create';
+    const storeUrl = form.dataset.storeUrl || form.getAttribute('action') || '';
+    const updateUrl = readTriggerData(trigger, 'time_log_change_request_update_url');
+
+    form.action = mode === 'edit' && updateUrl ? updateUrl : storeUrl;
+    form.dataset.requestMethod = mode === 'edit' ? 'PATCH' : 'POST';
 
     if (userNameNode) {
         const userName = readTriggerData(trigger, 'time_log_user_name') || 'Unknown User';
@@ -179,8 +186,19 @@ const populateFromTrigger = (trigger) => {
     setFieldValue(originalEndedAtField, readTriggerData(trigger, 'original_ended_at'));
     setFieldValue(newStartedAtField, readTriggerData(trigger, 'new_started_at'));
     setFieldValue(newEndedAtField, readTriggerData(trigger, 'new_ended_at'));
-    setFieldValue(reasonField, '');
+    setFieldValue(reasonField, mode === 'edit'
+        ? readTriggerData(trigger, 'time_log_change_request_reason')
+        : '');
     syncDurationDisplay();
+};
+
+export const openTimeLogChangeRequest = (trigger) => {
+    if (!trigger || trigger.disabled) {
+        return;
+    }
+
+    populateFromTrigger(trigger);
+    getModal()?.classList.remove('hidden');
 };
 
 const setSubmittingState = (isSubmitting) => {
@@ -297,6 +315,156 @@ const closeRejectListModal = () => {
     getRejectListModal()?.classList.add('hidden');
 };
 
+const approvalModalSelectors = {
+    modal: '[data-time-log-change-request-approve-modal]',
+    form: '[data-time-log-change-request-approve-form]',
+    open: '[data-time-log-change-request-approve-open]',
+    close: '[data-time-log-change-request-approve-close]',
+    submit: '[data-time-log-change-request-approve-submit]',
+    userName: '[data-time-log-change-request-approve-user-name]',
+    taskName: '[data-time-log-change-request-approve-task-name]',
+    reason: '[data-time-log-change-request-approve-reason]',
+    currentStart: '[data-time-log-change-request-current-start]',
+    currentEnd: '[data-time-log-change-request-current-end]',
+    startedAt: '[name="new_started_at"]',
+    endedAt: '[name="new_ended_at"]',
+    error: '[data-time-log-change-request-approve-error]',
+};
+
+const getApprovalModal = () => document.querySelector(approvalModalSelectors.modal);
+const getApprovalForm = () => document.querySelector(approvalModalSelectors.form);
+
+const resetApprovalErrors = () => {
+    const form = getApprovalForm();
+
+    form?.querySelectorAll(approvalModalSelectors.error).forEach((node) => {
+        node.textContent = '';
+        node.classList.add('hidden');
+    });
+    form?.querySelectorAll('input').forEach((input) => {
+        input.classList.remove('border-red-500');
+        input._flatpickr?.altInput?.classList.remove('border-red-500');
+    });
+};
+
+const setDateTimepickerValue = (input, value) => {
+    if (!input) {
+        return;
+    }
+
+    if (input._flatpickr) {
+        input._flatpickr.setDate(value, true, 'Y-m-d H:i:S');
+        return;
+    }
+
+    input.value = value || '';
+};
+
+const openApprovalModal = (trigger) => {
+    const modal = getApprovalModal();
+    const form = getApprovalForm();
+
+    if (!modal || !form || !trigger) {
+        return;
+    }
+
+    resetApprovalErrors();
+    form.action = trigger.dataset.action || '#';
+
+    modal.querySelector(approvalModalSelectors.userName).textContent = trigger.dataset.userName || 'Unknown User';
+    modal.querySelector(approvalModalSelectors.taskName).textContent = trigger.dataset.taskName || 'Unknown Task';
+    modal.querySelector(approvalModalSelectors.reason).textContent = trigger.dataset.reason || '--';
+    modal.querySelector(approvalModalSelectors.currentStart).textContent = trigger.dataset.currentStart || '--';
+    modal.querySelector(approvalModalSelectors.currentEnd).textContent = trigger.dataset.currentEnd || '--';
+
+    setDateTimepickerValue(form.querySelector(approvalModalSelectors.startedAt), trigger.dataset.requestedStart);
+    setDateTimepickerValue(form.querySelector(approvalModalSelectors.endedAt), trigger.dataset.requestedEnd);
+
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+};
+
+const closeApprovalModal = () => {
+    const modal = getApprovalModal();
+    const form = getApprovalForm();
+
+    modal?.classList.add('hidden');
+    modal?.setAttribute('aria-hidden', 'true');
+    form?.reset();
+    resetApprovalErrors();
+};
+
+const showApprovalErrors = (errors = {}) => {
+    const form = getApprovalForm();
+    const unhandledMessages = [];
+
+    resetApprovalErrors();
+
+    Object.entries(errors).forEach(([field, messages]) => {
+        const message = Array.isArray(messages) ? messages[0] : messages;
+        const errorNode = form?.querySelector(`[data-time-log-change-request-approve-error="${field}"]`);
+        const input = form?.querySelector(`[name="${field}"]`);
+
+        input?.classList.add('border-red-500');
+        input?._flatpickr?.altInput?.classList.add('border-red-500');
+
+        if (errorNode) {
+            errorNode.textContent = message;
+            errorNode.classList.remove('hidden');
+        } else if (message) {
+            unhandledMessages.push(message);
+        }
+    });
+
+    if (unhandledMessages.length) {
+        Alert.error(unhandledMessages[0]);
+    }
+};
+
+const submitApprovalForm = async (form) => {
+    const submitButton = form.querySelector(approvalModalSelectors.submit);
+
+    if (form.dataset.submitting === 'true') {
+        return;
+    }
+
+    resetApprovalErrors();
+    form.dataset.submitting = 'true';
+    submitButton.disabled = true;
+    submitButton.textContent = 'Approving...';
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: new FormData(form),
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (response.status === 422) {
+            showApprovalErrors(result.errors || {});
+            return;
+        }
+
+        if (!response.ok || result.status === false) {
+            throw new Error(result.message || 'Unable to approve the time log change request.');
+        }
+
+        closeApprovalModal();
+        Alert.success(result.message || 'Time log change request approved successfully.');
+        window.setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+        Alert.error(error.message || 'Unable to approve the time log change request.');
+    } finally {
+        form.dataset.submitting = 'false';
+        submitButton.disabled = false;
+        submitButton.textContent = 'Approve';
+    }
+};
+
 const submitForm = async () => {
     const form = getForm();
 
@@ -309,7 +477,7 @@ const submitForm = async () => {
 
     try {
         const response = await fetch(form.action, {
-            method: 'POST',
+            method: form.dataset.requestMethod || 'POST',
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -345,10 +513,20 @@ document.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-time-log-change-request-open]');
 
     if (trigger && !trigger.disabled) {
-        window.setTimeout(() => {
-            populateFromTrigger(trigger);
-        }, 0);
+        openTimeLogChangeRequest(trigger);
 
+        return;
+    }
+
+    const approvalTrigger = event.target.closest(approvalModalSelectors.open);
+
+    if (approvalTrigger) {
+        openApprovalModal(approvalTrigger);
+        return;
+    }
+
+    if (event.target.closest(approvalModalSelectors.close)) {
+        closeApprovalModal();
         return;
     }
 
@@ -414,21 +592,11 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('submit', async (event) => {
-    const approvalForm = event.target.closest('[data-time-log-change-request-action-form]');
+    const approvalForm = event.target.closest(approvalModalSelectors.form);
 
     if (approvalForm) {
         event.preventDefault();
-
-        const result = await Alert.confirm({
-            title: approvalForm.dataset.confirmTitle || 'Approve request?',
-            text: approvalForm.dataset.confirmText || 'Please confirm this action.',
-            icon: approvalForm.dataset.confirmIcon || 'warning',
-            confirmText: approvalForm.dataset.confirmTextButton || 'Yes, approve',
-        });
-
-        if (result?.isConfirmed) {
-            approvalForm.submit();
-        }
+        submitApprovalForm(approvalForm);
     }
 });
 
@@ -457,6 +625,9 @@ document.addEventListener('change', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    const approvalModal = getApprovalModal();
+    initDatepicker('.datepicker', {}, approvalModal || document);
+
     syncBulkActions();
     syncDurationDisplay();
 
@@ -465,4 +636,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newStartedAtField?.addEventListener('input', syncDurationDisplay);
     newEndedAtField?.addEventListener('input', syncDurationDisplay);
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !getApprovalModal()?.classList.contains('hidden')) {
+        closeApprovalModal();
+    }
 });

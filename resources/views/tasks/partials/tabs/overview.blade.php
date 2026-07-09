@@ -5,6 +5,14 @@
     $emptyTextClasses = 'text-sm italic text-bgray-600 dark:text-bgray-300';
     $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
     $timeBarClasses = $timeComparison['is_over_estimate'] ? 'bg-red-500' : 'bg-success-400';
+    $isCompleted = (bool) $task->status?->is_completed;
+    $wasCompletedLate = $isCompleted
+        && $task->completed_at
+        && $task->due_date_time
+        && $task->completed_at->gt($task->due_date_time);
+    $completedAtClasses = $wasCompletedLate
+        ? 'text-red-500 dark:text-red-600'
+        : 'text-success-400 dark:text-success-300';
     $formatDuration = function (?int $seconds): string {
         $normalizedSeconds = max(0, (int) ($seconds ?? 0));
         $hours = intdiv($normalizedSeconds, 3600);
@@ -137,6 +145,15 @@
                             @endif
                         </div>
                     @endforeach
+
+                    @if ($isCompleted)
+                        <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
+                            <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">Completed At</p>
+                            <p class="mt-2 text-sm font-semibold {{ $completedAtClasses }}">
+                                @appDateTime($task->completed_at)
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </section>
 

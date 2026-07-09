@@ -117,9 +117,23 @@ class TaskController extends Controller
             self::KANBAN_STATUS_PAGE_SIZE,
             ['sort' => $selectedKanbanSort]
         );
+        $defaultStatus = $boardStatuses->first(fn($status) => (bool) $status->is_default);
+        $newTaskCount = $defaultStatus
+            ? (int) ($tasksByStatus[$defaultStatus->id]['total'] ?? 0)
+            : 0;
+        $otherFlowType = $selectedFlowType === 'agile' ? 'linear' : 'agile';
+        $otherFlowNewTaskCount = $taskServices->countDefaultStatusKanbanTasks(
+            $user,
+            $request->all(),
+            $otherFlowType
+        );
+        $agileNewTaskCount = $selectedFlowType === 'agile' ? $newTaskCount : $otherFlowNewTaskCount;
+        $linearNewTaskCount = $selectedFlowType === 'linear' ? $newTaskCount : $otherFlowNewTaskCount;
 
         return view('tasks.kanban.kanban-view', array_merge([
             'tasksByStatus' => $tasksByStatus,
+            'agileNewTaskCount' => $agileNewTaskCount,
+            'linearNewTaskCount' => $linearNewTaskCount,
             'perPage' => $request->input('per_page'),
             'taskCreateDependencies' => $taskCreateDependencies,
             'boardStatuses' => $boardStatuses,

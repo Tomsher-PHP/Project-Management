@@ -16,7 +16,7 @@
                     </button>
                 </div>
 
-                <form action="" method="POST" class="space-y-4 overflow-y-auto px-5 py-5" data-extend-time-form>
+                <form action="" method="POST" class="space-y-4 overflow-y-auto px-5 py-2" data-extend-time-form>
                     @csrf
 
                     <div class="space-y-4">
@@ -36,6 +36,9 @@
 
                         <div>
                             <x-forms.estimated-time-input label="New Estimated Time" name="new_estimated_time_minutes" :total-minutes="0" :show-label="false" />
+                            <p class="mt-1.5 text-xs leading-5 text-warning-300 dark:text-bgray-300">
+                                <span class="font-semibold">Note:</span> This will replace the current estimated time if approved.
+                            </p>
                             <p class="mt-1 hidden text-xs text-red-500" data-extend-time-error="new_estimated_time_minutes"></p>
                         </div>
 

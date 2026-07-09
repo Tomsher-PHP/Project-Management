@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Shift;
+use App\Models\Team;
 use App\Models\User;
 use App\Models\UserShiftAssignment;
 use App\Providers\AppServiceProvider;
@@ -328,6 +329,12 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             $summary['Users'] = implode(', ', $userNames);
         }
 
+        $teamNames = $this->resolveTeamFilterNames();
+
+        if ($teamNames !== []) {
+            $summary['Teams'] = implode(', ', $teamNames);
+        }
+
         $shiftNames = $this->resolveShiftFilterNames();
 
         if ($shiftNames !== []) {
@@ -339,12 +346,7 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
 
     protected function resolveUserFilterNames(): array
     {
-        $selectedIds = collect($this->filters['user_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds(['user_id', 'staff_id', 'users']);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -362,14 +364,29 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             ->all();
     }
 
+    protected function resolveTeamFilterNames(): array
+    {
+        $selectedIds = $this->resolveFilterIds(['teams', 'team_id']);
+
+        if ($selectedIds->isEmpty()) {
+            return [];
+        }
+
+        $namesById = Team::query()
+            ->whereIn('id', $selectedIds)
+            ->pluck('name', 'id');
+
+        return $selectedIds
+            ->map(fn(int $id) => $namesById->get($id))
+            ->filter(fn($name) => filled($name))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     protected function resolveShiftFilterNames(): array
     {
-        $selectedIds = collect($this->filters['shift_id'] ?? [])
-            ->flatten()
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->values();
+        $selectedIds = $this->resolveFilterIds(['shift_id']);
 
         if ($selectedIds->isEmpty()) {
             return [];
@@ -399,6 +416,21 @@ class DailyTimeReportExport implements FromCollection, WithCustomStartCell, With
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function resolveFilterIds(array $keys): Collection
+    {
+        return collect($keys)
+            ->flatMap(function (string $key) {
+                $value = $this->filters[$key] ?? [];
+
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
     }
 
     protected function generatedAtLabel(): string

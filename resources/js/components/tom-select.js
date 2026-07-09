@@ -1,6 +1,222 @@
 export function initTomSelect(root = document) {
     const normalizeText = (value = '') => String(value).trim().toLowerCase();
 
+    const enableCompactMultipleDisplay = (instance) => {
+        const badgeClass = 'ts-selection-count';
+        const hiddenItemClass = 'ts-selection-item-hidden';
+        let selectedItemsPopover = null;
+
+        instance.wrapper.classList.add('ts-wrapper-multiple-compact');
+
+        const closeSelectedItemsPopover = () => {
+            instance.control
+                .querySelector(`.${badgeClass}`)
+                ?.setAttribute('aria-expanded', 'false');
+
+            if (!selectedItemsPopover) return;
+
+            selectedItemsPopover.remove();
+            selectedItemsPopover = null;
+            document.removeEventListener('mousedown', handleOutsidePopoverClick);
+            document.removeEventListener('keydown', handlePopoverKeydown);
+            window.removeEventListener('resize', closeSelectedItemsPopover);
+        };
+
+        const handleOutsidePopoverClick = (event) => {
+            if (
+                selectedItemsPopover?.contains(event.target)
+                || (
+                    event.target instanceof Element
+                    && event.target.closest(`.${badgeClass}`)
+                )
+            ) {
+                return;
+            }
+
+            closeSelectedItemsPopover();
+        };
+
+        const handlePopoverKeydown = (event) => {
+            if (event.key === 'Escape') {
+                closeSelectedItemsPopover();
+                instance.focus();
+            }
+        };
+
+        const handleControlMouseDown = (event) => {
+            if (
+                selectedItemsPopover
+                && (
+                    !(event.target instanceof Element)
+                    || !event.target.closest(`.${badgeClass}`)
+                )
+            ) {
+                closeSelectedItemsPopover();
+            }
+        };
+
+        const renderSelectedItemsPopover = () => {
+            if (!selectedItemsPopover) return;
+
+            const list = selectedItemsPopover.querySelector('.ts-selected-items-list');
+            const scrollTop = list.scrollTop;
+            const existingItems = new Map(
+                Array.from(list.children).map((item) => [item.dataset.value, item])
+            );
+
+            instance.items.forEach((value) => {
+                const itemValue = String(value);
+                let item = existingItems.get(itemValue);
+
+                if (!item) {
+                    item = document.createElement('div');
+                    item.className = 'ts-selected-items-option';
+                    item.dataset.value = itemValue;
+
+                    const label = document.createElement('span');
+                    label.className = 'ts-selected-items-label';
+
+                    const removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.className = 'ts-selected-items-remove';
+                    removeButton.textContent = '×';
+                    removeButton.addEventListener('click', (event) => {
+                        const selectedItem = instance.getItem(itemValue);
+
+                        if (
+                            instance.isLocked
+                            || !selectedItem
+                            || !instance.shouldDelete([selectedItem], event)
+                        ) {
+                            return;
+                        }
+
+                        instance.removeItem(selectedItem);
+                        instance.refreshOptions(false);
+                        instance.inputState();
+                    });
+
+                    item.append(label, removeButton);
+                }
+
+                const label = item.querySelector('.ts-selected-items-label');
+                const removeButton = item.querySelector('.ts-selected-items-remove');
+                label.textContent = String(instance.options[itemValue]?.text ?? itemValue);
+                removeButton.setAttribute('aria-label', `Remove ${label.textContent}`);
+
+                list.append(item);
+                existingItems.delete(itemValue);
+            });
+
+            existingItems.forEach((item) => item.remove());
+            list.scrollTop = scrollTop;
+        };
+
+        const openSelectedItemsPopover = (badge) => {
+            const wasIgnoringFocus = instance.ignoreFocus;
+
+            try {
+                instance.ignoreFocus = true;
+                instance.close();
+            } finally {
+                instance.ignoreFocus = wasIgnoringFocus;
+            }
+
+            closeSelectedItemsPopover();
+
+            selectedItemsPopover = document.createElement('div');
+            selectedItemsPopover.className = 'ts-selected-items-popover';
+            selectedItemsPopover.setAttribute('role', 'dialog');
+            selectedItemsPopover.setAttribute('aria-label', 'Selected items');
+            selectedItemsPopover.innerHTML = `
+                <div class="ts-selected-items-heading">Selected items</div>
+                <div class="ts-selected-items-list"></div>
+            `;
+            document.body.append(selectedItemsPopover);
+            selectedItemsPopover.addEventListener('mousedown', (event) => {
+                event.stopPropagation();
+            });
+            selectedItemsPopover.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            const wrapperRect = instance.wrapper.getBoundingClientRect();
+            const viewportPadding = 8;
+            const width = Math.min(wrapperRect.width, window.innerWidth - (viewportPadding * 2));
+            const left = Math.min(
+                Math.max(viewportPadding, wrapperRect.left),
+                window.innerWidth - width - viewportPadding
+            );
+
+            selectedItemsPopover.style.width = `${width}px`;
+            selectedItemsPopover.style.left = `${left + window.scrollX}px`;
+            selectedItemsPopover.style.top = `${wrapperRect.bottom + window.scrollY + 4}px`;
+
+            renderSelectedItemsPopover();
+            document.addEventListener('mousedown', handleOutsidePopoverClick);
+            document.addEventListener('keydown', handlePopoverKeydown);
+            window.addEventListener('resize', closeSelectedItemsPopover);
+
+            selectedItemsPopover.querySelector('.ts-selected-items-remove')?.focus();
+            badge.setAttribute('aria-expanded', 'true');
+        };
+
+        const syncSelectedItems = () => {
+            const selectedItems = Array.from(instance.control.querySelectorAll('.item'));
+            const hiddenCount = Math.max(0, selectedItems.length - 1);
+
+            selectedItems.forEach((item, index) => {
+                item.classList.toggle(hiddenItemClass, index > 0);
+            });
+
+            let badge = instance.control.querySelector(`.${badgeClass}`);
+
+            if (hiddenCount === 0) {
+                badge?.remove();
+                renderSelectedItemsPopover();
+                return;
+            }
+
+            if (!badge) {
+                badge = document.createElement('button');
+                badge.type = 'button';
+                badge.className = badgeClass;
+                badge.setAttribute('aria-haspopup', 'dialog');
+                badge.setAttribute('aria-expanded', 'false');
+                badge.addEventListener('mousedown', (event) => event.preventDefault());
+                badge.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (!instance.isDisabled) {
+                        openSelectedItemsPopover(badge);
+                    }
+                });
+
+                const input = instance.control.querySelector('input');
+                instance.control.insertBefore(badge, input);
+            }
+
+            badge.textContent = `+${hiddenCount}`;
+            badge.setAttribute(
+                'aria-label',
+                `Show all ${selectedItems.length} selected items`
+            );
+            badge.disabled = instance.isDisabled;
+            renderSelectedItemsPopover();
+        };
+
+        instance.on('item_add', syncSelectedItems);
+        instance.on('item_remove', syncSelectedItems);
+        instance.on('change', syncSelectedItems);
+        instance.control.addEventListener('mousedown', handleControlMouseDown);
+        instance.on('destroy', () => {
+            instance.control.removeEventListener('mousedown', handleControlMouseDown);
+            closeSelectedItemsPopover();
+        });
+        syncSelectedItems();
+    };
+
     const applyDisabledStyles = (instance, el) => {
         if (!instance?.wrapper || !instance?.control || !el.disabled) return;
 
@@ -217,6 +433,7 @@ export function initTomSelect(root = document) {
             dropdownParent: 'body',
         });
 
+        enableCompactMultipleDisplay(instance);
         applyDisabledStyles(instance, el);
     });
 

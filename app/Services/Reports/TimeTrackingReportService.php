@@ -7,6 +7,7 @@ use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\TaskTimeLog;
 use App\Models\User;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
 use App\Services\UserTimelineService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +19,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TimeTrackingReportService
 {
+    use ResolvesTeamUserFilters;
+
     protected const EXPORTABLE_COLUMNS = [
         'project' => 'Project',
         'milestone' => 'Milestone',
@@ -62,7 +65,8 @@ class TimeTrackingReportService
             : $this->resolveFilterIds($request, ['project_sprint_id', 'sprint_id']);
         $userIds = in_array('user_id', $excludedFilters, true)
             || in_array('staff_id', $excludedFilters, true)
-            ? $this->getAccessibleUserIds($request->user())
+            || in_array('users', $excludedFilters, true)
+            ? $this->getUserIdsForExcludedUserFilter($request)
             : $this->getScopedUserIds($request);
 
         $query = TaskTimeLog::query()
@@ -142,17 +146,9 @@ class TimeTrackingReportService
             ->withQueryString();
     }
 
-    public function getTotalMinutes(Request $request)
+    public function getTotalSeconds(Request $request)
     {
-        return round(
-            $this->query($request)
-                ->sum('duration_seconds') / 60
-        );
-    }
-
-    public function getSelectedUserIds(Request $request): array
-    {
-        return $this->resolveFilterIds($request, ['user_id', 'staff_id']);
+        return round($this->query($request)->sum('duration_seconds'));
     }
 
     public function getFilterProjects(Request $request): Collection
@@ -168,7 +164,7 @@ class TimeTrackingReportService
 
     public function getFilterUsers(Request $request): Collection
     {
-        return $this->baseQuery($request, ['user_id', 'staff_id'])
+        return $this->baseQuery($request, ['user_id', 'staff_id', 'users'])
             ->join('users', 'users.id', '=', 'task_time_logs.user_id')
             ->select('users.id', 'users.name')
             ->distinct()
@@ -312,22 +308,10 @@ class TimeTrackingReportService
         return $dateRange['start']->diffInDays($dateRange['end']) + 1 <= 31;
     }
 
-    protected function getScopedUserIds(Request $request): array
-    {
-        $accessibleUserIds = $this->getAccessibleUserIds($request->user());
-        $selectedUserIds = $this->getSelectedUserIds($request);
-
-        if ($selectedUserIds === []) {
-            return $accessibleUserIds;
-        }
-
-        return array_values(array_intersect($accessibleUserIds, $selectedUserIds));
-    }
-
     protected function getSanitizedSelectedUserIds(Request $request): array
     {
         return array_values(array_intersect(
-            $this->getAccessibleUserIds($request->user()),
+            $this->getScopedUserIds($request),
             $this->getSelectedUserIds($request)
         ));
     }
@@ -415,26 +399,6 @@ class TimeTrackingReportService
             $userId ? 'user_' . $userId : 'system',
             $generatedAt->format('Ymd_His')
         );
-    }
-
-    protected function resolveFilterIds(Request $request, array $keys): array
-    {
-        return collect($keys)
-            ->flatMap(function (string $key) use ($request) {
-                $value = $request->input($key, []);
-
-                if (! is_array($value)) {
-                    $value = [$value];
-                }
-
-                return $value;
-            })
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (int) $value)
-            ->filter(fn(int $value) => $value > 0)
-            ->unique()
-            ->values()
-            ->all();
     }
 
     protected function shouldExcludeAnyFilter(array $excludedFilters, array $keys): bool

@@ -18,7 +18,7 @@
         </h6>
 
         <!-- Column Body -->
-        <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full px-4 pb-4 pt-4" data-status-id="{{ $status->id }}" data-task-ids='@json($column['taskIds'] ?? [])' data-next-page="{{ $column['nextPage'] ?? '' }}" data-has-more="{{ !empty($column['hasMore']) ? 'true' : 'false' }}" data-loading="false">
+        <div class="flex flex-col gap-4 kanban-board overflow-y-auto overflow-x-hidden h-full px-4 pb-4 pt-4" data-status-id="{{ $status->id }}" data-is-default="{{ $status->is_default ? '1' : '0' }}" data-task-ids='@json($column['taskIds'] ?? [])' data-next-page="{{ $column['nextPage'] ?? '' }}" data-has-more="{{ !empty($column['hasMore']) ? 'true' : 'false' }}" data-loading="false">
             @include('tasks.kanban._cards', ['tasks' => $column['tasks'] ?? collect(), 'status' => $status])
 
             <div class="hidden py-2 text-center text-xs text-gray-400 dark:text-gray-500" data-kanban-load-indicator>

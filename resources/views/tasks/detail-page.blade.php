@@ -89,6 +89,7 @@
     </section>
 
     @include('tasks.partials.modals.insights-modal')
+    @include('tasks.partials.time-log-change-request-modal')
 
     <!-- Request Estimate Change Modal -->
     @include('tasks.partials.extend-time-modal')

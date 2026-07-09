@@ -55,7 +55,7 @@ class Team extends Model
     public function leader()
     {
         return $this->belongsToMany(User::class)
-            ->wherePivot('team_role', 'owner')
+            ->wherePivot('team_role', 'team_leader')
             ->limit(1);
     }
 

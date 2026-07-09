@@ -33,6 +33,118 @@
     line-height: 24px;
 }
 
+/* Keep selected items consistent across standard and multiple selects. */
+.ts-wrapper.tom-select,
+.ts-wrapper.tom-select-multiple {
+    --ts-selected-item-background: rgba(59, 130, 246, 0.1);
+}
+
+.ts-wrapper.tom-select .ts-control > .item:not(.active),
+.ts-wrapper.tom-select-multiple .ts-control > .item:not(.active) {
+    background-color: var(--ts-selected-item-background);
+}
+
+/* Multiple selects show one item and a summary instead of scrolling chips. */
+.ts-wrapper-multiple-compact .ts-control {
+    overflow-x: hidden;
+}
+
+.ts-wrapper-multiple-compact .ts-control .ts-selection-item-hidden {
+    display: none !important;
+}
+
+.ts-wrapper-multiple-compact .ts-control .ts-selection-count {
+    flex: 0 0 auto;
+    min-width: 2rem;
+    max-width: none;
+    margin-left: 0.375rem;
+    padding: 0.125rem 0.5rem;
+    overflow: visible;
+    border-radius: 9999px;
+    background-color: #e5e7eb;
+    color: #374151;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ts-wrapper-multiple-compact .ts-control .ts-selection-count:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+}
+
+.ts-wrapper-multiple-compact .ts-control .ts-selection-count:disabled {
+    cursor: default;
+}
+
+.ts-selected-items-popover {
+    position: absolute;
+    z-index: 10000;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    color: #1f2937;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.ts-selected-items-heading {
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.ts-selected-items-list {
+    max-height: 15rem;
+    overflow-y: auto;
+}
+
+.ts-selected-items-option {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.ts-selected-items-option + .ts-selected-items-option {
+    border-top: 1px solid #f3f4f6;
+}
+
+.ts-selected-items-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ts-selected-items-remove {
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.375rem;
+    color: #6b7280;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.ts-selected-items-remove:hover,
+.ts-selected-items-remove:focus-visible {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.ts-selected-items-remove:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+}
+
 /* Focus state */
 .ts-wrapper.focus .ts-control {
     border-color: #3b82f6;
@@ -142,6 +254,41 @@ select {
     border-right-color: #d1d5db;
     /* arrow color */
     border-bottom-color: #d1d5db;
+}
+
+.dark .ts-wrapper.tom-select,
+.dark .ts-wrapper.tom-select-multiple {
+    --ts-selected-item-background: rgba(96, 165, 250, 0.16);
+}
+
+.dark .ts-wrapper-multiple-compact .ts-control .ts-selection-count {
+    background-color: #374151;
+    color: #f3f4f6;
+}
+
+.dark .ts-selected-items-popover {
+    border-color: #374151;
+    background-color: #1f1f1f;
+    color: #f9fafb;
+}
+
+.dark .ts-selected-items-heading {
+    border-bottom-color: #374151;
+    color: #9ca3af;
+}
+
+.dark .ts-selected-items-option + .ts-selected-items-option {
+    border-top-color: #374151;
+}
+
+.dark .ts-selected-items-remove {
+    color: #d1d5db;
+}
+
+.dark .ts-selected-items-remove:hover,
+.dark .ts-selected-items-remove:focus-visible {
+    background-color: #374151;
+    color: #fff;
 }
 
 /* Dark mode: focused input text color */

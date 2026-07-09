@@ -42,7 +42,7 @@ class RequestMenuBadgeService
             'task_handoff' => $taskHandoff,
             'break_requests' => $breakRequests,
             'task_time_extend_requests' => $taskTimeExtendRequests,
-            'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff + $breakRequests) > 0,
+            'has_any_pending' => ($taskRequests + $taskTime + $taskHandoff + $breakRequests + $taskTimeExtendRequests) > 0,
         ];
     }
 
