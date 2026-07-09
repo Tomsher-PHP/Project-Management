@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AppraisalKpiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
@@ -23,9 +24,9 @@ use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
-use App\Http\Controllers\ProjectRestoreController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectPaymentController;
+use App\Http\Controllers\ProjectRestoreController;
 use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
@@ -37,9 +38,9 @@ use App\Http\Controllers\ScheduleTaskController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskTimeExtendController;
 use App\Http\Controllers\TaskRequestController;
 use App\Http\Controllers\TaskSettingsController;
+use App\Http\Controllers\TaskTimeExtendController;
 use App\Http\Controllers\TaskTimeLogChangeRequestController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TechnologyController;
@@ -251,6 +252,15 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.edit')->only(['update']);
         Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.delete')->only(['destroy']);
         // End Checklists templates routes
+
+        // Appraisal Kpis routes
+        Route::patch('/appraisal-kpis/toggle-status', [AppraisalKpiController::class, 'toggleStatusChecklist'])->middleware('permission.type:appraisal_kpi.edit')->name('checklist.toggleStatus');
+        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.view')->only(['index']);
+        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.create')->only(['store']);
+        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.edit')->only(['update']);
+        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.delete')->only(['destroy']);
+        // End appraisal-kpis templates routes
+        
     });
     // End Settings Routes
 

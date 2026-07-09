@@ -211,4 +211,10 @@ return [
     // Task Time Extend Request (29000)
     ['name' => 'task_time_extend_request.approve_reject', 'sort_order' => 29000, 'default_checked' => false],
 
+    // Appraisal KPI (30000)
+    ['name' => 'appraisal_kpi.view',   'sort_order' => 30000, 'default_checked' => false],
+    ['name' => 'appraisal_kpi.create', 'sort_order' => 30020, 'default_checked' => false],
+    ['name' => 'appraisal_kpi.edit',   'sort_order' => 30040, 'default_checked' => false],
+    ['name' => 'appraisal_kpi.delete', 'sort_order' => 30060, 'default_checked' => false],
+
 ];
