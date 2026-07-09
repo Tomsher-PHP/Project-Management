@@ -9,18 +9,20 @@ use App\Traits\Sortable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AppraisalKpiCategory extends Model
+class AppraisalCategory extends Model
 {
     use SoftDeletes, Filterable, Sortable, HasFormOptions;
 
     protected $fillable = [
-        'title',
+        'name',
+        'sort_order',
         'is_system',
         'is_active'
     ];
 
     protected $sortable = [
         'name',
+        'sort_order',
     ];
 
     protected $searchable = ['name'];
@@ -29,14 +31,15 @@ class AppraisalKpiCategory extends Model
     {
         return [
             'name' => 'string',
+            'sort_order' => 'integer',
             'is_system' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
 
-    public function items()
+    public function questions()
     {
-        return $this->hasMany(AppraisalKpiQuestions::class)->orderBy('sort_order');
+        return $this->hasMany(AppraisalQuestion::class)->orderBy('sort_order');
     }
 
     public function scopeActive($query)

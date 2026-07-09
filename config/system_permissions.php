@@ -211,10 +211,16 @@ return [
     // Task Time Extend Request (29000)
     ['name' => 'task_time_extend_request.approve_reject', 'sort_order' => 29000, 'default_checked' => false],
 
-    // Appraisal KPI (30000)
-    ['name' => 'appraisal_kpi.view',   'sort_order' => 30000, 'default_checked' => false],
-    ['name' => 'appraisal_kpi.create', 'sort_order' => 30020, 'default_checked' => false],
-    ['name' => 'appraisal_kpi.edit',   'sort_order' => 30040, 'default_checked' => false],
-    ['name' => 'appraisal_kpi.delete', 'sort_order' => 30060, 'default_checked' => false],
+    // Appraisal Settings (30000)
+    ['name' => 'appraisal_settings.view',   'sort_order' => 30000, 'default_checked' => false],
+    ['name' => 'appraisal_settings.create', 'sort_order' => 30020, 'default_checked' => false],
+    ['name' => 'appraisal_settings.edit',   'sort_order' => 30040, 'default_checked' => false],
+    ['name' => 'appraisal_settings.delete', 'sort_order' => 30060, 'default_checked' => false],
+
+    // Appraisal operational (31000)
+    ['name' => 'appraisal.view',   'sort_order' => 31000, 'default_checked' => true],
+    ['name' => 'appraisal.create', 'sort_order' => 31020, 'default_checked' => false],
+    ['name' => 'appraisal.edit',   'sort_order' => 31040, 'default_checked' => false],
+    ['name' => 'appraisal.delete', 'sort_order' => 31060, 'default_checked' => false]
 
 ];

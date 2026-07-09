@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('appraisal_kpi_categories', function (Blueprint $table) {
+        Schema::create('appraisal_questions', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
+            $table->foreignId('appraisal_category_id')->constrained('appraisal_categories')->onDelete('cascade');
 
-            $table->boolean('is_system')->default(false);
+            $table->text('question');
+            $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
-            $table->softDeletes();
 
-            $table->index('is_active');
+            $table->index('appraisal_category_id');
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('appraisal_kpi_categories');
+        Schema::dropIfExists('appraisal_questions');
     }
 };

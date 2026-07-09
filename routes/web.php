@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalKpiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
@@ -253,13 +254,13 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.delete')->only(['destroy']);
         // End Checklists templates routes
 
-        // Appraisal Kpis routes
-        Route::patch('/appraisal-kpis/toggle-status', [AppraisalKpiController::class, 'toggleStatusChecklist'])->middleware('permission.type:appraisal_kpi.edit')->name('checklist.toggleStatus');
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.view')->only(['index']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.create')->only(['store']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.edit')->only(['update']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.delete')->only(['destroy']);
-        // End appraisal-kpis templates routes
+        // Appraisal categories routes
+        Route::patch('/appraisal/toggle-status', [AppraisalCategoryController::class, 'toggleStatus'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleStatus');
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.view')->only(['index']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.create')->only(['store']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
+        // End appraisal categories routes
         
     });
     // End Settings Routes

@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AppraisalKpiQuestions extends Model
+class AppraisalQuestion extends Model
 {
     protected $fillable = [
-        'appraisal_kpi_category_id',
+        'appraisal_category_id',
         'question',
         'sort_order',
         'is_active',
@@ -20,12 +20,18 @@ class AppraisalKpiQuestions extends Model
         return [
             'question' => 'string',
             'sort_order' => 'integer',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function appraisalCategory()
+    {
+        return $this->belongsTo(AppraisalCategory::class);
     }
 
     public function category()
     {
-        return $this->belongsTo(AppraisalKpiCategory::class);
+        return $this->belongsTo(AppraisalCategory::class, 'appraisal_category_id');
     }
 
     public function scopeActive($query)
