@@ -8,13 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class AppraisalSettingsService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
 
     public function getAppraisalCategories(): Collection
     {
