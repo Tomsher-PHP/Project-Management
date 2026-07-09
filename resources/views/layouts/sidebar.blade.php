@@ -40,9 +40,11 @@
     $canViewDailyReports = $authUser?->can('reports.daily_time_view');
     $canViewProductivityReports = $authUser?->can('reports.productivity_view');
 
+    $canViewAppraisal = $authUser?->can('appraisal.view');
+
     $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
-    $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
+    $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog || $canViewAppraisal;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
     $isDashboardActive = request()->routeIs('dashboard');
@@ -78,6 +80,8 @@
     $isScheduleShiftActive = request()->routeIs('schedule.shift.*');
     $isSettingsActive = request()->routeIs('settings.*');
     $isActivityLogActive = request()->routeIs('activity.log*');
+
+    $isAppraisalActive = request()->routeIs('appraisal.*');
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -580,59 +584,6 @@
                             </li>
                         @endif
 
-                        <!-- RESOURCES -->
-                        {{-- @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
-                    <li class="item py-[8px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                        <a href="index.html" aria-expanded="{{ $isResourcesReportsMenuActive ? 'true' : 'false' }}">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                        <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="7" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                            <circle cx="14" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                            <path d="M3 16C4.5 13 15.5 13 17 16" stroke="#22C55E" stroke-width="2" stroke-linecap="round" class="path-2" />
-                                        </svg>
-                                    </span>
-                                    <span class="item-text text-base font-medium leading-none {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : '' }}">Resources</span>
-                                </div>
-                                <span class="flex items-center gap-2">
-                                    <svg width="6" height="12" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform {{ $isResourcesReportsMenuActive ? 'rotate-90 ' . $sidebarItemActiveClass : '' }}" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
-                                    </svg>
-                                </span>
-                            </div>
-                        </a>
-                        <ul class="sub-menu ml-2.5 mt-[22px] border-l border-success-100 pl-5 {{ $isResourcesReportsMenuActive ? 'active' : '' }}">
-                            @if ($canViewAttendanceReports)
-                                <!-- Attendance Report -->
-                                <li>
-                                    <a href="#" class="text-sm inline-block py-1.5 font-medium transition-all {{ $isAttendanceReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                        Attendance
-                                    </a>
-                                </li>
-                            @endif
-
-                            @if ($canViewLeaveReports)
-                                <!-- Leave Report -->
-                                <li>
-                                    <a href="#" class="text-sm inline-block py-1.5 font-medium transition-all {{ $isLeaveReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                        Leave
-                                    </a>
-                                </li>
-                            @endif
-
-                            @if ($canViewShiftScheduleReports)
-                                <!-- Shift Schedule Report -->
-                                <li>
-                                    <a href="#" class="text-sm inline-block py-1.5 font-medium transition-all {{ $isShiftScheduleReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                        Shift Schedule
-                                    </a>
-                                </li>
-                            @endif
-                        </ul>
-                    </li>
-                @endif --}}
-
                     </ul>
                 </div>
             @endif
@@ -708,37 +659,28 @@
                             </li>
                         @endif
 
+                        @if ($canViewAppraisal)
+                            <!-- Appraisal -->
+                            <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('appraisal.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M13 3C8.03 3 4 7.03 4 12H1L4.89 15.89L5 16L9 12H6C6 8.13 9.13 5 13 5C16.87 5 20 8.13 20 12C20 15.87 16.87 19 13 19C11.07 19 9.32 18.21 8.06 16.94L6.64 18.36C8.27 20 10.51 21 13 21C17.97 21 22 16.97 22 12C22 7.03 17.97 3 13 3Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M12.5 7V12.5L16 14.6L16.8 13.3L14 11.6V7H12.5Z" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+
                     </ul>
                 </div>
             @endif
-            {{-- <div class="item-wrapper mb-5">
-                <h4 class="border-b border-bgray-200 text-xs font-medium leading-6 text-bgray-700 dark:border-darkblack-400 dark:text-bgray-50">
-
-                </h4>
-                <ul class="mt-2.5">
-                    <li class="item py-[8px] text-bgray-900 dark:text-white">
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="w-full text-left">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                            <svg width="21" height="18" viewBox="0 0 21 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M17.1464 10.4394C16.8536 10.7323 16.8536 11.2072 17.1464 11.5001C17.4393 11.7929 17.9142 11.7929 18.2071 11.5001L19.5 10.2072C20.1834 9.52375 20.1834 8.41571 19.5 7.73229L18.2071 6.4394C17.9142 6.1465 17.4393 6.1465 17.1464 6.4394C16.8536 6.73229 16.8536 7.20716 17.1464 7.50006L17.8661 8.21973H11.75C11.3358 8.21973 11 8.55551 11 8.96973C11 9.38394 11.3358 9.71973 11.75 9.71973H17.8661L17.1464 10.4394Z" fill="#22C55E" class="path-2" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 17.75H12C14.6234 17.75 16.75 15.6234 16.75 13C16.75 12.5858 16.4142 12.25 16 12.25C15.5858 12.25 15.25 12.5858 15.25 13C15.25 14.7949 13.7949 16.25 12 16.25H8.21412C7.34758 17.1733 6.11614 17.75 4.75 17.75ZM8.21412 1.75H12C13.7949 1.75 15.25 3.20507 15.25 5C15.25 5.41421 15.5858 5.75 16 5.75C16.4142 5.75 16.75 5.41421 16.75 5C16.75 2.37665 14.6234 0.25 12 0.25H4.75C6.11614 0.25 7.34758 0.82673 8.21412 1.75Z" fill="#1A202C" class="path-1" />
-                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M0 5C0 2.37665 2.12665 0.25 4.75 0.25C7.37335 0.25 9.5 2.37665 9.5 5V13C9.5 15.6234 7.37335 17.75 4.75 17.75C2.12665 17.75 0 15.6234 0 13V5Z" fill="#1A202C" class="path-1" />
-                                            </svg>
-                                        </span>
-                                        <span class="item-text text-base font-medium leading-none">
-                                            Logout
-                                        </span>
-                                    </div>
-                                </div>
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </div> --}}
         </div>
         <div class="copy-write-text">
             <p class="text-sm text-[#969BA0]">© {{ date('Y') }} All Rights Reserved</p>

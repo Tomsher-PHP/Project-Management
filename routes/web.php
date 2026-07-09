@@ -5,6 +5,7 @@ use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
+use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AppraisalKpiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
@@ -529,6 +530,13 @@ Route::middleware(['auth'])->group(function () {
 
     // User login activity routes
     Route::get('user-login-activity', [UserLoginActivityController::class, 'index'])->name('user.login.activity');
+
+    // Appraisal routes
+    Route::prefix('appraisal')->as('appraisal.')->group(function () {
+        Route::get('/', [AppraisalController::class, 'index'])->middleware('permission.type:appraisal.view')->name('index');
+        Route::get('/assignment-data', [AppraisalController::class, 'assignmentData'])->middleware('permission.type:appraisal.create')->name('assignment-data');
+        Route::post('/assign', [AppraisalController::class, 'assign'])->middleware('permission.type:appraisal.create')->name('assign');
+    });
 
     // Help Center routes
     Route::prefix('help-center')->as('help-center.')->group(function () {

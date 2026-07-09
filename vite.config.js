@@ -34,6 +34,7 @@ export default defineConfig({
                 'resources/js/modules/kpi-form.js',
                 'resources/js/modules/checklist-template-form.js',
                 'resources/js/modules/appraisal/appaisal-settings.js',
+                'resources/js/modules/appraisal/appraisal.js',
                 'resources/js/modules/projects/project-payment.js',
                 'resources/js/modules/workspace/user-timeline.js',
                 'resources/js/modules/workspace/workspace-auto-refresh.js',
