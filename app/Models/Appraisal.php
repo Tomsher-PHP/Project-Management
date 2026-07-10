@@ -45,6 +45,11 @@ class Appraisal extends Model
         return $this->hasMany(AppraisalSnapshotCategory::class)->orderBy('sort_order');
     }
 
+    public function answers()
+    {
+        return $this->hasMany(AppraisalAnswer::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

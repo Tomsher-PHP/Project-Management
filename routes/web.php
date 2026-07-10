@@ -536,6 +536,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/assignment-data', [AppraisalController::class, 'assignmentData'])->middleware('permission.type:appraisal.view')->name('assignment-data');
         Route::post('/assign', [AppraisalController::class, 'assign'])->middleware('permission.type:appraisal.create')->name('assign');
         Route::post('/publish', [AppraisalController::class, 'publish'])->middleware('permission.type:appraisal.create')->name('publish');
+        Route::post('/{appraisal}/agree-kpi', [AppraisalController::class, 'agreeKpi'])->middleware('permission.type:appraisal.view')->name('agree-kpi');
+        Route::get('/{appraisal}/answer-form', [AppraisalController::class, 'answerForm'])->middleware('permission.type:appraisal.view')->name('answer-form');
         Route::get('/{appraisal}', [AppraisalController::class, 'show'])->middleware('permission.type:appraisal.create')->name('show');
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
     });

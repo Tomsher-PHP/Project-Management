@@ -95,4 +95,23 @@ class AppraisalController extends Controller
             'data' => $result,
         ]);
     }
+
+    public function agreeKpi(Appraisal $appraisal): JsonResponse
+    {
+        $result = $this->appraisalService->agreeToKpi($appraisal);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'KPI agreed successfully.',
+            'data' => $result,
+        ]);
+    }
+
+    public function answerForm(Appraisal $appraisal): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $this->appraisalService->getAnswerForm($appraisal),
+        ]);
+    }
 }

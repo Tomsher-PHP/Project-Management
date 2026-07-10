@@ -22,9 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiDescription = root.querySelector('[data-appraisal-kpi-description]');
     const modalCategories = root.querySelector('[data-appraisal-modal-categories]');
     const addCategoryButton = root.querySelector('[data-appraisal-assignment-category-add]');
+    const kpiAgreementModal = root.querySelector('[data-appraisal-kpi-agreement-modal]');
+    const kpiAgreementTitle = root.querySelector('[data-appraisal-kpi-agreement-title]');
+    const kpiAgreementDescription = root.querySelector('[data-appraisal-kpi-agreement-description]');
+    const kpiAgreementCheckbox = root.querySelector('[data-appraisal-kpi-agreement-checkbox]');
+    const kpiAgreementSubmit = root.querySelector('[data-appraisal-kpi-agreement-submit]');
+    const answerModal = root.querySelector('[data-appraisal-answer-modal]');
+    const answerMeta = root.querySelector('[data-appraisal-answer-meta]');
+    const answerKpiTitle = root.querySelector('[data-appraisal-answer-kpi-title]');
+    const answerKpiDescription = root.querySelector('[data-appraisal-answer-kpi-description]');
+    const answerCategoryTitle = root.querySelector('[data-appraisal-answer-category-title]');
+    const answerQuestions = root.querySelector('[data-appraisal-answer-questions]');
+    const answerCategories = root.querySelector('[data-appraisal-answer-categories]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
     const submitButtons = root.querySelectorAll('[data-appraisal-submit]');
+    const authUserId = Number(root.dataset.authUserId || 0);
 
     let assignmentData = { my_appraisals: [], users: [], kpis: [], categories: [] };
     let activeTab = 'my';
@@ -33,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragHandleItem = null;
     let kpiDescriptionEditor = null;
     let modalReadOnly = false;
+    let kpiAgreementAppraisalId = null;
+    let answerFormData = null;
+    let activeAnswerCategoryId = null;
 
     const escapeHtml = (value = '') => String(value)
         .replace(/&/g, '&amp;')
@@ -202,9 +218,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = row.user || {};
             const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
             const cellText = (value) => `<span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(value || '--')}</span>`;
-            const action = row.appraisal_id
-                ? `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-placeholder data-appraisal-id="${escapeHtml(row.appraisal_id)}">Answer</button>`
-                : '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+            const status = String(row.status || '').toLowerCase();
+            const isAssignee = row.is_assignee || Number(user.id) === authUserId;
+            const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
+            const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
+            let action = '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+
+            if (canAgree) {
+                action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-kpi-agree data-appraisal-id="${escapeHtml(row.appraisal_id)}">Agree</button>`;
+            } else if (canAnswer) {
+                action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-placeholder data-appraisal-id="${escapeHtml(row.appraisal_id)}">Answer</button>`;
+            }
 
             return `
                 <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-50 dark:hover:bg-darkblack-500">
@@ -831,6 +855,301 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const findMyAppraisalRow = (appraisalId) => (assignmentData.my_appraisals || [])
+        .find((row) => Number(row.appraisal_id) === Number(appraisalId));
+
+    const canAgreeToKpi = (row = {}) => {
+        const user = row.user || {};
+        const status = String(row.status || '').toLowerCase();
+        const isAssignee = row.is_assignee || Number(user.id) === authUserId;
+
+        return row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
+    };
+
+    const resetKpiAgreementModal = () => {
+        kpiAgreementAppraisalId = null;
+
+        if (kpiAgreementTitle) {
+            kpiAgreementTitle.textContent = '';
+        }
+
+        if (kpiAgreementDescription) {
+            kpiAgreementDescription.innerHTML = '';
+        }
+
+        if (kpiAgreementCheckbox) {
+            kpiAgreementCheckbox.checked = false;
+        }
+
+        if (kpiAgreementSubmit) {
+            kpiAgreementSubmit.disabled = true;
+        }
+    };
+
+    const openKpiAgreementModal = (appraisalId) => {
+        const row = findMyAppraisalRow(appraisalId);
+
+        if (!row || !canAgreeToKpi(row)) {
+            alertError('This KPI cannot be agreed.');
+            return;
+        }
+
+        kpiAgreementAppraisalId = row.appraisal_id;
+
+        if (kpiAgreementTitle) {
+            kpiAgreementTitle.textContent = row.kpi_name || 'Untitled KPI';
+        }
+
+        if (kpiAgreementDescription) {
+            kpiAgreementDescription.innerHTML = normalizeHtml(row.kpi_description || '') || '<p>--</p>';
+        }
+
+        if (kpiAgreementCheckbox) {
+            kpiAgreementCheckbox.checked = false;
+        }
+
+        if (kpiAgreementSubmit) {
+            kpiAgreementSubmit.disabled = true;
+        }
+
+        kpiAgreementModal?.classList.remove('hidden');
+        kpiAgreementModal?.classList.add('flex');
+    };
+
+    const closeKpiAgreementModal = () => {
+        kpiAgreementModal?.classList.add('hidden');
+        kpiAgreementModal?.classList.remove('flex');
+        resetKpiAgreementModal();
+    };
+
+    const submitKpiAgreement = async () => {
+        if (!kpiAgreementAppraisalId || !kpiAgreementCheckbox?.checked) {
+            return;
+        }
+
+        try {
+            const response = await fetch(urlFromTemplate(root.dataset.agreeKpiUrlTemplate, kpiAgreementAppraisalId), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to agree to KPI.');
+            }
+
+            alertSuccess(payload.message || 'KPI agreed successfully.');
+            assignmentData = {
+                ...assignmentData,
+                ...(payload.data || {}),
+            };
+            closeKpiAgreementModal();
+            renderMyAppraisals();
+        } catch (error) {
+            alertError(error.message || 'Unable to agree to KPI.');
+        }
+    };
+
+    const answerValue = (question, field) => question.answer?.[field] ?? '';
+
+    const answerSectionMarkup = (label, ratingField, remarkField, question, editable = false) => {
+        const disabled = editable ? '' : 'disabled';
+        const readonlyClasses = editable ? '' : 'opacity-80';
+
+        return `
+            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
+                <p class="text-sm font-bold text-bgray-900 dark:text-white">${label}</p>
+                <div class="mt-3 grid gap-3 md:grid-cols-[160px_1fr]">
+                    <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Rating</label>
+                        <input type="number" min="0" max="5" step="0.5" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${disabled}>
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Remark</label>
+                        <textarea rows="3" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${disabled}>${escapeHtml(answerValue(question, remarkField))}</textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    const persistVisibleAnswerValues = () => {
+        if (!answerFormData || !answerQuestions) {
+            return;
+        }
+
+        answerQuestions.querySelectorAll('[data-appraisal-answer-input]:not(:disabled)').forEach((input) => {
+            const questionId = Number(input.dataset.questionId);
+            const field = input.dataset.answerField;
+            const question = answerFormData.categories
+                ?.flatMap((category) => category.questions || [])
+                .find((item) => Number(item.id) === questionId);
+
+            if (question && field) {
+                question.answer = {
+                    ...(question.answer || {}),
+                    [field]: input.value,
+                };
+            }
+        });
+    };
+
+    const renderAnswerCategories = () => {
+        if (!answerCategories || !answerFormData) {
+            return;
+        }
+
+        answerCategories.innerHTML = (answerFormData.categories || []).map((category) => {
+            const isActive = Number(category.id) === Number(activeAnswerCategoryId);
+            const classes = isActive
+                ? 'border-success-300 bg-success-50 text-success-500 dark:border-success-900/50 dark:bg-darkblack-600 dark:text-success-300'
+                : 'border-bgray-200 bg-white text-bgray-700 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50';
+
+            return `
+                <button type="button" class="w-full rounded-lg border px-3 py-3 text-left transition ${classes}" data-appraisal-answer-category-id="${escapeHtml(category.id)}">
+                    <span class="block text-sm font-bold">${escapeHtml(category.name)}</span>
+                    <span class="mt-1 block text-xs font-medium opacity-80">(${(category.questions || []).length} ${(category.questions || []).length === 1 ? 'Question' : 'Questions'})</span>
+                </button>
+            `;
+        }).join('');
+    };
+
+    const renderAnswerQuestions = () => {
+        if (!answerFormData || !answerQuestions) {
+            return;
+        }
+
+        const category = (answerFormData.categories || []).find((item) => Number(item.id) === Number(activeAnswerCategoryId));
+
+        if (!category) {
+            if (answerCategoryTitle) {
+                answerCategoryTitle.textContent = '';
+            }
+
+            answerQuestions.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No questions found.</div>';
+            return;
+        }
+
+        if (answerCategoryTitle) {
+            answerCategoryTitle.textContent = category.name;
+        }
+
+        answerQuestions.innerHTML = (category.questions || []).map((question, index) => {
+            const sections = [];
+
+            if (answerFormData.role === 'assignee') {
+                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, true));
+            }
+
+            if (answerFormData.role === 'reporter') {
+                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, false));
+                sections.push(answerSectionMarkup('Reporter', 'reporter_rating', 'reporter_remark', question, true));
+            }
+
+            if (answerFormData.role === 'manager') {
+                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, false));
+                sections.push(answerSectionMarkup('Reporter', 'reporter_rating', 'reporter_remark', question, false));
+                sections.push(answerSectionMarkup('Manager', 'manager_rating', 'manager_remark', question, true));
+            }
+
+            return `
+                <article class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
+                    <div class="flex gap-3">
+                        <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
+                        <p class="pt-1 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
+                    </div>
+                    <div class="mt-4 space-y-3">
+                        ${sections.join('')}
+                    </div>
+                </article>
+            `;
+        }).join('');
+    };
+
+    const renderAnswerModal = () => {
+        if (!answerFormData) {
+            return;
+        }
+
+        if (answerMeta) {
+            answerMeta.textContent = `${answerFormData.role_label || 'Reviewer'} • ${answerFormData.assignee?.name || 'Assignee'}`;
+        }
+
+        if (answerKpiTitle) {
+            answerKpiTitle.textContent = answerFormData.kpi_name || 'Untitled KPI';
+        }
+
+        if (answerKpiDescription) {
+            answerKpiDescription.innerHTML = normalizeHtml(answerFormData.kpi_description || '') || '<p>--</p>';
+        }
+
+        activeAnswerCategoryId = answerFormData.categories?.[0]?.id || null;
+        renderAnswerCategories();
+        renderAnswerQuestions();
+    };
+
+    const openAnswerModal = async (appraisalId) => {
+        if (!appraisalId) {
+            alertError('Appraisal not found.');
+            return;
+        }
+
+        try {
+            const response = await fetch(urlFromTemplate(root.dataset.answerFormUrlTemplate, appraisalId), {
+                headers: { Accept: 'application/json' },
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to load appraisal.');
+            }
+
+            answerFormData = payload.data;
+            renderAnswerModal();
+            answerModal?.classList.remove('hidden');
+            answerModal?.classList.add('flex');
+        } catch (error) {
+            alertError(error.message || 'Unable to load appraisal.');
+        }
+    };
+
+    const closeAnswerModal = () => {
+        answerModal?.classList.add('hidden');
+        answerModal?.classList.remove('flex');
+        answerFormData = null;
+        activeAnswerCategoryId = null;
+
+        if (answerMeta) {
+            answerMeta.textContent = '';
+        }
+
+        if (answerKpiTitle) {
+            answerKpiTitle.textContent = '';
+        }
+
+        if (answerKpiDescription) {
+            answerKpiDescription.innerHTML = '';
+        }
+
+        if (answerCategoryTitle) {
+            answerCategoryTitle.textContent = '';
+        }
+
+        if (answerQuestions) {
+            answerQuestions.innerHTML = '';
+        }
+
+        if (answerCategories) {
+            answerCategories.innerHTML = '';
+        }
+    };
+
     const setActiveTab = (tab) => {
         activeTab = tab;
 
@@ -933,6 +1252,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedKpi = (assignmentData.kpis || []).find((kpi) => Number(kpi.id) === Number(event.target.value));
 
             setKpiDescription(selectedKpi?.description || '');
+            return;
+        }
+
+        if (event.target.matches('[data-appraisal-kpi-agreement-checkbox]')) {
+            if (kpiAgreementSubmit) {
+                kpiAgreementSubmit.disabled = !event.target.checked;
+            }
         }
     });
 
@@ -960,7 +1286,42 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (event.target.closest('[data-appraisal-answer-placeholder]')) {
+        const agreeKpiButton = event.target.closest('[data-appraisal-kpi-agree]');
+
+        if (agreeKpiButton) {
+            openKpiAgreementModal(Number(agreeKpiButton.dataset.appraisalId));
+            return;
+        }
+
+        const answerButton = event.target.closest('[data-appraisal-answer-placeholder]');
+
+        if (answerButton) {
+            openAnswerModal(Number(answerButton.dataset.appraisalId));
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-kpi-agreement-close]')) {
+            closeKpiAgreementModal();
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-kpi-agreement-submit]')) {
+            submitKpiAgreement();
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-answer-close]')) {
+            closeAnswerModal();
+            return;
+        }
+
+        const answerCategoryButton = event.target.closest('[data-appraisal-answer-category-id]');
+
+        if (answerCategoryButton) {
+            persistVisibleAnswerValues();
+            activeAnswerCategoryId = Number(answerCategoryButton.dataset.appraisalAnswerCategoryId);
+            renderAnswerCategories();
+            renderAnswerQuestions();
             return;
         }
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appraisal;
+use App\Models\AppraisalAnswer;
 use App\Models\AppraisalCategory;
 use App\Models\Kpi;
 use App\Models\User;
@@ -105,14 +106,18 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $users->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
+            ->with('user.details')
             ->get()
             ->keyBy('user_id');
 
         return $users
             ->map(function (User $user) use ($appraisals) {
                 $appraisal = $appraisals->get($user->id);
+                $answerRole = $appraisal ? $this->resolveAnswerRole($appraisal) : null;
+                $canAnswer = $appraisal ? $this->canOpenAnswerForm($appraisal, $answerRole) : false;
 
                 return [
+                    'is_assignee' => (int) $user->id === (int) auth()->id(),
                     'user' => [
                         'id' => $user->id,
                         'name' => $user->name,
@@ -122,6 +127,8 @@ class AppraisalService
                         'designation' => $user->details?->designation?->name,
                     ],
                     'appraisal_id' => $appraisal?->id,
+                    'kpi_name' => $appraisal?->kpi_name,
+                    'kpi_description' => $appraisal?->kpi_description,
                     'status' => $appraisal?->status,
                     'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
                     'assignee_submitted_at' => $this->formatDateTime($appraisal?->assignee_submitted_at),
@@ -129,7 +136,12 @@ class AppraisalService
                     'manager_submitted_at' => $this->formatDateTime($appraisal?->manager_submitted_at),
                     'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
                     'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
-                    'can_answer' => (bool) $appraisal,
+                    'can_agree' => $appraisal
+                        && (int) $appraisal->user_id === (int) auth()->id()
+                        && strtolower((string) $appraisal->status) === 'published'
+                        && blank($appraisal->kpi_agreed_at),
+                    'answer_role' => $answerRole,
+                    'can_answer' => $canAnswer,
                 ];
             })
             ->values()
@@ -284,6 +296,105 @@ class AppraisalService
         ];
     }
 
+    public function agreeToKpi(Appraisal $appraisal): array
+    {
+        if ((int) $appraisal->user_id !== (int) auth()->id()) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'Only the appraisal assignee can agree to this KPI.',
+            ]);
+        }
+
+        if ($appraisal->status !== 'published') {
+            throw ValidationException::withMessages([
+                'appraisal' => 'Only published appraisals can be agreed.',
+            ]);
+        }
+
+        if (filled($appraisal->kpi_agreed_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'This KPI has already been agreed.',
+            ]);
+        }
+
+        DB::transaction(function () use ($appraisal) {
+            $appraisal->update([
+                'kpi_agreed_at' => now(),
+            ]);
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+        ];
+    }
+
+    public function getAnswerForm(Appraisal $appraisal): array
+    {
+        $appraisal->load([
+            'user:id,name,email',
+            'user.details',
+            'snapshotCategories.questions',
+            'answers',
+        ]);
+
+        $role = $this->resolveAnswerRole($appraisal);
+
+        if (! $role) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'This appraisal is not available for answering.',
+            ]);
+        }
+
+        if (! $this->canOpenAnswerForm($appraisal, $role)) {
+            throw ValidationException::withMessages([
+                'appraisal' => $this->answerWorkflowMessage($role),
+            ]);
+        }
+
+        $answers = $appraisal->answers->keyBy('appraisal_snapshot_question_id');
+
+        return [
+            'id' => $appraisal->id,
+            'role' => $role,
+            'role_label' => str($role)->headline()->toString(),
+            'assignee' => [
+                'id' => $appraisal->user?->id,
+                'name' => $appraisal->user?->name,
+                'email' => $appraisal->user?->email,
+            ],
+            'kpi_name' => $appraisal->kpi_name,
+            'kpi_description' => $appraisal->kpi_description,
+            'status' => $appraisal->status,
+            'categories' => $appraisal->snapshotCategories
+                ->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'sort_order' => $category->sort_order,
+                    'questions' => $category->questions
+                        ->map(function ($question) use ($answers) {
+                            $answer = $answers->get($question->id);
+
+                            return [
+                                'id' => $question->id,
+                                'question' => $question->question,
+                                'sort_order' => $question->sort_order,
+                                'answer' => [
+                                    'assignee_rating' => $answer?->assignee_rating,
+                                    'assignee_remark' => $answer?->assignee_remark,
+                                    'reporter_rating' => $answer?->reporter_rating,
+                                    'reporter_remark' => $answer?->reporter_remark,
+                                    'manager_rating' => $answer?->manager_rating,
+                                    'manager_remark' => $answer?->manager_remark,
+                                ],
+                            ];
+                        })
+                        ->values()
+                        ->all(),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
     private function ensureAppraisalUserIsAccessible(Appraisal $appraisal, string $action): void
     {
         $isAccessible = User::query()
@@ -301,6 +412,51 @@ class AppraisalService
     private function formatDateTime($dateTime): ?string
     {
         return $dateTime ? $dateTime->format('M d, Y h:i A') : null;
+    }
+
+    private function resolveAnswerRole(Appraisal $appraisal): ?string
+    {
+        $authId = (int) auth()->id();
+
+        if ((int) $appraisal->user_id === $authId) {
+            return 'assignee';
+        }
+
+        $details = $appraisal->user?->details;
+
+        if ($details && (int) $details->reporter_id === $authId) {
+            return 'reporter';
+        }
+
+        if ($details && (int) $details->manager_id === $authId) {
+            return 'manager';
+        }
+
+        return null;
+    }
+
+    private function canOpenAnswerForm(Appraisal $appraisal, ?string $role): bool
+    {
+        if (! $role || ! in_array(strtolower((string) $appraisal->status), ['published', 'completed', 'closed'], true)) {
+            return false;
+        }
+
+        return match ($role) {
+            'assignee' => filled($appraisal->kpi_agreed_at),
+            'reporter' => filled($appraisal->assignee_submitted_at),
+            'manager' => filled($appraisal->reporter_submitted_at),
+            default => false,
+        };
+    }
+
+    private function answerWorkflowMessage(string $role): string
+    {
+        return match ($role) {
+            'assignee' => 'Please agree to the KPI before answering this appraisal.',
+            'reporter' => 'The assignee must submit this appraisal before reporter review.',
+            'manager' => 'The reporter must submit this appraisal before manager review.',
+            default => 'This appraisal cannot be answered yet.',
+        };
     }
 
     private function formatAppraisalSnapshot(Appraisal $appraisal): array
