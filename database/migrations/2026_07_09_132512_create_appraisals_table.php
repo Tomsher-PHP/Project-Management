@@ -25,10 +25,19 @@ return new class extends Migration
 
             $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft');
 
+            // Workflow
             $table->timestamp('published_at')->nullable();
+
+            $table->timestamp('assignee_submitted_at')->nullable();
+            $table->timestamp('reporter_submitted_at')->nullable();
+            $table->timestamp('manager_submitted_at')->nullable();
+
+            $table->timestamp('completed_at')->nullable();
+
             $table->foreignId('published_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
             $table->softDeletes();
