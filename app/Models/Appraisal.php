@@ -28,6 +28,9 @@ class Appraisal extends Model
             'year' => 'integer',
             'month' => 'integer',
             'published_at' => 'datetime',
+            'assignee_submitted_at' => 'datetime',
+            'reporter_submitted_at' => 'datetime',
+            'manager_submitted_at' => 'datetime',
             'kpi_agreed_at' => 'datetime',
         ];
     }

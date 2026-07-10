@@ -110,6 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
     };
 
+    const kpiAgreementBadge = (isAgreed = false) => {
+        const label = isAgreed ? 'Agreed' : 'Not Agreed';
+        const classes = isAgreed
+            ? 'bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300'
+            : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
+
+        return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
+    };
+
     const categoryBadges = (user) => {
         const categories = user.categories || [];
 
@@ -185,34 +194,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const appraisals = assignmentData.my_appraisals || [];
 
         if (!appraisals.length) {
-            myAppraisalsContainer.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No published appraisals found for this period.</div>';
+            myAppraisalsContainer.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
             return;
         }
 
-        myAppraisalsContainer.innerHTML = appraisals.map((appraisal) => `
-            <article class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h4 class="text-base font-bold text-bgray-900 dark:text-white">${escapeHtml(appraisal.kpi_name || 'Untitled KPI')}</h4>
-                            ${statusBadge(appraisal)}
+        myAppraisalsContainer.innerHTML = appraisals.map((row) => {
+            const user = row.user || {};
+            const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
+            const cellText = (value) => `<span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(value || '--')}</span>`;
+            const action = row.appraisal_id
+                ? `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-placeholder data-appraisal-id="${escapeHtml(row.appraisal_id)}">Answer</button>`
+                : '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+
+            return `
+                <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                    <td class="px-4 py-4 xl:px-0">
+                        <div class="flex items-center gap-3">
+                            ${userAvatar(user)}
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(user.name || 'User')}</p>
+                                <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">${escapeHtml(meta)}</p>
+                            </div>
                         </div>
-                        <p class="mt-1 text-xs font-medium text-bgray-500 dark:text-bgray-300">${escapeHtml(appraisal.published_at ? `Published ${appraisal.published_at}` : '')}</p>
-                    </div>
-                </div>
-                <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-300">${appraisal.kpi_description || ''}</div>
-                <div class="mt-4 space-y-3">
-                    ${(appraisal.categories || []).map((category) => `
-                        <div class="rounded-lg bg-white p-3 dark:bg-darkblack-600">
-                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(category.name)}</p>
-                            <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-bgray-700 dark:text-bgray-300">
-                                ${(category.questions || []).map((question) => `<li>${escapeHtml(question.question)}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `).join('')}
-                </div>
-            </article>
-        `).join('');
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">${cellText(row.assignee_submitted_at)}</td>
+                    <td class="px-4 py-4 xl:px-0">${cellText(row.reporter_submitted_at)}</td>
+                    <td class="px-4 py-4 xl:px-0">${cellText(row.manager_submitted_at)}</td>
+                    <td class="px-4 py-4 xl:px-0">${cellText(row.kpi_agreed_at)}</td>
+                    <td class="px-4 py-4 xl:px-0">${kpiAgreementBadge(row.kpi_agreed)}</td>
+                    <td class="px-4 py-4 xl:px-0">${action}</td>
+                </tr>
+            `;
+        }).join('');
     };
 
     const renderUsers = () => {
@@ -944,6 +957,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (event.target.closest('[data-appraisal-publish-selected]')) {
             publishAppraisals(selectedDraftUserIds());
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-answer-placeholder]')) {
             return;
         }
 

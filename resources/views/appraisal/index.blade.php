@@ -57,7 +57,36 @@
                     </div>
                 </div>
 
-                <div class="mt-5 space-y-4" data-appraisal-my-list></div>
+                <div class="table-content mt-5 w-full overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                <th class="px-4 py-4 text-left xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Assignee Submitted At</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporter Submitted At</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Manager Submitted At</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[160px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreed At</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreement</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[100px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Action</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody data-appraisal-my-list></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 

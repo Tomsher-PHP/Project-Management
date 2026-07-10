@@ -45,7 +45,6 @@ class AppraisalService
     {
         $users = User::query()
             ->accessibleBy(auth()->user())
-            ->active()
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name')
             ->get();
@@ -84,34 +83,55 @@ class AppraisalService
 
     public function getMyAppraisals(int $month, int $year): array
     {
-        return Appraisal::query()
+        $users = User::query()
+            ->accessibleBy(auth()->user())
+            ->active()
+            ->with(['details.department', 'details.designation', 'primaryAttachment'])
+            ->orderBy('name')
+            ->get();
+
+        if (auth()->id() && ! $users->contains('id', auth()->id())) {
+            $authUser = User::query()
+                ->with(['details.department', 'details.designation', 'primaryAttachment'])
+                ->find(auth()->id());
+
+            if ($authUser) {
+                $users->prepend($authUser);
+            }
+        }
+
+        $appraisals = Appraisal::query()
             ->where('month', $month)
             ->where('year', $year)
-            ->where('user_id', auth()->id())
+            ->whereIn('user_id', $users->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
-            ->with('snapshotCategories.questions')
-            ->orderByDesc('published_at')
             ->get()
-            ->map(fn (Appraisal $appraisal) => [
-                'id' => $appraisal->id,
-                'kpi_name' => $appraisal->kpi_name,
-                'kpi_description' => $appraisal->kpi_description,
-                'status' => $appraisal->status,
-                'status_label' => str($appraisal->status)->headline()->toString(),
-                'published_at' => $appraisal->published_at?->format('M d, Y h:i A'),
-                'categories' => $appraisal->snapshotCategories
-                    ->map(fn ($category) => [
-                        'name' => $category->name,
-                        'questions' => $category->questions
-                            ->map(fn ($question) => [
-                                'question' => $question->question,
-                            ])
-                            ->values()
-                            ->all(),
-                    ])
-                    ->values()
-                    ->all(),
-            ])
+            ->keyBy('user_id');
+
+        return $users
+            ->map(function (User $user) use ($appraisals) {
+                $appraisal = $appraisals->get($user->id);
+
+                return [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'profile_image_url' => $user->profile_image_url,
+                        'department' => $user->details?->department?->name,
+                        'designation' => $user->details?->designation?->name,
+                    ],
+                    'appraisal_id' => $appraisal?->id,
+                    'status' => $appraisal?->status,
+                    'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
+                    'assignee_submitted_at' => $this->formatDateTime($appraisal?->assignee_submitted_at),
+                    'reporter_submitted_at' => $this->formatDateTime($appraisal?->reporter_submitted_at),
+                    'manager_submitted_at' => $this->formatDateTime($appraisal?->manager_submitted_at),
+                    'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
+                    'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
+                    'can_answer' => (bool) $appraisal,
+                ];
+            })
             ->values()
             ->all();
     }
@@ -276,6 +296,11 @@ class AppraisalService
                 'appraisal' => "This appraisal is not available for {$action}.",
             ]);
         }
+    }
+
+    private function formatDateTime($dateTime): ?string
+    {
+        return $dateTime ? $dateTime->format('M d, Y h:i A') : null;
     }
 
     private function formatAppraisalSnapshot(Appraisal $appraisal): array
