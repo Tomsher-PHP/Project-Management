@@ -13,6 +13,9 @@ class Appraisal extends Model
         'year',
         'month',
         'user_id',
+        'kpi_name',
+        'kpi_description',
+        'kpi_agreed_at',
         'status',
         'published_at',
         'published_by',
@@ -25,6 +28,7 @@ class Appraisal extends Model
             'year' => 'integer',
             'month' => 'integer',
             'published_at' => 'datetime',
+            'kpi_agreed_at' => 'datetime',
         ];
     }
 

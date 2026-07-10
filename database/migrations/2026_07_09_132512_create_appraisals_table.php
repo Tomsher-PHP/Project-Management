@@ -19,7 +19,11 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            $table->enum('status', ['draft', 'published', 'completed', 'closed',])->default('draft');
+            $table->string('kpi_name', 255)->nullable();
+            $table->longText('kpi_description')->nullable();
+            $table->timestamp('kpi_agreed_at')->nullable();
+
+            $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft');
 
             $table->timestamp('published_at')->nullable();
             $table->foreignId('published_by')->nullable()->constrained('users')->nullOnDelete();
