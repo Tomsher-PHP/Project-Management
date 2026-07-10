@@ -114,4 +114,60 @@ class AppraisalController extends Controller
             'data' => $this->appraisalService->getAnswerForm($appraisal),
         ]);
     }
+
+    public function submitAnswers(Request $request, Appraisal $appraisal): JsonResponse
+    {
+        $validated = $request->validate([
+            'answers' => ['required', 'array'],
+            'answers.*.question_id' => ['required', 'integer'],
+            'answers.*.rating' => [
+                'required',
+                'numeric',
+                'min:0.1',
+                'max:5.0',
+                function ($attribute, $value, $fail) {
+                    if (strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
+                        $fail('The rating must have at most one decimal place.');
+                    }
+                }
+            ],
+            'answers.*.remark' => ['required', 'string'],
+        ]);
+
+        $result = $this->appraisalService->submitAnswers($appraisal, $validated['answers']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Appraisal answers submitted successfully.',
+            'data' => $result,
+        ]);
+    }
+
+    public function saveDraft(Request $request, Appraisal $appraisal): JsonResponse
+    {
+        $validated = $request->validate([
+            'answers' => ['required', 'array'],
+            'answers.*.question_id' => ['required', 'integer'],
+            'answers.*.rating' => [
+                'nullable',
+                'numeric',
+                'min:0.1',
+                'max:5.0',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
+                        $fail('The rating must have at most one decimal place.');
+                    }
+                }
+            ],
+            'answers.*.remark' => ['nullable', 'string'],
+        ]);
+
+        $result = $this->appraisalService->saveDraft($appraisal, $validated['answers']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Draft saved successfully.',
+            'data' => $result,
+        ]);
+    }
 }

@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const answerCategoryTitle = root.querySelector('[data-appraisal-answer-category-title]');
     const answerQuestions = root.querySelector('[data-appraisal-answer-questions]');
     const answerCategories = root.querySelector('[data-appraisal-answer-categories]');
+    const answerSubmit = root.querySelector('[data-appraisal-answer-submit]');
+    const answerSaveDraft = root.querySelector('[data-appraisal-answer-save-draft]');
+    const answerHelperMessage = root.querySelector('[data-appraisal-answer-helper-message]');
+    const overallCount = root.querySelector('[data-appraisal-answer-overall-count]');
+    const overallPercentage = root.querySelector('[data-appraisal-answer-overall-percentage]');
+    const overallBar = root.querySelector('[data-appraisal-answer-overall-bar]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
     const submitButtons = root.querySelectorAll('[data-appraisal-submit]');
@@ -955,6 +961,222 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const saveAppraisalDraft = async () => {
+        if (!answerFormData || !answerSaveDraft) {
+            return;
+        }
+
+        persistVisibleAnswerValues();
+
+        const role = answerFormData.role;
+        const answersList = [];
+        (answerFormData.categories || []).forEach((category) => {
+            (category.questions || []).forEach((question) => {
+                const rating = question.answer?.[`${role}_rating`];
+                const remark = question.answer?.[`${role}_remark`];
+
+                let ratingVal = null;
+                if (rating !== undefined && rating !== null && rating !== '') {
+                    ratingVal = Number(rating);
+                    if (isNaN(ratingVal)) {
+                        ratingVal = rating;
+                    }
+                }
+
+                answersList.push({
+                    question_id: question.id,
+                    rating: ratingVal,
+                    remark: remark !== undefined && remark !== null ? String(remark).trim() : null,
+                });
+            });
+        });
+
+        const originalText = answerSaveDraft.textContent;
+        answerSaveDraft.disabled = true;
+        answerSaveDraft.textContent = 'Saving...';
+
+        try {
+            const response = await fetch(urlFromTemplate(root.dataset.saveDraftUrlTemplate, answerFormData.id), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({ answers: answersList }),
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to save draft.');
+            }
+
+            alertSuccess(payload.message || 'Draft saved successfully.');
+            assignmentData = {
+                ...assignmentData,
+                ...(payload.data || {}),
+            };
+            renderMyAppraisals();
+        } catch (error) {
+            alertError(error.message || 'Unable to save draft.');
+        } finally {
+            if (answerSaveDraft) {
+                answerSaveDraft.disabled = false;
+                answerSaveDraft.textContent = originalText;
+            }
+        }
+    };
+
+    const submitAppraisalAnswers = async () => {
+        if (!answerFormData || !answerSubmit) {
+            return;
+        }
+
+        persistVisibleAnswerValues();
+
+        const role = answerFormData.role;
+        const answersList = [];
+
+        let allCompleted = true;
+        (answerFormData.categories || []).forEach((category) => {
+            (category.questions || []).forEach((question) => {
+                const rating = question.answer?.[`${role}_rating`];
+                const remark = question.answer?.[`${role}_remark`];
+
+                if (!isQuestionCompleted(question, role)) {
+                    allCompleted = false;
+                }
+
+                answersList.push({
+                    question_id: question.id,
+                    rating: rating === '' ? null : Number(rating),
+                    remark: String(remark || '').trim(),
+                });
+            });
+        });
+
+        if (!allCompleted) {
+            alertError('Please complete all questions before submitting.');
+            return;
+        }
+
+        const originalText = answerSubmit.textContent;
+        answerSubmit.disabled = true;
+        answerSubmit.textContent = 'Submitting...';
+
+        try {
+            const response = await fetch(urlFromTemplate(root.dataset.submitAnswersUrlTemplate, answerFormData.id), {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({ answers: answersList }),
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to submit answers.');
+            }
+
+            alertSuccess(payload.message || 'Appraisal answers submitted successfully.');
+            assignmentData = {
+                ...assignmentData,
+                ...(payload.data || {}),
+            };
+            closeAnswerModal();
+            renderMyAppraisals();
+        } catch (error) {
+            alertError(error.message || 'Unable to submit answers.');
+        } finally {
+            if (answerSubmit) {
+                answerSubmit.disabled = false;
+                answerSubmit.textContent = originalText;
+            }
+        }
+    };
+
+    const isQuestionCompleted = (question, role) => {
+        const rating = question.answer?.[`${role}_rating`];
+        const remark = question.answer?.[`${role}_remark`];
+
+        if (rating === undefined || rating === null || rating === '') {
+            return false;
+        }
+        const numericRating = Number(rating);
+        if (isNaN(numericRating) || numericRating < 0.1 || numericRating > 5.0) {
+            return false;
+        }
+
+        if (Number(numericRating.toFixed(1)) !== numericRating) {
+            return false;
+        }
+
+        if (remark === undefined || remark === null || String(remark).trim() === '') {
+            return false;
+        }
+
+        return true;
+    };
+
+    const updateAnswerProgress = () => {
+        if (!answerFormData) {
+            return;
+        }
+
+        renderAnswerCategories();
+
+        const role = answerFormData.role;
+        let allCompleted = true;
+        let totalQuestions = 0;
+        let completedQuestions = 0;
+
+        (answerFormData.categories || []).forEach((category) => {
+            (category.questions || []).forEach((question) => {
+                totalQuestions++;
+                if (isQuestionCompleted(question, role)) {
+                    completedQuestions++;
+                } else {
+                    allCompleted = false;
+                }
+            });
+        });
+
+        const percentage = totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0;
+
+        if (overallCount) {
+            overallCount.textContent = `${completedQuestions} / ${totalQuestions} Questions`;
+        }
+        if (overallPercentage) {
+            overallPercentage.textContent = `${percentage}%`;
+        }
+        if (overallBar) {
+            overallBar.style.width = `${percentage}%`;
+        }
+
+        if (answerSubmit) {
+            if (allCompleted && totalQuestions > 0) {
+                answerSubmit.disabled = false;
+                answerSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                answerSubmit.disabled = true;
+                answerSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        if (answerHelperMessage) {
+            if (allCompleted && totalQuestions > 0) {
+                answerHelperMessage.classList.add('hidden');
+            } else {
+                answerHelperMessage.classList.remove('hidden');
+                answerHelperMessage.textContent = 'All questions must be answered before submitting. You can save your progress as a draft anytime.';
+            }
+        }
+    };
+
     const answerValue = (question, field) => question.answer?.[field] ?? '';
 
     const answerSectionMarkup = (label, ratingField, remarkField, question, editable = false) => {
@@ -1006,14 +1228,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         answerCategories.innerHTML = (answerFormData.categories || []).map((category) => {
             const isActive = Number(category.id) === Number(activeAnswerCategoryId);
+            
+            const totalQuestions = (category.questions || []).length;
+            const answeredCount = (category.questions || []).filter(q => isQuestionCompleted(q, answerFormData.role)).length;
+            const isCompleted = answeredCount === totalQuestions;
+
             const classes = isActive
                 ? 'border-success-300 bg-success-50 text-success-500 dark:border-success-900/50 dark:bg-darkblack-600 dark:text-success-300'
                 : 'border-bgray-200 bg-white text-bgray-700 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50';
 
+            const progressText = isCompleted
+                ? `✓ ${answeredCount} / ${totalQuestions} Completed`
+                : `${answeredCount} / ${totalQuestions} Questions`;
+
+            const textClasses = isCompleted ? 'text-success-500 dark:text-success-300 font-bold' : 'opacity-80';
+
             return `
                 <button type="button" class="w-full rounded-lg border px-3 py-3 text-left transition ${classes}" data-appraisal-answer-category-id="${escapeHtml(category.id)}">
                     <span class="block text-sm font-bold">${escapeHtml(category.name)}</span>
-                    <span class="mt-1 block text-xs font-medium opacity-80">(${(category.questions || []).length} ${(category.questions || []).length === 1 ? 'Question' : 'Questions'})</span>
+                    <span class="mt-1 block text-xs font-medium ${textClasses}">${progressText}</span>
                 </button>
             `;
         }).join('');
@@ -1111,6 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activeAnswerCategoryId = answerFormData.categories?.[0]?.id || null;
         renderAnswerCategories();
         renderAnswerQuestions();
+        updateAnswerProgress();
     };
 
     const openAnswerModal = async (appraisalId) => {
@@ -1279,12 +1513,48 @@ document.addEventListener('DOMContentLoaded', () => {
             if (kpiAgreementSubmit) {
                 kpiAgreementSubmit.disabled = !event.target.checked;
             }
+            return;
+        }
+
+        if (event.target.matches('[data-appraisal-answer-input]')) {
+            const input = event.target;
+            const questionId = Number(input.dataset.questionId);
+            const field = input.dataset.answerField;
+            const question = answerFormData?.categories
+                ?.flatMap((category) => category.questions || [])
+                .find((item) => Number(item.id) === questionId);
+
+            if (question && field) {
+                question.answer = {
+                    ...(question.answer || {}),
+                    [field]: input.value,
+                };
+                updateAnswerProgress();
+            }
         }
     });
 
     root.addEventListener('input', (event) => {
         if (event.target.matches('[data-appraisal-user-search]')) {
             renderUsers();
+            return;
+        }
+
+        if (event.target.matches('[data-appraisal-answer-input]')) {
+            const input = event.target;
+            const questionId = Number(input.dataset.questionId);
+            const field = input.dataset.answerField;
+            const question = answerFormData?.categories
+                ?.flatMap((category) => category.questions || [])
+                .find((item) => Number(item.id) === questionId);
+
+            if (question && field) {
+                question.answer = {
+                    ...(question.answer || {}),
+                    [field]: input.value,
+                };
+                updateAnswerProgress();
+            }
         }
     });
 
@@ -1332,6 +1602,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (event.target.closest('[data-appraisal-answer-close]')) {
             closeAnswerModal();
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-answer-submit]')) {
+            submitAppraisalAnswers();
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-answer-save-draft]')) {
+            saveAppraisalDraft();
             return;
         }
 

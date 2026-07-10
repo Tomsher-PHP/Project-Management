@@ -5,7 +5,7 @@
         $canAssignAppraisals = auth()->user()?->can('appraisal.create');
     @endphp
 
-    <div class="space-y-6" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-form-url-template="{{ route('appraisal.answer-form', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
+    <div class="space-y-6" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-form-url-template="{{ route('appraisal.answer-form', ['appraisal' => '__ID__']) }}" data-submit-answers-url-template="{{ route('appraisal.submit-answers', ['appraisal' => '__ID__']) }}" data-save-draft-url-template="{{ route('appraisal.save-draft', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
         <script type="application/json" data-appraisal-initial-data>
             @json($assignmentData)
         </script>
@@ -240,7 +240,7 @@
                         <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-answer-close aria-label="Close">×</button>
                     </div>
 
-                    <div class="grid h-[calc(85vh-82px)] grid-cols-1 overflow-hidden lg:grid-cols-4">
+                    <div class="grid h-[calc(85vh-150px)] grid-cols-1 overflow-hidden lg:grid-cols-4">
                         <div class="h-full overflow-y-auto px-6 py-5 lg:col-span-3">
                             <div class="mt-5">
                                 <h4 class="text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title></h4>
@@ -249,9 +249,32 @@
                         </div>
 
                         <aside class="border-t border-bgray-200 bg-bgray-50 px-4 py-5 dark:border-darkblack-400 dark:bg-darkblack-500 lg:h-full lg:overflow-y-auto lg:border-l lg:border-t-0">
+                            <!-- Overall Progress Card -->
+                            <div class="mb-6 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                <h5 class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Overall Progress</h5>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-sm font-bold text-bgray-900 dark:text-white" data-appraisal-answer-overall-count>0 / 0 Questions</span>
+                                    <span class="text-sm font-bold text-success-500 dark:text-success-300" data-appraisal-answer-overall-percentage>0%</span>
+                                </div>
+                                <div class="mt-2 h-1.5 w-full rounded-full bg-bgray-100 dark:bg-darkblack-500">
+                                    <div class="h-1.5 rounded-full bg-success-300 transition-all duration-300" data-appraisal-answer-overall-bar style="width: 0%"></div>
+                                </div>
+                            </div>
+
                             <h4 class="text-sm font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Categories</h4>
                             <div class="mt-4 space-y-2" data-appraisal-answer-categories></div>
                         </aside>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 bg-white dark:bg-darkblack-600">
+                        <div class="text-sm text-red-500 font-medium" data-appraisal-answer-helper-message>
+                            All questions must be answered before submitting. You can save your progress as a draft anytime.
+                        </div>
+                        <div class="flex items-center gap-3 ml-auto">
+                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-answer-close>Cancel</button>
+                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-answer-save-draft>Save Draft</button>
+                            <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-answer-submit disabled>Submit</button>
+                        </div>
                     </div>
                 </div>
             </div>

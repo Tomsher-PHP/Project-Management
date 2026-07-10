@@ -395,6 +395,201 @@ class AppraisalService
         ];
     }
 
+    public function saveDraft(Appraisal $appraisal, array $answersData): array
+    {
+        $appraisal->load([
+            'user:id,name,email',
+            'user.details',
+            'snapshotCategories.questions',
+            'answers',
+        ]);
+
+        $role = $this->resolveAnswerRole($appraisal);
+        if (! $role) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'This appraisal is not available for answering.',
+            ]);
+        }
+
+        if (! $this->canOpenAnswerForm($appraisal, $role)) {
+            throw ValidationException::withMessages([
+                'appraisal' => $this->answerWorkflowMessage($role),
+            ]);
+        }
+
+        if ($role === 'assignee' && filled($appraisal->assignee_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'You have already submitted answers for this appraisal.',
+            ]);
+        }
+        if ($role === 'reporter' && filled($appraisal->reporter_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'The reporter has already submitted answers for this appraisal.',
+            ]);
+        }
+        if ($role === 'manager' && filled($appraisal->manager_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'The manager has already submitted answers for this appraisal.',
+            ]);
+        }
+
+        DB::transaction(function () use ($appraisal, $answersData, $role) {
+            foreach ($answersData as $data) {
+                $qId = $data['question_id'];
+                $rating = $data['rating'] ?? null;
+                $remark = $data['remark'] !== null ? trim((string)$data['remark']) : null;
+
+                $answer = AppraisalAnswer::firstOrNew([
+                    'appraisal_id' => $appraisal->id,
+                    'appraisal_snapshot_question_id' => $qId,
+                ]);
+
+                if ($role === 'assignee') {
+                    $answer->assignee_rating = $rating;
+                    $answer->assignee_remark = $remark;
+                } elseif ($role === 'reporter') {
+                    $answer->reporter_user_id = auth()->id();
+                    $answer->reporter_rating = $rating;
+                    $answer->reporter_remark = $remark;
+                } elseif ($role === 'manager') {
+                    $answer->manager_user_id = auth()->id();
+                    $answer->manager_rating = $rating;
+                    $answer->manager_remark = $remark;
+                }
+
+                $answer->save();
+            }
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+        ];
+    }
+
+    public function submitAnswers(Appraisal $appraisal, array $answersData): array
+    {
+        $appraisal->load([
+            'user:id,name,email',
+            'user.details',
+            'snapshotCategories.questions',
+            'answers',
+        ]);
+
+        $role = $this->resolveAnswerRole($appraisal);
+        if (! $role) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'This appraisal is not available for answering.',
+            ]);
+        }
+
+        if (! $this->canOpenAnswerForm($appraisal, $role)) {
+            throw ValidationException::withMessages([
+                'appraisal' => $this->answerWorkflowMessage($role),
+            ]);
+        }
+
+        if ($role === 'assignee' && filled($appraisal->assignee_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'You have already submitted answers for this appraisal.',
+            ]);
+        }
+        if ($role === 'reporter' && filled($appraisal->reporter_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'The reporter has already submitted answers for this appraisal.',
+            ]);
+        }
+        if ($role === 'manager' && filled($appraisal->manager_submitted_at)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'The manager has already submitted answers for this appraisal.',
+            ]);
+        }
+
+        $questionIds = $appraisal->snapshotCategories
+            ->flatMap(fn ($category) => $category->questions->pluck('id'))
+            ->toArray();
+
+        $submittedAnswers = collect($answersData)->keyBy('question_id');
+
+        foreach ($questionIds as $index => $qId) {
+            if (! $submittedAnswers->has($qId)) {
+                throw ValidationException::withMessages([
+                    'answers' => 'All questions must be answered before submitting.',
+                ]);
+            }
+
+            $ans = $submittedAnswers->get($qId);
+            $rating = $ans['rating'] ?? null;
+            $remark = $ans['remark'] ?? null;
+
+            if ($rating === null || ! is_numeric($rating) || $rating < 0.1 || $rating > 5.0) {
+                throw ValidationException::withMessages([
+                    "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
+                ]);
+            }
+            if (strlen(substr(strrchr((string)$rating, "."), 1)) > 1) {
+                throw ValidationException::withMessages([
+                    "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
+                ]);
+            }
+
+            if ($remark === null || blank(trim((string)$remark))) {
+                throw ValidationException::withMessages([
+                    "answers.{$index}.remark" => 'Remarks cannot be empty.',
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($appraisal, $submittedAnswers, $role) {
+            foreach ($submittedAnswers as $qId => $data) {
+                $answer = AppraisalAnswer::firstOrNew([
+                    'appraisal_id' => $appraisal->id,
+                    'appraisal_snapshot_question_id' => $qId,
+                ]);
+
+                if ($role === 'assignee') {
+                    $answer->assignee_rating = $data['rating'];
+                    $answer->assignee_remark = trim((string)$data['remark']);
+                    if (blank($answer->assignee_submitted_at)) {
+                        $answer->assignee_submitted_at = now();
+                    }
+                } elseif ($role === 'reporter') {
+                    $answer->reporter_user_id = auth()->id();
+                    $answer->reporter_rating = $data['rating'];
+                    $answer->reporter_remark = trim((string)$data['remark']);
+                    if (blank($answer->reporter_submitted_at)) {
+                        $answer->reporter_submitted_at = now();
+                    }
+                } elseif ($role === 'manager') {
+                    $answer->manager_user_id = auth()->id();
+                    $answer->manager_rating = $data['rating'];
+                    $answer->manager_remark = trim((string)$data['remark']);
+                    if (blank($answer->manager_submitted_at)) {
+                        $answer->manager_submitted_at = now();
+                    }
+                }
+
+                $answer->save();
+            }
+
+            $now = now();
+            if ($role === 'assignee') {
+                $appraisal->assignee_submitted_at = $now;
+            } elseif ($role === 'reporter') {
+                $appraisal->reporter_submitted_at = $now;
+            } elseif ($role === 'manager') {
+                $appraisal->manager_submitted_at = $now;
+                $appraisal->status = 'completed';
+                $appraisal->completed_at = $now;
+            }
+
+            $appraisal->save();
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+        ];
+    }
+
     private function ensureAppraisalUserIsAccessible(Appraisal $appraisal, string $action): void
     {
         $isAccessible = User::query()
