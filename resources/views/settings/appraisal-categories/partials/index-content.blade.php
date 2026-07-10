@@ -35,6 +35,7 @@
                                         fn($question) => [
                                             'id' => $question->id,
                                             'question' => $question->question,
+                                            'is_active' => $question->is_active,
                                         ],
                                     )
                                     ->values();

@@ -64,18 +64,61 @@ document.addEventListener('DOMContentLoaded', () => {
         return [];
     };
 
+    const toBoolean = (value, fallback = true) => {
+        if (typeof value === 'boolean') {
+            return value;
+        }
+
+        if (value === undefined || value === null || value === '') {
+            return fallback;
+        }
+
+        return ['1', 'true', 'on', 'yes'].includes(String(value).toLowerCase());
+    };
+
     const normalizeQuestion = (question = '') => {
         if (typeof question === 'object' && question !== null) {
             return {
                 id: question.id || '',
                 question: question.question || '',
+                isActive: toBoolean(question.is_active ?? question.isActive, true),
             };
         }
 
         return {
             id: '',
             question,
+            isActive: true,
         };
+    };
+
+    const setQuestionActiveState = (item, isActive = true) => {
+        const activeInput = item?.querySelector('[data-appraisal-question-active-input]');
+        const activeToggle = item?.querySelector('[data-appraisal-question-active-toggle]');
+        const activeLabel = item?.querySelector('[data-appraisal-question-active-label]');
+
+        if (!item) {
+            return;
+        }
+
+        if (activeInput) {
+            activeInput.value = isActive ? '1' : '0';
+        }
+
+        if (activeToggle) {
+            activeToggle.classList.toggle('active', isActive);
+            activeToggle.setAttribute('aria-checked', isActive ? 'true' : 'false');
+        }
+
+        if (activeLabel) {
+            activeLabel.textContent = isActive ? 'Enabled' : 'Disabled';
+            activeLabel.classList.toggle('text-success-400', isActive);
+            activeLabel.classList.toggle('dark:text-success-300', isActive);
+            activeLabel.classList.toggle('text-bgray-500', !isActive);
+            activeLabel.classList.toggle('dark:text-bgray-300', !isActive);
+        }
+
+        item.classList.toggle('opacity-70', !isActive);
     };
 
     const createQuestionRow = (question = '') => {
@@ -92,6 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) {
             input.value = normalizedQuestion.question;
         }
+
+        setQuestionActiveState(item, normalizedQuestion.isActive);
 
         return item;
     };
@@ -129,6 +174,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (addTrigger) {
             event.preventDefault();
             addQuestion();
+            return;
+        }
+
+        const activeToggle = event.target.closest('[data-appraisal-question-active-toggle]');
+
+        if (activeToggle) {
+            event.preventDefault();
+
+            const item = activeToggle.closest('[data-appraisal-question-item]');
+            const isActive = activeToggle.getAttribute('aria-checked') !== 'true';
+
+            setQuestionActiveState(item, isActive);
             return;
         }
 

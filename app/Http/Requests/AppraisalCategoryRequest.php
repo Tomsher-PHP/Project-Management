@@ -28,18 +28,24 @@ class AppraisalCategoryRequest extends FormRequest
             'questions.*' => ['required', 'string', 'max:500'],
             'question_ids' => ['nullable', 'array'],
             'question_ids.*' => ['nullable', 'integer'],
+            'question_is_active' => ['nullable', 'array'],
+            'question_is_active.*' => ['boolean'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
         $questionIds = $this->input('question_ids', []);
+        $questionStatuses = $this->input('question_is_active', []);
 
         $questions = collect($this->input('questions', []))
-            ->map(function ($question, $index) use ($questionIds) {
+            ->map(function ($question, $index) use ($questionIds, $questionStatuses) {
+                $isActive = filter_var($questionStatuses[$index] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
                 return [
                     'id' => filled($questionIds[$index] ?? null) ? (int) $questionIds[$index] : null,
                     'question' => is_string($question) ? trim($question) : $question,
+                    'is_active' => $isActive ?? true,
                 ];
             })
             ->filter(fn ($question) => filled($question['question'] ?? null))
@@ -50,6 +56,7 @@ class AppraisalCategoryRequest extends FormRequest
             'name' => is_string($this->input('name')) ? trim($this->input('name')) : $this->input('name'),
             'questions' => collect($questions)->pluck('question')->all(),
             'question_ids' => collect($questions)->pluck('id')->all(),
+            'question_is_active' => collect($questions)->pluck('is_active')->map(fn (bool $isActive) => $isActive ? 1 : 0)->all(),
             'question_payload' => $questions,
         ]);
     }
@@ -89,6 +96,7 @@ class AppraisalCategoryRequest extends FormRequest
 
         $validated['questions'] = $this->input('question_payload', []);
         unset($validated['question_ids']);
+        unset($validated['question_is_active']);
 
         return $validated;
     }

@@ -43,7 +43,14 @@
                         <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-question-number>1</span>
                         <div class="flex-1">
                             <input type="hidden" name="question_ids[]" data-appraisal-question-id>
+                            <input type="hidden" name="question_is_active[]" value="1" data-appraisal-question-active-input>
                             <input type="text" name="questions[]" class="w-full rounded-lg border border-gray-300 p-2.5 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Enter an appraisal question">
+                        </div>
+                        <div class="flex min-w-[100px] flex-col items-start gap-1 pt-1">
+                            <button type="button" class="switch-btn active relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none" data-appraisal-question-active-toggle role="switch" aria-checked="true" aria-label="Toggle question status">
+                                <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                            </button>
+                            <span class="text-xs font-medium text-success-400 dark:text-success-300" data-appraisal-question-active-label>Enabled</span>
                         </div>
                         <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-appraisal-question-remove aria-label="Remove question">
                             ✕
@@ -63,7 +70,14 @@
                         <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-question-number></span>
                         <div class="flex-1">
                             <input type="hidden" name="question_ids[]" data-appraisal-question-id>
+                            <input type="hidden" name="question_is_active[]" value="1" data-appraisal-question-active-input>
                             <input type="text" name="questions[]" class="w-full rounded-lg border border-gray-300 p-2.5 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Enter an appraisal question">
+                        </div>
+                        <div class="flex min-w-[100px] flex-col items-start gap-1 pt-1">
+                            <button type="button" class="switch-btn active relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none" data-appraisal-question-active-toggle role="switch" aria-checked="true" aria-label="Toggle question status">
+                                <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                            </button>
+                            <span class="text-xs font-medium text-success-400 dark:text-success-300" data-appraisal-question-active-label>Enabled</span>
                         </div>
                         <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-appraisal-question-remove aria-label="Remove question">
                             ✕

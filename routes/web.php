@@ -262,7 +262,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
         // End appraisal categories routes
-        
     });
     // End Settings Routes
 

@@ -12,8 +12,8 @@ class AppraisalSettingsService
     public function getAppraisalCategories(): Collection
     {
         return AppraisalCategory::query()
-            ->with(['questions' => fn ($query) => $query->active()])
-            ->withCount(['questions' => fn ($query) => $query->active()])
+            ->with('questions')
+            ->withCount('questions')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -29,13 +29,16 @@ class AppraisalSettingsService
             ]);
 
             $questions = collect($data['questions'] ?? [])
-                ->map(fn (array $question) => trim($question['question']))
-                ->filter(fn ($question) => filled($question))
+                ->map(fn (array $question) => [
+                    'question' => trim($question['question']),
+                    'is_active' => (bool) ($question['is_active'] ?? true),
+                ])
+                ->filter(fn (array $question) => filled($question['question']))
                 ->values()
-                ->map(fn (string $question, int $index) => [
-                    'question' => $question,
+                ->map(fn (array $question, int $index) => [
+                    'question' => $question['question'],
                     'sort_order' => $index + 1,
-                    'is_active' => true,
+                    'is_active' => $question['is_active'],
                 ])
                 ->all();
 
@@ -56,6 +59,7 @@ class AppraisalSettingsService
                 ->map(fn (array $question) => [
                     'id' => $question['id'] ?? null,
                     'question' => trim($question['question']),
+                    'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
                 ->values();
@@ -68,7 +72,7 @@ class AppraisalSettingsService
                 $attributes = [
                     'question' => $question['question'],
                     'sort_order' => $index + 1,
-                    'is_active' => true,
+                    'is_active' => $question['is_active'],
                 ];
 
                 if ($questionId && $existingQuestions->has($questionId)) {
