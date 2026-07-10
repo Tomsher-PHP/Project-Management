@@ -192,65 +192,67 @@
             </div>
         @endif
 
-        <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6" data-appraisal-kpi-agreement-modal>
-            <div class="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
-                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-                    <h3 class="text-xl font-bold text-bgray-900 dark:text-white">KPI Agreement</h3>
-                    <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-kpi-agreement-close aria-label="Close">×</button>
-                </div>
+        <div class="modal fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto" data-appraisal-kpi-agreement-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-appraisal-kpi-agreement-close></div>
 
-                <div class="max-h-[calc(90vh-145px)] overflow-y-auto px-6 py-5">
-                    <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                        <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Title</p>
-                        <h4 class="mt-2 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-kpi-agreement-title></h4>
+            <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <h3 class="text-xl font-bold text-bgray-900 dark:text-white">KPI Agreement</h3>
+                        <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-kpi-agreement-close aria-label="Close">×</button>
                     </div>
 
-                    <div class="mt-4 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                        <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Description</p>
-                        <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-100" data-appraisal-kpi-agreement-description></div>
+                    <div class="max-h-[calc(85vh-145px)] overflow-y-auto px-6 py-5">
+                        <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Title</p>
+                            <h4 class="mt-2 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-kpi-agreement-title></h4>
+                        </div>
+
+                        <div class="mt-4 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Description</p>
+                            <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-100" data-appraisal-kpi-agreement-description></div>
+                        </div>
+
+                        <label class="mt-5 flex items-start gap-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                            <input type="checkbox" class="mt-1 h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-kpi-agreement-checkbox>
+                            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-100">I have read, understood and agree to the KPI and expectations for this appraisal.</span>
+                        </label>
                     </div>
 
-                    <label class="mt-5 flex items-start gap-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                        <input type="checkbox" class="mt-1 h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-kpi-agreement-checkbox>
-                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-100">I have read, understood and agree to the KPI and expectations for this appraisal.</span>
-                    </label>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-                    <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-kpi-agreement-close>Cancel</button>
-                    <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-kpi-agreement-submit disabled>Agree & Continue</button>
+                    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-kpi-agreement-close>Cancel</button>
+                        <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-kpi-agreement-submit disabled>Agree & Continue</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6" data-appraisal-answer-modal>
-            <div class="max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
-                <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-                    <div>
-                        <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Answer Appraisal</h3>
-                        <p class="mt-1 text-sm font-medium text-bgray-500 dark:text-bgray-300" data-appraisal-answer-meta></p>
-                    </div>
-                    <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-answer-close aria-label="Close">×</button>
-                </div>
+        <div class="modal fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto" data-appraisal-answer-modal>
+            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-appraisal-answer-close></div>
 
-                <div class="grid max-h-[calc(92vh-82px)] grid-cols-1 overflow-hidden lg:grid-cols-4">
-                    <div class="max-h-[calc(92vh-82px)] overflow-y-auto px-6 py-5 lg:col-span-3">
-                        <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI</p>
-                            <h4 class="mt-2 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-kpi-title></h4>
-                            <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-100" data-appraisal-answer-kpi-description></div>
+            <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
+                <div class="relative z-10 w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <div>
+                            <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Answer Appraisal</h3>
+                            <p class="mt-1 text-sm font-medium text-bgray-500 dark:text-bgray-300" data-appraisal-answer-meta></p>
                         </div>
-
-                        <div class="mt-5">
-                            <h4 class="text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title></h4>
-                            <div class="mt-4 space-y-4" data-appraisal-answer-questions></div>
-                        </div>
+                        <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-answer-close aria-label="Close">×</button>
                     </div>
 
-                    <aside class="border-t border-bgray-200 bg-bgray-50 px-4 py-5 dark:border-darkblack-400 dark:bg-darkblack-500 lg:max-h-[calc(92vh-82px)] lg:overflow-y-auto lg:border-l lg:border-t-0">
-                        <h4 class="text-sm font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Categories</h4>
-                        <div class="mt-4 space-y-2" data-appraisal-answer-categories></div>
-                    </aside>
+                    <div class="grid h-[calc(85vh-82px)] grid-cols-1 overflow-hidden lg:grid-cols-4">
+                        <div class="h-full overflow-y-auto px-6 py-5 lg:col-span-3">
+                            <div class="mt-5">
+                                <h4 class="text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title></h4>
+                                <div class="mt-4 space-y-4" data-appraisal-answer-questions></div>
+                            </div>
+                        </div>
+
+                        <aside class="border-t border-bgray-200 bg-bgray-50 px-4 py-5 dark:border-darkblack-400 dark:bg-darkblack-500 lg:h-full lg:overflow-y-auto lg:border-l lg:border-t-0">
+                            <h4 class="text-sm font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Categories</h4>
+                            <div class="mt-4 space-y-2" data-appraisal-answer-categories></div>
+                        </aside>
+                    </div>
                 </div>
             </div>
         </div>

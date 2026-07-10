@@ -958,8 +958,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const answerValue = (question, field) => question.answer?.[field] ?? '';
 
     const answerSectionMarkup = (label, ratingField, remarkField, question, editable = false) => {
-        const disabled = editable ? '' : 'disabled';
-        const readonlyClasses = editable ? '' : 'opacity-80';
+        const readonlyAttr = editable ? '' : 'readonly';
+        const readonlyClasses = editable ? '' : 'bg-bgray-100 dark:bg-darkblack-400 cursor-default';
 
         return `
             <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -967,11 +967,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="mt-3 grid gap-3 md:grid-cols-[160px_1fr]">
                     <div>
                         <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Rating</label>
-                        <input type="number" min="0" max="5" step="0.5" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${disabled}>
+                        <input type="number" min="0" max="5" step="0.5" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${readonlyAttr}>
                     </div>
                     <div>
                         <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Remark</label>
-                        <textarea rows="3" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${disabled}>${escapeHtml(answerValue(question, remarkField))}</textarea>
+                        <textarea rows="2" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${readonlyAttr}>${escapeHtml(answerValue(question, remarkField))}</textarea>
                     </div>
                 </div>
             </div>
@@ -983,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        answerQuestions.querySelectorAll('[data-appraisal-answer-input]:not(:disabled)').forEach((input) => {
+        answerQuestions.querySelectorAll('[data-appraisal-answer-input]:not([readonly]):not(:disabled)').forEach((input) => {
             const questionId = Number(input.dataset.questionId);
             const field = input.dataset.answerField;
             const question = answerFormData.categories
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 answerCategoryTitle.textContent = '';
             }
 
-            answerQuestions.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No questions found.</div>';
+            answerQuestions.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-300">No questions found.</div>';
             return;
         }
 
@@ -1042,28 +1042,48 @@ document.addEventListener('DOMContentLoaded', () => {
         answerQuestions.innerHTML = (category.questions || []).map((question, index) => {
             const sections = [];
 
-            if (answerFormData.role === 'assignee') {
-                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, true));
-            }
+            const isAssigneeRole = answerFormData.role === 'assignee';
+            const isReporterRole = answerFormData.role === 'reporter';
+            const isManagerRole = answerFormData.role === 'manager';
 
-            if (answerFormData.role === 'reporter') {
-                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, false));
-                sections.push(answerSectionMarkup('Reporter', 'reporter_rating', 'reporter_remark', question, true));
-            }
+            sections.push(answerSectionMarkup(
+                isAssigneeRole ? 'Self' : 'Assignee',
+                'assignee_rating',
+                'assignee_remark',
+                question,
+                isAssigneeRole
+            ));
 
-            if (answerFormData.role === 'manager') {
-                sections.push(answerSectionMarkup('Assignee', 'assignee_rating', 'assignee_remark', question, false));
-                sections.push(answerSectionMarkup('Reporter', 'reporter_rating', 'reporter_remark', question, false));
-                sections.push(answerSectionMarkup('Manager', 'manager_rating', 'manager_remark', question, true));
-            }
+            sections.push(answerSectionMarkup(
+                'Reporter',
+                'reporter_rating',
+                'reporter_remark',
+                question,
+                isReporterRole
+            ));
+
+            sections.push(answerSectionMarkup(
+                'Manager',
+                'manager_rating',
+                'manager_remark',
+                question,
+                isManagerRole
+            ));
 
             return `
-                <article class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500">
-                    <div class="flex gap-3">
-                        <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
-                        <p class="pt-1 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
-                    </div>
-                    <div class="mt-4 space-y-3">
+                <article class="rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 overflow-hidden" data-appraisal-answer-question-card>
+                    <header class="flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-bgray-50 dark:hover:bg-darkblack-600 transition animate-fade-in" data-appraisal-answer-question-header>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
+                        </div>
+                        <button type="button" class="text-bgray-500 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </header>
+                    <div class="border-t border-bgray-100 dark:border-darkblack-400 p-4 space-y-3 transition-all duration-200" data-appraisal-answer-question-body>
                         ${sections.join('')}
                     </div>
                 </article>
@@ -1322,6 +1342,20 @@ document.addEventListener('DOMContentLoaded', () => {
             activeAnswerCategoryId = Number(answerCategoryButton.dataset.appraisalAnswerCategoryId);
             renderAnswerCategories();
             renderAnswerQuestions();
+            return;
+        }
+
+        const questionHeader = event.target.closest('[data-appraisal-answer-question-header]');
+
+        if (questionHeader) {
+            const card = questionHeader.closest('[data-appraisal-answer-question-card]');
+            const body = card?.querySelector('[data-appraisal-answer-question-body]');
+            const svg = card?.querySelector('[data-appraisal-answer-question-toggle] svg');
+
+            if (body && svg) {
+                const isHidden = body.classList.toggle('hidden');
+                svg.classList.toggle('rotate-180', !isHidden);
+            }
             return;
         }
 

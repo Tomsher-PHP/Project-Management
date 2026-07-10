@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dc0Z0CFb.css",
+    "file": "assets/app-2vW3KUTt.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -91,7 +91,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B7UGw3Ol.js",
+    "file": "assets/app-LkXOu5kH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -151,6 +151,18 @@
       "_flatpickr.min-Cc3t1Oke.js",
       "_datepicker-C_SEo8OD.js"
     ]
+  },
+  "resources/js/modules/appraisal/appaisal-settings.js": {
+    "file": "assets/appaisal-settings-CFXAF7dU.js",
+    "name": "appaisal-settings",
+    "src": "resources/js/modules/appraisal/appaisal-settings.js",
+    "isEntry": true
+  },
+  "resources/js/modules/appraisal/appraisal.js": {
+    "file": "assets/appraisal-BLfEEuI3.js",
+    "name": "appraisal",
+    "src": "resources/js/modules/appraisal/appraisal.js",
+    "isEntry": true
   },
   "resources/js/modules/checklist-template-form.js": {
     "file": "assets/checklist-template-form-Cqw0kBkE.js",
