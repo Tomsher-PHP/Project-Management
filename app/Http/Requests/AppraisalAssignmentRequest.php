@@ -18,6 +18,7 @@ class AppraisalAssignmentRequest extends FormRequest
             'month' => ['required', 'integer', 'between:1,12'],
             'year' => ['required', 'integer', 'between:2000,2100'],
             'status' => ['required', 'in:draft,published'],
+            'kpi_name' => ['required', 'string', 'max:255'],
             'user_ids' => ['required', 'array', 'min:1'],
             'user_ids.*' => ['integer', 'exists:users,id'],
             'categories' => ['required', 'array', 'min:1'],
@@ -51,6 +52,7 @@ class AppraisalAssignmentRequest extends FormRequest
         $this->merge([
             'month' => (int) $this->input('month'),
             'year' => (int) $this->input('year'),
+            'kpi_name' => is_string($this->input('kpi_name')) ? trim($this->input('kpi_name')) : $this->input('kpi_name'),
             'user_ids' => collect($this->input('user_ids', []))->filter(fn ($id) => filled($id))->map(fn ($id) => (int) $id)->values()->all(),
             'categories' => $categories,
         ]);
@@ -76,6 +78,7 @@ class AppraisalAssignmentRequest extends FormRequest
         return [
             'user_ids.required' => 'Select at least one user.',
             'user_ids.min' => 'Select at least one user.',
+            'kpi_name.required' => 'Enter a KPI title.',
             'categories.required' => 'Select at least one appraisal category.',
             'categories.min' => 'Select at least one appraisal category.',
             'categories.*.questions.required' => 'Each selected category must have at least one question.',

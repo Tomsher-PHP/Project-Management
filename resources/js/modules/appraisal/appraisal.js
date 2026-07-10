@@ -8,17 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthSelect = root.querySelector('[data-appraisal-month]');
     const yearSelect = root.querySelector('[data-appraisal-year]');
     const usersContainer = root.querySelector('[data-appraisal-users]');
-    const categoriesContainer = root.querySelector('[data-appraisal-categories]');
     const userSearch = root.querySelector('[data-appraisal-user-search]');
     const selectedCount = root.querySelector('[data-appraisal-selected-count]');
+    const selectAllCheckbox = root.querySelector('[data-appraisal-users-select-all]');
     const canAssign = root.dataset.canAssign === 'true';
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
 
-    let assignmentData = { users: [], categories: [] };
-    let activeTab = canAssign ? 'my' : 'my';
-    let draggedQuestionItem = null;
-    let dragHandleItem = null;
+    let assignmentData = { users: [] };
+    let activeTab = 'my';
+    let selectedUserIds = new Set();
 
     const escapeHtml = (value = '') => String(value)
         .replace(/&/g, '&amp;')
@@ -27,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 
-    const alertSuccess = (message) => window.Alert?.success ? window.Alert.success(message) : window.alert(message);
     const alertError = (message) => window.Alert?.error ? window.Alert.error(message) : window.alert(message);
 
     const parseInitialData = () => {
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             assignmentData = JSON.parse(initialDataNode.textContent || '{}');
         } catch (error) {
-            assignmentData = { users: [], categories: [] };
+            assignmentData = { users: [] };
         }
     };
 
@@ -47,17 +44,75 @@ document.addEventListener('DOMContentLoaded', () => {
         year: Number(yearSelect?.value || new Date().getFullYear()),
     });
 
+    const userInitials = (name = 'User') => String(name)
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('') || 'U';
+
+    const userAvatar = (user) => {
+        if (user.profile_image_url) {
+            return `<span class="inline-flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-success-50"><img src="${escapeHtml(user.profile_image_url)}" alt="${escapeHtml(user.name)}" class="h-full w-full rounded-full object-cover"></span>`;
+        }
+
+        return `<span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-50 text-sm font-bold text-success-400 dark:bg-darkblack-500 dark:text-success-300">${escapeHtml(userInitials(user.name))}</span>`;
+    };
+
     const statusBadge = (user) => {
         if (!user.is_assigned) {
             return '<span class="inline-flex rounded-full bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">Not Assigned</span>';
         }
 
-        const label = user.status === 'published' ? 'Assigned: Published' : 'Assigned';
-        const classes = user.status === 'published'
-            ? 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-300'
-            : 'bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300';
+        const label = user.status_label || String(user.status || '').replace(/^\w/, (letter) => letter.toUpperCase());
+        const classes = {
+            draft: 'bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300',
+            published: 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-300',
+            completed: 'bg-info-50 text-info-500 dark:bg-darkblack-500 dark:text-info-500',
+            closed: 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300',
+        }[user.status] || 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
 
         return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
+    };
+
+    const categoryBadges = (user) => {
+        const categories = user.categories || [];
+
+        if (!categories.length) {
+            return '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+        }
+
+        return categories.map((category) => `
+            <span class="inline-flex rounded-md bg-bgray-100 px-2.5 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">${escapeHtml(category)}</span>
+        `).join('');
+    };
+
+    const actionButton = (user) => {
+        const action = !user.is_assigned ? 'assign' : (user.status === 'draft' ? 'edit' : 'view');
+        const label = action.charAt(0).toUpperCase() + action.slice(1);
+        const classes = action === 'view'
+            ? 'border border-bgray-200 bg-white text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50'
+            : 'bg-success-300 text-white';
+
+        return `<button type="button" class="rounded-lg px-3 py-2 text-xs font-semibold transition ${classes}">${label}</button>`;
+    };
+
+    const updateSelectedCount = () => {
+        if (!selectedCount || !usersContainer) {
+            return;
+        }
+
+        const checkboxes = Array.from(usersContainer.querySelectorAll('[data-appraisal-user-checkbox]'));
+        const enabledCheckboxes = checkboxes.filter((input) => !input.disabled);
+        const checkedCheckboxes = checkboxes.filter((input) => input.checked);
+
+        selectedCount.textContent = String(selectedUserIds.size);
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = enabledCheckboxes.length > 0 && enabledCheckboxes.every((input) => input.checked);
+            selectAllCheckbox.indeterminate = checkedCheckboxes.length > 0 && !selectAllCheckbox.checked;
+            selectAllCheckbox.disabled = enabledCheckboxes.length === 0;
+        }
     };
 
     const renderUsers = () => {
@@ -80,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!users.length) {
-            usersContainer.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No users found.</div>';
+            usersContainer.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
             updateSelectedCount();
             return;
         }
@@ -88,107 +143,36 @@ document.addEventListener('DOMContentLoaded', () => {
         usersContainer.innerHTML = users.map((user) => {
             const disabled = user.is_editable === false ? 'disabled' : '';
             const disabledClasses = user.is_editable === false ? 'opacity-60' : '';
+            const checked = selectedUserIds.has(Number(user.id)) && user.is_editable !== false ? 'checked' : '';
+            const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
 
             return `
-                <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-bgray-200 bg-bgray-50 px-3 py-3 transition hover:border-success-200 dark:border-darkblack-400 dark:bg-darkblack-500 ${disabledClasses}" data-appraisal-user-row>
-                    <input type="checkbox" value="${escapeHtml(user.id)}" class="mt-1 h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-user-checkbox ${disabled}>
-                    <span class="min-w-0 flex-1">
-                        <span class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(user.name)}</span>
-                            ${statusBadge(user)}
-                        </span>
-                        <span class="mt-1 block text-xs text-bgray-600 dark:text-bgray-300">
-                            ${escapeHtml(user.department || 'No department')} · ${escapeHtml(user.designation || 'No designation')}
-                        </span>
-                    </span>
-                </label>
+                <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-50 dark:hover:bg-darkblack-500 ${disabledClasses}" data-appraisal-user-row data-user-id="${escapeHtml(user.id)}">
+                    <td class="px-4 py-4 xl:px-0">
+                        <input type="checkbox" value="${escapeHtml(user.id)}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-user-checkbox ${disabled} ${checked}>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <div class="flex items-center gap-3">
+                            ${userAvatar(user)}
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(user.name)}</p>
+                                <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">${escapeHtml(meta)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(user.kpi_name || 'Not Assigned')}</span>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <div class="flex flex-wrap gap-1.5">${categoryBadges(user)}</div>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">${statusBadge(user)}</td>
+                    <td class="px-4 py-4 xl:px-0">${actionButton(user)}</td>
+                </tr>
             `;
         }).join('');
 
         updateSelectedCount();
-    };
-
-    const questionRowMarkup = (question = '') => `
-        <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-question>
-            <div class="flex items-start gap-3">
-                <button type="button" class="mt-0.5 inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                    </svg>
-                </button>
-                <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-assignment-question-number></span>
-                <div class="flex-1">
-                    <input type="text" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
-                </div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-remove aria-label="Remove question">✕</button>
-            </div>
-        </div>
-    `;
-
-    const refreshQuestionNumbers = (categoryCard = null) => {
-        const scope = categoryCard || categoriesContainer;
-        scope?.querySelectorAll('[data-appraisal-assignment-question-list]').forEach((list) => {
-            const rows = Array.from(list.querySelectorAll('[data-appraisal-assignment-question]'));
-
-            rows.forEach((row, index) => {
-                const number = row.querySelector('[data-appraisal-assignment-question-number]');
-                const removeButton = row.querySelector('[data-appraisal-assignment-question-remove]');
-
-                if (number) {
-                    number.textContent = String(index + 1);
-                }
-
-                if (removeButton) {
-                    removeButton.disabled = rows.length === 1;
-                    removeButton.classList.toggle('opacity-50', rows.length === 1);
-                    removeButton.classList.toggle('cursor-not-allowed', rows.length === 1);
-                }
-            });
-        });
-    };
-
-    const renderCategories = () => {
-        if (!categoriesContainer) {
-            return;
-        }
-
-        const categories = assignmentData.categories || [];
-
-        if (!categories.length) {
-            categoriesContainer.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No active appraisal categories found.</div>';
-            return;
-        }
-
-        categoriesContainer.innerHTML = categories.map((category, categoryIndex) => `
-            <article class="rounded-xl border border-bgray-200 bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-category>
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 px-4 py-3 dark:border-darkblack-400">
-                    <label class="flex items-center gap-3">
-                        <input type="checkbox" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" checked data-appraisal-assignment-category-checkbox>
-                        <input type="hidden" value="${escapeHtml(category.name)}" data-appraisal-assignment-category-name>
-                        <span class="text-base font-semibold text-bgray-900 dark:text-white">${escapeHtml(category.name)}</span>
-                    </label>
-                    <div class="flex items-center gap-2">
-                        <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-semibold text-success-400 transition hover:border-success-300 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-assignment-question-add>Add Question</button>
-                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-700 transition hover:border-bgray-300 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50" data-appraisal-assignment-category-toggle aria-expanded="true">Collapse</button>
-                    </div>
-                </div>
-                <div class="space-y-3 px-4 py-4" data-appraisal-assignment-category-body>
-                    <div class="space-y-3" data-appraisal-assignment-question-list>
-                        ${(category.questions || []).map((question) => questionRowMarkup(question.question)).join('') || questionRowMarkup('')}
-                    </div>
-                </div>
-            </article>
-        `).join('');
-
-        refreshQuestionNumbers();
-    };
-
-    const updateSelectedCount = () => {
-        if (!selectedCount || !usersContainer) {
-            return;
-        }
-
-        selectedCount.textContent = String(usersContainer.querySelectorAll('[data-appraisal-user-checkbox]:checked').length);
     };
 
     const setActiveTab = (tab) => {
@@ -210,7 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (tab === 'assign') {
             renderUsers();
-            renderCategories();
         }
     };
 
@@ -232,86 +215,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(payload.message || 'Unable to load appraisal assignments.');
             }
 
-            assignmentData = payload.data || { users: [], categories: [] };
+            assignmentData = payload.data || { users: [] };
+            selectedUserIds.clear();
 
             if (activeTab === 'assign') {
                 renderUsers();
-                renderCategories();
             }
         } catch (error) {
             alertError(error.message || 'Unable to load appraisal assignments.');
         }
-    };
-
-    const serializeCategories = () => Array.from(categoriesContainer?.querySelectorAll('[data-appraisal-assignment-category]') || [])
-        .filter((categoryCard) => categoryCard.querySelector('[data-appraisal-assignment-category-checkbox]')?.checked)
-        .map((categoryCard) => ({
-            name: categoryCard.querySelector('[data-appraisal-assignment-category-name]')?.value || '',
-            questions: Array.from(categoryCard.querySelectorAll('[data-appraisal-assignment-question-input]'))
-                .map((input) => ({ question: input.value.trim() }))
-                .filter((question) => question.question !== ''),
-        }))
-        .filter((category) => category.name && category.questions.length);
-
-    const submitAssignments = async (status) => {
-        const period = currentPeriod();
-        const userIds = Array.from(usersContainer?.querySelectorAll('[data-appraisal-user-checkbox]:checked') || []).map((input) => Number(input.value));
-        const categories = serializeCategories();
-
-        if (!userIds.length) {
-            alertError('Select at least one user.');
-            return;
-        }
-
-        if (!categories.length) {
-            alertError('Select at least one category with questions.');
-            return;
-        }
-
-        try {
-            const response = await fetch(root.dataset.submitUrl, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: JSON.stringify({
-                    month: period.month,
-                    year: period.year,
-                    status,
-                    user_ids: userIds,
-                    categories,
-                }),
-            });
-            const payload = await response.json();
-
-            if (!response.ok || !payload.status) {
-                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
-                throw new Error(errors[0] || payload.message || 'Unable to save appraisal assignments.');
-            }
-
-            alertSuccess(payload.message || 'Appraisal assignments saved.');
-            assignmentData.users = payload.data?.users || assignmentData.users;
-            renderUsers();
-        } catch (error) {
-            alertError(error.message || 'Unable to save appraisal assignments.');
-        }
-    };
-
-    const resetDraggedItemState = () => {
-        if (draggedQuestionItem) {
-            draggedQuestionItem.classList.remove('opacity-60', 'scale-[0.99]');
-            draggedQuestionItem.setAttribute('draggable', 'false');
-            draggedQuestionItem.style.boxShadow = '';
-        }
-
-        if (dragHandleItem) {
-            dragHandleItem.setAttribute('draggable', 'false');
-        }
-
-        draggedQuestionItem = null;
-        dragHandleItem = null;
     };
 
     root.addEventListener('change', (event) => {
@@ -320,7 +232,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (event.target.matches('[data-appraisal-users-select-all]')) {
+            usersContainer?.querySelectorAll('[data-appraisal-user-checkbox]:not(:disabled)').forEach((input) => {
+                input.checked = event.target.checked;
+
+                if (event.target.checked) {
+                    selectedUserIds.add(Number(input.value));
+                    return;
+                }
+
+                selectedUserIds.delete(Number(input.value));
+            });
+            updateSelectedCount();
+            return;
+        }
+
         if (event.target.matches('[data-appraisal-user-checkbox]')) {
+            if (event.target.checked) {
+                selectedUserIds.add(Number(event.target.value));
+            } else {
+                selectedUserIds.delete(Number(event.target.value));
+            }
             updateSelectedCount();
         }
     });
@@ -336,162 +268,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (tabButton) {
             setActiveTab(tabButton.dataset.tab);
-            return;
         }
-
-        if (event.target.closest('[data-appraisal-users-select-all]')) {
-            usersContainer?.querySelectorAll('[data-appraisal-user-checkbox]:not(:disabled)').forEach((input) => {
-                input.checked = true;
-            });
-            updateSelectedCount();
-            return;
-        }
-
-        if (event.target.closest('[data-appraisal-users-clear]')) {
-            usersContainer?.querySelectorAll('[data-appraisal-user-checkbox]').forEach((input) => {
-                input.checked = false;
-            });
-            updateSelectedCount();
-            return;
-        }
-
-        const categoryToggle = event.target.closest('[data-appraisal-assignment-category-toggle]');
-
-        if (categoryToggle) {
-            const card = categoryToggle.closest('[data-appraisal-assignment-category]');
-            const body = card?.querySelector('[data-appraisal-assignment-category-body]');
-            const isHidden = body?.classList.toggle('hidden');
-            categoryToggle.textContent = isHidden ? 'Expand' : 'Collapse';
-            categoryToggle.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
-            return;
-        }
-
-        const addQuestion = event.target.closest('[data-appraisal-assignment-question-add]');
-
-        if (addQuestion) {
-            const card = addQuestion.closest('[data-appraisal-assignment-category]');
-            const list = card?.querySelector('[data-appraisal-assignment-question-list]');
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = questionRowMarkup('');
-            const row = wrapper.firstElementChild;
-
-            if (row && list) {
-                list.appendChild(row);
-                refreshQuestionNumbers(card);
-                row.querySelector('[data-appraisal-assignment-question-input]')?.focus();
-            }
-
-            return;
-        }
-
-        const removeQuestion = event.target.closest('[data-appraisal-assignment-question-remove]');
-
-        if (removeQuestion) {
-            const card = removeQuestion.closest('[data-appraisal-assignment-category]');
-            const list = card?.querySelector('[data-appraisal-assignment-question-list]');
-            const rows = list?.querySelectorAll('[data-appraisal-assignment-question]') || [];
-
-            if (rows.length <= 1) {
-                const input = list?.querySelector('[data-appraisal-assignment-question-input]');
-                if (input) {
-                    input.value = '';
-                    input.focus();
-                }
-                return;
-            }
-
-            removeQuestion.closest('[data-appraisal-assignment-question]')?.remove();
-            refreshQuestionNumbers(card);
-            return;
-        }
-
-        const submitButton = event.target.closest('[data-appraisal-submit]');
-
-        if (submitButton) {
-            submitAssignments(submitButton.dataset.appraisalSubmit);
-        }
-    });
-
-    root.addEventListener('mousedown', (event) => {
-        const handle = event.target.closest('[data-appraisal-assignment-question-handle]');
-
-        if (!handle) {
-            return;
-        }
-
-        const item = handle.closest('[data-appraisal-assignment-question]');
-
-        if (!item) {
-            return;
-        }
-
-        dragHandleItem = item;
-        item.setAttribute('draggable', 'true');
-    });
-
-    root.addEventListener('mouseup', () => {
-        if (!draggedQuestionItem && dragHandleItem) {
-            dragHandleItem.setAttribute('draggable', 'false');
-            dragHandleItem = null;
-        }
-    });
-
-    root.addEventListener('dragstart', (event) => {
-        const item = event.target.closest('[data-appraisal-assignment-question]');
-
-        if (!item || item !== dragHandleItem) {
-            event.preventDefault();
-            return;
-        }
-
-        draggedQuestionItem = item;
-        item.classList.add('opacity-60', 'scale-[0.99]');
-        item.style.boxShadow = '0 18px 35px -18px rgba(15, 23, 42, 0.35)';
-
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', '');
-        }
-    });
-
-    root.addEventListener('dragover', (event) => {
-        if (draggedQuestionItem) {
-            event.preventDefault();
-        }
-
-        const targetItem = event.target.closest('[data-appraisal-assignment-question]');
-        const sourceList = draggedQuestionItem?.closest('[data-appraisal-assignment-question-list]');
-
-        if (!draggedQuestionItem || !targetItem || targetItem === draggedQuestionItem || targetItem.closest('[data-appraisal-assignment-question-list]') !== sourceList) {
-            return;
-        }
-
-        const bounds = targetItem.getBoundingClientRect();
-        const insertAfter = event.clientY > bounds.top + (bounds.height / 2);
-
-        sourceList.insertBefore(draggedQuestionItem, insertAfter ? targetItem.nextElementSibling : targetItem);
-    });
-
-    root.addEventListener('drop', (event) => {
-        if (!draggedQuestionItem) {
-            return;
-        }
-
-        event.preventDefault();
-        refreshQuestionNumbers(draggedQuestionItem.closest('[data-appraisal-assignment-category]'));
-        resetDraggedItemState();
-    });
-
-    root.addEventListener('dragend', () => {
-        if (draggedQuestionItem) {
-            refreshQuestionNumbers(draggedQuestionItem.closest('[data-appraisal-assignment-category]'));
-        }
-
-        resetDraggedItemState();
     });
 
     parseInitialData();
     renderUsers();
-    renderCategories();
     setActiveTab('my');
 });

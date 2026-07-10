@@ -26,4 +26,9 @@ class AppraisalSnapshotQuestion extends Model
     {
         return $this->belongsTo(AppraisalSnapshotCategory::class, 'appraisal_snapshot_category_id');
     }
+
+    public function appraisalSnapshotCategory()
+    {
+        return $this->belongsTo(AppraisalSnapshotCategory::class);
+    }
 }
