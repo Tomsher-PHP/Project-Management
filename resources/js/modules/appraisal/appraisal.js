@@ -110,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .join('') || 'U';
 
     const userAvatar = (user) => {
+        if (user.avatar_html) {
+            return user.avatar_html;
+        }
+
         if (user.profile_image_url) {
             return `<span class="inline-flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-success-50"><img src="${escapeHtml(user.profile_image_url)}" alt="${escapeHtml(user.name)}" class="h-full w-full rounded-full object-cover"></span>`;
         }

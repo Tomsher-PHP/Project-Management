@@ -78,6 +78,7 @@ class AppraisalService
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'is_editable' => ! $appraisal || $appraisal->status === 'draft',
                 'categories' => $snapshotCategoryNames->all(),
+                'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
         })->values()->all();
     }
@@ -125,6 +126,7 @@ class AppraisalService
                         'profile_image_url' => $user->profile_image_url,
                         'department' => $user->details?->department?->name,
                         'designation' => $user->details?->designation?->name,
+                        'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
                     ],
                     'appraisal_id' => $appraisal?->id,
                     'kpi_name' => $appraisal?->kpi_name,
