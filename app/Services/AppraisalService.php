@@ -18,12 +18,31 @@ class AppraisalService
         $month = $month ?: (int) now()->month;
         $year = $year ?: (int) now()->year;
 
+        $perPage = (int) request('per_page', config('constants.per_page_count', 10));
+
+        $myAppraisalsPaginator = $this->getMyAppraisalsPaginator($month, $year, $perPage);
+        $usersPaginator = null;
+
+        if (auth()->user()?->can('appraisal.create')) {
+            $usersPaginator = $this->getUsersWithAssignmentsPaginator($month, $year, $perPage);
+        }
+
+        $assignmentData = [
+            'my_appraisals' => $myAppraisalsPaginator->items(),
+            'users' => $usersPaginator ? $usersPaginator->items() : [],
+            'kpis' => auth()->user()?->can('appraisal.create') ? $this->getActiveKpis() : [],
+            'categories' => auth()->user()?->can('appraisal.create') ? $this->getActiveCategories() : [],
+        ];
+
         return [
             'month' => $month,
             'year' => $year,
             'months' => $this->getMonths(),
             'years' => $this->getYears($year),
-            'assignmentData' => $this->getAssignmentData($month, $year),
+            'assignmentData' => $assignmentData,
+            'myAppraisalsPaginator' => $myAppraisalsPaginator,
+            'usersPaginator' => $usersPaginator,
+            'perPage' => $perPage,
         ];
     }
 
@@ -809,5 +828,105 @@ class AppraisalService
         return collect(range(min($start, $selectedYear), max($end, $selectedYear)))
             ->mapWithKeys(fn ($year) => [$year => $year])
             ->all();
+    }
+
+    public function getMyAppraisalsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $usersQuery = User::query()
+            ->accessibleBy(auth()->user())
+            ->active()
+            ->with(['details.department', 'details.designation', 'primaryAttachment'])
+            ->orderBy('name');
+
+        $paginator = $usersQuery->paginate($perPage, ['*'], 'my_page')->withQueryString();
+
+        $appraisals = Appraisal::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereIn('user_id', $paginator->pluck('id'))
+            ->whereIn('status', ['published', 'completed', 'closed'])
+            ->with('user.details')
+            ->get()
+            ->keyBy('user_id');
+
+        $paginator->through(function (User $user) use ($appraisals) {
+            $appraisal = $appraisals->get($user->id);
+            $answerRole = $appraisal ? $this->resolveAnswerRole($appraisal) : null;
+            $canAnswer = $appraisal ? $this->canOpenAnswerForm($appraisal, $answerRole) : false;
+
+            return [
+                'is_assignee' => (int) $user->id === (int) auth()->id(),
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'profile_image_url' => $user->profile_image_url,
+                    'department' => $user->details?->department?->name,
+                    'designation' => $user->details?->designation?->name,
+                    'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
+                ],
+                'appraisal_id' => $appraisal?->id,
+                'kpi_name' => $appraisal?->kpi_name,
+                'kpi_description' => $appraisal?->kpi_description,
+                'status' => $appraisal?->status,
+                'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
+                'assignee_submitted_at' => $this->formatDateTime($appraisal?->assignee_submitted_at),
+                'reporter_submitted_at' => $this->formatDateTime($appraisal?->reporter_submitted_at),
+                'manager_submitted_at' => $this->formatDateTime($appraisal?->manager_submitted_at),
+                'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
+                'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
+                'can_agree' => $appraisal
+                    && (int) $appraisal->user_id === (int) auth()->id()
+                    && $appraisal->status === 'published'
+                    && ! $appraisal->kpi_agreed_at,
+                'can_answer' => $canAnswer,
+            ];
+        });
+
+        return $paginator;
+    }
+
+    public function getUsersWithAssignmentsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $usersQuery = User::query()
+            ->accessibleBy(auth()->user())
+            ->with(['details.department', 'details.designation', 'primaryAttachment'])
+            ->orderBy('name');
+
+        $paginator = $usersQuery->paginate($perPage, ['*'], 'assign_page')->withQueryString();
+
+        $appraisals = Appraisal::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereIn('user_id', $paginator->pluck('id'))
+            ->with('snapshotCategories:id,appraisal_id,name,sort_order')
+            ->get()
+            ->keyBy('user_id');
+
+        $paginator->through(function (User $user) use ($appraisals) {
+            $appraisal = $appraisals->get($user->id);
+            $snapshotCategoryNames = $appraisal?->snapshotCategories
+                ? $appraisal->snapshotCategories->pluck('name')->filter()->values()
+                : collect();
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'profile_image_url' => $user->profile_image_url,
+                'department' => $user->details?->department?->name,
+                'designation' => $user->details?->designation?->name,
+                'is_assigned' => (bool) $appraisal,
+                'appraisal_id' => $appraisal?->id,
+                'kpi_name' => $appraisal?->kpi_name,
+                'status' => $appraisal?->status,
+                'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
+                'is_editable' => ! $appraisal || $appraisal->status === 'draft',
+                'categories' => $snapshotCategoryNames->all(),
+                'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
+            ];
+        });
+
+        return $paginator;
     }
 }

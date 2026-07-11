@@ -1578,7 +1578,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     root.addEventListener('change', (event) => {
         if (event.target.matches('[data-appraisal-month], [data-appraisal-year]')) {
-            loadAssignmentData();
+            const period = currentPeriod();
+            const url = new URL(window.location.href);
+            url.searchParams.set('month', period.month);
+            url.searchParams.set('year', period.year);
+            url.searchParams.delete('my_page');
+            url.searchParams.delete('assign_page');
+            window.location.href = url.toString();
             return;
         }
 

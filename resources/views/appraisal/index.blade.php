@@ -70,6 +70,9 @@
                         <tbody data-appraisal-my-list></tbody>
                     </table>
                 </div>
+                @if ($myAppraisalsPaginator->hasPages())
+                    <x-pagination :paginator="$myAppraisalsPaginator" :per-page="$perPage" />
+                @endif
             </div>
         </section>
 
@@ -122,6 +125,9 @@
                             <tbody data-appraisal-users></tbody>
                         </table>
                     </div>
+                    @if ($usersPaginator && $usersPaginator->hasPages())
+                        <x-pagination :paginator="$usersPaginator" :per-page="$perPage" />
+                    @endif
                 </div>
             </section>
         @endif
