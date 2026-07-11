@@ -1526,6 +1526,10 @@ document.addEventListener('DOMContentLoaded', () => {
             button.classList.toggle('text-bgray-700', !isActive);
         });
 
+        document.querySelectorAll('[data-filter-tab]').forEach((el) => {
+            el.classList.toggle('hidden', el.dataset.filterTab !== tab);
+        });
+
         if (tab === 'assign') {
             renderUsers();
         }

@@ -381,6 +381,11 @@ class User extends Authenticatable
 
     public function kpis()
     {
-        return $this->belongsToMany(Kpi::class, 'user_kpis')->withTimestamps();;
+        return $this->belongsToMany(Kpi::class, 'user_kpis')->withTimestamps();
+    }
+
+    public function appraisals()
+    {
+        return $this->hasMany(Appraisal::class);
     }
 }

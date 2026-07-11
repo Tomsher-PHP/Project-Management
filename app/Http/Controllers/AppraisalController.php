@@ -21,24 +21,7 @@ class AppraisalController extends Controller
 
     public function index(Request $request): View
     {
-        $month = $request->input('month');
-        $year = $request->input('year');
-
-        if ($month !== null) {
-            $month = (int) $month;
-            session(['appraisal_filter_month' => $month]);
-        } else {
-            $month = (int) session('appraisal_filter_month', now()->month);
-        }
-
-        if ($year !== null) {
-            $year = (int) $year;
-            session(['appraisal_filter_year' => $year]);
-        } else {
-            $year = (int) session('appraisal_filter_year', now()->year);
-        }
-
-        return view('appraisal.index', $this->appraisalService->index($month, $year));
+        return view('appraisal.index', $this->appraisalService->index($request));
     }
 
     public function assignmentData(Request $request): JsonResponse

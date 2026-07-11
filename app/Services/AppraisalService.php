@@ -7,18 +7,37 @@ use App\Models\AppraisalAnswer;
 use App\Models\AppraisalCategory;
 use App\Models\Kpi;
 use App\Models\User;
+use App\Models\Team;
+use App\Models\Department;
+use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AppraisalService
 {
-    public function index(?int $month = null, ?int $year = null): array
+    use ResolvesTeamUserFilters;
+    public function index(Request $request): array
     {
-        $month = $month ?: (int) now()->month;
-        $year = $year ?: (int) now()->year;
+        $month = $request->input('month');
+        $year = $request->input('year');
 
-        $perPage = (int) request('per_page', config('constants.per_page_count', 10));
+        if ($month !== null) {
+            $month = (int) $month;
+            session(['appraisal_filter_month' => $month]);
+        } else {
+            $month = (int) session('appraisal_filter_month', now()->month);
+        }
+
+        if ($year !== null) {
+            $year = (int) $year;
+            session(['appraisal_filter_year' => $year]);
+        } else {
+            $year = (int) session('appraisal_filter_year', now()->year);
+        }
+
+        $perPage = (int) $request->input('per_page', config('constants.per_page_count', 10));
 
         $myAppraisalsPaginator = $this->getMyAppraisalsPaginator($month, $year, $perPage);
         $usersPaginator = null;
@@ -43,6 +62,19 @@ class AppraisalService
             'myAppraisalsPaginator' => $myAppraisalsPaginator,
             'usersPaginator' => $usersPaginator,
             'perPage' => $perPage,
+            'teams' => $this->getFilterTeams($request),
+            'users' => $this->getFilterUsers($request),
+            'departments' => $this->getFilterDepartments(),
+            'kpiOptions' => [
+                'agreed' => 'Agreed',
+                'not_agreed' => 'Not Agreed',
+            ],
+            'statusOptions' => [
+                'Draft' => 'Draft',
+                'Published' => 'Published',
+                'Completed' => 'Completed',
+                'Closed' => 'Closed',
+            ],
         ];
     }
 
@@ -830,11 +862,80 @@ class AppraisalService
             ->all();
     }
 
+    protected function getAccessibleUserIds(?User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        return User::query()
+            ->accessibleBy($user)
+            ->pluck('users.id')
+            ->push($user->id)
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function getFilterUsers(Request $request): \Illuminate\Support\Collection
+    {
+        $userIds = $this->getAccessibleUserIds(auth()->user());
+        return User::query()
+            ->whereIn('id', $userIds)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    public function getFilterDepartments(): \Illuminate\Support\Collection
+    {
+        return Department::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     public function getMyAppraisalsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
+        $userIds = $this->getScopedUserIds(request());
+        $userIds = array_values(array_unique(array_merge([auth()->id()], $userIds)));
+        $departmentIds = $this->resolveFilterIds(request(), ['department_id']);
+        $kpiFilter = request('kpi');
+
         $usersQuery = User::query()
-            ->accessibleBy(auth()->user())
             ->active()
+            ->whereIn('id', $userIds)
+            ->when($departmentIds !== [], function ($q) use ($departmentIds) {
+                $q->where(function ($sub) use ($departmentIds) {
+                    $sub->where('id', auth()->id())
+                        ->orWhereHas('details', function ($detailsQuery) use ($departmentIds) {
+                            $detailsQuery->whereIn('department_id', $departmentIds);
+                        });
+                });
+            })
+            ->when($kpiFilter === 'agreed', function ($q) use ($month, $year) {
+                $q->whereHas('appraisals', function ($aq) use ($month, $year) {
+                    $aq->where('month', $month)
+                       ->where('year', $year)
+                       ->whereIn('status', ['published', 'completed', 'closed'])
+                       ->whereNotNull('kpi_agreed_at');
+                });
+            })
+            ->when($kpiFilter === 'not_agreed', function ($q) use ($month, $year) {
+                $q->where(function ($sub) use ($month, $year) {
+                    $sub->whereDoesntHave('appraisals', function ($aq) use ($month, $year) {
+                        $aq->where('month', $month)
+                           ->where('year', $year)
+                           ->whereIn('status', ['published', 'completed', 'closed']);
+                    })->orWhereHas('appraisals', function ($aq) use ($month, $year) {
+                        $aq->where('month', $month)
+                           ->where('year', $year)
+                           ->whereIn('status', ['published', 'completed', 'closed'])
+                           ->whereNull('kpi_agreed_at');
+                    });
+                });
+            })
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name');
 
@@ -888,8 +989,25 @@ class AppraisalService
 
     public function getUsersWithAssignmentsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
+        $userIds = $this->getScopedUserIds(request());
+        $departmentIds = $this->resolveFilterIds(request(), ['department_id']);
+        $statusFilter = request('status');
+
         $usersQuery = User::query()
             ->accessibleBy(auth()->user())
+            ->whereIn('id', $userIds)
+            ->when($departmentIds !== [], function ($q) use ($departmentIds) {
+                $q->whereHas('details', function ($detailsQuery) use ($departmentIds) {
+                    $detailsQuery->whereIn('department_id', $departmentIds);
+                });
+            })
+            ->when(filled($statusFilter), function ($q) use ($statusFilter, $month, $year) {
+                $q->whereHas('appraisals', function ($aq) use ($statusFilter, $month, $year) {
+                    $aq->where('month', $month)
+                       ->where('year', $year)
+                       ->where('status', strtolower($statusFilter));
+                });
+            })
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name');
 

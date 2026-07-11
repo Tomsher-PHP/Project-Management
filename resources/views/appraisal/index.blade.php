@@ -24,6 +24,8 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
+                <x-filters.button />
+
                 <select class="tom-select-no-search min-w-[150px]" data-appraisal-month>
                     @foreach ($months as $monthValue => $monthLabel)
                         <option value="{{ $monthValue }}" @selected((int) $monthValue === (int) $month)>{{ $monthLabel }}</option>
@@ -92,9 +94,6 @@
                             <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-publish-selected disabled>
                                 Publish Selected
                             </button>
-                            <div class="min-w-[240px]">
-                                <input type="search" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Search users" data-appraisal-user-search>
-                            </div>
                         </div>
                     </div>
 
@@ -280,6 +279,229 @@
             </div>
         </div>
     </div>
+    @php
+        $selectedUserFilterIds = collect(['user_id', 'staff_id', 'users'])
+            ->flatMap(function (string $key) {
+                $value = request($key, []);
+                return is_array($value) ? $value : [$value];
+            })
+            ->filter(fn($value) => filled($value))
+            ->map(fn($value) => (int) $value)
+            ->filter(fn(int $value) => $value > 0)
+            ->unique()
+            ->values();
+
+        $isUserFilterApplied = $selectedUserFilterIds->isNotEmpty();
+
+        $filterDependencies = [
+            'teams' => $teams->map(fn($team) => [
+                'id' => $team->id,
+                'name' => $team->name,
+                'users' => $team->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ])->values(),
+            ])->values(),
+            'hasExplicitUserFilter' => $isUserFilterApplied,
+            'hasUserFilterAppliedParameter' => request()->has('user_filter_applied'),
+        ];
+    @endphp
+
+    <x-filters.drawer>
+        <input type="hidden" name="month" value="{{ $month }}">
+        <input type="hidden" name="year" value="{{ $year }}">
+
+        <x-filters.multi-select name="teams" label="Teams" :options="$teams" id="appraisal-team-filter" />
+        <input type="hidden" name="user_filter_applied" id="appraisal-user-filter-applied" value="{{ $isUserFilterApplied ? '1' : '0' }}">
+        <x-filters.multi-select name="user_id" label="Users" :options="$users" id="appraisal-user-filter" />
+        <x-filters.multi-select name="department_id" label="Departments" :options="$departments" />
+
+        <div data-filter-tab="my">
+            <x-filters.select name="kpi" label="KPI" :options="$kpiOptions" />
+        </div>
+
+        <div data-filter-tab="assign">
+            <x-filters.select name="status" label="Status" :options="$statusOptions" />
+        </div>
+    </x-filters.drawer>
+
+    <script id="appraisal-filter-dependencies" type="application/json">
+        @json($filterDependencies)
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dependenciesNode = document.getElementById('appraisal-filter-dependencies');
+            const teamSelect = document.getElementById('appraisal-team-filter');
+            const userSelect = document.getElementById('appraisal-user-filter');
+            const userFilterAppliedInput = document.getElementById('appraisal-user-filter-applied');
+
+            if (!dependenciesNode || !teamSelect || !userSelect) {
+                return;
+            }
+
+            let dependencies = {
+                teams: []
+            };
+
+            try {
+                dependencies = JSON.parse(dependenciesNode.textContent || '{}');
+            } catch (error) {
+                return;
+            }
+
+            const teams = Array.isArray(dependencies.teams) ? dependencies.teams : [];
+            const hasExplicitUserFilter = dependencies.hasExplicitUserFilter === true;
+            const hasUserFilterAppliedParameter = dependencies.hasUserFilterAppliedParameter === true;
+            let isSyncingUsersFromTeams = false;
+
+            const normalizeValues = (value) => {
+                if (Array.isArray(value)) {
+                    return value.map((item) => String(item)).filter(Boolean);
+                }
+
+                if (value === null || value === undefined || value === '') {
+                    return [];
+                }
+
+                return [String(value)];
+            };
+
+            const getSelectedValues = (select) => {
+                if (select.tomselect) {
+                    return normalizeValues(select.tomselect.getValue());
+                }
+
+                return Array.from(select.selectedOptions)
+                    .map((option) => String(option.value))
+                    .filter(Boolean);
+            };
+
+            const setSelectedValues = (select, values) => {
+                const normalizedValues = normalizeValues(values);
+
+                if (select.tomselect) {
+                    normalizedValues.forEach((value) => {
+                        if (!select.tomselect.options[value]) {
+                            const option = Array.from(select.options).find((item) => item.value === value);
+
+                            if (option) {
+                                select.tomselect.addOption({
+                                    value,
+                                    text: option.textContent
+                                });
+                            }
+                        }
+                    });
+
+                    select.tomselect.setValue(normalizedValues, true);
+                    select.tomselect.refreshItems();
+                    select.tomselect.refreshOptions(false);
+                }
+
+                Array.from(select.options).forEach((option) => {
+                    option.selected = normalizedValues.includes(String(option.value));
+                });
+
+                select.dispatchEvent(new Event('change', {
+                    bubbles: true
+                }));
+            };
+
+            const syncUserFilterApplied = () => {
+                if (userFilterAppliedInput) {
+                    userFilterAppliedInput.value = getSelectedValues(userSelect).length ? '1' : '0';
+                }
+            };
+
+            const ensureUserOptions = (users) => {
+                const existingOptions = new Set(Array.from(userSelect.options).map((option) => String(option.value)));
+
+                users.forEach((user) => {
+                    const value = String(user.id);
+
+                    if (!existingOptions.has(value)) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = user.name;
+                        userSelect.appendChild(option);
+                        existingOptions.add(value);
+                    }
+
+                    if (userSelect.tomselect && !userSelect.tomselect.options[value]) {
+                        userSelect.tomselect.addOption({
+                            value,
+                            text: user.name
+                        });
+                    }
+                });
+
+                userSelect.tomselect?.refreshOptions(false);
+            };
+
+            let previousTeamIds = getSelectedValues(teamSelect);
+            let savedUserIds = previousTeamIds.length ? [] : getSelectedValues(userSelect);
+
+            const syncUsersFromTeams = () => {
+                const selectedTeamIds = getSelectedValues(teamSelect);
+
+                if (!previousTeamIds.length && selectedTeamIds.length) {
+                    savedUserIds = getSelectedValues(userSelect);
+                }
+
+                if (!selectedTeamIds.length) {
+                    isSyncingUsersFromTeams = true;
+                    setSelectedValues(userSelect, savedUserIds);
+                    isSyncingUsersFromTeams = false;
+                    savedUserIds = getSelectedValues(userSelect);
+                    previousTeamIds = selectedTeamIds;
+                    syncUserFilterApplied();
+                    return;
+                }
+
+                const usersById = new Map();
+
+                teams
+                    .filter((team) => selectedTeamIds.includes(String(team.id)))
+                    .forEach((team) => {
+                        (Array.isArray(team.users) ? team.users : []).forEach((user) => {
+                            usersById.set(String(user.id), user);
+                        });
+                    });
+
+                const users = Array.from(usersById.values()).sort((first, second) => {
+                    return String(first.name).localeCompare(String(second.name));
+                });
+
+                ensureUserOptions(users);
+                isSyncingUsersFromTeams = true;
+                setSelectedValues(userSelect, users.map((user) => String(user.id)));
+                isSyncingUsersFromTeams = false;
+                previousTeamIds = selectedTeamIds;
+                syncUserFilterApplied();
+            };
+
+            teamSelect.addEventListener('change', syncUsersFromTeams);
+            userSelect.addEventListener('change', () => {
+                if (!isSyncingUsersFromTeams) {
+                    savedUserIds = getSelectedValues(userSelect);
+                    syncUserFilterApplied();
+                }
+            });
+
+            const initializeTeamUserSync = () => {
+                if (!hasExplicitUserFilter && !hasUserFilterAppliedParameter && getSelectedValues(teamSelect).length) {
+                    syncUsersFromTeams();
+                }
+            };
+
+            document.addEventListener('tomselect:ready', initializeTeamUserSync, {
+                once: true
+            });
+            window.requestAnimationFrame(initializeTeamUserSync);
+            window.requestAnimationFrame(syncUserFilterApplied);
+        });
+    </script>
 @endsection
 
 @push('scripts')
