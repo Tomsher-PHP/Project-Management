@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
         return `
-            <article class="rounded-xl border border-bgray-200 bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-category>
+            <article class="rounded-xl border border-bgray-200 bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-category data-appraisal-template-source="${escapeHtml(categoryName)}">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 px-4 py-3 dark:border-darkblack-400">
                     ${categorySelector}
                     <div class="flex items-center gap-2">
@@ -497,6 +497,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const updateTemplateAddButtons = () => {
+        const templatesList = root.querySelector('[data-appraisal-assign-templates-list]');
+        if (!templatesList) return;
+
+        const addedTemplates = Array.from(modalCategories?.querySelectorAll('[data-appraisal-template-source]') || [])
+            .map(el => el.dataset.appraisalTemplateSource)
+            .filter(Boolean);
+
+        const isReadOnly = modalReadOnly;
+
+        templatesList.querySelectorAll('[data-appraisal-template-item]').forEach(item => {
+            const name = item.dataset.appraisalTemplateName;
+            const addButton = item.querySelector('[data-appraisal-template-add]');
+            if (addButton) {
+                const alreadyAdded = addedTemplates.includes(name);
+                const disabled = alreadyAdded || isReadOnly;
+                addButton.disabled = disabled;
+                addButton.classList.toggle('opacity-30', disabled);
+            }
+        });
+    };
+
+    const renderTemplatesList = () => {
+        const templatesContainer = root.querySelector('[data-appraisal-assign-templates-list]');
+        if (!templatesContainer) return;
+
+        const templates = assignmentData.categories || [];
+        if (!templates.length) {
+            templatesContainer.innerHTML = '<p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">No category templates available.</p>';
+            return;
+        }
+
+        templatesContainer.innerHTML = templates.map((category) => `
+            <div class="rounded-lg border border-bgray-200 bg-white p-3 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-template-item data-appraisal-template-name="${escapeHtml(category.name)}">
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" class="flex flex-1 items-center gap-2 text-left" data-appraisal-template-toggle aria-expanded="false">
+                        <svg class="h-4 w-4 transform transition-transform duration-200 text-bgray-500 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <div>
+                            <h5 class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(category.name)}</h5>
+                            <span class="text-xs text-bgray-500 dark:text-bgray-300">${category.questions.length} ${category.questions.length === 1 ? 'question' : 'questions'}</span>
+                        </div>
+                    </button>
+                    <button type="button" class="flex h-7 w-7 items-center justify-center rounded-lg bg-success-50 text-success-300 hover:bg-success-100 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400" data-appraisal-template-add aria-label="Add category to appraisal">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-3 hidden border-t border-bgray-100 pt-2 dark:border-darkblack-400" data-appraisal-template-questions-body>
+                    <ul class="list-disc pl-5 text-xs text-bgray-600 dark:text-bgray-300 space-y-1">
+                        ${category.questions.map(q => `<li>${escapeHtml(q.question)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `).join('');
+
+        updateTemplateAddButtons();
+    };
+
     const renderModalCategories = (categoriesToRender = null, readOnly = modalReadOnly) => {
         if (!modalCategories) {
             return;
@@ -507,6 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!categories.length) {
             modalCategories.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300" data-appraisal-modal-empty>No active appraisal categories found.</div>';
             setModalReadOnly(readOnly);
+            updateTemplateAddButtons();
             return;
         }
 
@@ -515,6 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshQuestionNumbers();
         refreshCategoryControls();
         setModalReadOnly(readOnly);
+        updateTemplateAddButtons();
     };
 
     const renderSelectedUsers = (users = selectedUsers()) => {
@@ -544,6 +607,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderModalCategories(null, false);
         resetDraggedItemState();
+
+        const templatesContainer = root.querySelector('[data-appraisal-assign-templates-list]');
+        if (templatesContainer) {
+            templatesContainer.innerHTML = '';
+        }
     };
 
     const openAssignModal = () => {
@@ -555,6 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSelectedUsers();
         renderKpis();
         resetModal();
+        renderTemplatesList();
         modal?.classList.remove('hidden');
         modal?.classList.add('flex');
     };
@@ -611,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setKpiDescription(appraisal.kpi_description || '');
             renderModalCategories(appraisal.categories || [], false);
+            renderTemplatesList();
             modal?.classList.remove('hidden');
             modal?.classList.add('flex');
         } catch (error) {
@@ -635,6 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setKpiDescription(appraisal.kpi_description || '');
             renderModalCategories(appraisal.categories || [], true);
+            renderTemplatesList();
             modal?.classList.remove('hidden');
             modal?.classList.add('flex');
         } catch (error) {
@@ -1750,6 +1821,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             removeCategory.closest('[data-appraisal-assignment-category]')?.remove();
             refreshCategoryControls();
+            updateTemplateAddButtons();
             return;
         }
 
@@ -1761,6 +1833,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const isHidden = body?.classList.toggle('hidden');
             categoryToggle.textContent = isHidden ? 'Expand' : 'Collapse';
             categoryToggle.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+            return;
+        }
+
+        const templateToggle = event.target.closest('[data-appraisal-template-toggle]');
+        if (templateToggle) {
+            const item = templateToggle.closest('[data-appraisal-template-item]');
+            const body = item?.querySelector('[data-appraisal-template-questions-body]');
+            const svg = templateToggle.querySelector('svg');
+            if (body) {
+                const isHidden = body.classList.toggle('hidden');
+                svg?.classList.toggle('rotate-90', !isHidden);
+                templateToggle.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+            }
+            return;
+        }
+
+        const templateAdd = event.target.closest('[data-appraisal-template-add]');
+        if (templateAdd) {
+            if (modalReadOnly) {
+                return;
+            }
+
+            const item = templateAdd.closest('[data-appraisal-template-item]');
+            const name = item?.dataset.appraisalTemplateName;
+            if (!name) return;
+
+            const template = (assignmentData.categories || []).find(cat => cat.name === name);
+            if (!template) return;
+
+            const alreadyAdded = modalCategories?.querySelector(`[data-appraisal-template-source="${escapeHtml(name)}"]`);
+            if (alreadyAdded) {
+                alertError('This category template has already been added.');
+                return;
+            }
+
+            if (modalCategories) {
+                const emptyMessage = modalCategories.querySelector('[data-appraisal-modal-empty]');
+                if (emptyMessage) {
+                    modalCategories.innerHTML = '';
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = categoryMarkup(template, false);
+                const categoryCard = wrapper.firstElementChild;
+
+                if (categoryCard) {
+                    modalCategories.appendChild(categoryCard);
+                    refreshQuestionNumbers(categoryCard);
+                    refreshCategoryControls();
+                    updateTemplateAddButtons();
+                }
+            }
             return;
         }
 

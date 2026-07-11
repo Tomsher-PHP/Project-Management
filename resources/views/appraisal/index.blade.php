@@ -128,7 +128,7 @@
 
         @if ($canAssignAppraisals)
             <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6" data-appraisal-assign-modal>
-                <div class="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
+                <div class="max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                         <h3 class="text-xl font-bold text-bgray-900 dark:text-white" data-appraisal-modal-title>Assign Appraisal</h3>
                         <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-modal-close aria-label="Close">×</button>
@@ -154,15 +154,26 @@
                             </div>
                         </div>
 
-                        <div class="mt-5">
-                            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-                                <h4 class="text-base font-bold text-bgray-900 dark:text-white">Categories & Questions</h4>
+                        <div class="grid grid-cols-1 gap-6 lg:grid-cols-4 mt-6">
+                            <!-- Left Panel (larger) -->
+                            <div class="lg:col-span-3">
+                                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Categories & Questions</h4>
+                                </div>
+
+                                <div class="space-y-4" data-appraisal-modal-categories></div>
+                                <button type="button" class="mt-4 rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-assignment-category-add>
+                                    + Add Category
+                                </button>
                             </div>
 
-                            <div class="space-y-4" data-appraisal-modal-categories></div>
-                            <button type="button" class="mt-4 rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-assignment-category-add>
-                                + Add Category
-                            </button>
+                            <!-- Right Panel (smaller) -->
+                            <aside class="lg:col-span-1 border-t border-bgray-200 pt-6 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0 dark:border-darkblack-400">
+                                <h4 class="text-base font-bold text-bgray-900 dark:text-white mb-3">Category Templates</h4>
+                                <div class="space-y-3" data-appraisal-assign-templates-list>
+                                    <!-- Templates list rendered dynamically via JS -->
+                                </div>
+                            </aside>
                         </div>
                     </div>
 
