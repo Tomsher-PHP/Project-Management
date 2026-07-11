@@ -21,8 +21,22 @@ class AppraisalController extends Controller
 
     public function index(Request $request): View
     {
-        $month = (int) $request->input('month', now()->month);
-        $year = (int) $request->input('year', now()->year);
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        if ($month !== null) {
+            $month = (int) $month;
+            session(['appraisal_filter_month' => $month]);
+        } else {
+            $month = (int) session('appraisal_filter_month', now()->month);
+        }
+
+        if ($year !== null) {
+            $year = (int) $year;
+            session(['appraisal_filter_year' => $year]);
+        } else {
+            $year = (int) session('appraisal_filter_year', now()->year);
+        }
 
         return view('appraisal.index', $this->appraisalService->index($month, $year));
     }
@@ -34,9 +48,17 @@ class AppraisalController extends Controller
             'year' => ['required', 'integer', 'between:2000,2100'],
         ]);
 
+        $month = (int) $validated['month'];
+        $year = (int) $validated['year'];
+
+        session([
+            'appraisal_filter_month' => $month,
+            'appraisal_filter_year' => $year,
+        ]);
+
         return response()->json([
             'status' => true,
-            'data' => $this->appraisalService->getAssignmentData((int) $validated['month'], (int) $validated['year']),
+            'data' => $this->appraisalService->getAssignmentData($month, $year),
         ]);
     }
 
