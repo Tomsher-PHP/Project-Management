@@ -357,6 +357,7 @@ class AppraisalService
             'role' => $role,
             'role_label' => str($role)->headline()->toString(),
             'is_submitted' => $this->isRoleSubmitted($appraisal, $role),
+            'period' => Carbon::createFromDate($appraisal->year, $appraisal->month, 1)->format('F Y'),
             'assignee' => [
                 'id' => $appraisal->user?->id,
                 'name' => $appraisal->user?->name,

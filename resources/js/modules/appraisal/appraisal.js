@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiAgreementCheckbox = root.querySelector('[data-appraisal-kpi-agreement-checkbox]');
     const kpiAgreementSubmit = root.querySelector('[data-appraisal-kpi-agreement-submit]');
     const answerModal = root.querySelector('[data-appraisal-answer-modal]');
+    const answerModalTitle = root.querySelector('[data-appraisal-answer-modal-title]');
     const answerMeta = root.querySelector('[data-appraisal-answer-meta]');
     const answerKpiTitle = root.querySelector('[data-appraisal-answer-kpi-title]');
     const answerKpiDescription = root.querySelector('[data-appraisal-answer-kpi-description]');
@@ -1348,6 +1349,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (answerModalTitle) {
+            answerModalTitle.textContent = answerFormData.period ? `Answer Appraisal • ${answerFormData.period}` : 'Answer Appraisal';
+        }
+
         if (answerMeta) {
             answerMeta.textContent = `${answerFormData.role_label || 'Reviewer'} • ${answerFormData.assignee?.name || 'Assignee'}`;
         }
@@ -1397,6 +1402,10 @@ document.addEventListener('DOMContentLoaded', () => {
         answerModal?.classList.remove('flex');
         answerFormData = null;
         activeAnswerCategoryId = null;
+
+        if (answerModalTitle) {
+            answerModalTitle.textContent = 'Answer Appraisal';
+        }
 
         if (answerMeta) {
             answerMeta.textContent = '';
