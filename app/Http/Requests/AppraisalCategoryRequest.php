@@ -30,6 +30,7 @@ class AppraisalCategoryRequest extends FormRequest
             'question_ids.*' => ['nullable', 'integer'],
             'question_is_active' => ['nullable', 'array'],
             'question_is_active.*' => ['boolean'],
+            'is_default' => ['nullable', 'boolean'],
         ];
     }
 
@@ -58,6 +59,7 @@ class AppraisalCategoryRequest extends FormRequest
             'question_ids' => collect($questions)->pluck('id')->all(),
             'question_is_active' => collect($questions)->pluck('is_active')->map(fn (bool $isActive) => $isActive ? 1 : 0)->all(),
             'question_payload' => $questions,
+            'is_default' => filter_var($this->input('is_default'), FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 

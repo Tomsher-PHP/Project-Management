@@ -121,6 +121,29 @@ document.addEventListener('DOMContentLoaded', () => {
         item.classList.toggle('opacity-70', !isActive);
     };
 
+    const setDefaultStatusState = (isDefault = false) => {
+        const defaultInput = modal?.querySelector('[data-appraisal-category-default-input]');
+        const defaultToggle = modal?.querySelector('[data-appraisal-category-default-toggle]');
+        const defaultLabel = modal?.querySelector('[data-appraisal-category-default-label]');
+
+        if (defaultInput) {
+            defaultInput.value = isDefault ? '1' : '0';
+        }
+
+        if (defaultToggle) {
+            defaultToggle.classList.toggle('active', isDefault);
+            defaultToggle.setAttribute('aria-checked', isDefault ? 'true' : 'false');
+        }
+
+        if (defaultLabel) {
+            defaultLabel.textContent = isDefault ? 'Enabled' : 'Disabled';
+            defaultLabel.classList.toggle('text-success-400', isDefault);
+            defaultLabel.classList.toggle('dark:text-success-300', isDefault);
+            defaultLabel.classList.toggle('text-bgray-500', !isDefault);
+            defaultLabel.classList.toggle('dark:text-bgray-300', !isDefault);
+        }
+    };
+
     const createQuestionRow = (question = '') => {
         const normalizedQuestion = normalizeQuestion(question);
         const fragment = template.content.cloneNode(true);
@@ -189,6 +212,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const defaultToggle = event.target.closest('[data-appraisal-category-default-toggle]');
+
+        if (defaultToggle) {
+            event.preventDefault();
+            const isDefault = defaultToggle.getAttribute('aria-checked') !== 'true';
+            setDefaultStatusState(isDefault);
+            return;
+        }
+
         const removeTrigger = event.target.closest('[data-appraisal-question-remove]');
 
         if (removeTrigger) {
@@ -217,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modal.querySelector('.modal-title').textContent = 'Create Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Save';
                 setQuestions(['']);
+                setDefaultStatusState(false);
             }, 0);
             return;
         }
@@ -228,17 +261,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 modal.querySelector('.modal-title').textContent = 'Edit Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Update';
                 setQuestions(parseQuestions(editTrigger.dataset.questions));
+                setDefaultStatusState(toBoolean(editTrigger.dataset.isDefault, false));
             }, 0);
             return;
         }
 
         if (event.target.closest('#multi-step-modal .modal-close')) {
-            window.setTimeout(() => setQuestions(['']), 0);
+            window.setTimeout(() => {
+                setQuestions(['']);
+                setDefaultStatusState(false);
+            }, 0);
         }
     });
 
     document.addEventListener('ajax-form:rendered', () => {
         setQuestions(['']);
+        setDefaultStatusState(false);
     });
 
     list.addEventListener('mousedown', function (event) {
@@ -328,4 +366,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     setQuestions(['']);
+});
+
+$(document).on('click', '.default-toggle', function () {
+    let btn = $(this);
+
+    if (btn.data('processing')) return;
+    btn.data('processing', true);
+
+    let id = btn.data('id');
+    let url = btn.data('url');
+    let entity = btn.data('entity');
+
+    let isDefault = btn.attr('aria-checked') === 'true';
+    let actionText = isDefault ? 'deactivate' : 'activate';
+
+    window.Alert.confirm({
+        title: 'Are you sure?',
+        text: `You are about to ${actionText} this ${entity}.`,
+        confirmText: `Yes, ${actionText} it`
+    }).then(result => {
+
+        if (!result.isConfirmed) {
+            btn.data('processing', false);
+            btn.toggleClass('active', isDefault);
+            return;
+        }
+
+        $.ajax({
+            url: url,
+            type: 'PATCH',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                id: id
+            },
+
+            success: function (response) {
+                if (response.success) {
+                    let newStatus = response.is_default == 1;
+
+                    // Update switch UI
+                    btn.attr('aria-checked', newStatus);
+                    btn.toggleClass('active', newStatus);
+
+                    let capitalizedEntity = entity.charAt(0).toUpperCase() + entity.slice(1);
+                    window.Alert.success(`${capitalizedEntity} updated successfully.`);
+                }
+                else {
+                    window.Alert.error('Update failed.');
+                }
+            },
+
+            error: function () {
+                window.Alert.error('Something went wrong.');
+            },
+
+            complete: function () {
+                btn.data('processing', false);
+            }
+        });
+    });
 });

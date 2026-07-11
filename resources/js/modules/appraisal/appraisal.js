@@ -605,7 +605,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setKpiDescription('');
 
-        renderModalCategories(null, false);
+        const defaultCategories = (assignmentData.categories || []).filter(cat => cat.is_default);
+        renderModalCategories(defaultCategories, false);
         resetDraggedItemState();
 
         const templatesContainer = root.querySelector('[data-appraisal-assign-templates-list]');

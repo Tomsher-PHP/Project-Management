@@ -257,6 +257,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Appraisal categories routes
         Route::patch('/appraisal/toggle-status', [AppraisalCategoryController::class, 'toggleStatus'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleStatus');
+        Route::patch('/appraisal/toggle-default', [AppraisalCategoryController::class, 'toggleDefault'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleDefault');
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.view')->only(['index']);
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.create')->only(['store']);
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);

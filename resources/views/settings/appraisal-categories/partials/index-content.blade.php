@@ -21,6 +21,9 @@
                             <td class="px-6 py-5 xl:w-[150px] xl:px-0">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                             </td>
+                            <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Default</span>
+                            </td>
                             <td class="px-6 py-5 xl:w-[180px] xl:px-0">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Created At</span>
                             </td>
@@ -64,6 +67,18 @@
                                 <td class="px-6 py-5 xl:w-[150px] xl:px-0">
                                     <x-status-toggle :model="$appraisalCategory" route="settings.appraisal.toggleStatus" entity="appraisal category" permission="appraisal_settings.edit" />
                                 </td>
+                                <td class="px-6 py-5 xl:w-[150px] xl:px-0">
+                                    <button type="button" 
+                                            @cannot('appraisal_settings.edit') disabled @endcannot 
+                                            class="default-toggle switch-btn {{ $appraisalCategory->is_default ? 'active' : '' }} relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" 
+                                            data-id="{{ $appraisalCategory->id }}" 
+                                            data-url="{{ route('settings.appraisal.toggleDefault') }}" 
+                                            data-entity="default setting" 
+                                            role="switch" 
+                                            aria-checked="{{ $appraisalCategory->is_default ? 'true' : 'false' }}">
+                                        <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                                    </button>
+                                </td>
                                 <td class="px-6 py-5 xl:w-[180px] xl:px-0">
                                     <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                         @appDateTime($appraisalCategory->created_at)
@@ -72,7 +87,7 @@
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2">
                                         @can('appraisal_settings.edit')
-                                            <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.appraisal.update', $appraisalCategory->id) }}" data-name="{{ $appraisalCategory->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT"
+                                            <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.appraisal.update', $appraisalCategory->id) }}" data-name="{{ $appraisalCategory->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-is-default="{{ $appraisalCategory->is_default ? '1' : '0' }}" data-method="PUT"
                                                 data-module="Appraisal Category" aria-label="Edit appraisal category">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
@@ -83,7 +98,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <x-table-no-data :col-span="7" message="No appraisal categories found." />
+                            <x-table-no-data :col-span="8" message="No appraisal categories found." />
                         @endforelse
                     </table>
                 </div>

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
 
             $table->boolean('is_system')->default(false);
+            $table->boolean('is_default')->default(false)->comment('Assign by default');
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

@@ -20,6 +20,17 @@
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2.5 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. Communication">
         </div>
 
+        <div class="md:col-span-2">
+            <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Default Category</label>
+            <div class="flex items-center gap-3">
+                <input type="hidden" name="is_default" value="0" data-appraisal-category-default-input>
+                <button type="button" class="switch-btn relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none" data-appraisal-category-default-toggle role="switch" aria-checked="false" aria-label="Toggle default status">
+                    <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                </button>
+                <span class="text-xs font-medium text-bgray-500 dark:text-bgray-300" data-appraisal-category-default-label>Disabled</span>
+            </div>
+        </div>
+
         <div class="md:col-span-2" data-appraisal-question-builder>
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>

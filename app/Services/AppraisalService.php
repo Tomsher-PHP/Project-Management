@@ -778,6 +778,7 @@ class AppraisalService
             ->map(fn (AppraisalCategory $category) => [
                 'name' => $category->name,
                 'sort_order' => $category->sort_order,
+                'is_default' => $category->is_default,
                 'questions' => $category->questions
                     ->map(fn ($question) => [
                         'question' => $question->question,

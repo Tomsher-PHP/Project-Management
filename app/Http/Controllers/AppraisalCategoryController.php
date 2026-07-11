@@ -70,6 +70,18 @@ class AppraisalCategoryController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function toggleDefault(Request $request): JsonResponse
+    {
+        $appraisalCategory = AppraisalCategory::findOrFail($request->id);
+        $appraisalCategory = $this->appraisalSettingsService->toggleCategoryDefault($appraisalCategory);
+
+        return response()->json([
+            'success' => true,
+            'is_default' => $appraisalCategory->is_default,
+            'message' => 'Default status updated successfully'
+        ], Response::HTTP_OK);
+    }
+
     private function getIndexViewData(): array
     {
         return [

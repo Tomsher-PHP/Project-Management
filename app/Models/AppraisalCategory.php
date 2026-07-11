@@ -17,6 +17,7 @@ class AppraisalCategory extends Model
         'name',
         'sort_order',
         'is_system',
+        'is_default',
         'is_active'
     ];
 
@@ -33,6 +34,7 @@ class AppraisalCategory extends Model
             'name' => 'string',
             'sort_order' => 'integer',
             'is_system' => 'boolean',
+            'is_default' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

@@ -26,6 +26,7 @@ class AppraisalSettingsService
                 'name' => $data['name'],
                 'sort_order' => (int) (AppraisalCategory::max('sort_order') + 1),
                 'is_active' => true,
+                'is_default' => (bool) ($data['is_default'] ?? false),
             ]);
 
             $questions = collect($data['questions'] ?? [])
@@ -53,6 +54,7 @@ class AppraisalSettingsService
         return DB::transaction(function () use ($appraisalCategory, $data) {
             $appraisalCategory->update([
                 'name' => $data['name'],
+                'is_default' => (bool) ($data['is_default'] ?? false),
             ]);
 
             $submittedQuestions = collect($data['questions'] ?? [])
@@ -97,6 +99,14 @@ class AppraisalSettingsService
     public function toggleCategoryStatus(AppraisalCategory $appraisalCategory): AppraisalCategory
     {
         $appraisalCategory->is_active = ! $appraisalCategory->is_active;
+        $appraisalCategory->save();
+
+        return $appraisalCategory;
+    }
+
+    public function toggleCategoryDefault(AppraisalCategory $appraisalCategory): AppraisalCategory
+    {
+        $appraisalCategory->is_default = ! $appraisalCategory->is_default;
         $appraisalCategory->save();
 
         return $appraisalCategory;
