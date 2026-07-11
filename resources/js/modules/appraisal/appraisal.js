@@ -960,9 +960,13 @@ document.addEventListener('DOMContentLoaded', () => {
             alertError(error.message || 'Unable to agree to KPI.');
         }
     };
-
     const saveAppraisalDraft = async () => {
         if (!answerFormData || !answerSaveDraft) {
+            return;
+        }
+
+        if (answerFormData.is_submitted) {
+            alertError('Your appraisal has already been submitted and can no longer be edited.');
             return;
         }
 
@@ -1027,9 +1031,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
     const submitAppraisalAnswers = async () => {
         if (!answerFormData || !answerSubmit) {
+            return;
+        }
+
+        if (answerFormData.is_submitted) {
+            alertError('Your appraisal has already been submitted and can no longer be edited.');
             return;
         }
 
@@ -1157,22 +1165,38 @@ document.addEventListener('DOMContentLoaded', () => {
             overallBar.style.width = `${percentage}%`;
         }
 
-        if (answerSubmit) {
-            if (allCompleted && totalQuestions > 0) {
-                answerSubmit.disabled = false;
-                answerSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
-                answerSubmit.disabled = true;
-                answerSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+        if (answerFormData.is_submitted) {
+            if (answerSaveDraft) {
+                answerSaveDraft.classList.add('hidden');
             }
-        }
-
-        if (answerHelperMessage) {
-            if (allCompleted && totalQuestions > 0) {
+            if (answerSubmit) {
+                answerSubmit.classList.add('hidden');
+            }
+            if (answerHelperMessage) {
                 answerHelperMessage.classList.add('hidden');
-            } else {
-                answerHelperMessage.classList.remove('hidden');
-                answerHelperMessage.textContent = 'All questions must be answered before submitting. You can save your progress as a draft anytime.';
+            }
+        } else {
+            if (answerSaveDraft) {
+                answerSaveDraft.classList.remove('hidden');
+            }
+            if (answerSubmit) {
+                answerSubmit.classList.remove('hidden');
+                if (allCompleted && totalQuestions > 0) {
+                    answerSubmit.disabled = false;
+                    answerSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    answerSubmit.disabled = true;
+                    answerSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            if (answerHelperMessage) {
+                if (allCompleted && totalQuestions > 0) {
+                    answerHelperMessage.classList.add('hidden');
+                } else {
+                    answerHelperMessage.classList.remove('hidden');
+                    answerHelperMessage.textContent = 'All questions must be answered before submitting. You can save your progress as a draft anytime.';
+                }
             }
         }
     };
@@ -1275,9 +1299,10 @@ document.addEventListener('DOMContentLoaded', () => {
         answerQuestions.innerHTML = (category.questions || []).map((question, index) => {
             const sections = [];
 
-            const isAssigneeRole = answerFormData.role === 'assignee';
-            const isReporterRole = answerFormData.role === 'reporter';
-            const isManagerRole = answerFormData.role === 'manager';
+            const isEditable = !answerFormData.is_submitted;
+            const isAssigneeRole = answerFormData.role === 'assignee' && isEditable;
+            const isReporterRole = answerFormData.role === 'reporter' && isEditable;
+            const isManagerRole = answerFormData.role === 'manager' && isEditable;
 
             sections.push(answerSectionMarkup(
                 isAssigneeRole ? 'Self' : 'Assignee',

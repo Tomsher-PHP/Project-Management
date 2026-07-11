@@ -356,6 +356,7 @@ class AppraisalService
             'id' => $appraisal->id,
             'role' => $role,
             'role_label' => str($role)->headline()->toString(),
+            'is_submitted' => $this->isRoleSubmitted($appraisal, $role),
             'assignee' => [
                 'id' => $appraisal->user?->id,
                 'name' => $appraisal->user?->name,
@@ -417,21 +418,7 @@ class AppraisalService
             ]);
         }
 
-        if ($role === 'assignee' && filled($appraisal->assignee_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'You have already submitted answers for this appraisal.',
-            ]);
-        }
-        if ($role === 'reporter' && filled($appraisal->reporter_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'The reporter has already submitted answers for this appraisal.',
-            ]);
-        }
-        if ($role === 'manager' && filled($appraisal->manager_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'The manager has already submitted answers for this appraisal.',
-            ]);
-        }
+        $this->validateReviewEditable($appraisal, $role);
 
         DB::transaction(function () use ($appraisal, $answersData, $role) {
             foreach ($answersData as $data) {
@@ -488,21 +475,7 @@ class AppraisalService
             ]);
         }
 
-        if ($role === 'assignee' && filled($appraisal->assignee_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'You have already submitted answers for this appraisal.',
-            ]);
-        }
-        if ($role === 'reporter' && filled($appraisal->reporter_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'The reporter has already submitted answers for this appraisal.',
-            ]);
-        }
-        if ($role === 'manager' && filled($appraisal->manager_submitted_at)) {
-            throw ValidationException::withMessages([
-                'appraisal' => 'The manager has already submitted answers for this appraisal.',
-            ]);
-        }
+        $this->validateReviewEditable($appraisal, $role);
 
         $questionIds = $appraisal->snapshotCategories
             ->flatMap(fn ($category) => $category->questions->pluck('id'))
@@ -628,6 +601,25 @@ class AppraisalService
         }
 
         return null;
+    }
+
+    private function isRoleSubmitted(Appraisal $appraisal, string $role): bool
+    {
+        return match ($role) {
+            'assignee' => filled($appraisal->assignee_submitted_at),
+            'reporter' => filled($appraisal->reporter_submitted_at),
+            'manager' => filled($appraisal->manager_submitted_at),
+            default => true,
+        };
+    }
+
+    private function validateReviewEditable(Appraisal $appraisal, string $role): void
+    {
+        if ($this->isRoleSubmitted($appraisal, $role)) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'Your appraisal has already been submitted and can no longer be edited.',
+            ]);
+        }
     }
 
     private function canOpenAnswerForm(Appraisal $appraisal, ?string $role): bool
