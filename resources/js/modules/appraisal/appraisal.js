@@ -1425,6 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setActiveTab = (tab) => {
         activeTab = tab;
+        localStorage.setItem('appraisal_active_tab', tab);
 
         root.querySelectorAll('[data-appraisal-tab-panel]').forEach((panel) => {
             panel.classList.toggle('hidden', panel.dataset.appraisalTabPanel !== tab);
@@ -1899,5 +1900,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderUsers();
     renderKpis();
     initializeKpiDescriptionEditor();
-    setActiveTab('my');
+
+    const savedTab = localStorage.getItem('appraisal_active_tab');
+    const initialTab = (savedTab && root.querySelector(`[data-appraisal-tab-button][data-tab="${savedTab}"]`)) ? savedTab : 'my';
+    setActiveTab(initialTab);
 });

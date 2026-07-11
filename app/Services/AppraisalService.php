@@ -579,7 +579,7 @@ class AppraisalService
 
     private function formatDateTime($dateTime): ?string
     {
-        return $dateTime ? $dateTime->format('M d, Y h:i A') : null;
+        return $dateTime ? \App\Providers\AppServiceProvider::formatAppDateTime($dateTime) : null;
     }
 
     private function resolveAnswerRole(Appraisal $appraisal): ?string
