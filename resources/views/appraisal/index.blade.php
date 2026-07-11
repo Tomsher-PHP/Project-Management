@@ -161,7 +161,7 @@
                                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Categories & Questions</h4>
                                 </div>
 
-                                <div class="space-y-4" data-appraisal-modal-categories></div>
+                                <div class="space-y-4 max-h-[380px] lg:max-h-[420px] overflow-y-auto pr-2" data-appraisal-modal-categories></div>
                                 <button type="button" class="mt-4 rounded-lg border border-success-200 bg-success-50 px-4 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-assignment-category-add>
                                     + Add Category
                                 </button>
@@ -170,7 +170,7 @@
                             <!-- Right Panel (smaller) -->
                             <aside class="lg:col-span-1 border-t border-bgray-200 pt-6 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0 dark:border-darkblack-400">
                                 <h4 class="text-base font-bold text-bgray-900 dark:text-white mb-3">Category Templates</h4>
-                                <div class="space-y-3" data-appraisal-assign-templates-list>
+                                <div class="space-y-3 max-h-[380px] lg:max-h-[420px] overflow-y-auto pr-2" data-appraisal-assign-templates-list>
                                     <!-- Templates list rendered dynamically via JS -->
                                 </div>
                             </aside>

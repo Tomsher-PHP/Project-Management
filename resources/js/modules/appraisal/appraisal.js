@@ -1319,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         answerCategories.innerHTML = (answerFormData.categories || []).map((category) => {
             const isActive = Number(category.id) === Number(activeAnswerCategoryId);
-            
+
             const totalQuestions = (category.questions || []).length;
             const answeredCount = (category.questions || []).filter(q => isQuestionCompleted(q, answerFormData.role)).length;
             const isCompleted = answeredCount === totalQuestions;
