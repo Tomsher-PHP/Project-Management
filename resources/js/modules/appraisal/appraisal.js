@@ -1677,7 +1677,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const tabButton = event.target.closest('[data-appraisal-tab-button]');
 
         if (tabButton) {
-            setActiveTab(tabButton.dataset.tab);
+            const nextTab = tabButton.dataset.tab;
+            if (nextTab !== activeTab) {
+                localStorage.setItem('appraisal_active_tab', nextTab);
+                
+                const period = currentPeriod();
+                const url = new URL(window.location.href);
+                const perPage = url.searchParams.get('per_page');
+                url.search = '';
+                url.searchParams.set('month', period.month);
+                url.searchParams.set('year', period.year);
+                if (perPage) {
+                    url.searchParams.set('per_page', perPage);
+                }
+                
+                window.location.href = url.toString();
+            }
             return;
         }
 

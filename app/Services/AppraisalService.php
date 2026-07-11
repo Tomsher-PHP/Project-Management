@@ -939,7 +939,20 @@ class AppraisalService
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name');
 
-        $paginator = $usersQuery->paginate($perPage, ['*'], 'my_page')->withQueryString();
+        $currentPage = (int) request('my_page', 1);
+        if ($currentPage < 1) {
+            $currentPage = 1;
+        }
+        $total = $usersQuery->count();
+        $lastPage = (int) ceil($total / $perPage);
+        if ($lastPage < 1) {
+            $lastPage = 1;
+        }
+        if ($currentPage > $lastPage) {
+            $currentPage = 1;
+        }
+
+        $paginator = $usersQuery->paginate($perPage, ['*'], 'my_page', $currentPage)->withQueryString();
 
         $appraisals = Appraisal::query()
             ->where('month', $month)
@@ -1011,7 +1024,20 @@ class AppraisalService
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name');
 
-        $paginator = $usersQuery->paginate($perPage, ['*'], 'assign_page')->withQueryString();
+        $currentPage = (int) request('assign_page', 1);
+        if ($currentPage < 1) {
+            $currentPage = 1;
+        }
+        $total = $usersQuery->count();
+        $lastPage = (int) ceil($total / $perPage);
+        if ($lastPage < 1) {
+            $lastPage = 1;
+        }
+        if ($currentPage > $lastPage) {
+            $currentPage = 1;
+        }
+
+        $paginator = $usersQuery->paginate($perPage, ['*'], 'assign_page', $currentPage)->withQueryString();
 
         $appraisals = Appraisal::query()
             ->where('month', $month)
