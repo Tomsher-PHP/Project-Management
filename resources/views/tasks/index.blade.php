@@ -2,7 +2,7 @@
 @section('without-main', true)
 
 @section('page-content')
-    <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
+    <main class="w-full px-6 pb-6 pt-[68px] sm:pt-[80px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
             @can('task.create')
                 <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />

@@ -5,77 +5,59 @@
         $canAssignAppraisals = auth()->user()?->can('appraisal.create');
     @endphp
 
-    <div class="space-y-6" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-form-url-template="{{ route('appraisal.answer-form', ['appraisal' => '__ID__']) }}"
+    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-form-url-template="{{ route('appraisal.answer-form', ['appraisal' => '__ID__']) }}"
         data-submit-answers-url-template="{{ route('appraisal.submit-answers', ['appraisal' => '__ID__']) }}" data-save-draft-url-template="{{ route('appraisal.save-draft', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
         <script type="application/json" data-appraisal-initial-data>
             @json($assignmentData)
         </script>
 
-        <section class="rounded-lg bg-white px-6 py-5 shadow-sm dark:bg-darkblack-600">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Appraisals</h2>
-                </div>
-
-                <div class="flex flex-wrap items-end gap-3">
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Month</label>
-                        <select class="tom-select-no-search min-w-[150px]" data-appraisal-month>
-                            @foreach ($months as $monthValue => $monthLabel)
-                                <option value="{{ $monthValue }}" @selected((int) $monthValue === (int) $month)>{{ $monthLabel }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">Year</label>
-                        <select class="tom-select-no-search min-w-[120px]" data-appraisal-year>
-                            @foreach ($years as $yearValue => $yearLabel)
-                                <option value="{{ $yearValue }}" @selected((int) $yearValue === (int) $year)>{{ $yearLabel }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        @if ($canAssignAppraisals)
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap gap-2">
                 <button type="button" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200" data-appraisal-tab-button data-tab="my">
                     My Appraisals
                 </button>
-                <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-bgray-50 px-4 py-2 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-tab-button data-tab="assign">
-                    Assign Appraisals
-                </button>
+                @if ($canAssignAppraisals)
+                    <button type="button" class="inline-flex items-center rounded-lg border border-bgray-200 bg-bgray-50 px-4 py-2 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-tab-button data-tab="assign">
+                        Assign Appraisals
+                    </button>
+                @endif
             </div>
-        @endif
+
+            <div class="flex flex-wrap items-center gap-3">
+                <select class="tom-select-no-search min-w-[150px]" data-appraisal-month>
+                    @foreach ($months as $monthValue => $monthLabel)
+                        <option value="{{ $monthValue }}" @selected((int) $monthValue === (int) $month)>{{ $monthLabel }}</option>
+                    @endforeach
+                </select>
+
+                <select class="tom-select-no-search min-w-[120px]" data-appraisal-year>
+                    @foreach ($years as $yearValue => $yearLabel)
+                        <option value="{{ $yearValue }}" @selected((int) $yearValue === (int) $year)>{{ $yearLabel }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
 
         <section data-appraisal-tab-panel="my">
             <div class="rounded-lg bg-white px-6 py-5 shadow-sm dark:bg-darkblack-600">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">My Appraisals</h3>
-                    </div>
-                </div>
-
-                <div class="table-content mt-5 w-full overflow-x-auto">
+                <div class="table-content w-full overflow-x-auto">
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                <th class="px-4 py-4 text-left xl:px-0">
+                                <th class="px-4 py-4 text-left xl:w-[300px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Assignee Submitted At</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Self Submitted</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporter Submitted At</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporter Submitted</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Manager Submitted At</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Manager Submitted</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[160px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreed At</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreed</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreement</span>
