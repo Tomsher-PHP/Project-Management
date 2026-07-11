@@ -1208,17 +1208,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const readonlyClasses = editable ? '' : 'bg-bgray-100 dark:bg-darkblack-400 cursor-default';
 
         return `
-            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <p class="text-sm font-bold text-bgray-900 dark:text-white">${label}</p>
-                <div class="mt-3 grid gap-3 md:grid-cols-[160px_1fr]">
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Rating</label>
-                        <input type="number" min="0" max="5" step="0.5" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${readonlyAttr}>
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Remark</label>
-                        <textarea rows="2" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${readonlyAttr}>${escapeHtml(answerValue(question, remarkField))}</textarea>
-                    </div>
+            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                <p class="text-xs font-bold text-bgray-900 dark:text-white uppercase tracking-[0.08em]">${label}</p>
+                <div class="mt-1.5 grid gap-2 md:grid-cols-[120px_1fr]">
+                    <input type="number" min="0" max="5" step="0.5" placeholder="Rating" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${readonlyAttr}>
+                    <textarea rows="1" placeholder="Remark" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${readonlyAttr}>${escapeHtml(answerValue(question, remarkField))}</textarea>
                 </div>
             </div>
         `;
