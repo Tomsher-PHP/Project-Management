@@ -30,6 +30,8 @@ class AppraisalCategoryRequest extends FormRequest
             'question_ids.*' => ['nullable', 'integer'],
             'question_is_active' => ['nullable', 'array'],
             'question_is_active.*' => ['boolean'],
+            'question_types' => ['nullable', 'array'],
+            'question_types.*' => ['string', 'in:rating,answer'],
             'is_default' => ['nullable', 'boolean'],
         ];
     }
@@ -38,14 +40,20 @@ class AppraisalCategoryRequest extends FormRequest
     {
         $questionIds = $this->input('question_ids', []);
         $questionStatuses = $this->input('question_is_active', []);
+        $questionTypes = $this->input('question_types', []);
 
         $questions = collect($this->input('questions', []))
-            ->map(function ($question, $index) use ($questionIds, $questionStatuses) {
+            ->map(function ($question, $index) use ($questionIds, $questionStatuses, $questionTypes) {
                 $isActive = filter_var($questionStatuses[$index] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                $questionType = $questionTypes[$index] ?? 'rating';
+                if (!in_array($questionType, ['rating', 'answer'])) {
+                    $questionType = 'rating';
+                }
 
                 return [
                     'id' => filled($questionIds[$index] ?? null) ? (int) $questionIds[$index] : null,
                     'question' => is_string($question) ? trim($question) : $question,
+                    'question_type' => $questionType,
                     'is_active' => $isActive ?? true,
                 ];
             })
@@ -58,6 +66,7 @@ class AppraisalCategoryRequest extends FormRequest
             'questions' => collect($questions)->pluck('question')->all(),
             'question_ids' => collect($questions)->pluck('id')->all(),
             'question_is_active' => collect($questions)->pluck('is_active')->map(fn (bool $isActive) => $isActive ? 1 : 0)->all(),
+            'question_types' => collect($questions)->pluck('question_type')->all(),
             'question_payload' => $questions,
             'is_default' => filter_var($this->input('is_default'), FILTER_VALIDATE_BOOLEAN),
         ]);

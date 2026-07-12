@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-p3Yp7gqX.css",
+    "file": "assets/app-BRj4zw1r.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -153,7 +153,7 @@
     ]
   },
   "resources/js/modules/appraisal/appaisal-settings.js": {
-    "file": "assets/appaisal-settings-fR7fvEvx.js",
+    "file": "assets/appaisal-settings-BFrjihxq.js",
     "name": "appaisal-settings",
     "src": "resources/js/modules/appraisal/appaisal-settings.js",
     "isEntry": true

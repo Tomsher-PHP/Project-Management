@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 id: question.id || '',
                 question: question.question || '',
+                questionType: question.question_type || question.questionType || 'rating',
                 isActive: toBoolean(question.is_active ?? question.isActive, true),
             };
         }
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
             id: '',
             question,
+            questionType: 'rating',
             isActive: true,
         };
     };
@@ -150,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = fragment.querySelector('[data-appraisal-question-item]');
         const idInput = item?.querySelector('[data-appraisal-question-id]');
         const input = item?.querySelector('input[name="questions[]"]');
+        const typeSelect = item?.querySelector('[data-appraisal-question-type]');
 
         if (idInput) {
             idInput.value = normalizedQuestion.id;
@@ -157,6 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (input) {
             input.value = normalizedQuestion.question;
+        }
+
+        if (typeSelect) {
+            typeSelect.value = normalizedQuestion.questionType;
         }
 
         setQuestionActiveState(item, normalizedQuestion.isActive);

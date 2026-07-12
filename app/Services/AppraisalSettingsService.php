@@ -32,12 +32,14 @@ class AppraisalSettingsService
             $questions = collect($data['questions'] ?? [])
                 ->map(fn (array $question) => [
                     'question' => trim($question['question']),
+                    'question_type' => $question['question_type'] ?? 'rating',
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
                 ->values()
                 ->map(fn (array $question, int $index) => [
                     'question' => $question['question'],
+                    'question_type' => $question['question_type'],
                     'sort_order' => $index + 1,
                     'is_active' => $question['is_active'],
                 ])
@@ -61,6 +63,7 @@ class AppraisalSettingsService
                 ->map(fn (array $question) => [
                     'id' => $question['id'] ?? null,
                     'question' => trim($question['question']),
+                    'question_type' => $question['question_type'] ?? 'rating',
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
@@ -73,6 +76,7 @@ class AppraisalSettingsService
                 $questionId = $question['id'];
                 $attributes = [
                     'question' => $question['question'],
+                    'question_type' => $question['question_type'],
                     'sort_order' => $index + 1,
                     'is_active' => $question['is_active'],
                 ];
