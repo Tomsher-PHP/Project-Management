@@ -41,6 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const overallCount = root.querySelector('[data-appraisal-answer-overall-count]');
     const overallPercentage = root.querySelector('[data-appraisal-answer-overall-percentage]');
     const overallBar = root.querySelector('[data-appraisal-answer-overall-bar]');
+    const overallCommentsSection = root.querySelector('[data-appraisal-overall-comments-section]');
+    const reporterCommentMeta = root.querySelector('[data-appraisal-reporter-comment-meta]');
+    const reporterCommentTextarea = root.querySelector('[data-appraisal-reporter-comment-textarea]');
+    const reporterCommentSaveBtn = root.querySelector('[data-appraisal-save-comment-btn="reporter"]');
+    const managerCommentMeta = root.querySelector('[data-appraisal-manager-comment-meta]');
+    const managerCommentTextarea = root.querySelector('[data-appraisal-manager-comment-textarea]');
+    const managerCommentSaveBtn = root.querySelector('[data-appraisal-save-comment-btn="manager"]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
     const submitButtons = root.querySelectorAll('[data-appraisal-submit]');
@@ -376,7 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const questionRowMarkup = (question = '', readOnly = modalReadOnly) => {
+    const questionRowMarkup = (questionData = '', readOnly = modalReadOnly) => {
+        const question = typeof questionData === 'object' ? (questionData.question || '') : questionData;
+        const qType = typeof questionData === 'object' ? (questionData.question_type || 'rating') : 'rating';
+
         const questionControl = readOnly
             ? `<p class="flex-1 pt-1 text-sm font-medium text-bgray-700 dark:text-bgray-100">${escapeHtml(question)}</p>`
             : `
@@ -392,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
         return `
-            <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-question>
+            <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-question data-question-type="${escapeHtml(qType)}">
                 <div class="flex items-start gap-3">
                     <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-assignment-question-number></span>
                     ${questionControl}
@@ -434,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="space-y-3 px-4 py-4" data-appraisal-assignment-category-body>
                     <div class="space-y-3" data-appraisal-assignment-question-list>
-                        ${questions.map((question) => questionRowMarkup(question.question, readOnly)).join('') || questionRowMarkup('', readOnly)}
+                        ${questions.map((question) => questionRowMarkup(question, readOnly)).join('') || questionRowMarkup({ question: '', question_type: 'rating' }, readOnly)}
                     </div>
                 </div>
             </article>
@@ -553,7 +563,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="mt-3 hidden border-t border-bgray-100 pt-2 dark:border-darkblack-400" data-appraisal-template-questions-body>
                     <ul class="list-disc pl-5 text-xs text-bgray-600 dark:text-bgray-300 space-y-1">
-                        ${category.questions.map(q => `<li>${escapeHtml(q.question)}</li>`).join('')}
+                        ${category.questions.map(q => {
+                            const suffix = (q.question_type === 'answer') ? ' (Answer Only)' : '';
+                            return `<li>${escapeHtml(q.question)}${suffix}</li>`;
+                        }).join('')}
                     </ul>
                 </div>
             </div>
@@ -728,9 +741,17 @@ document.addEventListener('DOMContentLoaded', () => {
         .filter((categoryCard) => categoryCard.querySelector('[data-appraisal-assignment-category-checkbox]')?.checked !== false)
         .map((categoryCard) => ({
             name: (categoryCard.querySelector('[data-appraisal-assignment-category-name]')?.value || '').trim(),
-            questions: Array.from(categoryCard.querySelectorAll('[data-appraisal-assignment-question-input]'))
-                .map((input) => ({ question: input.value.trim() }))
-                .filter((question) => question.question !== ''),
+            questions: Array.from(categoryCard.querySelectorAll('[data-appraisal-assignment-question]'))
+                .map((row) => {
+                    const input = row.querySelector('[data-appraisal-assignment-question-input]');
+                    const questionText = input ? input.value.trim() : (row.querySelector('p')?.textContent || '').trim();
+                    const questionType = row.dataset.questionType || 'rating';
+                    return {
+                        question: questionText,
+                        question_type: questionType
+                    };
+                })
+                .filter((q) => q.question !== ''),
         }));
 
     const validateCategories = (categories) => {
@@ -1053,22 +1074,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const answersList = [];
         (answerFormData.categories || []).forEach((category) => {
             (category.questions || []).forEach((question) => {
-                const rating = question.answer?.[`${role}_rating`];
-                const remark = question.answer?.[`${role}_remark`];
+                if (question.question_type === 'answer') {
+                    answersList.push({
+                        question_id: question.id,
+                        assignee_answer: question.answer?.assignee_answer !== undefined && question.answer?.assignee_answer !== null ? String(question.answer?.assignee_answer).trim() : null,
+                    });
+                } else {
+                    const rating = question.answer?.[`${role}_rating`];
+                    const remark = question.answer?.[`${role}_remark`];
 
-                let ratingVal = null;
-                if (rating !== undefined && rating !== null && rating !== '') {
-                    ratingVal = Number(rating);
-                    if (isNaN(ratingVal)) {
-                        ratingVal = rating;
+                    let ratingVal = null;
+                    if (rating !== undefined && rating !== null && rating !== '') {
+                        ratingVal = Number(rating);
+                        if (isNaN(ratingVal)) {
+                            ratingVal = rating;
+                        }
                     }
-                }
 
-                answersList.push({
-                    question_id: question.id,
-                    rating: ratingVal,
-                    remark: remark !== undefined && remark !== null ? String(remark).trim() : null,
-                });
+                    answersList.push({
+                        question_id: question.id,
+                        rating: ratingVal,
+                        remark: remark !== undefined && remark !== null ? String(remark).trim() : null,
+                    });
+                }
             });
         });
 
@@ -1126,18 +1154,25 @@ document.addEventListener('DOMContentLoaded', () => {
         let allCompleted = true;
         (answerFormData.categories || []).forEach((category) => {
             (category.questions || []).forEach((question) => {
-                const rating = question.answer?.[`${role}_rating`];
-                const remark = question.answer?.[`${role}_remark`];
-
                 if (!isQuestionCompleted(question, role)) {
                     allCompleted = false;
                 }
 
-                answersList.push({
-                    question_id: question.id,
-                    rating: rating === '' ? null : Number(rating),
-                    remark: String(remark || '').trim(),
-                });
+                if (question.question_type === 'answer') {
+                    answersList.push({
+                        question_id: question.id,
+                        assignee_answer: String(question.answer?.assignee_answer || '').trim(),
+                    });
+                } else {
+                    const rating = question.answer?.[`${role}_rating`];
+                    const remark = question.answer?.[`${role}_remark`];
+
+                    answersList.push({
+                        question_id: question.id,
+                        rating: rating === '' ? null : Number(rating),
+                        remark: String(remark || '').trim(),
+                    });
+                }
             });
         });
 
@@ -1185,6 +1220,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const isQuestionCompleted = (question, role) => {
+        if (question.question_type === 'answer') {
+            if (role === 'assignee') {
+                const answerText = question.answer?.assignee_answer;
+                return answerText !== undefined && answerText !== null && String(answerText).trim() !== '';
+            }
+            return true;
+        }
+
         const rating = question.answer?.[`${role}_rating`];
         const remark = question.answer?.[`${role}_remark`];
 
@@ -1368,12 +1411,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         answerQuestions.innerHTML = (category.questions || []).map((question, index) => {
-            const sections = [];
-
             const isEditable = !answerFormData.is_submitted;
             const isAssigneeRole = answerFormData.role === 'assignee' && isEditable;
             const isReporterRole = answerFormData.role === 'reporter' && isEditable;
             const isManagerRole = answerFormData.role === 'manager' && isEditable;
+
+            if (question.question_type === 'answer') {
+                const editable = answerFormData.role === 'assignee' && isEditable;
+                const readonlyAttr = editable ? '' : 'readonly';
+                const readonlyClasses = editable ? '' : 'bg-bgray-100 dark:bg-darkblack-400 cursor-default';
+                const answerText = question.answer?.assignee_answer ?? '';
+
+                return `
+                    <article class="rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 overflow-hidden" data-appraisal-answer-question-card>
+                        <header class="flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-bgray-50 dark:hover:bg-darkblack-600 transition animate-fade-in" data-appraisal-answer-question-header>
+                            <div class="flex items-center gap-3">
+                                <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
+                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
+                            </div>
+                            <button type="button" class="text-bgray-500 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </header>
+                        <div class="border-t border-bgray-100 dark:border-darkblack-400 p-4 space-y-3 transition-all duration-200" data-appraisal-answer-question-body>
+                            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                                <p class="text-xs font-bold text-bgray-900 dark:text-white uppercase tracking-[0.08em]">Assignee Answer Only</p>
+                                <div class="mt-1.5">
+                                    <textarea rows="4" placeholder="Enter your answer" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="assignee_answer" ${readonlyAttr}>${escapeHtml(answerText)}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }
+
+            const sections = [];
 
             sections.push(answerSectionMarkup(
                 isAssigneeRole ? 'Self' : 'Assignee',
@@ -1445,6 +1519,107 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAnswerCategories();
         renderAnswerQuestions();
         updateAnswerProgress();
+        renderOverallComments();
+    };
+
+    const renderOverallComments = () => {
+        if (!answerFormData || !overallCommentsSection) {
+            return;
+        }
+
+        overallCommentsSection.classList.remove('hidden');
+
+        const comments = answerFormData.comments || [];
+        const reporterComment = comments.find((c) => c.role === 'reporter');
+        const managerComment = comments.find((c) => c.role === 'manager');
+
+        if (reporterCommentTextarea) {
+            reporterCommentTextarea.value = reporterComment ? reporterComment.comment : '';
+        }
+        if (reporterCommentMeta) {
+            reporterCommentMeta.textContent = reporterComment 
+                ? `By ${escapeHtml(reporterComment.commentator_name)} • ${escapeHtml(reporterComment.created_at)}`
+                : '';
+        }
+
+        if (managerCommentTextarea) {
+            managerCommentTextarea.value = managerComment ? managerComment.comment : '';
+        }
+        if (managerCommentMeta) {
+            managerCommentMeta.textContent = managerComment 
+                ? `By ${escapeHtml(managerComment.commentator_name)} • ${escapeHtml(managerComment.created_at)}`
+                : '';
+        }
+
+        const userRole = answerFormData.role;
+        const hasSubmitted = answerFormData.is_submitted === true;
+
+        if (userRole === 'reporter' && hasSubmitted) {
+            if (reporterCommentTextarea) reporterCommentTextarea.disabled = false;
+            if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.remove('hidden');
+
+            if (managerCommentTextarea) managerCommentTextarea.disabled = true;
+            if (managerCommentSaveBtn) managerCommentSaveBtn.classList.add('hidden');
+        } else if (userRole === 'manager' && hasSubmitted) {
+            if (reporterCommentTextarea) reporterCommentTextarea.disabled = true;
+            if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.add('hidden');
+
+            if (managerCommentTextarea) managerCommentTextarea.disabled = false;
+            if (managerCommentSaveBtn) managerCommentSaveBtn.classList.remove('hidden');
+        } else {
+            if (reporterCommentTextarea) reporterCommentTextarea.disabled = true;
+            if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.add('hidden');
+
+            if (managerCommentTextarea) managerCommentTextarea.disabled = true;
+            if (managerCommentSaveBtn) managerCommentSaveBtn.classList.add('hidden');
+        }
+    };
+
+    const saveComment = async (roleType, comment) => {
+        if (!answerFormData) {
+            return;
+        }
+
+        if (!comment) {
+            alertError('Comment is required.');
+            return;
+        }
+
+        try {
+            const saveUrl = urlFromTemplate(root.dataset.saveCommentUrlTemplate, answerFormData.id);
+            const response = await fetch(saveUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({ comment }),
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to save comment.');
+            }
+
+            if (!answerFormData.comments) {
+                answerFormData.comments = [];
+            }
+            
+            const commentIndex = answerFormData.comments.findIndex((c) => c.role === roleType);
+            if (commentIndex !== -1) {
+                answerFormData.comments[commentIndex] = payload.data;
+            } else {
+                answerFormData.comments.push(payload.data);
+            }
+
+            alertSuccess(payload.message || 'Comment saved successfully.');
+            renderOverallComments();
+        } catch (error) {
+            alertError(error.message || 'Unable to save comment.');
+        }
     };
 
     const openAnswerModal = async (appraisalId) => {
@@ -1505,6 +1680,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (answerCategories) {
             answerCategories.innerHTML = '';
+        }
+
+        if (overallCommentsSection) {
+            overallCommentsSection.classList.add('hidden');
+        }
+        if (reporterCommentTextarea) {
+            reporterCommentTextarea.value = '';
+            reporterCommentTextarea.disabled = true;
+        }
+        if (reporterCommentMeta) {
+            reporterCommentMeta.textContent = '';
+        }
+        if (reporterCommentSaveBtn) {
+            reporterCommentSaveBtn.classList.add('hidden');
+        }
+        if (managerCommentTextarea) {
+            managerCommentTextarea.value = '';
+            managerCommentTextarea.disabled = true;
+        }
+        if (managerCommentMeta) {
+            managerCommentMeta.textContent = '';
+        }
+        if (managerCommentSaveBtn) {
+            managerCommentSaveBtn.classList.add('hidden');
         }
     };
 
@@ -1742,6 +1941,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (event.target.closest('[data-appraisal-answer-save-draft]')) {
             saveAppraisalDraft();
+            return;
+        }
+
+        const saveCommentButton = event.target.closest('[data-appraisal-save-comment-btn]');
+
+        if (saveCommentButton) {
+            const roleType = saveCommentButton.dataset.appraisalSaveCommentBtn;
+            const textarea = roleType === 'reporter' ? reporterCommentTextarea : managerCommentTextarea;
+            const commentVal = textarea ? textarea.value.trim() : '';
+
+            saveComment(roleType, commentVal);
             return;
         }
 

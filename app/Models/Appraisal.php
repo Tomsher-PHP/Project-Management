@@ -56,6 +56,11 @@ class Appraisal extends Model
         return $this->hasMany(AppraisalAnswer::class);
     }
 
+    public function comments()
+    {
+        return $this->hasMany(AppraisalComment::class);
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

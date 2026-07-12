@@ -126,17 +126,18 @@ class AppraisalController extends Controller
             'answers' => ['required', 'array'],
             'answers.*.question_id' => ['required', 'integer'],
             'answers.*.rating' => [
-                'required',
+                'nullable',
                 'numeric',
                 'min:0.1',
                 'max:5.0',
                 function ($attribute, $value, $fail) {
-                    if (strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
+                    if ($value !== null && strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
                         $fail('The rating must have at most one decimal place.');
                     }
                 }
             ],
-            'answers.*.remark' => ['required', 'string'],
+            'answers.*.remark' => ['nullable', 'string'],
+            'answers.*.assignee_answer' => ['nullable', 'string'],
         ]);
 
         $result = $this->appraisalService->submitAnswers($appraisal, $validated['answers']);
@@ -165,6 +166,7 @@ class AppraisalController extends Controller
                 }
             ],
             'answers.*.remark' => ['nullable', 'string'],
+            'answers.*.assignee_answer' => ['nullable', 'string'],
         ]);
 
         $result = $this->appraisalService->saveDraft($appraisal, $validated['answers']);
@@ -173,6 +175,27 @@ class AppraisalController extends Controller
             'status' => true,
             'message' => 'Draft saved successfully.',
             'data' => $result,
+        ]);
+    }
+
+    public function saveComment(Request $request, Appraisal $appraisal): JsonResponse
+    {
+        $validated = $request->validate([
+            'comment' => ['required', 'string'],
+        ]);
+
+        $comment = $this->appraisalService->saveComment($appraisal, $validated['comment']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Comment saved successfully.',
+            'data' => [
+                'role' => $comment->role,
+                'comment' => $comment->comment,
+                'commented_by' => $comment->commented_by,
+                'commentator_name' => $comment->commentator?->name,
+                'created_at' => $comment->created_at?->format('M d, Y h:i A'),
+            ],
         ]);
     }
 }

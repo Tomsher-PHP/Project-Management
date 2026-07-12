@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Appraisal;
 use App\Models\AppraisalAnswer;
+use App\Models\AppraisalComment;
 use App\Models\AppraisalCategory;
 use App\Models\Kpi;
 use App\Models\User;
@@ -387,6 +388,7 @@ class AppraisalService
             'user.details',
             'snapshotCategories.questions',
             'answers',
+            'comments.commentator:id,name',
         ]);
 
         $role = $this->resolveAnswerRole($appraisal);
@@ -431,10 +433,12 @@ class AppraisalService
                             return [
                                 'id' => $question->id,
                                 'question' => $question->question,
+                                'question_type' => $question->question_type,
                                 'sort_order' => $question->sort_order,
                                 'answer' => [
                                     'assignee_rating' => $answer?->assignee_rating,
                                     'assignee_remark' => $answer?->assignee_remark,
+                                    'assignee_answer' => $answer?->assignee_answer,
                                     'reporter_rating' => $answer?->reporter_rating,
                                     'reporter_remark' => $answer?->reporter_remark,
                                     'manager_rating' => $answer?->manager_rating,
@@ -447,6 +451,13 @@ class AppraisalService
                 ])
                 ->values()
                 ->all(),
+            'comments' => $appraisal->comments->map(fn ($c) => [
+                'role' => $c->role,
+                'comment' => $c->comment,
+                'commented_by' => $c->commented_by,
+                'commentator_name' => $c->commentator?->name,
+                'created_at' => $c->created_at?->format('M d, Y h:i A'),
+            ])->values()->all(),
         ];
     }
 
@@ -474,32 +485,52 @@ class AppraisalService
 
         $this->validateReviewEditable($appraisal, $role);
 
-        DB::transaction(function () use ($appraisal, $answersData, $role) {
+        $snapshotQuestions = $appraisal->snapshotCategories
+            ->flatMap(fn ($category) => $category->questions)
+            ->keyBy('id');
+
+        DB::transaction(function () use ($appraisal, $answersData, $role, $snapshotQuestions) {
             foreach ($answersData as $data) {
                 $qId = $data['question_id'];
-                $rating = $data['rating'] ?? null;
-                $remark = $data['remark'] !== null ? trim((string)$data['remark']) : null;
+                $questionModel = $snapshotQuestions->get($qId);
+                if (! $questionModel) {
+                    continue;
+                }
+
+                $questionType = $questionModel->question_type ?? 'rating';
 
                 $answer = AppraisalAnswer::firstOrNew([
                     'appraisal_id' => $appraisal->id,
                     'appraisal_snapshot_question_id' => $qId,
                 ]);
 
-                if ($role === 'assignee') {
-                    $answer->assignee_rating = $rating;
-                    $answer->assignee_remark = $remark;
-                } elseif ($role === 'reporter') {
-                    $answer->reporter_user_id = auth()->id();
-                    $answer->reporter_rating = $rating;
-                    $answer->reporter_remark = $remark;
-                } elseif ($role === 'manager') {
-                    $answer->manager_user_id = auth()->id();
-                    $answer->manager_rating = $rating;
-                    $answer->manager_remark = $remark;
+                if ($questionType === 'rating') {
+                    $rating = $data['rating'] ?? null;
+                    $remark = $data['remark'] !== null ? trim((string)$data['remark']) : null;
+
+                    if ($role === 'assignee') {
+                        $answer->assignee_rating = $rating;
+                        $answer->assignee_remark = $remark;
+                    } elseif ($role === 'reporter') {
+                        $answer->reporter_user_id = auth()->id();
+                        $answer->reporter_rating = $rating;
+                        $answer->reporter_remark = $remark;
+                    } elseif ($role === 'manager') {
+                        $answer->manager_user_id = auth()->id();
+                        $answer->manager_rating = $rating;
+                        $answer->manager_remark = $remark;
+                    }
+                } else {
+                    // 'answer' type
+                    if ($role === 'assignee') {
+                        $answer->assignee_answer = isset($data['assignee_answer']) && $data['assignee_answer'] !== null ? trim((string)$data['assignee_answer']) : null;
+                    }
                 }
 
                 $answer->save();
             }
+
+            $this->updateAppraisalAverageRatings($appraisal);
         });
 
         return [
@@ -531,13 +562,14 @@ class AppraisalService
 
         $this->validateReviewEditable($appraisal, $role);
 
-        $questionIds = $appraisal->snapshotCategories
-            ->flatMap(fn ($category) => $category->questions->pluck('id'))
-            ->toArray();
+        $snapshotQuestions = $appraisal->snapshotCategories
+            ->flatMap(fn ($category) => $category->questions)
+            ->keyBy('id');
 
         $submittedAnswers = collect($answersData)->keyBy('question_id');
 
-        foreach ($questionIds as $index => $qId) {
+        $index = 0;
+        foreach ($snapshotQuestions as $qId => $questionModel) {
             if (! $submittedAnswers->has($qId)) {
                 throw ValidationException::withMessages([
                     'answers' => 'All questions must be answered before submitting.',
@@ -545,53 +577,85 @@ class AppraisalService
             }
 
             $ans = $submittedAnswers->get($qId);
-            $rating = $ans['rating'] ?? null;
-            $remark = $ans['remark'] ?? null;
+            $questionType = $questionModel->question_type ?? 'rating';
 
-            if ($rating === null || ! is_numeric($rating) || $rating < 0.1 || $rating > 5.0) {
-                throw ValidationException::withMessages([
-                    "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
-                ]);
-            }
-            if (strlen(substr(strrchr((string)$rating, "."), 1)) > 1) {
-                throw ValidationException::withMessages([
-                    "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
-                ]);
-            }
+            if ($questionType === 'rating') {
+                $rating = $ans['rating'] ?? null;
+                $remark = $ans['remark'] ?? null;
 
-            if ($remark === null || blank(trim((string)$remark))) {
-                throw ValidationException::withMessages([
-                    "answers.{$index}.remark" => 'Remarks cannot be empty.',
-                ]);
+                if ($rating === null || ! is_numeric($rating) || $rating < 0.1 || $rating > 5.0) {
+                    throw ValidationException::withMessages([
+                        "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
+                    ]);
+                }
+                if (strlen(substr(strrchr((string)$rating, "."), 1)) > 1) {
+                    throw ValidationException::withMessages([
+                        "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
+                    ]);
+                }
+
+                if ($remark === null || blank(trim((string)$remark))) {
+                    throw ValidationException::withMessages([
+                        "answers.{$index}.remark" => 'Remarks cannot be empty.',
+                    ]);
+                }
+            } else {
+                // 'answer' type question
+                if ($role === 'assignee') {
+                    $assigneeAnswer = $ans['assignee_answer'] ?? null;
+                    if ($assigneeAnswer === null || blank(trim((string)$assigneeAnswer))) {
+                        throw ValidationException::withMessages([
+                            "answers.{$index}.assignee_answer" => 'Answers cannot be empty.',
+                        ]);
+                    }
+                }
             }
+            $index++;
         }
 
-        DB::transaction(function () use ($appraisal, $submittedAnswers, $role) {
+        DB::transaction(function () use ($appraisal, $submittedAnswers, $role, $snapshotQuestions) {
             foreach ($submittedAnswers as $qId => $data) {
+                $questionModel = $snapshotQuestions->get($qId);
+                if (! $questionModel) {
+                    continue;
+                }
+
+                $questionType = $questionModel->question_type ?? 'rating';
+
                 $answer = AppraisalAnswer::firstOrNew([
                     'appraisal_id' => $appraisal->id,
                     'appraisal_snapshot_question_id' => $qId,
                 ]);
 
-                if ($role === 'assignee') {
-                    $answer->assignee_rating = $data['rating'];
-                    $answer->assignee_remark = trim((string)$data['remark']);
-                    if (blank($answer->assignee_submitted_at)) {
-                        $answer->assignee_submitted_at = now();
+                if ($questionType === 'rating') {
+                    if ($role === 'assignee') {
+                        $answer->assignee_rating = $data['rating'];
+                        $answer->assignee_remark = trim((string)$data['remark']);
+                        if (blank($answer->assignee_submitted_at)) {
+                            $answer->assignee_submitted_at = now();
+                        }
+                    } elseif ($role === 'reporter') {
+                        $answer->reporter_user_id = auth()->id();
+                        $answer->reporter_rating = $data['rating'];
+                        $answer->reporter_remark = trim((string)$data['remark']);
+                        if (blank($answer->reporter_submitted_at)) {
+                            $answer->reporter_submitted_at = now();
+                        }
+                    } elseif ($role === 'manager') {
+                        $answer->manager_user_id = auth()->id();
+                        $answer->manager_rating = $data['rating'];
+                        $answer->manager_remark = trim((string)$data['remark']);
+                        if (blank($answer->manager_submitted_at)) {
+                            $answer->manager_submitted_at = now();
+                        }
                     }
-                } elseif ($role === 'reporter') {
-                    $answer->reporter_user_id = auth()->id();
-                    $answer->reporter_rating = $data['rating'];
-                    $answer->reporter_remark = trim((string)$data['remark']);
-                    if (blank($answer->reporter_submitted_at)) {
-                        $answer->reporter_submitted_at = now();
-                    }
-                } elseif ($role === 'manager') {
-                    $answer->manager_user_id = auth()->id();
-                    $answer->manager_rating = $data['rating'];
-                    $answer->manager_remark = trim((string)$data['remark']);
-                    if (blank($answer->manager_submitted_at)) {
-                        $answer->manager_submitted_at = now();
+                } else {
+                    // 'answer' type
+                    if ($role === 'assignee') {
+                        $answer->assignee_answer = trim((string)$data['assignee_answer']);
+                        if (blank($answer->assignee_submitted_at)) {
+                            $answer->assignee_submitted_at = now();
+                        }
                     }
                 }
 
@@ -610,6 +674,9 @@ class AppraisalService
             }
 
             $appraisal->save();
+
+            // Calculate and update average ratings
+            $this->updateAppraisalAverageRatings($appraisal);
         });
 
         return [
@@ -636,6 +703,39 @@ class AppraisalService
         return $dateTime ? \App\Providers\AppServiceProvider::formatAppDateTime($dateTime) : null;
     }
 
+    public function saveComment(Appraisal $appraisal, string $comment): AppraisalComment
+    {
+        $role = $this->resolveAnswerRole($appraisal);
+
+        if (! in_array($role, ['reporter', 'manager'], true)) {
+            throw ValidationException::withMessages([
+                'comment' => 'Only the reporter or manager can add overall comments.',
+            ]);
+        }
+
+        if ($role === 'reporter' && blank($appraisal->reporter_submitted_at)) {
+            throw ValidationException::withMessages([
+                'comment' => 'You can only comment after submitting your appraisal answers.',
+            ]);
+        }
+
+        if ($role === 'manager' && blank($appraisal->manager_submitted_at)) {
+            throw ValidationException::withMessages([
+                'comment' => 'You can only comment after submitting your appraisal answers.',
+            ]);
+        }
+
+        $commentModel = $appraisal->comments()->updateOrCreate(
+            ['role' => $role],
+            [
+                'commented_by' => auth()->id(),
+                'comment' => $comment,
+            ]
+        );
+
+        return $commentModel->load('commentator:id,name');
+    }
+
     private function resolveAnswerRole(Appraisal $appraisal): ?string
     {
         $authId = (int) auth()->id();
@@ -654,6 +754,10 @@ class AppraisalService
             return 'manager';
         }
 
+        if (auth()->user()?->can('appraisal.view')) {
+            return 'viewer';
+        }
+
         return null;
     }
 
@@ -663,6 +767,7 @@ class AppraisalService
             'assignee' => filled($appraisal->assignee_submitted_at),
             'reporter' => filled($appraisal->reporter_submitted_at),
             'manager' => filled($appraisal->manager_submitted_at),
+            'viewer' => true,
             default => true,
         };
     }
@@ -686,6 +791,7 @@ class AppraisalService
             'assignee' => filled($appraisal->kpi_agreed_at),
             'reporter' => filled($appraisal->assignee_submitted_at),
             'manager' => filled($appraisal->reporter_submitted_at),
+            'viewer' => true,
             default => false,
         };
     }
@@ -798,6 +904,7 @@ class AppraisalService
                     ->values()
                     ->map(fn (array $question, int $questionIndex) => [
                         'question' => $question['question'],
+                        'question_type' => $question['question_type'] ?? 'rating',
                         'sort_order' => $questionIndex + 1,
                     ])
                     ->all()
@@ -835,6 +942,7 @@ class AppraisalService
                 'questions' => $category->questions
                     ->map(fn ($question) => [
                         'question' => $question->question,
+                        'question_type' => $question->question_type,
                         'sort_order' => $question->sort_order,
                     ])
                     ->values()
@@ -1072,5 +1180,45 @@ class AppraisalService
         });
 
         return $paginator;
+    }
+
+    private function updateAppraisalAverageRatings(Appraisal $appraisal): void
+    {
+        $appraisal->load(['snapshotCategories.questions', 'answers']);
+        
+        $ratingQuestionIds = $appraisal->snapshotCategories
+            ->flatMap(fn ($category) => $category->questions)
+            ->filter(fn ($question) => ($question->question_type ?? 'rating') === 'rating')
+            ->pluck('id')
+            ->toArray();
+            
+        if (empty($ratingQuestionIds)) {
+            $appraisal->update([
+                'assignee_average_rating' => null,
+                'reporter_average_rating' => null,
+                'manager_average_rating' => null,
+            ]);
+            return;
+        }
+        
+        $answers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
+        
+        // 1. Assignee average
+        $assigneeRatings = $answers->pluck('assignee_rating')->filter(fn ($r) => $r !== null);
+        $assigneeAvg = $assigneeRatings->isNotEmpty() ? round($assigneeRatings->average(), 2) : null;
+        
+        // 2. Reporter average
+        $reporterRatings = $answers->pluck('reporter_rating')->filter(fn ($r) => $r !== null);
+        $reporterAvg = $reporterRatings->isNotEmpty() ? round($reporterRatings->average(), 2) : null;
+        
+        // 3. Manager average
+        $managerRatings = $answers->pluck('manager_rating')->filter(fn ($r) => $r !== null);
+        $managerAvg = $managerRatings->isNotEmpty() ? round($managerRatings->average(), 2) : null;
+        
+        $appraisal->update([
+            'assignee_average_rating' => $assigneeAvg,
+            'reporter_average_rating' => $reporterAvg,
+            'manager_average_rating' => $managerAvg,
+        ]);
     }
 }
