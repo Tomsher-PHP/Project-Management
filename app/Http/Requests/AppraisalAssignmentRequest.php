@@ -25,20 +25,22 @@ class AppraisalAssignmentRequest extends FormRequest
             'categories.*.name' => ['required', 'string', 'max:255'],
             'categories.*.questions' => ['required', 'array', 'min:1'],
             'categories.*.questions.*.question' => ['required', 'string', 'max:500'],
+            'categories.*.questions.*.question_type' => ['required', 'string', 'in:rating,answer'],
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $categories = collect($this->input('categories', []))
-            ->map(function ($category) {
-                $questions = collect($category['questions'] ?? [])
-                    ->map(fn ($question) => [
-                        'question' => is_string($question['question'] ?? null) ? trim($question['question']) : ($question['question'] ?? null),
-                    ])
-                    ->filter(fn ($question) => filled($question['question'] ?? null))
-                    ->values()
-                    ->all();
+     }
+ 
+     protected function prepareForValidation(): void
+     {
+         $categories = collect($this->input('categories', []))
+             ->map(function ($category) {
+                 $questions = collect($category['questions'] ?? [])
+                     ->map(fn ($question) => [
+                         'question' => is_string($question['question'] ?? null) ? trim($question['question']) : ($question['question'] ?? null),
+                         'question_type' => is_string($question['question_type'] ?? null) ? trim($question['question_type']) : 'rating',
+                     ])
+                     ->filter(fn ($question) => filled($question['question'] ?? null))
+                     ->values()
+                     ->all();
 
                 return [
                     'name' => is_string($category['name'] ?? null) ? trim($category['name']) : ($category['name'] ?? null),

@@ -388,15 +388,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const qType = typeof questionData === 'object' ? (questionData.question_type || 'rating') : 'rating';
 
         const questionControl = readOnly
-            ? `<p class="flex-1 pt-1 text-sm font-medium text-bgray-700 dark:text-bgray-100">${escapeHtml(question)}</p>`
+            ? `
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">${escapeHtml(question)}</p>
+                    <span class="mt-1 inline-flex items-center rounded-md bg-bgray-100 px-2 py-0.5 text-xs font-medium text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300">
+                        ${qType === 'answer' ? 'Answer Only' : 'Rating & Remark'}
+                    </span>
+                </div>
+              `
             : `
                 <button type="button" class="mt-0.5 inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                     </svg>
                 </button>
-                <div class="flex-1">
-                    <input type="text" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
+                <div class="flex-1 flex flex-col sm:flex-row gap-2">
+                    <input type="text" class="flex-1 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
+                    <select class="w-full sm:w-48 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" data-appraisal-assignment-question-type-select>
+                        <option value="rating" ${qType === 'rating' ? 'selected' : ''}>Rating & Remark</option>
+                        <option value="answer" ${qType === 'answer' ? 'selected' : ''}>Answer Only</option>
+                    </select>
                 </div>
                 <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
             `;
@@ -745,7 +756,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map((row) => {
                     const input = row.querySelector('[data-appraisal-assignment-question-input]');
                     const questionText = input ? input.value.trim() : (row.querySelector('p')?.textContent || '').trim();
-                    const questionType = row.dataset.questionType || 'rating';
+                    const select = row.querySelector('[data-appraisal-assignment-question-type-select]');
+                    const questionType = select ? select.value : (row.dataset.questionType || 'rating');
                     return {
                         question: questionText,
                         question_type: questionType

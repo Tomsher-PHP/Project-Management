@@ -55,7 +55,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BRj4zw1r.css",
+    "file": "assets/app-DOTcKnxO.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -159,7 +159,7 @@
     "isEntry": true
   },
   "resources/js/modules/appraisal/appraisal.js": {
-    "file": "assets/appraisal-MyzY-TLY.js",
+    "file": "assets/appraisal-CDVwNcah.js",
     "name": "appraisal",
     "src": "resources/js/modules/appraisal/appraisal.js",
     "isEntry": true

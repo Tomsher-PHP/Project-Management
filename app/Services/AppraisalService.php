@@ -831,6 +831,7 @@ class AppraisalService
                     'questions' => $category->questions
                         ->map(fn ($question) => [
                             'question' => $question->question,
+                            'question_type' => $question->question_type ?? 'rating',
                             'sort_order' => $question->sort_order,
                         ])
                         ->values()
