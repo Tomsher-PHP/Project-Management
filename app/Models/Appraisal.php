@@ -17,6 +17,9 @@ class Appraisal extends Model
         'kpi_description',
         'kpi_agreed_at',
         'status',
+        'assignee_average_rating',
+        'reporter_average_rating',
+        'manager_average_rating',
         'published_at',
         'published_by',
         'created_by',
@@ -32,6 +35,9 @@ class Appraisal extends Model
             'reporter_submitted_at' => 'datetime',
             'manager_submitted_at' => 'datetime',
             'kpi_agreed_at' => 'datetime',
+            'assignee_average_rating' => 'decimal:2',
+            'reporter_average_rating' => 'decimal:2',
+            'manager_average_rating' => 'decimal:2',
         ];
     }
 

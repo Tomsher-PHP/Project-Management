@@ -11,6 +11,7 @@ class AppraisalQuestion extends Model
     protected $fillable = [
         'appraisal_category_id',
         'question',
+        'question_type',
         'sort_order',
         'is_active',
     ];
@@ -21,6 +22,7 @@ class AppraisalQuestion extends Model
     {
         return [
             'question' => 'string',
+            'question_type' => 'string',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];

@@ -14,6 +14,7 @@ class AppraisalAnswer extends Model
         'appraisal_snapshot_question_id',
         'assignee_rating',
         'assignee_remark',
+        'assignee_answer',
         'assignee_submitted_at',
         'reporter_user_id',
         'reporter_rating',
@@ -34,6 +35,7 @@ class AppraisalAnswer extends Model
             'assignee_submitted_at' => 'datetime',
             'reporter_submitted_at' => 'datetime',
             'manager_submitted_at' => 'datetime',
+            'assignee_answer' => 'string',
         ];
     }
 

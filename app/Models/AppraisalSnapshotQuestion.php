@@ -12,12 +12,14 @@ class AppraisalSnapshotQuestion extends Model
     protected $fillable = [
         'appraisal_snapshot_category_id',
         'question',
+        'question_type',
         'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
+            'question_type' => 'string',
             'sort_order' => 'integer',
         ];
     }
