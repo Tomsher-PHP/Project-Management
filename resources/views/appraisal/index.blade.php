@@ -130,8 +130,10 @@
         @endif
 
         @if ($canAssignAppraisals)
-            <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6" data-appraisal-assign-modal>
-                <div class="max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
+            <div class="modal fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto" data-appraisal-assign-modal>
+                <div class="fixed inset-0 bg-black/40 dark:bg-black/60"></div>
+
+                <div class="relative z-10 max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                         <h3 class="text-xl font-bold text-bgray-900 dark:text-white" data-appraisal-modal-title>Assign Appraisal</h3>
                         <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-modal-close aria-label="Close">×</button>
