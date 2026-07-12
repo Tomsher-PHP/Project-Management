@@ -1,11 +1,7 @@
 <div class="2xl:flex 2xl:space-x-[48px]">
     <section class="mb-6 2xl:mb-0 2xl:flex-1">
-        <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
-            <div class="flex flex-col space-y-5">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Appraisal Categories</h3>
-                </div>
-
+        <div class="w-full rounded-lg bg-white px-[24px] dark:bg-darkblack-600">
+            <div class="flex flex-col space-y-2">
                 <div class="table-content w-full overflow-x-auto">
                     <table class="w-full">
                         <tr class="border-b border-bgray-300 dark:border-darkblack-400">
