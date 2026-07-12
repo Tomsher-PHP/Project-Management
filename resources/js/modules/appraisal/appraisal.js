@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             return `
-                <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-50 dark:hover:bg-darkblack-500">
+                <tr class="border-b border-bgray-300 hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500">
                     <td class="px-4 py-4 xl:px-0">
                         <div class="flex items-center gap-3">
                             ${userAvatar(user)}
@@ -332,9 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
 
             return `
-                <tr class="border-b border-bgray-300 dark:border-darkblack-400 hover:bg-bgray-50 dark:hover:bg-darkblack-500 ${disabledClasses}" data-appraisal-user-row data-user-id="${escapeHtml(user.id)}">
-                    <td class="px-4 py-4 xl:px-0">
-                        <input type="checkbox" value="${escapeHtml(user.id)}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-user-checkbox ${disabled} ${checked}>
+                <tr class="border-b border-bgray-300 hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500 ${disabledClasses}" data-appraisal-user-row data-user-id="${escapeHtml(user.id)}">
+                    <td class="w-12 px-4 py-4">
+                        <input type="checkbox" value="${escapeHtml(user.id)}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-user-checkbox ${disabled} ${checked}>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <div class="flex items-center gap-3">

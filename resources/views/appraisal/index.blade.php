@@ -11,8 +11,8 @@
             @json($assignmentData)
         </script>
 
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex flex-wrap items-center gap-2">
                 <button type="button" class="inline-flex items-center rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white shadow-sm transition duration-200" data-appraisal-tab-button data-tab="my">
                     My Appraisals
                 </button>
@@ -99,8 +99,8 @@
                         <table class="w-full">
                             <thead>
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                    <th class="px-4 py-4 text-left xl:w-[60px] xl:px-0">
-                                        <input type="checkbox" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-users-select-all>
+                                    <th class="w-12 px-4 py-4 text-left">
+                                        <input type="checkbox" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-users-select-all>
                                     </th>
                                     <th class="px-4 py-4 text-left xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
