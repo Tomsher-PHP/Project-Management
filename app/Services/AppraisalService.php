@@ -461,7 +461,7 @@ class AppraisalService
         ];
     }
 
-    public function saveDraft(Appraisal $appraisal, array $answersData): array
+    public function saveDraft(Appraisal $appraisal, array $answersData, ?string $overallComment = null): array
     {
         $appraisal->load([
             'user:id,name,email',
@@ -489,7 +489,7 @@ class AppraisalService
             ->flatMap(fn ($category) => $category->questions)
             ->keyBy('id');
 
-        DB::transaction(function () use ($appraisal, $answersData, $role, $snapshotQuestions) {
+        DB::transaction(function () use ($appraisal, $answersData, $role, $snapshotQuestions, $overallComment) {
             foreach ($answersData as $data) {
                 $qId = $data['question_id'];
                 $questionModel = $snapshotQuestions->get($qId);
@@ -530,6 +530,7 @@ class AppraisalService
                 $answer->save();
             }
 
+            $this->persistReviewerComment($appraisal, $role, $overallComment);
             $this->updateAppraisalAverageRatings($appraisal);
         });
 
@@ -538,7 +539,7 @@ class AppraisalService
         ];
     }
 
-    public function submitAnswers(Appraisal $appraisal, array $answersData): array
+    public function submitAnswers(Appraisal $appraisal, array $answersData, ?string $overallComment = null): array
     {
         $appraisal->load([
             'user:id,name,email',
@@ -613,7 +614,7 @@ class AppraisalService
             $index++;
         }
 
-        DB::transaction(function () use ($appraisal, $submittedAnswers, $role, $snapshotQuestions) {
+        DB::transaction(function () use ($appraisal, $submittedAnswers, $role, $snapshotQuestions, $overallComment) {
             foreach ($submittedAnswers as $qId => $data) {
                 $questionModel = $snapshotQuestions->get($qId);
                 if (! $questionModel) {
@@ -661,6 +662,8 @@ class AppraisalService
 
                 $answer->save();
             }
+
+            $this->persistReviewerComment($appraisal, $role, $overallComment);
 
             $now = now();
             if ($role === 'assignee') {
@@ -713,27 +716,34 @@ class AppraisalService
             ]);
         }
 
-        if ($role === 'reporter' && blank($appraisal->reporter_submitted_at)) {
-            throw ValidationException::withMessages([
-                'comment' => 'You can only comment after submitting your appraisal answers.',
-            ]);
+        $this->validateReviewEditable($appraisal, $role);
+
+        $commentModel = $this->persistReviewerComment($appraisal, $role, $comment);
+
+        return $commentModel->load('commentator:id,name');
+    }
+
+    private function persistReviewerComment(Appraisal $appraisal, string $role, ?string $comment): ?AppraisalComment
+    {
+        if (! in_array($role, ['reporter', 'manager'], true)) {
+            return null;
         }
 
-        if ($role === 'manager' && blank($appraisal->manager_submitted_at)) {
-            throw ValidationException::withMessages([
-                'comment' => 'You can only comment after submitting your appraisal answers.',
-            ]);
+        $comment = trim((string) $comment);
+
+        if ($comment === '') {
+            $appraisal->comments()->where('role', $role)->forceDelete();
+
+            return null;
         }
 
-        $commentModel = $appraisal->comments()->updateOrCreate(
+        return $appraisal->comments()->updateOrCreate(
             ['role' => $role],
             [
                 'commented_by' => auth()->id(),
                 'comment' => $comment,
             ]
         );
-
-        return $commentModel->load('commentator:id,name');
     }
 
     private function resolveAnswerRole(Appraisal $appraisal): ?string

@@ -1117,6 +1117,11 @@ document.addEventListener('DOMContentLoaded', () => {
         persistVisibleAnswerValues();
 
         const role = answerFormData.role;
+        const overallComment = role === 'reporter'
+            ? reporterCommentTextarea?.value ?? ''
+            : role === 'manager'
+                ? managerCommentTextarea?.value ?? ''
+                : null;
         const answersList = [];
         (answerFormData.categories || []).forEach((category) => {
             (category.questions || []).forEach((question) => {
@@ -1158,7 +1163,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify({ answers: answersList }),
+                body: JSON.stringify({
+                    answers: answersList,
+                    overall_comment: overallComment,
+                }),
             });
             const payload = await response.json();
 
@@ -1195,6 +1203,11 @@ document.addEventListener('DOMContentLoaded', () => {
         persistVisibleAnswerValues();
 
         const role = answerFormData.role;
+        const overallComment = role === 'reporter'
+            ? reporterCommentTextarea?.value ?? ''
+            : role === 'manager'
+                ? managerCommentTextarea?.value ?? ''
+                : null;
         const answersList = [];
 
         let allCompleted = true;
@@ -1239,7 +1252,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify({ answers: answersList }),
+                body: JSON.stringify({
+                    answers: answersList,
+                    overall_comment: overallComment,
+                }),
             });
             const payload = await response.json();
 
@@ -1600,18 +1616,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const userRole = answerFormData.role;
         const hasSubmitted = answerFormData.is_submitted === true;
 
-        if (userRole === 'reporter' && hasSubmitted) {
+        if (userRole === 'reporter' && !hasSubmitted) {
             if (reporterCommentTextarea) reporterCommentTextarea.disabled = false;
-            if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.remove('hidden');
+            if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.add('hidden');
 
             if (managerCommentTextarea) managerCommentTextarea.disabled = true;
             if (managerCommentSaveBtn) managerCommentSaveBtn.classList.add('hidden');
-        } else if (userRole === 'manager' && hasSubmitted) {
+        } else if (userRole === 'manager' && !hasSubmitted) {
             if (reporterCommentTextarea) reporterCommentTextarea.disabled = true;
             if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.add('hidden');
 
             if (managerCommentTextarea) managerCommentTextarea.disabled = false;
-            if (managerCommentSaveBtn) managerCommentSaveBtn.classList.remove('hidden');
+            if (managerCommentSaveBtn) managerCommentSaveBtn.classList.add('hidden');
         } else {
             if (reporterCommentTextarea) reporterCommentTextarea.disabled = true;
             if (reporterCommentSaveBtn) reporterCommentSaveBtn.classList.add('hidden');

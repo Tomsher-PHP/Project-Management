@@ -138,9 +138,14 @@ class AppraisalController extends Controller
             ],
             'answers.*.remark' => ['nullable', 'string'],
             'answers.*.assignee_answer' => ['nullable', 'string'],
+            'overall_comment' => ['nullable', 'string'],
         ]);
 
-        $result = $this->appraisalService->submitAnswers($appraisal, $validated['answers']);
+        $result = $this->appraisalService->submitAnswers(
+            $appraisal,
+            $validated['answers'],
+            $validated['overall_comment'] ?? null
+        );
 
         return response()->json([
             'status' => true,
@@ -167,9 +172,14 @@ class AppraisalController extends Controller
             ],
             'answers.*.remark' => ['nullable', 'string'],
             'answers.*.assignee_answer' => ['nullable', 'string'],
+            'overall_comment' => ['nullable', 'string'],
         ]);
 
-        $result = $this->appraisalService->saveDraft($appraisal, $validated['answers']);
+        $result = $this->appraisalService->saveDraft(
+            $appraisal,
+            $validated['answers'],
+            $validated['overall_comment'] ?? null
+        );
 
         return response()->json([
             'status' => true,
