@@ -330,9 +330,46 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectedCount();
     };
 
+    const syncKpiTomSelect = () => {
+        if (!kpiSelect) return;
+
+        if (kpiSelect.tomselect) {
+            kpiSelect.tomselect.destroy();
+        }
+
+        if (modalReadOnly) {
+            kpiSelect.disabled = true;
+            kpiSelect.classList.add('opacity-70');
+            return;
+        }
+
+        kpiSelect.disabled = false;
+        kpiSelect.classList.remove('opacity-70');
+
+        if (window.TomSelect) {
+            const tsInstance = new window.TomSelect(kpiSelect, {
+                create: false,
+                persist: false,
+                hideDropdownArrow: false,
+                plugins: ['dropdown_input', 'remove_button'],
+                searchField: ['text'],
+                dropdownParent: 'body',
+            });
+            
+            tsInstance.on('change', (value) => {
+                const selectedKpi = (assignmentData.kpis || []).find((kpi) => Number(kpi.id) === Number(value));
+                setKpiDescription(selectedKpi?.description || '');
+            });
+        }
+    };
+
     const renderKpis = () => {
         if (!kpiSelect) {
             return;
+        }
+
+        if (kpiSelect.tomselect) {
+            kpiSelect.tomselect.destroy();
         }
 
         kpiSelect.innerHTML = '<option value="">Select KPI</option>' + (assignmentData.kpis || [])
@@ -402,14 +439,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                     </svg>
                 </button>
-                <div class="flex-1 flex flex-col sm:flex-row gap-2">
-                    <input type="text" class="flex-1 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
-                    <select class="w-full sm:w-48 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" data-appraisal-assignment-question-type-select>
+                <div class="flex-1 flex items-center gap-2">
+                    <input type="text" class="flex-1 min-w-0 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
+                    <select class="w-40 shrink-0 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" data-appraisal-assignment-question-type-select>
                         <option value="rating" ${qType === 'rating' ? 'selected' : ''}>Rating & Remark</option>
                         <option value="answer" ${qType === 'answer' ? 'selected' : ''}>Answer Only</option>
                     </select>
                 </div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:bg-red-100 hover:text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
             `;
 
         return `
@@ -501,10 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setModalReadOnly = (readOnly = false) => {
         modalReadOnly = readOnly;
 
-        if (kpiSelect) {
-            kpiSelect.disabled = readOnly;
-            kpiSelect.classList.toggle('opacity-70', readOnly);
-        }
+        syncKpiTomSelect();
 
         submitButtons.forEach((button) => {
             button.classList.toggle('hidden', readOnly);

@@ -145,7 +145,7 @@
 
                         <div class="mt-5">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">KPI <x-red-star /></label>
-                            <select class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-appraisal-kpi-select>
+                            <select class="w-full" data-appraisal-kpi-select>
                                 <option value="">Select KPI</option>
                             </select>
                         </div>
@@ -171,9 +171,11 @@
                             </div>
 
                             <!-- Right Panel (smaller) -->
-                            <aside class="lg:col-span-1 border-t border-bgray-200 pt-6 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0 dark:border-darkblack-400">
-                                <h4 class="text-base font-bold text-bgray-900 dark:text-white mb-3">Category Templates</h4>
-                                <div class="space-y-3 max-h-[380px] lg:max-h-[420px] overflow-y-auto pr-2" data-appraisal-assign-templates-list>
+                            <aside class="lg:col-span-1 rounded-xl border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
+                                <div class="mb-4 -mx-4 -mt-4 rounded-t-xl bg-bgray-100 px-4 py-3 dark:bg-darkblack-500 border-b border-bgray-200 dark:border-darkblack-400">
+                                    <h4 class="text-sm font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Category Templates</h4>
+                                </div>
+                                <div class="space-y-3 max-h-[300px] lg:max-h-[340px] overflow-y-auto pr-1" data-appraisal-assign-templates-list>
                                     <!-- Templates list rendered dynamically via JS -->
                                 </div>
                             </aside>
@@ -254,12 +256,7 @@
                                             <span class="text-sm font-bold text-bgray-900 dark:text-white">Reporter Comment</span>
                                             <span class="text-xs text-bgray-500 dark:text-bgray-300" data-appraisal-reporter-comment-meta></span>
                                         </div>
-                                        <textarea 
-                                            class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" 
-                                            rows="4" 
-                                            placeholder="No comment provided yet." 
-                                            data-appraisal-reporter-comment-textarea
-                                            disabled></textarea>
+                                        <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" rows="4" placeholder="No comment provided yet." data-appraisal-reporter-comment-textarea disabled></textarea>
                                         <div class="mt-2 text-right">
                                             <button type="button" class="hidden rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white hover:bg-success-400 transition shadow-sm" data-appraisal-save-comment-btn="reporter">Save Comment</button>
                                         </div>
@@ -271,12 +268,7 @@
                                             <span class="text-sm font-bold text-bgray-900 dark:text-white">Manager Comment</span>
                                             <span class="text-xs text-bgray-500 dark:text-bgray-300" data-appraisal-manager-comment-meta></span>
                                         </div>
-                                        <textarea 
-                                            class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" 
-                                            rows="4" 
-                                            placeholder="No comment provided yet." 
-                                            data-appraisal-manager-comment-textarea
-                                            disabled></textarea>
+                                        <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" rows="4" placeholder="No comment provided yet." data-appraisal-manager-comment-textarea disabled></textarea>
                                         <div class="mt-2 text-right">
                                             <button type="button" class="hidden rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white hover:bg-success-400 transition shadow-sm" data-appraisal-save-comment-btn="manager">Save Comment</button>
                                         </div>
@@ -332,14 +324,22 @@
         $isUserFilterApplied = $selectedUserFilterIds->isNotEmpty();
 
         $filterDependencies = [
-            'teams' => $teams->map(fn($team) => [
-                'id' => $team->id,
-                'name' => $team->name,
-                'users' => $team->users->map(fn($user) => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ])->values(),
-            ])->values(),
+            'teams' => $teams
+                ->map(
+                    fn($team) => [
+                        'id' => $team->id,
+                        'name' => $team->name,
+                        'users' => $team->users
+                            ->map(
+                                fn($user) => [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                ],
+                            )
+                            ->values(),
+                    ],
+                )
+                ->values(),
             'hasExplicitUserFilter' => $isUserFilterApplied,
             'hasUserFilterAppliedParameter' => request()->has('user_filter_applied'),
         ];
