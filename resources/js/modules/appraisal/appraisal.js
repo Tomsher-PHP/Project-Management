@@ -236,6 +236,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = row.user || {};
             const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
             const cellText = (value) => `<span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(value || '--')}</span>`;
+            const reviewSummary = (prefix) => {
+                const submittedAt = row[`${prefix}_submitted_at`];
+                const rating = row[`${prefix}_average_rating`];
+                const submittedById = Number(row[`${prefix}_submitted_by_id`] || 0);
+                const submittedByName = row[`${prefix}_submitted_by_name`];
+
+                if (!submittedAt) {
+                    return `
+                        <div class="space-y-1">
+                            <p class="text-sm font-bold text-bgray-900 dark:text-white">--</p>
+                            <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">--</p>
+                            <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">--</p>
+                        </div>
+                    `;
+                }
+
+                const reviewerName = submittedById === authUserId ? 'You' : (submittedByName || '--');
+                const averageRating = rating !== null && rating !== undefined && rating !== ''
+                    ? Number(rating).toFixed(2)
+                    : '--';
+
+                return `
+                    <div class="space-y-1">
+                        <p class="text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(averageRating)}</p>
+                        <p class="text-xs font-medium text-bgray-700 dark:text-bgray-200">${escapeHtml(reviewerName)}</p>
+                        <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(submittedAt)}</p>
+                    </div>
+                `;
+            };
             const status = String(row.status || '').toLowerCase();
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
@@ -245,7 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (canAgree) {
                 action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-kpi-agree data-appraisal-id="${escapeHtml(row.appraisal_id)}">Agree</button>`;
             } else if (canAnswer) {
-                action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-placeholder data-appraisal-id="${escapeHtml(row.appraisal_id)}">Answer</button>`;
+                const actionLabel = row.can_edit_answer ? 'Answer' : 'View Answer';
+                action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-placeholder data-appraisal-id="${escapeHtml(row.appraisal_id)}">${actionLabel}</button>`;
             }
 
             return `
@@ -259,9 +289,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-4 xl:px-0">${cellText(row.assignee_submitted_at)}</td>
-                    <td class="px-4 py-4 xl:px-0">${cellText(row.reporter_submitted_at)}</td>
-                    <td class="px-4 py-4 xl:px-0">${cellText(row.manager_submitted_at)}</td>
+                    <td class="px-4 py-4 xl:px-0">${reviewSummary('assignee')}</td>
+                    <td class="px-4 py-4 xl:px-0">${reviewSummary('reporter')}</td>
+                    <td class="px-4 py-4 xl:px-0">${reviewSummary('manager')}</td>
                     <td class="px-4 py-4 xl:px-0">${cellText(row.kpi_agreed_at)}</td>
                     <td class="px-4 py-4 xl:px-0">${kpiAgreementBadge(row.kpi_agreed)}</td>
                     <td class="px-4 py-4 xl:px-0">${action}</td>
