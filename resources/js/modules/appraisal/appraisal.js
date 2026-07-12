@@ -1240,6 +1240,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (['reporter', 'manager'].includes(role) && !String(overallComment || '').trim()) {
+            const confirmed = await confirmAction({
+                title: 'Submit Without Overall Comment?',
+                text: 'You have not entered an overall comment for this appraisal. Are you sure you want to submit without adding one?',
+                confirmText: 'Submit Anyway',
+                cancelText: 'Go Back',
+                icon: 'warning',
+            });
+
+            if (!confirmed) {
+                return;
+            }
+        }
+
         const originalText = answerSubmit.textContent;
         answerSubmit.disabled = true;
         answerSubmit.textContent = 'Submitting...';
