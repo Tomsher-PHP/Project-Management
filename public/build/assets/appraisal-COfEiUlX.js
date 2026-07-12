@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded",()=>{const i=document.querySelector
                         <option value="answer" ${s==="answer"?"selected":""}>Answer Only</option>
                     </select>
                 </div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:bg-red-100 hover:text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-error-50 text-error-300 transition duration-200 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
             `;return`
             <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-question data-question-type="${o(s)}">
                 <div class="flex items-start gap-3">

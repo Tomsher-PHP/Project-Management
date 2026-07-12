@@ -171,8 +171,8 @@
                             </div>
 
                             <!-- Right Panel (smaller) -->
-                            <aside class="lg:col-span-1 rounded-xl border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
-                                <div class="mb-4 -mx-4 -mt-4 rounded-t-xl bg-bgray-100 px-4 py-3 dark:bg-darkblack-500 border-b border-bgray-200 dark:border-darkblack-400">
+                            <aside class="lg:col-span-1 rounded-xl border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                                <div class="mb-4 -mx-4 -mt-4 rounded-t-xl bg-bgray-100 px-4 py-3 dark:bg-darkblack-600 border-b border-bgray-200 dark:border-darkblack-400">
                                     <h4 class="text-sm font-bold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Category Templates</h4>
                                 </div>
                                 <div class="space-y-3 max-h-[300px] lg:max-h-[340px] overflow-y-auto pr-1" data-appraisal-assign-templates-list>

@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchField: ['text'],
                 dropdownParent: 'body',
             });
-            
+
             tsInstance.on('change', (value) => {
                 const selectedKpi = (assignmentData.kpis || []).find((kpi) => Number(kpi.id) === Number(value));
                 setKpiDescription(selectedKpi?.description || '');
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <option value="answer" ${qType === 'answer' ? 'selected' : ''}>Answer Only</option>
                     </select>
                 </div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:bg-red-100 hover:text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-error-50 text-error-300 transition duration-200 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
             `;
 
         return `
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? ''
             : `
                 <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-assignment-question-add>Add Question</button>
-                <button type="button" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-500 transition hover:border-red-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/40 dark:bg-darkblack-600 dark:text-red-300" data-appraisal-assignment-category-remove>Remove</button>
+                <button type="button" class="rounded-lg border border-red-200 bg-error-50 px-3 py-2 text-xs font-semibold text-error-300 transition disabled:cursor-not-allowed disabled:opacity-50 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400" data-appraisal-assignment-category-remove>Remove</button>
             `;
 
         return `
@@ -609,9 +609,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="mt-3 hidden border-t border-bgray-100 pt-2 dark:border-darkblack-400" data-appraisal-template-questions-body>
                     <ul class="list-disc pl-5 text-xs text-bgray-600 dark:text-bgray-300 space-y-1">
                         ${category.questions.map(q => {
-                            const suffix = (q.question_type === 'answer') ? ' (Answer Only)' : '';
-                            return `<li>${escapeHtml(q.question)}${suffix}</li>`;
-                        }).join('')}
+            const suffix = (q.question_type === 'answer') ? ' (Answer Only)' : '';
+            return `<li>${escapeHtml(q.question)}${suffix}</li>`;
+        }).join('')}
                     </ul>
                 </div>
             </div>
@@ -1583,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reporterCommentTextarea.value = reporterComment ? reporterComment.comment : '';
         }
         if (reporterCommentMeta) {
-            reporterCommentMeta.textContent = reporterComment 
+            reporterCommentMeta.textContent = reporterComment
                 ? `By ${escapeHtml(reporterComment.commentator_name)} • ${escapeHtml(reporterComment.created_at)}`
                 : '';
         }
@@ -1592,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             managerCommentTextarea.value = managerComment ? managerComment.comment : '';
         }
         if (managerCommentMeta) {
-            managerCommentMeta.textContent = managerComment 
+            managerCommentMeta.textContent = managerComment
                 ? `By ${escapeHtml(managerComment.commentator_name)} • ${escapeHtml(managerComment.created_at)}`
                 : '';
         }
@@ -1653,7 +1653,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!answerFormData.comments) {
                 answerFormData.comments = [];
             }
-            
+
             const commentIndex = answerFormData.comments.findIndex((c) => c.role === roleType);
             if (commentIndex !== -1) {
                 answerFormData.comments[commentIndex] = payload.data;
@@ -1925,7 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const nextTab = tabButton.dataset.tab;
             if (nextTab !== activeTab) {
                 localStorage.setItem('appraisal_active_tab', nextTab);
-                
+
                 const period = currentPeriod();
                 const url = new URL(window.location.href);
                 const perPage = url.searchParams.get('per_page');
@@ -1935,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (perPage) {
                     url.searchParams.set('per_page', perPage);
                 }
-                
+
                 window.location.href = url.toString();
             }
             return;
