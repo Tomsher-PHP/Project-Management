@@ -50,7 +50,7 @@
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Self / Assignee</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Assignee</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporter</span>
