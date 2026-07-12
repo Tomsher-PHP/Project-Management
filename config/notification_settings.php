@@ -7,6 +7,23 @@ return [
     //#FFC837 - yellow
     //#2DD4BF - teal
 
+    'team_assigned' => [
+        'label' => 'Team Assigned',
+        'subtitle' => 'Receive notifications when you are assigned to a team.',
+        'group' => 'Team & Shift',
+        'action' => 'team_assigned',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <path d="M22 26a4 4 0 1 1 8 0a4 4 0 1 1-8 0zm10 2c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm-14 12c0-4 4-6 8-6s8 2 8 6v2H18v-2zm16 0c.2-1.5.8-2.8 2-3.8c1.2-1 2.8-1.2 4.5-1.2V40h-6.5z" fill="white"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 1
+    ],
+
     'shift_assigned' => [
         'label' => 'Shift Scheduled',
         'subtitle' => 'Receive notifications when shifts are assigned or updated.',
@@ -21,7 +38,47 @@ return [
         ',
         'in_app' => true,
         'email' => true,
-        'sort_order' => 1
+        'sort_order' => 2
+    ],
+
+    'appraisal_assigned' => [
+        'label' => 'Appraisal Assigned',
+        'subtitle' => 'Receive notifications when an appraisal is assigned to you.',
+        'group' => 'Team & Shift',
+        'action' => 'appraisal_assigned',
+        'icon_bg' => '#FFC837',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#FFC837"/>
+                <rect x="20" y="17" width="20" height="26" rx="3" fill="white"/>
+                <path d="M25 24h10M25 29h10M25 34h6" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="39" cy="39" r="7" fill="#B7791F"/>
+                <path d="M39 35.5v7M35.5 39h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 3
+    ],
+
+    'appraisal_submitted' => [
+        'label' => 'Appraisal Submitted',
+        'subtitle' => 'Receive notifications when an appraisal review is submitted.',
+        'group' => 'Team & Shift',
+        'action' => 'appraisal_submitted',
+        'icon_bg' => '#22C55E',
+        'icon' => '
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
+                <rect x="20" y="17" width="20" height="26" rx="3" fill="white"/>
+                <path d="M25 24h10M25 29h10M25 34h6" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="39" cy="39" r="7" fill="#15803D"/>
+                <path d="M35.5 39l2.2 2.2 4.3-4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        ',
+        'in_app' => true,
+        'email' => true,
+        'sort_order' => 4
     ],
 
     'project_assigned' => [
@@ -131,23 +188,6 @@ return [
         'in_app' => true,
         'email' => true,
         'sort_order' => 3
-    ],
-
-    'team_assigned' => [
-        'label' => 'Team Assigned',
-        'subtitle' => 'Receive notifications when you are assigned to a team.',
-        'group' => 'Team & Shift',
-        'action' => 'team_assigned',
-        'icon_bg' => '#22C55E',
-        'icon' => '
-            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="30" cy="30" r="30" fill="#22C55E"/>
-                <path d="M22 26a4 4 0 1 1 8 0a4 4 0 1 1-8 0zm10 2c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm-14 12c0-4 4-6 8-6s8 2 8 6v2H18v-2zm16 0c.2-1.5.8-2.8 2-3.8c1.2-1 2.8-1.2 4.5-1.2V40h-6.5z" fill="white"/>
-            </svg>
-        ',
-        'in_app' => true,
-        'email' => true,
-        'sort_order' => 4
     ],
 
     'task_status_changed' => [
