@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Appraisal;
 use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Project;
@@ -116,6 +117,40 @@ class NotificationService
                     ));
                 }
             });
+    }
+
+    public function notifyAppraisalAssigned(Appraisal $appraisal, User $actor, int $assigneeId): void
+    {
+        $assignee = User::query()->find($assigneeId);
+
+        if (! $assignee) {
+            return;
+        }
+
+        $monthYear = Carbon::create($appraisal->year, $appraisal->month, 1)->translatedFormat('F Y');
+        $message = "A new appraisal has been assigned for {$monthYear}.";
+        $url = route('appraisal.show', $appraisal);
+        $projectId = null;
+
+        $this->send(
+            (int) $assignee->id,
+            'New Appraisal Assigned',
+            $message,
+            $url,
+            UserNotificationSetting::APPRAISAL_ASSIGNED,
+            (int) $actor->id,
+            $projectId,
+            [
+                'Month' => $monthYear,
+            ],
+            [
+                'type' => 'appraisal_assigned',
+                'actor_id' => (int) $actor->id,
+                'actor_name' => $actor->name ?? 'A team member',
+                'assignee_id' => (int) $assignee->id,
+                'assignee_name' => $assignee->name ?? 'Unassigned',
+            ]
+        );
     }
 
     // Team Member Added: Notify users when they are added to a team

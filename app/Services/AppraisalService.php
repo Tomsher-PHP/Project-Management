@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Team;
 use App\Models\Department;
 use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,11 @@ use Illuminate\Validation\ValidationException;
 class AppraisalService
 {
     use ResolvesTeamUserFilters;
+
+    public function __construct(private readonly NotificationService $notificationService)
+    {
+    }
+
     public function index(Request $request): array
     {
         $month = $request->input('month');
@@ -245,16 +251,20 @@ class AppraisalService
 
         $this->validateAssignableUsers($userIds, $month, $year);
 
-        $savedCount = DB::transaction(function () use ($data, $kpi, $status, $month, $year, $userIds) {
+        $assignedAppraisals = [];
+
+        $savedCount = DB::transaction(function () use ($data, $kpi, $status, $month, $year, $userIds, &$assignedAppraisals) {
             $count = 0;
 
-            $userIds->each(function (int $userId) use ($data, $kpi, $status, $month, $year, &$count) {
+            $userIds->each(function (int $userId) use ($data, $kpi, $status, $month, $year, &$count, &$assignedAppraisals) {
                 $appraisal = Appraisal::query()
                     ->firstOrNew([
                         'year' => $year,
                         'month' => $month,
                         'user_id' => $userId,
                     ]);
+
+                $wasPublished = $appraisal->exists && strtolower((string) $appraisal->getOriginal('status')) === 'published';
 
                 if (! $appraisal->exists) {
                     $appraisal->created_by = auth()->id();
@@ -268,11 +278,24 @@ class AppraisalService
                 $appraisal->save();
 
                 $this->replaceSnapshot($appraisal, $data['categories']);
+
+                if ($status === 'published' && ! $wasPublished) {
+                    $assignedAppraisals[] = $appraisal;
+                }
+
                 $count++;
             });
 
             return $count;
         });
+
+        foreach ($assignedAppraisals as $appraisal) {
+            $this->notificationService->notifyAppraisalAssigned(
+                $appraisal,
+                auth()->user(),
+                (int) $appraisal->user_id,
+            );
+        }
 
         return [
             'count' => $savedCount,
@@ -315,15 +338,27 @@ class AppraisalService
             ]);
         }
 
-        DB::transaction(function () use ($draftAppraisals) {
-            $draftAppraisals->each(function (Appraisal $appraisal) {
+        $publishedAppraisals = [];
+
+        DB::transaction(function () use ($draftAppraisals, &$publishedAppraisals) {
+            $draftAppraisals->each(function (Appraisal $appraisal) use (&$publishedAppraisals) {
                 $appraisal->update([
                     'status' => 'published',
                     'published_at' => now(),
                     'published_by' => auth()->id(),
                 ]);
+
+                $publishedAppraisals[] = $appraisal;
             });
         });
+
+        foreach ($publishedAppraisals as $appraisal) {
+            $this->notificationService->notifyAppraisalAssigned(
+                $appraisal,
+                auth()->user(),
+                (int) $appraisal->user_id,
+            );
+        }
 
         return [
             'published_count' => $draftAppraisals->count(),
