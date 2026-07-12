@@ -153,6 +153,41 @@ class NotificationService
         );
     }
 
+    public function notifyAppraisalSubmitted(Appraisal $appraisal, User $actor, int $reviewerId): void
+    {
+        $reviewer = User::query()->find($reviewerId);
+
+        if (! $reviewer) {
+            return;
+        }
+
+        $monthYear = Carbon::create($appraisal->year, $appraisal->month, 1)->translatedFormat('F Y');
+        $assigneeName = $appraisal->user?->name ?? 'The assignee';
+        $message = "{$assigneeName}'s appraisal for {$monthYear} has been submitted and is ready for your review.";
+        $url = route('appraisal.show', $appraisal);
+        $projectId = null;
+
+        $this->send(
+            (int) $reviewer->id,
+            'Appraisal Ready for Review',
+            $message,
+            $url,
+            UserNotificationSetting::APPRAISAL_SUBMITTED,
+            (int) $actor->id,
+            $projectId,
+            [
+                'Month' => $monthYear,
+            ],
+            [
+                'type' => 'appraisal_submitted',
+                'actor_id' => (int) $actor->id,
+                'actor_name' => $actor->name ?? 'A team member',
+                'assignee_id' => (int) ($appraisal->user_id ?? 0),
+                'assignee_name' => $assigneeName,
+            ]
+        );
+    }
+
     // Team Member Added: Notify users when they are added to a team
     public function notifyTeamMemberAdded(int|array $userIds, Team $team, ?string $roleName = null): void
     {

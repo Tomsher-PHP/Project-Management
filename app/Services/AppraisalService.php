@@ -673,7 +673,9 @@ class AppraisalService
             $index++;
         }
 
-        DB::transaction(function () use ($appraisal, $submittedAnswers, $role, $snapshotQuestions, $overallComment) {
+        $notificationRecipientId = null;
+
+        DB::transaction(function () use ($appraisal, $submittedAnswers, $role, $snapshotQuestions, $overallComment, &$notificationRecipientId) {
             foreach ($submittedAnswers as $qId => $data) {
                 $questionModel = $snapshotQuestions->get($qId);
                 if (! $questionModel) {
@@ -727,8 +729,10 @@ class AppraisalService
             $now = now();
             if ($role === 'assignee') {
                 $appraisal->assignee_submitted_at = $now;
+                $notificationRecipientId = (int) ($appraisal->user?->details?->reporter_id ?? 0);
             } elseif ($role === 'reporter') {
                 $appraisal->reporter_submitted_at = $now;
+                $notificationRecipientId = (int) ($appraisal->user?->details?->manager_id ?? 0);
             } elseif ($role === 'manager') {
                 $appraisal->manager_submitted_at = $now;
                 $appraisal->status = 'completed';
@@ -740,6 +744,14 @@ class AppraisalService
             // Calculate and update average ratings
             $this->updateAppraisalAverageRatings($appraisal);
         });
+
+        if ($notificationRecipientId) {
+            $this->notificationService->notifyAppraisalSubmitted(
+                $appraisal->fresh(),
+                auth()->user(),
+                $notificationRecipientId,
+            );
+        }
 
         return [
             'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
