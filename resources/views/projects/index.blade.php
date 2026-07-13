@@ -10,6 +10,8 @@
 
         <x-filters.button />
 
+        <x-filters.list-search />
+
         <x-project-flow-indicator class="sm:ml-auto" />
 
         @can('project.restore')
