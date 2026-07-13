@@ -11,6 +11,7 @@
             <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
 
             <x-filters.button />
+            <x-filters.list-search />
             <x-project-flow-indicator class="sm:ml-auto" />
         </div>
 

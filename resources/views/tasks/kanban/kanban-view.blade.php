@@ -16,6 +16,8 @@
 
             <x-filters.button />
 
+            <x-filters.list-search />
+
             @include('tasks.kanban._sort_dropdown')
 
             @include('tasks.kanban._project_flow_btn', [
