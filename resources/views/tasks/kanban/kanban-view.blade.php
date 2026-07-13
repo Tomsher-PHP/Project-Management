@@ -18,12 +18,14 @@
 
             <x-filters.list-search />
 
-            @include('tasks.kanban._sort_dropdown')
+            <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
+                @include('tasks.kanban._sort_dropdown')
 
-            @include('tasks.kanban._project_flow_btn', [
-                'agileNewTaskCount' => $agileNewTaskCount,
-                'linearNewTaskCount' => $linearNewTaskCount,
-            ])
+                @include('tasks.kanban._project_flow_btn', [
+                    'agileNewTaskCount' => $agileNewTaskCount,
+                    'linearNewTaskCount' => $linearNewTaskCount,
+                ])
+            </div>
         </div>
 
         @php
