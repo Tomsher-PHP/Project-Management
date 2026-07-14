@@ -78,6 +78,9 @@
                                     $flowLabel = ucfirst($project->project_flow ?? 'linear');
                                     $projectStatusColor = $project->projectStatus->color ?? '#CBD5E1';
                                     $projectStageColor = $project->projectStage->color ?? '#CBD5E1';
+                                    $taskProgress = $project->task_progress;
+                                    $completedHours = rtrim(rtrim(number_format((float) $taskProgress['completed_hours'], 2, '.', ''), '0'), '.');
+                                    $totalHours = rtrim(rtrim(number_format((float) $taskProgress['total_hours'], 2, '.', ''), '0'), '.');
                                 @endphp
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
                                     <td class="px-6 py-5 xl:px-0">
@@ -100,23 +103,18 @@
                                                     </p>
                                                 </a>
                                                 <div class="mt-3 w-full">
-                                                    <div class="mb-1 flex items-center justify-between gap-3">
-                                                        <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                                                            Timeline
-                                                        </span>
-                                                        <span class="text-xs font-semibold {{ $project->project_timeline['text_class'] }}">
-                                                            {{ $project->project_timeline['percentage'] }}%
-                                                        </span>
+                                                    <div class="mb-1.5 flex items-center justify-between gap-3">
+                                                        <span class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Completion</span>
+                                                        <span class="text-xs font-bold text-success-400 dark:text-success-300">{{ $taskProgress['percentage'] }}%</span>
                                                     </div>
 
-                                                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-darkblack-500">
-                                                        <div class="h-full rounded-full {{ $project->project_timeline['bar_class'] }}" style="width: {{ $project->project_timeline['percentage'] }}%;"></div>
+                                                    <div class="h-2 w-full overflow-hidden rounded-full bg-bgray-200 dark:bg-darkblack-400">
+                                                        <div class="h-full rounded-full bg-success-300 transition-all duration-500" style="width: {{ $taskProgress['percentage'] }}%;"></div>
                                                     </div>
 
-                                                    <div class="mt-1 flex items-center justify-between gap-3 text-[11px] text-bgray-700 dark:text-bgray-300">
-                                                        <span>{{ $project->project_timeline['start_label'] }}</span>
-                                                        <span class="text-right">{{ $project->project_timeline['end_label'] }}</span>
-                                                    </div>
+                                                    <p class="mt-1.5 text-[11px] font-medium text-bgray-700 dark:text-bgray-300">
+                                                        {{ $completedHours }}h completed / {{ $totalHours }}h estimated
+                                                    </p>
                                                 </div>
                                             </div>
 

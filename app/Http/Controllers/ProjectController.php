@@ -70,7 +70,8 @@ class ProjectController extends Controller
             ->withQueryString();
 
         $projects->getCollection()->transform(function ($project) use ($service) {
-            $project->project_timeline = $service->getTimelines($project)['projectTimeline'];
+            $timelines = $service->getTimelines($project);
+            $project->task_progress = $timelines['task_progress'];
 
             return $project;
         });
