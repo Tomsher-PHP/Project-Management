@@ -291,11 +291,90 @@ const renderBurnupChart = (overviewRoot) => {
     const maxHours = Number(burnupData.max_hours) > 0 ? Number(burnupData.max_hours) : undefined;
     const interval = Number(burnupData.interval) > 0 ? Number(burnupData.interval) : 10;
     const isOriginPoint = (context) => context?.raw?.y === originLabel;
+    const formatMilestoneAxisLabel = (label) => {
+        const characters = Array.from(String(label || ''));
+
+        return characters.length > 12
+            ? `${characters.slice(0, 12).join('')}...`
+            : characters.join('');
+    };
     const estimatedHoursByMilestone = new Map(
         (Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [])
             .filter((point) => point && typeof point === 'object' && point.y !== originLabel)
             .map((point) => [point.y, formatHourValue(point.x)]),
     );
+
+    const burnupAxisLabelTooltip = {
+        id: 'burnupAxisLabelTooltip',
+        afterInit(chart) {
+            const tooltip = document.createElement('div');
+
+            tooltip.className = 'pointer-events-none fixed z-50 hidden max-w-xs rounded-lg bg-bgray-900 px-3 py-2 text-xs font-semibold text-bgray-700 shadow-lg dark:bg-white dark:text-bgray-900';
+            tooltip.setAttribute('role', 'tooltip');
+            document.body.appendChild(tooltip);
+            chart.$axisLabelTooltip = tooltip;
+        },
+        afterEvent(chart, { event }) {
+            const tooltip = chart.$axisLabelTooltip;
+            const yScale = chart.scales.y;
+            const hideTooltip = () => {
+                tooltip?.classList.add('hidden');
+                chart.canvas.style.cursor = '';
+            };
+
+            if (!tooltip || !yScale || event.type === 'mouseout') {
+                hideTooltip();
+                return;
+            }
+
+            const isInsideYAxis = event.x >= yScale.left
+                && event.x <= yScale.right
+                && event.y >= yScale.top
+                && event.y <= yScale.bottom;
+
+            if (!isInsideYAxis) {
+                hideTooltip();
+                return;
+            }
+
+            const tickPixels = labels.map((label, index) => ({
+                label,
+                pixel: yScale.getPixelForTick(index),
+            }));
+            const tickSpacing = tickPixels.length > 1
+                ? Math.abs(tickPixels[1].pixel - tickPixels[0].pixel)
+                : 24;
+            const hitRadius = Math.max(6, Math.min(12, tickSpacing / 2));
+            const hoveredTick = tickPixels.find(({ label, pixel }) => (
+                label !== originLabel
+                && label !== endLabel
+                && Math.abs(event.y - pixel) <= hitRadius
+            ));
+
+            if (!hoveredTick) {
+                hideTooltip();
+                return;
+            }
+
+            tooltip.textContent = String(hoveredTick.label);
+            tooltip.classList.remove('hidden');
+            chart.canvas.style.cursor = 'help';
+
+            const canvasRect = chart.canvas.getBoundingClientRect();
+            const clientX = event.native?.clientX ?? canvasRect.left + event.x;
+            const clientY = event.native?.clientY ?? canvasRect.top + event.y;
+            const left = Math.max(8, Math.min(clientX + 12, window.innerWidth - tooltip.offsetWidth - 8));
+            const top = Math.max(8, Math.min(clientY + 12, window.innerHeight - tooltip.offsetHeight - 8));
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        },
+        beforeDestroy(chart) {
+            chart.$axisLabelTooltip?.remove();
+            chart.canvas.style.cursor = '';
+            delete chart.$axisLabelTooltip;
+        },
+    };
 
     const burnupPointLabels = {
         id: 'burnupPointLabels',
@@ -417,8 +496,9 @@ const renderBurnupChart = (overviewRoot) => {
                             }
 
                             const estimatedHours = estimatedHoursByMilestone.get(label);
+                            const axisLabel = formatMilestoneAxisLabel(label);
 
-                            return estimatedHours ? `${label} (${estimatedHours})` : label;
+                            return estimatedHours ? `${axisLabel} (${estimatedHours})` : axisLabel;
                         },
                     },
                     title: {
@@ -444,7 +524,7 @@ const renderBurnupChart = (overviewRoot) => {
                 },
             },
         },
-        plugins: [burnupPointLabels],
+        plugins: [burnupPointLabels, burnupAxisLabelTooltip],
     });
 
     getChartRegistry(projectId).burnup = chart;
