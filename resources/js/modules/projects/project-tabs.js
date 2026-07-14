@@ -3,6 +3,8 @@ import { initDatepicker } from '../../components/datepicker';
 import { initTimepicker } from '../../components/timepicker';
 import { initWeekPicker } from '../../components/weekpicker';
 
+const ALWAYS_REFRESH_TABS = new Set(['tasks']);
+
 document.addEventListener('DOMContentLoaded', function () {
     const tabsRoot = document.querySelector('[data-project-tabs]');
 
@@ -88,14 +90,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    const loadTab = async (tab) => {
+    const loadTab = async (tab, { forceReload = false } = {}) => {
         const panel = getPanel(tab);
 
         if (!panel) {
             return;
         }
 
-        if (panel.dataset.loaded === 'true') {
+        if (panel.dataset.loaded === 'true' && !forceReload) {
             showTab(tab);
             return;
         }
@@ -144,7 +146,11 @@ document.addEventListener('DOMContentLoaded', function () {
     triggers.forEach((trigger) => {
         trigger.addEventListener('click', function () {
             const tab = this.dataset.projectTabTrigger;
-            loadTab(tab);
+            const isOpeningTab = getPanel(tab)?.classList.contains('hidden');
+
+            loadTab(tab, {
+                forceReload: isOpeningTab && ALWAYS_REFRESH_TABS.has(tab),
+            });
         });
     });
 
