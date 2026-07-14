@@ -130,9 +130,9 @@ class ProjectMemberController extends Controller
         return $response;
     }
 
-    public function removeMember(int $projectId, int $userId, NotificationService $notificationService)
+    public function removeMember(Project $project, int $userId, NotificationService $notificationService)
     {
-        $member = ProjectMember::with('project')->where('project_id', $projectId)
+        $member = ProjectMember::with('project')->where('project_id', $project->id)
             ->where('user_id', $userId)
             ->first();
 

@@ -55,6 +55,7 @@ class ProjectChecklistController extends Controller
             'status' => $item->status,
         ], Response::HTTP_OK);
     }
+    
     public function show(Project $project, int $userId): JsonResponse
     {
         $member = $this->resolveProjectMember($project, $userId);

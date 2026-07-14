@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProjectPaymentStatusRequest;
 use App\Models\Project;
+use App\Models\ProjectPayment;
 use App\Services\ProjectPaymentServices;
 use App\Services\ProjectServices;
 use App\Traits\ProjectHeaderTrait;
@@ -44,7 +45,7 @@ class ProjectPaymentController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, \App\Models\ProjectPayment $payment): JsonResponse
+    public function updateProjectPaymentStatus(ProjectPaymentStatusRequest $request, Project $project, ProjectPayment $payment): JsonResponse
     {
         $validated = $request->validated();
         if (!$project->is_linear) {
