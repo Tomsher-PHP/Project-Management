@@ -28,6 +28,10 @@
       "assets/flatpickr-CksuuEqD.css"
     ]
   },
+  "_note-files-modal-BGduGZXA.js": {
+    "file": "assets/note-files-modal-BGduGZXA.js",
+    "name": "note-files-modal"
+  },
   "_sweetalert2.esm.all-YZDMVk0e.js": {
     "file": "assets/sweetalert2.esm.all-YZDMVk0e.js",
     "name": "sweetalert2.esm.all"
@@ -55,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-Dc0Z0CFb.css",
+    "file": "assets/app-B5IdnlB5.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -91,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B7UGw3Ol.js",
+    "file": "assets/app-Bm2sjqqU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -227,12 +231,13 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-BnQCRgyk.js",
+    "file": "assets/project-detail-CLQnQH5N.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
     "imports": [
       "_alert-DZ9rIzyM.js",
+      "_note-files-modal-BGduGZXA.js",
       "_datepicker-C_SEo8OD.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-CrIMTW6-.js",
@@ -284,7 +289,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DIHRAECu.js",
+    "file": "assets/task-detail-DU9T21Go.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -296,6 +301,7 @@
       "_weekpicker-CPVHNp86.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_task-comments-BCaf8cZV.js",
+      "_note-files-modal-BGduGZXA.js",
       "resources/js/modules/tasks/time-log-change-request.js",
       "resources/js/modules/projects/project-tasks.js",
       "_sweetalert2.esm.all-YZDMVk0e.js",
