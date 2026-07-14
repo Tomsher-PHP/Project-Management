@@ -9,6 +9,7 @@ use App\Models\ProjectSprint;
 use App\Models\Task;
 use App\Models\TaskStatus;
 use App\Models\User;
+use App\Services\Task\RunningTaskNavbarService;
 use App\Services\TaskFilterService;
 use App\Services\TaskFormService;
 use App\Services\TaskQueryService;
@@ -28,9 +29,14 @@ class UserWorkspaceController extends Controller
 
     private UserTimelineService $timeLineService;
 
-    public function __construct(UserTimelineService $timeLineService)
-    {
+    private RunningTaskNavbarService $runningTaskNavbarService;
+
+    public function __construct(
+        UserTimelineService $timeLineService,
+        RunningTaskNavbarService $runningTaskNavbarService
+    ) {
         $this->timeLineService = $timeLineService;
+        $this->runningTaskNavbarService = $runningTaskNavbarService;
         $this->pageTitle = 'My Workspace';
         view()->share(['pageTitle' => $this->pageTitle]);
     }
@@ -264,6 +270,8 @@ class UserWorkspaceController extends Controller
     private function buildTimelineViewData(User $workspaceUser, Carbon $selectedDate, bool $isOwnWorkspace = true): array
     {
         $userId = (int) $workspaceUser->id;
+        $hasRunningTaskTimer = ! $isOwnWorkspace
+            && (bool) ($this->runningTaskNavbarService->getForUser($userId)['isRunning'] ?? false);
         $assignedShift = $this->timeLineService->getAssignedShift($userId, $selectedDate);
         $workedTaskSegments = $this->timeLineService->getWorkedTaskTimelineSegments($userId, $selectedDate);
         $breakTaskSegments = $this->timeLineService->getBreakTimelineSegments($workedTaskSegments, $assignedShift, $selectedDate);
@@ -291,6 +299,7 @@ class UserWorkspaceController extends Controller
             'workspaceTimelineUserAvatarUrl' => $workspaceUser->profileImageUrl,
             'workspaceTimelineUserInitial' => Str::upper(Str::substr($workspaceUser->name ?? 'U', 0, 2)),
             'workspaceTimelineShowsUser' => ! $isOwnWorkspace,
+            'workspaceTimelineUserHasRunningTimer' => $hasRunningTaskTimer,
         ];
     }
 

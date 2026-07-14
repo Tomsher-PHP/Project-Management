@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Traits\Filterable;
 use App\Traits\LogsModelActivity;
 use App\Traits\Sortable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -44,6 +45,21 @@ class User extends Authenticatable
     ];
 
     protected $searchable = ['name', 'email'];
+
+    protected function applyFilterSearchExtensions(Builder $query, string $search, string $condition): void
+    {
+        if ($condition === 'not_contains') {
+            return;
+        }
+
+        $query->orWhereHas('details', function (Builder $detailsQuery) use ($search, $condition) {
+            match ($condition) {
+                'starts_with' => $detailsQuery->where('employee_id', 'like', $search.'%'),
+                'ends_with' => $detailsQuery->where('employee_id', 'like', '%'.$search),
+                default => $detailsQuery->where('employee_id', 'like', '%'.$search.'%'),
+            };
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.

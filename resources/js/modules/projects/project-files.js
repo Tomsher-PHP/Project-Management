@@ -1,16 +1,21 @@
+import { createNoteFilesModalController } from '../note-files-modal';
+
 const projectFilesState = {
     editor: null,
     listenersBound: false,
 };
+
+const projectNoteModal = createNoteFilesModalController({
+    modalSelector: '[data-project-note-modal]',
+    openSelector: '[data-project-note-modal-open]',
+    closeSelector: '[data-project-note-modal-close]',
+});
 
 const initializeProjectFiles = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const projectId = window.ProjectApp?.id;
     const canCreateNotesFiles = Boolean(window.ProjectApp?.canCreateNotesFiles);
     const canRemoveNotesFiles = Boolean(window.ProjectApp?.canRemoveNotesFiles);
-    const modal = root.querySelector ? root.querySelector('[data-project-note-modal]') : document.querySelector('[data-project-note-modal]');
-    const modalOpenButton = root.querySelector ? root.querySelector('[data-project-note-modal-open]') : document.querySelector('[data-project-note-modal-open]');
-    const modalCloseButtons = modal ? Array.from(modal.querySelectorAll('[data-project-note-modal-close]')) : [];
     const saveBtn = root.querySelector ? root.querySelector('#saveProjectNote') : document.getElementById('saveProjectNote');
     const attachmentsInput = root.querySelector ? root.querySelector('#note-attachments-input') : document.getElementById('note-attachments-input');
     const selectedFilesList = root.querySelector ? root.querySelector('#selected-note-files') : document.getElementById('selected-note-files');
@@ -73,28 +78,7 @@ const initializeProjectFiles = (root = document) => {
         renderSelectedFiles();
     };
 
-    const closeModal = () => {
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        resetComposer();
-    };
-
-    const openModal = () => {
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        window.setTimeout(() => {
-            projectNoteEditor?.focus();
-        }, 50);
-    };
+    projectNoteModal.initialize(root, projectNoteEditor, resetComposer);
 
     if (attachmentsInput) {
         if (attachmentsInput.dataset.projectFilesBound !== 'true') {
@@ -104,19 +88,6 @@ const initializeProjectFiles = (root = document) => {
             });
             attachmentsInput.dataset.projectFilesBound = 'true';
         }
-    }
-
-    if (modal && modal.dataset.projectNoteModalInitialized !== 'true') {
-        modalOpenButton?.addEventListener('click', openModal);
-        modalCloseButtons.forEach((button) => {
-            button.addEventListener('click', closeModal);
-        });
-        modal.addEventListener('click', function (event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-        modal.dataset.projectNoteModalInitialized = 'true';
     }
 
     if (!saveBtn || !projectNoteEditor) {
@@ -173,7 +144,7 @@ const initializeProjectFiles = (root = document) => {
             }
 
             replaceNotesHistory(data.html, data.current_page);
-            closeModal();
+            projectNoteModal.close();
             Alert.success(data.message);
         } catch (error) {
             console.error(error);

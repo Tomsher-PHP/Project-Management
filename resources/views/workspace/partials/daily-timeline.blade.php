@@ -16,7 +16,10 @@
                     </div>
 
                     <div>
-                        <h2 class="text-[18px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">{{ $workspaceTimelineUserName }}</h2>
+                        <h2 class="flex items-center gap-2 text-[18px] font-extrabold leading-tight tracking-normal text-[#172033] dark:text-bgray-50">
+                            <span class="h-2.5 w-2.5 shrink-0 rounded-full {{ !empty($workspaceTimelineUserHasRunningTimer) ? 'bg-success-400' : 'bg-error-300' }}" aria-label="{{ !empty($workspaceTimelineUserHasRunningTimer) ? 'Task timer running' : 'No task timer running' }}" role="img"></span>
+                            <span>{{ $workspaceTimelineUserName }}</span>
+                        </h2>
                     </div>
                 </div>
             @elseif (!empty($workspaceGreetingLabel))

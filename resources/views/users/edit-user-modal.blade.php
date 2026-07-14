@@ -17,35 +17,49 @@
                 @method('PUT')
             @endif
 
-            <div class="flex flex-col md:flex-row gap-8 pb-8 dark:border-darkblack-400 dark:text-white items-start md:items-center">
+            <div class="flex flex-col items-center gap-8 pb-8 dark:border-darkblack-400 dark:text-white md:flex-row">
 
                 <!-- Profile Image -->
-                <div class="flex-shrink-0">
-                    <div id="drop-area" class="relative flex h-28 w-28 items-center justify-center rounded-md border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer">
-                        <!-- Preview Image -->
-                        <img id="preview" class="{{ $user->hasProfileImage ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover rounded-md" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
+                <div class="w-28 flex-shrink-0">
+                    <div>
+                        <div id="drop-area" class="relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300">
+                            <!-- Preview Image -->
+                            <img id="preview" class="{{ $user->hasProfileImage ? '' : 'hidden' }} absolute inset-0 h-full w-full object-cover rounded-md" alt="Preview" src="{{ $user->profileImageUrl ?? '' }}" />
 
-                        <!-- Remove Button -->
-                        <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-gray-700 shadow-md hover:bg-red-600 {{ $user->hasProfileImage ? '' : 'hidden' }}">
-                            ✕
-                        </button>
+                            <!-- Remove Button -->
+                            <button type="button" id="remove-btn" class="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-gray-700 shadow-md hover:bg-red-600 {{ $user->hasProfileImage ? '' : 'hidden' }}">
+                                ✕
+                            </button>
 
-                        <!-- Upload Placeholder -->
-                        <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ $user->hasProfileImage ? 'hidden' : '' }}">
-                            <label for="profile-image" class="cursor-pointer text-indigo-600">
-                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <input id="profile-image" name="profile_image" type="file" class="hidden" accept="image/*" />
-                                <input type="hidden" name="remove_profile_image" id="remove_profile_image" value="0">
-                            </label>
+                            <!-- Upload Placeholder -->
+                            <div id="placeholder" class="flex items-center justify-center text-sm text-gray-600 {{ $user->hasProfileImage ? 'hidden' : '' }}">
+                                <label for="profile-image" class="cursor-pointer text-indigo-600">
+                                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.9997 13.3333V26.6666M26.6663 19.9999H13.333M19.9997 36.6666C29.2044 36.6666 36.6663 29.2047 36.6663 19.9999C36.6663 10.7952 29.2044 3.33325 19.9997 3.33325C10.7949 3.33325 3.33301 10.7952 3.33301 19.9999C3.33301 29.2047 10.7949 36.6666 19.9997 36.6666Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <input id="profile-image" name="profile_image" type="file" class="hidden" accept="image/*" />
+                                    <input type="hidden" name="remove_profile_image" id="remove_profile_image" value="0">
+                                </label>
+                            </div>
                         </div>
+                        @error('profile_image')
+                            <p class="mt-2 text-sm text-error-300">
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
-                    @error('profile_image')
-                        <p class="mt-2 text-sm text-error-300">
-                            {{ $message }}
-                        </p>
-                    @enderror
+
+                    <div class="mt-2 flex items-center gap-1.5 text-xs font-medium text-bgray-500 dark:text-bgray-300">
+                        <span>Image must</span>
+                        <span class="group relative inline-flex cursor-help">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-400 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            </svg>
+                            <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                                JPG, JPEG, or PNG. Maximum file size: 2 MB.
+                            </span>
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Basic Information Fields -->

@@ -256,9 +256,28 @@ class ProjectServices
 
     public function getTimelines(Project $project): array
     {
+        $taskEstimateTotals = Task::query()
+            ->leftJoin('task_statuses', 'task_statuses.id', '=', 'tasks.status_id')
+            ->where('tasks.project_id', $project->id)
+            ->where('tasks.request_status', Task::REQUEST_APPROVED)
+            ->selectRaw('COALESCE(SUM(tasks.estimated_time_seconds), 0) as total_estimated_seconds')
+            ->selectRaw('COALESCE(SUM(CASE WHEN task_statuses.is_completed = 1 THEN tasks.estimated_time_seconds ELSE 0 END), 0) as completed_estimated_seconds')
+            ->first();
+
+        $totalEstimatedSeconds = (int) ($taskEstimateTotals?->total_estimated_seconds ?? 0);
+        $completedEstimatedSeconds = (int) ($taskEstimateTotals?->completed_estimated_seconds ?? 0);
+        $taskCompletionPercentage = $totalEstimatedSeconds > 0
+            ? (int) round(($completedEstimatedSeconds / $totalEstimatedSeconds) * 100)
+            : 0;
+
         return [
             'projectTimeline' => $this->buildTimeline($project->start_date, $project->end_date),
             'customerTimeline' => $this->buildTimeline($project->start_date, $project->customer_end_date),
+            'task_progress' => [
+                'percentage' => min(max($taskCompletionPercentage, 0), 100),
+                'completed_hours' => round($completedEstimatedSeconds / 3600, 2),
+                'total_hours' => round($totalEstimatedSeconds / 3600, 2),
+            ],
         ];
     }
 
