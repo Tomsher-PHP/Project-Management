@@ -10,7 +10,7 @@
     $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
     $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-700 dark:text-bgray-300');
     $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
-    $estimatedBarColor = (string) $progressbar->get('estimated_bar_color', 'bg-bgray-400 dark:bg-bgray-300');
+    $estimatedBarColor = 'bg-blue-500';
     $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
     $workedTrackColor = $isExceeded ? 'bg-red-50 dark:bg-red-900/20' : 'bg-success-50 dark:bg-success-900/20';
     $estimatedTrackColor = 'bg-warning-100 bg-opacity-30 dark:bg-darkblack-500';

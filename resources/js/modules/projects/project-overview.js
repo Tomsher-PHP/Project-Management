@@ -350,8 +350,8 @@ const renderBurnupChart = (overviewRoot) => {
                 {
                     label: estimatedDataset.label || 'Estimated Hours',
                     data: Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [],
-                    borderColor: '#22C55E',
-                    backgroundColor: '#22C55E',
+                    borderColor: '#3B82F6',
+                    backgroundColor: '#3B82F6',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: false,
@@ -365,8 +365,8 @@ const renderBurnupChart = (overviewRoot) => {
                 {
                     label: actualDataset.label || 'Actual Hours',
                     data: Array.isArray(actualDataset.data) ? actualDataset.data : [],
-                    borderColor: '#EF4444',
-                    backgroundColor: '#EF4444',
+                    borderColor: '#22C55E',
+                    backgroundColor: '#22C55E',
                     borderWidth: 2,
                     tension: 0.3,
                     fill: false,
