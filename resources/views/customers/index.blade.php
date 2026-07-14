@@ -9,6 +9,8 @@
             @endcan
 
             <x-filters.button />
+            <x-filters.list-search />
+
             @php
                 session(['customers_return_url' => url()->full()]);
             @endphp

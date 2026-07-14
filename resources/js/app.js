@@ -15,6 +15,7 @@ import './modules/activity-log-details';
 import './modules/task-filters';
 import './delete-alert';
 import './components/filterDrawer';
+import './components/list-search';
 import './components/estimated-time-input';
 import './modules/tasks/task-running-timer'
 import './components/calendar';
