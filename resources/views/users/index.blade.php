@@ -9,6 +9,7 @@
             @endcan
 
             <x-filters.button />
+            <x-filters.list-search />
         </div>
 
         @can('user.restore')
