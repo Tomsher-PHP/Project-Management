@@ -1,16 +1,21 @@
+import { createNoteFilesModalController } from './note-files-modal';
+
 const taskFilesState = {
     editor: null,
     listenersBound: false,
 };
+
+const taskNoteModal = createNoteFilesModalController({
+    modalSelector: '[data-task-note-modal]',
+    openSelector: '[data-task-note-modal-open]',
+    closeSelector: '[data-task-note-modal-close]',
+});
 
 const initializeTaskFiles = (root = document) => {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const tabsRoot = document.querySelector('[data-task-tabs]');
     const taskId = tabsRoot?.dataset.taskId;
     const tabsUrlTemplate = tabsRoot?.dataset.tabsUrlTemplate;
-    const modal = root.querySelector ? root.querySelector('[data-task-note-modal]') : document.querySelector('[data-task-note-modal]');
-    const modalOpenButton = root.querySelector ? root.querySelector('[data-task-note-modal-open]') : document.querySelector('[data-task-note-modal-open]');
-    const modalCloseButtons = modal ? Array.from(modal.querySelectorAll('[data-task-note-modal-close]')) : [];
     const saveBtn = root.querySelector ? root.querySelector('#saveTaskNote') : document.getElementById('saveTaskNote');
     const attachmentsInput = root.querySelector ? root.querySelector('#task-note-attachments-input') : document.getElementById('task-note-attachments-input');
     const selectedFilesList = root.querySelector ? root.querySelector('#selected-task-note-files') : document.getElementById('selected-task-note-files');
@@ -73,28 +78,7 @@ const initializeTaskFiles = (root = document) => {
         renderSelectedFiles();
     };
 
-    const closeModal = () => {
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        resetComposer();
-    };
-
-    const openModal = () => {
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        window.setTimeout(() => {
-            taskNoteEditor?.focus();
-        }, 50);
-    };
+    taskNoteModal.initialize(root, taskNoteEditor, resetComposer);
 
     if (attachmentsInput && attachmentsInput.dataset.taskFilesBound !== 'true') {
         attachmentsInput.addEventListener('change', () => {
@@ -102,19 +86,6 @@ const initializeTaskFiles = (root = document) => {
             renderSelectedFiles();
         });
         attachmentsInput.dataset.taskFilesBound = 'true';
-    }
-
-    if (modal && modal.dataset.taskNoteModalInitialized !== 'true') {
-        modalOpenButton?.addEventListener('click', openModal);
-        modalCloseButtons.forEach((button) => {
-            button.addEventListener('click', closeModal);
-        });
-        modal.addEventListener('click', function (event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        });
-        modal.dataset.taskNoteModalInitialized = 'true';
     }
 
     if (!saveBtn || !taskNoteEditor) {
@@ -164,7 +135,7 @@ const initializeTaskFiles = (root = document) => {
             }
 
             replaceNotesHistory(data.html, data.current_page);
-            closeModal();
+            taskNoteModal.close();
             Alert.success(data.message);
         } catch (error) {
             Alert.error(error.message || 'Something went wrong. Please try again.');
