@@ -35,6 +35,9 @@
                                             'id' => $question->id,
                                             'question' => $question->question,
                                             'question_type' => $question->question_type,
+                                            'measurement_type' => $question->measurement_type,
+                                            'target_value' => $question->target_value,
+                                            'unit' => $question->unit,
                                             'is_active' => $question->is_active,
                                         ],
                                     )

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AppraisalCategoryRequest;
 use App\Models\AppraisalCategory;
+use App\Models\AppraisalQuestion;
+use App\Models\AppraisalQuestionUnit;
 use App\Services\AppraisalSettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -66,7 +68,7 @@ class AppraisalCategoryController extends Controller
         return response()->json([
             'success' => true,
             'is_active' => $appraisalCategory->is_active,
-            'message' => 'Status updated successfully'
+            'message' => 'Status updated successfully',
         ], Response::HTTP_OK);
     }
 
@@ -78,7 +80,7 @@ class AppraisalCategoryController extends Controller
         return response()->json([
             'success' => true,
             'is_default' => $appraisalCategory->is_default,
-            'message' => 'Default status updated successfully'
+            'message' => 'Default status updated successfully',
         ], Response::HTTP_OK);
     }
 
@@ -86,6 +88,13 @@ class AppraisalCategoryController extends Controller
     {
         return [
             'appraisalCategories' => $this->appraisalSettingsService->getAppraisalCategories(),
+            'questionTypes' => AppraisalQuestion::QUESTION_TYPES,
+            'measurementTypes' => AppraisalQuestion::MEASUREMENT_TYPES,
+            'questionUnits' => AppraisalQuestionUnit::active()
+                ->whereNull('deleted_at')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
         ];
     }
 

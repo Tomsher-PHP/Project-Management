@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class AppraisalSettingsService
 {
-
     public function getAppraisalCategories(): Collection
     {
         return AppraisalCategory::query()
@@ -33,6 +32,9 @@ class AppraisalSettingsService
                 ->map(fn (array $question) => [
                     'question' => trim($question['question']),
                     'question_type' => $question['question_type'] ?? 'rating',
+                    'measurement_type' => $question['measurement_type'] ?? null,
+                    'target_value' => $question['target_value'] ?? null,
+                    'unit' => $question['unit'] ?? null,
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
@@ -40,6 +42,9 @@ class AppraisalSettingsService
                 ->map(fn (array $question, int $index) => [
                     'question' => $question['question'],
                     'question_type' => $question['question_type'],
+                    'measurement_type' => $question['measurement_type'],
+                    'target_value' => $question['target_value'],
+                    'unit' => $question['unit'],
                     'sort_order' => $index + 1,
                     'is_active' => $question['is_active'],
                 ])
@@ -64,6 +69,9 @@ class AppraisalSettingsService
                     'id' => $question['id'] ?? null,
                     'question' => trim($question['question']),
                     'question_type' => $question['question_type'] ?? 'rating',
+                    'measurement_type' => $question['measurement_type'] ?? null,
+                    'target_value' => $question['target_value'] ?? null,
+                    'unit' => $question['unit'] ?? null,
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
@@ -77,6 +85,9 @@ class AppraisalSettingsService
                 $attributes = [
                     'question' => $question['question'],
                     'question_type' => $question['question_type'],
+                    'measurement_type' => $question['measurement_type'],
+                    'target_value' => $question['target_value'],
+                    'unit' => $question['unit'],
                     'sort_order' => $index + 1,
                     'is_active' => $question['is_active'],
                 ];

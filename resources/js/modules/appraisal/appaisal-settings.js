@@ -1,3 +1,5 @@
+import { initTomSelect } from '../../components/tom-select';
+
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('multi-step-modal');
     const form = document.getElementById('appraisalCategoryForm');
@@ -11,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let draggedQuestionItem = null;
     let dragHandleItem = null;
+    const targetQuestionType = builder.dataset.appraisalTargetQuestionType;
 
     const refreshNumbers = () => {
         list.querySelectorAll('[data-appraisal-question-item]').forEach((item, index) => {
@@ -82,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: question.id || '',
                 question: question.question || '',
                 questionType: question.question_type || question.questionType || 'rating',
+                measurementType: question.measurement_type ?? question.measurementType ?? '',
+                targetValue: question.target_value ?? question.targetValue ?? '',
+                unit: question.unit ?? '',
                 isActive: toBoolean(question.is_active ?? question.isActive, true),
             };
         }
@@ -90,8 +96,33 @@ document.addEventListener('DOMContentLoaded', () => {
             id: '',
             question,
             questionType: 'rating',
+            measurementType: '',
+            targetValue: '',
+            unit: '',
             isActive: true,
         };
+    };
+
+    const setTargetFieldsVisibility = (item) => {
+        const typeSelect = item?.querySelector('[data-appraisal-question-type]');
+        const targetFields = item?.querySelector('[data-appraisal-target-fields]');
+        const isTarget = typeSelect?.value === targetQuestionType;
+
+        if (!targetFields) {
+            return;
+        }
+
+        targetFields.classList.toggle('hidden', !isTarget);
+        targetFields.classList.toggle('flex', isTarget);
+        targetFields.querySelectorAll('input, select').forEach((field) => {
+            field.required = isTarget;
+        });
+    };
+
+    const destroyQuestionRowSelects = (item) => {
+        item?.querySelectorAll('select.tom-select, select.tom-select-no-search').forEach((select) => {
+            select.tomselect?.destroy();
+        });
     };
 
     const setQuestionActiveState = (item, isActive = true) => {
@@ -153,6 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const idInput = item?.querySelector('[data-appraisal-question-id]');
         const input = item?.querySelector('input[name="questions[]"]');
         const typeSelect = item?.querySelector('[data-appraisal-question-type]');
+        const measurementTypeSelect = item?.querySelector('[data-appraisal-measurement-type]');
+        const targetValueInput = item?.querySelector('[data-appraisal-target-value]');
+        const unitSelect = item?.querySelector('[data-appraisal-unit]');
 
         if (idInput) {
             idInput.value = normalizedQuestion.id;
@@ -166,7 +200,20 @@ document.addEventListener('DOMContentLoaded', () => {
             typeSelect.value = normalizedQuestion.questionType;
         }
 
+        if (measurementTypeSelect) {
+            measurementTypeSelect.value = normalizedQuestion.measurementType;
+        }
+
+        if (targetValueInput) {
+            targetValueInput.value = normalizedQuestion.targetValue;
+        }
+
+        if (unitSelect) {
+            unitSelect.value = normalizedQuestion.unit;
+        }
+
         setQuestionActiveState(item, normalizedQuestion.isActive);
+        setTargetFieldsVisibility(item);
 
         return item;
     };
@@ -174,12 +221,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const setQuestions = (questions = ['']) => {
         const normalized = questions.length ? questions : [''];
 
+        list.querySelectorAll('[data-appraisal-question-item]').forEach(destroyQuestionRowSelects);
         list.innerHTML = '';
         normalized.forEach((question) => {
             const item = createQuestionRow(question);
 
             if (item) {
                 list.appendChild(item);
+                initTomSelect(item);
             }
         });
 
@@ -194,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         list.appendChild(item);
+        initTomSelect(item);
         refreshNumbers();
         item.querySelector('input[name="questions[]"]')?.focus();
     };
@@ -244,7 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            removeTrigger.closest('[data-appraisal-question-item]')?.remove();
+            const item = removeTrigger.closest('[data-appraisal-question-item]');
+
+            destroyQuestionRowSelects(item);
+            item?.remove();
             refreshNumbers();
             return;
         }
@@ -284,6 +337,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('ajax-form:rendered', () => {
         setQuestions(['']);
         setDefaultStatusState(false);
+    });
+
+    list.addEventListener('change', (event) => {
+        if (!event.target.matches('[data-appraisal-question-type]')) {
+            return;
+        }
+
+        setTargetFieldsVisibility(event.target.closest('[data-appraisal-question-item]'));
     });
 
     list.addEventListener('mousedown', function (event) {
