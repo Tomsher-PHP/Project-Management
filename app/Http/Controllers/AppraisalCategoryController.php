@@ -89,6 +89,7 @@ class AppraisalCategoryController extends Controller
         return [
             'appraisalCategories' => $this->appraisalSettingsService->getAppraisalCategories(),
             'questionTypes' => AppraisalQuestion::QUESTION_TYPES,
+            'targetQuestionType' => AppraisalQuestion::QUESTION_TYPE_TARGET,
             'measurementTypes' => AppraisalQuestion::MEASUREMENT_TYPES,
             'questionUnits' => AppraisalQuestionUnit::active()
                 ->whereNull('deleted_at')

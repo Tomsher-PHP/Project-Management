@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ \App\Models\AppraisalQuestion::QUESTION_TYPE_TARGET }}">
+        <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ $targetQuestionType }}">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
 

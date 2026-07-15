@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let draggedQuestionItem = null;
     let dragHandleItem = null;
+    let validationErrorSequence = 0;
     const targetQuestionType = builder.dataset.appraisalTargetQuestionType;
+
+    form.noValidate = true;
 
     const refreshNumbers = () => {
         list.querySelectorAll('[data-appraisal-question-item]').forEach((item, index) => {
@@ -115,8 +118,97 @@ document.addEventListener('DOMContentLoaded', () => {
         targetFields.classList.toggle('hidden', !isTarget);
         targetFields.classList.toggle('flex', isTarget);
         targetFields.querySelectorAll('input, select').forEach((field) => {
-            field.required = isTarget;
+            if (isTarget) {
+                field.setAttribute('required', 'required');
+                return;
+            }
+
+            field.removeAttribute('required');
         });
+    };
+
+    const clearTargetValidationError = (field) => {
+        if (!field) {
+            return;
+        }
+
+        const validationId = field.dataset.appraisalValidationId;
+
+        if (validationId) {
+            document.getElementById(validationId)?.remove();
+            delete field.dataset.appraisalValidationId;
+        }
+
+        field.classList.remove('border-red-500');
+        field.tomselect?.control?.classList.remove('border-red-500');
+    };
+
+    const showTargetValidationError = (field, message) => {
+        clearTargetValidationError(field);
+
+        validationErrorSequence += 1;
+        const validationId = `appraisal-target-error-${validationErrorSequence}`;
+        const error = document.createElement('span');
+        const anchor = field.tomselect?.wrapper || field;
+
+        error.id = validationId;
+        error.className = 'mt-1 block text-xs text-red-500 error-text';
+        error.textContent = message;
+        anchor.insertAdjacentElement('afterend', error);
+        field.dataset.appraisalValidationId = validationId;
+
+        if (field.tomselect) {
+            field.tomselect.control.classList.add('border-red-500');
+            return;
+        }
+
+        field.classList.add('border-red-500');
+    };
+
+    const validateTargetQuestions = () => {
+        let firstInvalidField = null;
+
+        list.querySelectorAll('[data-appraisal-question-item]').forEach((item) => {
+            const typeSelect = item.querySelector('[data-appraisal-question-type]');
+            const measurementType = item.querySelector('[data-appraisal-measurement-type]');
+            const targetValue = item.querySelector('[data-appraisal-target-value]');
+            const unit = item.querySelector('[data-appraisal-unit]');
+
+            [measurementType, targetValue, unit].forEach(clearTargetValidationError);
+
+            if (typeSelect?.value !== targetQuestionType) {
+                return;
+            }
+
+            const requiredFields = [
+                [measurementType, 'Please select a measurement type.'],
+                [targetValue, 'Please enter a target value.'],
+                [unit, 'Please select a unit.'],
+            ];
+
+            requiredFields.forEach(([field, message]) => {
+                const value = field?.tomselect?.getValue() ?? field?.value ?? '';
+
+                if (String(value).trim() !== '') {
+                    return;
+                }
+
+                showTargetValidationError(field, message);
+                firstInvalidField ??= field;
+            });
+        });
+
+        if (!firstInvalidField) {
+            return true;
+        }
+
+        if (firstInvalidField.tomselect) {
+            firstInvalidField.tomselect.focus();
+        } else {
+            firstInvalidField.focus();
+        }
+
+        return false;
     };
 
     const destroyQuestionRowSelects = (item) => {
@@ -229,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item) {
                 list.appendChild(item);
                 initTomSelect(item);
+                setTargetFieldsVisibility(item);
             }
         });
 
@@ -244,6 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         list.appendChild(item);
         initTomSelect(item);
+        setTargetFieldsVisibility(item);
         refreshNumbers();
         item.querySelector('input[name="questions[]"]')?.focus();
     };
@@ -340,12 +434,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     list.addEventListener('change', (event) => {
+        if (event.target.matches('[data-appraisal-measurement-type], [data-appraisal-unit]')) {
+            clearTargetValidationError(event.target);
+        }
+
         if (!event.target.matches('[data-appraisal-question-type]')) {
             return;
         }
 
-        setTargetFieldsVisibility(event.target.closest('[data-appraisal-question-item]'));
+        const item = event.target.closest('[data-appraisal-question-item]');
+
+        setTargetFieldsVisibility(item);
+        item.querySelectorAll('[data-appraisal-measurement-type], [data-appraisal-target-value], [data-appraisal-unit]')
+            .forEach(clearTargetValidationError);
     });
+
+    list.addEventListener('input', (event) => {
+        if (event.target.matches('[data-appraisal-target-value]')) {
+            clearTargetValidationError(event.target);
+        }
+    });
+
+    form.addEventListener('submit', (event) => {
+        if (validateTargetQuestions()) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+    }, true);
 
     list.addEventListener('mousedown', function (event) {
         const handle = event.target.closest('[data-appraisal-question-handle]');
