@@ -33,14 +33,24 @@
     line-height: 24px;
 }
 
-/* Keep selected items consistent across standard and multiple selects. */
-.ts-wrapper.tom-select,
-.ts-wrapper.tom-select-multiple {
+/* Keep selected items consistent across all Tom Select variants. */
+.ts-wrapper:is(
+    .tom-select,
+    .tom-select-no-search,
+    .tom-select-tags,
+    .tom-select-multiple,
+    .tom-select-lazy
+) {
     --ts-selected-item-background: rgba(59, 130, 246, 0.1);
 }
 
-.ts-wrapper.tom-select .ts-control > .item:not(.active),
-.ts-wrapper.tom-select-multiple .ts-control > .item:not(.active) {
+.ts-wrapper:is(
+    .tom-select,
+    .tom-select-no-search,
+    .tom-select-tags,
+    .tom-select-multiple,
+    .tom-select-lazy
+) .ts-control > .item:not(.active) {
     background-color: var(--ts-selected-item-background);
 }
 
@@ -256,8 +266,13 @@ select {
     border-bottom-color: #d1d5db;
 }
 
-.dark .ts-wrapper.tom-select,
-.dark .ts-wrapper.tom-select-multiple {
+.dark .ts-wrapper:is(
+    .tom-select,
+    .tom-select-no-search,
+    .tom-select-tags,
+    .tom-select-multiple,
+    .tom-select-lazy
+) {
     --ts-selected-item-background: rgba(96, 165, 250, 0.16);
 }
 
