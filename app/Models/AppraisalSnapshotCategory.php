@@ -18,6 +18,8 @@ class AppraisalSnapshotCategory extends Model
     protected function casts(): array
     {
         return [
+            'appraisal_id' => 'integer',
+            'name' => 'string',
             'sort_order' => 'integer',
         ];
     }

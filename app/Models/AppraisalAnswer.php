@@ -12,30 +12,25 @@ class AppraisalAnswer extends Model
     protected $fillable = [
         'appraisal_id',
         'appraisal_snapshot_question_id',
-        'assignee_rating',
-        'assignee_remark',
-        'assignee_answer',
-        'assignee_submitted_at',
-        'reporter_user_id',
-        'reporter_rating',
-        'reporter_remark',
-        'reporter_submitted_at',
-        'manager_user_id',
-        'manager_rating',
-        'manager_remark',
-        'manager_submitted_at',
+        'rating',
+        'answer',
+        'achieved_value',
+        'achievement_percentage',
+        'remark',
+        'submitted_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'assignee_rating' => 'decimal:1',
-            'reporter_rating' => 'decimal:1',
-            'manager_rating' => 'decimal:1',
-            'assignee_submitted_at' => 'datetime',
-            'reporter_submitted_at' => 'datetime',
-            'manager_submitted_at' => 'datetime',
-            'assignee_answer' => 'string',
+            'appraisal_id' => 'integer',
+            'appraisal_snapshot_question_id' => 'integer',
+            'rating' => 'decimal:1',
+            'answer' => 'string',
+            'achieved_value' => 'decimal:2',
+            'achievement_percentage' => 'decimal:2',
+            'remark' => 'string',
+            'submitted_at' => 'datetime',
         ];
     }
 
@@ -44,8 +39,13 @@ class AppraisalAnswer extends Model
         return $this->belongsTo(Appraisal::class);
     }
 
-    public function snapshotQuestion()
+    public function question()
     {
         return $this->belongsTo(AppraisalSnapshotQuestion::class, 'appraisal_snapshot_question_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(AppraisalAnswerReview::class);
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('appraisal_id')->constrained('appraisals')->cascadeOnDelete();
 
             $table->string('name');
-            $table->unsignedInteger('sort_order')->default(1);
+            $table->unsignedInteger('sort_order')->default(1)->index('idx_sort_order');
 
             $table->timestamps();
             $table->softDeletes();

@@ -17,27 +17,27 @@ return new class extends Migration
             $table->foreignId('appraisal_id')->constrained()->cascadeOnDelete();
             $table->foreignId('appraisal_snapshot_question_id')->constrained(table: 'appraisal_snapshot_questions', indexName: 'fk_app_answer_question')->cascadeOnDelete();
 
-            // Assignee
-            $table->decimal('assignee_rating', 2, 1)->nullable();            
-            $table->longText('assignee_remark')->nullable();
-            $table->timestamp('assignee_submitted_at')->nullable();
-            
-            // Reporter
-            $table->foreignId('reporter_user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->decimal('reporter_rating', 2, 1)->nullable();
-            $table->longText('reporter_remark')->nullable();
-            $table->timestamp('reporter_submitted_at')->nullable();
-            
-            // Manager
-            $table->foreignId('manager_user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->decimal('manager_rating', 2, 1)->nullable();
-            $table->longText('manager_remark')->nullable();
-            $table->timestamp('manager_submitted_at')->nullable();
+            // rating type question
+            $table->decimal('rating', 2, 1)->nullable();
+
+            // answer type question
+            $table->longText('answer')->nullable();
+
+            // target type question
+            $table->decimal('achieved_value', 15, 2)->nullable();
+            $table->decimal('achievement_percentage', 8, 2)->nullable();
+
+            // common remark
+            $table->longText('remark')->nullable();
+
+            $table->timestamp('submitted_at')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
 
             $table->unique(['appraisal_id', 'appraisal_snapshot_question_id'], 'uq_appraisal_question');
+            $table->index('appraisal_id');
+            $table->index('appraisal_snapshot_question_id', 'idx_appraisal_question');
         });
     }
 

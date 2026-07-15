@@ -13,16 +13,18 @@ return new class extends Migration
     {
         Schema::create('appraisal_comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('appraisal_id')->constrained('appraisals')->onDelete('cascade');
-            $table->enum('role', ['reporter', 'manager']);
-            $table->foreignId('commented_by')->constrained('users')->onDelete('cascade');
+
+            $table->foreignId('appraisal_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('appraisal_reviewer_id')->constrained('appraisal_reviewers')->cascadeOnDelete();
+
             $table->longText('comment');
+
             $table->timestamps();
             $table->softDeletes();
 
             $table->index('appraisal_id');
-            $table->index('commented_by');
-            $table->unique(['appraisal_id', 'role']);
+            $table->index('appraisal_reviewer_id');
+            $table->unique(['appraisal_id','appraisal_reviewer_id'], 'uq_appraisal_reviewer');
         });
     }
 

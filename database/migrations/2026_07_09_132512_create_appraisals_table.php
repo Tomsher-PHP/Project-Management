@@ -23,26 +23,23 @@ return new class extends Migration
             $table->longText('kpi_description')->nullable();
             $table->timestamp('kpi_agreed_at')->nullable();
 
-            $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft');
+            $table->decimal('assignee_average_rating', 4, 2)->nullable();
+            $table->decimal('final_rating', 4, 2)->nullable();
 
-            // Workflow
+            $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft')->index();
+
             $table->timestamp('published_at')->nullable();
-
-            $table->timestamp('assignee_submitted_at')->nullable();
-            $table->timestamp('reporter_submitted_at')->nullable();
-            $table->timestamp('manager_submitted_at')->nullable();
-
             $table->timestamp('completed_at')->nullable();
 
             $table->foreignId('published_by')->nullable()->constrained('users')->nullOnDelete();
-
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['year', 'month', 'user_id']);
+            $table->unique(['year', 'month', 'user_id'], 'uq_y_m_user');
+            $table->index(['year', 'month'], 'idx_y_m');
         });
     }
 

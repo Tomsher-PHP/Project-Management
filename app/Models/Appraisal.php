@@ -9,6 +9,21 @@ class Appraisal extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PUBLISHED = 'published';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_CLOSED = 'closed';
+
+    public const STATUSES = [
+        self::STATUS_DRAFT => 'Draft',
+        self::STATUS_PUBLISHED => 'Published',
+        self::STATUS_COMPLETED => 'Completed',
+        self::STATUS_CLOSED => 'Closed',
+    ];
+
     protected $fillable = [
         'year',
         'month',
@@ -16,13 +31,14 @@ class Appraisal extends Model
         'kpi_name',
         'kpi_description',
         'kpi_agreed_at',
-        'status',
         'assignee_average_rating',
-        'reporter_average_rating',
-        'manager_average_rating',
+        'final_rating',
+        'status',
         'published_at',
+        'completed_at',
         'published_by',
         'created_by',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -30,14 +46,18 @@ class Appraisal extends Model
         return [
             'year' => 'integer',
             'month' => 'integer',
-            'published_at' => 'datetime',
-            'assignee_submitted_at' => 'datetime',
-            'reporter_submitted_at' => 'datetime',
-            'manager_submitted_at' => 'datetime',
+            'user_id' => 'integer',
+            'kpi_name' => 'string',
+            'kpi_description' => 'string',
             'kpi_agreed_at' => 'datetime',
             'assignee_average_rating' => 'decimal:2',
-            'reporter_average_rating' => 'decimal:2',
-            'manager_average_rating' => 'decimal:2',
+            'final_rating' => 'decimal:2',
+            'status' => 'string',
+            'published_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'published_by' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
         ];
     }
 
@@ -51,6 +71,11 @@ class Appraisal extends Model
         return $this->hasMany(AppraisalSnapshotCategory::class)->orderBy('sort_order');
     }
 
+    public function reviewers()
+    {
+        return $this->hasMany(AppraisalReviewer::class);
+    }
+
     public function answers()
     {
         return $this->hasMany(AppraisalAnswer::class);
@@ -61,18 +86,23 @@ class Appraisal extends Model
         return $this->hasMany(AppraisalComment::class);
     }
 
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function publisher()
+    public function publishedBy()
     {
         return $this->belongsTo(User::class, 'published_by');
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
     public function isPublished(): bool
     {
-        return $this->status === 'published';
+        return $this->status === self::STATUS_PUBLISHED;
     }
 }

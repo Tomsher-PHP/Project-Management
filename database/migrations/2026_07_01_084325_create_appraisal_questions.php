@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index('appraisal_category_id');
+            $table->index('appraisal_category_id', 'idx_appraisal_category_id');
         });
     }
 
