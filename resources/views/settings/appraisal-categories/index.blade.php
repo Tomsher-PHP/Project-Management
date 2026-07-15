@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ $targetQuestionType }}">
+        <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ $targetQuestionType }}" data-appraisal-question-units-url="{{ route('settings.appraisal.units') }}">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
 
@@ -93,7 +93,7 @@
 
                                 <label class="block min-w-0 flex-1">
                                     <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Unit <x-red-star /></span>
-                                    <select name="units[]" class="tom-select w-full" data-appraisal-unit>
+                                    <select name="units[]" class="tom-select-add w-full" data-appraisal-unit data-placeholder="Select or type a unit..." data-max-items="1">
                                         <option value="">Select unit</option>
                                         @foreach ($questionUnits as $unit)
                                             <option value="{{ $unit->name }}">{{ $unit->name }}</option>

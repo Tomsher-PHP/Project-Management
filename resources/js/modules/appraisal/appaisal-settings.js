@@ -14,7 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedQuestionItem = null;
     let dragHandleItem = null;
     let validationErrorSequence = 0;
+    let modalOpenRequest = 0;
     const targetQuestionType = builder.dataset.appraisalTargetQuestionType;
+    const questionUnitsUrl = builder.dataset.appraisalQuestionUnitsUrl;
 
     form.noValidate = true;
 
@@ -212,8 +214,71 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const destroyQuestionRowSelects = (item) => {
-        item?.querySelectorAll('select.tom-select, select.tom-select-no-search').forEach((select) => {
+        item?.querySelectorAll('select.tom-select, select.tom-select-no-search, select.tom-select-add').forEach((select) => {
             select.tomselect?.destroy();
+        });
+    };
+
+    const refreshUnitSelectOptions = (select, units, selectedValue = '') => {
+        if (!select) {
+            return;
+        }
+
+        const options = units.map((unit) => ({
+            value: String(unit.value ?? unit.name ?? ''),
+            text: String(unit.text ?? unit.name ?? ''),
+        })).filter((unit) => unit.value !== '');
+        const selectedUnit = String(selectedValue || '');
+
+        if (selectedUnit && !options.some((unit) => unit.value === selectedUnit)) {
+            options.push({ value: selectedUnit, text: selectedUnit });
+        }
+
+        if (select.tomselect) {
+            select.tomselect.clear(true);
+            select.tomselect.clearOptions();
+            select.tomselect.addOptions(options);
+            select.tomselect.refreshOptions(false);
+
+            if (selectedUnit) {
+                select.tomselect.setValue(selectedUnit, true);
+            }
+
+            return;
+        }
+
+        const placeholder = new Option('Select unit', '');
+        select.replaceChildren(
+            placeholder,
+            ...options.map((unit) => new Option(unit.text, unit.value)),
+        );
+        select.value = selectedUnit;
+    };
+
+    const refreshQuestionUnits = async () => {
+        if (!questionUnitsUrl) {
+            return;
+        }
+
+        const response = await fetch(questionUnitsUrl, {
+            cache: 'no-store',
+            headers: {
+                Accept: 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to load appraisal question units.');
+        }
+
+        const payload = await response.json();
+        const units = Array.isArray(payload.data) ? payload.data : [];
+        const templateUnitSelect = template.content.querySelector('[data-appraisal-unit]');
+
+        refreshUnitSelectOptions(templateUnitSelect, units);
+        list.querySelectorAll('[data-appraisal-unit]').forEach((select) => {
+            const selectedValue = select.tomselect?.getValue() ?? select.value;
+            refreshUnitSelectOptions(select, units, selectedValue);
         });
     };
 
@@ -301,6 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (unitSelect) {
+            if (
+                normalizedQuestion.unit
+                && !Array.from(unitSelect.options).some((option) => option.value === normalizedQuestion.unit)
+            ) {
+                unitSelect.add(new Option(normalizedQuestion.unit, normalizedQuestion.unit));
+            }
+
             unitSelect.value = normalizedQuestion.unit;
         }
 
@@ -399,7 +471,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const createTrigger = event.target.closest('.modal-open[data-target="#multi-step-modal"]');
 
         if (createTrigger) {
-            window.setTimeout(() => {
+            const requestId = ++modalOpenRequest;
+
+            window.setTimeout(async () => {
+                try {
+                    await refreshQuestionUnits();
+                } catch (error) {
+                    // Keep the currently rendered options available if refreshing fails.
+                }
+
+                if (requestId !== modalOpenRequest) {
+                    return;
+                }
+
                 modal.querySelector('.modal-title').textContent = 'Create Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Save';
                 setQuestions(['']);
@@ -411,7 +495,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const editTrigger = event.target.closest('.edit-record[data-modal="multi-step-modal"]');
 
         if (editTrigger) {
-            window.setTimeout(() => {
+            const requestId = ++modalOpenRequest;
+
+            window.setTimeout(async () => {
+                try {
+                    await refreshQuestionUnits();
+                } catch (error) {
+                    // Keep the currently rendered options available if refreshing fails.
+                }
+
+                if (requestId !== modalOpenRequest) {
+                    return;
+                }
+
                 modal.querySelector('.modal-title').textContent = 'Edit Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Update';
                 setQuestions(parseQuestions(editTrigger.dataset.questions));
@@ -421,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (event.target.closest('#multi-step-modal .modal-close')) {
+            modalOpenRequest += 1;
             window.setTimeout(() => {
                 setQuestions(['']);
                 setDefaultStatusState(false);

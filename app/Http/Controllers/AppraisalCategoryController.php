@@ -8,6 +8,7 @@ use App\Models\AppraisalQuestion;
 use App\Models\AppraisalQuestionUnit;
 use App\Services\AppraisalSettingsService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -38,6 +39,18 @@ class AppraisalCategoryController extends Controller
             'html' => $this->renderIndexContent(),
             'render_target' => '#appraisal-category-index-content',
             'render_mode' => 'replace_inner',
+        ]);
+    }
+
+    public function units(): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->getActiveQuestionUnits()
+                ->map(fn (AppraisalQuestionUnit $unit) => [
+                    'value' => $unit->name,
+                    'text' => $unit->name,
+                ])
+                ->values(),
         ]);
     }
 
@@ -91,16 +104,21 @@ class AppraisalCategoryController extends Controller
             'questionTypes' => AppraisalQuestion::QUESTION_TYPES,
             'targetQuestionType' => AppraisalQuestion::QUESTION_TYPE_TARGET,
             'measurementTypes' => AppraisalQuestion::MEASUREMENT_TYPES,
-            'questionUnits' => AppraisalQuestionUnit::active()
-                ->whereNull('deleted_at')
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(),
+            'questionUnits' => $this->getActiveQuestionUnits(),
         ];
     }
 
     private function renderIndexContent(): string
     {
         return view('settings.appraisal-categories.partials.index-content', $this->getIndexViewData())->render();
+    }
+
+    private function getActiveQuestionUnits(): Collection
+    {
+        return AppraisalQuestionUnit::active()
+            ->whereNull('deleted_at')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 }

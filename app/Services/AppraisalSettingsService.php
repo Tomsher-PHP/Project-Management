@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AppraisalCategory;
+use App\Models\AppraisalQuestionUnit;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ class AppraisalSettingsService
                     'question_type' => $question['question_type'] ?? 'rating',
                     'measurement_type' => $question['measurement_type'] ?? null,
                     'target_value' => $question['target_value'] ?? null,
-                    'unit' => $question['unit'] ?? null,
+                    'unit' => $this->resolveQuestionUnit($question['unit'] ?? null),
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
@@ -71,7 +72,7 @@ class AppraisalSettingsService
                     'question_type' => $question['question_type'] ?? 'rating',
                     'measurement_type' => $question['measurement_type'] ?? null,
                     'target_value' => $question['target_value'] ?? null,
-                    'unit' => $question['unit'] ?? null,
+                    'unit' => $this->resolveQuestionUnit($question['unit'] ?? null),
                     'is_active' => (bool) ($question['is_active'] ?? true),
                 ])
                 ->filter(fn (array $question) => filled($question['question']))
@@ -117,6 +118,39 @@ class AppraisalSettingsService
         $appraisalCategory->save();
 
         return $appraisalCategory;
+    }
+
+    private function resolveQuestionUnit(?string $unit): ?string
+    {
+        $name = trim((string) $unit);
+
+        if ($name === '') {
+            return null;
+        }
+
+        $existingUnit = AppraisalQuestionUnit::query()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->lockForUpdate()
+            ->first();
+
+        if ($existingUnit) {
+            if (! $existingUnit->is_active || $existingUnit->deleted_at !== null) {
+                $existingUnit->is_active = true;
+                $existingUnit->deleted_at = null;
+                $existingUnit->save();
+            }
+
+            return $existingUnit->name;
+        }
+
+        $createdUnit = AppraisalQuestionUnit::create([
+            'name' => $name,
+            'sort_order' => (int) AppraisalQuestionUnit::max('sort_order') + 1,
+            'is_system' => false,
+            'is_active' => true,
+        ]);
+
+        return $createdUnit->name;
     }
 
     public function toggleCategoryDefault(AppraisalCategory $appraisalCategory): AppraisalCategory

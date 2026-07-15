@@ -256,6 +256,7 @@ Route::middleware(['auth'])->group(function () {
         // End Checklists templates routes
 
         // Appraisal categories routes
+        Route::get('/appraisal/units', [AppraisalCategoryController::class, 'units'])->middleware('permission.type:appraisal_settings.view')->name('appraisal.units');
         Route::patch('/appraisal/toggle-status', [AppraisalCategoryController::class, 'toggleStatus'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleStatus');
         Route::patch('/appraisal/toggle-default', [AppraisalCategoryController::class, 'toggleDefault'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleDefault');
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.view')->only(['index']);

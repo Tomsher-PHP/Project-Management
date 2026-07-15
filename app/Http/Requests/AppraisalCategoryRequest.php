@@ -53,9 +53,7 @@ class AppraisalCategoryRequest extends FormRequest
             $rules["units.$index"] = [
                 $presenceRule,
                 'string',
-                Rule::exists('appraisal_question_units', 'name')
-                    ->where('is_active', true)
-                    ->whereNull('deleted_at'),
+                'max:255',
             ];
         }
 
@@ -83,7 +81,9 @@ class AppraisalCategoryRequest extends FormRequest
                     'question_type' => $questionType,
                     'measurement_type' => $isTarget ? ($measurementTypes[$index] ?? null) : null,
                     'target_value' => $isTarget ? ($targetValues[$index] ?? null) : null,
-                    'unit' => $isTarget ? ($units[$index] ?? null) : null,
+                    'unit' => $isTarget && is_string($units[$index] ?? null)
+                        ? trim($units[$index])
+                        : ($isTarget ? ($units[$index] ?? null) : null),
                     'is_active' => $isActive ?? true,
                 ];
             })
