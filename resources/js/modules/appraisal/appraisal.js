@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const publishSelectedButton = root.querySelector('[data-appraisal-publish-selected]');
     const modal = root.querySelector('[data-appraisal-assign-modal]');
     const modalPanel = root.querySelector('[data-appraisal-modal-panel]');
+    const modalHeader = root.querySelector('[data-appraisal-modal-header]');
     const modalTitle = root.querySelector('[data-appraisal-modal-title]');
     const modalSubtitle = root.querySelector('[data-appraisal-modal-subtitle]');
     const modalSelectedCount = root.querySelector('[data-appraisal-modal-selected-count]');
@@ -1038,8 +1039,25 @@ document.addEventListener('DOMContentLoaded', () => {
         modalSubtitle?.classList.toggle('hidden', !isView);
     };
 
+    const setAssignEditModalLayout = (isFixed = false) => {
+        modalPanel?.classList.toggle('h-[92vh]', isFixed);
+        modalPanel?.classList.toggle('flex', isFixed);
+        modalPanel?.classList.toggle('flex-col', isFixed);
+        modalHeader?.classList.toggle('shrink-0', isFixed);
+
+        assignmentSteps.forEach((step) => {
+            step.classList.toggle('min-h-0', isFixed);
+            step.classList.toggle('flex-1', isFixed);
+        });
+
+        assignmentFooters.forEach((footer) => {
+            footer.classList.toggle('shrink-0', isFixed);
+        });
+    };
+
     const resetModal = () => {
         showAssignmentStep(1);
+        setAssignEditModalLayout(false);
         setViewModalLayout(false);
         reviewerAssignmentData = [];
         destroyReviewerSelects();
@@ -1082,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSelectedUsers();
         renderKpis();
         resetModal();
+        setAssignEditModalLayout(true);
         renderTemplatesList();
         modal?.classList.remove('hidden');
         modal?.classList.add('flex');
@@ -1120,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSelectedUsers([appraisal.user]);
             renderKpis();
             resetModal();
+            setAssignEditModalLayout(true);
 
             if (modalTitle) {
                 modalTitle.textContent = 'Edit Appraisal';

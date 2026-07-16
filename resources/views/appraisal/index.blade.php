@@ -134,7 +134,7 @@
                 <div class="fixed inset-0 bg-black/40 dark:bg-black/60"></div>
 
                 <div class="relative z-10 max-h-[92vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600" data-appraisal-modal-panel>
-                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400" data-appraisal-modal-header>
                         <div>
                             <h3 class="text-xl font-bold text-bgray-900 dark:text-white" data-appraisal-modal-title>Assign Appraisal</h3>
                             <p class="mt-1 hidden text-sm font-medium text-bgray-600 dark:text-bgray-300" data-appraisal-modal-subtitle></p>
