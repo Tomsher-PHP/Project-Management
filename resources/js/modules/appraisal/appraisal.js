@@ -17,9 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAssignButton = root.querySelector('[data-appraisal-open-assign]');
     const publishSelectedButton = root.querySelector('[data-appraisal-publish-selected]');
     const modal = root.querySelector('[data-appraisal-assign-modal]');
+    const modalPanel = root.querySelector('[data-appraisal-modal-panel]');
     const modalTitle = root.querySelector('[data-appraisal-modal-title]');
+    const modalSubtitle = root.querySelector('[data-appraisal-modal-subtitle]');
     const modalSelectedCount = root.querySelector('[data-appraisal-modal-selected-count]');
     const modalSelectedUsers = root.querySelector('[data-appraisal-modal-selected-users]');
+    const modalSelectedUsersSummary = root.querySelector('[data-appraisal-selected-users-summary]');
     const kpiSelect = root.querySelector('[data-appraisal-kpi-select]');
     const kpiDescription = root.querySelector('[data-appraisal-kpi-description]');
     const modalCategories = root.querySelector('[data-appraisal-modal-categories]');
@@ -144,9 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (readOnly) {
             return `
                 <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-reviewer-level data-level="${levelIndex + 1}">
-                    <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Reviewer Level ${levelIndex + 1}</p>
+                    <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-600 dark:text-bgray-300">Reviewer Level ${levelIndex + 1}</p>
                     <p class="mt-2 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(savedReviewer?.name || 'Not Assigned')}</p>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${escapeHtml(savedReviewer?.email || '')}</p>
+                    <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">${escapeHtml(savedReviewer?.email || '')}</p>
                 </div>
             `;
         }
@@ -273,16 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <article class="rounded-xl border border-bgray-200 bg-bgray-50 p-5 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-reviewer-card data-user-id="${escapeHtml(assignment.user?.id || '')}">
                     <div class="mb-4">
                         <h5 class="text-base font-bold text-bgray-900 dark:text-white">${escapeHtml(assignment.user?.name || 'Employee')}</h5>
-                        <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${escapeHtml(assignment.user?.email || '')}</p>
+                        <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">${escapeHtml(assignment.user?.email || '')}</p>
                     </div>
                     ${noChain
-                        ? '<p class="rounded-lg border border-dashed border-bgray-200 px-4 py-6 text-sm text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No reporting hierarchy is available for this employee.</p>'
-                        : reviewerLevels
-                    }
+                    ? '<p class="rounded-lg border border-dashed border-bgray-200 px-4 py-6 text-sm text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300">No reporting hierarchy is available for this employee.</p>'
+                    : reviewerLevels
+                }
                     ${!readOnly && !noChain
-                        ? '<button type="button" class="mt-3 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-reviewer-level-add>Add Level</button>'
-                        : ''
-                    }
+                    ? '<button type="button" class="mt-3 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-reviewer-level-add>Add Level</button>'
+                    : ''
+                }
                 </article>
             `;
         }).join('');
@@ -370,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const categories = user.categories || [];
 
         if (!categories.length) {
-            return '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+            return '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
         }
 
         return categories.map((category) => `
@@ -482,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
             const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
-            let action = '<span class="text-sm font-medium text-bgray-500 dark:text-bgray-300">--</span>';
+            let action = '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
 
             if (canAgree) {
                 action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-kpi-agree data-appraisal-id="${escapeHtml(row.appraisal_id)}">Agree</button>`;
@@ -644,12 +647,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const unavailableValue = '__missing';
             const unavailableLabel = `${appraisal.kpi_name} (not available)`;
 
-            kpiSelect.tomselect?.addOption({
-                value: unavailableValue,
-                text: unavailableLabel,
-                disabled: true,
-            });
-            kpiSelect.tomselect?.setValue(unavailableValue, true);
+            if (kpiSelect.tomselect) {
+                kpiSelect.tomselect.addOption({
+                    value: unavailableValue,
+                    text: unavailableLabel,
+                    disabled: true,
+                });
+                kpiSelect.tomselect.setValue(unavailableValue, true);
+            } else {
+                const unavailableOption = document.createElement('option');
+                unavailableOption.value = unavailableValue;
+                unavailableOption.textContent = unavailableLabel;
+                kpiSelect.appendChild(unavailableOption);
+            }
+
             kpiSelect.value = unavailableValue;
         }
 
@@ -712,23 +723,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const questionControl = readOnly
             ? `
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">${escapeHtml(question)}</p>
+                    <p class="text-sm font-medium text-bgray-700 dark:text-bgray-300">${escapeHtml(question)}</p>
                     <span class="mt-1 inline-flex items-center rounded-md bg-bgray-100 px-2 py-0.5 text-xs font-medium text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300">
                         ${escapeHtml(questionTypeLabel(qType))}
                     </span>
                     ${isTarget ? `
-                        <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-                            <div>
-                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Measurement Type</span>
-                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(assignmentData.measurement_types?.[measurementType] || measurementType)}</span>
+                        <div class="mt-3 grid grid-cols-3 divide-x divide-bgray-200 overflow-hidden rounded-lg border border-bgray-200 bg-bgray-50 dark:divide-darkblack-400 dark:border-darkblack-400 dark:bg-darkblack-600">
+                            <div class="min-w-0 px-3 py-2">
+                                <span class="block truncate text-xs font-semibold text-bgray-600 dark:text-bgray-300">Measurement Type</span>
+                                <span class="mt-1 block truncate text-sm font-medium text-bgray-700 dark:text-bgray-300">${escapeHtml(assignmentData.measurement_types?.[measurementType] || measurementType)}</span>
                             </div>
-                            <div>
-                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Target Value</span>
-                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(targetValue)}</span>
+                            <div class="min-w-0 px-3 py-2">
+                                <span class="block truncate text-xs font-semibold text-bgray-600 dark:text-bgray-300">Target Value</span>
+                                <span class="mt-1 block truncate text-sm font-medium text-bgray-700 dark:text-bgray-300">${escapeHtml(targetValue)}</span>
                             </div>
-                            <div>
-                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Unit</span>
-                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(unit)}</span>
+                            <div class="min-w-0 px-3 py-2">
+                                <span class="block truncate text-xs font-semibold text-bgray-600 dark:text-bgray-300">Unit</span>
+                                <span class="mt-1 block truncate text-sm font-medium text-bgray-700 dark:text-bgray-300">${escapeHtml(unit)}</span>
                             </div>
                         </div>
                     ` : ''}
@@ -738,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="grid min-w-0 flex-1 gap-3 lg:grid-cols-12">
                     <label class="block lg:col-span-9">
                         <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Question</span>
-                        <input type="text" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
+                        <input type="text" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
                     </label>
                     <label class="block lg:col-span-3">
                         <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Question Type</span>
@@ -772,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex flex-col gap-3 xl:flex-row xl:items-start">
                     <div class="flex items-center gap-2 xl:pt-6">
                         ${readOnly ? '' : `
-                            <button type="button" class="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
+                            <button type="button" class="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-600 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                                 </svg>
@@ -823,6 +834,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const categoryNameControl = readOnly
             ? `<span class="text-base font-semibold text-bgray-900 dark:text-white">${categoryTitle}</span>`
             : `<input type="text" class="min-w-[220px] flex-1 rounded-lg border border-gray-300 p-2.5 text-sm font-semibold text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(categoryName)}" placeholder="Category name" data-appraisal-assignment-category-name>`;
+        const questionCount = readOnly
+            ? `<span class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">(${questions.length} ${questions.length === 1 ? 'Question' : 'Questions'})</span>`
+            : '';
         const actionButtons = readOnly
             ? ''
             : `
@@ -836,6 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${categoryNameControl}
                     <div class="flex items-center gap-2">
                         ${actionButtons}
+                        ${questionCount}
                         <button type="button" class="rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-700 transition hover:border-bgray-300 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50" data-appraisal-assignment-category-toggle aria-expanded="true">Collapse</button>
                     </div>
                 </div>
@@ -933,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const templates = assignmentData.categories || [];
         if (!templates.length) {
-            templatesContainer.innerHTML = '<p class="text-xs font-medium text-bgray-500 dark:text-bgray-300">No category templates available.</p>';
+            templatesContainer.innerHTML = '<p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">No category templates available.</p>';
             return;
         }
 
@@ -941,12 +956,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="rounded-lg border border-bgray-200 bg-white p-3 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-template-item data-appraisal-template-name="${escapeHtml(category.name)}">
                 <div class="flex items-center justify-between gap-2">
                     <button type="button" class="flex flex-1 items-center gap-2 text-left" data-appraisal-template-toggle aria-expanded="false">
-                        <svg class="h-4 w-4 transform transition-transform duration-200 text-bgray-500 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-4 w-4 transform transition-transform duration-200 text-bgray-600 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                         <div>
                             <h5 class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(category.name)}</h5>
-                            <span class="text-xs text-bgray-500 dark:text-bgray-300">${category.questions.length} ${category.questions.length === 1 ? 'question' : 'questions'}</span>
+                            <span class="text-xs text-bgray-600 dark:text-bgray-300">${category.questions.length} ${category.questions.length === 1 ? 'question' : 'questions'}</span>
                         </div>
                     </button>
                     <button type="button" class="flex h-7 w-7 items-center justify-center rounded-lg bg-success-50 text-success-300 hover:bg-success-100 disabled:opacity-30 disabled:cursor-not-allowed dark:bg-darkblack-500 dark:text-success-300 dark:hover:bg-darkblack-400" data-appraisal-template-add aria-label="Add category to appraisal">
@@ -1009,8 +1024,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const setViewModalLayout = (isView = false) => {
+        modalPanel?.classList.toggle('h-[92vh]', isView);
+        modalPanel?.classList.toggle('flex', isView);
+        modalPanel?.classList.toggle('flex-col', isView);
+
+        assignmentSteps.forEach((step) => {
+            step.classList.toggle('min-h-0', isView);
+            step.classList.toggle('flex-1', isView);
+        });
+
+        modalSelectedUsersSummary?.classList.toggle('hidden', isView);
+        modalSubtitle?.classList.toggle('hidden', !isView);
+    };
+
     const resetModal = () => {
         showAssignmentStep(1);
+        setViewModalLayout(false);
         reviewerAssignmentData = [];
         destroyReviewerSelects();
 
@@ -1020,6 +1050,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (modalTitle) {
             modalTitle.textContent = 'Assign Appraisal';
+        }
+
+        if (modalSubtitle) {
+            modalSubtitle.textContent = '';
         }
 
         if (kpiSelect) {
@@ -1107,20 +1141,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const openViewModal = async (appraisalId) => {
         try {
             const appraisal = await loadStoredAppraisal(appraisalId);
+            const monthLabel = monthSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+            const yearLabel = yearSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
 
             if (modalTitle) {
-                modalTitle.textContent = 'View Appraisal';
+                modalTitle.textContent = `View Appraisal • ${[monthLabel, yearLabel].filter(Boolean).join(' ')}`;
             }
 
-            renderSelectedUsers([appraisal.user]);
-
-            if (kpiSelect) {
-                kpiSelect.innerHTML = `<option value="${escapeHtml(appraisal.id)}">${escapeHtml(appraisal.kpi_name || 'Untitled KPI')}</option>`;
-                kpiSelect.value = String(appraisal.id);
+            if (modalSubtitle) {
+                modalSubtitle.textContent = `Assignee • ${appraisal.user?.name || 'Unknown User'}`;
             }
 
-            setKpiDescription(appraisal.kpi_description || '');
+            renderKpis();
+            setViewModalLayout(true);
             renderModalCategories(appraisal.categories || [], true);
+            restoreKpiSelection(appraisal);
             renderTemplatesList();
             reviewerAssignmentData = appraisal.reviewer_assignment
                 ? [appraisal.reviewer_assignment]
@@ -2048,7 +2083,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
                                 <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
                             </div>
-                            <button type="button" class="text-bgray-500 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
+                            <button type="button" class="text-bgray-600 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -2099,7 +2134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
                             <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
                         </div>
-                        <button type="button" class="text-bgray-500 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
+                        <button type="button" class="text-bgray-600 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
