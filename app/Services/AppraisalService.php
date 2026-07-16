@@ -174,27 +174,25 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $users->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
-            ->with(['user.details', 'answers:id,appraisal_id,reporter_user_id,manager_user_id'])
+            ->with([
+                'user.details',
+                'answers:id,appraisal_id,rating,submitted_at',
+                'reviewers.reviewer:id,name',
+            ])
             ->get()
             ->keyBy('user_id');
 
-        $reviewers = User::query()
-            ->whereIn('id', $appraisals->flatMap(fn (Appraisal $appraisal) => $appraisal->answers
-                ->flatMap(fn (AppraisalAnswer $answer) => [$answer->reporter_user_id, $answer->manager_user_id])
-                ->push($appraisal->user?->details?->reporter_id, $appraisal->user?->details?->manager_id)
-                ->filter()))
-            ->get(['id', 'name'])
-            ->keyBy('id');
-
         return $users
-            ->map(function (User $user) use ($appraisals, $reviewers) {
+            ->map(function (User $user) use ($appraisals) {
                 $appraisal = $appraisals->get($user->id);
                 $answerRole = $appraisal ? $this->resolveAnswerRole($appraisal) : null;
                 $canAnswer = $appraisal ? $this->canOpenAnswerForm($appraisal, $answerRole) : false;
-                $reporterUserId = $appraisal?->answers->first(fn (AppraisalAnswer $answer) => filled($answer->reporter_user_id))?->reporter_user_id
-                    ?: $appraisal?->user?->details?->reporter_id;
-                $managerUserId = $appraisal?->answers->first(fn (AppraisalAnswer $answer) => filled($answer->manager_user_id))?->manager_user_id
-                    ?: $appraisal?->user?->details?->manager_id;
+                $reporter = $appraisal?->reviewers->firstWhere('level', 1);
+                $manager = $appraisal?->reviewers->firstWhere('level', 2);
+                $assigneeSubmittedAt = $appraisal?->answers
+                    ->pluck('submitted_at')
+                    ->filter()
+                    ->max();
 
                 return [
                     'is_assignee' => (int) $user->id === (int) auth()->id(),
@@ -212,18 +210,18 @@ class AppraisalService
                     'kpi_description' => $appraisal?->kpi_description,
                     'status' => $appraisal?->status,
                     'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
-                    'assignee_submitted_at' => $this->formatDateTime($appraisal?->assignee_submitted_at),
-                    'reporter_submitted_at' => $this->formatDateTime($appraisal?->reporter_submitted_at),
-                    'manager_submitted_at' => $this->formatDateTime($appraisal?->manager_submitted_at),
+                    'assignee_submitted_at' => $this->formatDateTime($assigneeSubmittedAt),
+                    'reporter_submitted_at' => $this->formatDateTime($reporter?->submitted_at),
+                    'manager_submitted_at' => $this->formatDateTime($manager?->submitted_at),
                     'assignee_average_rating' => $appraisal?->assignee_average_rating,
-                    'reporter_average_rating' => $appraisal?->reporter_average_rating,
-                    'manager_average_rating' => $appraisal?->manager_average_rating,
+                    'reporter_average_rating' => $reporter?->average_rating,
+                    'manager_average_rating' => $manager?->average_rating,
                     'assignee_submitted_by_id' => $appraisal?->user_id,
                     'assignee_submitted_by_name' => $appraisal?->user?->name,
-                    'reporter_submitted_by_id' => $reporterUserId,
-                    'reporter_submitted_by_name' => $reviewers->get($reporterUserId)?->name,
-                    'manager_submitted_by_id' => $managerUserId,
-                    'manager_submitted_by_name' => $reviewers->get($managerUserId)?->name,
+                    'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
+                    'reporter_submitted_by_name' => $reporter?->reviewer?->name,
+                    'manager_submitted_by_id' => $manager?->reviewer_user_id,
+                    'manager_submitted_by_name' => $manager?->reviewer?->name,
                     'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
                     'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
                     'can_agree' => $appraisal
@@ -1357,26 +1355,24 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $paginator->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
-            ->with(['user.details', 'answers:id,appraisal_id,reporter_user_id,manager_user_id'])
+            ->with([
+                'user.details',
+                'answers:id,appraisal_id,rating,submitted_at',
+                'reviewers.reviewer:id,name',
+            ])
             ->get()
             ->keyBy('user_id');
 
-        $reviewers = User::query()
-            ->whereIn('id', $appraisals->flatMap(fn (Appraisal $appraisal) => $appraisal->answers
-                ->flatMap(fn (AppraisalAnswer $answer) => [$answer->reporter_user_id, $answer->manager_user_id])
-                ->push($appraisal->user?->details?->reporter_id, $appraisal->user?->details?->manager_id)
-                ->filter()))
-            ->get(['id', 'name'])
-            ->keyBy('id');
-
-        $paginator->through(function (User $user) use ($appraisals, $reviewers) {
+        $paginator->through(function (User $user) use ($appraisals) {
             $appraisal = $appraisals->get($user->id);
             $answerRole = $appraisal ? $this->resolveAnswerRole($appraisal) : null;
             $canAnswer = $appraisal ? $this->canOpenAnswerForm($appraisal, $answerRole) : false;
-            $reporterUserId = $appraisal?->answers->first(fn (AppraisalAnswer $answer) => filled($answer->reporter_user_id))?->reporter_user_id
-                ?: $appraisal?->user?->details?->reporter_id;
-            $managerUserId = $appraisal?->answers->first(fn (AppraisalAnswer $answer) => filled($answer->manager_user_id))?->manager_user_id
-                ?: $appraisal?->user?->details?->manager_id;
+            $reporter = $appraisal?->reviewers->firstWhere('level', 1);
+            $manager = $appraisal?->reviewers->firstWhere('level', 2);
+            $assigneeSubmittedAt = $appraisal?->answers
+                ->pluck('submitted_at')
+                ->filter()
+                ->max();
 
             return [
                 'is_assignee' => (int) $user->id === (int) auth()->id(),
@@ -1394,18 +1390,18 @@ class AppraisalService
                 'kpi_description' => $appraisal?->kpi_description,
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
-                'assignee_submitted_at' => $this->formatDateTime($appraisal?->assignee_submitted_at),
-                'reporter_submitted_at' => $this->formatDateTime($appraisal?->reporter_submitted_at),
-                'manager_submitted_at' => $this->formatDateTime($appraisal?->manager_submitted_at),
+                'assignee_submitted_at' => $this->formatDateTime($assigneeSubmittedAt),
+                'reporter_submitted_at' => $this->formatDateTime($reporter?->submitted_at),
+                'manager_submitted_at' => $this->formatDateTime($manager?->submitted_at),
                 'assignee_average_rating' => $appraisal?->assignee_average_rating,
-                'reporter_average_rating' => $appraisal?->reporter_average_rating,
-                'manager_average_rating' => $appraisal?->manager_average_rating,
+                'reporter_average_rating' => $reporter?->average_rating,
+                'manager_average_rating' => $manager?->average_rating,
                 'assignee_submitted_by_id' => $appraisal?->user_id,
                 'assignee_submitted_by_name' => $appraisal?->user?->name,
-                'reporter_submitted_by_id' => $reporterUserId,
-                'reporter_submitted_by_name' => $reviewers->get($reporterUserId)?->name,
-                'manager_submitted_by_id' => $managerUserId,
-                'manager_submitted_by_name' => $reviewers->get($managerUserId)?->name,
+                'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
+                'reporter_submitted_by_name' => $reporter?->reviewer?->name,
+                'manager_submitted_by_id' => $manager?->reviewer_user_id,
+                'manager_submitted_by_name' => $manager?->reviewer?->name,
                 'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
                 'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
                 'can_agree' => $appraisal
