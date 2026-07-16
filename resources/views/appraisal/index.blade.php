@@ -139,7 +139,7 @@
                         <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-modal-close aria-label="Close">×</button>
                     </div>
 
-                    <div class="max-h-[calc(92vh-145px)] overflow-y-auto px-6 py-5">
+                    <div class="max-h-[calc(92vh-145px)] overflow-y-auto px-6 py-5" data-appraisal-assignment-step="1">
                         <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
                             <p class="text-sm font-semibold text-bgray-900 dark:text-white" data-appraisal-modal-selected-count>0 Users Selected</p>
                             <div class="mt-3 flex flex-wrap gap-2" data-appraisal-modal-selected-users></div>
@@ -184,10 +184,23 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                    <div class="hidden max-h-[calc(92vh-145px)] overflow-y-auto px-6 py-5" data-appraisal-assignment-step="2">
+                        <div class="rounded-xl border border-bgray-200 bg-bgray-50 p-6 dark:border-darkblack-400 dark:bg-darkblack-500">
+                            <h4 class="text-lg font-bold text-bgray-900 dark:text-white">Reviewer Assignment</h4>
+                            <p class="mt-3 text-sm font-medium text-bgray-600 dark:text-bgray-300">Reviewer assignment will be configured here.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400" data-appraisal-assignment-footer="1">
                         <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-modal-close>Cancel</button>
-                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-submit="draft">Assign</button>
-                        <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400" data-appraisal-submit="published">Assign & Publish</button>
+                        <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-assignment-continue>Continue</button>
+                    </div>
+
+                    <div class="hidden flex-wrap items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400" data-appraisal-assignment-footer="2">
+                        <button type="button" class="mr-auto rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-assignment-back>Back</button>
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-modal-close>Cancel</button>
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-400 opacity-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-400" disabled>Assign</button>
+                        <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white opacity-50" disabled>Assign & Publish</button>
                     </div>
                 </div>
             </div>

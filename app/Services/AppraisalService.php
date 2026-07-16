@@ -6,6 +6,8 @@ use App\Models\Appraisal;
 use App\Models\AppraisalAnswer;
 use App\Models\AppraisalComment;
 use App\Models\AppraisalCategory;
+use App\Models\AppraisalQuestion;
+use App\Models\AppraisalQuestionUnit;
 use App\Models\Kpi;
 use App\Models\User;
 use App\Models\Team;
@@ -60,6 +62,10 @@ class AppraisalService
             'categories' => auth()->user()?->can('appraisal.create') ? $this->getActiveCategories() : [],
         ];
 
+        if (auth()->user()?->can('appraisal.create')) {
+            $assignmentData = array_merge($assignmentData, $this->getAssignmentQuestionOptions());
+        }
+
         return [
             'month' => $month,
             'year' => $year,
@@ -95,6 +101,7 @@ class AppraisalService
             $data['users'] = $this->getUsersWithAssignments($month, $year);
             $data['kpis'] = $this->getActiveKpis();
             $data['categories'] = $this->getActiveCategories();
+            $data = array_merge($data, $this->getAssignmentQuestionOptions());
         }
 
         return $data;
@@ -912,7 +919,11 @@ class AppraisalService
                     'questions' => $category->questions
                         ->map(fn ($question) => [
                             'question' => $question->question,
-                            'question_type' => $question->question_type ?? 'rating',
+                            'question_type' => $question->question_type ?? AppraisalQuestion::QUESTION_TYPE_RATING,
+                            'measurement_type' => $question->measurement_type,
+                            'target_value' => $question->target_value,
+                            'unit' => $question->unit,
+                            'unit_name' => $question->unit,
                             'sort_order' => $question->sort_order,
                         ])
                         ->values()
@@ -984,11 +995,19 @@ class AppraisalService
             $snapshotCategory->questions()->createMany(
                 collect($category['questions'] ?? [])
                     ->values()
-                    ->map(fn (array $question, int $questionIndex) => [
-                        'question' => $question['question'],
-                        'question_type' => $question['question_type'] ?? 'rating',
-                        'sort_order' => $questionIndex + 1,
-                    ])
+                    ->map(function (array $question, int $questionIndex) {
+                        $questionType = $question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+                        $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
+
+                        return [
+                            'question' => $question['question'],
+                            'question_type' => $questionType,
+                            'measurement_type' => $isTarget ? ($question['measurement_type'] ?? null) : null,
+                            'target_value' => $isTarget ? ($question['target_value'] ?? null) : null,
+                            'unit' => $isTarget ? ($question['unit'] ?? null) : null,
+                            'sort_order' => $questionIndex + 1,
+                        ];
+                    })
                     ->all()
             );
         });
@@ -1025,6 +1044,9 @@ class AppraisalService
                     ->map(fn ($question) => [
                         'question' => $question->question,
                         'question_type' => $question->question_type,
+                        'measurement_type' => $question->measurement_type,
+                        'target_value' => $question->target_value,
+                        'unit' => $question->unit,
                         'sort_order' => $question->sort_order,
                     ])
                     ->values()
@@ -1033,6 +1055,24 @@ class AppraisalService
             ->filter(fn ($category) => count($category['questions']) > 0)
             ->values()
             ->all();
+    }
+
+    private function getAssignmentQuestionOptions(): array
+    {
+        return [
+            'question_types' => AppraisalQuestion::QUESTION_TYPES,
+            'default_question_type' => AppraisalQuestion::QUESTION_TYPE_RATING,
+            'target_question_type' => AppraisalQuestion::QUESTION_TYPE_TARGET,
+            'measurement_types' => AppraisalQuestion::MEASUREMENT_TYPES,
+            'question_units' => AppraisalQuestionUnit::query()
+                ->active()
+                ->whereNull('deleted_at')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->pluck('name')
+                ->values()
+                ->all(),
+        ];
     }
 
     private function getMonths(): array

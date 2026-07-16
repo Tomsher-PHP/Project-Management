@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\AppraisalQuestion;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class AppraisalAssignmentRequest extends FormRequest
@@ -14,7 +16,7 @@ class AppraisalAssignmentRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'month' => ['required', 'integer', 'between:1,12'],
             'year' => ['required', 'integer', 'between:2000,2100'],
             'status' => ['required', 'in:draft,published'],
@@ -25,22 +27,66 @@ class AppraisalAssignmentRequest extends FormRequest
             'categories.*.name' => ['required', 'string', 'max:255'],
             'categories.*.questions' => ['required', 'array', 'min:1'],
             'categories.*.questions.*.question' => ['required', 'string', 'max:500'],
-            'categories.*.questions.*.question_type' => ['required', 'string', 'in:rating,answer'],
+            'categories.*.questions.*.question_type' => [
+                'required',
+                'string',
+                Rule::in(array_keys(AppraisalQuestion::QUESTION_TYPES)),
+            ],
         ];
-     }
- 
-     protected function prepareForValidation(): void
-     {
-         $categories = collect($this->input('categories', []))
-             ->map(function ($category) {
-                 $questions = collect($category['questions'] ?? [])
-                     ->map(fn ($question) => [
-                         'question' => is_string($question['question'] ?? null) ? trim($question['question']) : ($question['question'] ?? null),
-                         'question_type' => is_string($question['question_type'] ?? null) ? trim($question['question_type']) : 'rating',
-                     ])
-                     ->filter(fn ($question) => filled($question['question'] ?? null))
-                     ->values()
-                     ->all();
+
+        foreach ($this->input('categories', []) as $categoryIndex => $category) {
+            foreach ($category['questions'] ?? [] as $questionIndex => $question) {
+                $isTarget = ($question['question_type'] ?? null) === AppraisalQuestion::QUESTION_TYPE_TARGET;
+                $presenceRule = $isTarget ? 'required' : 'nullable';
+                $prefix = "categories.{$categoryIndex}.questions.{$questionIndex}";
+
+                $rules["{$prefix}.measurement_type"] = [
+                    $presenceRule,
+                    'string',
+                    Rule::in(array_keys(AppraisalQuestion::MEASUREMENT_TYPES)),
+                ];
+                $rules["{$prefix}.target_value"] = [$presenceRule, 'numeric'];
+                $rules["{$prefix}.unit"] = [
+                    $presenceRule,
+                    'string',
+                    'max:255',
+                    Rule::exists('appraisal_question_units', 'name')
+                        ->where(fn ($query) => $query
+                            ->where('is_active', true)
+                            ->whereNull('deleted_at')),
+                ];
+            }
+        }
+
+        return $rules;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $categories = collect($this->input('categories', []))
+            ->map(function ($category) {
+                $questions = collect($category['questions'] ?? [])
+                    ->map(function ($question) {
+                        $questionType = is_string($question['question_type'] ?? null)
+                            ? trim($question['question_type'])
+                            : AppraisalQuestion::QUESTION_TYPE_RATING;
+                        $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
+
+                        return [
+                            'question' => is_string($question['question'] ?? null) ? trim($question['question']) : ($question['question'] ?? null),
+                            'question_type' => $questionType,
+                            'measurement_type' => $isTarget && is_string($question['measurement_type'] ?? null)
+                                ? trim($question['measurement_type'])
+                                : ($isTarget ? ($question['measurement_type'] ?? null) : null),
+                            'target_value' => $isTarget ? ($question['target_value'] ?? null) : null,
+                            'unit' => $isTarget && is_string($question['unit'] ?? null)
+                                ? trim($question['unit'])
+                                : ($isTarget ? ($question['unit'] ?? null) : null),
+                        ];
+                    })
+                    ->filter(fn ($question) => filled($question['question'] ?? null))
+                    ->values()
+                    ->all();
 
                 return [
                     'name' => is_string($category['name'] ?? null) ? trim($category['name']) : ($category['name'] ?? null),
@@ -94,6 +140,10 @@ class AppraisalAssignmentRequest extends FormRequest
             'categories.*.name.required' => 'Category name is required.',
             'categories.*.questions.required' => 'Each selected category must have at least one question.',
             'categories.*.questions.min' => 'Each selected category must have at least one question.',
+            'categories.*.questions.*.measurement_type.required' => 'Measurement type is required for target questions.',
+            'categories.*.questions.*.target_value.required' => 'Target value is required for target questions.',
+            'categories.*.questions.*.unit.required' => 'Unit is required for target questions.',
+            'categories.*.questions.*.unit.exists' => 'The selected unit is not available.',
         ];
     }
 }

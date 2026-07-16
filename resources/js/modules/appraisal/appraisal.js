@@ -1,3 +1,5 @@
+import { initTomSelect } from '../../components/tom-select';
+
 document.addEventListener('DOMContentLoaded', () => {
     const root = document.querySelector('[data-appraisal-root]');
 
@@ -22,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const kpiDescription = root.querySelector('[data-appraisal-kpi-description]');
     const modalCategories = root.querySelector('[data-appraisal-modal-categories]');
     const addCategoryButton = root.querySelector('[data-appraisal-assignment-category-add]');
+    const assignmentSteps = root.querySelectorAll('[data-appraisal-assignment-step]');
+    const assignmentFooters = root.querySelectorAll('[data-appraisal-assignment-footer]');
+    const assignmentContinueButton = root.querySelector('[data-appraisal-assignment-continue]');
     const kpiAgreementModal = root.querySelector('[data-appraisal-kpi-agreement-modal]');
     const kpiAgreementTitle = root.querySelector('[data-appraisal-kpi-agreement-title]');
     const kpiAgreementDescription = root.querySelector('[data-appraisal-kpi-agreement-description]');
@@ -50,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const managerCommentSaveBtn = root.querySelector('[data-appraisal-save-comment-btn="manager"]');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
-    const submitButtons = root.querySelectorAll('[data-appraisal-submit]');
     const authUserId = Number(root.dataset.authUserId || 0);
 
     let assignmentData = { my_appraisals: [], users: [], kpis: [], categories: [] };
@@ -60,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragHandleItem = null;
     let kpiDescriptionEditor = null;
     let modalReadOnly = false;
+    let activeAssignmentStep = 1;
     let kpiAgreementAppraisalId = null;
     let answerFormData = null;
     let activeAnswerCategoryId = null;
@@ -71,6 +76,31 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 
+    const defaultQuestionType = () => assignmentData.default_question_type || Object.keys(assignmentData.question_types || {})[0] || '';
+    const targetQuestionType = () => assignmentData.target_question_type || '';
+    const questionTypeLabel = (value) => assignmentData.question_types?.[value] || value;
+    const selectOptionsMarkup = (options, selectedValue, placeholder = '') => {
+        const placeholderOption = placeholder
+            ? `<option value="">${escapeHtml(placeholder)}</option>`
+            : '';
+
+        return placeholderOption + Object.entries(options || {})
+            .map(([value, label]) => `<option value="${escapeHtml(value)}" ${String(value) === String(selectedValue) ? 'selected' : ''}>${escapeHtml(label)}</option>`)
+            .join('');
+    };
+    const unitOptionsMarkup = (selectedValue = '') => {
+        const selectedUnit = String(selectedValue || '');
+        const units = [...(assignmentData.question_units || [])];
+
+        if (selectedUnit && !units.some((unit) => String(unit) === selectedUnit)) {
+            units.push(selectedUnit);
+        }
+
+        return '<option value="">Select unit</option>' + units
+            .map((unit) => `<option value="${escapeHtml(unit)}" ${String(unit) === selectedUnit ? 'selected' : ''}>${escapeHtml(unit)}</option>`)
+            .join('');
+    };
+
     const alertSuccess = (message) => window.Alert?.success ? window.Alert.success(message) : window.alert(message);
     const alertError = (message) => window.Alert?.error ? window.Alert.error(message) : window.alert(message);
     const confirmAction = async (options) => {
@@ -81,6 +111,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return window.confirm(options.text || options.title || 'Are you sure?');
+    };
+
+    const showAssignmentStep = (step = 1) => {
+        activeAssignmentStep = step;
+
+        assignmentSteps.forEach((panel) => {
+            panel.classList.toggle('hidden', Number(panel.dataset.appraisalAssignmentStep) !== step);
+        });
+
+        assignmentFooters.forEach((footer) => {
+            const isActive = Number(footer.dataset.appraisalAssignmentFooter) === step;
+            footer.classList.toggle('hidden', !isActive);
+            footer.classList.toggle('flex', isActive);
+        });
     };
 
     const parseInitialData = () => {
@@ -452,41 +496,119 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const questionRowMarkup = (questionData = '', readOnly = modalReadOnly) => {
         const question = typeof questionData === 'object' ? (questionData.question || '') : questionData;
-        const qType = typeof questionData === 'object' ? (questionData.question_type || 'rating') : 'rating';
+        const qType = typeof questionData === 'object'
+            ? (questionData.question_type || defaultQuestionType())
+            : defaultQuestionType();
+        const measurementType = typeof questionData === 'object' ? (questionData.measurement_type || '') : '';
+        const targetValue = typeof questionData === 'object' ? (questionData.target_value ?? '') : '';
+        const unit = typeof questionData === 'object' ? (questionData.unit ?? questionData.unit_name ?? '') : '';
+        const isTarget = qType === targetQuestionType();
 
         const questionControl = readOnly
             ? `
                 <div class="flex-1">
                     <p class="text-sm font-medium text-bgray-700 dark:text-bgray-100">${escapeHtml(question)}</p>
                     <span class="mt-1 inline-flex items-center rounded-md bg-bgray-100 px-2 py-0.5 text-xs font-medium text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300">
-                        ${qType === 'answer' ? 'Answer Only' : 'Rating & Remark'}
+                        ${escapeHtml(questionTypeLabel(qType))}
                     </span>
+                    ${isTarget ? `
+                        <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div>
+                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Measurement Type</span>
+                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(assignmentData.measurement_types?.[measurementType] || measurementType)}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Target Value</span>
+                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(targetValue)}</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs font-semibold text-bgray-500 dark:text-bgray-300">Unit</span>
+                                <span class="mt-1 block text-sm text-bgray-700 dark:text-bgray-100">${escapeHtml(unit)}</span>
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
               `
             : `
-                <button type="button" class="mt-0.5 inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                    </svg>
-                </button>
-                <div class="flex-1 flex items-center gap-2">
-                    <input type="text" class="flex-1 min-w-0 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
-                    <select class="w-40 shrink-0 rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" data-appraisal-assignment-question-type-select>
-                        <option value="rating" ${qType === 'rating' ? 'selected' : ''}>Rating & Remark</option>
-                        <option value="answer" ${qType === 'answer' ? 'selected' : ''}>Answer Only</option>
-                    </select>
+                <div class="grid min-w-0 flex-1 gap-3 lg:grid-cols-12">
+                    <label class="block lg:col-span-9">
+                        <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Question</span>
+                        <input type="text" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(question)}" placeholder="Enter an appraisal question" data-appraisal-assignment-question-input>
+                    </label>
+                    <label class="block lg:col-span-3">
+                        <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Question Type</span>
+                        <select class="tom-select-no-search w-full" data-appraisal-assignment-question-type-select>
+                            ${selectOptionsMarkup(assignmentData.question_types, qType)}
+                        </select>
+                    </label>
+                    <div class="${isTarget ? 'flex' : 'hidden'} flex-col gap-3 md:flex-row lg:col-span-12" data-appraisal-assignment-target-fields>
+                        <label class="block min-w-0 flex-1">
+                            <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Measurement Type <span class="text-red-500">*</span></span>
+                            <select class="tom-select-no-search w-full" data-appraisal-assignment-measurement-type>
+                                ${selectOptionsMarkup(assignmentData.measurement_types, measurementType, 'Select measurement type')}
+                            </select>
+                        </label>
+                        <label class="block min-w-0 flex-1">
+                            <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Target Value <span class="text-red-500">*</span></span>
+                            <input type="number" step="any" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(targetValue)}" placeholder="e.g. 92.5" data-appraisal-assignment-target-value>
+                        </label>
+                        <label class="block min-w-0 flex-1">
+                            <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Unit <span class="text-red-500">*</span></span>
+                            <select class="tom-select w-full" data-appraisal-assignment-unit>
+                                ${unitOptionsMarkup(unit)}
+                            </select>
+                        </label>
+                    </div>
                 </div>
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-200 bg-error-50 text-error-300 transition duration-200 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>
             `;
 
         return `
             <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-question data-question-type="${escapeHtml(qType)}">
-                <div class="flex items-start gap-3">
-                    <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-assignment-question-number></span>
+                <div class="flex flex-col gap-3 xl:flex-row xl:items-start">
+                    <div class="flex items-center gap-2 xl:pt-6">
+                        ${readOnly ? '' : `
+                            <button type="button" class="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-500 transition duration-200 hover:border-success-200 hover:text-success-400 active:cursor-grabbing dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" data-appraisal-assignment-question-handle aria-label="Drag question">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M7 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 4a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 10a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM7 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM16 16a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                                </svg>
+                            </button>
+                        `}
+                        <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300" data-appraisal-assignment-question-number></span>
+                    </div>
                     ${questionControl}
+                    ${readOnly ? '' : '<button type="button" class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-bgray-200 bg-error-50 text-error-300 transition duration-200 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400 xl:mt-6" data-appraisal-assignment-question-remove aria-label="Remove question">×</button>'}
                 </div>
             </div>
         `;
+    };
+
+    const setAssignmentTargetFieldsVisibility = (row) => {
+        const typeSelect = row?.querySelector('[data-appraisal-assignment-question-type-select]');
+        const targetFields = row?.querySelector('[data-appraisal-assignment-target-fields]');
+        const isTarget = typeSelect?.value === targetQuestionType();
+
+        if (!targetFields) {
+            return;
+        }
+
+        row.dataset.questionType = typeSelect?.value || defaultQuestionType();
+        targetFields.classList.toggle('hidden', !isTarget);
+        targetFields.classList.toggle('flex', isTarget);
+    };
+
+    const initializeQuestionRowSelects = (row) => {
+        if (!row) {
+            return;
+        }
+
+        initTomSelect(row);
+        setAssignmentTargetFieldsVisibility(row);
+    };
+
+    const destroyAssignmentQuestionSelects = (rootElement = modalCategories) => {
+        rootElement?.querySelectorAll('select.tom-select, select.tom-select-no-search').forEach((select) => {
+            select.tomselect?.destroy();
+        });
     };
 
     const categoryMarkup = (category = {}, readOnly = modalReadOnly) => {
@@ -496,14 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const categoryNameControl = readOnly
             ? `<span class="text-base font-semibold text-bgray-900 dark:text-white">${categoryTitle}</span>`
             : `<input type="text" class="min-w-[220px] flex-1 rounded-lg border border-gray-300 p-2.5 text-sm font-semibold text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" value="${escapeHtml(categoryName)}" placeholder="Category name" data-appraisal-assignment-category-name>`;
-        const categorySelector = readOnly
-            ? categoryNameControl
-            : `
-                <label class="flex min-w-0 flex-1 items-center gap-3">
-                    <input type="checkbox" class="h-4 w-4 shrink-0 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" checked data-appraisal-assignment-category-checkbox>
-                    ${categoryNameControl}
-                </label>
-            `;
         const actionButtons = readOnly
             ? ''
             : `
@@ -514,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <article class="rounded-xl border border-bgray-200 bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-category data-appraisal-template-source="${escapeHtml(categoryName)}">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 px-4 py-3 dark:border-darkblack-400">
-                    ${categorySelector}
+                    ${categoryNameControl}
                     <div class="flex items-center gap-2">
                         ${actionButtons}
                         <button type="button" class="rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-700 transition hover:border-bgray-300 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50" data-appraisal-assignment-category-toggle aria-expanded="true">Collapse</button>
@@ -522,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="space-y-3 px-4 py-4" data-appraisal-assignment-category-body>
                     <div class="space-y-3" data-appraisal-assignment-question-list>
-                        ${questions.map((question) => questionRowMarkup(question, readOnly)).join('') || questionRowMarkup({ question: '', question_type: 'rating' }, readOnly)}
+                        ${questions.map((question) => questionRowMarkup(question, readOnly)).join('') || questionRowMarkup({ question: '', question_type: defaultQuestionType() }, readOnly)}
                     </div>
                 </div>
             </article>
@@ -570,9 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         syncKpiTomSelect();
 
-        submitButtons.forEach((button) => {
-            button.classList.toggle('hidden', readOnly);
-        });
+        assignmentContinueButton?.classList.toggle('hidden', readOnly);
 
         if (addCategoryButton) {
             addCategoryButton.classList.toggle('hidden', readOnly);
@@ -639,7 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="mt-3 hidden border-t border-bgray-100 pt-2 dark:border-darkblack-400" data-appraisal-template-questions-body>
                     <ul class="list-disc pl-5 text-xs text-bgray-600 dark:text-bgray-300 space-y-1">
                         ${category.questions.map(q => {
-            const suffix = (q.question_type === 'answer') ? ' (Answer Only)' : '';
+            const suffix = q.question_type && q.question_type !== defaultQuestionType()
+                ? ` (${questionTypeLabel(q.question_type)})`
+                : '';
             return `<li>${escapeHtml(q.question)}${suffix}</li>`;
         }).join('')}
                     </ul>
@@ -657,6 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const categories = cloneCategories(categoriesToRender || assignmentData.categories || []);
 
+        destroyAssignmentQuestionSelects();
+
         if (!categories.length) {
             modalCategories.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:text-bgray-300" data-appraisal-modal-empty>No active appraisal categories found.</div>';
             setModalReadOnly(readOnly);
@@ -665,6 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         modalCategories.innerHTML = categories.map((category) => categoryMarkup(category, readOnly)).join('');
+        modalCategories.querySelectorAll('[data-appraisal-assignment-question]').forEach(initializeQuestionRowSelects);
 
         refreshQuestionNumbers();
         refreshCategoryControls();
@@ -686,6 +803,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resetModal = () => {
+        showAssignmentStep(1);
+
         if (modalTitle) {
             modalTitle.textContent = 'Assign Appraisal';
         }
@@ -813,7 +932,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const serializeCategories = () => Array.from(modalCategories?.querySelectorAll('[data-appraisal-assignment-category]') || [])
-        .filter((categoryCard) => categoryCard.querySelector('[data-appraisal-assignment-category-checkbox]')?.checked !== false)
         .map((categoryCard) => ({
             name: (categoryCard.querySelector('[data-appraisal-assignment-category-name]')?.value || '').trim(),
             questions: Array.from(categoryCard.querySelectorAll('[data-appraisal-assignment-question]'))
@@ -821,10 +939,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     const input = row.querySelector('[data-appraisal-assignment-question-input]');
                     const questionText = input ? input.value.trim() : (row.querySelector('p')?.textContent || '').trim();
                     const select = row.querySelector('[data-appraisal-assignment-question-type-select]');
-                    const questionType = select ? select.value : (row.dataset.questionType || 'rating');
+                    const questionType = select ? select.value : (row.dataset.questionType || defaultQuestionType());
+                    const isTarget = questionType === targetQuestionType();
+                    const measurementType = row.querySelector('[data-appraisal-assignment-measurement-type]');
+                    const targetValue = row.querySelector('[data-appraisal-assignment-target-value]');
+                    const unit = row.querySelector('[data-appraisal-assignment-unit]');
+
                     return {
                         question: questionText,
-                        question_type: questionType
+                        question_type: questionType,
+                        measurement_type: isTarget ? (measurementType?.value || '') : null,
+                        target_value: isTarget ? (targetValue?.value || '') : null,
+                        unit: isTarget ? (unit?.value || '') : null,
                     };
                 })
                 .filter((q) => q.question !== ''),
@@ -868,10 +994,33 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
+        for (const category of categories) {
+            for (const question of category.questions) {
+                if (question.question_type !== targetQuestionType()) {
+                    continue;
+                }
+
+                if (!question.measurement_type) {
+                    alertError(`Select a measurement type for "${question.question}".`);
+                    return false;
+                }
+
+                if (String(question.target_value).trim() === '' || !Number.isFinite(Number(question.target_value))) {
+                    alertError(`Enter a valid target value for "${question.question}".`);
+                    return false;
+                }
+
+                if (!question.unit) {
+                    alertError(`Select a unit for "${question.question}".`);
+                    return false;
+                }
+            }
+        }
+
         return true;
     };
 
-    const submitAssignments = async (status) => {
+    const submitAssignments = async (status, { keepModalOpen = false } = {}) => {
         const period = currentPeriod();
         const userIds = Array.from(selectedUserIds);
         const kpiId = Number(kpiSelect?.value || 0);
@@ -879,17 +1028,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!userIds.length) {
             alertError('Select at least one user.');
-            return;
+            return false;
         }
 
         if (!kpiId) {
             alertError('Select a KPI.');
             kpiSelect?.focus();
-            return;
+            return false;
         }
 
         if (!validateCategories(categories)) {
-            return;
+            return false;
         }
 
         try {
@@ -921,12 +1070,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...assignmentData,
                 ...(payload.data || {}),
             };
-            selectedUserIds.clear();
-            closeAssignModal();
+
+            if (!keepModalOpen) {
+                selectedUserIds.clear();
+                closeAssignModal();
+            }
+
             renderMyAppraisals();
             renderUsers();
+
+            return true;
         } catch (error) {
             alertError(error.message || 'Unable to assign appraisals.');
+
+            return false;
+        }
+    };
+
+    const saveDraftAndContinue = async () => {
+        if (!assignmentContinueButton || activeAssignmentStep !== 1) {
+            return;
+        }
+
+        const originalText = assignmentContinueButton.textContent;
+        assignmentContinueButton.disabled = true;
+        assignmentContinueButton.textContent = 'Saving...';
+
+        try {
+            const saved = await submitAssignments('draft', { keepModalOpen: true });
+
+            if (saved) {
+                showAssignmentStep(2);
+            }
+        } finally {
+            assignmentContinueButton.disabled = false;
+            assignmentContinueButton.textContent = originalText;
         }
     };
 
@@ -1929,6 +2107,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (event.target.matches('[data-appraisal-assignment-question-type-select]')) {
+            setAssignmentTargetFieldsVisibility(
+                event.target.closest('[data-appraisal-assignment-question]')
+            );
+            return;
+        }
+
         if (event.target.matches('[data-appraisal-kpi-agreement-checkbox]')) {
             if (kpiAgreementSubmit) {
                 kpiAgreementSubmit.disabled = !event.target.checked;
@@ -2128,6 +2313,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (event.target.closest('[data-appraisal-assignment-continue]')) {
+            saveDraftAndContinue();
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-assignment-back]')) {
+            showAssignmentStep(1);
+            return;
+        }
+
         if (event.target.closest('[data-appraisal-assignment-category-add]')) {
             if (modalReadOnly) {
                 return;
@@ -2143,6 +2338,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (categoryCard && modalCategories) {
                 modalCategories.appendChild(categoryCard);
+                categoryCard.querySelectorAll('[data-appraisal-assignment-question]').forEach(initializeQuestionRowSelects);
                 refreshQuestionNumbers(categoryCard);
                 refreshCategoryControls();
                 categoryCard.querySelector('[data-appraisal-assignment-category-name]')?.focus();
@@ -2165,7 +2361,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            removeCategory.closest('[data-appraisal-assignment-category]')?.remove();
+            const categoryCard = removeCategory.closest('[data-appraisal-assignment-category]');
+            destroyAssignmentQuestionSelects(categoryCard);
+            categoryCard?.remove();
             refreshCategoryControls();
             updateTemplateAddButtons();
             return;
@@ -2226,6 +2424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (categoryCard) {
                     modalCategories.appendChild(categoryCard);
+                    categoryCard.querySelectorAll('[data-appraisal-assignment-question]').forEach(initializeQuestionRowSelects);
                     refreshQuestionNumbers(categoryCard);
                     refreshCategoryControls();
                     updateTemplateAddButtons();
@@ -2249,6 +2448,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (row && list) {
                 list.appendChild(row);
+                initializeQuestionRowSelects(row);
                 refreshQuestionNumbers(card);
                 row.querySelector('[data-appraisal-assignment-question-input]')?.focus();
             }
@@ -2276,20 +2476,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            removeQuestion.closest('[data-appraisal-assignment-question]')?.remove();
+            const questionRow = removeQuestion.closest('[data-appraisal-assignment-question]');
+            destroyAssignmentQuestionSelects(questionRow);
+            questionRow?.remove();
             refreshQuestionNumbers(card);
             return;
         }
 
-        const submitButton = event.target.closest('[data-appraisal-submit]');
-
-        if (submitButton) {
-            if (modalReadOnly) {
-                return;
-            }
-
-            submitAssignments(submitButton.dataset.appraisalSubmit);
-        }
     });
 
     root.addEventListener('mousedown', (event) => {
