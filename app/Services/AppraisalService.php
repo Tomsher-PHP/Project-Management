@@ -138,6 +138,7 @@ class AppraisalService
                 'designation' => $user->details?->designation?->name,
                 'is_assigned' => (bool) $appraisal,
                 'appraisal_id' => $appraisal?->id,
+                'kpi_id' => $appraisal?->kpi_id,
                 'kpi_name' => $appraisal?->kpi_name,
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
@@ -277,6 +278,7 @@ class AppraisalService
                     $appraisal->created_by = auth()->id();
                 }
 
+                $appraisal->kpi_id = $kpi->id;
                 $appraisal->kpi_name = $kpi->name;
                 $appraisal->kpi_description = $kpi->description;
                 $appraisal->status = $status;
@@ -936,6 +938,10 @@ class AppraisalService
 
     private function resolveSnapshotKpiId(Appraisal $appraisal): ?int
     {
+        if (filled($appraisal->kpi_id)) {
+            return (int) $appraisal->kpi_id;
+        }
+
         if (! filled($appraisal->kpi_name)) {
             return null;
         }
@@ -1316,6 +1322,7 @@ class AppraisalService
                 'designation' => $user->details?->designation?->name,
                 'is_assigned' => (bool) $appraisal,
                 'appraisal_id' => $appraisal?->id,
+                'kpi_id' => $appraisal?->kpi_id,
                 'kpi_name' => $appraisal?->kpi_name,
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',

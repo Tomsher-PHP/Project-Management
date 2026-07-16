@@ -19,6 +19,7 @@ return new class extends Migration
 
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
+            $table->unsignedBigInteger('kpi_id')->nullable();
             $table->string('kpi_name', 255)->nullable();
             $table->longText('kpi_description')->nullable();
             $table->timestamp('kpi_agreed_at')->nullable();
