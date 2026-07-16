@@ -352,10 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const label = record.status_label || String(record.status || '').replace(/^\w/, (letter) => letter.toUpperCase());
         const classes = {
-            draft: 'bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300',
+            draft: 'bg-success-100 text-success-400 dark:bg-success-900/30 dark:text-success-300',
             published: 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-300',
-            completed: 'bg-info-50 text-info-500 dark:bg-darkblack-500 dark:text-info-500',
-            closed: 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300',
+            completed: 'bg-primary-new text-bgray-900 dark:bg-primary-new dark:text-bgray-900',
+            closed: 'bg-bgray-100 text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300',
         }[record.status] || 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
 
         return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
