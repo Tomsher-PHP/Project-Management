@@ -345,11 +345,12 @@ class AppraisalService
                 ->values();
 
             if (
-                $reviewerIds->count() > $chainIds->count()
-                || $reviewerIds->all() !== $chainIds->take($reviewerIds->count())->all()
+                $reviewerIds->duplicates()->isNotEmpty()
+                || $reviewerIds->count() > $chainIds->count()
+                || $reviewerIds->diff($chainIds)->isNotEmpty()
             ) {
                 throw ValidationException::withMessages([
-                    "assignments.{$userId}.reviewer_user_ids" => 'Reviewer levels must follow the employee reporting hierarchy without skipping levels.',
+                    "assignments.{$userId}.reviewer_user_ids" => 'Reviewers must be unique users from the employee reporting chain.',
                 ]);
             }
         }

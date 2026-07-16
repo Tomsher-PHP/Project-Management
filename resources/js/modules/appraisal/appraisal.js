@@ -138,18 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const reviewerLevelMarkup = (assignment, levelIndex, selectedReviewerId = '', readOnly = modalReadOnly) => {
-        const reviewer = assignment.available_reviewers?.[levelIndex];
         const savedReviewer = assignment.reviewers?.find((item) => Number(item.level) === levelIndex + 1);
         const selectedId = Number(selectedReviewerId || savedReviewer?.reviewer_user_id || 0);
 
         if (readOnly) {
-            const displayReviewer = savedReviewer || reviewer;
-
             return `
                 <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-reviewer-level data-level="${levelIndex + 1}">
                     <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Reviewer Level ${levelIndex + 1}</p>
-                    <p class="mt-2 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(displayReviewer?.name || 'Not Assigned')}</p>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${escapeHtml(displayReviewer?.email || '')}</p>
+                    <p class="mt-2 text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(savedReviewer?.name || 'Not Assigned')}</p>
+                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${escapeHtml(savedReviewer?.email || '')}</p>
                 </div>
             `;
         }
@@ -161,13 +158,60 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="mb-1 block text-xs font-semibold text-bgray-600 dark:text-bgray-300">Reviewer Level ${levelIndex + 1} <span class="text-red-500">*</span></span>
                         <select class="tom-select-no-search w-full" data-appraisal-reviewer-select>
                             <option value="">Select reviewer</option>
-                            ${reviewer ? `<option value="${escapeHtml(reviewer.id)}" ${Number(reviewer.id) === selectedId ? 'selected' : ''}>${escapeHtml(reviewer.name)}${reviewer.email ? ` (${escapeHtml(reviewer.email)})` : ''}</option>` : ''}
+                            ${(assignment.available_reviewers || []).map((reviewer) => `
+                                <option value="${escapeHtml(reviewer.id)}" ${Number(reviewer.id) === selectedId ? 'selected' : ''}>
+                                    ${escapeHtml(reviewer.name)}${reviewer.email ? ` (${escapeHtml(reviewer.email)})` : ''}
+                                </option>
+                            `).join('')}
                         </select>
                     </label>
                     ${levelIndex > 0 ? '<button type="button" class="rounded-lg border border-red-200 bg-error-50 px-3 py-2.5 text-xs font-semibold text-error-300 transition hover:text-red-500 dark:border-darkblack-400" data-appraisal-reviewer-level-remove>Remove Level</button>' : ''}
                 </div>
             </div>
         `;
+    };
+
+    const syncReviewerSelectOptions = (card) => {
+        if (!card || modalReadOnly) {
+            return;
+        }
+
+        const assignment = reviewerAssignmentData.find(
+            (item) => Number(item.user?.id) === Number(card.dataset.userId)
+        );
+        const selects = Array.from(card.querySelectorAll('[data-appraisal-reviewer-select]'));
+        const selectedIds = selects
+            .map((select) => Number(select.tomselect?.getValue() ?? select.value ?? 0))
+            .filter((id) => id > 0);
+
+        selects.forEach((select) => {
+            const instance = select.tomselect;
+
+            if (!instance) {
+                return;
+            }
+
+            const currentValue = Number(instance.getValue() || 0);
+            const unavailableIds = new Set(selectedIds.filter((id) => id !== currentValue));
+
+            instance.clearOptions();
+            instance.addOption(
+                (assignment?.available_reviewers || [])
+                    .filter((reviewer) => !unavailableIds.has(Number(reviewer.id)))
+                    .map((reviewer) => ({
+                        value: String(reviewer.id),
+                        text: reviewer.email
+                            ? `${reviewer.name} (${reviewer.email})`
+                            : reviewer.name,
+                    }))
+            );
+
+            if (currentValue) {
+                instance.setValue(String(currentValue), true);
+            }
+
+            instance.refreshOptions(false);
+        });
     };
 
     const updateReviewerCardControls = (card) => {
@@ -246,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!readOnly) {
             reviewerAssignmentsContainer.querySelectorAll('[data-appraisal-reviewer-card]').forEach((card) => {
                 initTomSelect(card);
+                syncReviewerSelectOptions(card);
                 updateReviewerCardControls(card);
             });
         }
@@ -1305,13 +1350,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
 
-            const expectedIds = chainIds.slice(0, assignment.reviewer_user_ids.length);
-
             if (
                 assignment.reviewer_user_ids.length !== new Set(assignment.reviewer_user_ids).size
-                || assignment.reviewer_user_ids.some((id, index) => id !== expectedIds[index])
+                || assignment.reviewer_user_ids.some((id) => !chainIds.includes(id))
             ) {
-                alertError(`Reviewer levels for ${employeeName} must follow the reporting hierarchy without skipping levels.`);
+                alertError(`Reviewers for ${employeeName} must be unique users from the available reporter chain.`);
                 return false;
             }
         }
@@ -2407,9 +2450,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (event.target.matches('[data-appraisal-reviewer-select]')) {
-            updateReviewerCardControls(
-                event.target.closest('[data-appraisal-reviewer-card]')
-            );
+            const card = event.target.closest('[data-appraisal-reviewer-card]');
+
+            syncReviewerSelectOptions(card);
+            updateReviewerCardControls(card);
             return;
         }
 
@@ -2666,6 +2710,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (level) {
                 levelsContainer.appendChild(level);
                 initTomSelect(level);
+                syncReviewerSelectOptions(card);
                 updateReviewerCardControls(card);
             }
             return;
@@ -2684,6 +2729,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             level.querySelector('[data-appraisal-reviewer-select]')?.tomselect?.destroy();
             level.remove();
+            syncReviewerSelectOptions(card);
             updateReviewerCardControls(card);
             return;
         }
