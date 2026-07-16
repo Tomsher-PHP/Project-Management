@@ -6,7 +6,6 @@ use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalCategoryController;
 use App\Http\Controllers\AppraisalController;
-use App\Http\Controllers\AppraisalKpiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
