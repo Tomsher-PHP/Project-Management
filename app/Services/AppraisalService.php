@@ -273,6 +273,7 @@ class AppraisalService
                     ]);
 
                 $wasPublished = $appraisal->exists && strtolower((string) $appraisal->getOriginal('status')) === 'published';
+                $isExistingDraft = $appraisal->exists && strtolower((string) $appraisal->getOriginal('status')) === 'draft';
 
                 if (! $appraisal->exists) {
                     $appraisal->created_by = auth()->id();
@@ -286,7 +287,7 @@ class AppraisalService
                 $appraisal->published_by = $status === 'published' ? auth()->id() : null;
                 $appraisal->save();
 
-                $this->replaceSnapshot($appraisal, $data['categories']);
+                $this->replaceSnapshot($appraisal, $data['categories'], $isExistingDraft);
 
                 if ($status === 'published' && ! $wasPublished) {
                     $assignedAppraisals[] = $appraisal;
@@ -985,12 +986,22 @@ class AppraisalService
         }
     }
 
-    private function replaceSnapshot(Appraisal $appraisal, array $categories): void
+    private function replaceSnapshot(Appraisal $appraisal, array $categories, bool $forceDeleteExisting = false): void
     {
-        $appraisal->snapshotCategories()->each(function ($category) {
-            $category->questions()->delete();
-            $category->delete();
-        });
+        if ($forceDeleteExisting) {
+            $appraisal->snapshotCategories()
+                ->withTrashed()
+                ->get()
+                ->each(function ($category) {
+                    $category->questions()->withTrashed()->forceDelete();
+                    $category->forceDelete();
+                });
+        } else {
+            $appraisal->snapshotCategories()->each(function ($category) {
+                $category->questions()->delete();
+                $category->delete();
+            });
+        }
 
         collect($categories)->values()->each(function (array $category, int $categoryIndex) use ($appraisal) {
             $snapshotCategory = $appraisal->snapshotCategories()->create([

@@ -451,6 +451,42 @@ document.addEventListener('DOMContentLoaded', () => {
             .join('');
     };
 
+    const restoreKpiSelection = (appraisal) => {
+        if (!kpiSelect) {
+            return;
+        }
+
+        const matchedKpiId = Number(appraisal.kpi_id || 0);
+        const selectedKpi = (assignmentData.kpis || [])
+            .find((kpi) => Number(kpi.id) === matchedKpiId);
+
+        if (selectedKpi) {
+            const selectedValue = String(selectedKpi.id);
+
+            kpiSelect.tomselect?.setValue(selectedValue, true);
+            kpiSelect.value = selectedValue;
+            kpiSelect.tomselect?.refreshItems();
+            setKpiDescription(selectedKpi.description || appraisal.kpi_description || '');
+
+            return;
+        }
+
+        if (appraisal.kpi_name) {
+            const unavailableValue = '__missing';
+            const unavailableLabel = `${appraisal.kpi_name} (not available)`;
+
+            kpiSelect.tomselect?.addOption({
+                value: unavailableValue,
+                text: unavailableLabel,
+                disabled: true,
+            });
+            kpiSelect.tomselect?.setValue(unavailableValue, true);
+            kpiSelect.value = unavailableValue;
+        }
+
+        setKpiDescription(appraisal.kpi_description || '');
+    };
+
     const normalizeHtml = (value) => {
         const plainText = String(value || '')
             .replace(/<[^>]*>/g, ' ')
@@ -878,21 +914,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalTitle.textContent = 'Edit Appraisal';
             }
 
-            if (kpiSelect) {
-                const matchedKpiId = Number(appraisal.kpi_id || 0);
-                const hasMatchedKpi = (assignmentData.kpis || []).some((kpi) => Number(kpi.id) === matchedKpiId);
-
-                if (matchedKpiId && hasMatchedKpi) {
-                    kpiSelect.value = String(matchedKpiId);
-                } else if (appraisal.kpi_name) {
-                    kpiSelect.insertAdjacentHTML('beforeend', `<option value="__missing" selected disabled>${escapeHtml(appraisal.kpi_name)} (not available)</option>`);
-                    kpiSelect.value = '__missing';
-                }
-            }
-
-            setKpiDescription(appraisal.kpi_description || '');
             renderModalCategories(appraisal.categories || [], false);
             renderTemplatesList();
+            restoreKpiSelection(appraisal);
             modal?.classList.remove('hidden');
             modal?.classList.add('flex');
         } catch (error) {
