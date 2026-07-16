@@ -8,6 +8,7 @@ use App\Models\AppraisalComment;
 use App\Models\AppraisalCategory;
 use App\Models\AppraisalQuestion;
 use App\Models\AppraisalQuestionUnit;
+use App\Models\AppraisalReviewer;
 use App\Models\Kpi;
 use App\Models\User;
 use App\Models\Team;
@@ -313,6 +314,71 @@ class AppraisalService
             'users' => $this->getUsersWithAssignments($month, $year),
             'kpis' => $this->getActiveKpis(),
             'categories' => $this->getActiveCategories(),
+            'reviewer_assignments' => $this->getReviewerAssignmentData($userIds, $month, $year),
+        ];
+    }
+
+    public function assignReviewers(array $data): array
+    {
+        $month = (int) $data['month'];
+        $year = (int) $data['year'];
+        $assignments = collect($data['assignments'])->keyBy('user_id');
+        $userIds = $assignments->keys()->map(fn ($id) => (int) $id)->values();
+
+        $this->validateAssignableUsers($userIds, $month, $year);
+
+        $appraisals = Appraisal::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereIn('user_id', $userIds)
+            ->get()
+            ->keyBy('user_id');
+
+        if ($appraisals->count() !== $userIds->count()) {
+            throw ValidationException::withMessages([
+                'assignments' => 'Save every appraisal as draft before assigning reviewers.',
+            ]);
+        }
+
+        foreach ($assignments as $userId => $assignment) {
+            $chainIds = $this->getReviewerChainUserIds((int) $userId);
+            $reviewerIds = collect($assignment['reviewer_user_ids'])
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            if (
+                $reviewerIds->count() > $chainIds->count()
+                || $reviewerIds->all() !== $chainIds->take($reviewerIds->count())->all()
+            ) {
+                throw ValidationException::withMessages([
+                    "assignments.{$userId}.reviewer_user_ids" => 'Reviewer levels must follow the employee reporting hierarchy without skipping levels.',
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($assignments, $appraisals) {
+            foreach ($assignments as $userId => $assignment) {
+                $appraisal = $appraisals->get((int) $userId);
+
+                $appraisal->reviewers()->withTrashed()->forceDelete();
+
+                $appraisal->reviewers()->createMany(
+                    collect($assignment['reviewer_user_ids'])
+                        ->values()
+                        ->map(fn ($reviewerUserId, $index) => [
+                            'reviewer_user_id' => (int) $reviewerUserId,
+                            'role' => 'reporter',
+                            'level' => $index + 1,
+                        ])
+                        ->all()
+                );
+            }
+        });
+
+        return [
+            'reviewer_assignments' => $this->getReviewerAssignmentData($userIds, $month, $year),
+            'my_appraisals' => $this->getMyAppraisals($month, $year),
+            'users' => $this->getUsersWithAssignments($month, $year),
         ];
     }
 
@@ -391,7 +457,13 @@ class AppraisalService
         }
 
         return $this->formatAppraisalSnapshot(
-            $appraisal->load(['user:id,name,email', 'user.details.department', 'user.details.designation', 'snapshotCategories.questions'])
+            $appraisal->load([
+                'user:id,name,email',
+                'user.details.department',
+                'user.details.designation',
+                'snapshotCategories.questions',
+                'reviewers.reviewer:id,name,email',
+            ])
         );
     }
 
@@ -915,6 +987,7 @@ class AppraisalService
             'status_label' => str($appraisal->status)->headline()->toString(),
             'is_editable' => $appraisal->status === 'draft',
             'published_at' => $appraisal->published_at?->format('M d, Y h:i A'),
+            'reviewer_assignment' => $this->formatReviewerAssignment($appraisal),
             'categories' => $appraisal->snapshotCategories
                 ->map(fn ($category) => [
                     'name' => $category->name,
@@ -956,6 +1029,84 @@ class AppraisalService
             ->value('id');
 
         return $exactMatch ?: $query->value('id');
+    }
+
+    private function getReviewerAssignmentData($userIds, int $month, int $year): array
+    {
+        $appraisals = Appraisal::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereIn('user_id', $userIds)
+            ->with([
+                'user:id,name,email',
+                'reviewers.reviewer:id,name,email',
+            ])
+            ->get()
+            ->keyBy('user_id');
+
+        return collect($userIds)
+            ->map(fn ($userId) => $appraisals->get((int) $userId))
+            ->filter()
+            ->map(fn (Appraisal $appraisal) => $this->formatReviewerAssignment($appraisal))
+            ->values()
+            ->all();
+    }
+
+    private function formatReviewerAssignment(Appraisal $appraisal): array
+    {
+        $chainIds = $this->getReviewerChainUserIds((int) $appraisal->user_id);
+        $chainUsers = User::query()
+            ->whereIn('id', $chainIds)
+            ->get(['id', 'name', 'email'])
+            ->keyBy('id');
+
+        return [
+            'appraisal_id' => $appraisal->id,
+            'user' => [
+                'id' => $appraisal->user?->id,
+                'name' => $appraisal->user?->name,
+                'email' => $appraisal->user?->email,
+            ],
+            'available_reviewers' => $chainIds
+                ->map(fn ($id) => $chainUsers->get($id))
+                ->filter()
+                ->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ])
+                ->values()
+                ->all(),
+            'reviewers' => $appraisal->reviewers
+                ->sortBy('level')
+                ->map(fn (AppraisalReviewer $reviewer) => [
+                    'id' => $reviewer->id,
+                    'reviewer_user_id' => $reviewer->reviewer_user_id,
+                    'role' => $reviewer->role,
+                    'level' => $reviewer->level,
+                    'name' => $reviewer->reviewer?->name,
+                    'email' => $reviewer->reviewer?->email,
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    private function getReviewerChainUserIds(int $userId)
+    {
+        $chainIds = collect(User::getReporterChainUserIds($userId))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $existingIds = User::query()
+            ->whereIn('id', $chainIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->flip();
+
+        return $chainIds
+            ->filter(fn ($id) => $existingIds->has($id))
+            ->values();
     }
 
     private function validateAssignableUsers($userIds, int $month, int $year): void

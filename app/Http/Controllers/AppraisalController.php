@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AppraisalAssignmentRequest;
+use App\Http\Requests\AppraisalReviewerAssignmentRequest;
 use App\Models\Appraisal;
 use App\Services\AppraisalService;
 use Illuminate\Contracts\View\View;
@@ -56,6 +57,15 @@ class AppraisalController extends Controller
                 ? 'Appraisals assigned and published successfully.'
                 : 'Appraisals assigned as draft successfully.',
             'data' => $result,
+        ]);
+    }
+
+    public function assignReviewers(AppraisalReviewerAssignmentRequest $request): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Appraisal reviewers assigned successfully.',
+            'data' => $this->appraisalService->assignReviewers($request->validated()),
         ]);
     }
 
