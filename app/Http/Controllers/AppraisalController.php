@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AppraisalAssignmentRequest;
 use App\Http\Requests\AppraisalReviewerAssignmentRequest;
 use App\Models\Appraisal;
+use App\Models\AppraisalQuestion;
 use App\Services\AppraisalService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -168,13 +169,28 @@ class AppraisalController extends Controller
     private function isAnswerQuestionCompleted(array $question, string $role): bool
     {
         $answer = $question['answer'] ?? [];
+        $review = collect($question['reviews'] ?? [])->firstWhere('is_current', true) ?? [];
 
-        if (($question['question_type'] ?? null) === 'answer') {
-            return $role !== 'assignee' || filled(trim((string) ($answer['assignee_answer'] ?? '')));
-        }
+        return match ($question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING) {
+            AppraisalQuestion::QUESTION_TYPE_ANSWER => $role !== 'assignee'
+                || filled(trim((string) ($answer['answer'] ?? ''))),
+            AppraisalQuestion::QUESTION_TYPE_TARGET => $role === 'assignee'
+                ? $this->hasAnswerValue($answer['achieved_value'] ?? null)
+                : ($role !== 'reviewer' || filled(trim((string) ($review['remark'] ?? '')))),
+            default => $role === 'viewer' || $this->isRatingResponseCompleted(
+                $role === 'reviewer' ? ($review['rating'] ?? null) : ($answer['rating'] ?? null),
+                $role === 'reviewer' ? ($review['remark'] ?? null) : ($answer['remark'] ?? null),
+            ),
+        };
+    }
 
-        $rating = $answer["{$role}_rating"] ?? null;
-        $remark = $answer["{$role}_remark"] ?? null;
+    private function hasAnswerValue(mixed $value): bool
+    {
+        return $value !== null && $value !== '' && is_numeric($value);
+    }
+
+    private function isRatingResponseCompleted(mixed $rating, mixed $remark): bool
+    {
 
         if (! is_numeric($rating)) {
             return false;
@@ -199,13 +215,14 @@ class AppraisalController extends Controller
                 'min:0.1',
                 'max:5.0',
                 function ($attribute, $value, $fail) {
-                    if ($value !== null && strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
+                    if ($value !== null && strlen(substr(strrchr((string) $value, '.'), 1)) > 1) {
                         $fail('The rating must have at most one decimal place.');
                     }
-                }
+                },
             ],
             'answers.*.remark' => ['nullable', 'string'],
             'answers.*.assignee_answer' => ['nullable', 'string'],
+            'answers.*.achieved_value' => ['nullable', 'numeric'],
             'overall_comment' => ['nullable', 'string'],
         ]);
 
@@ -233,13 +250,14 @@ class AppraisalController extends Controller
                 'min:0.1',
                 'max:5.0',
                 function ($attribute, $value, $fail) {
-                    if ($value !== null && strlen(substr(strrchr((string)$value, "."), 1)) > 1) {
+                    if ($value !== null && strlen(substr(strrchr((string) $value, '.'), 1)) > 1) {
                         $fail('The rating must have at most one decimal place.');
                     }
-                }
+                },
             ],
             'answers.*.remark' => ['nullable', 'string'],
             'answers.*.assignee_answer' => ['nullable', 'string'],
+            'answers.*.achieved_value' => ['nullable', 'numeric'],
             'overall_comment' => ['nullable', 'string'],
         ]);
 
@@ -268,10 +286,9 @@ class AppraisalController extends Controller
             'status' => true,
             'message' => 'Comment saved successfully.',
             'data' => [
-                'role' => $comment->role,
+                'appraisal_reviewer_id' => $comment->appraisal_reviewer_id,
                 'comment' => $comment->comment,
-                'commented_by' => $comment->commented_by,
-                'commentator_name' => $comment->commentator?->name,
+                'commentator_name' => $comment->reviewer?->reviewer?->name,
                 'created_at' => $comment->created_at?->format('M d, Y h:i A'),
             ],
         ]);

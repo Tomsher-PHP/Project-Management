@@ -4,17 +4,16 @@ namespace App\Services;
 
 use App\Models\Appraisal;
 use App\Models\AppraisalAnswer;
-use App\Models\AppraisalComment;
 use App\Models\AppraisalCategory;
+use App\Models\AppraisalComment;
 use App\Models\AppraisalQuestion;
 use App\Models\AppraisalQuestionUnit;
 use App\Models\AppraisalReviewer;
+use App\Models\AppraisalSnapshotQuestion;
+use App\Models\Department;
 use App\Models\Kpi;
 use App\Models\User;
-use App\Models\Team;
-use App\Models\Department;
 use App\Services\Reports\Concerns\ResolvesTeamUserFilters;
-use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -24,9 +23,7 @@ class AppraisalService
 {
     use ResolvesTeamUserFilters;
 
-    public function __construct(private readonly NotificationService $notificationService)
-    {
-    }
+    public function __construct(private readonly NotificationService $notificationService) {}
 
     public function index(Request $request): array
     {
@@ -231,7 +228,7 @@ class AppraisalService
                     'answer_role' => $answerRole,
                     'can_answer' => $canAnswer,
                     'can_edit_answer' => $canAnswer
-                        && in_array($answerRole, ['assignee', 'reporter', 'manager'], true)
+                        && in_array($answerRole, ['assignee', 'reviewer'], true)
                         && ! $this->isRoleSubmitted($appraisal, $answerRole),
                 ];
             })
@@ -525,10 +522,10 @@ class AppraisalService
     {
         $appraisal->load([
             'user:id,name,email',
-            'user.details',
             'snapshotCategories.questions',
-            'answers',
-            'comments.commentator:id,name',
+            'answers.reviews',
+            'reviewers.reviewer:id,name,email',
+            'comments.reviewer.reviewer:id,name,email',
         ]);
 
         $role = $this->resolveAnswerRole($appraisal);
@@ -546,12 +543,17 @@ class AppraisalService
         }
 
         $answers = $appraisal->answers->keyBy('appraisal_snapshot_question_id');
+        $reviewers = $appraisal->reviewers->sortBy('level')->values();
+        $authenticatedReviewer = $this->authenticatedReviewer($appraisal);
 
         return [
             'id' => $appraisal->id,
             'role' => $role,
-            'role_label' => str($role)->headline()->toString(),
+            'role_label' => $role === 'reviewer'
+                ? 'Reviewer Level '.($authenticatedReviewer?->level ?? '')
+                : str($role)->headline()->toString(),
             'is_submitted' => $this->isRoleSubmitted($appraisal, $role),
+            'current_reviewer_id' => $authenticatedReviewer?->id,
             'period' => Carbon::createFromDate($appraisal->year, $appraisal->month, 1)->format('F Y'),
             'assignee' => [
                 'id' => $appraisal->user?->id,
@@ -567,23 +569,42 @@ class AppraisalService
                     'name' => $category->name,
                     'sort_order' => $category->sort_order,
                     'questions' => $category->questions
-                        ->map(function ($question) use ($answers) {
+                        ->map(function ($question) use ($answers, $reviewers, $authenticatedReviewer) {
                             $answer = $answers->get($question->id);
+                            $answerReviews = $answer?->reviews?->keyBy('appraisal_reviewer_id') ?? collect();
 
                             return [
                                 'id' => $question->id,
                                 'question' => $question->question,
                                 'question_type' => $question->question_type,
+                                'measurement_type' => $question->measurement_type,
+                                'target_value' => $question->target_value,
+                                'unit' => $question->unit,
                                 'sort_order' => $question->sort_order,
                                 'answer' => [
-                                    'assignee_rating' => $answer?->assignee_rating,
-                                    'assignee_remark' => $answer?->assignee_remark,
-                                    'assignee_answer' => $answer?->assignee_answer,
-                                    'reporter_rating' => $answer?->reporter_rating,
-                                    'reporter_remark' => $answer?->reporter_remark,
-                                    'manager_rating' => $answer?->manager_rating,
-                                    'manager_remark' => $answer?->manager_remark,
+                                    'rating' => $answer?->rating,
+                                    'remark' => $answer?->remark,
+                                    'answer' => $answer?->answer,
+                                    'achieved_value' => $answer?->achieved_value,
+                                    'achievement_percentage' => $answer?->achievement_percentage,
+                                    'submitted_at' => $answer?->submitted_at?->toISOString(),
                                 ],
+                                'reviews' => $reviewers->map(function ($reviewer) use ($answerReviews, $authenticatedReviewer) {
+                                    $review = $answerReviews->get($reviewer->id);
+
+                                    return [
+                                        'appraisal_reviewer_id' => $reviewer->id,
+                                        'reviewer_user_id' => $reviewer->reviewer_user_id,
+                                        'name' => $reviewer->reviewer?->name,
+                                        'role' => $reviewer->role,
+                                        'level' => $reviewer->level,
+                                        'rating' => $review?->rating,
+                                        'remark' => $review?->remark,
+                                        'submitted_at' => $review?->submitted_at?->toISOString(),
+                                        'is_current' => (int) $authenticatedReviewer?->id === (int) $reviewer->id,
+                                        'is_submitted' => filled($reviewer->submitted_at),
+                                    ];
+                                })->all(),
                             ];
                         })
                         ->values()
@@ -591,11 +612,19 @@ class AppraisalService
                 ])
                 ->values()
                 ->all(),
+            'reviewers' => $reviewers->map(fn ($reviewer) => [
+                'id' => $reviewer->id,
+                'reviewer_user_id' => $reviewer->reviewer_user_id,
+                'name' => $reviewer->reviewer?->name,
+                'role' => $reviewer->role,
+                'level' => $reviewer->level,
+                'submitted_at' => $reviewer->submitted_at?->toISOString(),
+            ])->all(),
             'comments' => $appraisal->comments->map(fn ($c) => [
-                'role' => $c->role,
+                'appraisal_reviewer_id' => $c->appraisal_reviewer_id,
+                'level' => $c->reviewer?->level,
                 'comment' => $c->comment,
-                'commented_by' => $c->commented_by,
-                'commentator_name' => $c->commentator?->name,
+                'commentator_name' => $c->reviewer?->reviewer?->name,
                 'created_at' => $c->created_at?->format('M d, Y h:i A'),
             ])->values()->all(),
         ];
@@ -605,9 +634,9 @@ class AppraisalService
     {
         $appraisal->load([
             'user:id,name,email',
-            'user.details',
             'snapshotCategories.questions',
-            'answers',
+            'answers.reviews',
+            'reviewers',
         ]);
 
         $role = $this->resolveAnswerRole($appraisal);
@@ -637,37 +666,13 @@ class AppraisalService
                     continue;
                 }
 
-                $questionType = $questionModel->question_type ?? 'rating';
-
                 $answer = AppraisalAnswer::firstOrNew([
                     'appraisal_id' => $appraisal->id,
                     'appraisal_snapshot_question_id' => $qId,
                 ]);
 
-                if ($questionType === 'rating') {
-                    $rating = $data['rating'] ?? null;
-                    $remark = $data['remark'] !== null ? trim((string)$data['remark']) : null;
-
-                    if ($role === 'assignee') {
-                        $answer->assignee_rating = $rating;
-                        $answer->assignee_remark = $remark;
-                    } elseif ($role === 'reporter') {
-                        $answer->reporter_user_id = auth()->id();
-                        $answer->reporter_rating = $rating;
-                        $answer->reporter_remark = $remark;
-                    } elseif ($role === 'manager') {
-                        $answer->manager_user_id = auth()->id();
-                        $answer->manager_rating = $rating;
-                        $answer->manager_remark = $remark;
-                    }
-                } else {
-                    // 'answer' type
-                    if ($role === 'assignee') {
-                        $answer->assignee_answer = isset($data['assignee_answer']) && $data['assignee_answer'] !== null ? trim((string)$data['assignee_answer']) : null;
-                    }
-                }
-
                 $answer->save();
+                $this->fillAnswerResponse($answer, $questionModel, $data, $role);
             }
 
             $this->persistReviewerComment($appraisal, $role, $overallComment);
@@ -683,9 +688,9 @@ class AppraisalService
     {
         $appraisal->load([
             'user:id,name,email',
-            'user.details',
             'snapshotCategories.questions',
-            'answers',
+            'answers.reviews',
+            'reviewers',
         ]);
 
         $role = $this->resolveAnswerRole($appraisal);
@@ -720,7 +725,7 @@ class AppraisalService
             $ans = $submittedAnswers->get($qId);
             $questionType = $questionModel->question_type ?? 'rating';
 
-            if ($questionType === 'rating') {
+            if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
                 $rating = $ans['rating'] ?? null;
                 $remark = $ans['remark'] ?? null;
 
@@ -729,26 +734,39 @@ class AppraisalService
                         "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
                     ]);
                 }
-                if (strlen(substr(strrchr((string)$rating, "."), 1)) > 1) {
+                if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
                     throw ValidationException::withMessages([
                         "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
                     ]);
                 }
 
-                if ($remark === null || blank(trim((string)$remark))) {
+                if ($remark === null || blank(trim((string) $remark))) {
                     throw ValidationException::withMessages([
                         "answers.{$index}.remark" => 'Remarks cannot be empty.',
                     ]);
                 }
-            } else {
-                // 'answer' type question
+            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
                 if ($role === 'assignee') {
                     $assigneeAnswer = $ans['assignee_answer'] ?? null;
-                    if ($assigneeAnswer === null || blank(trim((string)$assigneeAnswer))) {
+                    if ($assigneeAnswer === null || blank(trim((string) $assigneeAnswer))) {
                         throw ValidationException::withMessages([
                             "answers.{$index}.assignee_answer" => 'Answers cannot be empty.',
                         ]);
                     }
+                }
+            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_TARGET) {
+                if ($role === 'assignee') {
+                    $achievedValue = $ans['achieved_value'] ?? null;
+
+                    if ($achievedValue === null || $achievedValue === '' || ! is_numeric($achievedValue)) {
+                        throw ValidationException::withMessages([
+                            "answers.{$index}.achieved_value" => 'Achieved value is required.',
+                        ]);
+                    }
+                } elseif ($role === 'reviewer' && blank(trim((string) ($ans['remark'] ?? '')))) {
+                    throw ValidationException::withMessages([
+                        "answers.{$index}.remark" => 'Remarks cannot be empty.',
+                    ]);
                 }
             }
             $index++;
@@ -763,61 +781,34 @@ class AppraisalService
                     continue;
                 }
 
-                $questionType = $questionModel->question_type ?? 'rating';
-
                 $answer = AppraisalAnswer::firstOrNew([
                     'appraisal_id' => $appraisal->id,
                     'appraisal_snapshot_question_id' => $qId,
                 ]);
 
-                if ($questionType === 'rating') {
-                    if ($role === 'assignee') {
-                        $answer->assignee_rating = $data['rating'];
-                        $answer->assignee_remark = trim((string)$data['remark']);
-                        if (blank($answer->assignee_submitted_at)) {
-                            $answer->assignee_submitted_at = now();
-                        }
-                    } elseif ($role === 'reporter') {
-                        $answer->reporter_user_id = auth()->id();
-                        $answer->reporter_rating = $data['rating'];
-                        $answer->reporter_remark = trim((string)$data['remark']);
-                        if (blank($answer->reporter_submitted_at)) {
-                            $answer->reporter_submitted_at = now();
-                        }
-                    } elseif ($role === 'manager') {
-                        $answer->manager_user_id = auth()->id();
-                        $answer->manager_rating = $data['rating'];
-                        $answer->manager_remark = trim((string)$data['remark']);
-                        if (blank($answer->manager_submitted_at)) {
-                            $answer->manager_submitted_at = now();
-                        }
-                    }
-                } else {
-                    // 'answer' type
-                    if ($role === 'assignee') {
-                        $answer->assignee_answer = trim((string)$data['assignee_answer']);
-                        if (blank($answer->assignee_submitted_at)) {
-                            $answer->assignee_submitted_at = now();
-                        }
-                    }
-                }
-
                 $answer->save();
+                $this->fillAnswerResponse($answer, $questionModel, $data, $role, now());
             }
 
             $this->persistReviewerComment($appraisal, $role, $overallComment);
 
             $now = now();
             if ($role === 'assignee') {
-                $appraisal->assignee_submitted_at = $now;
-                $notificationRecipientId = (int) ($appraisal->user?->details?->reporter_id ?? 0);
-            } elseif ($role === 'reporter') {
-                $appraisal->reporter_submitted_at = $now;
-                $notificationRecipientId = (int) ($appraisal->user?->details?->manager_id ?? 0);
-            } elseif ($role === 'manager') {
-                $appraisal->manager_submitted_at = $now;
-                $appraisal->status = 'completed';
-                $appraisal->completed_at = $now;
+                $nextReviewer = $appraisal->reviewers->sortBy('level')->first();
+                $notificationRecipientId = (int) ($nextReviewer?->reviewer_user_id ?? 0);
+            } elseif ($role === 'reviewer') {
+                $reviewer = $this->authenticatedReviewer($appraisal);
+                $reviewer?->update(['submitted_at' => $now]);
+                $nextReviewer = $appraisal->reviewers
+                    ->where('level', '>', $reviewer?->level)
+                    ->sortBy('level')
+                    ->first();
+                $notificationRecipientId = (int) ($nextReviewer?->reviewer_user_id ?? 0);
+
+                if (! $nextReviewer) {
+                    $appraisal->status = Appraisal::STATUS_COMPLETED;
+                    $appraisal->completed_at = $now;
+                }
             }
 
             $appraisal->save();
@@ -862,9 +853,9 @@ class AppraisalService
     {
         $role = $this->resolveAnswerRole($appraisal);
 
-        if (! in_array($role, ['reporter', 'manager'], true)) {
+        if ($role !== 'reviewer') {
             throw ValidationException::withMessages([
-                'comment' => 'Only the reporter or manager can add overall comments.',
+                'comment' => 'Only an assigned reviewer can add overall comments.',
             ]);
         }
 
@@ -872,29 +863,32 @@ class AppraisalService
 
         $commentModel = $this->persistReviewerComment($appraisal, $role, $comment);
 
-        return $commentModel->load('commentator:id,name');
+        return $commentModel->load('reviewer.reviewer:id,name');
     }
 
     private function persistReviewerComment(Appraisal $appraisal, string $role, ?string $comment): ?AppraisalComment
     {
-        if (! in_array($role, ['reporter', 'manager'], true)) {
+        if ($role !== 'reviewer') {
             return null;
         }
 
         $comment = trim((string) $comment);
 
+        $reviewer = $this->authenticatedReviewer($appraisal);
+
+        if (! $reviewer) {
+            return null;
+        }
+
         if ($comment === '') {
-            $appraisal->comments()->where('role', $role)->forceDelete();
+            $appraisal->comments()->where('appraisal_reviewer_id', $reviewer->id)->forceDelete();
 
             return null;
         }
 
         return $appraisal->comments()->updateOrCreate(
-            ['role' => $role],
-            [
-                'commented_by' => auth()->id(),
-                'comment' => $comment,
-            ]
+            ['appraisal_reviewer_id' => $reviewer->id],
+            ['comment' => $comment]
         );
     }
 
@@ -906,14 +900,8 @@ class AppraisalService
             return 'assignee';
         }
 
-        $details = $appraisal->user?->details;
-
-        if ($details && (int) $details->reporter_id === $authId) {
-            return 'reporter';
-        }
-
-        if ($details && (int) $details->manager_id === $authId) {
-            return 'manager';
+        if ($this->authenticatedReviewer($appraisal)) {
+            return 'reviewer';
         }
 
         if (auth()->user()?->can('appraisal.view')) {
@@ -926,9 +914,8 @@ class AppraisalService
     private function isRoleSubmitted(Appraisal $appraisal, string $role): bool
     {
         return match ($role) {
-            'assignee' => filled($appraisal->assignee_submitted_at),
-            'reporter' => filled($appraisal->reporter_submitted_at),
-            'manager' => filled($appraisal->manager_submitted_at),
+            'assignee' => $this->isAssigneeSubmitted($appraisal),
+            'reviewer' => filled($this->authenticatedReviewer($appraisal)?->submitted_at),
             'viewer' => true,
             default => true,
         };
@@ -951,8 +938,7 @@ class AppraisalService
 
         return match ($role) {
             'assignee' => filled($appraisal->kpi_agreed_at),
-            'reporter' => filled($appraisal->assignee_submitted_at),
-            'manager' => filled($appraisal->reporter_submitted_at),
+            'reviewer' => $this->reviewerCanAnswer($appraisal),
             'viewer' => true,
             default => false,
         };
@@ -962,10 +948,118 @@ class AppraisalService
     {
         return match ($role) {
             'assignee' => 'Please agree to the KPI before answering this appraisal.',
-            'reporter' => 'The assignee must submit this appraisal before reporter review.',
-            'manager' => 'The reporter must submit this appraisal before manager review.',
+            'reviewer' => 'The previous appraisal stage must be submitted before your review.',
             default => 'This appraisal cannot be answered yet.',
         };
+    }
+
+    private function authenticatedReviewer(Appraisal $appraisal): ?AppraisalReviewer
+    {
+        $appraisal->loadMissing('reviewers');
+
+        return $appraisal->reviewers->first(
+            fn (AppraisalReviewer $reviewer) => (int) $reviewer->reviewer_user_id === (int) auth()->id()
+        );
+    }
+
+    private function isAssigneeSubmitted(Appraisal $appraisal): bool
+    {
+        $questionIds = AppraisalSnapshotQuestion::query()
+            ->whereHas('category', fn ($query) => $query->where('appraisal_id', $appraisal->id))
+            ->pluck('id');
+
+        return $questionIds->isNotEmpty()
+            && AppraisalAnswer::query()
+                ->where('appraisal_id', $appraisal->id)
+                ->whereIn('appraisal_snapshot_question_id', $questionIds)
+                ->whereNotNull('submitted_at')
+                ->count() === $questionIds->count();
+    }
+
+    private function reviewerCanAnswer(Appraisal $appraisal): bool
+    {
+        $reviewer = $this->authenticatedReviewer($appraisal);
+
+        if (! $reviewer || ! $this->isAssigneeSubmitted($appraisal)) {
+            return false;
+        }
+
+        return $appraisal->reviewers
+            ->where('level', '<', $reviewer->level)
+            ->every(fn (AppraisalReviewer $previousReviewer) => filled($previousReviewer->submitted_at));
+    }
+
+    private function fillAnswerResponse(
+        AppraisalAnswer $answer,
+        $question,
+        array $data,
+        string $role,
+        $submittedAt = null,
+    ): void {
+        $questionType = $question->question_type ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+
+        if ($role === 'assignee') {
+            if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
+                $answer->rating = $data['rating'] ?? null;
+                $answer->remark = $this->nullableTrim($data['remark'] ?? null);
+            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
+                $answer->answer = $this->nullableTrim($data['assignee_answer'] ?? null);
+            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_TARGET) {
+                $answer->achieved_value = $data['achieved_value'] ?? null;
+                $target = (float) ($question->target_value ?? 0);
+                $answer->achievement_percentage = $target > 0 && $answer->achieved_value !== null
+                    ? round(((float) $answer->achieved_value / $target) * 100, 2)
+                    : null;
+            }
+
+            if ($submittedAt) {
+                $answer->submitted_at = $submittedAt;
+            }
+
+            $answer->save();
+
+            return;
+        }
+
+        if ($role !== 'reviewer') {
+            return;
+        }
+
+        $reviewer = $this->authenticatedReviewer($answer->appraisal);
+
+        if (! $reviewer) {
+            return;
+        }
+
+        $reviewData = [
+            'rating' => $questionType === AppraisalQuestion::QUESTION_TYPE_RATING
+                ? ($data['rating'] ?? null)
+                : null,
+            'remark' => in_array($questionType, [
+                AppraisalQuestion::QUESTION_TYPE_RATING,
+                AppraisalQuestion::QUESTION_TYPE_TARGET,
+            ], true) ? $this->nullableTrim($data['remark'] ?? null) : null,
+        ];
+
+        if ($submittedAt) {
+            $reviewData['submitted_at'] = $submittedAt;
+        }
+
+        $answer->reviews()->updateOrCreate(
+            ['appraisal_reviewer_id' => $reviewer->id],
+            $reviewData,
+        );
+    }
+
+    private function nullableTrim(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 
     private function formatAppraisalSnapshot(Appraisal $appraisal): array
@@ -1131,7 +1225,7 @@ class AppraisalService
 
         if ($lockedUsers->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'user_ids' => 'Only draft appraisals can be updated: ' . $lockedUsers->pluck('user.name')->filter()->join(', '),
+                'user_ids' => 'Only draft appraisals can be updated: '.$lockedUsers->pluck('user.name')->filter()->join(', '),
             ]);
         }
     }
@@ -1269,8 +1363,8 @@ class AppraisalService
             ->accessibleBy($user)
             ->pluck('users.id')
             ->push($user->id)
-            ->map(fn($id) => (int) $id)
-            ->filter(fn(int $id) => $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
             ->unique()
             ->values()
             ->all();
@@ -1279,6 +1373,7 @@ class AppraisalService
     public function getFilterUsers(Request $request): \Illuminate\Support\Collection
     {
         $userIds = $this->getAccessibleUserIds(auth()->user());
+
         return User::query()
             ->whereIn('id', $userIds)
             ->active()
@@ -1314,22 +1409,22 @@ class AppraisalService
             ->when($kpiFilter === 'agreed', function ($q) use ($month, $year) {
                 $q->whereHas('appraisals', function ($aq) use ($month, $year) {
                     $aq->where('month', $month)
-                       ->where('year', $year)
-                       ->whereIn('status', ['published', 'completed', 'closed'])
-                       ->whereNotNull('kpi_agreed_at');
+                        ->where('year', $year)
+                        ->whereIn('status', ['published', 'completed', 'closed'])
+                        ->whereNotNull('kpi_agreed_at');
                 });
             })
             ->when($kpiFilter === 'not_agreed', function ($q) use ($month, $year) {
                 $q->where(function ($sub) use ($month, $year) {
                     $sub->whereDoesntHave('appraisals', function ($aq) use ($month, $year) {
                         $aq->where('month', $month)
-                           ->where('year', $year)
-                           ->whereIn('status', ['published', 'completed', 'closed']);
+                            ->where('year', $year)
+                            ->whereIn('status', ['published', 'completed', 'closed']);
                     })->orWhereHas('appraisals', function ($aq) use ($month, $year) {
                         $aq->where('month', $month)
-                           ->where('year', $year)
-                           ->whereIn('status', ['published', 'completed', 'closed'])
-                           ->whereNull('kpi_agreed_at');
+                            ->where('year', $year)
+                            ->whereIn('status', ['published', 'completed', 'closed'])
+                            ->whereNull('kpi_agreed_at');
                     });
                 });
             })
@@ -1411,7 +1506,7 @@ class AppraisalService
                     && ! $appraisal->kpi_agreed_at,
                 'can_answer' => $canAnswer,
                 'can_edit_answer' => $canAnswer
-                    && in_array($answerRole, ['assignee', 'reporter', 'manager'], true)
+                    && in_array($answerRole, ['assignee', 'reviewer'], true)
                     && ! $this->isRoleSubmitted($appraisal, $answerRole),
             ];
         });
@@ -1436,8 +1531,8 @@ class AppraisalService
             ->when(filled($statusFilter), function ($q) use ($statusFilter, $month, $year) {
                 $q->whereHas('appraisals', function ($aq) use ($statusFilter, $month, $year) {
                     $aq->where('month', $month)
-                       ->where('year', $year)
-                       ->where('status', strtolower($statusFilter));
+                        ->where('year', $year)
+                        ->where('status', strtolower($statusFilter));
                 });
             })
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
@@ -1496,41 +1591,44 @@ class AppraisalService
 
     private function updateAppraisalAverageRatings(Appraisal $appraisal): void
     {
-        $appraisal->load(['snapshotCategories.questions', 'answers']);
-        
+        $appraisal->load(['snapshotCategories.questions', 'answers.reviews', 'reviewers']);
+
         $ratingQuestionIds = $appraisal->snapshotCategories
             ->flatMap(fn ($category) => $category->questions)
             ->filter(fn ($question) => ($question->question_type ?? 'rating') === 'rating')
             ->pluck('id')
             ->toArray();
-            
+
         if (empty($ratingQuestionIds)) {
             $appraisal->update([
                 'assignee_average_rating' => null,
-                'reporter_average_rating' => null,
-                'manager_average_rating' => null,
             ]);
+
+            $appraisal->reviewers->each->update(['average_rating' => null]);
+
             return;
         }
-        
+
         $answers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
-        
+
         // 1. Assignee average
-        $assigneeRatings = $answers->pluck('assignee_rating')->filter(fn ($r) => $r !== null);
+        $assigneeRatings = $answers->pluck('rating')->filter(fn ($r) => $r !== null);
         $assigneeAvg = $assigneeRatings->isNotEmpty() ? round($assigneeRatings->average(), 2) : null;
-        
-        // 2. Reporter average
-        $reporterRatings = $answers->pluck('reporter_rating')->filter(fn ($r) => $r !== null);
-        $reporterAvg = $reporterRatings->isNotEmpty() ? round($reporterRatings->average(), 2) : null;
-        
-        // 3. Manager average
-        $managerRatings = $answers->pluck('manager_rating')->filter(fn ($r) => $r !== null);
-        $managerAvg = $managerRatings->isNotEmpty() ? round($managerRatings->average(), 2) : null;
-        
+
+        $appraisal->reviewers->each(function (AppraisalReviewer $reviewer) use ($answers) {
+            $ratings = $answers
+                ->flatMap(fn (AppraisalAnswer $answer) => $answer->reviews)
+                ->where('appraisal_reviewer_id', $reviewer->id)
+                ->pluck('rating')
+                ->filter(fn ($rating) => $rating !== null);
+            $average = $ratings->isNotEmpty() ? round($ratings->average(), 2) : null;
+
+            $reviewer->update(['average_rating' => $average]);
+
+        });
+
         $appraisal->update([
             'assignee_average_rating' => $assigneeAvg,
-            'reporter_average_rating' => $reporterAvg,
-            'manager_average_rating' => $managerAvg,
         ]);
     }
 }
