@@ -132,9 +132,60 @@ class AppraisalController extends Controller
 
     public function answerPage(Appraisal $appraisal): View
     {
+        $answerData = $this->appraisalService->getAnswerForm($appraisal);
+        $role = $answerData['role'];
+        $categories = collect($answerData['categories'] ?? [])->map(function (array $category) use ($role) {
+            $questions = collect($category['questions'] ?? []);
+            $answeredCount = $questions
+                ->filter(fn (array $question) => $this->isAnswerQuestionCompleted($question, $role))
+                ->count();
+
+            return [
+                ...$category,
+                'answered_count' => $answeredCount,
+                'total_questions' => $questions->count(),
+                'is_completed' => $answeredCount === $questions->count(),
+            ];
+        });
+        $totalQuestions = $categories->sum('total_questions');
+        $completedQuestions = $categories->sum('answered_count');
+
         return view('appraisal.answer', [
-            'answerData' => $this->appraisalService->getAnswerForm($appraisal),
+            'answerData' => $answerData,
+            'categories' => $categories,
+            'activeCategoryId' => $categories->first()['id'] ?? null,
+            'progress' => [
+                'completed' => $completedQuestions,
+                'total' => $totalQuestions,
+                'percentage' => $totalQuestions > 0
+                    ? (int) round(($completedQuestions / $totalQuestions) * 100)
+                    : 0,
+                'can_submit' => $totalQuestions > 0 && $completedQuestions === $totalQuestions,
+            ],
         ]);
+    }
+
+    private function isAnswerQuestionCompleted(array $question, string $role): bool
+    {
+        $answer = $question['answer'] ?? [];
+
+        if (($question['question_type'] ?? null) === 'answer') {
+            return $role !== 'assignee' || filled(trim((string) ($answer['assignee_answer'] ?? '')));
+        }
+
+        $rating = $answer["{$role}_rating"] ?? null;
+        $remark = $answer["{$role}_remark"] ?? null;
+
+        if (! is_numeric($rating)) {
+            return false;
+        }
+
+        $numericRating = (float) $rating;
+
+        return $numericRating >= 0.1
+            && $numericRating <= 5.0
+            && round($numericRating, 1) === $numericRating
+            && filled(trim((string) $remark));
     }
 
     public function submitAnswers(Request $request, Appraisal $appraisal): JsonResponse

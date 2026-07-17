@@ -21,20 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const overallCount = root.querySelector('[data-appraisal-answer-overall-count]');
     const overallPercentage = root.querySelector('[data-appraisal-answer-overall-percentage]');
     const overallBar = root.querySelector('[data-appraisal-answer-overall-bar]');
-    const overallCommentsSection = root.querySelector('[data-appraisal-overall-comments-section]');
-    const reporterCommentMeta = root.querySelector('[data-appraisal-reporter-comment-meta]');
     const reporterCommentTextarea = root.querySelector('[data-appraisal-reporter-comment-textarea]');
-    const managerCommentMeta = root.querySelector('[data-appraisal-manager-comment-meta]');
     const managerCommentTextarea = root.querySelector('[data-appraisal-manager-comment-textarea]');
 
     let activeAnswerCategoryId = answerFormData.categories?.[0]?.id || null;
 
-    const escapeHtml = (value = '') => String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const alertSuccess = (message) => window.Alert?.success ? window.Alert.success(message) : window.alert(message);
     const alertError = (message) => window.Alert?.error ? window.Alert.error(message) : window.alert(message);
@@ -79,23 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return remark !== undefined && remark !== null && String(remark).trim() !== '';
     };
 
-    const answerValue = (question, field) => question.answer?.[field] ?? '';
-
-    const answerSectionMarkup = (label, ratingField, remarkField, question, editable = false) => {
-        const readonlyAttr = editable ? '' : 'readonly';
-        const readonlyClasses = editable ? '' : 'bg-bgray-100 dark:bg-darkblack-400 cursor-default';
-
-        return `
-            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                <p class="text-xs font-bold text-bgray-900 dark:text-white uppercase tracking-[0.08em]">${label}</p>
-                <div class="mt-1.5 grid gap-2 md:grid-cols-[120px_1fr]">
-                    <input type="number" min="0" max="5" step="0.5" placeholder="Rating" value="${escapeHtml(answerValue(question, ratingField))}" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(ratingField)}" ${readonlyAttr}>
-                    <textarea rows="1" placeholder="Remark" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="${escapeHtml(remarkField)}" ${readonlyAttr}>${escapeHtml(answerValue(question, remarkField))}</textarea>
-                </div>
-            </div>
-        `;
-    };
-
     const persistVisibleAnswerValues = () => {
         if (!answerQuestions) {
             return;
@@ -117,157 +91,79 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderAnswerCategories = () => {
+    const activeCategoryClasses = [
+        'border-success-300',
+        'bg-success-50',
+        'text-success-500',
+        'dark:border-success-900/50',
+        'dark:bg-darkblack-600',
+        'dark:text-success-300',
+    ];
+    const inactiveCategoryClasses = [
+        'border-bgray-200',
+        'bg-white',
+        'text-bgray-700',
+        'hover:border-success-200',
+        'hover:text-success-400',
+        'dark:border-darkblack-400',
+        'dark:bg-darkblack-600',
+        'dark:text-bgray-50',
+    ];
+
+    const updateAnswerCategories = () => {
         if (!answerCategories) {
             return;
         }
 
-        answerCategories.innerHTML = (answerFormData.categories || []).map((category) => {
+        answerCategories.querySelectorAll('[data-appraisal-answer-category-id]').forEach((button) => {
+            const category = (answerFormData.categories || [])
+                .find((item) => Number(item.id) === Number(button.dataset.appraisalAnswerCategoryId));
+
+            if (!category) {
+                return;
+            }
+
             const isActive = Number(category.id) === Number(activeAnswerCategoryId);
             const totalQuestions = (category.questions || []).length;
             const answeredCount = (category.questions || [])
                 .filter((question) => isQuestionCompleted(question, answerFormData.role))
                 .length;
             const isCompleted = answeredCount === totalQuestions;
-            const classes = isActive
-                ? 'border-success-300 bg-success-50 text-success-500 dark:border-success-900/50 dark:bg-darkblack-600 dark:text-success-300'
-                : 'border-bgray-200 bg-white text-bgray-700 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50';
-            const progressText = isCompleted
-                ? `✓ ${answeredCount} / ${totalQuestions} Completed`
-                : `${answeredCount} / ${totalQuestions} Questions`;
-            const textClasses = isCompleted ? 'text-success-500 dark:text-success-300 font-bold' : 'opacity-80';
+            const progressElement = button.querySelector('[data-appraisal-answer-category-progress]');
 
-            return `
-                <button type="button" class="w-full rounded-lg border px-3 py-3 text-left transition ${classes}" data-appraisal-answer-category-id="${escapeHtml(category.id)}">
-                    <span class="block text-sm font-bold">${escapeHtml(category.name)}</span>
-                    <span class="mt-1 block text-xs font-medium ${textClasses}">${progressText}</span>
-                </button>
-            `;
-        }).join('');
+            button.classList.remove(...activeCategoryClasses, ...inactiveCategoryClasses);
+            button.classList.add(...(isActive ? activeCategoryClasses : inactiveCategoryClasses));
+
+            if (progressElement) {
+                progressElement.textContent = isCompleted
+                    ? `✓ ${answeredCount} / ${totalQuestions} Completed`
+                    : `${answeredCount} / ${totalQuestions} Questions`;
+                progressElement.classList.toggle('text-success-500', isCompleted);
+                progressElement.classList.toggle('dark:text-success-300', isCompleted);
+                progressElement.classList.toggle('font-bold', isCompleted);
+                progressElement.classList.toggle('opacity-80', !isCompleted);
+            }
+        });
     };
 
-    const renderAnswerQuestions = () => {
-        if (!answerQuestions) {
-            return;
-        }
+    const showAnswerCategory = () => {
+        let activeCategoryName = '';
 
-        const category = (answerFormData.categories || [])
-            .find((item) => Number(item.id) === Number(activeAnswerCategoryId));
+        answerQuestions?.querySelectorAll('[data-appraisal-answer-category-panel]').forEach((panel) => {
+            const isActive = Number(panel.dataset.categoryId) === Number(activeAnswerCategoryId);
 
-        if (!category) {
-            if (answerCategoryTitle) {
-                answerCategoryTitle.textContent = '';
+            panel.classList.toggle('hidden', !isActive);
+
+            if (isActive) {
+                activeCategoryName = panel.dataset.categoryName || '';
             }
-
-            answerQuestions.innerHTML = '<div class="rounded-lg border border-dashed border-bgray-200 px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-300">No questions found.</div>';
-            return;
-        }
+        });
 
         if (answerCategoryTitle) {
-            answerCategoryTitle.textContent = category.name;
+            answerCategoryTitle.textContent = activeCategoryName;
         }
 
-        answerQuestions.innerHTML = (category.questions || []).map((question, index) => {
-            const isEditable = !answerFormData.is_submitted;
-            const isAssigneeRole = answerFormData.role === 'assignee' && isEditable;
-            const isReporterRole = answerFormData.role === 'reporter' && isEditable;
-            const isManagerRole = answerFormData.role === 'manager' && isEditable;
-
-            if (question.question_type === 'answer') {
-                const editable = answerFormData.role === 'assignee' && isEditable;
-                const readonlyAttr = editable ? '' : 'readonly';
-                const readonlyClasses = editable ? '' : 'bg-bgray-100 dark:bg-darkblack-400 cursor-default';
-                const answerText = question.answer?.assignee_answer ?? '';
-
-                return `
-                    <article class="rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 overflow-hidden" data-appraisal-answer-question-card>
-                        <header class="flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-bgray-50 dark:hover:bg-darkblack-600 transition animate-fade-in" data-appraisal-answer-question-header>
-                            <div class="flex items-center gap-3">
-                                <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
-                                <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
-                            </div>
-                            <button type="button" class="text-bgray-600 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </header>
-                        <div class="border-t border-bgray-100 dark:border-darkblack-400 p-4 space-y-3 transition-all duration-200" data-appraisal-answer-question-body>
-                            <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-2.5 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                <p class="text-xs font-bold text-bgray-900 dark:text-white uppercase tracking-[0.08em]">Assignee Answer Only</p>
-                                <div class="mt-1.5">
-                                    <textarea rows="4" placeholder="Enter your answer" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-400 ${readonlyClasses}" data-appraisal-answer-input data-question-id="${escapeHtml(question.id)}" data-answer-field="assignee_answer" ${readonlyAttr}>${escapeHtml(answerText)}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                `;
-            }
-
-            const sections = [
-                answerSectionMarkup(
-                    isAssigneeRole ? 'Self' : 'Assignee',
-                    'assignee_rating',
-                    'assignee_remark',
-                    question,
-                    isAssigneeRole,
-                ),
-                answerSectionMarkup('Reporter', 'reporter_rating', 'reporter_remark', question, isReporterRole),
-                answerSectionMarkup('Manager', 'manager_rating', 'manager_remark', question, isManagerRole),
-            ];
-
-            return `
-                <article class="rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 overflow-hidden" data-appraisal-answer-question-card>
-                    <header class="flex items-center justify-between gap-3 p-4 cursor-pointer hover:bg-bgray-50 dark:hover:bg-darkblack-600 transition animate-fade-in" data-appraisal-answer-question-header>
-                        <div class="flex items-center gap-3">
-                            <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">${index + 1}</span>
-                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(question.question)}</p>
-                        </div>
-                        <button type="button" class="text-bgray-600 hover:text-bgray-800 dark:text-bgray-400 dark:hover:text-white focus:outline-none transition-transform duration-200" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform transition-transform duration-200 rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </header>
-                    <div class="border-t border-bgray-100 dark:border-darkblack-400 p-4 space-y-3 transition-all duration-200" data-appraisal-answer-question-body>
-                        ${sections.join('')}
-                    </div>
-                </article>
-            `;
-        }).join('');
-    };
-
-    const renderOverallComments = () => {
-        if (!overallCommentsSection) {
-            return;
-        }
-
-        overallCommentsSection.classList.remove('hidden');
-
-        const comments = answerFormData.comments || [];
-        const reporterComment = comments.find((comment) => comment.role === 'reporter');
-        const managerComment = comments.find((comment) => comment.role === 'manager');
-
-        if (reporterCommentTextarea) {
-            reporterCommentTextarea.value = reporterComment?.comment || '';
-        }
-        if (reporterCommentMeta) {
-            reporterCommentMeta.textContent = reporterComment
-                ? `By ${reporterComment.commentator_name} • ${reporterComment.created_at}`
-                : '';
-        }
-        if (managerCommentTextarea) {
-            managerCommentTextarea.value = managerComment?.comment || '';
-        }
-        if (managerCommentMeta) {
-            managerCommentMeta.textContent = managerComment
-                ? `By ${managerComment.commentator_name} • ${managerComment.created_at}`
-                : '';
-        }
-
-        const hasSubmitted = answerFormData.is_submitted === true;
-        reporterCommentTextarea?.toggleAttribute('disabled', answerFormData.role !== 'reporter' || hasSubmitted);
-        managerCommentTextarea?.toggleAttribute('disabled', answerFormData.role !== 'manager' || hasSubmitted);
+        updateAnswerCategories();
     };
 
     const updateAnswerProgress = () => {
@@ -275,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalQuestions = 0;
         let completedQuestions = 0;
 
-        renderAnswerCategories();
+        updateAnswerCategories();
 
         (answerFormData.categories || []).forEach((category) => {
             (category.questions || []).forEach((question) => {
@@ -549,8 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (categoryButton) {
             persistVisibleAnswerValues();
             activeAnswerCategoryId = Number(categoryButton.dataset.appraisalAnswerCategoryId);
-            renderAnswerCategories();
-            renderAnswerQuestions();
+            showAnswerCategory();
             return;
         }
 
@@ -570,9 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    renderAnswerQuestions();
+    showAnswerCategory();
     updateAnswerProgress();
-    renderOverallComments();
-
-    console.log('Appraisal answer page data:', answerFormData);
 });
