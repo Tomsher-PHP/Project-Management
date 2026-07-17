@@ -122,7 +122,7 @@
                     </svg>
                 </div>
                 <h4 class="text-sm font-bold text-bgray-900 dark:text-white mb-1">All Caught Up!</h4>
-                <p class="text-xs text-bgray-500 dark:text-bgray-400">No pending requests require your approval.</p>
+                <p class="text-xs text-bgray-500 dark:text-bgray-300">No pending requests require your approval.</p>
             </div>
         @endif
 

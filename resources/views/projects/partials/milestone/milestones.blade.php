@@ -153,7 +153,7 @@
                                                 <div class="xl:col-span-2">
                                                     <div class="mb-2 flex items-center justify-between gap-3">
                                                         <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
-                                                        <span class="text-[11px] font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
+                                                        <span class="text-[11px] font-medium text-bgray-600 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
                                                     </div>
                                                     <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
                                                     <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
@@ -205,7 +205,7 @@
                             </div>
 
                             <label class="relative mb-4 block">
-                                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bgray-400">
+                                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bgray-600">
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 013.93 9.35l3.61 3.61a1 1 0 01-1.414 1.414l-3.61-3.61A5.5 5.5 0 118.5 3zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" clip-rule="evenodd" />
                                     </svg>
@@ -284,7 +284,7 @@
                                     <div class="md:col-span-2">
                                         <div class="mb-2.5 flex items-center justify-between gap-3">
                                             <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-milestone-library-description-count>0</span>/100</span>
+                                            <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-project-milestone-library-description-count>0</span>/100</span>
                                         </div>
                                         <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-milestone-library-create-error="description"></p>
@@ -382,7 +382,7 @@
                             </div>
 
                             <label class="relative mb-4 block">
-                                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bgray-400">
+                                <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-bgray-600">
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 013.93 9.35l3.61 3.61a1 1 0 01-1.414 1.414l-3.61-3.61A5.5 5.5 0 118.5 3zm0 2a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" clip-rule="evenodd" />
                                     </svg>
@@ -461,7 +461,7 @@
                                     <div class="md:col-span-2">
                                         <div class="mb-2.5 flex items-center justify-between gap-3">
                                             <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                                            <span class="text-xs font-medium text-bgray-400 dark:text-bgray-300"><span data-project-sprint-library-description-count>0</span>/100</span>
+                                            <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-project-sprint-library-description-count>0</span>/100</span>
                                         </div>
                                         <textarea name="description" rows="3" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
                                         <p class="mt-1 hidden text-sm text-red-500" data-project-sprint-library-create-error="description"></p>

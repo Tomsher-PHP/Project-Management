@@ -49,7 +49,7 @@
         <p class="truncate text-xs text-bgray-700 dark:text-bgray-300">
             {{ $file->addedBy?->name ?? 'Unknown User' }}
         </p>
-        <p class="text-[11px] text-bgray-400 dark:text-bgray-300">
+        <p class="text-[11px] text-bgray-600 dark:text-bgray-300">
             {{ $file->created_at?->timezone($globalTimezone)->format($globalDateFormat . ', ' . $globalTimeFormat) }}
         </p>
     </div>

@@ -1,9 +1,9 @@
 @php
     $handoffAccessibleProjects = \App\Models\Project::accessibleBy(auth()->user())
         ->where('is_active', true)
-        ->whereHas('projectStatus', function ($q) {
-            $q->where('is_completed', false);
-        })
+        // ->whereHas('projectStatus', function ($q) {
+        //     $q->where('is_completed', false);
+        // })
         ->get();
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
 @endphp

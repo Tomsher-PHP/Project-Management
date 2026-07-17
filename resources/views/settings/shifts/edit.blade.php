@@ -16,7 +16,7 @@
                                     </h3>
                                 </div>
                                 <div class="flex items-center gap-2 text-sm text-bgray-600 dark:text-bgray-300 bg-bgray-100 dark:bg-darkblack-500 rounded-lg px-4 py-2 border border-bgray-200 dark:border-darkblack-400 max-w-xl">
-                                    <svg class="w-5 h-5 text-bgray-500 dark:text-bgray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="w-5 h-5 text-bgray-500 dark:text-bgray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                     <span>Only Shift Name and Shift Color can be edited. Time settings and weekend configuration are locked after creation.</span>

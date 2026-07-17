@@ -23,14 +23,14 @@
                         color: rgb(74 222 128) !important;
                     }
                 </style>
-                <button type="button" class="active rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-worked-time-filter="today" aria-pressed="true">Today</button>
-                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white" data-worked-time-filter="yesterday" aria-pressed="false">Yesterday</button>
+                <button type="button" class="active rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="today" aria-pressed="true">Today</button>
+                <button type="button" class="rounded-md px-3 py-1 text-[11px] font-bold transition-all text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-worked-time-filter="yesterday" aria-pressed="false">Yesterday</button>
             </div>
 
             <!-- Custom Datepicker Input (Always visible) -->
             <div class="relative" id="custom-datepicker-container">
                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg class="h-4 w-4 text-bgray-500 dark:text-bgray-400" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2">
+                    <svg class="h-4 w-4 text-bgray-500 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>
@@ -81,7 +81,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for today.</td>
+                        <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-300">No worked time logged for today.</td>
                     </tr>
                 @endforelse
             </tbody>

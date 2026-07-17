@@ -42,7 +42,7 @@
                                     {{ $setting['label'] }}
                                 </h4>
                                 @if (!empty($setting['subtitle']))
-                                    <p class="mt-1 text-sm font-normal leading-5 text-bgray-500 dark:text-bgray-400">
+                                    <p class="mt-1 text-sm font-normal leading-5 text-bgray-500 dark:text-bgray-300">
                                         {{ $setting['subtitle'] }}
                                     </p>
                                 @endif

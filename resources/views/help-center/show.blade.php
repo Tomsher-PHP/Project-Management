@@ -31,7 +31,7 @@
     <nav aria-label="Article navigation" class="mt-6 grid gap-4 sm:grid-cols-2">
         @if ($previousArticle)
             <a href="{{ $previousArticle['url'] }}" class="group rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm transition hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-bgray-400 dark:text-bgray-300">Previous</span>
+                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">Previous</span>
                 <span class="mt-2 flex items-center gap-2 text-sm font-semibold text-bgray-900 group-hover:text-success-400 dark:text-white">
                     <svg class="stroke-current transition group-hover:-translate-x-1" width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M19 12H5m6-6-6 6 6 6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
@@ -45,7 +45,7 @@
 
         @if ($nextArticle)
             <a href="{{ $nextArticle['url'] }}" class="group rounded-2xl border border-bgray-200 bg-white p-5 text-right shadow-sm transition hover:border-success-300 hover:shadow-md dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-bgray-400 dark:text-bgray-300">Next</span>
+                <span class="text-xs font-semibold uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">Next</span>
                 <span class="mt-2 flex items-center justify-end gap-2 text-sm font-semibold text-bgray-900 group-hover:text-success-400 dark:text-white">
                     {{ $nextArticle['title'] }}
                     <svg class="stroke-current transition group-hover:translate-x-1" width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
