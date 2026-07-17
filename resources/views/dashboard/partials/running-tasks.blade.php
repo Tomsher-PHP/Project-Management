@@ -43,7 +43,7 @@
                                     </svg>
                                 </div>
                                 <h4 class="text-sm font-bold text-bgray-900 dark:text-white mb-1">No Running Tasks</h4>
-                                <p class="text-xs text-bgray-500 dark:text-bgray-400">There are currently no tasks in progress.</p>
+                                <p class="text-xs text-bgray-500 dark:text-bgray-300">There are currently no tasks in progress.</p>
                             </div>
                         </td>
                     </tr>
@@ -58,7 +58,7 @@
             </tfoot>
             <tfoot data-running-tasks-no-more class="hidden">
                 <tr>
-                    <td colspan="4" class="py-3 text-center text-xs text-bgray-500 dark:text-bgray-400">
+                    <td colspan="4" class="py-3 text-center text-xs text-bgray-500 dark:text-bgray-300">
                         No more running tasks.
                     </td>
                 </tr>

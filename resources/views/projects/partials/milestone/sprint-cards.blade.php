@@ -24,7 +24,7 @@
         <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex items-start gap-3">
                 @if ($isProtectedSprint || $isDeletedProjectView)
-                    <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-400 opacity-70 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-400" title="System sprint">
+                    <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 opacity-70 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300" title="System sprint">
                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                         </svg>

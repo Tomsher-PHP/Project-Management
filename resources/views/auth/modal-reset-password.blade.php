@@ -75,7 +75,7 @@
                         </div>
 
                         <div class="mb-8 text-center">
-                            <button type="button" id="resend-otp-button" class="text-sm font-semibold text-success-300 underline underline-offset-2 transition hover:text-success-400 disabled:cursor-not-allowed disabled:text-bgray-400 disabled:no-underline" disabled>
+                            <button type="button" id="resend-otp-button" class="text-sm font-semibold text-success-300 underline underline-offset-2 transition hover:text-success-400 disabled:cursor-not-allowed disabled:text-bgray-600 disabled:no-underline" disabled>
                                 Resend OTP in 60s
                             </button>
                         </div>

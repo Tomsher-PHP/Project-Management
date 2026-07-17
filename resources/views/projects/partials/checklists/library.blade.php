@@ -19,7 +19,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center text-bgray-400 transition-transform duration-200 {{ $isExpanded ? 'rotate-180' : '' }}">
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center text-bgray-600 transition-transform duration-200 {{ $isExpanded ? 'rotate-180' : '' }}">
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
@@ -39,7 +39,7 @@
                     </div>
                 @endforeach
                 @if ($questionsCount > count($preview))
-                    <p class="text-xs text-bgray-400 dark:text-bgray-300">+{{ $questionsCount - count($preview) }} more questions</p>
+                    <p class="text-xs text-bgray-600 dark:text-bgray-300">+{{ $questionsCount - count($preview) }} more questions</p>
                 @endif
             </div>
         </article>

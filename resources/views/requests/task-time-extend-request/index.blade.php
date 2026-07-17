@@ -128,7 +128,7 @@
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">Rejected by {{ $extendRequest->rejector?->name ?? '--' }}</p>
                                             <p class="mt-0.5">@appDateTime($extendRequest->rejected_at)</p>
-                                            <p class="mt-0.5 text-bgray-500 dark:text-bgray-400" title="{{ $extendRequest->rejection_reason }}">{{ \Illuminate\Support\Str::limit($extendRequest->rejection_reason ?? '--', 45) }}</p>
+                                            <p class="mt-0.5 text-bgray-500 dark:text-bgray-300" title="{{ $extendRequest->rejection_reason }}">{{ \Illuminate\Support\Str::limit($extendRequest->rejection_reason ?? '--', 45) }}</p>
                                         </div>
                                     @else
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">

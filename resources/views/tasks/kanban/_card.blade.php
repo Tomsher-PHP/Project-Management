@@ -59,7 +59,7 @@
                         @endif
 
                         @if (($project?->project_flow ?? null) === 'agile' && $milestoneName)
-                            <span class="shrink-0 text-bgray-900 dark:text-bgray-700">
+                            <span class="shrink-0 text-bgray-900 dark:text-bgray-300">
                                 <svg width="8" height="8" viewBox="0 0 6 12" fill="none" class="fill-current transition-transform" xmlns="http://www.w3.org/2000/svg">
                                     <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M0.531506 0.414376C0.20806 0.673133 0.155619 1.1451 0.414376 1.46855L4.03956 6.00003L0.414376 10.5315C0.155618 10.855 0.208059 11.3269 0.531506 11.5857C0.854952 11.8444 1.32692 11.792 1.58568 11.4685L5.58568 6.46855C5.80481 6.19464 5.80481 5.80542 5.58568 5.53151L1.58568 0.531506C1.32692 0.20806 0.854953 0.155619 0.531506 0.414376Z" />
                                 </svg>
@@ -109,7 +109,7 @@
                 </div>
 
                 <button type="button" class="group inline-flex items-center gap-1 px-2 py-0.5 font-semibold text-bgray-600 transition-all duration-150 dark:text-bgray-300 hover:text-bgray-900 dark:hover:text-bgray-200 transition-colors" title="View Comments" data-task-insights-trigger data-task-insights-url="{{ route('tasks.comments.modal', $task) }}">
-                    <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-400 dark:group-hover:text-bgray-200 transition-colors">
+                    <span class="inline-flex shrink-0 text-bgray-500 group-hover:text-bgray-700 dark:text-bgray-300 dark:group-hover:text-bgray-200 transition-colors">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
                         </svg>
@@ -122,7 +122,7 @@
                 <span class="shrink-0 text-bgray-600 dark:text-bgray-300" title="Estimated time: {{ $estimatedTime }}">
                     {{ $estimatedTime }}
                 </span>
-                <span class="text-bgray-300 dark:text-bgray-700">|</span>
+                <span class="text-bgray-300 dark:text-bgray-300">|</span>
 
                 <div class="flex items-center gap-2" data-task-timer-root data-task-id="{{ $task->id }}" data-task-timer-persist-display="true">
                     <div class="text-[12px] font-semibold {{ $timerTimeColorClass }}" data-task-timer-display data-task-id="{{ $task->id }}" data-started-at="{{ $timerStartedAt }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ $estimatedSeconds }}" data-compare-estimated="true" title="Worked time">

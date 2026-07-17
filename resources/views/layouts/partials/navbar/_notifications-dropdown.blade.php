@@ -30,7 +30,7 @@
                         </a>
                     </li>
                 @empty
-                    <li id="no-notifications" class="py-4 pl-6 text-sm text-bgray-700 dark:text-bgray-400">
+                    <li id="no-notifications" class="py-4 pl-6 text-sm text-bgray-700 dark:text-bgray-300">
                         No notifications
                     </li>
                 @endforelse

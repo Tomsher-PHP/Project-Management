@@ -21,7 +21,7 @@
 @endphp
 
 <span {{ $attributes->merge([
-    'class' => 'inline-flex shrink-0 items-center justify-center border transition duration-150 ' . $sizeClasses . ' ' . ($isAgileFlow ? 'bg-bgray-100 border-bgray-300 text-bgray-900 dark:border-darkblack-400 dark:text-bgray-400' : 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/40 text-blue-500'),
+    'class' => 'inline-flex shrink-0 items-center justify-center border transition duration-150 ' . $sizeClasses . ' ' . ($isAgileFlow ? 'bg-bgray-100 border-bgray-300 text-bgray-900 dark:border-darkblack-400 dark:text-bgray-300' : 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/40 text-blue-500'),
 ]) }} title="{{ $title }}">
     @if ($isAgileFlow)
         <svg xmlns="http://www.w3.org/2000/svg" class="{{ $iconSizeClasses }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

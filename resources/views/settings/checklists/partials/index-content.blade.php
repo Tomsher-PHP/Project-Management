@@ -52,7 +52,7 @@
                                             {{ $question->question }}
                                         </div>
                                     @empty
-                                        <p class="text-sm text-bgray-400 dark:text-bgray-300">No questions added.</p>
+                                        <p class="text-sm text-bgray-600 dark:text-bgray-300">No questions added.</p>
                                     @endforelse
 
                                     @if ($checklist->items_count > $previewQuestions->count())
