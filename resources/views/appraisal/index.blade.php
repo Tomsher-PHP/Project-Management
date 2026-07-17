@@ -5,8 +5,7 @@
         $canAssignAppraisals = auth()->user()?->can('appraisal.create');
     @endphp
 
-    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-form-url-template="{{ route('appraisal.answer-form', ['appraisal' => '__ID__']) }}"
-        data-submit-answers-url-template="{{ route('appraisal.submit-answers', ['appraisal' => '__ID__']) }}" data-save-draft-url-template="{{ route('appraisal.save-draft', ['appraisal' => '__ID__']) }}" data-save-comment-url-template="{{ route('appraisal.save-comment', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
+    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-page-url-template="{{ route('appraisal.answer', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
         <script type="application/json" data-appraisal-initial-data>
             @json($assignmentData)
         </script>
@@ -246,88 +245,6 @@
             </div>
         </div>
 
-        <div class="modal fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto" data-appraisal-answer-modal>
-            <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-appraisal-answer-close></div>
-
-            <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
-                <div class="relative z-10 w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
-                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-                        <div>
-                            <h3 class="text-xl font-bold text-bgray-900 dark:text-white" data-appraisal-answer-modal-title>Answer Appraisal</h3>
-                            <p class="mt-1 text-sm font-medium text-bgray-500 dark:text-bgray-300" data-appraisal-answer-meta></p>
-                        </div>
-                        <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-answer-close aria-label="Close">×</button>
-                    </div>
-
-                    <div class="grid h-[calc(85vh-150px)] grid-cols-1 overflow-hidden lg:grid-cols-4">
-                        <div class="h-full overflow-y-auto px-6 py-2 lg:col-span-3">
-                            <div class="mt-2">
-                                <h4 class="text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title></h4>
-                                <div class="mt-2 space-y-2" data-appraisal-answer-questions></div>
-                            </div>
-
-                            <!-- Overall Comments Section -->
-                            <div class="mt-8 border-t border-bgray-200 pt-6 dark:border-darkblack-400 hidden" data-appraisal-overall-comments-section>
-                                <h4 class="text-lg font-bold text-bgray-900 dark:text-white mb-4">Overall Comments</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-                                    <!-- Reporter Comment Card -->
-                                    <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-sm font-bold text-bgray-900 dark:text-white">Reporter Comment</span>
-                                            <span class="text-xs text-bgray-500 dark:text-bgray-300" data-appraisal-reporter-comment-meta></span>
-                                        </div>
-                                        <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" rows="4" placeholder="No comment provided yet." data-appraisal-reporter-comment-textarea disabled></textarea>
-                                        <div class="mt-2 text-right">
-                                            <button type="button" class="hidden rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white hover:bg-success-400 transition shadow-sm" data-appraisal-save-comment-btn="reporter">Save Comment</button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Manager Comment Card -->
-                                    <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-sm font-bold text-bgray-900 dark:text-white">Manager Comment</span>
-                                            <span class="text-xs text-bgray-500 dark:text-bgray-300" data-appraisal-manager-comment-meta></span>
-                                        </div>
-                                        <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white disabled:bg-bgray-50 dark:disabled:bg-darkblack-600 disabled:opacity-60" rows="4" placeholder="No comment provided yet." data-appraisal-manager-comment-textarea disabled></textarea>
-                                        <div class="mt-2 text-right">
-                                            <button type="button" class="hidden rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white hover:bg-success-400 transition shadow-sm" data-appraisal-save-comment-btn="manager">Save Comment</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <aside class="border-t border-bgray-200 bg-bgray-50 px-4 py-5 dark:border-darkblack-400 dark:bg-darkblack-500 lg:h-full lg:overflow-y-auto lg:border-l lg:border-t-0">
-                            <!-- Overall Progress Card -->
-                            <div class="mb-6 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
-                                <h5 class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Overall Progress</h5>
-                                <div class="mt-2 flex items-center justify-between">
-                                    <span class="text-sm font-bold text-bgray-900 dark:text-white" data-appraisal-answer-overall-count>0 / 0 Questions</span>
-                                    <span class="text-sm font-bold text-success-500 dark:text-success-300" data-appraisal-answer-overall-percentage>0%</span>
-                                </div>
-                                <div class="mt-2 h-1.5 w-full rounded-full bg-bgray-100 dark:bg-darkblack-500">
-                                    <div class="h-1.5 rounded-full bg-success-300 transition-all duration-300" data-appraisal-answer-overall-bar style="width: 0%"></div>
-                                </div>
-                            </div>
-
-                            <h4 class="text-sm font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">Categories</h4>
-                            <div class="mt-4 space-y-2" data-appraisal-answer-categories></div>
-                        </aside>
-                    </div>
-
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 bg-white dark:bg-darkblack-600">
-                        <div class="text-sm text-red-500 font-medium" data-appraisal-answer-helper-message>
-                            All questions must be answered before submitting. You can save your progress as a draft anytime.
-                        </div>
-                        <div class="flex items-center gap-3 ml-auto">
-                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-answer-close>Cancel</button>
-                            <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-answer-save-draft>Save Draft</button>
-                            <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-answer-submit disabled>Submit</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     @php
         $selectedUserFilterIds = collect(['user_id', 'staff_id', 'users'])

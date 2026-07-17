@@ -130,6 +130,13 @@ class AppraisalController extends Controller
         ]);
     }
 
+    public function answerPage(Appraisal $appraisal): View
+    {
+        return view('appraisal.answer', [
+            'answerData' => $this->appraisalService->getAnswerForm($appraisal),
+        ]);
+    }
+
     public function submitAnswers(Request $request, Appraisal $appraisal): JsonResponse
     {
         $validated = $request->validate([
