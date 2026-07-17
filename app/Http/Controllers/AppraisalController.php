@@ -274,6 +274,26 @@ class AppraisalController extends Controller
         ]);
     }
 
+    public function acknowledgeReview(Request $request, Appraisal $appraisal): JsonResponse
+    {
+        $validated = $request->validate([
+            'appraisal_reviewer_id' => ['required', 'integer'],
+            'acknowledgement_remark' => ['nullable', 'string'],
+        ]);
+
+        $result = $this->appraisalService->acknowledgeReview(
+            $appraisal,
+            (int) $validated['appraisal_reviewer_id'],
+            $validated['acknowledgement_remark'] ?? null,
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reviewer submission acknowledged successfully.',
+            'data' => $result,
+        ]);
+    }
+
     public function saveComment(Request $request, Appraisal $appraisal): JsonResponse
     {
         $validated = $request->validate([

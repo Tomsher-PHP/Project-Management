@@ -545,15 +545,34 @@ class AppraisalService
         $answers = $appraisal->answers->keyBy('appraisal_snapshot_question_id');
         $reviewers = $appraisal->reviewers->sortBy('level')->values();
         $authenticatedReviewer = $this->authenticatedReviewer($appraisal);
+        $pendingAcknowledgement = $role === 'assignee'
+            ? $this->pendingAcknowledgementReviewer($appraisal)
+            : null;
+        $pendingComment = $pendingAcknowledgement
+            ? $appraisal->comments->firstWhere('appraisal_reviewer_id', $pendingAcknowledgement->id)
+            : null;
 
         return [
             'id' => $appraisal->id,
             'role' => $role,
-            'role_label' => $role === 'reviewer'
-                ? 'Reviewer Level '.($authenticatedReviewer?->level ?? '')
-                : str($role)->headline()->toString(),
+            'role_label' => $pendingAcknowledgement
+                ? 'Acknowledgement • Reviewer Level '.$pendingAcknowledgement->level
+                : ($role === 'reviewer'
+                    ? 'Reviewer Level '.($authenticatedReviewer?->level ?? '')
+                    : str($role)->headline()->toString()),
             'is_submitted' => $this->isRoleSubmitted($appraisal, $role),
             'current_reviewer_id' => $authenticatedReviewer?->id,
+            'acknowledgement' => $pendingAcknowledgement ? [
+                'required' => true,
+                'appraisal_reviewer_id' => $pendingAcknowledgement->id,
+                'reviewer_name' => $pendingAcknowledgement->reviewer?->name,
+                'level' => $pendingAcknowledgement->level,
+                'average_rating' => $pendingAcknowledgement->average_rating,
+                'submitted_at' => $pendingAcknowledgement->submitted_at?->format('M d, Y h:i A'),
+                'overall_comment' => $pendingComment?->comment,
+            ] : [
+                'required' => false,
+            ],
             'period' => Carbon::createFromDate($appraisal->year, $appraisal->month, 1)->format('F Y'),
             'assignee' => [
                 'id' => $appraisal->user?->id,
@@ -619,6 +638,8 @@ class AppraisalService
                 'role' => $reviewer->role,
                 'level' => $reviewer->level,
                 'submitted_at' => $reviewer->submitted_at?->toISOString(),
+                'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
+                'acknowledgement_remark' => $reviewer->acknowledgement_remark,
             ])->all(),
             'comments' => $appraisal->comments->map(fn ($c) => [
                 'appraisal_reviewer_id' => $c->appraisal_reviewer_id,
@@ -799,16 +820,7 @@ class AppraisalService
             } elseif ($role === 'reviewer') {
                 $reviewer = $this->authenticatedReviewer($appraisal);
                 $reviewer?->update(['submitted_at' => $now]);
-                $nextReviewer = $appraisal->reviewers
-                    ->where('level', '>', $reviewer?->level)
-                    ->sortBy('level')
-                    ->first();
-                $notificationRecipientId = (int) ($nextReviewer?->reviewer_user_id ?? 0);
-
-                if (! $nextReviewer) {
-                    $appraisal->status = Appraisal::STATUS_COMPLETED;
-                    $appraisal->completed_at = $now;
-                }
+                $appraisal->current_stage = 'acknowledgement';
             }
 
             $appraisal->save();
@@ -824,6 +836,95 @@ class AppraisalService
                 $notificationRecipientId,
             );
         }
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+        ];
+    }
+
+    public function acknowledgeReview(
+        Appraisal $appraisal,
+        int $appraisalReviewerId,
+        ?string $acknowledgementRemark = null,
+    ): array {
+        if ((int) $appraisal->user_id !== (int) auth()->id()) {
+            throw ValidationException::withMessages([
+                'appraisal' => 'Only the appraisal assignee can acknowledge a reviewer submission.',
+            ]);
+        }
+
+        DB::transaction(function () use ($appraisal, $appraisalReviewerId, $acknowledgementRemark) {
+            $reviewer = AppraisalReviewer::query()
+                ->where('appraisal_id', $appraisal->id)
+                ->whereKey($appraisalReviewerId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $reviewer || blank($reviewer->submitted_at)) {
+                throw ValidationException::withMessages([
+                    'appraisal_reviewer_id' => 'This reviewer has not submitted their review.',
+                ]);
+            }
+
+            if (filled($reviewer->acknowledged_at)) {
+                throw ValidationException::withMessages([
+                    'appraisal_reviewer_id' => 'This reviewer submission has already been acknowledged.',
+                ]);
+            }
+
+            $hasUnacknowledgedPreviousStage = AppraisalReviewer::query()
+                ->where('appraisal_id', $appraisal->id)
+                ->where('level', '<', $reviewer->level)
+                ->whereNull('acknowledged_at')
+                ->exists();
+
+            if ($hasUnacknowledgedPreviousStage) {
+                throw ValidationException::withMessages([
+                    'appraisal_reviewer_id' => 'A previous reviewer submission must be acknowledged first.',
+                ]);
+            }
+
+            $pendingReviewerId = AppraisalReviewer::query()
+                ->where('appraisal_id', $appraisal->id)
+                ->whereNotNull('submitted_at')
+                ->whereNull('acknowledged_at')
+                ->orderBy('level')
+                ->value('id');
+
+            if ((int) $pendingReviewerId !== (int) $reviewer->id) {
+                throw ValidationException::withMessages([
+                    'appraisal_reviewer_id' => 'A previous reviewer submission must be acknowledged first.',
+                ]);
+            }
+
+            $reviewer->update([
+                'acknowledged_at' => now(),
+                'acknowledgement_remark' => $this->nullableTrim($acknowledgementRemark),
+            ]);
+
+            $nextReviewer = AppraisalReviewer::query()
+                ->where('appraisal_id', $appraisal->id)
+                ->where('level', '>', $reviewer->level)
+                ->orderBy('level')
+                ->first();
+
+            if ($nextReviewer) {
+                $appraisal->update([
+                    'current_stage' => filled($nextReviewer->submitted_at)
+                        ? 'acknowledgement'
+                        : 'reviewer_level_'.$nextReviewer->level,
+                ]);
+
+                return;
+            }
+
+            $appraisal->update([
+                'status' => Appraisal::STATUS_COMPLETED,
+                'completed_at' => now(),
+                'current_stage' => Appraisal::STATUS_COMPLETED,
+                'final_rating' => $reviewer->average_rating,
+            ]);
+        });
 
         return [
             'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
@@ -948,7 +1049,7 @@ class AppraisalService
     {
         return match ($role) {
             'assignee' => 'Please agree to the KPI before answering this appraisal.',
-            'reviewer' => 'The previous appraisal stage must be submitted before your review.',
+            'reviewer' => 'The previous appraisal stage must be completed and acknowledged before your review.',
             default => 'This appraisal cannot be answered yet.',
         };
     }
@@ -986,7 +1087,18 @@ class AppraisalService
 
         return $appraisal->reviewers
             ->where('level', '<', $reviewer->level)
-            ->every(fn (AppraisalReviewer $previousReviewer) => filled($previousReviewer->submitted_at));
+            ->every(fn (AppraisalReviewer $previousReviewer) => filled($previousReviewer->acknowledged_at));
+    }
+
+    private function pendingAcknowledgementReviewer(Appraisal $appraisal): ?AppraisalReviewer
+    {
+        $appraisal->loadMissing('reviewers.reviewer');
+
+        return $appraisal->reviewers
+            ->whereNotNull('submitted_at')
+            ->whereNull('acknowledged_at')
+            ->sortBy('level')
+            ->first();
     }
 
     private function fillAnswerResponse(

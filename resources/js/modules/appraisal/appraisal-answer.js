@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const overallPercentage = root.querySelector('[data-appraisal-answer-overall-percentage]');
     const overallBar = root.querySelector('[data-appraisal-answer-overall-bar]');
     const reviewerCommentTextarea = root.querySelector('[data-appraisal-reviewer-comment-textarea]');
+    const acknowledgementButton = root.querySelector('[data-appraisal-acknowledge-review]');
+    const acknowledgementRemark = root.querySelector('[data-appraisal-acknowledgement-remark]');
     let activeAnswerCategoryId = answerFormData.categories?.[0]?.id || null;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -252,6 +254,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const acknowledgeReview = async () => {
+        if (!acknowledgementButton) {
+            return;
+        }
+
+        const originalText = acknowledgementButton.textContent;
+        acknowledgementButton.disabled = true;
+        acknowledgementButton.textContent = 'Acknowledging...';
+
+        try {
+            const response = await fetch(root.dataset.acknowledgeReviewUrl, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                body: JSON.stringify({
+                    appraisal_reviewer_id: Number(acknowledgementButton.dataset.appraisalReviewerId),
+                    acknowledgement_remark: acknowledgementRemark?.value.trim() || null,
+                }),
+            });
+            const payload = await response.json();
+
+            if (!response.ok || !payload.status) {
+                const errors = payload.errors ? Object.values(payload.errors).flat() : [];
+                throw new Error(errors[0] || payload.message || 'Unable to acknowledge this reviewer submission.');
+            }
+
+            await alertSuccess(payload.message || 'Reviewer submission acknowledged successfully.');
+            window.location.reload();
+        } catch (error) {
+            alertError(error.message || 'Unable to acknowledge this reviewer submission.');
+            acknowledgementButton.disabled = false;
+            acknowledgementButton.textContent = originalText;
+        }
+    };
+
     const syncAnswerInput = (input) => {
         persistVisibleAnswerValues();
 
@@ -277,6 +313,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.matches('[data-appraisal-answer-input]')) syncAnswerInput(event.target);
     });
     root.addEventListener('click', (event) => {
+        if (event.target.closest('[data-appraisal-acknowledge-review]')) {
+            acknowledgeReview();
+            return;
+        }
+
         if (event.target.closest('[data-appraisal-answer-save-draft]')) {
             sendAnswers(root.dataset.saveDraftUrl, false);
             return;

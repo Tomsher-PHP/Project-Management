@@ -543,6 +543,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{appraisal}/answer-form', [AppraisalController::class, 'answerForm'])->middleware('permission.type:appraisal.view')->name('answer-form');
         Route::post('/{appraisal}/submit-answers', [AppraisalController::class, 'submitAnswers'])->middleware('permission.type:appraisal.view')->name('submit-answers');
         Route::post('/{appraisal}/save-draft', [AppraisalController::class, 'saveDraft'])->middleware('permission.type:appraisal.view')->name('save-draft');
+        Route::post('/{appraisal}/acknowledge-review', [AppraisalController::class, 'acknowledgeReview'])->middleware('permission.type:appraisal.view')->name('acknowledge-review');
         Route::post('/{appraisal}/comment', [AppraisalController::class, 'saveComment'])->middleware('permission.type:appraisal.view')->name('save-comment');
         Route::get('/{appraisal}', [AppraisalController::class, 'show'])->middleware('permission.type:appraisal.create')->name('show');
         Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
