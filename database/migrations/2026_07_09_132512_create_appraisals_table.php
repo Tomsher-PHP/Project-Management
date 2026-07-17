@@ -28,6 +28,7 @@ return new class extends Migration
             $table->decimal('final_rating', 4, 2)->nullable();
 
             $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft')->index();
+            $table->string('current_stage', 50)->nullable();
 
             $table->timestamp('published_at')->nullable();
             $table->timestamp('completed_at')->nullable();

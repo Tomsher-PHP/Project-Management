@@ -16,6 +16,8 @@ class AppraisalReviewer extends Model
         'level',
         'average_rating',
         'submitted_at',
+        'acknowledged_at',
+        'acknowledgement_remark',
     ];
 
     protected function casts(): array
@@ -27,6 +29,8 @@ class AppraisalReviewer extends Model
             'level' => 'integer',
             'average_rating' => 'decimal:2',
             'submitted_at' => 'datetime',
+            'acknowledged_at' => 'datetime',
+            'acknowledgement_remark' => 'string',
         ];
     }
 

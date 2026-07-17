@@ -25,6 +25,8 @@ return new class extends Migration
             $table->decimal('average_rating', 4, 2)->nullable();
 
             $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('acknowledged_at')->nullable();
+            $table->longText('acknowledgement_remark')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
