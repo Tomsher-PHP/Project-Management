@@ -137,7 +137,7 @@
                             ]) }}" class="flex w-full cursor-pointer items-center space-x-2.5">
                                 <span class="inline-flex items-center gap-1.5 text-base font-medium text-bgray-600 dark:text-bgray-50">
                                     <span>Efficiency (%)</span>
-                                    <span class="group relative inline-flex h-4 w-4 shrink-0 items-center justify-center text-bgray-400 transition hover:text-success-300 dark:text-bgray-300 dark:hover:text-success-300" aria-label="Efficiency formula">
+                                    <span class="group relative inline-flex h-4 w-4 shrink-0 items-center justify-center text-bgray-600 transition hover:text-success-300 dark:text-bgray-300 dark:hover:text-success-300" aria-label="Efficiency formula">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25h.75v5.25h.75" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h.01" />

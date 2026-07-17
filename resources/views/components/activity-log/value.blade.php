@@ -4,7 +4,7 @@
 ])
 
 @if (blank($value) && $value !== false && $value !== 0)
-    <span class="text-bgray-400 dark:text-bgray-700">--</span>
+    <span class="text-bgray-600 dark:text-bgray-300">--</span>
 @elseif ($type === 'date')
     <span>{{ \Carbon\Carbon::parse($value)->timezone($globalTimezone)->format($globalDateFormat) }}</span>
 @elseif ($type === 'datetime')

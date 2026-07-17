@@ -47,7 +47,7 @@
                             <span class="inline-flex items-center rounded bg-white px-2 py-0.5 dark:bg-darkblack-600 text-bgray-600 dark:text-white">
                                 <x-activity-log.value :value="$oldValue" :type="$oldType" />
                             </span>
-                            <span class="text-bgray-400 dark:text-bgray-700">&rarr;</span>
+                            <span class="text-bgray-600 dark:text-bgray-300">&rarr;</span>
                             <span class="inline-flex items-center rounded bg-success-50 px-2 py-0.5 dark:bg-success-900/10">
                                 <x-activity-log.value :value="$newValue" :type="$newType" />
                             </span>

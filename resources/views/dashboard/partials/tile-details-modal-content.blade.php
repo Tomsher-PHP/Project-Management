@@ -15,7 +15,7 @@
                             <a href="{{ route('projects.edit', $record->id) }}" class="text-sm font-bold text-success-300 hover:text-success-400 transition-colors">
                                 {{ $record->project_code }} - {{ $record->name }}
                             </a>
-                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-bgray-500 dark:text-bgray-400">
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-bgray-500 dark:text-bgray-300">
                                 Customer: 
                                 @if($record->customer)
                                     <x-profile-grade-badge :grade="$record->customer->profileGrade" size="sm" />
@@ -36,7 +36,7 @@
                             <a href="{{ route('tasks.edit', $record->id) }}" class="text-sm font-bold text-success-300 hover:text-success-400 transition-colors">
                                 {{ $record->code }} - {{ $record->name }}
                             </a>
-                            <span class="text-xs font-semibold text-bgray-500 dark:text-bgray-400">
+                            <span class="text-xs font-semibold text-bgray-500 dark:text-bgray-300">
                                 Assignee: {{ $record->currentAssignee?->name ?? 'Unassigned' }}
                             </span>
                         </div>
@@ -52,10 +52,10 @@
         </div>
     @else
         <div class="flex flex-col items-center justify-center py-12">
-            <svg class="mb-4 h-12 w-12 text-bgray-300 dark:text-bgray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="mb-4 h-12 w-12 text-bgray-300 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
-            <p class="text-sm font-semibold text-bgray-500 dark:text-bgray-400">No recent records found.</p>
+            <p class="text-sm font-semibold text-bgray-500 dark:text-bgray-300">No recent records found.</p>
         </div>
     @endif
 </div>
