@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const activeCategoryClasses = ['border-success-300', 'bg-success-50', 'text-success-500', 'dark:border-success-900/50', 'dark:bg-darkblack-600', 'dark:text-success-300'];
+    const activeCategoryClasses = ['border-success-300', 'bg-success-50', 'text-success-400', 'dark:border-success-900/50', 'dark:bg-darkblack-600', 'dark:text-success-300'];
     const inactiveCategoryClasses = ['border-bgray-200', 'bg-white', 'text-bgray-700', 'hover:border-success-200', 'hover:text-success-400', 'dark:border-darkblack-400', 'dark:bg-darkblack-600', 'dark:text-bgray-50'];
 
     const updateAnswerCategories = () => {
