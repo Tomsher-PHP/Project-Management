@@ -31,8 +31,8 @@
             </dl>
         </header>
 
-        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <main class="min-h-[480px] rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-6">
+        <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-4">
+            <main class="min-h-[480px] min-w-0 rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:p-6 xl:col-span-3 xl:max-h-[calc(100vh-240px)] xl:overflow-y-auto">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Questions</p>
                     <h2 class="mt-1 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title></h2>
@@ -62,7 +62,7 @@
                 </section>
             </main>
 
-            <aside class="space-y-5 lg:sticky lg:top-6">
+            <aside class="w-full space-y-5 xl:sticky xl:top-24 xl:col-span-1 xl:max-h-[calc(100vh-120px)] xl:overflow-y-auto">
                 <section class="rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                     <h2 class="text-sm font-bold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Overall Progress</h2>
                     <div class="mt-3 flex items-center justify-between gap-3">
