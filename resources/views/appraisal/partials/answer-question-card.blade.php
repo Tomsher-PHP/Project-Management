@@ -26,22 +26,22 @@
         @elseif ($questionType === 'target')
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-500">Target</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-600">Target</p>
                     <p class="mt-1 font-semibold text-bgray-900 dark:text-white">{{ $question['target_value'] }} {{ $unit }}</p>
                 </div>
                 <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <label class="text-xs font-semibold uppercase tracking-wide text-bgray-500">Achieved</label>
+                    <label class="text-xs font-semibold uppercase tracking-wide text-bgray-600">Achieved</label>
                     <div class="mt-1 flex items-center gap-2">
                         <input type="number" step="any" value="{{ $answer['achieved_value'] ?? '' }}" placeholder="Achieved value" class="min-w-0 flex-1 rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 disabled:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-appraisal-answer-input data-question-id="{{ $question['id'] }}" data-answer-field="achieved_value" data-answer-scope="answer" data-target-value="{{ $question['target_value'] }}" @readonly(! $assigneeEditable)>
                         <span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">{{ $unit }}</span>
                     </div>
                 </div>
                 <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-500">Unit</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-600">Unit</p>
                     <p class="mt-1 font-semibold text-bgray-900 dark:text-white">{{ $unit ?: '—' }}</p>
                 </div>
                 <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-3 dark:border-darkblack-400 dark:bg-darkblack-600">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-500">Achievement</p>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-600">Achievement</p>
                     <p class="mt-1 font-semibold text-bgray-900 dark:text-white" data-appraisal-target-achievement>{{ $answer['achievement_percentage'] !== null ? number_format((float) $answer['achievement_percentage'], 2).'%' : '—' }}</p>
                 </div>
             </div>

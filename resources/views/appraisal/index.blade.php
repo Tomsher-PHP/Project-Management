@@ -138,7 +138,7 @@
                             <h3 class="text-xl font-bold text-bgray-900 dark:text-white" data-appraisal-modal-title>Assign Appraisal</h3>
                             <p class="mt-1 hidden text-sm font-medium text-bgray-600 dark:text-bgray-300" data-appraisal-modal-subtitle></p>
                         </div>
-                        <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-modal-close aria-label="Close">×</button>
+                        <button type="button" class="text-2xl leading-none text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-modal-close aria-label="Close">×</button>
                     </div>
 
                     <div class="max-h-[calc(92vh-145px)] overflow-y-auto px-6 py-5" data-appraisal-assignment-step="1">
@@ -217,17 +217,17 @@
                 <div class="relative z-10 w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                         <h3 class="text-xl font-bold text-bgray-900 dark:text-white">KPI Agreement</h3>
-                        <button type="button" class="text-2xl leading-none text-bgray-500 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-kpi-agreement-close aria-label="Close">×</button>
+                        <button type="button" class="text-2xl leading-none text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-kpi-agreement-close aria-label="Close">×</button>
                     </div>
 
                     <div class="max-h-[calc(85vh-145px)] overflow-y-auto px-6 py-5">
                         <div class="rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Title</p>
+                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-600 dark:text-bgray-300">KPI Title</p>
                             <h4 class="mt-2 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-kpi-agreement-title></h4>
                         </div>
 
                         <div class="mt-4 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-500 dark:text-bgray-300">KPI Description</p>
+                            <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-600 dark:text-bgray-300">KPI Description</p>
                             <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-100" data-appraisal-kpi-agreement-description></div>
                         </div>
 

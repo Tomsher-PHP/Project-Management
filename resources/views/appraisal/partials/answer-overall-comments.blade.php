@@ -17,7 +17,7 @@
                 <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="mb-3 flex items-center justify-between gap-3">
                         <span class="text-sm font-bold text-bgray-900 dark:text-white">Reviewer Level {{ $reviewer['level'] }} &bull; {{ $reviewer['name'] }}</span>
-                        <span class="text-xs text-bgray-500 dark:text-bgray-300">
+                        <span class="text-xs text-bgray-600 dark:text-bgray-300">
                             @if ($comment)
                                 {{ $comment['created_at'] }}
                             @endif

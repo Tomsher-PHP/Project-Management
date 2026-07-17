@@ -1,5 +1,5 @@
 <div>
-    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-500 dark:text-bgray-300">Questions</p>
+    <p class="text-xs font-semibold uppercase tracking-wide text-bgray-600 dark:text-bgray-300">Questions</p>
     <h2 class="mt-1 text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-answer-category-title>{{ $categories->first()['name'] ?? '' }}</h2>
 </div>
 
