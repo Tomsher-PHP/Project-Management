@@ -1,6 +1,6 @@
 <section class="rounded-xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
     <h2 class="text-sm font-bold uppercase tracking-wide text-bgray-600 dark:text-bgray-300">Categories</h2>
-    <div class="mt-4 space-y-2" data-appraisal-answer-categories>
+    <div class="appraisal-answer-categories-list mt-4 space-y-2" data-appraisal-answer-categories>
         @foreach ($categories as $category)
             @php
                 $isActive = (int) $category['id'] === (int) $activeCategoryId;

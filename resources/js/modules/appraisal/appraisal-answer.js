@@ -129,6 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isActive) {
                 activeCategoryName = panel.dataset.categoryName || '';
+
+                // Expand first question card, collapse the remaining
+                panel.querySelectorAll('[data-appraisal-answer-question-card]').forEach((card, index) => {
+                    const body = card.querySelector('[data-appraisal-answer-question-body]');
+                    const icon = card.querySelector('[data-appraisal-answer-question-toggle] svg');
+                    if (body && icon) {
+                        const shouldExpand = index === 0;
+                        body.classList.toggle('hidden', !shouldExpand);
+                        icon.classList.toggle('rotate-180', shouldExpand);
+                    }
+                });
             }
         });
 
