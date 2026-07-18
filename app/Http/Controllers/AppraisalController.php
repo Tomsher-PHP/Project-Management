@@ -138,7 +138,7 @@ class AppraisalController extends Controller
         $categories = collect($answerData['categories'] ?? [])->map(function (array $category) use ($role) {
             $questions = collect($category['questions'] ?? []);
             $answeredCount = $questions
-                ->filter(fn (array $question) => $this->isAnswerQuestionCompleted($question, $role))
+                ->filter(fn(array $question) => $this->isAnswerQuestionCompleted($question, $role))
                 ->count();
 
             return [

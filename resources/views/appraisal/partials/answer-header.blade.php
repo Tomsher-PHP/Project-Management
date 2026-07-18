@@ -18,7 +18,7 @@
         </div>
         <div>
             <dt class="text-xs font-semibold uppercase tracking-wide text-bgray-600 dark:text-bgray-300">Current Stage</dt>
-            <dd class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $answerData['role_label'] ?? '--' }}</dd>
+            <dd class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $answerData['current_stage'] ?? '--' }}</dd>
         </div>
     </dl>
 </header>

@@ -582,6 +582,7 @@ class AppraisalService
             'kpi_name' => $appraisal->kpi_name,
             'kpi_description' => $appraisal->kpi_description,
             'status' => $appraisal->status,
+            'current_stage' => $appraisal->current_stage,
             'categories' => $appraisal->snapshotCategories
                 ->map(fn ($category) => [
                     'id' => $category->id,
