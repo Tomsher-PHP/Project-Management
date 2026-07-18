@@ -23,11 +23,9 @@
             </div>
         </div>
 
-        <div class="appraisal-answer-footer">
-            @unless (data_get($answerData, 'acknowledgement.required'))
-                @include('appraisal.partials.answer-footer-actions')
-            @endunless
-        </div>
+        @if (! $answerData['is_submitted'] && ! data_get($answerData, 'acknowledgement.required'))
+            @include('appraisal.partials.answer-footer-actions')
+        @endif
     </div>
 @endsection
 

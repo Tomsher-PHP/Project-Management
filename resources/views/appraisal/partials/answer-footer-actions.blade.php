@@ -1,4 +1,4 @@
-<footer class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-bgray-200 bg-white px-5 py-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-6">
+<div class="appraisal-answer-footer">
     <p @class([
         'text-sm font-medium text-red-500',
         'hidden' => $answerData['is_submitted'] || $progress['can_submit'],
@@ -20,4 +20,4 @@
             Submit
         </button>
     </div>
-</footer>
+</div>
