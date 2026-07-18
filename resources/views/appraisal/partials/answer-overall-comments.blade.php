@@ -10,20 +10,18 @@
             @foreach ($reviewers as $reviewer)
                 @php
                     $comment = $comments->get($reviewer['id']);
-                    $editable = $answerData['role'] === 'reviewer'
-                        && (int) $answerData['current_reviewer_id'] === (int) $reviewer['id']
-                        && ! $answerData['is_submitted'];
+                    $editable = $answerData['role'] === 'reviewer' && (int) $answerData['current_reviewer_id'] === (int) $reviewer['id'] && !$answerData['is_submitted'];
                 @endphp
                 <div class="rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="mb-3 flex items-center justify-between gap-3">
                         <span class="text-sm font-bold text-bgray-900 dark:text-white">Reviewer Level {{ $reviewer['level'] }} &bull; {{ $reviewer['name'] }}</span>
                         <span class="text-xs text-bgray-600 dark:text-bgray-300">
                             @if ($comment)
-                                {{ $comment['created_at'] }}
+                                @appDateTime($comment['created_at'])
                             @endif
                         </span>
                     </div>
-                    <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 disabled:bg-bgray-50 disabled:opacity-60 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-600" rows="4" placeholder="No comment provided yet." @if($editable) data-appraisal-reviewer-comment-textarea @endif @disabled(! $editable)>{{ $comment['comment'] ?? '' }}</textarea>
+                    <textarea class="w-full rounded-lg border border-bgray-200 p-3 text-sm focus:border-success-300 focus:ring-success-300 disabled:bg-bgray-50 disabled:opacity-60 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:disabled:bg-darkblack-600" rows="4" placeholder="No comment provided yet." @if ($editable) data-appraisal-reviewer-comment-textarea @endif @disabled(!$editable)>{{ $comment['comment'] ?? '' }}</textarea>
                 </div>
             @endforeach
         </div>

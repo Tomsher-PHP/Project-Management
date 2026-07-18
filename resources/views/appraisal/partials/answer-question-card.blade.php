@@ -6,7 +6,7 @@
     $unit = $question['unit'] ?? '';
 @endphp
 
-<article class="overflow-hidden rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-answer-question-card data-question-type="{{ $questionType }}">
+<article class="overflow-hidden rounded-xl border border-bgray-600 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-answer-question-card data-question-type="{{ $questionType }}">
     <header class="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 transition hover:bg-bgray-50 dark:hover:bg-darkblack-600 animate-fade-in" data-appraisal-answer-question-header>
         <div class="flex items-center gap-3">
             <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">{{ $index + 1 }}</span>
