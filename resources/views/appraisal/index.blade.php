@@ -113,6 +113,9 @@
                                     <th class="px-4 py-4 text-center xl:w-[100px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Questions</span>
                                     </th>
+                                    <th class="px-4 py-4 text-left xl:w-[180px] xl:px-0">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reviewers</span>
+                                    </th>
                                     <th class="px-4 py-4 text-left xl:w-[120px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                     </th>

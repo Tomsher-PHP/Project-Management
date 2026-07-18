@@ -117,7 +117,10 @@ class AppraisalService
             ->where('month', $month)
             ->where('year', $year)
             ->whereIn('user_id', $users->pluck('id'))
-            ->with('snapshotCategories:id,appraisal_id,name,sort_order')
+            ->with([
+                'snapshotCategories:id,appraisal_id,name,sort_order',
+                'reviewers.reviewer:id,name',
+            ])
             ->withCount('snapshotQuestions')
             ->get()
             ->keyBy('user_id');
@@ -144,6 +147,16 @@ class AppraisalService
                 'is_editable' => ! $appraisal || $appraisal->status === 'draft',
                 'categories' => $snapshotCategoryNames->all(),
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
+                'reviewers' => $appraisal
+                    ? $appraisal->reviewers
+                        ->sortBy('level')
+                        ->map(fn (AppraisalReviewer $reviewer) => [
+                            'level' => $reviewer->level,
+                            'name' => $reviewer->reviewer?->name,
+                        ])
+                        ->values()
+                        ->all()
+                    : [],
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
         })->values()->all();
@@ -1722,7 +1735,10 @@ class AppraisalService
             ->where('month', $month)
             ->where('year', $year)
             ->whereIn('user_id', $paginator->pluck('id'))
-            ->with('snapshotCategories:id,appraisal_id,name,sort_order')
+            ->with([
+                'snapshotCategories:id,appraisal_id,name,sort_order',
+                'reviewers.reviewer:id,name',
+            ])
             ->withCount('snapshotQuestions')
             ->get()
             ->keyBy('user_id');
@@ -1749,6 +1765,16 @@ class AppraisalService
                 'is_editable' => ! $appraisal || $appraisal->status === 'draft',
                 'categories' => $snapshotCategoryNames->all(),
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
+                'reviewers' => $appraisal
+                    ? $appraisal->reviewers
+                        ->sortBy('level')
+                        ->map(fn (AppraisalReviewer $reviewer) => [
+                            'level' => $reviewer->level,
+                            'name' => $reviewer->reviewer?->name,
+                        ])
+                        ->values()
+                        ->all()
+                    : [],
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
         });

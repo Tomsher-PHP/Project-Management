@@ -350,6 +350,25 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
+    const reviewerSummary = (user) => {
+        const reviewers = user.reviewers || [];
+
+        if (!reviewers.length) {
+            return '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
+        }
+
+        return `
+            <div class="space-y-1">
+                <p class="text-xs font-semibold text-bgray-600 dark:text-bgray-300">${reviewers.length} ${reviewers.length === 1 ? 'Reviewer' : 'Reviewers'}</p>
+                ${reviewers.map((reviewer) => `
+                    <p class="text-xs font-medium text-bgray-700 dark:text-bgray-50">
+                        <span class="font-bold">L${escapeHtml(reviewer.level)}:</span> ${escapeHtml(reviewer.name || '--')}
+                    </p>
+                `).join('')}
+            </div>
+        `;
+    };
+
     const actionButton = (user) => {
         const action = !user.is_assigned ? 'assign' : (user.status === 'draft' ? 'edit' : 'view');
 
@@ -501,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!users.length) {
-            usersContainer.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
+            usersContainer.innerHTML = '<tr><td colspan="8" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
             updateSelectedCount();
             return;
         }
@@ -535,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="px-4 py-4 xl:px-0 text-center">
                         <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${user.is_assigned ? escapeHtml(user.questions_count) : '--'}</span>
                     </td>
+                    <td class="px-4 py-4 xl:px-0">${reviewerSummary(user)}</td>
                     <td class="px-4 py-4 xl:px-0">${statusBadge(user)}</td>
                     <td class="px-4 py-4 xl:px-0">${actionButton(user)}</td>
                 </tr>
