@@ -75,6 +75,18 @@ class Appraisal extends Model
         return $this->hasMany(AppraisalSnapshotCategory::class)->orderBy('sort_order');
     }
 
+    public function snapshotQuestions()
+    {
+        return $this->hasManyThrough(
+            AppraisalSnapshotQuestion::class,
+            AppraisalSnapshotCategory::class,
+            'appraisal_id',
+            'appraisal_snapshot_category_id',
+            'id',
+            'id'
+        );
+    }
+
     public function reviewers()
     {
         return $this->hasMany(AppraisalReviewer::class);

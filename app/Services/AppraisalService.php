@@ -118,6 +118,7 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $users->pluck('id'))
             ->with('snapshotCategories:id,appraisal_id,name,sort_order')
+            ->withCount('snapshotQuestions')
             ->get()
             ->keyBy('user_id');
 
@@ -142,6 +143,7 @@ class AppraisalService
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'is_editable' => ! $appraisal || $appraisal->status === 'draft',
                 'categories' => $snapshotCategoryNames->all(),
+                'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
         })->values()->all();
@@ -1671,6 +1673,7 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $paginator->pluck('id'))
             ->with('snapshotCategories:id,appraisal_id,name,sort_order')
+            ->withCount('snapshotQuestions')
             ->get()
             ->keyBy('user_id');
 
@@ -1695,6 +1698,7 @@ class AppraisalService
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'is_editable' => ! $appraisal || $appraisal->status === 'draft',
                 'categories' => $snapshotCategoryNames->all(),
+                'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
         });

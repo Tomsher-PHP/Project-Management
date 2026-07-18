@@ -364,18 +364,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (action === 'edit') {
             return `
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-row-action="edit" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">Edit</button>
-                    <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-semibold text-success-400 transition hover:border-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-row-action="publish" data-user-id="${escapeHtml(user.id)}">Publish</button>
+                <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
+                    <button type="button" class="rounded-lg bg-success-300 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-row-action="edit" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">Edit</button>
+                    <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-400 transition hover:border-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-row-action="publish" data-user-id="${escapeHtml(user.id)}">Publish</button>
                 </div>
             `;
         }
 
         if (user.status === 'published') {
             return `
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="rounded-lg border border-bgray-200 bg-white px-3 py-2 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="view" data-appraisal-id="${escapeHtml(user.appraisal_id)}">View</button>
-                    <button type="button" class="rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs font-semibold text-warning-600 transition hover:border-warning-300 dark:border-warning-900/40 dark:bg-darkblack-500 dark:text-warning-300" data-appraisal-row-action="unpublish" data-appraisal-id="${escapeHtml(user.appraisal_id)}">Unpublish</button>
+                <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
+                    <button type="button" class="rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="view" data-appraisal-id="${escapeHtml(user.appraisal_id)}">View</button>
+                    <button type="button" class="rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-1.5 text-xs font-semibold text-warning-600 transition hover:border-warning-300 dark:border-warning-900/40 dark:bg-darkblack-500 dark:text-warning-300" data-appraisal-row-action="unpublish" data-appraisal-id="${escapeHtml(user.appraisal_id)}">Unpublish</button>
                 </div>
             `;
         }
@@ -385,7 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ? 'border border-bgray-200 bg-white text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50'
             : 'bg-success-300 text-white hover:bg-success-400';
 
-        return `<button type="button" class="rounded-lg px-3 py-2 text-xs font-semibold transition ${classes}" data-appraisal-row-action="${action}" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">${label}</button>`;
+        return `
+            <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
+                <button type="button" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${classes}" data-appraisal-row-action="${action}" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">${label}</button>
+            </div>
+        `;
     };
 
     const updateSelectedCount = () => {
@@ -544,6 +548,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <div class="flex flex-wrap gap-1.5">${categoryBadges(user)}</div>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0 text-center">
+                        <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${user.is_assigned ? escapeHtml(user.questions_count) : '--'}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">${statusBadge(user)}</td>
                     <td class="px-4 py-4 xl:px-0">${actionButton(user)}</td>

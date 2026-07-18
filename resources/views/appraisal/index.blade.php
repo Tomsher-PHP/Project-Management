@@ -101,19 +101,22 @@
                                     <th class="w-12 px-4 py-4 text-left">
                                         <input type="checkbox" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-users-select-all>
                                     </th>
-                                    <th class="px-4 py-4 text-left xl:px-0">
+                                    <th class="px-4 py-4 text-left xl:w-[250px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
                                     </th>
-                                    <th class="px-4 py-4 text-left xl:w-[220px] xl:px-0">
+                                    <th class="px-4 py-4 text-left xl:w-[200px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI</span>
                                     </th>
-                                    <th class="px-4 py-4 text-left xl:w-[260px] xl:px-0">
+                                    <th class="px-4 py-4 text-left xl:w-[220px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Categories</span>
                                     </th>
-                                    <th class="px-4 py-4 text-left xl:w-[150px] xl:px-0">
-                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                    <th class="px-4 py-4 text-center xl:w-[100px] xl:px-0">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Questions</span>
                                     </th>
                                     <th class="px-4 py-4 text-left xl:w-[120px] xl:px-0">
+                                        <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                    </th>
+                                    <th class="px-4 py-4 text-left xl:w-[200px] xl:px-0">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Action</span>
                                     </th>
                                 </tr>
