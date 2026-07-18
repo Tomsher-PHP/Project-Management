@@ -9,6 +9,13 @@
     width: 100%;
 }
 
+.appraisal-answer-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
 .appraisal-answer-content {
     display: grid;
     grid-template-columns: 1fr;
@@ -72,18 +79,18 @@
 /* Desktop layout at min-width 1280px (xl breakpoint) */
 @media (min-width: 1280px) {
     .appraisal-answer-content {
-        grid-template-columns: 4fr 1fr; /* 80% / 20% layout */
+        grid-template-columns: 4fr 1fr;
+        /* 80% / 20% layout */
     }
 
-    .appraisal-answer-right {
+    /* .appraisal-answer-right {
         position: sticky;
         top: 6rem;
-    }
+    } */
 }
 
 .appraisal-answer-categories-list {
-    max-height: 450px;
+    max-height: 587px;
     overflow-y: auto;
     padding-right: 4px;
 }
-

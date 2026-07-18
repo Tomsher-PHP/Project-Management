@@ -6,15 +6,21 @@
             @json($answerData)
         </script>
 
-        <div class="appraisal-answer-header">
-            @include('appraisal.partials.answer-header')
-        </div>
-
         <div class="appraisal-answer-content">
-            <div class="appraisal-answer-left">
-                @include('appraisal.partials.answer-acknowledgement')
-                @include('appraisal.partials.answer-questions')
-                @include('appraisal.partials.answer-overall-comments')
+            <div class="appraisal-answer-left-col">
+                <div class="appraisal-answer-header">
+                    @include('appraisal.partials.answer-header')
+                </div>
+
+                <div class="appraisal-answer-left">
+                    @include('appraisal.partials.answer-acknowledgement')
+                    @include('appraisal.partials.answer-questions')
+                    @include('appraisal.partials.answer-overall-comments')
+                </div>
+
+                @if (! $answerData['is_submitted'] && ! data_get($answerData, 'acknowledgement.required'))
+                    @include('appraisal.partials.answer-footer-actions')
+                @endif
             </div>
 
             <div class="appraisal-answer-right">
@@ -22,10 +28,6 @@
                 @include('appraisal.partials.answer-sidebar-categories')
             </div>
         </div>
-
-        @if (! $answerData['is_submitted'] && ! data_get($answerData, 'acknowledgement.required'))
-            @include('appraisal.partials.answer-footer-actions')
-        @endif
     </div>
 @endsection
 
