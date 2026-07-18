@@ -48,20 +48,20 @@
                                 <th class="px-4 py-4 text-left xl:w-[300px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">User</span>
                                 </th>
-                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Assignee</span>
+                                <th class="px-4 py-4 text-left xl:w-[220px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI</span>
                                 </th>
-                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reporter</span>
+                                <th class="px-4 py-4 text-left xl:w-[150px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Questions / Categories</span>
                                 </th>
-                                <th class="px-4 py-4 text-left xl:w-[170px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Manager</span>
-                                </th>
-                                <th class="px-4 py-4 text-left xl:w-[160px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreed</span>
+                                <th class="px-4 py-4 text-left xl:w-[150px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Current Stage</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">KPI Agreement</span>
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
+                                </th>
+                                <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Final Rating</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[100px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Action</span>

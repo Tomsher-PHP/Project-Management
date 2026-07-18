@@ -338,15 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
     };
 
-    const kpiAgreementBadge = (isAgreed = false) => {
-        const label = isAgreed ? 'Agreed' : 'Not Agreed';
-        const classes = isAgreed
-            ? 'bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300'
-            : 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
-
-        return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
-    };
-
     const categoryBadges = (user) => {
         const categories = user.categories || [];
 
@@ -433,40 +424,22 @@ document.addEventListener('DOMContentLoaded', () => {
         myAppraisalsContainer.innerHTML = appraisals.map((row) => {
             const user = row.user || {};
             const meta = [user.department, user.designation].filter(Boolean).join(' · ') || 'No department / designation';
-            const cellText = (value) => `<span class="text-sm font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(value || '--')}</span>`;
-            const reviewSummary = (prefix) => {
-                const submittedAt = row[`${prefix}_submitted_at`];
-                const rating = row[`${prefix}_average_rating`];
-                const submittedById = Number(row[`${prefix}_submitted_by_id`] || 0);
-                const submittedByName = row[`${prefix}_submitted_by_name`];
-
-                if (!submittedAt) {
-                    return `
-                        <div class="space-y-1">
-                            <p class="text-sm font-bold text-bgray-900 dark:text-white">--</p>
-                            <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">--</p>
-                            <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">--</p>
-                        </div>
-                    `;
-                }
-
-                const reviewerName = submittedById === authUserId ? 'You' : (submittedByName || '--');
-                const averageRating = rating !== null && rating !== undefined && rating !== ''
-                    ? Number(rating).toFixed(2)
-                    : '--';
-
-                return `
-                    <div class="space-y-1">
-                        <p class="text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(averageRating)}</p>
-                        <p class="text-xs font-medium text-bgray-700 dark:text-bgray-200">${escapeHtml(reviewerName)}</p>
-                        <p class="text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(submittedAt)}</p>
-                    </div>
-                `;
-            };
             const status = String(row.status || '').toLowerCase();
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
             const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
+            const finalRating = row.final_rating !== null && row.final_rating !== undefined && row.final_rating !== ''
+                ? Number(row.final_rating)
+                : null;
+            const kpiAgreement = row.kpi_agreed
+                ? `Agreed: ${escapeHtml(row.kpi_agreed_at || '--')}`
+                : 'Not Agreed';
+            const completedDate = status === 'completed' && row.completed_at
+                ? `<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(row.completed_at)}</p>`
+                : '';
+            const finalRatingMarkup = finalRating === null
+                ? '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>'
+                : `<span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(finalRating.toFixed(2))} / 5</span>`;
             let action = '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
 
             if (canAgree) {
@@ -487,11 +460,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-4 xl:px-0">${reviewSummary('assignee')}</td>
-                    <td class="px-4 py-4 xl:px-0">${reviewSummary('reporter')}</td>
-                    <td class="px-4 py-4 xl:px-0">${reviewSummary('manager')}</td>
-                    <td class="px-4 py-4 xl:px-0">${cellText(row.kpi_agreed_at)}</td>
-                    <td class="px-4 py-4 xl:px-0">${kpiAgreementBadge(row.kpi_agreed)}</td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.kpi_name || '--')}</p>
+                        <p class="mt-1 text-xs font-medium ${row.kpi_agreed ? 'text-success-500 dark:text-success-300' : 'text-bgray-600 dark:text-bgray-300'}">${kpiAgreement}</p>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage_label || '--')}</span>
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">
+                        ${statusBadge(row)}
+                        ${completedDate}
+                    </td>
+                    <td class="px-4 py-4 xl:px-0">${finalRatingMarkup}</td>
                     <td class="px-4 py-4 xl:px-0">${action}</td>
                 </tr>
             `;

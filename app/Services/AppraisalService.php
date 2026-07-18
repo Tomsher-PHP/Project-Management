@@ -173,6 +173,7 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $users->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
+            ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
                 'answers:id,appraisal_id,rating,submitted_at',
@@ -207,8 +208,14 @@ class AppraisalService
                     'appraisal_id' => $appraisal?->id,
                     'kpi_name' => $appraisal?->kpi_name,
                     'kpi_description' => $appraisal?->kpi_description,
+                    'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
+                    'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
+                    'current_stage' => $appraisal?->current_stage,
+                    'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
                     'status' => $appraisal?->status,
                     'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
+                    'completed_at' => $this->formatDate($appraisal?->completed_at),
+                    'final_rating' => $appraisal?->final_rating,
                     'assignee_submitted_at' => $this->formatDateTime($assigneeSubmittedAt),
                     'reporter_submitted_at' => $this->formatDateTime($reporter?->submitted_at),
                     'manager_submitted_at' => $this->formatDateTime($manager?->submitted_at),
@@ -221,7 +228,7 @@ class AppraisalService
                     'reporter_submitted_by_name' => $reporter?->reviewer?->name,
                     'manager_submitted_by_id' => $manager?->reviewer_user_id,
                     'manager_submitted_by_name' => $manager?->reviewer?->name,
-                    'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
+                    'kpi_agreed_at' => $this->formatDate($appraisal?->kpi_agreed_at),
                     'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
                     'can_agree' => $appraisal
                         && (int) $appraisal->user_id === (int) auth()->id()
@@ -953,6 +960,42 @@ class AppraisalService
         return $dateTime ? \App\Providers\AppServiceProvider::formatAppDateTime($dateTime) : null;
     }
 
+    private function formatDate($date): ?string
+    {
+        return $date ? \App\Providers\AppServiceProvider::formatAppDate($date) : null;
+    }
+
+    private function getCurrentStageLabel(?Appraisal $appraisal, $assigneeSubmittedAt = null): ?string
+    {
+        if (! $appraisal) {
+            return null;
+        }
+
+        if ($appraisal->status === Appraisal::STATUS_COMPLETED) {
+            return 'Completed';
+        }
+
+        if (blank($appraisal->kpi_agreed_at)) {
+            return 'KPI Agreement';
+        }
+
+        if (blank($assigneeSubmittedAt)) {
+            return 'Assignee';
+        }
+
+        if (filled($appraisal->current_stage)) {
+            return str($appraisal->current_stage)->replace('_', ' ')->headline()->toString();
+        }
+
+        $nextReviewer = $appraisal->reviewers
+            ->sortBy('level')
+            ->first(fn (AppraisalReviewer $reviewer) => blank($reviewer->submitted_at));
+
+        return $nextReviewer
+            ? 'Reviewer Level '.$nextReviewer->level
+            : 'Completed';
+    }
+
     public function saveComment(Appraisal $appraisal, string $comment): AppraisalComment
     {
         $role = $this->resolveAnswerRole($appraisal);
@@ -1566,6 +1609,7 @@ class AppraisalService
             ->where('year', $year)
             ->whereIn('user_id', $paginator->pluck('id'))
             ->whereIn('status', ['published', 'completed', 'closed'])
+            ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
                 'answers:id,appraisal_id,rating,submitted_at',
@@ -1599,8 +1643,14 @@ class AppraisalService
                 'appraisal_id' => $appraisal?->id,
                 'kpi_name' => $appraisal?->kpi_name,
                 'kpi_description' => $appraisal?->kpi_description,
+                'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
+                'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
+                'current_stage' => $appraisal?->current_stage,
+                'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
+                'completed_at' => $this->formatDate($appraisal?->completed_at),
+                'final_rating' => $appraisal?->final_rating,
                 'assignee_submitted_at' => $this->formatDateTime($assigneeSubmittedAt),
                 'reporter_submitted_at' => $this->formatDateTime($reporter?->submitted_at),
                 'manager_submitted_at' => $this->formatDateTime($manager?->submitted_at),
@@ -1613,7 +1663,7 @@ class AppraisalService
                 'reporter_submitted_by_name' => $reporter?->reviewer?->name,
                 'manager_submitted_by_id' => $manager?->reviewer_user_id,
                 'manager_submitted_by_name' => $manager?->reviewer?->name,
-                'kpi_agreed_at' => $this->formatDateTime($appraisal?->kpi_agreed_at),
+                'kpi_agreed_at' => $this->formatDate($appraisal?->kpi_agreed_at),
                 'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
                 'can_agree' => $appraisal
                     && (int) $appraisal->user_id === (int) auth()->id()
