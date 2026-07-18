@@ -10,6 +10,7 @@ use App\Services\AppraisalService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AppraisalController extends Controller
 {
@@ -133,6 +134,8 @@ class AppraisalController extends Controller
 
     public function answerPage(Appraisal $appraisal): View
     {
+        Gate::authorize('viewAnswer', $appraisal);
+
         $answerData = $this->appraisalService->getAnswerForm($appraisal);
         $role = $answerData['role'];
         $categories = collect($answerData['categories'] ?? [])->map(function (array $category) use ($role) {
