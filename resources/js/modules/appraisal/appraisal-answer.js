@@ -226,6 +226,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirmed) return;
         }
 
+        if (submitting) {
+            const isReviewer = answerFormData.role === 'reviewer';
+            const confirmed = await confirmAction({
+                title: 'Confirm Submission',
+                html: isReviewer
+                    ? '<p>Are you sure you want to submit your review?</p><p class="mt-2">After submission, you will no longer be able to edit your review.</p>'
+                    : '<p>Are you sure you want to submit your appraisal answers?</p><p class="mt-2">After submission, you will no longer be able to edit your answers.</p>',
+                confirmText: 'Submit',
+                cancelText: 'Cancel',
+                icon: 'warning',
+            });
+
+            if (!confirmed) return;
+        }
+
         const originalText = button.textContent;
         button.disabled = true;
         button.textContent = submitting ? 'Submitting...' : 'Saving...';
