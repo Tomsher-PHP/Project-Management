@@ -1,0 +1,62 @@
+.appraisal-answer-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.appraisal-answer-header {
+    width: 100%;
+}
+
+.appraisal-answer-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    width: 100%;
+}
+
+.appraisal-answer-left {
+    min-height: 480px;
+    min-width: 0;
+    border-radius: 12px;
+    border: 1px solid #edf2f7;
+    background-color: #ffffff;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+:is(.dark .appraisal-answer-left) {
+    border-color: rgb(42 49 60);
+    background-color: rgb(29 30 36);
+}
+
+.appraisal-answer-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.appraisal-answer-footer {
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .appraisal-answer-left {
+        padding: 1.5rem;
+    }
+}
+
+/* Desktop layout at min-width 1280px (xl breakpoint) */
+@media (min-width: 1280px) {
+    .appraisal-answer-content {
+        grid-template-columns: 4fr 1fr; /* 80% / 20% layout */
+    }
+
+    .appraisal-answer-right {
+        position: sticky;
+        top: 6rem;
+    }
+}
