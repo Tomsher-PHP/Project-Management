@@ -1,7 +1,12 @@
 <header class="rounded-xl border border-bgray-200 bg-white px-5 py-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-6">
-    <h1 class="text-xl font-bold text-bgray-900 dark:text-white sm:text-2xl">
-        Answer Appraisal <span class="text-bgray-400">&bull;</span> {{ $answerData['period'] ?? '--' }}
-    </h1>
+    <div class="flex items-center gap-3">
+        <div class="shrink-0">
+            <x-back-button :url="$appraisalBackUrl" :use-history="true" />
+        </div>
+        <h1 class="min-w-0 text-xl font-bold text-bgray-900 dark:text-white sm:text-2xl">
+            Answer Appraisal <span class="text-bgray-400">&bull;</span> {{ $answerData['period'] ?? '--' }}
+        </h1>
+    </div>
 
     <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div>
