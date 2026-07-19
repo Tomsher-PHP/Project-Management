@@ -50,7 +50,18 @@
             </div>
         </div>
 
-        <section data-appraisal-tab-panel="my">
+        <section class="space-y-3" data-appraisal-tab-panel="my">
+            <div class="custom-scroll flex items-center gap-3 overflow-x-auto py-0 dark:bg-darkblack-700" data-appraisal-summary-section>
+                @foreach ($myAppraisalSummary as $tile)
+                    <div class="group relative flex min-w-[160px] flex-1 shrink-0 items-center rounded-xl border border-bgray-300 bg-white p-3 transition-all duration-300 hover:border-[#d8e4f6] hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.05)] dark:border-darkblack-400 dark:bg-darkblack-600">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="truncate text-[10px] font-bold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">{{ $tile['label'] }}</h4>
+                            <p class="text-xl font-black leading-none {{ $tile['accent'] }}">{{ $tile['count'] }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
             <div class="rounded-lg bg-white px-6 py-5 shadow-sm dark:bg-darkblack-600">
                 <div class="table-content w-full overflow-x-auto">
                     <table class="w-full">

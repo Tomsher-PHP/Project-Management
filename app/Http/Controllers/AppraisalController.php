@@ -43,7 +43,7 @@ class AppraisalController extends Controller
             'appraisal_filter_year' => $year,
         ]);
 
-        $pageData = $this->appraisalService->index($request);
+        $pageData = $this->appraisalService->index($request, false);
         $usersPaginator = $pageData['usersPaginator'];
 
         if ($usersPaginator) {

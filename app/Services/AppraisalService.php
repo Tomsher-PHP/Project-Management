@@ -25,7 +25,7 @@ class AppraisalService
 
     public function __construct(private readonly NotificationService $notificationService) {}
 
-    public function index(Request $request): array
+    public function index(Request $request, bool $withMySummary = true): array
     {
         $month = $request->input('month');
         $year = $request->input('year');
@@ -46,7 +46,10 @@ class AppraisalService
 
         $perPage = (int) $request->input('per_page', config('constants.per_page_count', 10));
 
-        $myAppraisalsPaginator = $this->getMyAppraisalsPaginator($month, $year, $perPage);
+        $myAppraisalSummary = $withMySummary
+            ? $this->getMyAppraisalSummary($request, $month, $year)
+            : [];
+        $myAppraisalsPaginator = $this->getMyAppraisalsPaginator($request, $month, $year, $perPage);
         $usersPaginator = null;
 
         if (auth()->user()?->can('appraisal.create')) {
@@ -70,6 +73,7 @@ class AppraisalService
             'months' => $this->getMonths(),
             'years' => $this->getYears($year),
             'assignmentData' => $assignmentData,
+            'myAppraisalSummary' => $myAppraisalSummary,
             'myAppraisalsPaginator' => $myAppraisalsPaginator,
             'usersPaginator' => $usersPaginator,
             'perPage' => $perPage,
@@ -243,10 +247,7 @@ class AppraisalService
                     'manager_submitted_by_name' => $manager?->reviewer?->name,
                     'kpi_agreed_at' => $this->formatDate($appraisal?->kpi_agreed_at),
                     'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
-                    'can_agree' => $appraisal
-                        && (int) $appraisal->user_id === (int) auth()->id()
-                        && strtolower((string) $appraisal->status) === 'published'
-                        && blank($appraisal->kpi_agreed_at),
+                    'can_agree' => $appraisal && $this->canAgreeToKpi($appraisal),
                     'answer_role' => $answerRole,
                     'can_answer' => $canAnswer,
                     'can_edit_answer' => $canAnswer
@@ -1081,6 +1082,35 @@ class AppraisalService
         };
     }
 
+    private function canAgreeToKpi(Appraisal $appraisal): bool
+    {
+        return (int) $appraisal->user_id === (int) auth()->id()
+            && $appraisal->status === Appraisal::STATUS_PUBLISHED
+            && blank($appraisal->kpi_agreed_at);
+    }
+
+    private function canEditAnswer(Appraisal $appraisal, ?string $role): bool
+    {
+        return $this->canOpenAnswerForm($appraisal, $role)
+            && in_array($role, ['assignee', 'reviewer'], true)
+            && ! $this->isRoleSubmitted($appraisal, $role);
+    }
+
+    private function appraisalRequiresAction(Appraisal $appraisal): bool
+    {
+        if ($this->canAgreeToKpi($appraisal)) {
+            return true;
+        }
+
+        $role = $this->resolveAnswerRole($appraisal);
+
+        if ($role === 'assignee' && $this->pendingAcknowledgementReviewer($appraisal)) {
+            return true;
+        }
+
+        return $this->canEditAnswer($appraisal, $role);
+    }
+
     private function validateReviewEditable(Appraisal $appraisal, string $role): void
     {
         if ($this->isRoleSubmitted($appraisal, $role)) {
@@ -1124,6 +1154,22 @@ class AppraisalService
 
     private function isAssigneeSubmitted(Appraisal $appraisal): bool
     {
+        $hasLoadedWorkflowData = $appraisal->relationLoaded('snapshotCategories')
+            && $appraisal->snapshotCategories->every(fn ($category) => $category->relationLoaded('questions'))
+            && $appraisal->relationLoaded('answers');
+
+        if ($hasLoadedWorkflowData) {
+            $questionIds = $appraisal->snapshotCategories
+                ->flatMap(fn ($category) => $category->questions)
+                ->pluck('id');
+
+            return $questionIds->isNotEmpty()
+                && $appraisal->answers
+                    ->whereIn('appraisal_snapshot_question_id', $questionIds)
+                    ->whereNotNull('submitted_at')
+                    ->count() === $questionIds->count();
+        }
+
         $questionIds = AppraisalSnapshotQuestion::query()
             ->whereHas('category', fn ($query) => $query->where('appraisal_id', $appraisal->id))
             ->pluck('id');
@@ -1559,46 +1605,9 @@ class AppraisalService
             ->get(['id', 'name']);
     }
 
-    public function getMyAppraisalsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getMyAppraisalsPaginator(Request $request, int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        $userIds = $this->getScopedUserIds(request());
-        $userIds = array_values(array_unique(array_merge([auth()->id()], $userIds)));
-        $departmentIds = $this->resolveFilterIds(request(), ['department_id']);
-        $kpiFilter = request('kpi');
-
-        $usersQuery = User::query()
-            ->active()
-            ->whereIn('id', $userIds)
-            ->when($departmentIds !== [], function ($q) use ($departmentIds) {
-                $q->where(function ($sub) use ($departmentIds) {
-                    $sub->where('id', auth()->id())
-                        ->orWhereHas('details', function ($detailsQuery) use ($departmentIds) {
-                            $detailsQuery->whereIn('department_id', $departmentIds);
-                        });
-                });
-            })
-            ->when($kpiFilter === 'agreed', function ($q) use ($month, $year) {
-                $q->whereHas('appraisals', function ($aq) use ($month, $year) {
-                    $aq->where('month', $month)
-                        ->where('year', $year)
-                        ->whereIn('status', ['published', 'completed', 'closed'])
-                        ->whereNotNull('kpi_agreed_at');
-                });
-            })
-            ->when($kpiFilter === 'not_agreed', function ($q) use ($month, $year) {
-                $q->where(function ($sub) use ($month, $year) {
-                    $sub->whereDoesntHave('appraisals', function ($aq) use ($month, $year) {
-                        $aq->where('month', $month)
-                            ->where('year', $year)
-                            ->whereIn('status', ['published', 'completed', 'closed']);
-                    })->orWhereHas('appraisals', function ($aq) use ($month, $year) {
-                        $aq->where('month', $month)
-                            ->where('year', $year)
-                            ->whereIn('status', ['published', 'completed', 'closed'])
-                            ->whereNull('kpi_agreed_at');
-                    });
-                });
-            })
+        $usersQuery = $this->getMyAppraisalUsersQuery($request, $month, $year)
             ->with(['details.department', 'details.designation', 'primaryAttachment'])
             ->orderBy('name');
 
@@ -1678,18 +1687,98 @@ class AppraisalService
                 'manager_submitted_by_name' => $manager?->reviewer?->name,
                 'kpi_agreed_at' => $this->formatDate($appraisal?->kpi_agreed_at),
                 'kpi_agreed' => filled($appraisal?->kpi_agreed_at),
-                'can_agree' => $appraisal
-                    && (int) $appraisal->user_id === (int) auth()->id()
-                    && $appraisal->status === 'published'
-                    && ! $appraisal->kpi_agreed_at,
+                'can_agree' => $appraisal && $this->canAgreeToKpi($appraisal),
                 'can_answer' => $canAnswer,
-                'can_edit_answer' => $canAnswer
-                    && in_array($answerRole, ['assignee', 'reviewer'], true)
-                    && ! $this->isRoleSubmitted($appraisal, $answerRole),
+                'can_edit_answer' => $appraisal && $this->canEditAnswer($appraisal, $answerRole),
             ];
         });
 
         return $paginator;
+    }
+
+    private function getMyAppraisalSummary(Request $request, int $month, int $year): array
+    {
+        $userIds = $this->getMyAppraisalUsersQuery($request, $month, $year)->pluck('id');
+
+        $appraisals = Appraisal::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->whereIn('user_id', $userIds)
+            ->with([
+                'snapshotCategories.questions',
+                'answers',
+                'reviewers.reviewer:id,name',
+            ])
+            ->get();
+
+        return [
+            [
+                'key' => 'total',
+                'label' => 'Total Appraisals',
+                'count' => $appraisals->count(),
+                'accent' => 'text-success-400 dark:text-success-300',
+            ],
+            [
+                'key' => 'need_action',
+                'label' => 'Need Action',
+                'count' => $appraisals->filter(fn (Appraisal $appraisal) => $this->appraisalRequiresAction($appraisal))->count(),
+                'accent' => 'text-warning-300 dark:text-warning-200',
+            ],
+            [
+                'key' => 'draft',
+                'label' => 'Draft',
+                'count' => $appraisals->where('status', Appraisal::STATUS_DRAFT)->count(),
+                'accent' => 'text-bgray-700 dark:text-bgray-300',
+            ],
+            [
+                'key' => 'completed',
+                'label' => 'Completed',
+                'count' => $appraisals->where('status', Appraisal::STATUS_COMPLETED)->count(),
+                'accent' => 'text-success-500 dark:text-success-300',
+            ],
+        ];
+    }
+
+    private function getMyAppraisalUsersQuery(Request $request, int $month, int $year)
+    {
+        $userIds = $this->getScopedUserIds($request);
+        $userIds = array_values(array_unique(array_merge([auth()->id()], $userIds)));
+        $departmentIds = $this->resolveFilterIds($request, ['department_id']);
+        $kpiFilter = $request->input('kpi');
+
+        return User::query()
+            ->active()
+            ->whereIn('id', $userIds)
+            ->when($departmentIds !== [], function ($query) use ($departmentIds) {
+                $query->where(function ($subQuery) use ($departmentIds) {
+                    $subQuery->where('id', auth()->id())
+                        ->orWhereHas('details', function ($detailsQuery) use ($departmentIds) {
+                            $detailsQuery->whereIn('department_id', $departmentIds);
+                        });
+                });
+            })
+            ->when($kpiFilter === 'agreed', function ($query) use ($month, $year) {
+                $query->whereHas('appraisals', function ($appraisalQuery) use ($month, $year) {
+                    $appraisalQuery->where('month', $month)
+                        ->where('year', $year)
+                        ->whereIn('status', [Appraisal::STATUS_PUBLISHED, Appraisal::STATUS_COMPLETED, Appraisal::STATUS_CLOSED])
+                        ->whereNotNull('kpi_agreed_at');
+                });
+            })
+            ->when($kpiFilter === 'not_agreed', function ($query) use ($month, $year) {
+                $query->where(function ($subQuery) use ($month, $year) {
+                    $subQuery->whereDoesntHave('appraisals', function ($appraisalQuery) use ($month, $year) {
+                        $appraisalQuery->where('month', $month)
+                            ->where('year', $year)
+                            ->whereIn('status', [Appraisal::STATUS_PUBLISHED, Appraisal::STATUS_COMPLETED, Appraisal::STATUS_CLOSED]);
+                    })->orWhereHas('appraisals', function ($appraisalQuery) use ($month, $year) {
+                        $appraisalQuery->where('month', $month)
+                            ->where('year', $year)
+                            ->whereIn('status', [Appraisal::STATUS_PUBLISHED, Appraisal::STATUS_COMPLETED, Appraisal::STATUS_CLOSED])
+                            ->whereNull('kpi_agreed_at');
+                    });
+                });
+            });
     }
 
     public function getUsersWithAssignmentsPaginator(int $month, int $year, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
