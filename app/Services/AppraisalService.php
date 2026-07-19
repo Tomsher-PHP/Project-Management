@@ -84,6 +84,11 @@ class AppraisalService
                 'agreed' => 'Agreed',
                 'not_agreed' => 'Not Agreed',
             ],
+            'myStatusOptions' => collect([
+                Appraisal::STATUS_DRAFT => Appraisal::STATUSES[Appraisal::STATUS_DRAFT],
+                Appraisal::STATUS_PUBLISHED => Appraisal::STATUSES[Appraisal::STATUS_PUBLISHED],
+                Appraisal::STATUS_COMPLETED => Appraisal::STATUSES[Appraisal::STATUS_COMPLETED],
+            ])->map(fn (string $name, string $id) => (object) compact('id', 'name'))->values(),
             'statusOptions' => [
                 'Draft' => 'Draft',
                 'Published' => 'Published',
@@ -1630,7 +1635,6 @@ class AppraisalService
             ->where('month', $month)
             ->where('year', $year)
             ->whereIn('user_id', $paginator->pluck('id'))
-            ->whereIn('status', ['published', 'completed', 'closed'])
             ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
@@ -1653,6 +1657,7 @@ class AppraisalService
 
             return [
                 'is_assignee' => (int) $user->id === (int) auth()->id(),
+                'is_assigned' => (bool) $appraisal,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -1670,7 +1675,7 @@ class AppraisalService
                 'current_stage' => $appraisal?->current_stage,
                 'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
                 'status' => $appraisal?->status,
-                'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
+                'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'completed_at' => $this->formatDate($appraisal?->completed_at),
                 'final_rating' => $appraisal?->final_rating,
                 'assignee_submitted_at' => $this->formatDateTime($assigneeSubmittedAt),
@@ -1745,6 +1750,18 @@ class AppraisalService
         $userIds = array_values(array_unique(array_merge([auth()->id()], $userIds)));
         $departmentIds = $this->resolveFilterIds($request, ['department_id']);
         $kpiFilter = $request->input('kpi');
+        $allowedStatuses = [
+            Appraisal::STATUS_DRAFT,
+            Appraisal::STATUS_PUBLISHED,
+            Appraisal::STATUS_COMPLETED,
+        ];
+        $statusFilters = collect($request->input('my_status', []))
+            ->flatten()
+            ->map(fn ($status) => strtolower((string) $status))
+            ->intersect($allowedStatuses)
+            ->unique()
+            ->values()
+            ->all();
 
         return User::query()
             ->active()
@@ -1755,6 +1772,13 @@ class AppraisalService
                         ->orWhereHas('details', function ($detailsQuery) use ($departmentIds) {
                             $detailsQuery->whereIn('department_id', $departmentIds);
                         });
+                });
+            })
+            ->when($statusFilters !== [], function ($query) use ($statusFilters, $month, $year) {
+                $query->whereHas('appraisals', function ($appraisalQuery) use ($statusFilters, $month, $year) {
+                    $appraisalQuery->where('month', $month)
+                        ->where('year', $year)
+                        ->whereIn('status', $statusFilters);
                 });
             })
             ->when($kpiFilter === 'agreed', function ($query) use ($month, $year) {

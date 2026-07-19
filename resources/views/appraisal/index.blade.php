@@ -322,7 +322,10 @@
         <x-filters.multi-select name="department_id" label="Departments" :options="$departments" />
 
         <div data-filter-tab="my">
-            <x-filters.select name="kpi" label="KPI" :options="$kpiOptions" />
+            <div class="space-y-5">
+                <x-filters.select name="kpi" label="KPI" :options="$kpiOptions" />
+                <x-filters.multi-select name="my_status" label="Status" :options="$myStatusOptions" />
+            </div>
         </div>
 
         <div data-filter-tab="assign">

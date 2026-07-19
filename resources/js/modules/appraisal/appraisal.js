@@ -324,17 +324,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const statusBadge = (record) => {
-        if (!record.is_assigned && !record.status) {
+        const status = String(record.status || '').toLowerCase();
+
+        if (!record.is_assigned && !status) {
             return '<span class="inline-flex rounded-full bg-bgray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">Not Assigned</span>';
         }
 
-        const label = record.status_label || String(record.status || '').replace(/^\w/, (letter) => letter.toUpperCase());
+        const label = record.status_label || status.replace(/^\w/, (letter) => letter.toUpperCase());
         const classes = {
             draft: 'bg-success-100 text-success-400 dark:bg-success-900/30 dark:text-success-300',
             published: 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-300',
             completed: 'bg-primary-new text-bgray-900 dark:bg-primary-new dark:text-bgray-900',
             closed: 'bg-bgray-100 text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300',
-        }[record.status] || 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
+        }[status] || 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
 
         return `<span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] ${classes}">${label}</span>`;
     };
