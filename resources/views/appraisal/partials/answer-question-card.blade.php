@@ -58,7 +58,7 @@
                 </div>
             @else
                 <div class="text-sm mt-1 flex flex-wrap items-center gap-x-4 text-bgray-900 dark:text-bgray-300">
-                    <span>Achieved 88: <strong class="text-bgray-900 dark:text-white">{{ !is_null($answer['achieved_value'] ?? null) && ($answer['achieved_value'] ?? '') !== '' ? $answer['achieved_value'] . ' ' . $unit : '--' }}</strong></span>
+                    <span>Achieved: <strong class="text-bgray-900 dark:text-white">{{ !is_null($answer['achieved_value'] ?? null) && ($answer['achieved_value'] ?? '') !== '' ? $answer['achieved_value'] . ' ' . $unit : '--' }}</strong></span>
                     <span>Achievement: <strong class="text-bgray-900 dark:text-white">{{ $answer['achievement_percentage'] !== null ? number_format((float) $answer['achievement_percentage'], 2) . '%' : '—' }}</strong></span>
                 </div>
             @endif
