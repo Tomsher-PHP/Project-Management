@@ -53,6 +53,9 @@
     .tom-select-multiple,
     .tom-select-lazy
 ) .ts-control > .item:not(.active) {
+    padding: 0.125rem 0.5rem;
+    margin-right: 0.25rem;
+    border-radius: 0.375rem;
     background-color: var(--ts-selected-item-background);
 }
 

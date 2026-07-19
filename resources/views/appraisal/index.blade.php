@@ -5,7 +5,8 @@
         $canAssignAppraisals = auth()->user()?->can('appraisal.create');
     @endphp
 
-    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-page-url-template="{{ route('appraisal.answer', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
+    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}"
+        data-answer-page-url-template="{{ route('appraisal.answer', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
         <script type="application/json" data-appraisal-initial-data>
             @json($assignmentData)
         </script>
@@ -25,17 +26,27 @@
             <div class="flex flex-wrap items-center gap-3">
                 <x-filters.button />
 
-                <select class="tom-select-no-search min-w-[150px]" data-appraisal-month>
-                    @foreach ($months as $monthValue => $monthLabel)
-                        <option value="{{ $monthValue }}" @selected((int) $monthValue === (int) $month)>{{ $monthLabel }}</option>
-                    @endforeach
-                </select>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Period
+                    </span>
 
-                <select class="tom-select-no-search min-w-[120px]" data-appraisal-year>
-                    @foreach ($years as $yearValue => $yearLabel)
-                        <option value="{{ $yearValue }}" @selected((int) $yearValue === (int) $year)>{{ $yearLabel }}</option>
-                    @endforeach
-                </select>
+                    <select class="tom-select-no-search min-w-[150px]" data-appraisal-month>
+                        @foreach ($months as $monthValue => $monthLabel)
+                            <option value="{{ $monthValue }}" @selected((int) $monthValue === (int) $month)>
+                                {{ $monthLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <select class="tom-select-no-search min-w-[120px]" data-appraisal-year>
+                        @foreach ($years as $yearValue => $yearLabel)
+                            <option value="{{ $yearValue }}" @selected((int) $yearValue === (int) $year)>
+                                {{ $yearLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
 
