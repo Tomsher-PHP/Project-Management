@@ -10,6 +10,7 @@ use App\Services\AppraisalService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 
 class AppraisalController extends Controller
@@ -42,9 +43,25 @@ class AppraisalController extends Controller
             'appraisal_filter_year' => $year,
         ]);
 
+        $pageData = $this->appraisalService->index($request);
+        $usersPaginator = $pageData['usersPaginator'];
+
+        if ($usersPaginator) {
+            $usersPaginator->setPath(route('appraisal.index'));
+        }
+
         return response()->json([
             'status' => true,
-            'data' => $this->appraisalService->getAssignmentData($month, $year),
+            'data' => $pageData['assignmentData'],
+            'assign_pagination_html' => $usersPaginator
+                ? Blade::render(
+                    '<x-pagination :paginator="$paginator" :per-page="$perPage" />',
+                    [
+                        'paginator' => $usersPaginator,
+                        'perPage' => $pageData['perPage'],
+                    ],
+                )
+                : '',
         ]);
     }
 

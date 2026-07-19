@@ -127,9 +127,11 @@
                             <tbody data-appraisal-users></tbody>
                         </table>
                     </div>
-                    @if ($usersPaginator)
-                        <x-pagination :paginator="$usersPaginator" :per-page="$perPage" />
-                    @endif
+                    <div data-appraisal-assign-pagination>
+                        @if ($usersPaginator)
+                            <x-pagination :paginator="$usersPaginator" :per-page="$perPage" />
+                        @endif
+                    </div>
                 </div>
             </section>
         @endif

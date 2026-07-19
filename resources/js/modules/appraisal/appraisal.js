@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearSelect = root.querySelector('[data-appraisal-year]');
     const myAppraisalsContainer = root.querySelector('[data-appraisal-my-list]');
     const usersContainer = root.querySelector('[data-appraisal-users]');
+    const assignPaginationContainer = root.querySelector('[data-appraisal-assign-pagination]');
     const userSearch = root.querySelector('[data-appraisal-user-search]');
     const selectedCount = root.querySelector('[data-appraisal-selected-count]');
     const selectAllCheckbox = root.querySelector('[data-appraisal-users-select-all]');
@@ -1316,19 +1317,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             alertSuccess(payload.message || 'Appraisals assigned successfully.');
-            assignmentData = {
-                ...assignmentData,
-                ...(payload.data || {}),
-            };
             reviewerAssignmentData = payload.data?.reviewer_assignments || reviewerAssignmentData;
+            await loadAssignmentData({ clearSelection: !keepModalOpen });
 
             if (!keepModalOpen) {
                 selectedUserIds.clear();
                 closeAssignModal();
             }
-
-            renderMyAppraisals();
-            renderUsers();
 
             return true;
         } catch (error) {
@@ -1447,10 +1442,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errors[0] || payload.message || 'Unable to assign appraisal reviewers.');
             }
 
-            assignmentData = {
-                ...assignmentData,
-                ...(payload.data || {}),
-            };
             reviewerAssignmentData = payload.data?.reviewer_assignments || reviewerAssignmentData;
 
             if (publishAfterSave) {
@@ -1464,10 +1455,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             alertSuccess(payload.message || 'Appraisal reviewers assigned successfully.');
+            await loadAssignmentData();
             selectedUserIds.clear();
             closeAssignModal();
-            renderMyAppraisals();
-            renderUsers();
         } catch (error) {
             alertError(error.message || 'Unable to assign appraisal reviewers.');
         } finally {
@@ -1528,13 +1518,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             alertSuccess(payload.message || 'Appraisals published successfully.');
-            assignmentData = {
-                ...assignmentData,
-                ...(payload.data || {}),
-            };
+            await loadAssignmentData();
             selectedUserIds.clear();
-            renderMyAppraisals();
-            renderUsers();
 
             return true;
         } catch (error) {
@@ -1578,13 +1563,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             alertSuccess(payload.message || 'Appraisal unpublished successfully.');
-            assignmentData = {
-                ...assignmentData,
-                ...(payload.data || {}),
-            };
+            await loadAssignmentData();
             selectedUserIds.clear();
-            renderMyAppraisals();
-            renderUsers();
         } catch (error) {
             alertError(error.message || 'Unable to unpublish appraisal.');
         }
@@ -1714,13 +1694,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const loadAssignmentData = async () => {
+    const loadAssignmentData = async ({ clearSelection = true } = {}) => {
         if (!root.dataset.assignmentUrl) {
-            return;
+            return false;
         }
 
         const period = currentPeriod();
         const url = new URL(root.dataset.assignmentUrl, window.location.origin);
+        const currentUrl = new URL(window.location.href);
+
+        currentUrl.searchParams.forEach((value, key) => {
+            url.searchParams.append(key, value);
+        });
+
         url.searchParams.set('month', period.month);
         url.searchParams.set('year', period.year);
 
@@ -1733,14 +1719,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             assignmentData = payload.data || { my_appraisals: [], users: [], kpis: [], categories: [] };
-            selectedUserIds.clear();
+
+            if (clearSelection) {
+                selectedUserIds.clear();
+            }
+
+            if (assignPaginationContainer) {
+                assignPaginationContainer.innerHTML = payload.assign_pagination_html || '';
+            }
+
             renderMyAppraisals();
 
             if (activeTab === 'assign') {
                 renderUsers();
             }
+
+            return true;
         } catch (error) {
             alertError(error.message || 'Unable to load appraisal assignments.');
+
+            return false;
         }
     };
 
