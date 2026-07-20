@@ -22,7 +22,20 @@ class ProjectChecklistController extends Controller
             ->with(['projectChecklists' => function ($q) use ($project) {
                 $q->where('project_id', $project->id)->with('items');
             }])
-            ->get();
+            ->get()
+            ->map(function (User $user) {
+                $checklists = $user->projectChecklists ?? collect();
+                $totalChecklists = $checklists->sum(fn($checklist) => $checklist->items->count());
+                $completedChecklists = $checklists->sum(function ($checklist) {
+                    return $checklist->items->filter(fn($item) => (int) $item->status === 1)->count();
+                });
+
+                $user->checklist_summary = $completedChecklists . ' / ' . $totalChecklists;
+                $user->total_checklists = $totalChecklists;
+                $user->completed_checklists = $completedChecklists;
+
+                return $user;
+            });
 
         return view('projects.partials.tabs.checklists', compact('project', 'users'))->render();
     }
