@@ -455,6 +455,25 @@
                                 </ul>
                             </li>
                         @endif
+
+                        @if ($canViewAppraisal)
+                            <!-- Appraisal -->
+                            <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('appraisal.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M4 20H20V22H2V4H4V20Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M7 16L11 12L14 15L20 8L21.5 9.5L14 17L11 14L8.5 16.5L7 16Z" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             @endif
@@ -653,25 +672,6 @@
                                                 </svg>
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isActivityLogActive ? $sidebarItemActiveClass : '' }}">Activity Log</span>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        @endif
-
-                        @if ($canViewAppraisal)
-                            <!-- Appraisal -->
-                            <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                <a href="{{ route('appraisal.index') }}">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M13 3C8.03 3 4 7.03 4 12H1L4.89 15.89L5 16L9 12H6C6 8.13 9.13 5 13 5C16.87 5 20 8.13 20 12C20 15.87 16.87 19 13 19C11.07 19 9.32 18.21 8.06 16.94L6.64 18.36C8.27 20 10.51 21 13 21C17.97 21 22 16.97 22 12C22 7.03 17.97 3 13 3Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M12.5 7V12.5L16 14.6L16.8 13.3L14 11.6V7H12.5Z" fill="#22C55E" class="path-2" />
-                                                </svg>
-                                            </span>
-                                            <span class="item-text text-base font-medium leading-none {{ $isAppraisalActive ? $sidebarItemActiveClass : '' }}">Appraisal</span>
                                         </div>
                                     </div>
                                 </a>
