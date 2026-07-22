@@ -1,0 +1,55 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('appraisals', function (Blueprint $table) {
+            $table->id();
+
+            $table->year('year');
+            $table->unsignedTinyInteger('month');
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->unsignedBigInteger('kpi_id')->nullable();
+            $table->string('kpi_name', 255)->nullable();
+            $table->longText('kpi_description')->nullable();
+            $table->timestamp('kpi_agreed_at')->nullable();
+
+            $table->decimal('assignee_average_rating', 4, 2)->nullable();
+            $table->decimal('final_rating', 4, 2)->nullable();
+
+            $table->enum('status', ['draft', 'published', 'completed', 'closed'])->default('draft')->index();
+            $table->string('current_stage', 50)->nullable();
+
+            $table->timestamp('published_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
+
+            $table->foreignId('published_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['year', 'month', 'user_id'], 'uq_y_m_user');
+            $table->index(['year', 'month'], 'idx_y_m');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('appraisals');
+    }
+};

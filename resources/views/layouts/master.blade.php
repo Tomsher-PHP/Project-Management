@@ -65,7 +65,7 @@
                 @hasSection('without-main')
                     @yield('page-content')
                 @else
-                    <main class="@yield('main-class', 'w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]')" @yield('main-attributes')>
+                    <main class="@yield('main-class', 'w-full px-6 pb-6 pt-[68px] sm:pt-[80px] xl:px-[48px] xl:pb-[48px]')" @yield('main-attributes')>
                         @yield('page-content')
                     </main>
                 @endif

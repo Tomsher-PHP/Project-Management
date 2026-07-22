@@ -4,7 +4,8 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AgileMilestoneController;
 use App\Http\Controllers\AgileSprintController;
 use App\Http\Controllers\AnalyticsController;
-use App\Http\Controllers\AppraisalKpiController;
+use App\Http\Controllers\AppraisalCategoryController;
+use App\Http\Controllers\AppraisalController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BreakRequestController;
 use App\Http\Controllers\ChecklistController;
@@ -253,14 +254,15 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('checklists', ChecklistController::class)->middleware('permission.type:checklist_template.delete')->only(['destroy']);
         // End Checklists templates routes
 
-        // Appraisal Kpis routes
-        Route::patch('/appraisal-kpis/toggle-status', [AppraisalKpiController::class, 'toggleStatusChecklist'])->middleware('permission.type:appraisal_kpi.edit')->name('checklist.toggleStatus');
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.view')->only(['index']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.create')->only(['store']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.edit')->only(['update']);
-        Route::resource('appraisal-kpis', AppraisalKpiController::class)->middleware('permission.type:appraisal_kpi.delete')->only(['destroy']);
-        // End appraisal-kpis templates routes
-        
+        // Appraisal categories routes
+        Route::get('/appraisal/units', [AppraisalCategoryController::class, 'units'])->middleware('permission.type:appraisal_settings.view')->name('appraisal.units');
+        Route::patch('/appraisal/toggle-status', [AppraisalCategoryController::class, 'toggleStatus'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleStatus');
+        Route::patch('/appraisal/toggle-default', [AppraisalCategoryController::class, 'toggleDefault'])->middleware('permission.type:appraisal_settings.edit')->name('appraisal.toggleDefault');
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.view')->only(['index']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.create')->only(['store']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);
+        Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
+        // End appraisal categories routes
     });
     // End Settings Routes
 
@@ -528,6 +530,24 @@ Route::middleware(['auth'])->group(function () {
 
     // User login activity routes
     Route::get('user-login-activity', [UserLoginActivityController::class, 'index'])->name('user.login.activity');
+
+    // Appraisal routes
+    Route::prefix('appraisal')->as('appraisal.')->group(function () {
+        Route::get('/', [AppraisalController::class, 'index'])->middleware('permission.type:appraisal.view')->name('index');
+        Route::get('/assignment-data', [AppraisalController::class, 'assignmentData'])->middleware('permission.type:appraisal.view')->name('assignment-data');
+        Route::post('/assign', [AppraisalController::class, 'assign'])->middleware('permission.type:appraisal.create')->name('assign');
+        Route::post('/assign-reviewers', [AppraisalController::class, 'assignReviewers'])->middleware('permission.type:appraisal.create')->name('assign-reviewers');
+        Route::post('/publish', [AppraisalController::class, 'publish'])->middleware('permission.type:appraisal.create')->name('publish');
+        Route::post('/{appraisal}/agree-kpi', [AppraisalController::class, 'agreeKpi'])->middleware('permission.type:appraisal.view')->name('agree-kpi');
+        Route::get('/{appraisal}/answer', [AppraisalController::class, 'answerPage'])->middleware('permission.type:appraisal.view')->name('answer');
+        Route::get('/{appraisal}/answer-form', [AppraisalController::class, 'answerForm'])->middleware('permission.type:appraisal.view')->name('answer-form');
+        Route::post('/{appraisal}/submit-answers', [AppraisalController::class, 'submitAnswers'])->middleware('permission.type:appraisal.view')->name('submit-answers');
+        Route::post('/{appraisal}/save-draft', [AppraisalController::class, 'saveDraft'])->middleware('permission.type:appraisal.view')->name('save-draft');
+        Route::post('/{appraisal}/acknowledge-review', [AppraisalController::class, 'acknowledgeReview'])->middleware('permission.type:appraisal.view')->name('acknowledge-review');
+        Route::post('/{appraisal}/comment', [AppraisalController::class, 'saveComment'])->middleware('permission.type:appraisal.view')->name('save-comment');
+        Route::get('/{appraisal}', [AppraisalController::class, 'show'])->middleware('permission.type:appraisal.create')->name('show');
+        Route::post('/{appraisal}/unpublish', [AppraisalController::class, 'unpublish'])->middleware('permission.type:appraisal.create')->name('unpublish');
+    });
 
     // Help Center routes
     Route::prefix('help-center')->as('help-center.')->group(function () {

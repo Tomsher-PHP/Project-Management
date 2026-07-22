@@ -12,6 +12,8 @@ use App\Notifications\Channels\DatabaseChannel as AppDatabaseChannel;
 use App\Observers\ProjectSprintObserver;
 use App\Observers\TaskObserver;
 use App\Observers\TaskTimeLogObserver;
+use App\Models\Appraisal;
+use App\Policies\AppraisalPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\UserPolicy;
@@ -123,6 +125,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Appraisal::class, AppraisalPolicy::class);
     }
 
     public static function formatAppDate($value, string $fallback = '--'): string

@@ -44,6 +44,14 @@ $(document).on('click', '.status-toggle', function () {
                     btn.attr('aria-checked', newStatus);
                     btn.toggleClass('active', newStatus);
 
+                    const statusBadge = btn.closest('tr').find('[data-status-badge]');
+
+                    if (statusBadge.length) {
+                        statusBadge.text(newStatus ? 'Active' : 'Inactive');
+                        statusBadge.toggleClass('bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-300', newStatus);
+                        statusBadge.toggleClass('bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300', !newStatus);
+                    }
+
                     let capitalizedEntity = entity.charAt(0).toUpperCase() + entity.slice(1);
                     Alert.success(`${capitalizedEntity} ${actionText}d successfully.`);
                 }

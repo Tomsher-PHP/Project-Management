@@ -22,11 +22,14 @@
                                 <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $user->designation_name ?? $user->email }}</p>
                             </div>
                         </div>
-                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bgray-50 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
-                            <svg class="h-5 w-5 transition-transform duration-200" :class="expandedUser ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-300">{{ $user->checklist_summary }}</span>
+                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-bgray-50 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="expandedUser ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                        </div>
                     </button>
 
                     <div x-show="expandedUser" x-collapse x-cloak class="border-t border-bgray-200 bg-bgray-50/30 dark:border-darkblack-400 dark:bg-darkblack-500/10">

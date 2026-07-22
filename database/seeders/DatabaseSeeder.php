@@ -48,6 +48,9 @@ class DatabaseSeeder extends Seeder
             KpiSeeder::class,
             HandoffPurposesSeeder::class,
 
+            // Appraisal related seeders
+            AppraisalQuestionUnitSeeder::class,
+
             // Country related seeders
             CountrySeeder::class,
         ]);

@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B5IdnlB5.css",
+    "file": "assets/app-C5QSrnv6.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bm2sjqqU.js",
+    "file": "assets/app-D4uvovs2.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -154,6 +154,30 @@
     "imports": [
       "_flatpickr.min-Cc3t1Oke.js",
       "_datepicker-C_SEo8OD.js"
+    ]
+  },
+  "resources/js/modules/appraisal/appaisal-settings.js": {
+    "file": "assets/appaisal-settings-ovy3JqOB.js",
+    "name": "appaisal-settings",
+    "src": "resources/js/modules/appraisal/appaisal-settings.js",
+    "isEntry": true,
+    "imports": [
+      "_tom-select-CrIMTW6-.js"
+    ]
+  },
+  "resources/js/modules/appraisal/appraisal-answer.js": {
+    "file": "assets/appraisal-answer-CDE7Oo6s.js",
+    "name": "appraisal-answer",
+    "src": "resources/js/modules/appraisal/appraisal-answer.js",
+    "isEntry": true
+  },
+  "resources/js/modules/appraisal/appraisal.js": {
+    "file": "assets/appraisal-CvGNIflD.js",
+    "name": "appraisal",
+    "src": "resources/js/modules/appraisal/appraisal.js",
+    "isEntry": true,
+    "imports": [
+      "_tom-select-CrIMTW6-.js"
     ]
   },
   "resources/js/modules/checklist-template-form.js": {
@@ -339,7 +363,7 @@
     ]
   },
   "resources/js/modules/tasks/extend-task.js": {
-    "file": "assets/extend-task-D0UOV-J3.js",
+    "file": "assets/extend-task-CXhq7YEz.js",
     "name": "extend-task",
     "src": "resources/js/modules/tasks/extend-task.js",
     "isEntry": true,
