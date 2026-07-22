@@ -43,8 +43,8 @@
     $canViewAppraisal = $authUser?->can('appraisal.view');
 
     $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
-    $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog || $canViewAppraisal;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewAppraisal;
+    $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
     $isDashboardActive = request()->routeIs('dashboard');
@@ -456,7 +456,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewAppraisal)
+                        {{-- @if ($canViewAppraisal)
                             <!-- Appraisal -->
                             <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('appraisal.index') }}">
@@ -473,7 +473,7 @@
                                     </div>
                                 </a>
                             </li>
-                        @endif
+                        @endif --}}
                     </ul>
                 </div>
             @endif

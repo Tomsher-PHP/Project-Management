@@ -41,8 +41,10 @@
     $canViewMilestoneReports = $authUser?->can('reports.milestone_view');
     $canViewLeaveReports = $authUser?->can('reports.leave_view');
 
+    $canViewAppraisal = $authUser?->can('appraisal.view');
+
     $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewAppraisal;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
 
@@ -84,6 +86,8 @@
     $isScheduleShiftActive = request()->routeIs('schedule.shift.*');
     $isSettingsActive = request()->routeIs('settings.*');
     $isActivityLogActive = request()->routeIs('activity.log*');
+
+    $isAppraisalActive = request()->routeIs('appraisal.*');
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -354,6 +358,20 @@
                                         </ul>
                                     </li>
                                 @endif
+
+                                {{-- @if ($canViewAppraisal)
+                                    <li class="item px-[43px] py-[11px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                        <a href="{{ route('appraisal.index') }}">
+                                            <span class="item-ico">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M4 20H20V22H2V4H4V20Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M7 16L11 12L14 15L20 8L21.5 9.5L14 17L11 14L8.5 16.5L7 16Z" fill="#22C55E" class="path-2" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                        <span class="sidebar-tooltip">Appraisal</span>
+                                    </li>
+                                @endif --}}
                             </ul>
                         </div>
                     @endif
@@ -378,13 +396,6 @@
                                         </a>
                                         <span class="sidebar-tooltip">Performance Reports</span>
                                         <ul class="sub-menu min-w-[200px] rounded-lg border-l border-success-100 bg-white px-5 py-2 shadow-lg dark:bg-darkblack-600 dark:border-darkblack-400">
-                                            {{-- @if ($canViewProductivityReports)
-                                                <li>
-                                                    <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                        Productivity
-                                                    </a>
-                                                </li>
-                                            @endif --}}
                                             @if ($canViewDailyReports)
                                                 <li>
                                                     <a href="{{ route('reports.daily_time') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isDailyReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
@@ -399,47 +410,16 @@
                                                     </a>
                                                 </li>
                                             @endif
+                                            @if ($canViewProductivityReports)
+                                                <li>
+                                                    <a href="{{ route('reports.productivity') }}" class="text-md inline-block py-1.5 font-medium transition-all {{ $isProductivityReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
+                                                        Productivity
+                                                    </a>
+                                                </li>
+                                            @endif
                                         </ul>
                                     </li>
                                 @endif
-
-                                {{-- @if ($canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports)
-                                    <li class="item px-[43px] py-[11px] {{ $isResourcesReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                        <a href="#">
-                                            <span class="item-ico">
-                                                <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <circle cx="7" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                                    <circle cx="14" cy="6" r="3" fill="#1A202C" class="path-1" />
-                                                    <path d="M3 16C4.5 13 15.5 13 17 16" stroke="#22C55E" stroke-width="2" stroke-linecap="round" class="path-2" />
-                                                </svg>
-                                            </span>
-                                        </a>
-                                        <span class="sidebar-tooltip">Resource Reports</span>
-                                        <ul class="sub-menu min-w-[200px] rounded-lg border-l border-success-100 bg-white px-5 py-2 shadow-lg dark:bg-darkblack-600 dark:border-darkblack-400">
-                                            @if ($canViewAttendanceReports)
-                                                <li>
-                                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isAttendanceReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                        Attendance
-                                                    </a>
-                                                </li>
-                                            @endif
-                                            @if ($canViewLeaveReports)
-                                                <li>
-                                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isLeaveReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                        Leave
-                                                    </a>
-                                                </li>
-                                            @endif
-                                            @if ($canViewShiftScheduleReports)
-                                                <li>
-                                                    <a href="#" class="text-md inline-block py-1.5 font-medium transition-all {{ $isShiftScheduleReportActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                        Shift Schedule
-                                                    </a>
-                                                </li>
-                                            @endif
-                                        </ul>
-                                    </li>
-                                @endif --}}
 
                                 @if ($canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports)
                                     <li class="item px-[43px] py-[11px] {{ $isProjectsReportsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
@@ -541,22 +521,6 @@
                                         <span class="sidebar-tooltip">Activity Log</span>
                                     </li>
                                 @endif
-
-                                {{-- <li class="item px-[43px] py-[11px] text-bgray-900 dark:text-white">
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="w-full text-center flex justify-center">
-                                            <span class="item-ico">
-                                                <svg width="21" height="18" viewBox="0 0 21 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M17.1464 10.4394C16.8536 10.7323 16.8536 11.2072 17.1464 11.5001C17.4393 11.7929 17.9142 11.7929 18.2071 11.5001L19.5 10.2072C20.1834 9.52375 20.1834 8.41571 19.5 7.73229L18.2071 6.4394C17.9142 6.1465 17.4393 6.1465 17.1464 6.4394C16.8536 6.73229 16.8536 7.20716 17.1464 7.50006L17.8661 8.21973H11.75C11.3358 8.21973 11 8.55551 11 8.96973C11 9.38394 11.3358 9.71973 11.75 9.71973H17.8661L17.1464 10.4394Z" fill="#22C55E" class="path-2" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.75 17.75H12C14.6234 17.75 16.75 15.6234 16.75 13C16.75 12.5858 16.4142 12.25 16 12.25C15.5858 12.25 15.25 12.5858 15.25 13C15.25 14.7949 13.7949 16.25 12 16.25H8.21412C7.34758 17.1733 6.11614 17.75 4.75 17.75ZM8.21412 1.75H12C13.7949 1.75 15.25 3.20507 15.25 5C15.25 5.41421 15.5858 5.75 16 5.75C16.4142 5.75 16.75 5.41421 16.75 5C16.75 2.37665 14.6234 0.25 12 0.25H4.75C6.11614 0.25 7.34758 0.82673 8.21412 1.75Z" fill="#1A202C" class="path-1" />
-                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 5C0 2.37665 2.12665 0.25 4.75 0.25C7.37335 0.25 9.5 2.37665 9.5 5V13C9.5 15.6234 7.37335 17.75 4.75 17.75C2.12665 17.75 0 15.6234 0 13V5Z" fill="#1A202C" class="path-1" />
-                                                </svg>
-                                            </span>
-                                        </button>
-                                        <span class="sidebar-tooltip">Logout</span>
-                                    </form>
-                                </li> --}}
                             </ul>
                         </div>
                     @endif
