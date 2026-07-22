@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentEstimateNode = modal.querySelector('[data-extend-time-current-estimate]');
     const submitBtn = form.querySelector('[data-extend-time-submit]');
 
+    const setFormAvailability = (disabled) => {
+        form.dataset.hasExistingRequest = disabled ? 'true' : 'false';
+        form.querySelectorAll('[data-estimated-hours], [data-estimated-extra-minutes], textarea[name="reason"]').forEach(input => {
+            input.disabled = disabled;
+        });
+        if (submitBtn) submitBtn.disabled = disabled;
+    };
+
     const resetErrors = () => {
         form.querySelectorAll('[data-extend-time-error]').forEach(el => {
             el.textContent = '';
@@ -41,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal = async (trigger) => {
         resetErrors();
         form.reset();
+        setFormAvailability(false);
 
         const taskName = trigger.dataset.taskName || '--';
         const currentEstimate = trigger.dataset.currentEstimate || '--';
@@ -59,11 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const wrapper = form.querySelector('[data-estimated-time]');
         const totalInput = wrapper ? wrapper.querySelector('[data-estimated-total-minutes]') : null;
         const reasonTextarea = form.querySelector('[name="reason"]');
-        const hoursInput = wrapper ? wrapper.querySelector('[data-estimated-hours]') : null;
-        const minutesInput = wrapper ? wrapper.querySelector('[data-estimated-extra-minutes]') : null;
 
-        // Default new requests to the task's current estimate. A pending request,
-        // when present, replaces this value with its previously requested estimate.
+        // Default new requests to the task's current estimate. An existing request,
+        // when present, is displayed read-only.
         if (totalInput) {
             totalInput.value = String(currentEstimateMinutes);
         }
@@ -85,13 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Submit Request';
 
         // Disable inputs and submit button during load
-        if (hoursInput) hoursInput.disabled = true;
-        if (minutesInput) minutesInput.disabled = true;
-        if (reasonTextarea) reasonTextarea.disabled = true;
+        setFormAvailability(true);
         if (submitBtn) {
-            submitBtn.disabled = true;
             submitBtn.innerHTML = 'Loading...';
         }
+
+        let hasExistingRequest = false;
 
         try {
             const response = await fetch(pendingUrl, {
@@ -103,12 +109,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok && result.status && result.data) {
+                hasExistingRequest = true;
                 if (totalInput) {
                     totalInput.value = String(result.data.new_estimated_time_minutes);
                 }
                 if (reasonTextarea) {
                     reasonTextarea.value = result.data.reason || '';
                 }
+                const existingRequestMessage = result.data.request_status === 'rejected'
+                    ? 'Your extension request was rejected. Only one request is allowed per task.'
+                    : 'Only one extension request is permitted.';
+                showFieldError('extend_request', existingRequestMessage);
             } else {
                 if (totalInput) {
                     totalInput.value = String(currentEstimateMinutes);
@@ -129,11 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (wrapper) {
                 wrapper.dispatchEvent(new CustomEvent('estimated-time:refresh'));
             }
-            if (hoursInput) hoursInput.disabled = false;
-            if (minutesInput) minutesInput.disabled = false;
-            if (reasonTextarea) reasonTextarea.disabled = false;
+            setFormAvailability(hasExistingRequest);
             if (submitBtn) {
-                submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
             }
         }
@@ -145,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'true');
         resetErrors();
         form.reset();
+        setFormAvailability(false);
     };
 
     // Delegation for dynamic triggers (since detail-content is loaded via AJAX)
@@ -170,6 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        if (form.dataset.hasExistingRequest === 'true') {
+            showFieldError('extend_request', 'Only one extension request is permitted.');
+            return;
+        }
+
         if (form.dataset.submitting === 'true') return;
 
         resetErrors();
@@ -182,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(form);
         const submitUrl = form.action;
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        let duplicateRejected = false;
 
         try {
             const response = await fetch(submitUrl, {
@@ -206,8 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 if (response.status === 422 && data.errors) {
                     Object.entries(data.errors).forEach(([field, messages]) => {
-                        showFieldError(field, Array.isArray(messages) ? messages[0] : messages);
+                        const message = field === 'extend_request'
+                            ? 'Only one extension request is permitted.'
+                            : (Array.isArray(messages) ? messages[0] : messages);
+                        showFieldError(field, message);
                     });
+                    duplicateRejected = Object.prototype.hasOwnProperty.call(data.errors, 'extend_request');
                 } else {
                     Alert.error(data.message || 'An error occurred.');
                 }
@@ -218,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             form.dataset.submitting = 'false';
             submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            setFormAvailability(duplicateRejected);
         }
     });
 });

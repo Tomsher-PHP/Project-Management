@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Task;
 use App\Models\Project;
-use App\Models\User;
+use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TaskTimeExtendService
 {
@@ -20,22 +22,32 @@ class TaskTimeExtendService
      */
     public function createRequest(Task $task, array $data): TaskExtendTimeRequest
     {
-        $user = Auth::user();
+        return DB::transaction(function () use ($task, $data) {
+            $lockedTask = Task::query()->lockForUpdate()->findOrFail($task->id);
 
-        $request = TaskExtendTimeRequest::create([
-            'task_id' => $task->id,
-            'user_id' => $user->id,
-            'estimated_time_seconds' => $task->estimated_time_seconds ?? 0,
-            'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
-                ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
-                : 0,
-            'status' => 'pending',
-            'reason' => $data['reason'] ?? null,
-        ]);
+            if (TaskExtendTimeRequest::query()->where('task_id', $lockedTask->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'extend_request' => 'Only one extend time request is allowed per task.',
+                ]);
+            }
 
-        $this->notificationService->notifyTaskTimeExtendRequest($user, $task, $request);
+            $user = Auth::user();
 
-        return $request;
+            $request = TaskExtendTimeRequest::create([
+                'task_id' => $lockedTask->id,
+                'user_id' => $user->id,
+                'estimated_time_seconds' => $lockedTask->estimated_time_seconds ?? 0,
+                'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
+                    ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
+                    : 0,
+                'status' => 'pending',
+                'reason' => $data['reason'] ?? null,
+            ]);
+
+            $this->notificationService->notifyTaskTimeExtendRequest($user, $lockedTask, $request);
+
+            return $request;
+        });
     }
 
     /**

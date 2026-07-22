@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Task;
+use App\Models\TaskExtendTimeRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
 class TaskTimeExtendStoreRequest extends FormRequest
@@ -34,6 +36,29 @@ class TaskTimeExtendStoreRequest extends FormRequest
             'new_estimated_time_minutes.integer' => 'Please enter a valid new estimated time.',
             'new_estimated_time_minutes.min' => 'Please enter a valid new estimated time.',
             'reason.max' => 'Please enter a valid reason.',
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $task = $this->route('task');
+
+                if (
+                    ! $task instanceof Task
+                    || (int) $this->user()?->id !== (int) $task->current_assignee_id
+                ) {
+                    return;
+                }
+
+                if (TaskExtendTimeRequest::query()->where('task_id', $task->id)->exists()) {
+                    $validator->errors()->add(
+                        'extend_request',
+                        'Only one extend time request is allowed per task.'
+                    );
+                }
+            },
         ];
     }
 }
