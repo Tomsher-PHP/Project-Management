@@ -199,7 +199,6 @@ class AppraisalController extends Controller
                 : ($role !== 'reviewer' || filled(trim((string) ($review['remark'] ?? '')))),
             default => $role === 'viewer' || $this->isRatingResponseCompleted(
                 $role === 'reviewer' ? ($review['rating'] ?? null) : ($answer['rating'] ?? null),
-                $role === 'reviewer' ? ($review['remark'] ?? null) : ($answer['remark'] ?? null),
             ),
         };
     }
@@ -209,19 +208,17 @@ class AppraisalController extends Controller
         return $value !== null && $value !== '' && is_numeric($value);
     }
 
-    private function isRatingResponseCompleted(mixed $rating, mixed $remark): bool
+    private function isRatingResponseCompleted(mixed $rating): bool
     {
-
         if (! is_numeric($rating)) {
             return false;
         }
 
         $numericRating = (float) $rating;
 
-        return $numericRating >= 0.1
+        return $numericRating >= 0.0
             && $numericRating <= 5.0
-            && round($numericRating, 1) === $numericRating
-            && filled(trim((string) $remark));
+            && round($numericRating, 1) === $numericRating;
     }
 
     public function submitAnswers(Request $request, Appraisal $appraisal): JsonResponse
@@ -232,7 +229,7 @@ class AppraisalController extends Controller
             'answers.*.rating' => [
                 'nullable',
                 'numeric',
-                'min:0.1',
+                'min:0',
                 'max:5.0',
                 function ($attribute, $value, $fail) {
                     if ($value !== null && strlen(substr(strrchr((string) $value, '.'), 1)) > 1) {
@@ -267,7 +264,7 @@ class AppraisalController extends Controller
             'answers.*.rating' => [
                 'nullable',
                 'numeric',
-                'min:0.1',
+                'min:0',
                 'max:5.0',
                 function ($attribute, $value, $fail) {
                     if ($value !== null && strlen(substr(strrchr((string) $value, '.'), 1)) > 1) {
