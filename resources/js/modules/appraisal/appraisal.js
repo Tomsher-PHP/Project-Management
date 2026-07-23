@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${statusBadge(row)}
                         ${completedDate}
                     </td>
-                    <td class="px-4 py-4 xl:px-0">${averageRatingsSummary(row)}</td>
+                    <td class="px-4 py-4 xl:pl-0 xl:pr-6">${averageRatingsSummary(row)}</td>
                     <td class="px-4 py-4 xl:px-0">${action}</td>
                 </tr>
             `;

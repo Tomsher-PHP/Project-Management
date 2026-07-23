@@ -82,7 +82,7 @@
                                 <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>
-                                <th class="px-4 py-4 text-left xl:w-[200px] xl:px-0">
+                                <th class="px-4 py-4 text-left xl:w-[200px] xl:pl-0 xl:pr-6">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Average Ratings</span>
                                 </th>
                                 <th class="px-4 py-4 text-left xl:w-[100px] xl:px-0">
