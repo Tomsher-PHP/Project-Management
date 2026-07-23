@@ -456,7 +456,7 @@
                             </li>
                         @endif
 
-                        {{-- @if ($canViewAppraisal)
+                        @if ($canViewAppraisal)
                             <!-- Appraisal -->
                             <li class="item py-[8px] {{ $isAppraisalActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('appraisal.index') }}">
@@ -473,7 +473,7 @@
                                     </div>
                                 </a>
                             </li>
-                        @endif --}}
+                        @endif
                     </ul>
                 </div>
             @endif
