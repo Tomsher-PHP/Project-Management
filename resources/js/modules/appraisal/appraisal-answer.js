@@ -34,15 +34,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const allQuestions = () => (answerFormData.categories || []).flatMap((category) => category.questions || []);
     const currentReview = (question) => (question.reviews || []).find((review) => review.is_current) || null;
     const hasValue = (value) => value !== undefined && value !== null && String(value).trim() !== '';
-    const isRatingCompleted = (rating, remark) => {
+    const isRatingCompleted = (rating) => {
         const numericRating = Number(rating);
 
         return hasValue(rating)
-            && !Number.isNaN(numericRating)
-            && numericRating >= 0.1
+            && Number.isFinite(numericRating)
+            && numericRating >= 0
             && numericRating <= 5
-            && Number(numericRating.toFixed(1)) === numericRating
-            && hasValue(remark);
+            && Number(numericRating.toFixed(1)) === numericRating;
+    };
+    const validateRatingInput = (input, required = false) => {
+        const error = input.closest('div')?.querySelector('[data-appraisal-rating-error]');
+        const value = input.value.trim();
+        const isEmpty = value === '' && !input.validity.badInput;
+        const isValid = isEmpty ? !required : isRatingCompleted(value) && !input.validity.badInput;
+        const message = isEmpty
+            ? 'Please enter a valid rating between 0 and 5.'
+            : 'Value must be between 0 and 5 with at most one decimal place.';
+
+        input.classList.toggle('border-red-500', !isValid);
+        input.classList.toggle('focus:border-red-500', !isValid);
+        input.classList.toggle('focus:ring-red-500', !isValid);
+        input.setAttribute('aria-invalid', String(!isValid));
+
+        if (error) {
+            error.textContent = isValid ? '' : message;
+            error.classList.toggle('hidden', isValid);
+        }
+
+        return isValid;
+    };
+    const validateRatingInputs = (required = false, focusInvalid = false) => {
+        const inputs = [...(answerQuestions?.querySelectorAll(
+            '[data-appraisal-answer-input][data-answer-field="rating"]:not([readonly]):not(:disabled)'
+        ) || [])];
+        const invalidInputs = inputs.filter((input) => !validateRatingInput(input, required));
+
+        if (focusInvalid) {
+            invalidInputs[0]?.focus();
+        }
+
+        return invalidInputs.length === 0;
     };
 
     const isQuestionCompleted = (question) => {
@@ -60,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const response = role === 'reviewer' ? currentReview(question) : question.answer;
 
-        return role === 'viewer' || isRatingCompleted(response?.rating, response?.remark);
+        return role === 'viewer' || isRatingCompleted(response?.rating);
     };
 
     const persistVisibleAnswerValues = () => {
@@ -220,6 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         persistVisibleAnswerValues();
+        if (!validateRatingInputs(submitting, true)) {
+            updateAnswerProgress();
+            return;
+        }
+
         if (submitting && !allQuestions().every(isQuestionCompleted)) {
             alertError('Please complete all questions before submitting.');
             return;
@@ -317,6 +354,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const syncAnswerInput = (input) => {
         persistVisibleAnswerValues();
 
+        if (input.dataset.answerField === 'rating') {
+            validateRatingInput(input);
+        }
+
         if (input.dataset.answerField === 'achieved_value') {
             const target = Number(input.dataset.targetValue);
             const achieved = Number(input.value);
@@ -373,5 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     showAnswerCategory();
+    validateRatingInputs();
     updateAnswerProgress();
 });

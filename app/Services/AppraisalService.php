@@ -777,22 +777,15 @@ class AppraisalService
 
             if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
                 $rating = $ans['rating'] ?? null;
-                $remark = $ans['remark'] ?? null;
 
-                if ($rating === null || ! is_numeric($rating) || $rating < 0.1 || $rating > 5.0) {
+                if ($rating === null || ! is_numeric($rating) || $rating < 0 || $rating > 5.0) {
                     throw ValidationException::withMessages([
-                        "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
+                        "answers.{$index}.rating" => 'All ratings must be numeric between 0 and 5.',
                     ]);
                 }
                 if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
                     throw ValidationException::withMessages([
                         "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
-                    ]);
-                }
-
-                if ($remark === null || blank(trim((string) $remark))) {
-                    throw ValidationException::withMessages([
-                        "answers.{$index}.remark" => 'Remarks cannot be empty.',
                     ]);
                 }
             } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
