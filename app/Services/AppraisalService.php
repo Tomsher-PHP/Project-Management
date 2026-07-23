@@ -244,6 +244,7 @@ class AppraisalService
                     'assignee_average_rating' => $appraisal?->assignee_average_rating,
                     'reporter_average_rating' => $reporter?->average_rating,
                     'manager_average_rating' => $manager?->average_rating,
+                    'average_ratings' => $this->getContributorAverageRatings($appraisal),
                     'assignee_submitted_by_id' => $appraisal?->user_id,
                     'assignee_submitted_by_name' => $appraisal?->user?->name,
                     'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
@@ -1680,6 +1681,7 @@ class AppraisalService
                 'assignee_average_rating' => $appraisal?->assignee_average_rating,
                 'reporter_average_rating' => $reporter?->average_rating,
                 'manager_average_rating' => $manager?->average_rating,
+                'average_ratings' => $this->getContributorAverageRatings($appraisal),
                 'assignee_submitted_by_id' => $appraisal?->user_id,
                 'assignee_submitted_by_name' => $appraisal?->user?->name,
                 'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
@@ -1695,6 +1697,30 @@ class AppraisalService
         });
 
         return $paginator;
+    }
+
+    private function getContributorAverageRatings(?Appraisal $appraisal): array
+    {
+        if (! $appraisal) {
+            return [];
+        }
+
+        return collect([[
+            'name' => $appraisal->user?->name,
+            'role_label' => 'Assignee',
+            'average_rating' => $appraisal->assignee_average_rating,
+        ]])
+            ->concat(
+                $appraisal->reviewers
+                    ->sortBy('level')
+                    ->map(fn (AppraisalReviewer $reviewer) => [
+                        'name' => $reviewer->reviewer?->name,
+                        'role_label' => 'Reviewer L'.$reviewer->level,
+                        'average_rating' => $reviewer->average_rating,
+                    ])
+            )
+            ->values()
+            ->all();
     }
 
     private function getMyAppraisalSummary(Request $request, int $month, int $year): array
