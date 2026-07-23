@@ -11,30 +11,22 @@
 
         <dl class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:gap-x-5">
             <div class="whitespace-nowrap">
-                <dt class="font-semibold text-bgray-600 dark:text-bgray-300">Assignee</dt>
+                <dt class="max-w-[140px] truncate font-semibold text-bgray-600 dark:text-bgray-300" title="{{ data_get($answerData, 'assignee.name', '--') }}">{{ data_get($answerData, 'assignee.name', '--') }}</dt>
                 <dd class="mt-0.5 font-bold text-bgray-900 dark:text-white">
                     <span class="text-warning-300">★</span>
-                    {{ $answerData['assignee_average_rating'] !== null ? number_format((float) $answerData['assignee_average_rating'], 2) : '--' }}
+                    {{ $answerData['assignee_average_rating'] !== null ? number_format((float) $answerData['assignee_average_rating'], 2) . ' / 5' : '--' }}
                 </dd>
             </div>
 
             @foreach ($answerData['reviewers'] ?? [] as $reviewer)
-                <div class="whitespace-nowrap" title="{{ $reviewer['name'] ?? 'Reviewer' }}">
-                    <dt class="font-semibold text-bgray-600 dark:text-bgray-300">Reviewer L{{ $reviewer['level'] }}</dt>
+                <div class="whitespace-nowrap">
+                    <dt class="max-w-[140px] truncate font-semibold text-bgray-600 dark:text-bgray-300" title="{{ $reviewer['name'] ?? '--' }}">{{ $reviewer['name'] ?? '--' }}</dt>
                     <dd class="mt-0.5 font-bold text-bgray-900 dark:text-white">
                         <span class="text-warning-300">★</span>
-                        {{ $reviewer['average_rating'] !== null ? number_format((float) $reviewer['average_rating'], 2) : '--' }}
+                        {{ $reviewer['average_rating'] !== null ? number_format((float) $reviewer['average_rating'], 2) . ' / 5' : '--' }}
                     </dd>
                 </div>
             @endforeach
-
-            <div class="whitespace-nowrap border-l border-bgray-200 pl-4 dark:border-darkblack-400">
-                <dt class="font-semibold text-bgray-600 dark:text-bgray-300">Final Rating</dt>
-                <dd class="mt-0.5 font-bold text-bgray-900 dark:text-white">
-                    <span class="text-warning-300">★</span>
-                    {{ $answerData['final_rating'] !== null ? number_format((float) $answerData['final_rating'], 2) : '--' }}
-                </dd>
-            </div>
         </dl>
     </div>
 

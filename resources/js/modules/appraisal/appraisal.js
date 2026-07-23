@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
-                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage_label || '--')}</span>
+                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage || '--')}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         ${statusBadge(row)}

@@ -233,7 +233,7 @@ class AppraisalService
                     'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                     'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
                     'current_stage' => $appraisal?->current_stage,
-                    'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
+                    'current_stage_label' => $appraisal?->current_stage,
                     'status' => $appraisal?->status,
                     'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
                     'completed_at' => $this->formatDate($appraisal?->completed_at),
@@ -539,6 +539,7 @@ class AppraisalService
         DB::transaction(function () use ($appraisal) {
             $appraisal->update([
                 'kpi_agreed_at' => now(),
+                'current_stage' => 'Assignee',
             ]);
         });
 
@@ -843,10 +844,15 @@ class AppraisalService
             if ($role === 'assignee') {
                 $nextReviewer = $appraisal->reviewers->sortBy('level')->first();
                 $notificationRecipientId = (int) ($nextReviewer?->reviewer_user_id ?? 0);
+                $appraisal->current_stage = $this->reviewerStage($nextReviewer);
             } elseif ($role === 'reviewer') {
                 $reviewer = $this->authenticatedReviewer($appraisal);
-                $reviewer?->update(['submitted_at' => $now]);
-                $appraisal->current_stage = 'acknowledgement';
+                $reviewer->update(['submitted_at' => $now]);
+                $nextReviewer = $appraisal->reviewers
+                    ->where('level', '>', $reviewer->level)
+                    ->sortBy('level')
+                    ->first();
+                $appraisal->current_stage = $this->reviewerStage($nextReviewer);
             }
 
             $appraisal->save();
@@ -936,9 +942,7 @@ class AppraisalService
 
             if ($nextReviewer) {
                 $appraisal->update([
-                    'current_stage' => filled($nextReviewer->submitted_at)
-                        ? 'acknowledgement'
-                        : 'reviewer_level_'.$nextReviewer->level,
+                    'current_stage' => $this->reviewerStage($nextReviewer),
                 ]);
 
                 return;
@@ -947,7 +951,7 @@ class AppraisalService
             $appraisal->update([
                 'status' => Appraisal::STATUS_COMPLETED,
                 'completed_at' => now(),
-                'current_stage' => Appraisal::STATUS_COMPLETED,
+                'current_stage' => $this->reviewerStage(null),
                 'final_rating' => $reviewer->average_rating,
             ]);
         });
@@ -981,35 +985,9 @@ class AppraisalService
         return $date ? \App\Providers\AppServiceProvider::formatAppDate($date) : null;
     }
 
-    private function getCurrentStageLabel(?Appraisal $appraisal, $assigneeSubmittedAt = null): ?string
+    private function reviewerStage(?AppraisalReviewer $reviewer): string
     {
-        if (! $appraisal) {
-            return null;
-        }
-
-        if ($appraisal->status === Appraisal::STATUS_COMPLETED) {
-            return 'Completed';
-        }
-
-        if (blank($appraisal->kpi_agreed_at)) {
-            return 'KPI Agreement';
-        }
-
-        if (blank($assigneeSubmittedAt)) {
-            return 'Assignee';
-        }
-
-        if (filled($appraisal->current_stage)) {
-            return str($appraisal->current_stage)->replace('_', ' ')->headline()->toString();
-        }
-
-        $nextReviewer = $appraisal->reviewers
-            ->sortBy('level')
-            ->first(fn (AppraisalReviewer $reviewer) => blank($reviewer->submitted_at));
-
-        return $nextReviewer
-            ? 'Reviewer Level '.$nextReviewer->level
-            : 'Completed';
+        return $reviewer ? 'Reviewer Level '.$reviewer->level : 'Completed';
     }
 
     public function saveComment(Appraisal $appraisal, string $comment): AppraisalComment
@@ -1670,7 +1648,7 @@ class AppraisalService
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
                 'current_stage' => $appraisal?->current_stage,
-                'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
+                'current_stage_label' => $appraisal?->current_stage,
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'completed_at' => $this->formatDate($appraisal?->completed_at),
