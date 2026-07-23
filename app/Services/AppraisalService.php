@@ -611,6 +611,8 @@ class AppraisalService
             'kpi_description' => $appraisal->kpi_description,
             'status' => $appraisal->status,
             'current_stage' => $appraisal->current_stage,
+            'assignee_average_rating' => $appraisal->assignee_average_rating,
+            'final_rating' => $appraisal->final_rating,
             'categories' => $appraisal->snapshotCategories
                 ->map(fn ($category) => [
                     'id' => $category->id,
@@ -666,6 +668,7 @@ class AppraisalService
                 'name' => $reviewer->reviewer?->name,
                 'role' => $reviewer->role,
                 'level' => $reviewer->level,
+                'average_rating' => $reviewer->average_rating,
                 'submitted_at' => $reviewer->submitted_at?->toISOString(),
                 'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
                 'acknowledgement_remark' => $reviewer->acknowledgement_remark,
