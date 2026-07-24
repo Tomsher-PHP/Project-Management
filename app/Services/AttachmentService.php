@@ -68,7 +68,17 @@ class AttachmentService
     public function upload($file, $directory = 'attachments', $attachable, $disk = 'public', $visibility = 'public', $isPrimary = false, $category = null)
     {
         // 1. Generate Unique File Name
-        $fileName = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+
+        $originalName = Str::slug($originalName, '_');
+
+        $fileName = sprintf(
+            '%s_%04d_%d.%s',
+            $originalName,
+            random_int(1000, 9999),
+            time(),
+            $file->getClientOriginalExtension()
+        );
 
         // 2. Resolve Storage Disk and Visibility
         $actualDisk = config('filesystems.default', $disk);
