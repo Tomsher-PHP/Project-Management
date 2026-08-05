@@ -26,13 +26,13 @@ class AppraisalCategoryRequest extends FormRequest
     {
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'questions' => ['required', 'array', 'min:1'],
+            'questions' => ['nullable', 'array'],
             'questions.*' => ['required', 'string', 'max:500'],
             'question_ids' => ['nullable', 'array'],
             'question_ids.*' => ['nullable', 'integer'],
             'question_is_active' => ['nullable', 'array'],
             'question_is_active.*' => ['boolean'],
-            'question_types' => ['required', 'array'],
+            'question_types' => ['nullable', 'array'],
             'question_types.*' => ['required', 'string', Rule::in(array_keys(AppraisalQuestion::QUESTION_TYPES))],
             'measurement_types' => ['nullable', 'array'],
             'target_values' => ['nullable', 'array'],
@@ -112,7 +112,7 @@ class AppraisalCategoryRequest extends FormRequest
                 ->map(fn ($question) => mb_strtolower(trim((string) $question)))
                 ->filter();
 
-            if ($normalizedQuestions->count() !== $normalizedQuestions->unique()->count()) {
+            if ($normalizedQuestions->isNotEmpty() && $normalizedQuestions->count() !== $normalizedQuestions->unique()->count()) {
                 $validator->errors()->add('questions', 'Duplicate questions are not allowed.');
             }
         });
@@ -121,9 +121,7 @@ class AppraisalCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'questions.required' => 'Add at least one question.',
             'questions.array' => 'Questions must be provided as a list.',
-            'questions.min' => 'Add at least one question.',
             'questions.*.required' => 'Each question field is required.',
             'questions.*.string' => 'Each question must be valid text.',
             'questions.*.max' => 'Each question may not be greater than 500 characters.',

@@ -194,4 +194,16 @@ class AppraisalCategoryCodeTest extends TestCase
         $this->assertCount(2, $category->questions);
         $this->assertEquals($category->id, $category->questions->first()->appraisal_category_id);
     }
+
+    public function test_category_can_be_created_without_any_questions(): void
+    {
+        $category = $this->service->createCategory([
+            'name' => 'Category Without Questions',
+            'questions' => [],
+        ]);
+
+        $this->assertNotNull($category->code);
+        $this->assertMatchesRegularExpression('/^APC-[A-Z0-9]{8}$/', $category->code);
+        $this->assertCount(0, $category->questions);
+    }
 }

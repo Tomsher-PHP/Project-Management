@@ -30,9 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (removeButton) {
-                removeButton.disabled = list.children.length === 1;
-                removeButton.classList.toggle('opacity-50', list.children.length === 1);
-                removeButton.classList.toggle('cursor-not-allowed', list.children.length === 1);
+                removeButton.disabled = false;
+                removeButton.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
     };
@@ -382,8 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return item;
     };
 
-    const setQuestions = (questions = ['']) => {
-        const normalized = questions.length ? questions : [''];
+    const setQuestions = (questions = []) => {
+        const normalized = Array.isArray(questions) ? questions : [];
 
         list.querySelectorAll('[data-appraisal-question-item]').forEach(destroyQuestionRowSelects);
         list.innerHTML = '';
@@ -449,17 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (removeTrigger) {
             event.preventDefault();
 
-            if (list.children.length === 1) {
-                const input = list.querySelector('input[name="questions[]"]');
-
-                if (input) {
-                    input.value = '';
-                    input.focus();
-                }
-
-                return;
-            }
-
             const item = removeTrigger.closest('[data-appraisal-question-item]');
 
             destroyQuestionRowSelects(item);
@@ -486,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 modal.querySelector('.modal-title').textContent = 'Create Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Save';
-                setQuestions(['']);
+                setQuestions([]);
                 setDefaultStatusState(false);
             }, 0);
             return;
@@ -519,14 +507,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.closest('#multi-step-modal .modal-close')) {
             modalOpenRequest += 1;
             window.setTimeout(() => {
-                setQuestions(['']);
+                setQuestions([]);
                 setDefaultStatusState(false);
             }, 0);
         }
     });
 
     document.addEventListener('ajax-form:rendered', () => {
-        setQuestions(['']);
+        setQuestions([]);
         setDefaultStatusState(false);
     });
 
@@ -647,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetDraggedItemState();
     });
 
-    setQuestions(['']);
+    setQuestions([]);
 });
 
 $(document).on('click', '.default-toggle', function () {

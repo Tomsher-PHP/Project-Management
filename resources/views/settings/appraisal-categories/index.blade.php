@@ -32,7 +32,7 @@
         </div>
 
         <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ $targetQuestionType }}" data-appraisal-question-units-url="{{ route('settings.appraisal.units') }}">
-            <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
+            <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions</label>
 
             <div class="mt-4 space-y-3" data-appraisal-question-list></div>
 
