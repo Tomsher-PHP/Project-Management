@@ -73,6 +73,20 @@ class AppraisalReviewCommentWorkflowTest extends TestCase
         $service->submitAnswers($appraisal, $this->answersFor($question->id, 5.0, 'Too late'), 'Changed after submit');
     }
 
+    public function test_rating_can_be_submitted_without_a_remark_and_accepts_zero(): void
+    {
+        [$appraisal, $question, $reporter] = $this->createReviewAppraisal('reporter');
+        $this->actingAs($reporter);
+
+        app(AppraisalService::class)->submitAnswers($appraisal, [[
+            'question_id' => $question->id,
+            'rating' => 0,
+            'remark' => null,
+        ]]);
+
+        $this->assertNotNull($appraisal->fresh()->reporter_submitted_at);
+    }
+
     private function createReviewAppraisal(string $role): array
     {
         $assignee = User::factory()->create();

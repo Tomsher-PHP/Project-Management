@@ -372,6 +372,37 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
+    const averageRatingsSummary = (row) => {
+        const contributors = Array.isArray(row.average_ratings) ? row.average_ratings : [];
+
+        if (!contributors.length) {
+            return '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
+        }
+
+        return `
+            <div class="space-y-1">
+                ${contributors.map((contributor) => {
+            const rawRating = contributor.average_rating;
+            const numericRating = rawRating !== null && rawRating !== undefined && rawRating !== ''
+                ? Number(rawRating)
+                : null;
+            const rating = numericRating !== null && Number.isFinite(numericRating)
+                ? `${escapeHtml(numericRating.toFixed(2))} / 5`
+                : '--';
+            const name = contributor.name || '--';
+            const roleLabel = contributor.role_label || '';
+
+            return `
+                        <div class="flex items-center justify-between gap-3 whitespace-nowrap text-xs" title="${escapeHtml(roleLabel)}">
+                            <span class="max-w-[120px] truncate font-medium text-bgray-700 dark:text-bgray-50">${escapeHtml(name)}</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white"><span class="text-warning-300">★</span> ${rating}</span>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+        `;
+    };
+
     const actionButton = (user) => {
         const action = !user.is_assigned ? 'assign' : (user.status === 'draft' ? 'edit' : 'view');
 
@@ -450,18 +481,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
             const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
-            const finalRating = row.final_rating !== null && row.final_rating !== undefined && row.final_rating !== ''
-                ? Number(row.final_rating)
-                : null;
             const kpiAgreement = row.kpi_agreed
                 ? `Agreed: ${escapeHtml(row.kpi_agreed_at || '--')}`
                 : 'Not Agreed';
             const completedDate = status === 'completed' && row.completed_at
                 ? `<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(row.completed_at)}</p>`
                 : '';
-            const finalRatingMarkup = finalRating === null
-                ? '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>'
-                : `<span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(finalRating.toFixed(2))} / 5</span>`;
             let action = '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';
 
             if (canAgree) {
@@ -490,13 +515,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
-                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage_label || '--')}</span>
+                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage || '--')}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         ${statusBadge(row)}
                         ${completedDate}
                     </td>
-                    <td class="px-4 py-4 xl:px-0">${finalRatingMarkup}</td>
+                    <td class="px-4 py-4 xl:pl-0 xl:pr-6">${averageRatingsSummary(row)}</td>
                     <td class="px-4 py-4 xl:px-0">${action}</td>
                 </tr>
             `;
@@ -834,6 +859,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-assignment-question-add>Add Question</button>
                 <button type="button" class="rounded-lg border border-red-200 bg-error-50 px-3 py-2 text-xs font-semibold text-error-300 transition disabled:cursor-not-allowed disabled:opacity-50 hover:bg-bgray-100 hover:text-red-500 dark:border-darkblack-400" data-appraisal-assignment-category-remove>Remove</button>
             `;
+        const bottomAddQuestionButton = readOnly
+            ? ''
+            : `
+                <div class="mt-3 flex justify-end">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-semibold text-success-400 transition hover:border-success-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-success-900/40 dark:bg-darkblack-600 dark:text-success-300" data-appraisal-assignment-question-add title="Add Question" aria-label="Add Question">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                </div>
+            `;
 
         return `
             <article class="rounded-xl border border-bgray-200 bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-assignment-category data-appraisal-template-source="${escapeHtml(categoryName)}">
@@ -849,6 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="space-y-3" data-appraisal-assignment-question-list>
                         ${questions.map((question) => questionRowMarkup(question, readOnly)).join('') || questionRowMarkup({ question: '', question_type: defaultQuestionType() }, readOnly)}
                     </div>
+                    ${bottomAddQuestionButton}
                 </div>
             </article>
         `;

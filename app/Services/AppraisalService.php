@@ -88,7 +88,7 @@ class AppraisalService
                 Appraisal::STATUS_DRAFT => Appraisal::STATUSES[Appraisal::STATUS_DRAFT],
                 Appraisal::STATUS_PUBLISHED => Appraisal::STATUSES[Appraisal::STATUS_PUBLISHED],
                 Appraisal::STATUS_COMPLETED => Appraisal::STATUSES[Appraisal::STATUS_COMPLETED],
-            ])->map(fn (string $name, string $id) => (object) compact('id', 'name'))->values(),
+            ])->map(fn(string $name, string $id) => (object) compact('id', 'name'))->values(),
             'statusOptions' => [
                 'Draft' => 'Draft',
                 'Published' => 'Published',
@@ -158,13 +158,13 @@ class AppraisalService
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'reviewers' => $appraisal
                     ? $appraisal->reviewers
-                        ->sortBy('level')
-                        ->map(fn (AppraisalReviewer $reviewer) => [
-                            'level' => $reviewer->level,
-                            'name' => $reviewer->reviewer?->name,
-                        ])
-                        ->values()
-                        ->all()
+                    ->sortBy('level')
+                    ->map(fn(AppraisalReviewer $reviewer) => [
+                        'level' => $reviewer->level,
+                        'name' => $reviewer->reviewer?->name,
+                    ])
+                    ->values()
+                    ->all()
                     : [],
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
@@ -233,7 +233,7 @@ class AppraisalService
                     'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                     'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
                     'current_stage' => $appraisal?->current_stage,
-                    'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
+                    'current_stage_label' => $appraisal?->current_stage,
                     'status' => $appraisal?->status,
                     'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : null,
                     'completed_at' => $this->formatDate($appraisal?->completed_at),
@@ -244,6 +244,7 @@ class AppraisalService
                     'assignee_average_rating' => $appraisal?->assignee_average_rating,
                     'reporter_average_rating' => $reporter?->average_rating,
                     'manager_average_rating' => $manager?->average_rating,
+                    'average_ratings' => $this->getContributorAverageRatings($appraisal),
                     'assignee_submitted_by_id' => $appraisal?->user_id,
                     'assignee_submitted_by_name' => $appraisal?->user?->name,
                     'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
@@ -269,7 +270,7 @@ class AppraisalService
         $month = (int) $data['month'];
         $year = (int) $data['year'];
         $status = $data['status'];
-        $userIds = collect($data['user_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $userIds = collect($data['user_ids'])->map(fn($id) => (int) $id)->unique()->values();
 
         $kpi = Kpi::query()
             ->active()
@@ -346,7 +347,7 @@ class AppraisalService
         $month = (int) $data['month'];
         $year = (int) $data['year'];
         $assignments = collect($data['assignments'])->keyBy('user_id');
-        $userIds = $assignments->keys()->map(fn ($id) => (int) $id)->values();
+        $userIds = $assignments->keys()->map(fn($id) => (int) $id)->values();
 
         $this->validateAssignableUsers($userIds, $month, $year);
 
@@ -366,7 +367,7 @@ class AppraisalService
         foreach ($assignments as $userId => $assignment) {
             $chainIds = $this->getReviewerChainUserIds((int) $userId);
             $reviewerIds = collect($assignment['reviewer_user_ids'])
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->values();
 
             if (
@@ -389,7 +390,7 @@ class AppraisalService
                 $appraisal->reviewers()->createMany(
                     collect($assignment['reviewer_user_ids'])
                         ->values()
-                        ->map(fn ($reviewerUserId, $index) => [
+                        ->map(fn($reviewerUserId, $index) => [
                             'reviewer_user_id' => (int) $reviewerUserId,
                             'role' => 'reporter',
                             'level' => $index + 1,
@@ -410,7 +411,7 @@ class AppraisalService
     {
         $month = (int) $data['month'];
         $year = (int) $data['year'];
-        $userIds = collect($data['user_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $userIds = collect($data['user_ids'])->map(fn($id) => (int) $id)->unique()->values();
 
         $accessibleUserIds = User::query()
             ->accessibleBy(auth()->user())
@@ -538,6 +539,7 @@ class AppraisalService
         DB::transaction(function () use ($appraisal) {
             $appraisal->update([
                 'kpi_agreed_at' => now(),
+                'current_stage' => 'Assignee',
             ]);
         });
 
@@ -584,9 +586,9 @@ class AppraisalService
             'id' => $appraisal->id,
             'role' => $role,
             'role_label' => $pendingAcknowledgement
-                ? 'Acknowledgement • Reviewer Level '.$pendingAcknowledgement->level
+                ? 'Acknowledgement • Reviewer Level ' . $pendingAcknowledgement->level
                 : ($role === 'reviewer'
-                    ? 'Reviewer Level '.($authenticatedReviewer?->level ?? '')
+                    ? 'Reviewer Level ' . ($authenticatedReviewer?->level ?? '')
                     : str($role)->headline()->toString()),
             'is_submitted' => $this->isRoleSubmitted($appraisal, $role),
             'current_reviewer_id' => $authenticatedReviewer?->id,
@@ -611,8 +613,10 @@ class AppraisalService
             'kpi_description' => $appraisal->kpi_description,
             'status' => $appraisal->status,
             'current_stage' => $appraisal->current_stage,
+            'assignee_average_rating' => $appraisal->assignee_average_rating,
+            'final_rating' => $appraisal->final_rating,
             'categories' => $appraisal->snapshotCategories
-                ->map(fn ($category) => [
+                ->map(fn($category) => [
                     'id' => $category->id,
                     'name' => $category->name,
                     'sort_order' => $category->sort_order,
@@ -660,17 +664,18 @@ class AppraisalService
                 ])
                 ->values()
                 ->all(),
-            'reviewers' => $reviewers->map(fn ($reviewer) => [
+            'reviewers' => $reviewers->map(fn($reviewer) => [
                 'id' => $reviewer->id,
                 'reviewer_user_id' => $reviewer->reviewer_user_id,
                 'name' => $reviewer->reviewer?->name,
                 'role' => $reviewer->role,
                 'level' => $reviewer->level,
+                'average_rating' => $reviewer->average_rating,
                 'submitted_at' => $reviewer->submitted_at?->toISOString(),
                 'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
                 'acknowledgement_remark' => $reviewer->acknowledgement_remark,
             ])->all(),
-            'comments' => $appraisal->comments->map(fn ($c) => [
+            'comments' => $appraisal->comments->map(fn($c) => [
                 'appraisal_reviewer_id' => $c->appraisal_reviewer_id,
                 'level' => $c->reviewer?->level,
                 'comment' => $c->comment,
@@ -705,7 +710,7 @@ class AppraisalService
         $this->validateReviewEditable($appraisal, $role);
 
         $snapshotQuestions = $appraisal->snapshotCategories
-            ->flatMap(fn ($category) => $category->questions)
+            ->flatMap(fn($category) => $category->questions)
             ->keyBy('id');
 
         DB::transaction(function () use ($appraisal, $answersData, $role, $snapshotQuestions, $overallComment) {
@@ -759,7 +764,7 @@ class AppraisalService
         $this->validateReviewEditable($appraisal, $role);
 
         $snapshotQuestions = $appraisal->snapshotCategories
-            ->flatMap(fn ($category) => $category->questions)
+            ->flatMap(fn($category) => $category->questions)
             ->keyBy('id');
 
         $submittedAnswers = collect($answersData)->keyBy('question_id');
@@ -777,22 +782,15 @@ class AppraisalService
 
             if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
                 $rating = $ans['rating'] ?? null;
-                $remark = $ans['remark'] ?? null;
 
-                if ($rating === null || ! is_numeric($rating) || $rating < 0.1 || $rating > 5.0) {
+                if ($rating === null || ! is_numeric($rating) || $rating < 0 || $rating > 5.0) {
                     throw ValidationException::withMessages([
-                        "answers.{$index}.rating" => 'All ratings must be numeric between 0.1 and 5.0.',
+                        "answers.{$index}.rating" => 'All ratings must be numeric between 0 and 5.',
                     ]);
                 }
                 if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
                     throw ValidationException::withMessages([
                         "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
-                    ]);
-                }
-
-                if ($remark === null || blank(trim((string) $remark))) {
-                    throw ValidationException::withMessages([
-                        "answers.{$index}.remark" => 'Remarks cannot be empty.',
                     ]);
                 }
             } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
@@ -846,10 +844,15 @@ class AppraisalService
             if ($role === 'assignee') {
                 $nextReviewer = $appraisal->reviewers->sortBy('level')->first();
                 $notificationRecipientId = (int) ($nextReviewer?->reviewer_user_id ?? 0);
+                $appraisal->current_stage = $this->reviewerStage($nextReviewer);
             } elseif ($role === 'reviewer') {
                 $reviewer = $this->authenticatedReviewer($appraisal);
-                $reviewer?->update(['submitted_at' => $now]);
-                $appraisal->current_stage = 'acknowledgement';
+                $reviewer->update(['submitted_at' => $now]);
+                $nextReviewer = $appraisal->reviewers
+                    ->where('level', '>', $reviewer->level)
+                    ->sortBy('level')
+                    ->first();
+                $appraisal->current_stage = $this->reviewerStage($nextReviewer);
             }
 
             $appraisal->save();
@@ -939,9 +942,7 @@ class AppraisalService
 
             if ($nextReviewer) {
                 $appraisal->update([
-                    'current_stage' => filled($nextReviewer->submitted_at)
-                        ? 'acknowledgement'
-                        : 'reviewer_level_'.$nextReviewer->level,
+                    'current_stage' => $this->reviewerStage($nextReviewer),
                 ]);
 
                 return;
@@ -950,7 +951,7 @@ class AppraisalService
             $appraisal->update([
                 'status' => Appraisal::STATUS_COMPLETED,
                 'completed_at' => now(),
-                'current_stage' => Appraisal::STATUS_COMPLETED,
+                'current_stage' => $this->reviewerStage(null),
                 'final_rating' => $reviewer->average_rating,
             ]);
         });
@@ -984,35 +985,9 @@ class AppraisalService
         return $date ? \App\Providers\AppServiceProvider::formatAppDate($date) : null;
     }
 
-    private function getCurrentStageLabel(?Appraisal $appraisal, $assigneeSubmittedAt = null): ?string
+    private function reviewerStage(?AppraisalReviewer $reviewer): string
     {
-        if (! $appraisal) {
-            return null;
-        }
-
-        if ($appraisal->status === Appraisal::STATUS_COMPLETED) {
-            return 'Completed';
-        }
-
-        if (blank($appraisal->kpi_agreed_at)) {
-            return 'KPI Agreement';
-        }
-
-        if (blank($assigneeSubmittedAt)) {
-            return 'Assignee';
-        }
-
-        if (filled($appraisal->current_stage)) {
-            return str($appraisal->current_stage)->replace('_', ' ')->headline()->toString();
-        }
-
-        $nextReviewer = $appraisal->reviewers
-            ->sortBy('level')
-            ->first(fn (AppraisalReviewer $reviewer) => blank($reviewer->submitted_at));
-
-        return $nextReviewer
-            ? 'Reviewer Level '.$nextReviewer->level
-            : 'Completed';
+        return $reviewer ? 'Reviewer Level ' . $reviewer->level : 'Completed';
     }
 
     public function saveComment(Appraisal $appraisal, string $comment): AppraisalComment
@@ -1153,38 +1128,38 @@ class AppraisalService
         $appraisal->loadMissing('reviewers');
 
         return $appraisal->reviewers->first(
-            fn (AppraisalReviewer $reviewer) => (int) $reviewer->reviewer_user_id === (int) auth()->id()
+            fn(AppraisalReviewer $reviewer) => (int) $reviewer->reviewer_user_id === (int) auth()->id()
         );
     }
 
     private function isAssigneeSubmitted(Appraisal $appraisal): bool
     {
         $hasLoadedWorkflowData = $appraisal->relationLoaded('snapshotCategories')
-            && $appraisal->snapshotCategories->every(fn ($category) => $category->relationLoaded('questions'))
+            && $appraisal->snapshotCategories->every(fn($category) => $category->relationLoaded('questions'))
             && $appraisal->relationLoaded('answers');
 
         if ($hasLoadedWorkflowData) {
             $questionIds = $appraisal->snapshotCategories
-                ->flatMap(fn ($category) => $category->questions)
+                ->flatMap(fn($category) => $category->questions)
                 ->pluck('id');
 
             return $questionIds->isNotEmpty()
                 && $appraisal->answers
-                    ->whereIn('appraisal_snapshot_question_id', $questionIds)
-                    ->whereNotNull('submitted_at')
-                    ->count() === $questionIds->count();
+                ->whereIn('appraisal_snapshot_question_id', $questionIds)
+                ->whereNotNull('submitted_at')
+                ->count() === $questionIds->count();
         }
 
         $questionIds = AppraisalSnapshotQuestion::query()
-            ->whereHas('category', fn ($query) => $query->where('appraisal_id', $appraisal->id))
+            ->whereHas('category', fn($query) => $query->where('appraisal_id', $appraisal->id))
             ->pluck('id');
 
         return $questionIds->isNotEmpty()
             && AppraisalAnswer::query()
-                ->where('appraisal_id', $appraisal->id)
-                ->whereIn('appraisal_snapshot_question_id', $questionIds)
-                ->whereNotNull('submitted_at')
-                ->count() === $questionIds->count();
+            ->where('appraisal_id', $appraisal->id)
+            ->whereIn('appraisal_snapshot_question_id', $questionIds)
+            ->whereNotNull('submitted_at')
+            ->count() === $questionIds->count();
     }
 
     private function reviewerCanAnswer(Appraisal $appraisal): bool
@@ -1197,7 +1172,7 @@ class AppraisalService
 
         return $appraisal->reviewers
             ->where('level', '<', $reviewer->level)
-            ->every(fn (AppraisalReviewer $previousReviewer) => filled($previousReviewer->acknowledged_at));
+            ->every(fn(AppraisalReviewer $previousReviewer) => filled($previousReviewer->acknowledged_at));
     }
 
     private function pendingAcknowledgementReviewer(Appraisal $appraisal): ?AppraisalReviewer
@@ -1304,11 +1279,11 @@ class AppraisalService
             'published_at' => $appraisal->published_at?->format('M d, Y h:i A'),
             'reviewer_assignment' => $this->formatReviewerAssignment($appraisal),
             'categories' => $appraisal->snapshotCategories
-                ->map(fn ($category) => [
+                ->map(fn($category) => [
                     'name' => $category->name,
                     'sort_order' => $category->sort_order,
                     'questions' => $category->questions
-                        ->map(fn ($question) => [
+                        ->map(fn($question) => [
                             'question' => $question->question,
                             'question_type' => $question->question_type ?? AppraisalQuestion::QUESTION_TYPE_RATING,
                             'measurement_type' => $question->measurement_type,
@@ -1360,9 +1335,9 @@ class AppraisalService
             ->keyBy('user_id');
 
         return collect($userIds)
-            ->map(fn ($userId) => $appraisals->get((int) $userId))
+            ->map(fn($userId) => $appraisals->get((int) $userId))
             ->filter()
-            ->map(fn (Appraisal $appraisal) => $this->formatReviewerAssignment($appraisal))
+            ->map(fn(Appraisal $appraisal) => $this->formatReviewerAssignment($appraisal))
             ->values()
             ->all();
     }
@@ -1383,9 +1358,9 @@ class AppraisalService
                 'email' => $appraisal->user?->email,
             ],
             'available_reviewers' => $chainIds
-                ->map(fn ($id) => $chainUsers->get($id))
+                ->map(fn($id) => $chainUsers->get($id))
                 ->filter()
-                ->map(fn (User $user) => [
+                ->map(fn(User $user) => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
@@ -1394,7 +1369,7 @@ class AppraisalService
                 ->all(),
             'reviewers' => $appraisal->reviewers
                 ->sortBy('level')
-                ->map(fn (AppraisalReviewer $reviewer) => [
+                ->map(fn(AppraisalReviewer $reviewer) => [
                     'id' => $reviewer->id,
                     'reviewer_user_id' => $reviewer->reviewer_user_id,
                     'role' => $reviewer->role,
@@ -1410,17 +1385,17 @@ class AppraisalService
     private function getReviewerChainUserIds(int $userId)
     {
         $chainIds = collect(User::getReporterChainUserIds($userId))
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->unique()
             ->values();
         $existingIds = User::query()
             ->whereIn('id', $chainIds)
             ->pluck('id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->flip();
 
         return $chainIds
-            ->filter(fn ($id) => $existingIds->has($id))
+            ->filter(fn($id) => $existingIds->has($id))
             ->values();
     }
 
@@ -1447,7 +1422,7 @@ class AppraisalService
 
         if ($lockedUsers->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'user_ids' => 'Only draft appraisals can be updated: '.$lockedUsers->pluck('user.name')->filter()->join(', '),
+                'user_ids' => 'Only draft appraisals can be updated: ' . $lockedUsers->pluck('user.name')->filter()->join(', '),
             ]);
         }
     }
@@ -1502,7 +1477,7 @@ class AppraisalService
             ->active()
             ->orderBy('name')
             ->get(['id', 'name', 'description'])
-            ->map(fn (Kpi $kpi) => [
+            ->map(fn(Kpi $kpi) => [
                 'id' => $kpi->id,
                 'name' => $kpi->name,
                 'description' => $kpi->description,
@@ -1515,16 +1490,16 @@ class AppraisalService
     {
         return AppraisalCategory::query()
             ->active()
-            ->with(['questions' => fn ($query) => $query->active()->orderBy('sort_order')])
+            ->with(['questions' => fn($query) => $query->active()->orderBy('sort_order')])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
-            ->map(fn (AppraisalCategory $category) => [
+            ->map(fn(AppraisalCategory $category) => [
                 'name' => $category->name,
                 'sort_order' => $category->sort_order,
                 'is_default' => $category->is_default,
                 'questions' => $category->questions
-                    ->map(fn ($question) => [
+                    ->map(fn($question) => [
                         'question' => $question->question,
                         'question_type' => $question->question_type,
                         'measurement_type' => $question->measurement_type,
@@ -1535,7 +1510,7 @@ class AppraisalService
                     ->values()
                     ->all(),
             ])
-            ->filter(fn ($category) => count($category['questions']) > 0)
+            ->filter(fn($category) => count($category['questions']) > 0)
             ->values()
             ->all();
     }
@@ -1561,7 +1536,7 @@ class AppraisalService
     private function getMonths(): array
     {
         return collect(range(1, 12))
-            ->mapWithKeys(fn ($month) => [$month => Carbon::create(null, $month, 1)->format('F')])
+            ->mapWithKeys(fn($month) => [$month => Carbon::create(null, $month, 1)->format('F')])
             ->all();
     }
 
@@ -1571,7 +1546,7 @@ class AppraisalService
         $end = now()->year + 1;
 
         return collect(range(min($start, $selectedYear), max($end, $selectedYear)))
-            ->mapWithKeys(fn ($year) => [$year => $year])
+            ->mapWithKeys(fn($year) => [$year => $year])
             ->all();
     }
 
@@ -1585,8 +1560,8 @@ class AppraisalService
             ->accessibleBy($user)
             ->pluck('users.id')
             ->push($user->id)
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn (int $id) => $id > 0)
+            ->map(fn($id) => (int) $id)
+            ->filter(fn(int $id) => $id > 0)
             ->unique()
             ->values()
             ->all();
@@ -1673,7 +1648,7 @@ class AppraisalService
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'categories_count' => $appraisal?->snapshot_categories_count ?? 0,
                 'current_stage' => $appraisal?->current_stage,
-                'current_stage_label' => $this->getCurrentStageLabel($appraisal, $assigneeSubmittedAt),
+                'current_stage_label' => $appraisal?->current_stage,
                 'status' => $appraisal?->status,
                 'status_label' => $appraisal ? str($appraisal->status)->headline()->toString() : 'Not Assigned',
                 'completed_at' => $this->formatDate($appraisal?->completed_at),
@@ -1684,6 +1659,7 @@ class AppraisalService
                 'assignee_average_rating' => $appraisal?->assignee_average_rating,
                 'reporter_average_rating' => $reporter?->average_rating,
                 'manager_average_rating' => $manager?->average_rating,
+                'average_ratings' => $this->getContributorAverageRatings($appraisal),
                 'assignee_submitted_by_id' => $appraisal?->user_id,
                 'assignee_submitted_by_name' => $appraisal?->user?->name,
                 'reporter_submitted_by_id' => $reporter?->reviewer_user_id,
@@ -1699,6 +1675,30 @@ class AppraisalService
         });
 
         return $paginator;
+    }
+
+    private function getContributorAverageRatings(?Appraisal $appraisal): array
+    {
+        if (! $appraisal) {
+            return [];
+        }
+
+        return collect([[
+            'name' => $appraisal->user?->name,
+            'role_label' => 'Assignee',
+            'average_rating' => $appraisal->assignee_average_rating,
+        ]])
+            ->concat(
+                $appraisal->reviewers
+                    ->sortBy('level')
+                    ->map(fn(AppraisalReviewer $reviewer) => [
+                        'name' => $reviewer->reviewer?->name,
+                        'role_label' => 'Reviewer L' . $reviewer->level,
+                        'average_rating' => $reviewer->average_rating,
+                    ])
+            )
+            ->values()
+            ->all();
     }
 
     private function getMyAppraisalSummary(Request $request, int $month, int $year): array
@@ -1726,7 +1726,7 @@ class AppraisalService
             [
                 'key' => 'need_action',
                 'label' => 'Need Action',
-                'count' => $appraisals->filter(fn (Appraisal $appraisal) => $this->appraisalRequiresAction($appraisal))->count(),
+                'count' => $appraisals->filter(fn(Appraisal $appraisal) => $this->appraisalRequiresAction($appraisal))->count(),
                 'accent' => 'text-warning-300 dark:text-warning-200',
             ],
             [
@@ -1739,7 +1739,7 @@ class AppraisalService
                 'key' => 'completed',
                 'label' => 'Completed',
                 'count' => $appraisals->where('status', Appraisal::STATUS_COMPLETED)->count(),
-                'accent' => 'text-success-500 dark:text-success-300',
+                'accent' => 'text-success-300 dark:text-success-300',
             ],
         ];
     }
@@ -1757,7 +1757,7 @@ class AppraisalService
         ];
         $statusFilters = collect($request->input('my_status', []))
             ->flatten()
-            ->map(fn ($status) => strtolower((string) $status))
+            ->map(fn($status) => strtolower((string) $status))
             ->intersect($allowedStatuses)
             ->unique()
             ->values()
@@ -1880,13 +1880,13 @@ class AppraisalService
                 'questions_count' => $appraisal?->snapshot_questions_count ?? 0,
                 'reviewers' => $appraisal
                     ? $appraisal->reviewers
-                        ->sortBy('level')
-                        ->map(fn (AppraisalReviewer $reviewer) => [
-                            'level' => $reviewer->level,
-                            'name' => $reviewer->reviewer?->name,
-                        ])
-                        ->values()
-                        ->all()
+                    ->sortBy('level')
+                    ->map(fn(AppraisalReviewer $reviewer) => [
+                        'level' => $reviewer->level,
+                        'name' => $reviewer->reviewer?->name,
+                    ])
+                    ->values()
+                    ->all()
                     : [],
                 'avatar_html' => \Illuminate\Support\Facades\Blade::render('<x-user-avatar :user="$user" size="md" />', ['user' => $user]),
             ];
@@ -1900,8 +1900,8 @@ class AppraisalService
         $appraisal->load(['snapshotCategories.questions', 'answers.reviews', 'reviewers']);
 
         $ratingQuestionIds = $appraisal->snapshotCategories
-            ->flatMap(fn ($category) => $category->questions)
-            ->filter(fn ($question) => ($question->question_type ?? 'rating') === 'rating')
+            ->flatMap(fn($category) => $category->questions)
+            ->filter(fn($question) => ($question->question_type ?? 'rating') === 'rating')
             ->pluck('id')
             ->toArray();
 
@@ -1918,19 +1918,18 @@ class AppraisalService
         $answers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
 
         // 1. Assignee average
-        $assigneeRatings = $answers->pluck('rating')->filter(fn ($r) => $r !== null);
+        $assigneeRatings = $answers->pluck('rating')->filter(fn($r) => $r !== null);
         $assigneeAvg = $assigneeRatings->isNotEmpty() ? round($assigneeRatings->average(), 2) : null;
 
         $appraisal->reviewers->each(function (AppraisalReviewer $reviewer) use ($answers) {
             $ratings = $answers
-                ->flatMap(fn (AppraisalAnswer $answer) => $answer->reviews)
+                ->flatMap(fn(AppraisalAnswer $answer) => $answer->reviews)
                 ->where('appraisal_reviewer_id', $reviewer->id)
                 ->pluck('rating')
-                ->filter(fn ($rating) => $rating !== null);
+                ->filter(fn($rating) => $rating !== null);
             $average = $ratings->isNotEmpty() ? round($ratings->average(), 2) : null;
 
             $reviewer->update(['average_rating' => $average]);
-
         });
 
         $appraisal->update([
