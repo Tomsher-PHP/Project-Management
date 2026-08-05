@@ -30,8 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (removeButton) {
-                removeButton.disabled = false;
-                removeButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                removeButton.disabled = list.children.length === 1;
+                removeButton.classList.toggle('opacity-50', list.children.length === 1);
+                removeButton.classList.toggle('cursor-not-allowed', list.children.length === 1);
             }
         });
     };
@@ -381,8 +382,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return item;
     };
 
-    const setQuestions = (questions = []) => {
-        const normalized = Array.isArray(questions) ? questions : [];
+    const setQuestions = (questions = ['']) => {
+        const parsed = Array.isArray(questions) ? questions : [];
+        const normalized = parsed.length > 0 ? parsed : [''];
 
         list.querySelectorAll('[data-appraisal-question-item]').forEach(destroyQuestionRowSelects);
         list.innerHTML = '';
@@ -448,6 +450,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (removeTrigger) {
             event.preventDefault();
 
+            if (list.children.length === 1) {
+                const item = list.children[0];
+                const input = item.querySelector('input[name="questions[]"]');
+                const idInput = item.querySelector('[data-appraisal-question-id]');
+                if (input) input.value = '';
+                if (idInput) idInput.value = '';
+                item.querySelectorAll('[data-appraisal-target-value]').forEach(el => { el.value = ''; });
+                return;
+            }
+
             const item = removeTrigger.closest('[data-appraisal-question-item]');
 
             destroyQuestionRowSelects(item);
@@ -474,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 modal.querySelector('.modal-title').textContent = 'Create Appraisal Category';
                 modal.querySelector('.submit-btn').textContent = 'Save';
-                setQuestions([]);
+                setQuestions(['']);
                 setDefaultStatusState(false);
             }, 0);
             return;
@@ -507,14 +519,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.closest('#multi-step-modal .modal-close')) {
             modalOpenRequest += 1;
             window.setTimeout(() => {
-                setQuestions([]);
+                setQuestions(['']);
                 setDefaultStatusState(false);
             }, 0);
         }
     });
 
     document.addEventListener('ajax-form:rendered', () => {
-        setQuestions([]);
+        setQuestions(['']);
         setDefaultStatusState(false);
     });
 
@@ -635,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetDraggedItemState();
     });
 
-    setQuestions([]);
+    setQuestions(['']);
 });
 
 $(document).on('click', '.default-toggle', function () {
