@@ -22,12 +22,28 @@ class AppraisalSettingsService
     public function createCategory(array $data): AppraisalCategory
     {
         return DB::transaction(function () use ($data) {
-            $appraisalCategory = AppraisalCategory::create([
-                'name' => $data['name'],
-                'sort_order' => (int) (AppraisalCategory::max('sort_order') + 1),
-                'is_active' => true,
-                'is_default' => (bool) ($data['is_default'] ?? false),
-            ]);
+            $attempts = 0;
+            $maxAttempts = 3;
+            $appraisalCategory = null;
+
+            while ($attempts < $maxAttempts) {
+                try {
+                    $attempts++;
+                    $appraisalCategory = new AppraisalCategory([
+                        'name' => $data['name'],
+                        'sort_order' => (int) (AppraisalCategory::max('sort_order') + 1),
+                        'is_active' => true,
+                        'is_default' => (bool) ($data['is_default'] ?? false),
+                    ]);
+                    $appraisalCategory->save();
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($attempts >= $maxAttempts || ! $this->isDuplicateKeyException($e)) {
+                        throw $e;
+                    }
+                    $appraisalCategory->code = null;
+                }
+            }
 
             $questions = collect($data['questions'] ?? [])
                 ->map(fn (array $question) => [
@@ -159,5 +175,17 @@ class AppraisalSettingsService
         $appraisalCategory->save();
 
         return $appraisalCategory;
+    }
+
+    private function isDuplicateKeyException(\Illuminate\Database\QueryException $e): bool
+    {
+        $errorCode = $e->errorInfo[1] ?? null;
+        $sqlState = $e->errorInfo[0] ?? null;
+        $message = $e->getMessage();
+
+        return $sqlState === '23000'
+            || in_array($errorCode, [1062, 19, 2067, 23505], true)
+            || str_contains(strtolower($message), 'unique constraint failed')
+            || str_contains(strtolower($message), 'duplicate entry');
     }
 }
