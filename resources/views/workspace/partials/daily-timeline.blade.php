@@ -24,7 +24,7 @@
                 </div>
             @elseif (!empty($workspaceGreetingLabel))
                 <div>
-                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-success-400 dark:text-bgray-50">{{ $workspaceGreetingLabel }}</h2>
+                    <h2 class="text-[25px] font-extrabold leading-tight tracking-normal text-success-400 dark:text-success-300">{{ $workspaceGreetingLabel }} 👋</h2>
                     @if (!empty($workspaceGreetingDayName))
                         <p class="mt-1 text-sm font-semibold text-[#6b7280] dark:text-bgray-300">{{ $workspaceGreetingDayName }}</p>
                     @endif
@@ -108,15 +108,11 @@
                 @foreach ($workedTaskSegments ?? [] as $segment)
                     @php
                         $hasPendingTimeLogChangeRequest = !empty($segment['has_pending_time_log_change_request']);
-                        $canRequestOwnTimeLogChange = empty($workspaceTimelineShowsUser)
-                            && !empty($segment['can_request_time_log_change']);
-                        $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work'
-                            . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '')
-                            . ($canRequestOwnTimeLogChange ? ' modal-open' : ''));
+                        $canRequestOwnTimeLogChange = empty($workspaceTimelineShowsUser) && !empty($segment['can_request_time_log_change']);
+                        $workSegmentClasses = trim('daily-timeline__segment daily-timeline__segment--work' . ($hasPendingTimeLogChangeRequest ? ' daily-timeline__segment--work-request-pending' : '') . ($canRequestOwnTimeLogChange ? ' modal-open' : ''));
                     @endphp
                     <button type="button" class="{{ $workSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $hasPendingTimeLogChangeRequest ? 'Pending time change request | ' : '' }}{{ $segment['task_name'] }} | {{ $segment['start_label'] }} - {{ $segment['end_label'] }} | {{ $segment['duration_label'] }}" aria-label="{{ $segment['task_name'] }} {{ $segment['duration_label'] }}{{ $hasPendingTimeLogChangeRequest ? ' pending time change request' : '' }}"
-                        @if ($canRequestOwnTimeLogChange)
-                            data-target="#timeLogChangeRequestModal"
+                        @if ($canRequestOwnTimeLogChange) data-target="#timeLogChangeRequestModal"
                             data-time-log-change-request-open
                             data-task_id="{{ $segment['task_id'] }}"
                             data-task_time_log_id="{{ $segment['task_time_log_id'] }}"
@@ -129,9 +125,7 @@
                             @if ($hasPendingTimeLogChangeRequest)
                                 data-time_log_change_request_id="{{ $segment['pending_change_request_id'] }}"
                                 data-time_log_change_request_update_url="{{ $segment['pending_change_request_update_url'] }}"
-                                data-time_log_change_request_reason="{{ $segment['pending_reason'] }}"
-                            @endif
-                        @endif>
+                                data-time_log_change_request_reason="{{ $segment['pending_reason'] }}" @endif @endif>
                     </button>
                 @endforeach
                 <!-- Worked Task End-->
@@ -150,8 +144,7 @@
                         $originalBreakEnd = $isPendingBreakRequest ? $segment['original_break_end_label'] ?? $segment['end_label'] : $segment['end_label'];
                         $originalBreakDuration = $isPendingBreakRequest ? (int) ($segment['original_break_duration_seconds'] ?? $breakDurationSeconds) : $breakDurationSeconds;
                     @endphp
-                    <button type="button" class="{{ $breakSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}"
-                        @if ($isBreakRequestAllowed) data-break-work-request-trigger
+                    <button type="button" class="{{ $breakSegmentClasses }}" style="left: calc({{ $segment['left'] }}% + 0px); width: calc({{ $segment['width'] }}% - 0px);" data-tooltip-label="{{ $segment['tooltip_label'] }}" aria-label="Break {{ $segment['start_label'] }} {{ $segment['end_label'] }} {{ $segment['duration_label'] }}" @if ($isBreakRequestAllowed) data-break-work-request-trigger
                             data-break-request-mode="{{ $breakRequestMode }}"
                             data-break-date="{{ $selectedDateValue }}"
                             data-break-date-label="{{ $selectedDateLabel }}"
@@ -163,8 +156,7 @@
                                 data-break-request-update-url="{{ $segment['pending_break_request_update_url'] }}"
                                 data-break-request-start="{{ $segment['pending_break_request_start_label'] }}"
                                 data-break-request-end="{{ $segment['pending_break_request_end_label'] }}"
-                                data-break-request-description="{{ $segment['pending_break_request_description'] }}" @endif
-                        @endif>
+                                data-break-request-description="{{ $segment['pending_break_request_description'] }}" @endif @endif>
                     </button>
                 @endforeach
                 <!-- Break End-->
