@@ -38,35 +38,35 @@
                     <div class="table-content w-full overflow-x-auto">
                         <table class="w-full">
                             <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                <td class="">
+                                <td class="py-4 pl-4 pr-3 whitespace-nowrap">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">#</span>
                                 </td>
-                                <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
+                                <td class="px-4 py-4 min-w-[260px] lg:min-w-[280px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <x-sorting.sortable-column column="name" label="Name" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-4 py-4 whitespace-nowrap min-w-[140px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Department</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-4 py-4 whitespace-nowrap min-w-[140px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Designation</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-4 py-4 whitespace-nowrap min-w-[150px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Phone</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-4 py-4 whitespace-nowrap min-w-[165px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="py-4 pl-4 pr-4 whitespace-nowrap min-w-[120px]">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
                                     </div>
@@ -77,22 +77,23 @@
                             @endphp
                             @forelse ($users as $key => $user)
                                 <tr class="border-b border-bgray-300 dark:border-darkblack-400 {{ config('assets.classes.table_row_hover') }}">
-                                    <td class="px-6 py-5 xl:px-0">
+                                    <td class="py-4 pl-4 pr-3 whitespace-nowrap">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $startNumber + $loop->iteration }}</span>
                                     </td>
-                                    <td class="px-6 py-5 xl:px-0">
-                                        <div class="flex items-center gap-5">
-                                            <x-user-avatar :user="$user" class="h-[64px] w-[64px] text-xl" />
-                                            <div class="flex-1">
-                                                <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
+                                    <td class="px-4 py-4 min-w-[260px] lg:min-w-[280px]">
+                                        <div class="flex items-center gap-4">
+                                            <x-user-avatar :user="$user" class="h-12 w-12 shrink-0 text-lg sm:h-[64px] sm:w-[64px] sm:text-xl" />
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="text-base font-bold text-bgray-900 dark:text-white sm:text-lg">
                                                     <a href="{{ route('users.show', $user->id) }}" class="transition hover:text-success-400">
                                                         {{ $user->name }}
                                                     </a>
                                                 </h4>
-                                                <div class="flex flex-col">
-                                                    <span class="text-base font-medium text-bgray-700 dark:text-bgray-50">Role: {{ $user->role_name }}</span>
-                                                    <span class="inline-flex max-w-full items-center gap-1.5 text-gray-500 dark:text-bgray-50">
-                                                        <span>Email:</span>
+                                                <div class="flex flex-col gap-0.5">
+                                                    <span class="text-sm font-medium text-bgray-700 dark:text-bgray-50 sm:text-base">Role:
+                                                        {{ $user->role_name }}</span>
+                                                    <div class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-bgray-50 sm:text-sm">
+                                                        <span class="shrink-0">Email:</span>
                                                         @if (filled($user->email))
                                                             <a href="mailto:{{ $user->email }}" class="break-all transition hover:text-success-400">{{ $user->email }}</a>
                                                             <button type="button" class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" onclick="copyProfileEmail(event, @js($user->email))" aria-label="Copy user email" title="Copy email">
@@ -104,7 +105,7 @@
                                                         @else
                                                             <span>--</span>
                                                         @endif
-                                                    </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
