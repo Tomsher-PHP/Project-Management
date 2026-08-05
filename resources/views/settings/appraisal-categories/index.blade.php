@@ -32,9 +32,11 @@
         </div>
 
         <div class="md:col-span-2" data-appraisal-question-builder data-appraisal-target-question-type="{{ $targetQuestionType }}" data-appraisal-question-units-url="{{ route('settings.appraisal.units') }}">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
+            <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Questions <x-red-star /></label>
 
+            <div class="mt-4 space-y-3" data-appraisal-question-list></div>
+
+            <div class="mt-4 flex justify-end">
                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-question-add>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -42,8 +44,6 @@
                     <span>Add Question</span>
                 </button>
             </div>
-
-            <div class="mt-4 space-y-3" data-appraisal-question-list></div>
 
             <template id="appraisal-question-template">
                 <div class="rounded-xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500" data-appraisal-question-item>
