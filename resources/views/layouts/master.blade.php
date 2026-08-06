@@ -34,12 +34,12 @@
     @stack('styles')
 </head>
 
-<body>
+<body class="bg-white dark:bg-darkblack-700 min-h-screen">
     <!-- Page Loader -->
     <x-page-loader />
 
     <!-- layout start -->
-    <div id="layout-wrapper" class="layout-wrapper active w-full">
+    <div id="layout-wrapper" class="layout-wrapper active w-full min-h-screen bg-white dark:bg-darkblack-700">
         <script>
             (function() {
                 if (localStorage.getItem('sidebar_state') === 'collapsed') {
@@ -47,7 +47,7 @@
                 }
             })();
         </script>
-        <div class="relative flex w-full">
+        <div class="relative flex w-full min-h-screen bg-white dark:bg-darkblack-700">
 
             @include('layouts.sidebar')
 
@@ -55,7 +55,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-clip dark:bg-darkblack-700 h-[100vh]">
+            <div class="body-wrapper flex-1 overflow-x-clip dark:bg-darkblack-700 min-h-screen">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')

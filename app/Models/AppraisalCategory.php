@@ -28,9 +28,28 @@ class AppraisalCategory extends Model
 
     protected $searchable = ['name'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (AppraisalCategory $category) {
+            if (empty($category->code) || static::withTrashed()->where('code', $category->code)->exists()) {
+                $category->code = static::generateUniqueCode();
+            }
+        });
+    }
+
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = 'APC-' . strtoupper(\Illuminate\Support\Str::random(8));
+        } while (static::withTrashed()->where('code', $code)->exists());
+
+        return $code;
+    }
+
     protected function casts(): array
     {
         return [
+            'code' => 'string',
             'name' => 'string',
             'sort_order' => 'integer',
             'is_system' => 'boolean',
@@ -47,5 +66,10 @@ class AppraisalCategory extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeByCode($query, string $code)
+    {
+        return $query->where('code', trim($code));
     }
 }

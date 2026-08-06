@@ -261,6 +261,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.view')->only(['index']);
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.create')->only(['store']);
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);
+        Route::post('/appraisal/import-questions', [AppraisalCategoryController::class, 'importQuestions'])->middleware('permission.type:appraisal_settings.create')->name('appraisal.importQuestions');
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
         // End appraisal categories routes
     });

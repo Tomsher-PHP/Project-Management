@@ -383,7 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setQuestions = (questions = ['']) => {
-        const normalized = questions.length ? questions : [''];
+        const parsed = Array.isArray(questions) ? questions : [];
+        const normalized = parsed.length > 0 ? parsed : [''];
 
         list.querySelectorAll('[data-appraisal-question-item]').forEach(destroyQuestionRowSelects);
         list.innerHTML = '';
@@ -450,13 +451,12 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             if (list.children.length === 1) {
-                const input = list.querySelector('input[name="questions[]"]');
-
-                if (input) {
-                    input.value = '';
-                    input.focus();
-                }
-
+                const item = list.children[0];
+                const input = item.querySelector('input[name="questions[]"]');
+                const idInput = item.querySelector('[data-appraisal-question-id]');
+                if (input) input.value = '';
+                if (idInput) idInput.value = '';
+                item.querySelectorAll('[data-appraisal-target-value]').forEach(el => { el.value = ''; });
                 return;
             }
 
