@@ -553,12 +553,57 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     form.addEventListener('submit', (event) => {
-        if (validateTargetQuestions()) {
+        if (!validateTargetQuestions()) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
             return;
         }
 
-        event.preventDefault();
-        event.stopImmediatePropagation();
+        const questionsArray = [];
+        list.querySelectorAll('[data-appraisal-question-item]').forEach((item) => {
+            const idInput = item.querySelector('[data-appraisal-question-id]');
+            const questionInput = item.querySelector('input[name="questions[]"]');
+            const typeSelect = item.querySelector('[data-appraisal-question-type]');
+            const measurementSelect = item.querySelector('[data-appraisal-measurement-type]');
+            const targetInput = item.querySelector('[data-appraisal-target-value]');
+            const unitSelect = item.querySelector('[data-appraisal-unit]');
+            const activeInput = item.querySelector('[data-appraisal-question-active-input]');
+
+            const unitValue = unitSelect?.tomselect?.getValue() ?? unitSelect?.value ?? '';
+
+            questionsArray.push({
+                id: idInput?.value || null,
+                question: questionInput?.value || '',
+                question_type: typeSelect?.value || 'rating',
+                measurement_type: measurementSelect?.value || null,
+                target_value: targetInput?.value || null,
+                unit: unitValue || null,
+                is_active: activeInput ? activeInput.value === '1' : true,
+            });
+        });
+
+        console.log('Selected questions count:', questionsArray.length);
+        console.log('Question IDs before sending:', questionsArray.map((q) => q.id).filter(Boolean));
+
+        let jsonInput = form.querySelector('input[name="questions_json"]');
+        if (!jsonInput) {
+            jsonInput = document.createElement('input');
+            jsonInput.type = 'hidden';
+            jsonInput.name = 'questions_json';
+            form.appendChild(jsonInput);
+        }
+        jsonInput.value = JSON.stringify(questionsArray);
+
+        const rowInputs = list.querySelectorAll('input, select');
+        rowInputs.forEach((el) => {
+            el.disabled = true;
+        });
+
+        setTimeout(() => {
+            rowInputs.forEach((el) => {
+                el.disabled = false;
+            });
+        }, 0);
     }, true);
 
     list.addEventListener('mousedown', function (event) {

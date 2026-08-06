@@ -418,8 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user.status === 'published') {
             return `
                 <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
-                    <button type="button" class="rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="view" data-appraisal-id="${escapeHtml(user.appraisal_id)}">View</button>
-                    <button type="button" class="rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-1.5 text-xs font-semibold text-warning-600 transition hover:border-warning-300 dark:border-warning-900/40 dark:bg-darkblack-500 dark:text-warning-300" data-appraisal-row-action="unpublish" data-appraisal-id="${escapeHtml(user.appraisal_id)}">Unpublish</button>
+                    <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-300 transition hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="view" data-appraisal-id="${escapeHtml(user.appraisal_id)}">View</button>
+                    <button type="button" class="rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-1.5 text-xs font-semibold text-warning-300 transition hover:border-success-300 dark:border-warning-900/40 dark:bg-darkblack-500 dark:text-warning-300" data-appraisal-row-action="unpublish" data-appraisal-id="${escapeHtml(user.appraisal_id)}">Unpublish</button>
                 </div>
             `;
         }
@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(row.kpi_name || '--')}</p>
-                        <p class="mt-1 text-xs font-medium ${row.kpi_agreed ? 'text-success-500 dark:text-success-300' : 'text-bgray-600 dark:text-bgray-300'}">${kpiAgreement}</p>
+                        <p class="mt-1 text-xs font-medium ${row.kpi_agreed ? 'text-success-400 dark:text-success-300' : 'text-bgray-600 dark:text-bgray-300'}">${kpiAgreement}</p>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
