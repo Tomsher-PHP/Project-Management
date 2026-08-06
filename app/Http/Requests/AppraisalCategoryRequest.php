@@ -62,34 +62,63 @@ class AppraisalCategoryRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $questionIds = $this->input('question_ids', []);
-        $questionStatuses = $this->input('question_is_active', []);
-        $questionTypes = $this->input('question_types', []);
-        $measurementTypes = $this->input('measurement_types', []);
-        $targetValues = $this->input('target_values', []);
-        $units = $this->input('units', []);
+        $rawQuestions = $this->input('questions_json');
+        if (is_string($rawQuestions)) {
+            $rawQuestions = json_decode($rawQuestions, true) ?? [];
+        }
 
-        $questions = collect($this->input('questions', []))
-            ->map(function ($question, $index) use ($questionIds, $questionStatuses, $questionTypes, $measurementTypes, $targetValues, $units) {
-                $isActive = filter_var($questionStatuses[$index] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                $questionType = $questionTypes[$index] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
-                $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
+        if (is_array($rawQuestions) && ! empty($rawQuestions) && isset($rawQuestions[0]) && is_array($rawQuestions[0])) {
+            $questions = collect($rawQuestions)
+                ->map(function (array $question) {
+                    $questionType = $question['question_type'] ?? $question['questionTypes'] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+                    $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
+                    $isActive = filter_var($question['is_active'] ?? $question['isActive'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
-                return [
-                    'id' => filled($questionIds[$index] ?? null) ? (int) $questionIds[$index] : null,
-                    'question' => is_string($question) ? trim($question) : $question,
-                    'question_type' => $questionType,
-                    'measurement_type' => $isTarget ? ($measurementTypes[$index] ?? null) : null,
-                    'target_value' => $isTarget ? ($targetValues[$index] ?? null) : null,
-                    'unit' => $isTarget && is_string($units[$index] ?? null)
-                        ? trim($units[$index])
-                        : ($isTarget ? ($units[$index] ?? null) : null),
-                    'is_active' => $isActive ?? true,
-                ];
-            })
-            ->filter(fn ($question) => filled($question['question'] ?? null))
-            ->values()
-            ->all();
+                    return [
+                        'id' => filled($question['id'] ?? null) ? (int) $question['id'] : null,
+                        'question' => is_string($question['question'] ?? null) ? trim($question['question']) : ($question['question'] ?? null),
+                        'question_type' => $questionType,
+                        'measurement_type' => $isTarget ? ($question['measurement_type'] ?? $question['measurementTypes'] ?? null) : null,
+                        'target_value' => $isTarget ? ($question['target_value'] ?? $question['targetValues'] ?? null) : null,
+                        'unit' => $isTarget && is_string($question['unit'] ?? null)
+                            ? trim($question['unit'])
+                            : ($isTarget ? ($question['unit'] ?? null) : null),
+                        'is_active' => $isActive ?? true,
+                    ];
+                })
+                ->filter(fn ($question) => filled($question['question'] ?? null))
+                ->values()
+                ->all();
+        } else {
+            $questionIds = $this->input('question_ids', []);
+            $questionStatuses = $this->input('question_is_active', []);
+            $questionTypes = $this->input('question_types', []);
+            $measurementTypes = $this->input('measurement_types', []);
+            $targetValues = $this->input('target_values', []);
+            $units = $this->input('units', []);
+
+            $questions = collect($this->input('questions', []))
+                ->map(function ($question, $index) use ($questionIds, $questionStatuses, $questionTypes, $measurementTypes, $targetValues, $units) {
+                    $isActive = filter_var($questionStatuses[$index] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    $questionType = $questionTypes[$index] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+                    $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
+
+                    return [
+                        'id' => filled($questionIds[$index] ?? null) ? (int) $questionIds[$index] : null,
+                        'question' => is_string($question) ? trim($question) : $question,
+                        'question_type' => $questionType,
+                        'measurement_type' => $isTarget ? ($measurementTypes[$index] ?? null) : null,
+                        'target_value' => $isTarget ? ($targetValues[$index] ?? null) : null,
+                        'unit' => $isTarget && is_string($units[$index] ?? null)
+                            ? trim($units[$index])
+                            : ($isTarget ? ($units[$index] ?? null) : null),
+                        'is_active' => $isActive ?? true,
+                    ];
+                })
+                ->filter(fn ($question) => filled($question['question'] ?? null))
+                ->values()
+                ->all();
+        }
 
         $this->merge([
             'name' => is_string($this->input('name')) ? trim($this->input('name')) : $this->input('name'),
