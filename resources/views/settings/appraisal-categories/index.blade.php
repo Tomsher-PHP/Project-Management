@@ -2,13 +2,55 @@
 
 @section('page-content')
     <!-- Page starts -->
-    <div class="mb-6 flex flex-wrap items-center gap-3">
-        <x-back-button :url="route('settings.index')" label="Back" />
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+            <x-back-button :url="route('settings.index')" label="Back" />
 
-        @can('appraisal_settings.create')
-            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Appraisal Category" data-url="{{ route('settings.appraisal.store') }}" data-method="POST" label="Category" />
-        @endcan
+            @can('appraisal_settings.create')
+                <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="Appraisal Category" data-url="{{ route('settings.appraisal.store') }}" data-method="POST" label="Category" />
+            @endcan
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ asset(config('assets.templates.appraisal_questions')) }}" download="appraisal_bulk_questions_template.xlsx" class="inline-flex items-center gap-1.5 rounded-md border border-success-300 bg-success-300 px-3 py-1.5 text-sm font-semibold text-white transition duration-200 hover:border-success-400 hover:bg-success-400 dark:border-success-400 dark:bg-success-400 dark:hover:border-success-500 dark:hover:bg-success-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Questions Template</span>
+            </a>
+
+            @can('appraisal_settings.create')
+                <form action="{{ route('settings.appraisal.importQuestions') }}" method="POST" enctype="multipart/form-data" class="inline-block" id="appraisal-questions-import-form">
+                    @csrf
+                    <input type="file" name="file" id="appraisal-questions-import-file" class="hidden" accept=".xlsx,.xls" required>
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-md border border-bgray-500 bg-white px-3 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" id="appraisal-questions-import-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span id="appraisal-questions-import-text">Import Questions</span>
+                    </button>
+                </form>
+            @endcan
+        </div>
     </div>
+
+    @if (session('success'))
+        <div class="mb-4 rounded-lg border border-success-200 bg-success-50 p-4 text-sm text-success-500 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-500 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @error('file')
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-500 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300">
+            {{ $message }}
+        </div>
+    @enderror
 
     <div id="appraisal-category-index-content">
         @include('settings.appraisal-categories.partials.index-content')
@@ -124,4 +166,32 @@
 
 @push('scripts')
     @vite('resources/js/modules/appraisal/appaisal-settings.js')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const importButton = document.getElementById('appraisal-questions-import-button');
+            const importFile = document.getElementById('appraisal-questions-import-file');
+            const importForm = document.getElementById('appraisal-questions-import-form');
+            const importText = document.getElementById('appraisal-questions-import-text');
+
+            if (importButton && importFile && importForm) {
+                importButton.addEventListener('click', function () {
+                    importFile.click();
+                });
+
+                importFile.addEventListener('change', function () {
+                    if (!this.files || !this.files.length) {
+                        return;
+                    }
+
+                    importButton.disabled = true;
+                    importButton.classList.add('opacity-60', 'cursor-not-allowed');
+                    if (importText) {
+                        importText.textContent = 'Uploading...';
+                    }
+
+                    importForm.submit();
+                });
+            }
+        });
+    </script>
 @endpush

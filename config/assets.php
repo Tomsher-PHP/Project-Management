@@ -35,4 +35,8 @@ return [
         //profile page js
         'pages_profile' => 'assets/js/pages/profile.init.js',
     ],
+
+    'templates' => [
+        'appraisal_questions' => 'assets/templates/appraisal/appraisal_bulk_questions_template.xlsx',
+    ],
 ];

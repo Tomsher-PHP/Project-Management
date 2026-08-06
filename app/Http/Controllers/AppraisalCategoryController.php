@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AppraisalCategoryRequest;
+use App\Http\Requests\ImportAppraisalQuestionsRequest;
+use App\Jobs\ImportAppraisalQuestionsJob;
 use App\Models\AppraisalCategory;
 use App\Models\AppraisalQuestion;
 use App\Models\AppraisalQuestionUnit;
@@ -10,8 +12,11 @@ use App\Services\AppraisalSettingsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class AppraisalCategoryController extends Controller
 {
@@ -46,7 +51,7 @@ class AppraisalCategoryController extends Controller
     {
         return response()->json([
             'data' => $this->getActiveQuestionUnits()
-                ->map(fn (AppraisalQuestionUnit $unit) => [
+                ->map(fn(AppraisalQuestionUnit $unit) => [
                     'value' => $unit->name,
                     'text' => $unit->name,
                 ])
@@ -95,6 +100,35 @@ class AppraisalCategoryController extends Controller
             'is_default' => $appraisalCategory->is_default,
             'message' => 'Default status updated successfully',
         ], Response::HTTP_OK);
+    }
+
+    public function importQuestions(ImportAppraisalQuestionsRequest $request): JsonResponse|RedirectResponse
+    {
+        $filePath = $request->file('file')->store('appraisal-question-imports', 'local');
+
+        if ($filePath === false || ! Storage::disk('local')->exists($filePath)) {
+            throw new RuntimeException('The uploaded appraisal question file could not be stored.');
+        }
+
+        $import = $this->appraisalSettingsService->createQuestionImportRecord(
+            fileName: $request->file('file')->getClientOriginalName(),
+            filePath: $filePath,
+            uploadedBy: auth()->id(),
+        );
+
+        ImportAppraisalQuestionsJob::dispatch($import->id)->afterCommit();
+
+        $message = 'The appraisal question import has been queued and will be processed in the background.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+                'data' => $import,
+            ], Response::HTTP_ACCEPTED);
+        }
+
+        return back()->with('success', $message);
     }
 
     private function getIndexViewData(): array

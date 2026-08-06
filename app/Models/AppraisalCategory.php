@@ -67,4 +67,9 @@ class AppraisalCategory extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function scopeByCode($query, string $code)
+    {
+        return $query->where('code', trim($code));
+    }
 }
