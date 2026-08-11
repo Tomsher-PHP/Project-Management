@@ -40,16 +40,13 @@ class DummyUserSeeder extends Seeder
             });
 
             $users->each(function (User $user, int $index) use ($managerPool) {
-                $availableManagers = $managerPool->reject(fn (int $managerId) => $managerId === $user->id)->values();
-                $reporterId = $availableManagers->isNotEmpty() ? $availableManagers->random() : null;
-                $managerId = $availableManagers->isNotEmpty() ? $availableManagers->random() : null;
 
                 $user->details()->create([
                     'employee_id' => 'DMY-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
                     'department_id' => null,
                     'designation_id' => null,
-                    'reporter_id' => $reporterId,
-                    'manager_id' => $managerId,
+                    'reporter_id' => null,
+                    'manager_id' => null,
                     'gender' => fake()->randomElement(['male', 'female']),
                     'joining_date' => fake()->dateTimeBetween('-2 years', 'now'),
                 ]);

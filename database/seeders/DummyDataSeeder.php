@@ -18,14 +18,13 @@ class DummyDataSeeder extends Seeder
         $this->call([
             AdminUserSeeder::class,
             DummyUserSeeder::class,
+            CustomerSeeder::class,
         ]);
 
         DB::transaction(function () {
             Project::withTrashed()->forceDelete();
-            Customer::withTrashed()->forceDelete();
         });
 
-        Customer::factory(12)->create();
         Project::factory(12)->create();
     }
 }
