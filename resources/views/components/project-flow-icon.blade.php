@@ -21,17 +21,17 @@
 @endphp
 
 <span {{ $attributes->merge([
-    'class' => 'inline-flex shrink-0 items-center justify-center border transition duration-150 ' . $sizeClasses . ' ' . ($isAgileFlow ? 'bg-bgray-100 border-bgray-300 text-bgray-900 dark:border-darkblack-400 dark:text-bgray-300' : 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/40 text-blue-500'),
+    'class' => 'inline-flex shrink-0 items-center justify-center transition duration-150 ' . $sizeClasses . ' ' . ($isAgileFlow ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400'),
 ]) }} title="{{ $title }}">
     @if ($isAgileFlow)
-        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $iconSizeClasses }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0114.93-3.5M20 12a8 8 0 01-14.93 3.5" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M14 6h4v4M10 18H6v-4" />
+        {{-- Agile: Iterative Sprint / Cycle Loop Icon --}}
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $iconSizeClasses }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
         </svg>
     @else
-        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $iconSizeClasses }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h6v6h6v6h6" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M18 15l3 3-3 3" />
+        {{-- Linear: Sequential / Direct Flow Arrow Icon --}}
+        <svg xmlns="http://www.w3.org/2000/svg" class="{{ $iconSizeClasses }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
         </svg>
     @endif
 </span>
