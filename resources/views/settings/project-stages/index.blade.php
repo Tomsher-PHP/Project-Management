@@ -92,11 +92,7 @@
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('project_stage.edit')
-                                                <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.project-stages.update', $projectStage->id) }}" data-name="{{ $projectStage->name }}" data-code="{{ $projectStage->code }}" data-color="{{ $projectStage->color }}" data-is_default="{{ (int) $projectStage->is_default }}" data-sort_order="{{ $projectStage->sort_order }}" data-method="PUT" data-module="Project Stage" title="Edit Project Stage" />
                                             @endcan
                                             @can('project_stage.delete')
                                                 @if (!$projectStage->is_system)
