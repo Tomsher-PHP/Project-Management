@@ -89,6 +89,12 @@
                                         @can('appraisal_settings.edit')
                                             <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.appraisal.update', $appraisalCategory->id) }}" data-name="{{ $appraisalCategory->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-is-default="{{ $appraisalCategory->is_default ? '1' : '0' }}" data-method="PUT" data-module="Appraisal Category" aria-label="Edit appraisal category" title="Edit appraisal category" />
                                         @endcan
+
+                                        @can('appraisal_settings.delete')
+                                            @if (!$appraisalCategory->is_system)
+                                                <x-delete-form :action="route('settings.appraisal.destroy', $appraisalCategory->id)" ajax render-target="#appraisal-category-index-content" render-mode="replace_inner" title="Delete appraisal category" aria-label="Delete appraisal category" />
+                                            @endif
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

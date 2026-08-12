@@ -1,6 +1,6 @@
-@props(['action', 'id' => '', 'checkRoute' => '', 'formClass' => 'delete-form', 'ajax' => false, 'renderTarget' => '', 'renderMode' => 'replace_outer'])
+@props(['action', 'id' => '', 'checkRoute' => '', 'formClass' => 'delete-form', 'ajax' => false, 'renderTarget' => '', 'renderMode' => 'replace_outer', 'confirmTitle' => '', 'confirmMessage' => ''])
 
-<form action="{{ $action }}" method="POST" class="{{ $formClass }}" data-id="{{ $id }}" data-route="{{ $checkRoute }}" @if ($ajax) data-ajax-delete="true" @endif @if ($renderTarget) data-render-target="{{ $renderTarget }}" @endif @if ($renderMode) data-render-mode="{{ $renderMode }}" @endif>
+<form action="{{ $action }}" method="POST" class="{{ $formClass }}" data-id="{{ $id }}" data-route="{{ $checkRoute }}" @if ($ajax) data-ajax-delete="true" @endif @if ($renderTarget) data-render-target="{{ $renderTarget }}" @endif @if ($renderMode) data-render-mode="{{ $renderMode }}" @endif @if ($confirmTitle) data-confirm-title="{{ $confirmTitle }}" @endif @if ($confirmMessage) data-confirm-message="{{ $confirmMessage }}" @endif>
     @csrf
     @method('DELETE')
 
