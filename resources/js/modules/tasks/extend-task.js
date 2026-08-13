@@ -125,14 +125,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     isFormDisabled = false;
                     submitBtnText = 'Update Request';
                     modalTitleText = 'Edit Estimate Time Change Request';
-                } else {
+                } else if (result.data.request_status === 'approved') {
                     isFormDisabled = true;
-                    submitBtnText = 'Submit Request';
-                    modalTitleText = 'Request Estimate Time Change';
-                    const existingRequestMessage = result.data.request_status === 'rejected'
-                        ? 'Your extension request was rejected. Only one request is allowed per task.'
-                        : 'Your extension request was approved. Only one request is allowed per task.';
-                    showFieldError('extend_request', existingRequestMessage);
+                    submitBtnText = 'Approved';
+                    modalTitleText = 'View Estimate Time Change Request';
+                    showFieldError('extend_request', 'Your extension request was approved. Only one request is allowed per task.');
+                } else if (result.data.request_status === 'rejected') {
+                    isFormDisabled = true;
+                    submitBtnText = 'Rejected';
+                    modalTitleText = 'View Estimate Time Change Request';
+                    const rejectionInfo = result.data.rejection_reason ? ` (Reason: ${result.data.rejection_reason})` : '';
+                    showFieldError('extend_request', `Your extension request was rejected.${rejectionInfo}\nOnly one request is allowed per task.`);
                 }
             } else {
                 if (totalInput) {

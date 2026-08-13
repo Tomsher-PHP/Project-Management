@@ -233,15 +233,6 @@ class TaskTimeExtendService
             return false;
         }
 
-        $existingRequest = TaskExtendTimeRequest::query()
-            ->where('task_id', $task->id)
-            ->latest('id')
-            ->first();
-
-        if ($existingRequest && ($existingRequest->status === 'approved' || $existingRequest->status === 'rejected')) {
-            return false;
-        }
-
         return true;
     }
 }

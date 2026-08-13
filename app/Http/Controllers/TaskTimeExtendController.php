@@ -154,6 +154,7 @@ class TaskTimeExtendController extends Controller
                     'new_estimated_time_minutes' => (int) ($existingRequest->new_estimated_time_seconds / 60),
                     'reason' => $existingRequest->reason,
                     'request_status' => $existingRequest->status,
+                    'rejection_reason' => $existingRequest->rejection_reason,
                     'message' => $existingRequest->status === 'pending'
                         ? 'Edit pending estimate change request.'
                         : 'Only one extend time request is allowed per task.',

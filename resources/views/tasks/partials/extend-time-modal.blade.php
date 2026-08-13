@@ -20,7 +20,7 @@
                     @csrf
 
                     <div class="space-y-4">
-                        <p class="hidden text-sm text-error-300" data-extend-time-error="extend_request"></p>
+                        <p class="hidden text-sm text-error-300 whitespace-pre-line" data-extend-time-error="extend_request"></p>
 
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Task</label>

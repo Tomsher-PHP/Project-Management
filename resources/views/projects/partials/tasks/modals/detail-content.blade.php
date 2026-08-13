@@ -204,14 +204,29 @@
                     <p class="mt-1 hidden text-sm" data-project-task-detail-error="estimated_time_minutes"></p>
                     @if ($canRequestEstimate)
                         @php
-                            $pendingExceedRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->where('user_id', $authUser->id)->where('status', 'pending')->first();
+                            $latestExtendRequest = \App\Models\TaskExtendTimeRequest::where('task_id', $task->id)->latest('id')->first();
+                            $buttonText = 'Request Estimate Change';
+                            $buttonColorClass = 'text-success-300 hover:text-success-100';
+
+                            if ($latestExtendRequest) {
+                                if ($latestExtendRequest->status === 'pending') {
+                                    $buttonText = 'Edit Estimate Change Request';
+                                    $buttonColorClass = 'text-success-300 hover:text-success-100';
+                                } elseif ($latestExtendRequest->status === 'approved') {
+                                    $buttonText = 'Estimate Change Request Approved';
+                                    $buttonColorClass = 'text-success-300 hover:text-success-100';
+                                } elseif ($latestExtendRequest->status === 'rejected') {
+                                    $buttonText = 'Estimate Change Request Rejected';
+                                    $buttonColorClass = 'text-error-300 hover:text-error-200';
+                                }
+                            }
                         @endphp
                         <div class="mt-2">
-                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold text-success-300 hover:text-success-100 transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-current-estimate-minutes="{{ (int) round(($task->estimated_time_seconds ?? 0) / 60) }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
+                            <button type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold {{ $buttonColorClass }} transition duration-200" data-request-estimate-change-trigger data-task-id="{{ $task->id }}" data-task-name="{{ $task->name }}" data-current-estimate="{{ $task->estimated_time_formatted }}" data-current-estimate-minutes="{{ (int) round(($task->estimated_time_seconds ?? 0) / 60) }}" data-store-url="{{ route('tasks.extend-time-requests.store', $task) }}" data-pending-url="{{ route('tasks.extend-time-requests.pending', $task) }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span>{{ $pendingExceedRequest ? 'Edit Estimate Change Request' : 'Request Estimate Change' }}</span>
+                                <span>{{ $buttonText }}</span>
                             </button>
                         </div>
                     @endif
