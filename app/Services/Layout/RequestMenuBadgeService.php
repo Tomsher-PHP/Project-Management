@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
+use App\Services\TaskTimeExtendService;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -149,13 +150,7 @@ class RequestMenuBadgeService
 
     private function visibleTaskTimeExtendRequestQuery(User $user): Builder
     {
-        if ($user->is_super_admin) {
-            return TaskExtendTimeRequest::query();
-        }
-
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return TaskExtendTimeRequest::query()->whereIn('user_id', $accessibleUserIds);
+        return app(TaskTimeExtendService::class)->visibleRequestQuery($user);
     }
 
     private function applyAccountableUserScope(Builder $query, User $user): void

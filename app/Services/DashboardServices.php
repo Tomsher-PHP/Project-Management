@@ -407,20 +407,22 @@ class DashboardServices
         }
 
         if ($user->can('handoff_request.view_all')) {
-            return $query->whereHas('project', function (Builder $projectQuery) use ($user) {
+            $query->whereHas('project', function (Builder $projectQuery) use ($user) {
                 $projectQuery->accessibleBy($user);
             });
+        } else {
+            $accessibleUserIds = User::query()
+                ->accessibleBy($user)
+                ->pluck('users.id')
+                ->push($user->id)
+                ->unique()
+                ->values()
+                ->all();
+
+            $query->whereIn('user_id', $accessibleUserIds);
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
-
-        return $query->whereIn('user_id', $accessibleUserIds);
+        return $query;
     }
 
     private function visibleBreakRequestQuery(User $user): Builder
@@ -443,20 +445,7 @@ class DashboardServices
 
     private function visibleTaskTimeExtendRequestQuery(User $user): Builder
     {
-        if ($user->is_super_admin) {
-            return TaskExtendTimeRequest::query();
-        }
-
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
-
-        return TaskExtendTimeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return app(TaskTimeExtendService::class)->visibleRequestQuery($user);
     }
 
     private function applyAccountableUserScope(Builder $query, User $user): void

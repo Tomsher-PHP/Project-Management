@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -82,21 +83,32 @@ class TaskTimeExtendService
         return $request;
     }
 
-    public function visibleRequestQuery(User $user): \Illuminate\Database\Eloquent\Builder
+    public function visibleRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
             return TaskExtendTimeRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return TaskExtendTimeRequest::query()->whereIn('user_id', $accessibleUserIds);
+        return TaskExtendTimeRequest::query()
+            ->where(function (Builder $query) use ($user, $accessibleUserIds) {
+                $query->whereIn('user_id', $accessibleUserIds)
+                    ->orWhereHas('task', function (Builder $taskQuery) use ($user) {
+                        $this->applyAccountableTaskScope($taskQuery, $user);
+                    });
+            });
+    }
+
+    private function applyAccountableTaskScope(Builder $taskQuery, User $user): void
+    {
+        $taskQuery
+            ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
+                $teamLeaderQuery->whereKey($user->id);
+            })
+            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
+                $milestoneQuery->where('owner_id', $user->id);
+            });
     }
 
     public function getRequests(User $user, int $perPage, string $status, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
