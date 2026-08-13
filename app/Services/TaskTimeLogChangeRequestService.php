@@ -26,6 +26,9 @@ class TaskTimeLogChangeRequestService
                 'timeLog.task:id,name',
                 'approver:id,name',
                 'rejector:id,name',
+            ])
+            ->withExists([
+                'user as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
             ]);
 
         $this->applyFilters($query, $filters);
@@ -142,9 +145,8 @@ class TaskTimeLogChangeRequestService
             return TaskTimeLogChangeRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->select('users.id');
+        $excludeIds = User::getReporterChainUserIds($user->id);
+        $accessibleUserIds = app(UserService::class)->getAccessibleUsers($user, $excludeIds)->pluck('id');
 
         return TaskTimeLogChangeRequest::query()
             ->whereIn('user_id', $accessibleUserIds);

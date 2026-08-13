@@ -100,7 +100,9 @@
                             <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                 @if ($selectedStatus === 'pending')
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <input type="checkbox" value="{{ $changeRequest->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-checkbox>
+                                        @if ($changeRequest->isPending() && !$changeRequest->is_self_requested)
+                                            <input type="checkbox" value="{{ $changeRequest->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-time-log-change-request-bulk-checkbox>
+                                        @endif
                                     </td>
                                 @endif
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
@@ -152,10 +154,10 @@
                                     </div>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    @if ($changeRequest->isPending())
+                                    @if ($changeRequest->isPending() && !$changeRequest->is_self_requested)
+                                        {{-- @if ($changeRequest->isPending()) --}}
                                         <div class="flex min-w-[190px] flex-wrap items-center gap-2">
-                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-reason="{{ $changeRequest->reason ?? '--' }}"
-                                                data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
+                                            <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-reason="{{ $changeRequest->reason ?? '--' }}" data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
                                                 Approve
                                             </button>
 
@@ -163,6 +165,8 @@
                                                 Reject
                                             </button>
                                         </div>
+                                    @elseif ($changeRequest->isPending())
+                                        <span class="text-xs text-bgray-700 dark:text-bgray-300">Waiting for approval</span>
                                     @elseif ($changeRequest->isRejected())
                                         <div class="min-w-[220px] text-xs text-bgray-700 dark:text-bgray-300">
                                             <p class="font-semibold text-bgray-700 dark:text-white">Rejected by {{ $changeRequest->rejector?->name ?? '--' }}</p>
