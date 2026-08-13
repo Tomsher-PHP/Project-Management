@@ -204,13 +204,7 @@ class BreakRequestService
             return BreakWorkRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
         return BreakWorkRequest::query()->whereIn('user_id', $accessibleUserIds);
     }

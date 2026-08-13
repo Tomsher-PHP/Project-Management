@@ -142,16 +142,9 @@ class RequestMenuBadgeService
             return BreakWorkRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return BreakWorkRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return BreakWorkRequest::query()->whereIn('user_id', $accessibleUserIds);
     }
 
     private function visibleTaskTimeExtendRequestQuery(User $user): Builder
@@ -160,16 +153,9 @@ class RequestMenuBadgeService
             return TaskExtendTimeRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return TaskExtendTimeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return TaskExtendTimeRequest::query()->whereIn('user_id', $accessibleUserIds);
     }
 
     private function applyAccountableUserScope(Builder $query, User $user): void
