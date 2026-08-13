@@ -207,4 +207,18 @@ class TaskTimeExtendService
             $this->notificationService->notifyTaskTimeExtendRequestApprovedToReporterChain($request, $request->task, $user);
         }
     }
+
+    // logic task assignee is user and task status is approved, not pending, not rejected
+    public function canRequestEstimate(Task $task): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return (int) ($task->current_assignee_id ?? 0) === (int) $user->id
+            && $task->request_status !== 'pending'
+            && $task->request_status !== 'rejected';
+    }
 }

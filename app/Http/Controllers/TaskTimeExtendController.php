@@ -22,8 +22,7 @@ class TaskTimeExtendController extends Controller
     {
         $this->service = $service;
         $this->pageTitle = 'Task Time Extend Requests';
-        $this->subTitle = 'Manage task time extend requests';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -105,10 +104,10 @@ class TaskTimeExtendController extends Controller
     public function store(TaskTimeExtendStoreRequest $request, Task $task): JsonResponse
     {
         // Check if current user is assignee
-        if ((int) Auth::id() !== (int) $task->current_assignee_id) {
+        if (!$this->service->canRequestEstimate($task)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Only the task assignee can request an estimate change.',
+                'message' => 'You cannot request an estimate change for this task.',
             ], 403);
         }
 
