@@ -18,11 +18,11 @@
 
     $canViewProjects = $authUser?->canAny(['project.view', 'project.view_all_projects']);
     $canViewTasks = $authUser?->canAny(['task.view', 'task.view_all_tasks']);
-    $canViewTaskRequests = $canViewTasks;
-    $canViewTaskTimeLogChangeRequests = $authUser?->can('task_time_log_change_request.approve_reject');
+    $canViewTaskRequests = $authUser !== null;
+    $canViewTaskTimeLogChangeRequests = $authUser !== null; //$authUser?->can('task_time_log_change_request.approve_reject');
     $canViewHandoffs = $authUser?->canAny(['handoff_request.view', 'handoff_request.view_all']);
     $canViewBreakRequests = $authUser !== null;
-    $canViewTaskTimeExtendRequests = $authUser?->can('task_time_extend_request.approve_reject');
+    $canViewTaskTimeExtendRequests = $authUser !== null; //$authUser?->can('task_time_extend_request.approve_reject');
 
     $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
@@ -378,7 +378,7 @@
                                         <!-- Task Time Log Change Requests -->
                                         <li>
                                             <a href="{{ route('tasks.time-log-change-requests.index') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isTaskTimeChangeRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
-                                                <span>Task Time</span>
+                                                <span>Task Log</span>
                                                 @if (($requestMenuBadges['task_time'] ?? 0) > 0)
                                                     <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                                                         {{ $requestMenuBadges['task_time'] }}

@@ -20,13 +20,9 @@ class RequestMenuBadgeService
             return $this->empty();
         }
 
-        $taskRequests = $user->canAny(['task.view', 'task.view_all_tasks'])
-            ? $this->taskRequestCount($user)
-            : 0;
+        $taskRequests = $this->taskRequestCount($user);
 
-        $taskTime = $user->can('task_time_log_change_request.approve_reject')
-            ? $this->taskTimeChangeRequestCount($user)
-            : 0;
+        $taskTime = $this->taskTimeChangeRequestCount($user);
 
         $taskHandoff = $user->canAny(['handoff_request.view', 'handoff_request.view_all'])
             ? $this->handoffRequestCount($user)
@@ -34,9 +30,7 @@ class RequestMenuBadgeService
 
         $breakRequests = $this->breakRequestCount($user);
 
-        $taskTimeExtendRequests = $user->can('task_time_extend_request.approve_reject')
-            ? $this->taskTimeExtendRequestCount($user)
-            : 0;
+        $taskTimeExtendRequests = $this->taskTimeExtendRequestCount($user);
 
         return [
             'task_requests' => $taskRequests,

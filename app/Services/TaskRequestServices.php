@@ -117,13 +117,11 @@ class TaskRequestServices
     {
         $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
 
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return $query->where(function (Builder $query) use ($user) {
+        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
             $query
-                ->where('current_assignee_id', $user->id)
+                ->whereIn('current_assignee_id', $accessibleUserIds)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
                     $this->applyAccountableUserScope($accountableQuery, $user);
                 });
@@ -180,24 +178,20 @@ class TaskRequestServices
     {
         $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
 
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return $query->where(function (Builder $query) use ($user) {
-            $this->applyAccountableUserScope($query, $user);
+        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
+            $query->whereIn('current_assignee_id', $accessibleUserIds)
+                ->orWhere(function (Builder $accountableQuery) use ($user) {
+                    $this->applyAccountableUserScope($accountableQuery, $user);
+                });
         });
     }
 
     private function applyAccountableUserScope(Builder $query, User $user): void
     {
         $query
-            ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
-                $detailsQuery
-                    ->where('reporter_id', $user->id)
-                    ->orWhere('manager_id', $user->id);
-            })
-            ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
+            ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
                 $teamLeaderQuery->whereKey($user->id);
             })
             ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {

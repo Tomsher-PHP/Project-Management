@@ -449,11 +449,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/{task}/extend-time-requests/pending', [TaskTimeExtendController::class, 'pending'])->name('tasks.extend-time-requests.pending');
     Route::post('tasks/{task}/extend-time-requests', [TaskTimeExtendController::class, 'store'])->name('tasks.extend-time-requests.store');
 
-    Route::middleware(['permission.type:task_time_extend_request.approve_reject'])->group(function () {
-        Route::get('task-time-extend-requests', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
-        Route::get('task-time-extend-requests/{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
-        Route::post('task-time-extend-requests/{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])->name('tasks.extend-time-requests.approve');
-        Route::post('task-time-extend-requests/{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])->name('tasks.extend-time-requests.reject');
+    Route::prefix('task-time-extend-requests')->group(function () {
+        Route::get('/', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
+        Route::get('{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
+        Route::post('{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])
+            ->middleware('permission.type:task_time_extend_request.approve_reject')
+            ->name('tasks.extend-time-requests.approve');
+        Route::post('{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])
+            ->middleware('permission.type:task_time_extend_request.approve_reject')
+            ->name('tasks.extend-time-requests.reject');
     });
 
     // Activity Log Route
