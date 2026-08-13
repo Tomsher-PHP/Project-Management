@@ -389,12 +389,9 @@ class DashboardServices
             return TaskTimeLogChangeRequest::query()->where('user_id', '!=', $user->id);
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->select('users.id');
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
         return TaskTimeLogChangeRequest::query()
-            ->where('user_id', '!=', $user->id)
             ->whereIn('user_id', $accessibleUserIds);
     }
 
