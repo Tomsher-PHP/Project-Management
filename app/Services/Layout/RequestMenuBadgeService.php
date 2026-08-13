@@ -84,7 +84,7 @@ class RequestMenuBadgeService
 
     private function visibleTaskRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', 'self')->where('current_assignee_id', '!=', $user->id);
+        $query = Task::query()->where('request_type', 'self');
 
         if ($user->is_super_admin) {
             return $query;
@@ -108,7 +108,6 @@ class RequestMenuBadgeService
         $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
         return TaskTimeLogChangeRequest::query()
-            ->where('user_id', '!=', $user->id)
             ->whereIn('user_id', $accessibleUserIds);
     }
 
