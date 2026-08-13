@@ -6,7 +6,7 @@
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
+                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-extend-time-modal-title>
                             Request Estimate Time Change
                         </h3>
                     </div>

@@ -25,7 +25,16 @@ class TaskTimeExtendService
         return DB::transaction(function () use ($task, $data) {
             $lockedTask = Task::query()->lockForUpdate()->findOrFail($task->id);
 
-            if (TaskExtendTimeRequest::query()->where('task_id', $lockedTask->id)->exists()) {
+            $existing = TaskExtendTimeRequest::query()
+                ->where('task_id', $lockedTask->id)
+                ->latest('id')
+                ->first();
+
+            if ($existing) {
+                if ($existing->status === 'pending') {
+                    return $this->updateRequest($existing, $data);
+                }
+
                 throw ValidationException::withMessages([
                     'extend_request' => 'Only one extend time request is allowed per task.',
                 ]);
@@ -208,7 +217,6 @@ class TaskTimeExtendService
         }
     }
 
-    // logic task assignee is user and task status is approved, not pending, not rejected
     public function canRequestEstimate(Task $task): bool
     {
         $user = auth()->user();
@@ -217,8 +225,23 @@ class TaskTimeExtendService
             return false;
         }
 
-        return (int) ($task->current_assignee_id ?? 0) === (int) $user->id
-            && $task->request_status !== 'pending'
-            && $task->request_status !== 'rejected';
+        if ((int) ($task->current_assignee_id ?? 0) !== (int) $user->id) {
+            return false;
+        }
+
+        if ($task->request_status === 'pending' || $task->request_status === 'rejected') {
+            return false;
+        }
+
+        $existingRequest = TaskExtendTimeRequest::query()
+            ->where('task_id', $task->id)
+            ->latest('id')
+            ->first();
+
+        if ($existingRequest && ($existingRequest->status === 'approved' || $existingRequest->status === 'rejected')) {
+            return false;
+        }
+
+        return true;
     }
 }

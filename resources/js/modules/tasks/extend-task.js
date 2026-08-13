@@ -8,10 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const taskNameNode = modal.querySelector('[data-extend-time-task-name]');
     const currentEstimateNode = modal.querySelector('[data-extend-time-current-estimate]');
+    const modalTitleNode = modal.querySelector('[data-extend-time-modal-title]');
     const submitBtn = form.querySelector('[data-extend-time-submit]');
 
     const setFormAvailability = (disabled) => {
-        form.dataset.hasExistingRequest = disabled ? 'true' : 'false';
+        form.dataset.isDisabled = disabled ? 'true' : 'false';
         form.querySelectorAll('[data-estimated-hours], [data-estimated-extra-minutes], textarea[name="reason"]').forEach(input => {
             input.disabled = disabled;
         });
@@ -63,14 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentEstimateNode) {
             currentEstimateNode.textContent = currentEstimate;
         }
+        if (modalTitleNode) {
+            modalTitleNode.textContent = 'Request Estimate Time Change';
+        }
+        if (submitBtn) {
+            submitBtn.innerHTML = 'Submit Request';
+        }
         form.action = storeUrl;
 
         const wrapper = form.querySelector('[data-estimated-time]');
         const totalInput = wrapper ? wrapper.querySelector('[data-estimated-total-minutes]') : null;
         const reasonTextarea = form.querySelector('[name="reason"]');
 
-        // Default new requests to the task's current estimate. An existing request,
-        // when present, is displayed read-only.
         if (totalInput) {
             totalInput.value = String(currentEstimateMinutes);
         }
@@ -89,15 +94,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Submit Request';
-
         // Disable inputs and submit button during load
         setFormAvailability(true);
         if (submitBtn) {
             submitBtn.innerHTML = 'Loading...';
         }
 
-        let hasExistingRequest = false;
+        let isFormDisabled = false;
+        let submitBtnText = 'Submit Request';
+        let modalTitleText = 'Request Estimate Time Change';
 
         try {
             const response = await fetch(pendingUrl, {
@@ -109,17 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok && result.status && result.data) {
-                hasExistingRequest = true;
                 if (totalInput) {
                     totalInput.value = String(result.data.new_estimated_time_minutes);
                 }
                 if (reasonTextarea) {
                     reasonTextarea.value = result.data.reason || '';
                 }
-                const existingRequestMessage = result.data.request_status === 'rejected'
-                    ? 'Your extension request was rejected. Only one request is allowed per task.'
-                    : 'Only one extension request is permitted.';
-                showFieldError('extend_request', existingRequestMessage);
+
+                if (result.data.request_status === 'pending') {
+                    isFormDisabled = false;
+                    submitBtnText = 'Update Request';
+                    modalTitleText = 'Edit Estimate Time Change Request';
+                } else {
+                    isFormDisabled = true;
+                    submitBtnText = 'Submit Request';
+                    modalTitleText = 'Request Estimate Time Change';
+                    const existingRequestMessage = result.data.request_status === 'rejected'
+                        ? 'Your extension request was rejected. Only one request is allowed per task.'
+                        : 'Your extension request was approved. Only one request is allowed per task.';
+                    showFieldError('extend_request', existingRequestMessage);
+                }
             } else {
                 if (totalInput) {
                     totalInput.value = String(currentEstimateMinutes);
@@ -140,9 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (wrapper) {
                 wrapper.dispatchEvent(new CustomEvent('estimated-time:refresh'));
             }
-            setFormAvailability(hasExistingRequest);
+            setFormAvailability(isFormDisabled);
             if (submitBtn) {
-                submitBtn.innerHTML = originalBtnText;
+                submitBtn.innerHTML = submitBtnText;
+            }
+            if (modalTitleNode) {
+                modalTitleNode.textContent = modalTitleText;
             }
         }
     };
@@ -179,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (form.dataset.hasExistingRequest === 'true') {
+        if (form.dataset.isDisabled === 'true') {
             showFieldError('extend_request', 'Only one extension request is permitted.');
             return;
         }

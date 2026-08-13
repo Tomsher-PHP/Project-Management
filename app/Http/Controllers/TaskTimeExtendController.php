@@ -113,11 +113,21 @@ class TaskTimeExtendController extends Controller
 
         $validated = $request->validated();
 
-        $this->service->createRequest($task, $validated);
+        $existingRequest = TaskExtendTimeRequest::where('task_id', $task->id)
+            ->latest('id')
+            ->first();
+
+        if ($existingRequest && $existingRequest->status === 'pending') {
+            $this->service->updateRequest($existingRequest, $validated);
+            $message = 'Estimate change request updated successfully.';
+        } else {
+            $this->service->createRequest($task, $validated);
+            $message = 'Estimate change request submitted successfully.';
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Estimate change request submitted successfully.',
+            'message' => $message,
         ]);
     }
 
@@ -140,10 +150,13 @@ class TaskTimeExtendController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => [
+                    'id' => $existingRequest->id,
                     'new_estimated_time_minutes' => (int) ($existingRequest->new_estimated_time_seconds / 60),
                     'reason' => $existingRequest->reason,
                     'request_status' => $existingRequest->status,
-                    'message' => 'Only one extend time request is allowed per task.',
+                    'message' => $existingRequest->status === 'pending'
+                        ? 'Edit pending estimate change request.'
+                        : 'Only one extend time request is allowed per task.',
                 ],
             ]);
         }

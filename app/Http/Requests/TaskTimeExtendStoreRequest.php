@@ -52,7 +52,12 @@ class TaskTimeExtendStoreRequest extends FormRequest
                     return;
                 }
 
-                if (TaskExtendTimeRequest::query()->where('task_id', $task->id)->exists()) {
+                $existingRequest = TaskExtendTimeRequest::query()
+                    ->where('task_id', $task->id)
+                    ->latest('id')
+                    ->first();
+
+                if ($existingRequest && ($existingRequest->status === 'approved' || $existingRequest->status === 'rejected')) {
                     $validator->errors()->add(
                         'extend_request',
                         'Only one extend time request is allowed per task.'
