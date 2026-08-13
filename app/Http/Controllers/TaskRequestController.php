@@ -66,14 +66,8 @@ class TaskRequestController extends Controller
             ->with('success', $action === 'approve' ? 'Task request approved successfully.' : 'Task request rejected successfully.');
     }
 
-    public function updateAndApprove(
-        TaskProjectUpdateRequest $request,
-        Project $project,
-        Task $task,
-        TaskRequestServices $taskRequestServices,
-        TaskServices $taskService,
-        NotificationService $notificationService
-    ): JsonResponse {
+    public function updateAndApprove(TaskProjectUpdateRequest $request, Project $project, Task $task, TaskRequestServices $taskRequestServices, TaskServices $taskService, NotificationService $notificationService): JsonResponse
+    {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless($taskRequestServices->canHandleRequest($request->user(), $task), Response::HTTP_FORBIDDEN);
 

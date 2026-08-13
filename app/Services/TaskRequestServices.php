@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRequestServices
 {
-    public function __construct(private readonly NotificationService $notificationService)
-    {
-    }
+    public function __construct(private readonly NotificationService $notificationService) {}
 
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {

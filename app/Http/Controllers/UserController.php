@@ -48,6 +48,7 @@ class UserController extends Controller
             ])
             ->where('is_super_admin', false)
             ->where('delete_status', false)
+            ->whereNot('id', auth()->id())
             ->paginate($perPage)
             ->withQueryString();
 
