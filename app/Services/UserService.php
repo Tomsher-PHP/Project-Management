@@ -355,6 +355,17 @@ class UserService
             ->get();
     }
 
+    public function getRequestAccessibleUsers(User $user, array $excludeIds = [], array $includeIds = [])
+    {
+        $excludeIds = User::getReporterChainUserIds($user->id);
+        return $this->getAccessibleUsers($user, $excludeIds)
+            ->pluck('id')
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public function getNavSelectableUsers(User $authUser)
     {
         return User::query()

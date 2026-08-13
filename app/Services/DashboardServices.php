@@ -386,7 +386,7 @@ class DashboardServices
     private function visibleTaskTimeChangeRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
-            return TaskTimeLogChangeRequest::query();
+            return TaskTimeLogChangeRequest::query()->where('user_id', '!=', $user->id);
         }
 
         $accessibleUserIds = User::query()
@@ -394,6 +394,7 @@ class DashboardServices
             ->select('users.id');
 
         return TaskTimeLogChangeRequest::query()
+            ->where('user_id', '!=', $user->id)
             ->whereIn('user_id', $accessibleUserIds);
     }
 

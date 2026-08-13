@@ -90,7 +90,6 @@ class TaskTimeLogChangeRequestService
     public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null, ?array $approvalTimeRange = null): void
     {
         abort_unless($this->canHandleRequest($user, $changeRequest), Response::HTTP_FORBIDDEN);
-
         if (! $changeRequest->isPending()) {
             throw ValidationException::withMessages([
                 'change_request' => 'Only pending time log change requests can be reviewed.',
@@ -119,6 +118,7 @@ class TaskTimeLogChangeRequestService
 
         $changeRequests = $this->visibleRequestQuery($user)
             ->whereIn('id', $changeRequestIds)
+            ->where('user_id', '!=', $user->id)
             ->where('status', 'pending')
             ->get();
 
@@ -145,11 +145,9 @@ class TaskTimeLogChangeRequestService
             return TaskTimeLogChangeRequest::query();
         }
 
-        $excludeIds = User::getReporterChainUserIds($user->id);
-        $accessibleUserIds = app(UserService::class)->getAccessibleUsers($user, $excludeIds)->pluck('id');
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return TaskTimeLogChangeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return TaskTimeLogChangeRequest::query()->whereIn('user_id', $accessibleUserIds);
     }
 
     private function applyFilters(Builder $query, array $filters): void
@@ -162,6 +160,10 @@ class TaskTimeLogChangeRequestService
 
     private function canHandleRequest(User $user, TaskTimeLogChangeRequest $changeRequest): bool
     {
+        if ((int) $changeRequest->user_id === (int) $user->id) {
+            return false;
+        }
+
         return $this->visibleRequestQuery($user)
             ->whereKey($changeRequest->id)
             ->exists();
