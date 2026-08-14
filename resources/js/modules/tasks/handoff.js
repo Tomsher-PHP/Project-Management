@@ -22,7 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
         tsMilestone = milestoneSelect.tomselect;
         tsSprint = sprintSelect.tomselect;
         tsTask = taskSelect.tomselect;
-        tsPurpose = purposeSelect.tomselect;
+        tsPurpose = purposeSelect?.tomselect;
+
+        if (tsPurpose) {
+            tsPurpose.on('item_add', () => {
+                tsPurpose.close();
+                tsPurpose.blur();
+            });
+            tsPurpose.on('change', () => {
+                tsPurpose.close();
+            });
+        }
 
         if (!tsProject) return;
 
@@ -91,6 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         document.addEventListener('tomselect:ready', initSelects);
     }
+
+    purposeSelect?.addEventListener('change', () => {
+        if (purposeSelect.tomselect) {
+            purposeSelect.tomselect.close();
+            purposeSelect.tomselect.blur();
+        }
+    });
 
     const fetchTasks = async () => {
         const projectId = projectSelect?.value || '';
