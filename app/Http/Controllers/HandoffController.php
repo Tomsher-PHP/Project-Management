@@ -19,7 +19,6 @@ class HandoffController extends Controller
         $this->handoffServices = $handoffServices;
         view()->share([
             'pageTitle' => 'Handoff Requests',
-            'subTitle' => 'Manage and review handoff requests'
         ]);
     }
 

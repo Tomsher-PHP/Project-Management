@@ -108,7 +108,7 @@ class HandoffServices
                 'name' => $data['purpose'],
             ]);
 
-            app(\App\Services\NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, User::find($userId));
+            app(NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, User::find($userId));
 
             return $handoffRequest;
         });
@@ -127,7 +127,7 @@ class HandoffServices
                 'action' => HandoffRequestAction::REQUEST_NOTED,
             ]);
 
-            app(\App\Services\NotificationService::class)->notifyHandoffRequestNoted($handoffRequest, User::find($userId));
+            app(NotificationService::class)->notifyHandoffRequestNoted($handoffRequest, User::find($userId));
 
             return $handoffRequest;
         });
@@ -168,6 +168,6 @@ class HandoffServices
             'comment' => $comment,
         ]);
 
-        app(\App\Services\NotificationService::class)->notifyHandoffRequestAssigned($handoffRequest, $createdTask, $user);
+        app(NotificationService::class)->notifyHandoffRequestAssigned($handoffRequest, $createdTask, $user);
     }
 }
