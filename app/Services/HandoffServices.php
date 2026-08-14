@@ -84,8 +84,8 @@ class HandoffServices
         $recipientIds = collect();
 
         // 1. Project Team Leader
-        if ($handoffRequest->project?->team_leader_id) {
-            $recipientIds->push((int) $handoffRequest->project->team_leader_id);
+        if ($handoffRequest->project?->teamLeader?->id) {
+            $recipientIds->push((int) $handoffRequest->project->teamLeader->id);
         }
 
         // 2. Project Milestone Owner
