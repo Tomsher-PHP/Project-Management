@@ -368,17 +368,7 @@ class DashboardServices
 
     private function visibleTaskRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', 'self');
-
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
-            $query
-                ->whereIn('current_assignee_id', $accessibleUserIds)
-                ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $accountableQuery->accountableBy($user);
-                });
-        });
+        return app(TaskServices::class)->visibleTaskRequestQuery($user);
     }
 
     private function visibleTaskTimeChangeRequestQuery(User $user): Builder

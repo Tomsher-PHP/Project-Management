@@ -115,17 +115,7 @@ class TaskRequestServices
 
     private function visibleRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
-
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
-            $query
-                ->whereIn('current_assignee_id', $accessibleUserIds)
-                ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $accountableQuery->accountableBy($user);
-                });
-        });
+        return app(TaskServices::class)->visibleTaskRequestQuery($user);
     }
 
     private function applyFilters(Builder $query, array $filters): void
@@ -176,16 +166,7 @@ class TaskRequestServices
 
     private function accountableRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
-
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
-            $query->whereIn('current_assignee_id', $accessibleUserIds)
-                ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $accountableQuery->accountableBy($user);
-                });
-        });
+        return app(TaskServices::class)->visibleTaskRequestQuery($user);
     }
 
     private function approve(User $user, Task $task): void
