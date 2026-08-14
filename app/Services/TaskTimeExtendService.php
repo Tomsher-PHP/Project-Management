@@ -95,19 +95,8 @@ class TaskTimeExtendService
             ->where(function (Builder $query) use ($user, $accessibleUserIds) {
                 $query->whereIn('user_id', $accessibleUserIds)
                     ->orWhereHas('task', function (Builder $taskQuery) use ($user) {
-                        $this->applyAccountableTaskScope($taskQuery, $user);
+                        $taskQuery->accountableBy($user);
                     });
-            });
-    }
-
-    private function applyAccountableTaskScope(Builder $taskQuery, User $user): void
-    {
-        $taskQuery
-            ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                $teamLeaderQuery->whereKey($user->id);
-            })
-            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
-                $milestoneQuery->where('owner_id', $user->id);
             });
     }
 

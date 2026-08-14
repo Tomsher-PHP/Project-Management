@@ -9,6 +9,7 @@ use App\Models\TaskExtendTimeRequest;
 use App\Models\TaskTimeLogChangeRequest;
 use App\Models\User;
 use App\Services\TaskTimeExtendService;
+use App\Services\TaskTimeLogChangeRequestService;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -42,6 +43,9 @@ class RequestMenuBadgeService
         ];
     }
 
+    /**
+     * -----------------------Count methods
+     */
     private function taskRequestCount(User $user): int
     {
         return $this->visibleTaskRequestQuery($user)
@@ -77,33 +81,28 @@ class RequestMenuBadgeService
             ->count();
     }
 
+    /**
+     * -------------------------Helper Methods
+     */
+
     private function visibleTaskRequestQuery(User $user): Builder
     {
         $query = Task::query()->where('request_type', 'self');
 
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return $query->where(function (Builder $query) use ($user) {
+        return $query->where(function (Builder $query) use ($accessibleUserIds, $user) {
             $query
-                ->where('current_assignee_id', $user->id)
+                ->whereIn('current_assignee_id', $accessibleUserIds)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $this->applyAccountableUserScope($accountableQuery, $user);
+                    $accountableQuery->accountableBy($user);
                 });
         });
     }
 
     private function visibleTaskTimeChangeRequestQuery(User $user): Builder
     {
-        if ($user->is_super_admin) {
-            return TaskTimeLogChangeRequest::query();
-        }
-
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return TaskTimeLogChangeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return app(TaskTimeLogChangeRequestService::class)->visibleRequestQuery($user);
     }
 
     private function visibleHandoffRequestQuery(User $user): Builder
@@ -145,22 +144,6 @@ class RequestMenuBadgeService
     private function visibleTaskTimeExtendRequestQuery(User $user): Builder
     {
         return app(TaskTimeExtendService::class)->visibleRequestQuery($user);
-    }
-
-    private function applyAccountableUserScope(Builder $query, User $user): void
-    {
-        $query
-            ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
-                $detailsQuery
-                    ->where('reporter_id', $user->id)
-                    ->orWhere('manager_id', $user->id);
-            })
-            ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                $teamLeaderQuery->whereKey($user->id);
-            })
-            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
-                $milestoneQuery->where('owner_id', $user->id);
-            });
     }
 
     private function empty(): array

@@ -123,7 +123,7 @@ class TaskRequestServices
             $query
                 ->whereIn('current_assignee_id', $accessibleUserIds)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $this->applyAccountableUserScope($accountableQuery, $user);
+                    $accountableQuery->accountableBy($user);
                 });
         });
     }
@@ -183,20 +183,9 @@ class TaskRequestServices
         return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
             $query->whereIn('current_assignee_id', $accessibleUserIds)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $this->applyAccountableUserScope($accountableQuery, $user);
+                    $accountableQuery->accountableBy($user);
                 });
         });
-    }
-
-    private function applyAccountableUserScope(Builder $query, User $user): void
-    {
-        $query
-            ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                $teamLeaderQuery->whereKey($user->id);
-            })
-            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
-                $milestoneQuery->where('owner_id', $user->id);
-            });
     }
 
     private function approve(User $user, Task $task): void

@@ -139,7 +139,7 @@ class TaskTimeLogChangeRequestService
         return $changeRequests->count();
     }
 
-    private function visibleRequestQuery(User $user): Builder
+    public function visibleRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
             return TaskTimeLogChangeRequest::query();
@@ -147,7 +147,13 @@ class TaskTimeLogChangeRequestService
 
         $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return TaskTimeLogChangeRequest::query()->whereIn('user_id', $accessibleUserIds);
+        return TaskTimeLogChangeRequest::query()
+            ->where(function (Builder $query) use ($user, $accessibleUserIds) {
+                $query->whereIn('user_id', $accessibleUserIds)
+                    ->orWhereHas('timeLog.task', function (Builder $taskQuery) use ($user) {
+                        $taskQuery->accountableBy($user);
+                    });
+            });
     }
 
     private function applyFilters(Builder $query, array $filters): void

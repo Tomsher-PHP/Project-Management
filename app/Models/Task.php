@@ -177,6 +177,19 @@ class Task extends Model
         });
     }
 
+    public function scopeAccountableBy(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $query) use ($user) {
+            $query
+                ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
+                    $milestoneQuery->where('owner_id', $user->id);
+                });
+        });
+    }
+
     public static function generateTaskCode(?Project $project = null): string
     {
         $projectCodeSegment = self::resolveProjectCodeSegment($project);

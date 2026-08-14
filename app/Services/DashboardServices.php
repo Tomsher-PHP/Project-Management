@@ -378,7 +378,7 @@ class DashboardServices
             $query
                 ->where('current_assignee_id', $user->id)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $this->applyAccountableUserScope($accountableQuery, $user);
+                    $accountableQuery->accountableBy($user);
                 });
         });
     }
@@ -389,10 +389,7 @@ class DashboardServices
             return TaskTimeLogChangeRequest::query()->where('user_id', '!=', $user->id);
         }
 
-        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-
-        return TaskTimeLogChangeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+        return app(TaskTimeLogChangeRequestService::class)->visibleRequestQuery($user);
     }
 
     private function visibleHandoffRequestQuery(User $user): Builder
@@ -443,22 +440,6 @@ class DashboardServices
     private function visibleTaskTimeExtendRequestQuery(User $user): Builder
     {
         return app(TaskTimeExtendService::class)->visibleRequestQuery($user);
-    }
-
-    private function applyAccountableUserScope(Builder $query, User $user): void
-    {
-        $query
-            ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
-                $detailsQuery
-                    ->where('reporter_id', $user->id)
-                    ->orWhere('manager_id', $user->id);
-            })
-            ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                $teamLeaderQuery->whereKey($user->id);
-            })
-            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
-                $milestoneQuery->where('owner_id', $user->id);
-            });
     }
 
     /**
