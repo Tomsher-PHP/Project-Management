@@ -370,13 +370,11 @@ class DashboardServices
     {
         $query = Task::query()->where('request_type', 'self');
 
-        if ($user->is_super_admin) {
-            return $query;
-        }
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return $query->where(function (Builder $query) use ($user) {
+        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
             $query
-                ->where('current_assignee_id', $user->id)
+                ->whereIn('current_assignee_id', $accessibleUserIds)
                 ->orWhere(function (Builder $accountableQuery) use ($user) {
                     $accountableQuery->accountableBy($user);
                 });
