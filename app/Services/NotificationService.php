@@ -18,6 +18,7 @@ use App\Notifications\TaskAssignedNotification;
 use App\Models\TaskExtendTimeRequest;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class NotificationService
@@ -1174,20 +1175,16 @@ class NotificationService
     }
 
     // Handoff request: Notify related users when a handoff request is created
-    public function notifyHandoffRequestCreated(HandoffRequest $handoffRequest, User $requester): void
+    public function notifyHandoffRequestCreated(HandoffRequest $handoffRequest, Collection|array $users, ?User $requester = null): void
     {
         $handoffRequest->loadMissing('project.teamLeader');
 
-        $authorizedUserIds = User::permission(['handoff_request.view', 'handoff_request.view_all'])
-            ->pluck('id')
-            ->toArray();
+        $requester = $requester ?? $handoffRequest->user ?? User::find($handoffRequest->user_id);
 
-        $teamLeaderId = $handoffRequest->project?->teamLeader?->id;
-
-        $recipientIds = collect($authorizedUserIds)
-            ->push($teamLeaderId)
+        $recipientIds = collect($users)
+            ->map(fn($u) => $u instanceof User ? $u->id : (int) $u)
             ->filter()
-            ->reject(fn($id) => (int) $id === (int) $requester->id)
+            ->reject(fn($id) => $requester && (int) $id === (int) $requester->id)
             ->unique()
             ->values()
             ->all();
@@ -1196,14 +1193,15 @@ class NotificationService
             return;
         }
 
+        $requesterName = $requester?->name ?? 'A team member';
         $projectName = $handoffRequest->project?->name ?? 'Project';
         $title = 'New Handoff Request';
-        $message = "{$requester->name} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
+        $message = "{$requesterName} created a new handoff request (#{$handoffRequest->id}) for project '{$projectName}'.";
         $url = route('handoff_requests.index', ['request_status' => 'pending']);
         $emailSubjectContext = [
             'type' => 'handoff_request_submitted',
-            'actor_id' => (int) $requester->id,
-            'actor_name' => $requester->name ?? 'A team member',
+            'actor_id' => $requester ? (int) $requester->id : (int) $handoffRequest->user_id,
+            'actor_name' => $requesterName,
         ];
 
         $this->sendToMany(
@@ -1212,7 +1210,7 @@ class NotificationService
             $message,
             $url,
             UserNotificationSetting::HANDOFF_REQUEST,
-            (int) $requester->id,
+            $requester ? (int) $requester->id : (int) $handoffRequest->user_id,
             $handoffRequest->project_id ? (int) $handoffRequest->project_id : null,
             [
                 'Request Type' => 'Handoff Request',

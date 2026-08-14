@@ -9,14 +9,133 @@ use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectSprint;
 use App\Models\Task;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 
 class HandoffServices
 {
+    public function visibleRequestQuery(User $user): Builder
+    {
+        $query = HandoffRequest::query();
+
+        if ($user->is_super_admin) {
+            return $query;
+        }
+
+        $canViewAll = $user->can('handoff_request.view_all');
+        $canViewAllUsers = $user->can('user.view_all_users');
+        $canViewProject = $user->can('handoff_request.view');
+
+        // Case 1: handoff_request.view_all + user.view_all_users
+        if ($canViewAll && $canViewAllUsers) {
+            return $query;
+        }
+
+        $canViewAccountable = $canViewAll && !$canViewAllUsers;
+
+        if (!$canViewAccountable && !$canViewProject) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $q) use ($user, $canViewAccountable, $canViewProject) {
+            if ($canViewAccountable) {
+                // Case 2: Accountable user hierarchy
+                $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
+                $q->whereIn('user_id', $accessibleUserIds);
+            }
+
+            if ($canViewProject) {
+                // Case 3: Project authority (Team Leader or Milestone Owner)
+                $authorityClause = function (Builder $authorityQuery) use ($user) {
+                    $authorityQuery
+                        ->whereHas('project.teamLeader', function (Builder $tlQuery) use ($user) {
+                            $tlQuery->whereKey($user->id);
+                        })
+                        ->orWhereHas('projectMilestone', function (Builder $mQuery) use ($user) {
+                            $mQuery->where('owner_id', $user->id);
+                        });
+                };
+
+                if ($canViewAccountable) {
+                    $q->orWhere($authorityClause);
+                } else {
+                    $q->where($authorityClause);
+                }
+            }
+        });
+    }
+
+    public function getHandoffAccessibleUsers(User $user): Collection
+    {
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
+
+        return User::query()
+            ->whereIn('id', $accessibleUserIds)
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function getHandoffRequestNotificationRecipients(HandoffRequest $handoffRequest, User $requester): Collection
+    {
+        $handoffRequest->loadMissing(['project.teamLeader', 'projectMilestone.owner']);
+
+        $recipientIds = collect();
+
+        // 1. Project Team Leader
+        if ($handoffRequest->project?->team_leader_id) {
+            $recipientIds->push((int) $handoffRequest->project->team_leader_id);
+        }
+
+        // 2. Project Milestone Owner
+        if ($handoffRequest->projectMilestone?->owner_id) {
+            $recipientIds->push((int) $handoffRequest->projectMilestone->owner_id);
+        }
+
+        // 3. Global viewers: Super admins + users with handoff_request.view_all AND user.view_all_users
+        $globalViewerIds = User::query()
+            ->where(function (Builder $query) {
+                $query->where('is_super_admin', true)
+                    ->orWhere(function (Builder $permQuery) {
+                        $permQuery->permission(['handoff_request.view_all'])
+                            ->permission(['user.view_all_users']);
+                    });
+            })
+            ->pluck('id');
+
+        $recipientIds = $recipientIds->merge($globalViewerIds);
+
+        // 4. Accountable viewers: Users with handoff_request.view_all who have $requester in their accessible users hierarchy
+        $reporterChainIds = User::getReporterChainUserIds($requester->id);
+        if (!empty($reporterChainIds)) {
+            $accountableViewerIds = User::query()
+                ->whereIn('id', $reporterChainIds)
+                ->permission('handoff_request.view_all')
+                ->pluck('id');
+
+            $recipientIds = $recipientIds->merge($accountableViewerIds);
+        }
+
+        // Filter and deduplicate recipient IDs, excluding the requester
+        $finalRecipientIds = $recipientIds
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->reject(fn($id) => $id === (int) $requester->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($finalRecipientIds)) {
+            return collect();
+        }
+
+        return User::query()->whereIn('id', $finalRecipientIds)->get();
+    }
+
     public function getHandoffRequestsForList(User $user, int $perPage, array $filters = [])
     {
-        $query = HandoffRequest::sort($filters)->with([
+        $query = $this->visibleRequestQuery($user)->sort($filters)->with([
             'project',
             'projectMilestone',
             'projectSprint',
@@ -25,44 +144,12 @@ class HandoffServices
             'createdTask'
         ]);
 
-        if (!$user->is_super_admin) {
-            if ($user->can('handoff_request.view_all')) {
-                $query->whereHas('project', function ($q) use ($user) {
-                    $q->accessibleBy($user);
-                });
-            } else {
-                $accessibleUserIds = User::query()
-                    ->accessibleBy($user)
-                    ->pluck('users.id')
-                    ->toArray();
-
-                $accessibleUserIds[] = $user->id;
-                $query->whereIn('user_id', $accessibleUserIds);
-            }
-        }
-
         return $query->filter($filters)->latest()->paginate($perPage);
     }
 
     public function getFilterOptions(User $user): array
     {
-        $query = HandoffRequest::query();
-
-        if (!$user->is_super_admin) {
-            if ($user->can('handoff_request.view_all')) {
-                $query->whereHas('project', function ($q) use ($user) {
-                    $q->accessibleBy($user);
-                });
-            } else {
-                $accessibleUserIds = User::query()
-                    ->accessibleBy($user)
-                    ->pluck('users.id')
-                    ->toArray();
-
-                $accessibleUserIds[] = $user->id;
-                $query->whereIn('user_id', $accessibleUserIds);
-            }
-        }
+        $query = $this->visibleRequestQuery($user);
 
         $projectIds = (clone $query)->distinct()->pluck('project_id')->filter();
         $userIds = (clone $query)->distinct()->pluck('user_id')->filter();
@@ -108,7 +195,10 @@ class HandoffServices
                 'name' => $data['purpose'],
             ]);
 
-            app(NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, User::find($userId));
+            $requester = User::find($userId);
+            $recipients = $this->getHandoffRequestNotificationRecipients($handoffRequest, $requester);
+
+            app(NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, $recipients, $requester);
 
             return $handoffRequest;
         });

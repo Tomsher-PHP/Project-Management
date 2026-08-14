@@ -6,6 +6,7 @@ use App\Models\BreakWorkRequest;
 use App\Models\HandoffRequest;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\HandoffServices;
 use App\Services\TaskTimeExtendService;
 use App\Services\TaskTimeLogChangeRequestService;
 use App\Services\UserService;
@@ -105,27 +106,7 @@ class RequestMenuBadgeService
 
     private function visibleHandoffRequestQuery(User $user): Builder
     {
-        $query = HandoffRequest::query();
-
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
-        if ($user->can('handoff_request.view_all')) {
-            return $query->whereHas('project', function (Builder $projectQuery) use ($user) {
-                $projectQuery->accessibleBy($user);
-            });
-        }
-
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
-
-        return $query->whereIn('user_id', $accessibleUserIds);
+        return app(HandoffServices::class)->visibleRequestQuery($user);
     }
 
     private function visibleBreakRequestQuery(User $user): Builder

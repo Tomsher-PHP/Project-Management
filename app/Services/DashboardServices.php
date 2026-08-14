@@ -394,29 +394,7 @@ class DashboardServices
 
     private function visibleHandoffRequestQuery(User $user): Builder
     {
-        $query = HandoffRequest::query();
-
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
-        if ($user->can('handoff_request.view_all')) {
-            $query->whereHas('project', function (Builder $projectQuery) use ($user) {
-                $projectQuery->accessibleBy($user);
-            });
-        } else {
-            $accessibleUserIds = User::query()
-                ->accessibleBy($user)
-                ->pluck('users.id')
-                ->push($user->id)
-                ->unique()
-                ->values()
-                ->all();
-
-            $query->whereIn('user_id', $accessibleUserIds);
-        }
-
-        return $query;
+        return app(HandoffServices::class)->visibleRequestQuery($user);
     }
 
     private function visibleBreakRequestQuery(User $user): Builder
