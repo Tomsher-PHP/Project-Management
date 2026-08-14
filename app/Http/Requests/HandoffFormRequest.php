@@ -58,12 +58,6 @@ class HandoffFormRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if ($this->project_id && !$validator->errors()->has('project_id')) {
-                $project = Project::find($this->project_id);
-                if ($project && $project->is_agile && empty($this->project_milestone_id)) {
-                    $validator->errors()->add('project_milestone_id', 'The milestone field is required for agile projects.');
-                }
-            }
 
             if ($this->source_task_id && !$validator->errors()->has('source_task_id')) {
                 $task = Task::find($this->source_task_id);

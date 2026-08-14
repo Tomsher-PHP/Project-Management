@@ -29,7 +29,7 @@
                 <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
-                            <label for="handoff_project_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
                             <select id="handoff_project_id" name="project_id" class="tom-select w-full" data-handoff-project-select>
                                 <option value="">Select project</option>
                                 @foreach ($handoffAccessibleProjects as $projectOption)
@@ -42,7 +42,7 @@
                         </div>
 
                         <div>
-                            <label for="handoff_project_milestone_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
                             <select id="handoff_project_milestone_id" name="project_milestone_id" class="tom-select w-full" data-handoff-milestone-select>
                                 <option value="">Select project first</option>
                             </select>
@@ -50,7 +50,7 @@
                         </div>
 
                         <div>
-                            <label for="handoff_project_sprint_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Sprint</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Sprint</label>
                             <select id="handoff_project_sprint_id" name="project_sprint_id" class="tom-select w-full" data-handoff-sprint-select>
                                 <option value="">Select project first</option>
                             </select>
@@ -58,7 +58,7 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label for="handoff_source_task_id" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</label>
                             <select id="handoff_source_task_id" name="source_task_id" class="tom-select w-full" data-handoff-task-select>
                                 <option value="">Select project first</option>
                             </select>
@@ -66,7 +66,7 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label for="handoff_purpose" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose <x-red-star /></label>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose <x-red-star /></label>
                             <select id="handoff_purpose" name="purpose" class="tom-select-add w-full" data-handoff-purpose-select data-placeholder="Select or type a purpose..." data-sort="0" data-max-items="1">
                                 <option value="">Select or type a purpose...</option>
                                 @foreach ($handoffPurposes as $purpose)
