@@ -38,9 +38,6 @@
                                     <x-sorting.sortable-column column="purpose" label="Purpose" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Description</span>
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="user.name" label="Requested By" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -99,11 +96,6 @@
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
                                             {{ $request->purpose ?? '--' }}
-                                        </div>
-                                    </td>
-                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[200px] text-sm text-bgray-800 dark:text-bgray-300" title="{{ $request->description }}">
-                                            {{ \Illuminate\Support\Str::limit($request->description ?? '--', 60) }}
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
@@ -215,7 +207,7 @@
 
         <!-- View Details Modal -->
         <div id="handoffViewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl dark:bg-darkblack-600">
+            <div class="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl dark:bg-darkblack-600">
                 <div class="mb-4 flex items-center justify-between border-b border-bgray-200 pb-3 dark:border-darkblack-400">
                     <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Handoff Request Details</h3>
                     <button type="button" onclick="closeHandoffViewModal()" class="text-bgray-700 hover:text-error-300 transition">
@@ -281,7 +273,7 @@
 
                     <div>
                         <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Full Description</span>
-                        <div id="viewModalDescription" class="mt-1 rounded-lg bg-bgray-50 p-3 text-sm text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-300" style="white-space: pre-wrap;"></div>
+                        <div id="viewModalDescription" class="mt-1 break-words rounded-lg bg-bgray-50 p-3 text-sm leading-relaxed text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-300"></div>
                     </div>
                 </div>
 

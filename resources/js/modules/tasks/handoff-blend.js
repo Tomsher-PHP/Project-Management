@@ -10,6 +10,39 @@ function getProjectFlowIcon(flow) {
     }
 }
 
+function renderHandoffDescription(element, html) {
+    const template = document.createElement('template');
+    template.innerHTML = html || '';
+
+    const allowedTags = new Set(['A', 'B', 'BLOCKQUOTE', 'BR', 'EM', 'H1', 'H2', 'H3', 'I', 'LI', 'OL', 'P', 'STRONG', 'U', 'UL']);
+
+    template.content.querySelectorAll('*').forEach((node) => {
+        if (!allowedTags.has(node.tagName)) {
+            node.replaceWith(document.createTextNode(node.textContent || ''));
+            return;
+        }
+
+        [...node.attributes].forEach((attribute) => {
+            if (node.tagName !== 'A' || attribute.name !== 'href') {
+                node.removeAttribute(attribute.name);
+            }
+        });
+
+        if (node.tagName === 'A') {
+            const href = node.getAttribute('href') || '';
+            if (!/^(https?:|mailto:|\/)/i.test(href)) {
+                node.removeAttribute('href');
+            }
+        }
+    });
+
+    element.replaceChildren(template.content);
+
+    if (!element.textContent.trim()) {
+        element.textContent = '--';
+    }
+}
+
 window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalDate').textContent = data.date;
     document.getElementById('viewModalRequestedBy').textContent = data.requestedBy;
@@ -24,7 +57,7 @@ window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalCreatedTask').textContent = data.createdTask;
     document.getElementById('viewModalPurpose').textContent = data.purpose;
     document.getElementById('viewModalStatus').textContent = data.status;
-    document.getElementById('viewModalDescription').textContent = data.description;
+    renderHandoffDescription(document.getElementById('viewModalDescription'), data.description);
 
     const modal = document.getElementById('handoffViewModal');
     modal.classList.remove('hidden');
