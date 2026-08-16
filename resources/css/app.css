@@ -62,3 +62,48 @@
 .dark .custom-quill-wrapper .ql-toolbar .ql-picker {
     color: #cbd5e1 !important; /* bgray-300 */
 }
+
+/* View Modal Description Heading Styles */
+#viewModalDescription h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+    margin-top: 0.75rem;
+    margin-bottom: 0.375rem;
+}
+#viewModalDescription h2 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.625rem;
+    margin-bottom: 0.375rem;
+}
+#viewModalDescription h3 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+#viewModalDescription h4,
+#viewModalDescription h5,
+#viewModalDescription h6 {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.375rem;
+    margin-bottom: 0.25rem;
+}
+
+.dark #viewModalDescription h1,
+.dark #viewModalDescription h2,
+.dark #viewModalDescription h3,
+.dark #viewModalDescription h4,
+.dark #viewModalDescription h5,
+.dark #viewModalDescription h6 {
+    color: #ffffff;
+}

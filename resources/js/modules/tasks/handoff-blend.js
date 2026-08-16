@@ -37,10 +37,18 @@ function convertPlainTextToHtml(text) {
             return;
         }
 
+        const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
         const bulletMatch = trimmed.match(/^[-\*•–]\s+(.*)$/);
         const numberMatch = trimmed.match(/^\d+[\.\)]\s+(.*)$/);
 
-        if (bulletMatch) {
+        if (headingMatch) {
+            if (currentListType) {
+                html += `</${currentListType}>`;
+                currentListType = null;
+            }
+            const level = headingMatch[1].length;
+            html += `<h${level}>${escapeHtml(headingMatch[2])}</h${level}>`;
+        } else if (bulletMatch) {
             if (currentListType !== 'ul') {
                 if (currentListType) html += `</${currentListType}>`;
                 html += '<ul>';
@@ -79,6 +87,13 @@ function renderHandoffDescription(element, html) {
     }
 
     let processedHtml = html;
+
+    if (/&lt;[a-z][\s\S]*&gt;/i.test(processedHtml) && !/<[a-z][\s\S]*>/i.test(processedHtml)) {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = processedHtml;
+        processedHtml = txt.value;
+    }
+
     const isHtml = /<[a-z][\s\S]*>/i.test(processedHtml);
     if (!isHtml) {
         processedHtml = convertPlainTextToHtml(processedHtml);
@@ -100,7 +115,7 @@ function renderHandoffDescription(element, html) {
     });
 
     const allowedTags = new Set([
-        'A', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'DIV', 'EM', 'H1', 'H2', 'H3', 'I',
+        'A', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'DIV', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'I',
         'LI', 'OL', 'P', 'PRE', 'SPAN', 'STRONG', 'U', 'UL'
     ]);
 
