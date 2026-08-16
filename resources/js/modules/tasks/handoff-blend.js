@@ -13,6 +13,7 @@ function getProjectFlowIcon(flow) {
 window.openHandoffViewModal = function (data) {
     document.getElementById('viewModalDate').textContent = data.date;
     document.getElementById('viewModalRequestedBy').textContent = data.requestedBy;
+    document.getElementById('viewModalTargetUser').textContent = data.targetUser;
 
     const projectEl = document.getElementById('viewModalProject');
     projectEl.innerHTML = getProjectFlowIcon(data.projectFlow) + '<span>' + data.project + '</span>';
@@ -76,6 +77,7 @@ document.addEventListener('click', (e) => {
         }
 
         const projectId = assignBtn.dataset.projectId;
+        const targetUserId = assignBtn.dataset.targetUserId;
         const projectField = form.querySelector('[name="project_id"]');
         if (projectId && projectField) {
             if (projectField.tomselect) {
@@ -87,6 +89,16 @@ document.addEventListener('click', (e) => {
 
             // Wait for project fields (milestones) to update
             setTimeout(() => {
+                const assigneeField = form.querySelector('[name="current_assignee_id"]');
+                if (targetUserId && assigneeField) {
+                    if (assigneeField.tomselect) {
+                        assigneeField.tomselect.setValue(targetUserId);
+                    } else {
+                        assigneeField.value = targetUserId;
+                        assigneeField.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+
                 const milestoneId = assignBtn.dataset.projectMilestoneId;
                 const milestoneField = form.querySelector('[name="project_milestone_id"]');
                 if (milestoneId && milestoneField) {

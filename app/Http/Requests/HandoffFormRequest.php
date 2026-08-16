@@ -50,6 +50,11 @@ class HandoffFormRequest extends FormRequest
                 'integer',
                 Rule::exists('tasks', 'id')->where('project_id', $this->project_id),
             ],
+            'target_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id'),
+            ],
             'purpose' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string'],
         ];
@@ -58,6 +63,21 @@ class HandoffFormRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
+
+            if ($this->target_user_id && ! $validator->errors()->has('target_user_id')) {
+                if ((int) $this->target_user_id === (int) $this->user()->id) {
+                    $validator->errors()->add('target_user_id', 'You cannot select yourself as the target user.');
+                } elseif (! $validator->errors()->has('project_id')) {
+                    $isActiveProjectMember = Project::query()
+                        ->whereKey($this->project_id)
+                        ->whereHas('activeMembers', fn ($query) => $query->whereKey($this->target_user_id))
+                        ->exists();
+
+                    if (! $isActiveProjectMember) {
+                        $validator->errors()->add('target_user_id', 'The selected target user must be an active member of the selected project.');
+                    }
+                }
+            }
 
             if ($this->source_task_id && !$validator->errors()->has('source_task_id')) {
                 $task = Task::find($this->source_task_id);

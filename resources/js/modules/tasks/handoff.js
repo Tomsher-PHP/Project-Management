@@ -11,17 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const milestoneSelect = form.querySelector('[data-handoff-milestone-select]');
     const sprintSelect = form.querySelector('[data-handoff-sprint-select]');
     const taskSelect = form.querySelector('[data-handoff-task-select]');
+    const targetUserSelect = form.querySelector('[data-handoff-target-user-select]');
     const purposeSelect = form.querySelector('[data-handoff-purpose-select]');
     const submitBtn = form.querySelector('[data-handoff-create-submit]');
 
     // TomSelect Instances
-    let tsProject, tsMilestone, tsSprint, tsTask, tsPurpose;
+    let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose;
 
     const initSelects = () => {
         tsProject = projectSelect.tomselect;
         tsMilestone = milestoneSelect.tomselect;
         tsSprint = sprintSelect.tomselect;
         tsTask = taskSelect.tomselect;
+        tsTargetUser = targetUserSelect?.tomselect;
         tsPurpose = purposeSelect?.tomselect;
 
         if (tsPurpose) {
@@ -44,8 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
             tsSprint.clearOptions();
             tsTask.clear();
             tsTask.clearOptions();
+            tsTargetUser?.clear();
+            tsTargetUser?.clearOptions();
 
             if (!projectId) return;
+
+            (targetUserDependencies[projectId] || []).forEach((user) => {
+                tsTargetUser?.addOption(user);
+            });
+            tsTargetUser?.refreshOptions(false);
 
             // Filter milestones
             const projectMilestones = dependencies.milestones.filter(m => String(m.project_id) === String(projectId));
@@ -95,6 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const dependencies = getDependencies();
+
+    const getTargetUserDependencies = () => {
+        const depBlock = document.getElementById('handoff-target-user-dependencies');
+        return depBlock ? JSON.parse(depBlock.textContent) : {};
+    };
+
+    const targetUserDependencies = getTargetUserDependencies();
 
     if (projectSelect.tomselect) {
         initSelects();
@@ -161,24 +177,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const resetHandoffForm = () => {
+        form.reset();
+        if (tsProject) tsProject.clear();
+        if (tsPurpose) tsPurpose.clear();
+        if (tsMilestone) tsMilestone.clear();
+        if (tsSprint) tsSprint.clear();
+        if (tsTask) tsTask.clear();
+        if (tsTargetUser) tsTargetUser.clear();
+
+        form.querySelectorAll('[data-handoff-create-error]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    };
+
     const toggleModal = (show) => {
         if (show) {
+            resetHandoffForm();
             modalEl.classList.remove('hidden');
             modalEl.classList.add('flex');
         } else {
             modalEl.classList.add('hidden');
             modalEl.classList.remove('flex');
-            form.reset();
-            if (tsProject) tsProject.clear();
-            if (tsPurpose) tsPurpose.clear();
-            if (tsMilestone) tsMilestone.clear();
-            if (tsSprint) tsSprint.clear();
-            if (tsTask) tsTask.clear();
-
-            form.querySelectorAll('[data-handoff-create-error]').forEach(el => {
-                el.textContent = '';
-                el.classList.add('hidden');
-            });
+            resetHandoffForm();
         }
     };
 

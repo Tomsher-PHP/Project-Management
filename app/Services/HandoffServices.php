@@ -36,14 +36,17 @@ class HandoffServices
         $canViewAccountable = $canViewAll && !$canViewAllUsers;
 
         if (!$canViewAccountable && !$canViewProject) {
-            return $query->whereRaw('1 = 0');
+            return $query->where('target_user_id', $user->id);
         }
 
         return $query->where(function (Builder $q) use ($user, $canViewAccountable, $canViewProject) {
+            // Direct recipient access, in addition to the existing role-based access.
+            $q->where('target_user_id', $user->id);
+
             if ($canViewAccountable) {
                 // Case 2: Accountable user hierarchy
                 $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
-                $q->whereIn('user_id', $accessibleUserIds);
+                $q->orWhereIn('user_id', $accessibleUserIds);
             }
 
             if ($canViewProject) {
@@ -58,11 +61,7 @@ class HandoffServices
                         });
                 };
 
-                if ($canViewAccountable) {
-                    $q->orWhere($authorityClause);
-                } else {
-                    $q->where($authorityClause);
-                }
+                $q->orWhere($authorityClause);
             }
         });
     }
@@ -82,6 +81,11 @@ class HandoffServices
         $handoffRequest->loadMissing(['project.teamLeader', 'projectMilestone.owner']);
 
         $recipientIds = collect();
+
+        // The intended recipient is added to the established recipient set below.
+        if ($handoffRequest->target_user_id) {
+            $recipientIds->push((int) $handoffRequest->target_user_id);
+        }
 
         // 1. Project Team Leader
         if ($handoffRequest->project?->teamLeader?->id) {
@@ -141,6 +145,7 @@ class HandoffServices
             'projectSprint',
             'sourceTask',
             'user',
+            'targetUser',
             'createdTask'
         ]);
 
@@ -180,6 +185,7 @@ class HandoffServices
                 'project_sprint_id' => $data['project_sprint_id'] ?? null,
                 'source_task_id' => $data['source_task_id'] ?? null,
                 'user_id' => $userId,
+                'target_user_id' => $data['target_user_id'] ?? null,
                 'purpose' => $data['purpose'],
                 'description' => $data['description'],
                 'status' => 0, // pending
@@ -200,7 +206,7 @@ class HandoffServices
 
             app(NotificationService::class)->notifyHandoffRequestCreated($handoffRequest, $recipients, $requester);
 
-            return $handoffRequest;
+            return $handoffRequest->load('targetUser');
         });
     }
 

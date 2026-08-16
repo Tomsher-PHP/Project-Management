@@ -24,6 +24,19 @@ class HandoffController extends Controller
 
     public function index(Request $request, TaskFormService $taskFormService)
     {
+        $user = $request->user();
+        $canViewHandoffs = $user->is_super_admin || $user->canAny([
+            'handoff_request.view',
+            'handoff_request.view_all',
+        ]);
+        $isHandoffTarget = HandoffRequest::query()
+            ->where('target_user_id', $user->id)
+            ->exists();
+
+        if (! $canViewHandoffs && ! $isHandoffTarget) {
+            return redirect()->back()->with('error', 'You do not have permission to perform this action.');
+        }
+
         $perPage = (int) $request->input('per_page', config('constants.per_page_count', 15));
 
         $selectedStatus = in_array($request->input('request_status'), ['pending', 'noted', 'assigned'], true)

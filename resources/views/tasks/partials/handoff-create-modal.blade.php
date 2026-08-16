@@ -1,11 +1,19 @@
 @php
     $handoffAccessibleProjects = \App\Models\Project::accessibleBy(auth()->user())
         ->where('is_active', true)
+        ->with('activeMembers:id,name')
         // ->whereHas('projectStatus', function ($q) {
         //     $q->where('is_completed', false);
         // })
         ->get();
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
+    $handoffTargetUsersByProject = $handoffAccessibleProjects->mapWithKeys(function ($project) {
+        return [$project->id => $project->activeMembers
+            ->reject(fn ($member) => $member->id === auth()->id())
+            ->sortBy('name')
+            ->values()
+            ->map(fn ($member) => ['value' => (string) $member->id, 'text' => $member->name])];
+    });
 @endphp
 
 <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-handoff-create-modal id="handoff_create_modal">
@@ -66,6 +74,14 @@
                         </div>
 
                         <div class="md:col-span-2">
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</label>
+                            <select id="handoff_target_user_id" name="target_user_id" class="tom-select w-full" data-handoff-target-user-select>
+                                <option value="">Select project first</option>
+                            </select>
+                            <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="target_user_id"></p>
+                        </div>
+
+                        <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose <x-red-star /></label>
                             <select id="handoff_purpose" name="purpose" class="tom-select-add w-full" data-handoff-purpose-select data-placeholder="Select or type a purpose..." data-sort="0" data-max-items="1">
                                 <option value="">Select or type a purpose...</option>
@@ -97,3 +113,7 @@
         </div>
     </div>
 </div>
+
+<script id="handoff-target-user-dependencies" type="application/json">
+    @json($handoffTargetUsersByProject)
+</script>

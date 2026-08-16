@@ -38,6 +38,9 @@
                                     <x-sorting.sortable-column column="user.name" label="Requested By" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Target User</span>
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="project.name" label="Project" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -87,6 +90,11 @@
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <div class="min-w-[160px] text-sm text-bgray-800 dark:text-bgray-300">
+                                            {{ $request->targetUser?->name ?? '--' }}
+                                        </div>
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[150px] flex items-center gap-2 font-semibold text-bgray-900 dark:text-white">
 
                                             @if ($request->project)
@@ -126,7 +134,7 @@
                                             @if (auth()->user()->can('task.create'))
                                                 @if (in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
                                                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-success-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}"
-                                                        data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-description="{{ $request->description ?? '' }}" data-purpose="{{ $request->purpose ?? '' }}">
+                                                        data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-description="{{ $request->description ?? '' }}" data-purpose="{{ $request->purpose ?? '' }}">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                                         </svg>
@@ -152,6 +160,7 @@
                                                 onclick="openHandoffViewModal({{ json_encode([
                                                     'date' => $request->created_at->format('Y-m-d H:i:s'),
                                                     'requestedBy' => $requestUser?->name ?? '--',
+                                                    'targetUser' => $request->targetUser?->name ?? '--',
                                                     'project' => $request->project?->name ?? '--',
                                                     'projectFlow' => $request->project?->project_flow ?? '',
                                                     'milestone' => $request->projectMilestone?->name ?? '--',
@@ -171,7 +180,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data col-span="7" message="No handoff requests found." sub-message="There are no handoff requests available for your access level." />
+                                <x-table-no-data col-span="8" message="No handoff requests found." sub-message="There are no handoff requests available for your access level." />
                             @endforelse
                         </tbody>
                     </table>
@@ -218,6 +227,10 @@
                         <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Requested By</span>
                             <p id="viewModalRequestedBy" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</span>
+                            <p id="viewModalTargetUser" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
