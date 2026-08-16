@@ -32,15 +32,6 @@
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="created_at" label="Date" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="user.name" label="Requested By" />
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Target User</span>
-                                </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="project.name" label="Project" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -50,7 +41,16 @@
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Description</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <x-sorting.sortable-column column="user.name" label="Requested By" />
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Target User</span>
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="status" label="Status" />
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <x-sorting.sortable-column column="created_at" label="Date" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-center dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Action</span>
@@ -62,6 +62,7 @@
                             @forelse ($handoffRequests as $request)
                                 @php
                                     $requestUser = $request->user;
+                                    $targetUser = $request->targetUser;
                                     $statusClasses = [
                                         0 => 'bg-warning-50 text-warning-300',
                                         1 => 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300',
@@ -76,24 +77,7 @@
                                     $currentStatusLabel = $statusLabels[$request->status] ?? 'Unknown';
                                 @endphp
                                 <tr class="group {{ config('assets.classes.table_row_hover') }}">
-                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
-                                            @appDateTime($request->created_at)
-                                        </div>
-                                    </td>
-                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="flex min-w-[180px] items-center gap-3">
-                                            <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
-                                            <div>
-                                                <p class="font-semibold text-bgray-900 dark:text-white">{{ $requestUser?->name ?? 'Unknown User' }}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <div class="min-w-[160px] text-sm text-bgray-800 dark:text-bgray-300">
-                                            {{ $request->targetUser?->name ?? '--' }}
-                                        </div>
-                                    </td>
+
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[150px] flex items-center gap-2 font-semibold text-bgray-900 dark:text-white">
 
@@ -123,10 +107,33 @@
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <div class="flex min-w-[180px] items-center gap-3">
+                                            <x-user-avatar :user="$requestUser" :image="$requestUser?->profile_image_url" :name="$requestUser?->name ?? 'Unknown User'" size="md" />
+                                            <div>
+                                                <p class="font-semibold text-bgray-900 dark:text-white">{{ $requestUser?->name ?? 'Unknown User' }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <div class="flex min-w-[180px] items-center gap-3">
+                                            @if ($targetUser)
+                                                <x-user-avatar :user="$targetUser" :image="$targetUser->profile_image_url" :name="$targetUser->name" size="md" />
+                                                <p class="font-semibold text-bgray-900 dark:text-white">{{ $targetUser->name }}</p>
+                                            @else
+                                                <span class="text-sm text-bgray-800 dark:text-bgray-300">--</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="min-w-[100px]">
                                             <span class="inline-flex rounded-lg px-3 py-1 text-xs font-semibold {{ $currentStatusClass }}">
                                                 {{ $currentStatusLabel }}
                                             </span>
+                                        </div>
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <div class="min-w-[120px] text-sm text-bgray-800 dark:text-bgray-300">
+                                            @appDateTime($request->created_at)
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 text-center dark:border-darkblack-400">
