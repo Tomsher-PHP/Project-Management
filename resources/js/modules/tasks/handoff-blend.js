@@ -3,11 +3,13 @@ import Alert from '../../alert';
 function getProjectFlowIcon(flow) {
     if (!flow) return '';
     const isAgile = flow.toLowerCase() === 'agile';
-    if (isAgile) {
-        return `<span class="inline-flex shrink-0 items-center justify-center border border-bgray-200 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 h-5 w-5 rounded bg-success-50" title="Project Flow: Agile"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-success-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h4m0 0v4m0-4l-6 6"></path><path stroke-linecap="round" stroke-linejoin="round" d="M7 17h4m-4 0v-4m0 4l10-10" opacity=".45"></path></svg></span>`;
-    } else {
-        return `<span class="inline-flex shrink-0 items-center justify-center border border-bgray-200 text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 h-5 w-5 rounded bg-bgray-100" title="Project Flow: Linear"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 8l4 4-4 4"></path></svg></span>`;
-    }
+    const title = `Project Flow: ${isAgile ? 'Agile' : 'Linear'}`;
+    const colorClasses = isAgile ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400';
+    const svgContent = isAgile
+        ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>`;
+
+    return `<span class="inline-flex shrink-0 items-center justify-center transition duration-150 h-5 w-5 rounded ${colorClasses}" title="${title}">${svgContent}</span>`;
 }
 
 function escapeHtml(str) {

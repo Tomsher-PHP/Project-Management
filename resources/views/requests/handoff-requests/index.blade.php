@@ -219,45 +219,30 @@
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Date</span>
-                            <p id="viewModalDate" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
-                        </div>
-                        <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Requested By</span>
-                            <p id="viewModalRequestedBy" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
-                        </div>
-                        <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</span>
-                            <p id="viewModalTargetUser" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project</span>
                             <p id="viewModalProject" class="mt-1 flex items-center gap-2 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</span>
-                            <p id="viewModalMilestone" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose</span>
+                            <p id="viewModalPurpose" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</span>
+                            <p id="viewModalMilestone" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                        </div>
                         <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Sprint</span>
                             <p id="viewModalSprint" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
-                        <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</span>
-                            <p id="viewModalSourceTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
-                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Created Task</span>
-                            <p id="viewModalCreatedTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</span>
+                            <p id="viewModalSourceTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                         </div>
                         <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Status</span>
@@ -265,14 +250,26 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Requested By</span>
+                            <p id="viewModalRequestedBy" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                            <p id="viewModalDate" class="mt-0.5 text-xs text-bgray-600 dark:text-bgray-400"></p>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</span>
+                            <p id="viewModalTargetUser" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                        </div>
+                    </div>
+
                     <div>
-                        <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose</span>
-                        <p id="viewModalPurpose" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
+                        <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Created Task</span>
+                        <p id="viewModalCreatedTask" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
                     </div>
 
                     <div>
                         <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Full Description</span>
-                        <div id="viewModalDescription" class="mt-1 break-words rounded-lg bg-bgray-50 p-4 text-sm leading-relaxed text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-300 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_ol]:space-y-1 [&_li]:my-0.5 [&_li[data-list=bullet]]:list-disc [&_li[data-list=ordered]]:list-decimal [&_p]:my-1.5 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:my-2 [&_h2]:text-base [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:my-1.5 [&_a]:text-success-500 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-bgray-300 [&_blockquote]:pl-3 [&_blockquote]:italic"></div>
+                        <div id="viewModalDescription" class="mt-1 min-h-[100px] max-h-60 overflow-y-auto break-words rounded-lg bg-bgray-50 p-4 text-sm leading-relaxed text-bgray-800 dark:bg-darkblack-500 dark:text-bgray-300 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_ol]:space-y-1 [&_li]:my-0.5 [&_li[data-list=bullet]]:list-disc [&_li[data-list=ordered]]:list-decimal [&_p]:my-1.5 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:my-2 [&_h2]:text-base [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:my-1.5 [&_a]:text-success-500 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-bgray-300 [&_blockquote]:pl-3 [&_blockquote]:italic"></div>
                     </div>
                 </div>
 
