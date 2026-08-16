@@ -58,7 +58,7 @@ class HandoffController extends Controller
 
         $taskFormData = [];
         $taskCreateDependencies = [];
-        if ($request->user()->can('task.create')) {
+        if ($request->user()->can('task.create') || $request->user()->can('request-task')) {
             $taskFormData = $taskFormService->getCreateData($request->user());
             $taskCreateDependencies = $this->buildTaskCreateDependencies($taskFormData['taskCreateProjects'] ?? collect());
         }

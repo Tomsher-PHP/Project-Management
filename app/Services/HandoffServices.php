@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class HandoffServices
 {
@@ -238,6 +239,15 @@ class HandoffServices
 
         if (!in_array($handoffRequest->status, [HandoffRequest::STATUS_PENDING, HandoffRequest::STATUS_NOTED])) {
             throw new \Exception("Only pending or noted handoff requests can be assigned.");
+        }
+
+        if ($createdTask->request_type === 'self') {
+            if (!Gate::allows('request-task')) {
+                throw new \Exception("You do not have permission to request a task.");
+            }
+            if ((int) $handoffRequest->target_user_id !== (int) $user->id) {
+                throw new \Exception("Only the designated target user can request a task from this handoff.");
+            }
         }
 
         if ($handoffRequest->project_id !== $createdTask->project_id) {

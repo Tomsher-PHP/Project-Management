@@ -130,7 +130,8 @@
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 text-center dark:border-darkblack-400">
                                         <div class="flex items-center justify-center gap-2">
-                                            @if (auth()->user()->can('task.create'))
+
+                                            @if (auth()->user()->can('task.create') && !auth()->user()->can('request-task'))
                                                 @if (in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
                                                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-success-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-description="{{ e($request->description ?? '') }}" data-purpose="{{ e($request->purpose ?? '') }}">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -139,6 +140,16 @@
                                                     </button>
                                                 @endif
                                             @endif
+
+                                            @can('request-task')
+                                                @if ($request->target_user_id === auth()->id() && in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
+                                                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-success-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Request Task" data-task-create-open data-task-create-request-type="self" data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-description="{{ e($request->description ?? '') }}" data-purpose="{{ e($request->purpose ?? '') }}">
+                                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
+                                            @endcan
 
                                             @can('handoff_request.note')
                                                 @if ($request->status == App\Models\HandoffRequest::STATUS_PENDING)
@@ -281,19 +292,19 @@
             </div>
         </div>
 
-        @can('task.create')
+        @if (auth()->user()->can('task.create') || auth()->user()->can('request-task'))
             @include('tasks.partials.create-modal')
             <script id="task-create-dependencies" type="application/json">
                 @json($taskCreateDependencies)
             </script>
-        @endcan
+        @endif
 
     </main>
 @endsection
 
 @push('scripts')
-    @can('task.create')
+    @if (auth()->user()->can('task.create') || auth()->user()->can('request-task'))
         @vite('resources/js/modules/task-list-create.js')
-    @endcan
+    @endif
     @vite('resources/js/modules/tasks/handoff-blend.js')
 @endpush

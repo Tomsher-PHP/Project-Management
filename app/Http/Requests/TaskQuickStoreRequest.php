@@ -3,9 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesAgileTaskPlacement;
+use App\Models\HandoffRequest;
 use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class TaskQuickStoreRequest extends FormRequest
@@ -35,6 +37,31 @@ class TaskQuickStoreRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('handoff_requests', 'id'),
+                function ($attribute, $value, $fail) {
+                    if (blank($value)) {
+                        return;
+                    }
+                    $handoffRequest = HandoffRequest::find($value);
+                    if (!$handoffRequest) {
+                        return;
+                    }
+
+                    if (!in_array($handoffRequest->status, [HandoffRequest::STATUS_PENDING, HandoffRequest::STATUS_NOTED], true)) {
+                        $fail('The selected handoff request is no longer pending or noted.');
+                        return;
+                    }
+
+                    if ($this->input('request_type') === 'self') {
+                        if (!Gate::allows('request-task')) {
+                            $fail('You do not have permission to request a task.');
+                            return;
+                        }
+                        if ((int) $handoffRequest->target_user_id !== (int) auth()->id()) {
+                            $fail('Only the designated target user can request a task from this handoff.');
+                            return;
+                        }
+                    }
+                },
             ],
             'request_type' => ['nullable', Rule::in($requestTypes)],
             'name' => ['required', 'string', 'max:255'],
