@@ -350,7 +350,7 @@
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isRequestsMenuActive ? $sidebarItemActiveClass : '' }}">Requests</span>
                                             @if ($requestMenuBadges['has_any_pending'] ?? false)
-                                                <span class="h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500 dark:border-none"></span>
+                                                <span class="h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500 dark:border-none ml-1"></span>
                                             @endif
                                         </div>
                                         <span class="flex items-center gap-2">

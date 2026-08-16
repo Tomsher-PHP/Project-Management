@@ -14,7 +14,9 @@
                         <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
                     @endcan
 
-                    <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
+                    @can('request-task')
+                        <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
+                    @endcan
 
                     @can('handoff_request.create')
                         <x-button.create-button type="button" data-handoff-create-open title="Create Handoff request to qa, review etc.." label="Handoff" />
@@ -32,8 +34,7 @@
                         <input type="search" value="{{ request('search', '') }}" placeholder="Search tasks by name" class="h-10 w-full rounded-lg border border-bgray-400 bg-white pl-9 pr-3 text-sm font-semibold text-[#111653] shadow-[var(--workspace-soft-shadow)] outline-none transition placeholder:text-bgray-600 focus:border-success-300 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:placeholder:text-bgray-600" data-workspace-kanban-search autocomplete="off" />
                     </label>
 
-                    <button type="button" class="{{ $workspaceHasActiveFilters ? 'border-success-200 bg-success-50/80 text-success-400 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300' : 'border-bgray-400 bg-white text-[#111653] dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400' }} inline-flex h-10 w-10 items-center justify-center rounded-lg border shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff] hover:text-success-400 dark:hover:text-success-300"
-                        data-workspace-kanban-filter-button aria-label="Open filters" title="Filter tasks">
+                    <button type="button" class="{{ $workspaceHasActiveFilters ? 'border-success-200 bg-success-50/80 text-success-400 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300' : 'border-bgray-400 bg-white text-[#111653] dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400' }} inline-flex h-10 w-10 items-center justify-center rounded-lg border shadow-[var(--workspace-soft-shadow)] transition hover:border-[#d7e3f6] hover:bg-[#fbfdff] hover:text-success-400 dark:hover:text-success-300" data-workspace-kanban-filter-button aria-label="Open filters" title="Filter tasks">
                         <span class="relative inline-flex">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18l-7 8v5.25a1.5 1.5 0 0 1-.879 1.365l-3 1.364A.75.75 0 0 1 9 19.796V12.5l-6-8Z" />
