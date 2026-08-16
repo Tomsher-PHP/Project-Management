@@ -10,11 +10,97 @@ function getProjectFlowIcon(flow) {
     }
 }
 
-function renderHandoffDescription(element, html) {
-    const template = document.createElement('template');
-    template.innerHTML = html || '';
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-    const allowedTags = new Set(['A', 'B', 'BLOCKQUOTE', 'BR', 'EM', 'H1', 'H2', 'H3', 'I', 'LI', 'OL', 'P', 'STRONG', 'U', 'UL']);
+function convertPlainTextToHtml(text) {
+    if (!text) return '';
+    const lines = text.split(/\r?\n/);
+    let html = '';
+    let currentListType = null;
+
+    lines.forEach((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            if (currentListType) {
+                html += `</${currentListType}>`;
+                currentListType = null;
+            }
+            return;
+        }
+
+        const bulletMatch = trimmed.match(/^[-\*•–]\s+(.*)$/);
+        const numberMatch = trimmed.match(/^\d+[\.\)]\s+(.*)$/);
+
+        if (bulletMatch) {
+            if (currentListType !== 'ul') {
+                if (currentListType) html += `</${currentListType}>`;
+                html += '<ul>';
+                currentListType = 'ul';
+            }
+            html += `<li>${escapeHtml(bulletMatch[1])}</li>`;
+        } else if (numberMatch) {
+            if (currentListType !== 'ol') {
+                if (currentListType) html += `</${currentListType}>`;
+                html += '<ol>';
+                currentListType = 'ol';
+            }
+            html += `<li>${escapeHtml(numberMatch[1])}</li>`;
+        } else {
+            if (currentListType) {
+                html += `</${currentListType}>`;
+                currentListType = null;
+            }
+            html += `<p>${escapeHtml(trimmed)}</p>`;
+        }
+    });
+
+    if (currentListType) {
+        html += `</${currentListType}>`;
+    }
+
+    return html;
+}
+
+function renderHandoffDescription(element, html) {
+    if (!element) return;
+
+    if (!html || !html.trim()) {
+        element.textContent = '--';
+        return;
+    }
+
+    let processedHtml = html;
+    const isHtml = /<[a-z][\s\S]*>/i.test(processedHtml);
+    if (!isHtml) {
+        processedHtml = convertPlainTextToHtml(processedHtml);
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = processedHtml || '';
+
+    // Transform Quill ol with data-list="bullet" into ul
+    template.content.querySelectorAll('ol').forEach((ol) => {
+        const hasBulletLi = ol.querySelector('li[data-list="bullet"]');
+        if (hasBulletLi) {
+            const ul = document.createElement('ul');
+            while (ol.firstChild) {
+                ul.appendChild(ol.firstChild);
+            }
+            ol.replaceWith(ul);
+        }
+    });
+
+    const allowedTags = new Set([
+        'A', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'DIV', 'EM', 'H1', 'H2', 'H3', 'I',
+        'LI', 'OL', 'P', 'PRE', 'SPAN', 'STRONG', 'U', 'UL'
+    ]);
 
     template.content.querySelectorAll('*').forEach((node) => {
         if (!allowedTags.has(node.tagName)) {
@@ -23,9 +109,16 @@ function renderHandoffDescription(element, html) {
         }
 
         [...node.attributes].forEach((attribute) => {
-            if (node.tagName !== 'A' || attribute.name !== 'href') {
-                node.removeAttribute(attribute.name);
+            if (node.tagName === 'A' && attribute.name === 'href') {
+                return;
             }
+            if (node.tagName === 'LI' && attribute.name === 'data-list') {
+                return;
+            }
+            if (attribute.name === 'class') {
+                return;
+            }
+            node.removeAttribute(attribute.name);
         });
 
         if (node.tagName === 'A') {

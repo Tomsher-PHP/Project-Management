@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D3csfzmP.css",
+    "file": "assets/app-BaA9BvAb.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D4uvovs2.js",
+    "file": "assets/app-D10rIQq4.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -363,7 +363,7 @@
     ]
   },
   "resources/js/modules/tasks/extend-task.js": {
-    "file": "assets/extend-task-CXhq7YEz.js",
+    "file": "assets/extend-task-CtodKGwO.js",
     "name": "extend-task",
     "src": "resources/js/modules/tasks/extend-task.js",
     "isEntry": true,
@@ -373,7 +373,7 @@
     ]
   },
   "resources/js/modules/tasks/handoff-blend.js": {
-    "file": "assets/handoff-blend-CyrkDy-D.js",
+    "file": "assets/handoff-blend-BOeML3VY.js",
     "name": "handoff-blend",
     "src": "resources/js/modules/tasks/handoff-blend.js",
     "isEntry": true,
@@ -383,7 +383,7 @@
     ]
   },
   "resources/js/modules/tasks/handoff.js": {
-    "file": "assets/handoff-CVumuL0L.js",
+    "file": "assets/handoff-CuX8LU59.js",
     "name": "handoff",
     "src": "resources/js/modules/tasks/handoff.js",
     "isEntry": true
