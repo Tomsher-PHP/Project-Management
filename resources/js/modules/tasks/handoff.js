@@ -14,9 +14,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetUserSelect = form.querySelector('[data-handoff-target-user-select]');
     const purposeSelect = form.querySelector('[data-handoff-purpose-select]');
     const submitBtn = form.querySelector('[data-handoff-create-submit]');
+    const descriptionInput = form.querySelector('#handoff_description_input');
+    const descriptionEditorElement = form.querySelector('#handoff_description_editor');
 
     // TomSelect Instances
-    let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose;
+    let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose, descriptionEditor;
+
+    const initDescriptionEditor = () => {
+        if (!descriptionEditorElement || !window.Quill || descriptionEditor) return;
+
+        descriptionEditor = new window.Quill(descriptionEditorElement, {
+            theme: 'snow',
+            placeholder: 'Provide handoff details',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ header: [1, 2, 3, false] }],
+                    ['link'],
+                ],
+            },
+        });
+    };
 
     const initSelects = () => {
         tsProject = projectSelect.tomselect;
@@ -112,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const targetUserDependencies = getTargetUserDependencies();
 
+    initDescriptionEditor();
+
     if (projectSelect.tomselect) {
         initSelects();
     } else {
@@ -179,6 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetHandoffForm = () => {
         form.reset();
+        if (descriptionEditor) descriptionEditor.setContents([]);
+        if (descriptionInput) descriptionInput.value = '';
         if (tsProject) tsProject.clear();
         if (tsPurpose) tsPurpose.clear();
         if (tsMilestone) tsMilestone.clear();
@@ -215,6 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
             el.textContent = '';
             el.classList.add('hidden');
         });
+
+        if (descriptionEditor && descriptionInput) {
+            const content = descriptionEditor.root.innerHTML.trim();
+            descriptionInput.value = content === '<p><br></p>' ? '' : content;
+        }
 
         const formData = new FormData(form);
         const submitUrl = form.getAttribute('data-store-url');

@@ -20,7 +20,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-handoff-create-close></div>
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
-        <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-handoff-create-modal-panel>
+        <div class="relative z-10 w-full max-w-3xl transition-all duration-200" data-handoff-create-modal-panel>
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
@@ -93,8 +93,11 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label for="handoff_description" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description <x-red-star /></label>
-                            <textarea id="handoff_description" name="description" rows="3" class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Provide handoff details"></textarea>
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description <x-red-star /></label>
+                            <input type="hidden" name="description" id="handoff_description_input">
+                            <div class="custom-quill-wrapper overflow-hidden rounded-lg border border-gray-300 dark:border-darkblack-400">
+                                <div id="handoff_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                            </div>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="description"></p>
                         </div>
                     </div>
