@@ -73,7 +73,7 @@
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="source_task_id"></p>
                         </div>
 
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</label>
                             <select id="handoff_target_user_id" name="target_user_id" class="tom-select w-full" data-handoff-target-user-select>
                                 <option value="">Select project first</option>
@@ -81,7 +81,7 @@
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="target_user_id"></p>
                         </div>
 
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Purpose <x-red-star /></label>
                             <select id="handoff_purpose" name="purpose" class="tom-select-add w-full" data-handoff-purpose-select data-placeholder="Select or type a purpose..." data-sort="0" data-max-items="1">
                                 <option value="">Select or type a purpose...</option>
@@ -96,7 +96,7 @@
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description <x-red-star /></label>
                             <input type="hidden" name="description" id="handoff_description_input">
                             <div class="custom-quill-wrapper overflow-hidden rounded-lg border border-gray-300 dark:border-darkblack-400">
-                                <div id="handoff_description_editor" class="h-48 bg-white dark:bg-darkblack-500 dark:text-white"></div>
+                                <div id="handoff_description_editor" class="!h-28 bg-white dark:bg-darkblack-500 dark:text-white" style="height: 7rem !important;"></div>
                             </div>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="description"></p>
                         </div>
