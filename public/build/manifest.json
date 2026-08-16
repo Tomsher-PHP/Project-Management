@@ -333,7 +333,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-MWkRzLfj.js",
+    "file": "assets/task-list-create-CstD6Tp8.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -373,7 +373,7 @@
     ]
   },
   "resources/js/modules/tasks/handoff-blend.js": {
-    "file": "assets/handoff-blend-BIA7eiOG.js",
+    "file": "assets/handoff-blend-CweVGhOP.js",
     "name": "handoff-blend",
     "src": "resources/js/modules/tasks/handoff-blend.js",
     "isEntry": true,

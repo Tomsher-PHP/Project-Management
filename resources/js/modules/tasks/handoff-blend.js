@@ -180,6 +180,45 @@ window.confirmHandoffNote = function (button) {
     });
 }
 
+function prepareDescriptionHtmlForQuill(html) {
+    if (!html || !html.trim()) return '';
+
+    let content = html.trim();
+
+    if (/&lt;[a-z][\s\S]*&gt;/i.test(content) && !/<[a-z][\s\S]*>/i.test(content)) {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = content;
+        content = txt.value;
+    }
+
+    if (!/<[a-z][\s\S]*>/i.test(content)) {
+        content = convertPlainTextToHtml(content);
+    }
+
+    content = content.replace(/<span class="ql-ui"[^>]*>.*?<\/span>/gi, '');
+    content = content.replace(/\s*contenteditable="(false|true)"/gi, '');
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+
+    tempDiv.querySelectorAll('ol').forEach((ol) => {
+        const hasBulletLi = ol.querySelector('li[data-list="bullet"]');
+        if (hasBulletLi) {
+            const ul = document.createElement('ul');
+            while (ol.firstChild) {
+                ul.appendChild(ol.firstChild);
+            }
+            ol.replaceWith(ul);
+        }
+    });
+
+    tempDiv.querySelectorAll('li[data-list]').forEach((li) => {
+        li.removeAttribute('data-list');
+    });
+
+    return tempDiv.innerHTML.trim();
+}
+
 document.addEventListener('click', (e) => {
     const assignBtn = e.target.closest('[data-handoff-assign-btn]');
     if (!assignBtn) return;
@@ -196,12 +235,37 @@ document.addEventListener('click', (e) => {
         const handoffInput = form.querySelector('[name="handoff_request_id"]');
         if (handoffInput) handoffInput.value = handoffId || '';
 
-        const descInput = form.querySelector('[name="description"]');
+        const handoffDesc = assignBtn.dataset.description ? assignBtn.dataset.description.trim() : '';
+        const handoffPurpose = assignBtn.dataset.purpose ? assignBtn.dataset.purpose.trim() : '';
+
+        let rawDescription = '';
+        if (handoffDesc) {
+            rawDescription = handoffDesc;
+        } else if (handoffPurpose) {
+            rawDescription = `<p>Purpose: ${escapeHtml(handoffPurpose)}</p>`;
+        }
+
+        const cleanHtml = prepareDescriptionHtmlForQuill(rawDescription);
+
+        const descInput = form.querySelector('#task_create_description_input') || form.querySelector('[name="description"]');
         if (descInput) {
-            let descText = '';
-            if (assignBtn.dataset.purpose) descText += `Purpose: ${assignBtn.dataset.purpose}\n\n`;
-            if (assignBtn.dataset.description) descText += assignBtn.dataset.description;
-            descInput.value = descText;
+            descInput.value = cleanHtml;
+        }
+
+        const editorElement = root.querySelector('#task_create_description_editor');
+        if (editorElement) {
+            const quill = editorElement.__quill || (window.Quill?.find ? window.Quill.find(editorElement) : null);
+            if (quill) {
+                quill.setContents([]);
+                if (cleanHtml) {
+                    quill.clipboard.dangerouslyPasteHTML(0, cleanHtml);
+                }
+            } else {
+                const qlEditor = editorElement.querySelector('.ql-editor');
+                if (qlEditor) {
+                    qlEditor.innerHTML = cleanHtml;
+                }
+            }
         }
 
         const projectId = assignBtn.dataset.projectId;

@@ -620,6 +620,7 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             }
         });
         taskCreateEditors.set(root, editor);
+        editorElement.__quill = editor;
     }
 
     root.addEventListener('click', async (event) => {
