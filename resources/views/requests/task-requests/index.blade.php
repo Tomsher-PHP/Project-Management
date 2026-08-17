@@ -77,7 +77,7 @@
                                 <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                     @if ($selectedStatus === 'pending')
                                         <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                            @if ($task->request_status === 'pending' && ! $task->is_self_requested)
+                                            @if ($task->request_status === 'pending' && !$task->is_self_requested)
                                                 <input type="checkbox" value="{{ $task->id }}" class="h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-500" data-task-request-bulk-checkbox>
                                             @endif
                                         </td>
@@ -117,7 +117,7 @@
                                         <span class="text-sm text-bgray-900 dark:text-bgray-300 font-semibold">@appDateTime($task->due_date_time)</span>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        @if ($task->request_status === 'pending' && ! $task->is_self_requested)
+                                        @if ($task->request_status === 'pending' && (!$task->is_self_requested || auth()->user()->is_super_admin))
                                             <div class="flex min-w-[180px] flex-wrap items-center gap-2">
                                                 <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', ['project' => $task->project_id, 'task' => $task->id, 'approve_mode' => 1, 'request_id' => $task->id, 'action' => 'approve']) }}">
                                                     Approve

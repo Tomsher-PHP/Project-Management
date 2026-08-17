@@ -154,7 +154,7 @@
                                     </div>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    @if ($changeRequest->isPending() && !$changeRequest->is_self_requested)
+                                    @if ($changeRequest->isPending() && (!$changeRequest->is_self_requested || auth()->user()->is_super_admin))
                                         <div class="flex min-w-[190px] flex-wrap items-center gap-2">
                                             <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-time-log-change-request-approve-open data-action="{{ route('tasks.time-log-change-requests.action', [$changeRequest, 'approve']) }}" data-user-name="{{ $requestUser?->name ?? 'Unknown User' }}" data-task-name="{{ $task?->name ?? 'Unknown Task' }}" data-reason="{{ $changeRequest->reason ?? '--' }}" data-current-start="{{ $timeLog?->started_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-current-end="{{ $timeLog?->ended_at?->timezone($globalTimezone)->format($globalDateFormat . ' ' . $globalTimeFormat) ?? '--' }}" data-requested-start="{{ $changeRequest->new_started_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}" data-requested-end="{{ $changeRequest->new_ended_at?->timezone($globalTimezone)->format('Y-m-d H:i:s') }}">
                                                 Approve

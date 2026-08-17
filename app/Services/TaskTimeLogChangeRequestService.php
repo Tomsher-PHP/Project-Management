@@ -166,7 +166,7 @@ class TaskTimeLogChangeRequestService
 
     private function canHandleRequest(User $user, TaskTimeLogChangeRequest $changeRequest): bool
     {
-        if ((int) $changeRequest->user_id === (int) $user->id) {
+        if (! $user->is_super_admin && (int) $changeRequest->user_id === (int) $user->id) {
             return false;
         }
 
