@@ -4,9 +4,7 @@
     @php
         $appraisalIndexUrl = route('appraisal.index');
         $previousUrl = url()->previous();
-        $appraisalBackUrl = parse_url($previousUrl, PHP_URL_PATH) === parse_url($appraisalIndexUrl, PHP_URL_PATH)
-            ? $previousUrl
-            : $appraisalIndexUrl;
+        $appraisalBackUrl = parse_url($previousUrl, PHP_URL_PATH) === parse_url($appraisalIndexUrl, PHP_URL_PATH) ? $previousUrl : $appraisalIndexUrl;
     @endphp
 
     <div class="appraisal-answer-page" data-appraisal-answer-page data-save-draft-url="{{ route('appraisal.save-draft', ['appraisal' => $answerData['id']]) }}" data-submit-answers-url="{{ route('appraisal.submit-answers', ['appraisal' => $answerData['id']]) }}" data-acknowledge-review-url="{{ route('appraisal.acknowledge-review', ['appraisal' => $answerData['id']]) }}" data-index-url="{{ route('appraisal.index') }}">
@@ -26,12 +24,12 @@
                     @include('appraisal.partials.answer-overall-comments')
                 </div>
 
-                @if (! $answerData['is_submitted'] && ! data_get($answerData, 'acknowledgement.required'))
+                @if (!$answerData['is_submitted'] && !data_get($answerData, 'acknowledgement.required'))
                     @include('appraisal.partials.answer-footer-actions')
                 @endif
             </div>
 
-            <div class="appraisal-answer-right">
+            <div class="appraisal-answer-right" style="position: sticky; top: 80px;">
                 @include('appraisal.partials.answer-sidebar-progress')
                 @include('appraisal.partials.answer-sidebar-categories')
             </div>
