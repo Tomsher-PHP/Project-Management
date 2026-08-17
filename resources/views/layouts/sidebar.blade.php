@@ -350,7 +350,7 @@
                                             </span>
                                             <span class="item-text text-base font-medium leading-none {{ $isRequestsMenuActive ? $sidebarItemActiveClass : '' }}">Requests</span>
                                             @if ($requestMenuBadges['has_any_pending'] ?? false)
-                                                <span class="h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500 dark:border-none ml-1"></span>
+                                                <span class="h-2 w-2 rounded-full border-1 border-white bg-red-500 dark:border-none ml-1"></span>
                                             @endif
                                         </div>
                                         <span class="flex items-center gap-2">
@@ -654,11 +654,19 @@
                 </div>
             @endif
         </div>
-        <div class="copy-write-text">
-            <p class="text-sm text-[#969BA0]">© {{ date('Y') }} All Rights Reserved</p>
-            <p class="text-sm font-medium text-bgray-700">
-                <a href="https://www.tomsher.com/" target="_blank" class="border-b font-semibold hover:text-blue-600">Tomsher Technologies LLC</a>
-            </p>
+        <!-- Sidebar User Footer -->
+        <div class="sidebar-user-footer shrink-0 z-40 w-full border-t border-bgray-200 py-4 pr-8 dark:border-darkblack-400">
+            <div class="flex items-center gap-3">
+                <x-user-avatar :user="$authUser" size="sm" />
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-bold text-bgray-900 dark:text-white">
+                        {{ $authUser?->name }}
+                    </p>
+                    <p class="truncate text-xs font-medium text-bgray-700 dark:text-bgray-300">
+                        {{ $authUser?->role_name ?? 'Employee' }}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </aside>
