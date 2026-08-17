@@ -16,7 +16,7 @@
 }
 
 .flow-btn {
-    @apply px-4 py-2 text-sm font-semibold transition bg-white text-gray-700 dark:bg-gray-200 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-200;
+    @apply px-4 py-2 text-sm font-semibold transition text-gray-700 hover:bg-gray-200;
 }
 
 .flow-btn.active {
@@ -26,6 +26,7 @@
 .custom-quill-wrapper .ql-toolbar.ql-snow {
     border: none !important;
 }
+
 .custom-quill-wrapper .ql-container.ql-snow {
     border: none !important;
     color: #1f2937 !important;
@@ -33,34 +34,42 @@
 }
 
 .custom-quill-wrapper .ql-toolbar.ql-snow {
-    border-bottom: 1px solid #e5e7eb !important; /* border-gray-200 */
+    border-bottom: 1px solid #e5e7eb !important;
+    /* border-gray-200 */
 }
 
 /* Quill dark mode overrides */
 .dark .custom-quill-wrapper {
-    border-color: #434c5e !important; /* darkblack-400 */
+    border-color: #434c5e !important;
+    /* darkblack-400 */
 }
 
 .dark .custom-quill-wrapper .ql-toolbar.ql-snow {
-    border-bottom: 1px solid #434c5e !important; /* darkblack-400 */
-    background-color: #2a313c; /* darkblack-500 */
+    border-bottom: 1px solid #434c5e !important;
+    /* darkblack-400 */
+    background-color: #2a313c;
+    /* darkblack-500 */
 }
 
 .dark .custom-quill-wrapper .ql-container.ql-snow {
-    background-color: #1e242e; /* darkblack-600 */
+    background-color: #1e242e;
+    /* darkblack-600 */
     color: #ffffff !important;
 }
 
 .dark .custom-quill-wrapper .ql-toolbar .ql-stroke {
-    stroke: #cbd5e1 !important; /* bgray-300 */
+    stroke: #cbd5e1 !important;
+    /* bgray-300 */
 }
 
 .dark .custom-quill-wrapper .ql-toolbar .ql-fill {
-    fill: #cbd5e1 !important; /* bgray-300 */
+    fill: #cbd5e1 !important;
+    /* bgray-300 */
 }
 
 .dark .custom-quill-wrapper .ql-toolbar .ql-picker {
-    color: #cbd5e1 !important; /* bgray-300 */
+    color: #cbd5e1 !important;
+    /* bgray-300 */
 }
 
 /* View Modal Description Heading Styles */
@@ -72,6 +81,7 @@
     margin-top: 0.75rem;
     margin-bottom: 0.375rem;
 }
+
 #viewModalDescription h2 {
     font-size: 1.125rem;
     line-height: 1.75rem;
@@ -80,6 +90,7 @@
     margin-top: 0.625rem;
     margin-bottom: 0.375rem;
 }
+
 #viewModalDescription h3 {
     font-size: 1rem;
     line-height: 1.5rem;
@@ -88,6 +99,7 @@
     margin-top: 0.5rem;
     margin-bottom: 0.25rem;
 }
+
 #viewModalDescription h4,
 #viewModalDescription h5,
 #viewModalDescription h6 {

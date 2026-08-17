@@ -3,12 +3,6 @@
         <div class="border-b border-[#edf1f7] bg-white px-4 py-3 dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex min-w-0 items-center gap-3">
-                    <span class="inline-flex h-6 w-6 items-center justify-center text-[#111653] dark:text-bgray-50">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h7v7H4V4Zm9 0h7v4h-7V4ZM4 13h7v7H4v-7Zm9-3h7v10h-7V10Z" />
-                        </svg>
-                    </span>
-                    <h3 class="text-[17px] font-extrabold tracking-normal text-bgray-800 dark:text-bgray-50">Work Board</h3>
 
                     @can('task.create')
                         <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
