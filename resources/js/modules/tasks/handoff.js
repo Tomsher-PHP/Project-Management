@@ -11,18 +11,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const milestoneSelect = form.querySelector('[data-handoff-milestone-select]');
     const sprintSelect = form.querySelector('[data-handoff-sprint-select]');
     const taskSelect = form.querySelector('[data-handoff-task-select]');
+    const targetUserSelect = form.querySelector('[data-handoff-target-user-select]');
     const purposeSelect = form.querySelector('[data-handoff-purpose-select]');
     const submitBtn = form.querySelector('[data-handoff-create-submit]');
+    const descriptionInput = form.querySelector('#handoff_description_input');
+    const descriptionEditorElement = form.querySelector('#handoff_description_editor');
 
     // TomSelect Instances
-    let tsProject, tsMilestone, tsSprint, tsTask, tsPurpose;
+    let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose, descriptionEditor;
+
+    const initDescriptionEditor = () => {
+        if (!descriptionEditorElement || !window.Quill || descriptionEditor) return;
+
+        descriptionEditor = new window.Quill(descriptionEditorElement, {
+            theme: 'snow',
+            placeholder: 'Provide handoff details',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ header: [1, 2, 3, false] }],
+                    ['link'],
+                ],
+            },
+        });
+    };
 
     const initSelects = () => {
         tsProject = projectSelect.tomselect;
         tsMilestone = milestoneSelect.tomselect;
         tsSprint = sprintSelect.tomselect;
         tsTask = taskSelect.tomselect;
-        tsPurpose = purposeSelect.tomselect;
+        tsTargetUser = targetUserSelect?.tomselect;
+        tsPurpose = purposeSelect?.tomselect;
+
+        if (tsPurpose) {
+            tsPurpose.on('item_add', () => {
+                tsPurpose.close();
+                tsPurpose.blur();
+            });
+            tsPurpose.on('change', () => {
+                tsPurpose.close();
+            });
+        }
 
         if (!tsProject) return;
 
@@ -34,8 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
             tsSprint.clearOptions();
             tsTask.clear();
             tsTask.clearOptions();
+            tsTargetUser?.clear();
+            tsTargetUser?.clearOptions();
 
             if (!projectId) return;
+
+            (targetUserDependencies[projectId] || []).forEach((user) => {
+                tsTargetUser?.addOption(user);
+            });
+            tsTargetUser?.refreshOptions(false);
 
             // Filter milestones
             const projectMilestones = dependencies.milestones.filter(m => String(m.project_id) === String(projectId));
@@ -86,11 +124,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dependencies = getDependencies();
 
+    const getTargetUserDependencies = () => {
+        const depBlock = document.getElementById('handoff-target-user-dependencies');
+        return depBlock ? JSON.parse(depBlock.textContent) : {};
+    };
+
+    const targetUserDependencies = getTargetUserDependencies();
+
+    initDescriptionEditor();
+
     if (projectSelect.tomselect) {
         initSelects();
     } else {
         document.addEventListener('tomselect:ready', initSelects);
     }
+
+    purposeSelect?.addEventListener('change', () => {
+        if (purposeSelect.tomselect) {
+            purposeSelect.tomselect.close();
+            purposeSelect.tomselect.blur();
+        }
+    });
 
     const fetchTasks = async () => {
         const projectId = projectSelect?.value || '';
@@ -144,24 +198,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const resetHandoffForm = () => {
+        form.reset();
+        if (descriptionEditor) descriptionEditor.setContents([]);
+        if (descriptionInput) descriptionInput.value = '';
+        if (tsProject) tsProject.clear();
+        if (tsPurpose) tsPurpose.clear();
+        if (tsMilestone) tsMilestone.clear();
+        if (tsSprint) tsSprint.clear();
+        if (tsTask) tsTask.clear();
+        if (tsTargetUser) tsTargetUser.clear();
+
+        form.querySelectorAll('[data-handoff-create-error]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+    };
+
     const toggleModal = (show) => {
         if (show) {
+            resetHandoffForm();
             modalEl.classList.remove('hidden');
             modalEl.classList.add('flex');
         } else {
             modalEl.classList.add('hidden');
             modalEl.classList.remove('flex');
-            form.reset();
-            if (tsProject) tsProject.clear();
-            if (tsPurpose) tsPurpose.clear();
-            if (tsMilestone) tsMilestone.clear();
-            if (tsSprint) tsSprint.clear();
-            if (tsTask) tsTask.clear();
-
-            form.querySelectorAll('[data-handoff-create-error]').forEach(el => {
-                el.textContent = '';
-                el.classList.add('hidden');
-            });
+            resetHandoffForm();
         }
     };
 
@@ -176,6 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
             el.textContent = '';
             el.classList.add('hidden');
         });
+
+        if (descriptionEditor && descriptionInput) {
+            const content = descriptionEditor.root.innerHTML.trim();
+            descriptionInput.value = content === '<p><br></p>' ? '' : content;
+        }
 
         const formData = new FormData(form);
         const submitUrl = form.getAttribute('data-store-url');

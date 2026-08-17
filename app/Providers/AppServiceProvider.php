@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $notificationManager = $this->app->make(ChannelManager::class);
-        $notificationManager->extend('database', fn ($app) => $app->make(AppDatabaseChannel::class));
+        $notificationManager->extend('database', fn($app) => $app->make(AppDatabaseChannel::class));
         $notificationManager->forgetDrivers();
 
         $dateFormat = config('constants.date_format');
@@ -101,6 +101,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layouts.sidebar', SidebarComposer::class);
+
+        Gate::define('request-task', function () {
+            $user = auth()->user();
+
+            return $user && ! ($user->can('task.create') && $user->can('task.edit'));
+        });
 
         Blade::directive('appDate', function ($expression) {
             return "<?php echo \\App\\Providers\\AppServiceProvider::formatAppDate({$expression}); ?>";

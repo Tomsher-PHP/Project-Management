@@ -12,7 +12,9 @@
                 <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
             @endcan
 
-            <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
+            @can('request-task')
+                <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
+            @endcan
 
             <x-filters.button />
 

@@ -5152,6 +5152,21 @@ select {
   color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 
+:is(.dark .dark\:text-warning-300) {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-error-300) {
+  --tw-text-opacity: 1;
+  color: rgb(221 51 51 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-error-200) {
+  --tw-text-opacity: 1;
+  color: rgb(255 71 71 / var(--tw-text-opacity));
+}
+
 :is(.dark .dark\:opacity-50) {
   opacity: 0.5;
 }
@@ -6419,5 +6434,5 @@ select {
 }
 
 .comparison-arrow-up {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }

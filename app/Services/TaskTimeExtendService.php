@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskExtendTimeRequest;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,7 +26,16 @@ class TaskTimeExtendService
         return DB::transaction(function () use ($task, $data) {
             $lockedTask = Task::query()->lockForUpdate()->findOrFail($task->id);
 
-            if (TaskExtendTimeRequest::query()->where('task_id', $lockedTask->id)->exists()) {
+            $existing = TaskExtendTimeRequest::query()
+                ->where('task_id', $lockedTask->id)
+                ->latest('id')
+                ->first();
+
+            if ($existing) {
+                if ($existing->status === 'pending') {
+                    return $this->updateRequest($existing, $data);
+                }
+
                 throw ValidationException::withMessages([
                     'extend_request' => 'Only one extend time request is allowed per task.',
                 ]);
@@ -73,21 +83,21 @@ class TaskTimeExtendService
         return $request;
     }
 
-    public function visibleRequestQuery(User $user): \Illuminate\Database\Eloquent\Builder
+    public function visibleRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
             return TaskExtendTimeRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->pluck('users.id')
-            ->push($user->id)
-            ->unique()
-            ->values()
-            ->all();
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
-        return TaskExtendTimeRequest::query()->whereIn('user_id', $accessibleUserIds);
+        return TaskExtendTimeRequest::query()
+            ->where(function (Builder $query) use ($user, $accessibleUserIds) {
+                $query->whereIn('user_id', $accessibleUserIds)
+                    ->orWhereHas('task', function (Builder $taskQuery) use ($user) {
+                        $taskQuery->accountableBy($user);
+                    });
+            });
     }
 
     public function getRequests(User $user, int $perPage, string $status, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
@@ -206,5 +216,24 @@ class TaskTimeExtendService
             $this->notificationService->notifyTaskTimeExtendRequestApprovedToRequester($request, $request->task, $request->user);
             $this->notificationService->notifyTaskTimeExtendRequestApprovedToReporterChain($request, $request->task, $user);
         }
+    }
+
+    public function canRequestEstimate(Task $task): bool
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ((int) ($task->current_assignee_id ?? 0) !== (int) $user->id) {
+            return false;
+        }
+
+        if ($task->request_status === 'pending' || $task->request_status === 'rejected') {
+            return false;
+        }
+
+        return true;
     }
 }

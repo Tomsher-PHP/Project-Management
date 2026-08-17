@@ -4,6 +4,8 @@ namespace Database\Factories;
 
 use App\Models\Country;
 use App\Models\Customer;
+use App\Models\CustomerContact;
+use App\Models\CustomerProfileGrade;
 use App\Models\Industry;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,6 +19,22 @@ class CustomerFactory extends Factory
 
     protected static ?int $customerCodeCounter = null;
 
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Customer $customer) {
+            if ($customer->contacts()->count() === 0) {
+                CustomerContact::factory()->primary()->create([
+                    'customer_id' => $customer->id,
+                ]);
+
+                CustomerContact::factory()->count(fake()->numberBetween(1, 2))->create([
+                    'customer_id' => $customer->id,
+                    'is_primary' => false,
+                ]);
+            }
+        });
+    }
+
     public function definition(): array
     {
         $companyName = fake()->unique()->company();
@@ -27,6 +45,7 @@ class CustomerFactory extends Factory
             'name' => $companyName,
             'email' => fake()->unique()->companyEmail(),
             'industry_id' => Industry::query()->inRandomOrder()->value('id'),
+            'customer_profile_grade_id' => CustomerProfileGrade::query()->inRandomOrder()->value('id'),
             'website' => fake()->optional()->url(),
             'registered_country_id' => $countryId,
             'emirate' => fake()->optional()->randomElement([
@@ -35,6 +54,8 @@ class CustomerFactory extends Factory
                 'Sharjah',
                 'Ajman',
                 'Ras Al Khaimah',
+                'Fujairah',
+                'Umm Al Quwain',
             ]),
             'google_map_link' => fake()->optional()->url(),
             'company_address' => fake()->optional()->address(),

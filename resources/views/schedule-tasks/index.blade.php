@@ -55,18 +55,10 @@
                                     <td class="px-4 py-4">
                                         <div class="flex items-center gap-2">
                                             @can('task.edit')
-                                                <button type="button" class="group inline-flex h-8 w-8 items-center justify-center border rounded-lg bg-bgray-100 transition duration-200 hover:bg-bgray-200 dark:bg-darkblack-500 dark:hover:bg-darkblack-400" data-schedule-task-edit data-url="{{ route('schedule-tasks.edit', $taskSchedule) }}" title="Edit">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-bgray-600 transition group-hover:text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </button>
+                                                <x-edit-button action="javascript:void(0)" type="button" data-schedule-task-edit data-url="{{ route('schedule-tasks.edit', $taskSchedule) }}" title="Edit" />
                                             @endcan
                                             @can('task.delete')
-                                                <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 shadow-sm transition duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white dark:border-red-900/40 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-500 dark:hover:bg-red-500 dark:hover:text-error-300" data-schedule-task-delete data-url="{{ route('schedule-tasks.destroy', $taskSchedule) }}" title="Delete">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-current transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M 6.496094 1 C 5.675781 1 5 1.675781 5 2.496094 L 5 3 L 2 3 L 2 4 L 3 4 L 3 12.5 C 3 13.328125 3.671875 14 4.5 14 L 10.5 14 C 11.328125 14 12 13.328125 12 12.5 L 12 4 L 13 4 L 13 3 L 10 3 L 10 2.496094 C 10 1.675781 9.324219 1 8.503906 1 Z M 6.496094 2 L 8.503906 2 C 8.785156 2 9 2.214844 9 2.496094 L 9 3 L 6 3 L 6 2.496094 C 6 2.214844 6.214844 2 6.496094 2 Z M 5 5 L 6 5 L 6 12 L 5 12 Z M 7 5 L 8 5 L 8 12 L 7 12 Z M 9 5 L 10 5 L 10 12 L 9 12 Z"></path>
-                                                    </svg>
-                                                </button>
+                                                <x-delete-form :action="route('schedule-tasks.destroy', $taskSchedule)" data-schedule-task-delete data-url="{{ route('schedule-tasks.destroy', $taskSchedule) }}" title="Delete" />
                                             @endcan
                                         </div>
                                     </td>

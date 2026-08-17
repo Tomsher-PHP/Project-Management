@@ -54,9 +54,9 @@ class User extends Authenticatable
 
         $query->orWhereHas('details', function (Builder $detailsQuery) use ($search, $condition) {
             match ($condition) {
-                'starts_with' => $detailsQuery->where('employee_id', 'like', $search.'%'),
-                'ends_with' => $detailsQuery->where('employee_id', 'like', '%'.$search),
-                default => $detailsQuery->where('employee_id', 'like', '%'.$search.'%'),
+                'starts_with' => $detailsQuery->where('employee_id', 'like', $search . '%'),
+                'ends_with' => $detailsQuery->where('employee_id', 'like', '%' . $search),
+                default => $detailsQuery->where('employee_id', 'like', '%' . $search . '%'),
             };
         });
     }
@@ -106,6 +106,7 @@ class User extends Authenticatable
             return $query;
         }
 
+        // Downline user IDs
         $reporterHierarchyUserIds = self::getReporterHierarchyUserIds($user->id);
 
         return $query->where(function ($q) use ($user, $reporterHierarchyUserIds) {

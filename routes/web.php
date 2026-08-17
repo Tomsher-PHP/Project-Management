@@ -347,7 +347,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
-        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['permission.type:task.edit', 'can:view,task'])->name('projects.tasks.update');
+        Route::put('tasks/{task}', [ProjectTaskController::class, 'updateTask'])->middleware(['can:view,task'])->name('projects.tasks.update');
         Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
         Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
@@ -426,13 +426,13 @@ Route::middleware(['auth'])->group(function () {
     // Task time log change request routes
     Route::post('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'store'])->name('tasks.time-log-change-requests.store');
     Route::patch('tasks/time-logs/change-requests/{changeRequest}', [TaskTimeLogChangeRequestController::class, 'update'])->name('tasks.time-log-change-requests.update');
-    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->name('tasks.time-log-change-requests.index');
+    Route::get('tasks/time-logs/change-requests', [TaskTimeLogChangeRequestController::class, 'index'])->name('tasks.time-log-change-requests.index');
     Route::post('tasks/time-logs/change-requests/bulk/{action}', [TaskTimeLogChangeRequestController::class, 'handleBulkAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.bulk-action');
     Route::post('tasks/time-logs/change-requests/{changeRequest}/{action}', [TaskTimeLogChangeRequestController::class, 'handleAction'])->middleware(['permission.type:task_time_log_change_request.approve_reject'])->whereIn('action', ['approve', 'reject'])->name('tasks.time-log-change-requests.action');
 
     // Handoff Request routes
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
-        Route::get('/', [HandoffController::class, 'index'])->middleware(['permission.type:handoff_request.view|handoff_request.view_all'])->name('index');
+        Route::get('/', [HandoffController::class, 'index'])->name('index');
         Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('store');
         Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('assign');
         Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('note');
@@ -449,11 +449,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tasks/{task}/extend-time-requests/pending', [TaskTimeExtendController::class, 'pending'])->name('tasks.extend-time-requests.pending');
     Route::post('tasks/{task}/extend-time-requests', [TaskTimeExtendController::class, 'store'])->name('tasks.extend-time-requests.store');
 
-    Route::middleware(['permission.type:task_time_extend_request.approve_reject'])->group(function () {
-        Route::get('task-time-extend-requests', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
-        Route::get('task-time-extend-requests/{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
-        Route::post('task-time-extend-requests/{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])->name('tasks.extend-time-requests.approve');
-        Route::post('task-time-extend-requests/{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])->name('tasks.extend-time-requests.reject');
+    Route::prefix('task-time-extend-requests')->group(function () {
+        Route::get('/', [TaskTimeExtendController::class, 'index'])->name('tasks.extend-time-requests.index');
+        Route::get('{extendTimeRequest}', [TaskTimeExtendController::class, 'show'])->name('tasks.extend-time-requests.show');
+        Route::post('{extendTimeRequest}/approve', [TaskTimeExtendController::class, 'approve'])
+            ->middleware('permission.type:task_time_extend_request.approve_reject')
+            ->name('tasks.extend-time-requests.approve');
+        Route::post('{extendTimeRequest}/reject', [TaskTimeExtendController::class, 'reject'])
+            ->middleware('permission.type:task_time_extend_request.approve_reject')
+            ->name('tasks.extend-time-requests.reject');
     });
 
     // Activity Log Route

@@ -22,7 +22,7 @@
 
             <div class="min-w-0">
                 <a href="{{ route('tasks.edit', $task) }}" class="block">
-                    <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="30" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold text-bgray-900 transition hover:text-success-400 dark:text-white dark:hover:text-success-300'" class="max-w-full" />
+                    <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="30" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold transition hover:text-success-400 dark:hover:text-success-300'" class="max-w-full" />
                     <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
                     </p>
@@ -141,19 +141,9 @@
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <div class="flex items-center gap-2">
             @if ($task->project)
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}" data-project-task-group-key="">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
-                    </svg>
-                </button>
+                <x-edit-button action="javascript:void(0)" title="Open task" data-project-task-detail-open data-project-task-detail-url="{{ route('projects.tasks.modal', [$task->project, $task]) }}" data-project-task-group-key="" />
             @else
-                <a href="{{ route('tasks.edit', $task) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" title="Open task">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 112 0v3a4 4 0 01-4 4H5a4 4 0 01-4-4V7a4 4 0 014-4h3a1 1 0 110 2H5z" />
-                    </svg>
-                </a>
+                <x-edit-button :action="route('tasks.edit', $task)" title="Open task" />
             @endif
 
             @can('delete', $task)

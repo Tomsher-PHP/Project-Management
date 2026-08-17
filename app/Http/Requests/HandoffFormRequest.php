@@ -50,6 +50,11 @@ class HandoffFormRequest extends FormRequest
                 'integer',
                 Rule::exists('tasks', 'id')->where('project_id', $this->project_id),
             ],
+            'target_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id'),
+            ],
             'purpose' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string'],
         ];
@@ -58,10 +63,19 @@ class HandoffFormRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if ($this->project_id && !$validator->errors()->has('project_id')) {
-                $project = Project::find($this->project_id);
-                if ($project && $project->is_agile && empty($this->project_milestone_id)) {
-                    $validator->errors()->add('project_milestone_id', 'The milestone field is required for agile projects.');
+
+            if ($this->target_user_id && ! $validator->errors()->has('target_user_id')) {
+                if ((int) $this->target_user_id === (int) $this->user()->id) {
+                    $validator->errors()->add('target_user_id', 'You cannot select yourself as the target user.');
+                } elseif (! $validator->errors()->has('project_id')) {
+                    $isActiveProjectMember = Project::query()
+                        ->whereKey($this->project_id)
+                        ->whereHas('activeMembers', fn ($query) => $query->whereKey($this->target_user_id))
+                        ->exists();
+
+                    if (! $isActiveProjectMember) {
+                        $validator->errors()->add('target_user_id', 'The selected target user must be an active member of the selected project.');
+                    }
                 }
             }
 

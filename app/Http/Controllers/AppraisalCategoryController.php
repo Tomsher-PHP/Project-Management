@@ -73,9 +73,38 @@ class AppraisalCategoryController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, AppraisalCategory $appraisal)
+    public function destroy(Request $request, AppraisalCategory $appraisal): JsonResponse|RedirectResponse
     {
-        abort(Response::HTTP_NOT_FOUND);
+        if ($appraisal->is_system) {
+            $message = 'System Appraisal Category cannot be deleted.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $message,
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            return redirect()
+                ->route('settings.appraisal.index')
+                ->with('error', $message);
+        }
+
+        $appraisal->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Appraisal category deleted successfully.',
+                'html' => $this->renderIndexContent(),
+                'render_target' => '#appraisal-category-index-content',
+                'render_mode' => 'replace_inner',
+            ]);
+        }
+
+        return redirect()
+            ->route('settings.appraisal.index')
+            ->with('success', 'Appraisal category deleted successfully.');
     }
 
     public function toggleStatus(Request $request): JsonResponse

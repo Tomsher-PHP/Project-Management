@@ -62,7 +62,7 @@
                         @forelse ($extendRequests as $extendRequest)
                             @php
                                 $requestUser = $extendRequest->user;
-                                $isOwnRequest = (int) $extendRequest->user_id === (int) auth()->id();
+                                $canAccess = (int) $extendRequest->user_id != (int) auth()->id() || auth()->user()->is_super_admin;
                             @endphp
                             <tr class="group {{ config('assets.classes.table_row_hover') }}">
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
@@ -112,7 +112,7 @@
                                     </div>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    @if ($extendRequest->isPending() && $canApproveReject && !$isOwnRequest)
+                                    @if ($extendRequest->isPending() && $canApproveReject && $canAccess)
                                         <div class="flex min-w-[180px] flex-wrap items-center gap-2">
                                             <button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-extend-request-approve-open data-action="{{ route('tasks.extend-time-requests.approve', $extendRequest) }}" data-details-url="{{ route('tasks.extend-time-requests.show', $extendRequest) }}">
                                                 Approve

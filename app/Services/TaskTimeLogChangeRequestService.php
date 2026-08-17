@@ -26,6 +26,9 @@ class TaskTimeLogChangeRequestService
                 'timeLog.task:id,name',
                 'approver:id,name',
                 'rejector:id,name',
+            ])
+            ->withExists([
+                'user as is_self_requested' => fn(Builder $query) => $query->whereKey($user->id),
             ]);
 
         $this->applyFilters($query, $filters);
@@ -87,7 +90,6 @@ class TaskTimeLogChangeRequestService
     public function handleAction(User $user, TaskTimeLogChangeRequest $changeRequest, string $action, ?string $reason = null, ?array $approvalTimeRange = null): void
     {
         abort_unless($this->canHandleRequest($user, $changeRequest), Response::HTTP_FORBIDDEN);
-
         if (! $changeRequest->isPending()) {
             throw ValidationException::withMessages([
                 'change_request' => 'Only pending time log change requests can be reviewed.',
@@ -116,6 +118,7 @@ class TaskTimeLogChangeRequestService
 
         $changeRequests = $this->visibleRequestQuery($user)
             ->whereIn('id', $changeRequestIds)
+            ->where('user_id', '!=', $user->id)
             ->where('status', 'pending')
             ->get();
 
@@ -136,18 +139,21 @@ class TaskTimeLogChangeRequestService
         return $changeRequests->count();
     }
 
-    private function visibleRequestQuery(User $user): Builder
+    public function visibleRequestQuery(User $user): Builder
     {
         if ($user->is_super_admin) {
             return TaskTimeLogChangeRequest::query();
         }
 
-        $accessibleUserIds = User::query()
-            ->accessibleBy($user)
-            ->select('users.id');
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
 
         return TaskTimeLogChangeRequest::query()
-            ->whereIn('user_id', $accessibleUserIds);
+            ->where(function (Builder $query) use ($user, $accessibleUserIds) {
+                $query->whereIn('user_id', $accessibleUserIds)
+                    ->orWhereHas('timeLog.task', function (Builder $taskQuery) use ($user) {
+                        $taskQuery->accountableBy($user);
+                    });
+            });
     }
 
     private function applyFilters(Builder $query, array $filters): void
@@ -160,6 +166,10 @@ class TaskTimeLogChangeRequestService
 
     private function canHandleRequest(User $user, TaskTimeLogChangeRequest $changeRequest): bool
     {
+        if (! $user->is_super_admin && (int) $changeRequest->user_id === (int) $user->id) {
+            return false;
+        }
+
         return $this->visibleRequestQuery($user)
             ->whereKey($changeRequest->id)
             ->exists();

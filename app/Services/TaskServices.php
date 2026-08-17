@@ -14,6 +14,7 @@ use App\Models\TaskType;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\Task\RunningTaskNavbarService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -1334,5 +1335,25 @@ class TaskServices
                 ];
             })
             ->values();
+    }
+
+    public function visibleTaskRequestQuery(User $user): Builder
+    {
+        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
+
+        $accessibleUserIds = app(UserService::class)->getRequestAccessibleUsers($user);
+
+        return $query->where(function (Builder $query) use ($user, $accessibleUserIds) {
+            $query
+                ->whereIn('current_assignee_id', $accessibleUserIds)
+                ->orWhere(function (Builder $accountableQuery) use ($user) {
+                    $accountableQuery->accountableBy($user);
+                });
+        });
+    }
+
+    public function visibleRequestQuery(User $user): Builder
+    {
+        return $this->visibleTaskRequestQuery($user);
     }
 }

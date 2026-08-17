@@ -19,6 +19,7 @@ use App\Services\NotificationService;
 use App\Services\ProjectServices;
 use App\Services\TaskRequestServices;
 use App\Services\TaskServices;
+use App\Services\TaskTimeExtendService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -817,6 +818,7 @@ class ProjectTaskController extends Controller
 
         return [
             'canEditTask' => $task ? ($canApproveRequest || $this->canEditTaskModal($task)) : false,
+            'canRequestEstimate' => $task ? app(TaskTimeExtendService::class)->canRequestEstimate($task) : false,
             'isLinearFlow' => $project->project_flow === 'linear',
             'projectMilestones' => ProjectMilestone::query()
                 ->where('project_id', $project->id)
@@ -863,10 +865,13 @@ class ProjectTaskController extends Controller
     {
         $user = auth()->user();
 
-        return $user
-            && $this->canViewTaskModal($task)
-            && ! $task->isRejectedRequest()
-            && $user->can('task.edit');
+        if (! $user) {
+            return false;
+        }
+
+        $isSelfRequestedPendingTask = $task->request_status === 'pending' && (int) ($task->current_assignee_id ?? 0) === (int) $user->id;
+
+        return $this->canViewTaskModal($task) && ! $task->isRejectedRequest() && ($user->can('task.edit') || $isSelfRequestedPendingTask);
     }
 
     private function getExcludedParentTaskIds(?Task $task): array

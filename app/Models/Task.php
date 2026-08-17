@@ -159,8 +159,8 @@ class Task extends Model
 
         return $query->where(function ($taskQuery) use ($user) {
             $taskQuery
-                ->where('current_assignee_id', $user->id)
-                ->orWhere('added_by', $user->id)
+                ->where('tasks.current_assignee_id', $user->id)
+                ->orWhere('tasks.added_by', $user->id)
                 ->orWhereHas('project.teamLeader', function ($teamLeaderQuery) use ($user) {
                     $teamLeaderQuery->whereKey($user->id);
                 })
@@ -173,6 +173,19 @@ class Task extends Model
                         ->whereColumn('task_assignment_logs.task_id', 'tasks.id')
                         ->where('task_assignment_logs.user_id', $user->id)
                         ->where('task_assignment_logs.worked_time_seconds', '>', 0);
+                });
+        });
+    }
+
+    public function scopeAccountableBy(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $query) use ($user) {
+            $query
+                ->whereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
+                    $teamLeaderQuery->whereKey($user->id);
+                })
+                ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
+                    $milestoneQuery->where('owner_id', $user->id);
                 });
         });
     }

@@ -21,6 +21,7 @@ class HandoffRequest extends Model
         'project_sprint_id',
         'source_task_id',
         'user_id',
+        'target_user_id',
         'purpose',
         'description',
         'status',
@@ -35,6 +36,7 @@ class HandoffRequest extends Model
             'project_sprint_id' => 'integer',
             'source_task_id' => 'integer',
             'user_id' => 'integer',
+            'target_user_id' => 'integer',
             'purpose' => 'string',
             'description' => 'string',
             'status' => 'integer',
@@ -57,6 +59,11 @@ class HandoffRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function targetUser()
+    {
+        return $this->belongsTo(User::class, 'target_user_id');
     }
 
     public function project()
