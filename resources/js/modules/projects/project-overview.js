@@ -427,7 +427,7 @@ const renderBurnupChart = (overviewRoot) => {
             labels,
             datasets: [
                 {
-                    label: estimatedDataset.label || 'Estimated Hours',
+                    label: window.translations.labels.estimated_hours,
                     data: Array.isArray(estimatedDataset.data) ? estimatedDataset.data : [],
                     borderColor: '#3B82F6',
                     backgroundColor: '#3B82F6',
@@ -442,7 +442,7 @@ const renderBurnupChart = (overviewRoot) => {
                     },
                 },
                 {
-                    label: actualDataset.label || 'Actual Hours',
+                    label: window.translations.labels.spent_hours,
                     data: Array.isArray(actualDataset.data) ? actualDataset.data : [],
                     borderColor: '#22C55E',
                     backgroundColor: '#22C55E',
@@ -810,7 +810,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
 
             datasets: [
                 {
-                    label: 'Estimated',
+                    label: window.translations.labels.estimated,
                     data: estimatedHours,
 
                     backgroundColor: '#3B82F6',
@@ -828,7 +828,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
                 },
 
                 {
-                    label: 'Worked',
+                    label: window.translations.labels.spent,
                     data: workedHours,
 
                     backgroundColor: workedColors,
@@ -940,21 +940,21 @@ const renderAssigneeBarChart = (overviewRoot) => {
                         generateLabels() {
                             return [
                                 {
-                                    text: 'Estimated',
+                                    text: window.translations.labels.estimated,
                                     fillStyle: '#3B82F6',
                                     strokeStyle: '#3B82F6',
                                     pointStyle: 'rect',
                                     lineWidth: 0,
                                 },
                                 {
-                                    text: 'Worked',
+                                    text: window.translations.labels.spent,
                                     fillStyle: '#22C55E',
                                     strokeStyle: '#22C55E',
                                     pointStyle: 'rect',
                                     lineWidth: 0,
                                 },
                                 {
-                                    text: 'Exceeded',
+                                    text: window.translations.labels.exceeded,
                                     fillStyle: '#EF4444',
                                     strokeStyle: '#EF4444',
                                     pointStyle: 'rect',

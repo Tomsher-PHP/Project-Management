@@ -68,7 +68,7 @@
                     <div class="relative h-6 overflow-hidden {{ $estimatedTrackColor }}">
                         <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
                         <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
-                            <span>Estimated</span>
+                            <span>{{ __('label.project.estimated') }}</span>
                             <span>{{ $formatDuration($estimatedSeconds) }}</span>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                             Milestone Journey
                         </h3>
                         <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                            Estimated vs actual cumulative hours by milestone
+                            {{ __('label.project.estimated') }} vs {{ __('label.project.spent') }} cumulative hours by milestone
                         </p>
                     </div>
 
@@ -222,7 +222,7 @@
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($estimatedSeconds) }}
                                         </p>
-                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">Estimated</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
                                     </div>
 
                                     <div>
@@ -301,7 +301,7 @@
                             >
                                 <canvas
                                     data-assignee-bar-chart
-                                    aria-label="User wise estimated and worked time"
+                                    aria-label="User wise {{ __('label.project.estimated') }} and {{ __('label.project.spent') }} time"
                                 ></canvas>
                             </div>
                         </div>
