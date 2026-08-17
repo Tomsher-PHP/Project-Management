@@ -60,7 +60,7 @@
                     <div class="relative h-6 overflow-hidden {{ $workedTrackColor }}">
                         <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $workedBarColor }}" style="width: {{ $workedPercent }}%;"></div>
                         <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
-                            <span>Worked</span>
+                            <span>{{ __('label.project.spent') }}</span>
                             <span>{{ $formatDuration($workedSeconds) }}</span>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                     <div class="relative h-6 overflow-hidden {{ $estimatedTrackColor }}">
                         <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
                         <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
-                            <span>Estimated</span>
+                            <span>{{ __('label.project.estimated') }}</span>
                             <span>{{ $formatDuration($estimatedSeconds) }}</span>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
                             Milestone Journey
                         </h3>
                         <p class="text-sm text-bgray-700 dark:text-bgray-300">
-                            Estimated vs actual cumulative hours by milestone
+                            {{ __('label.project.estimated') }} vs {{ __('label.project.spent') }} cumulative hours by milestone
                         </p>
                     </div>
 
@@ -178,7 +178,7 @@
 
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
-                        {{ $formatDuration($totalWorkedSeconds) }} worked
+                        {{ $formatDuration($totalWorkedSeconds) }} {{ __('label.project.spent') }}
                     </span>
                     <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
                         {{ $assigneeCount }} {{ \Illuminate\Support\Str::plural('user', $assigneeCount) }}
@@ -199,8 +199,13 @@
                                 $estimatedSeconds = (int) ($assignee['estimated_time_seconds'] ?? 0);
                                 $hasEstimatedTime = $estimatedSeconds > 0;
                                 $isWithinEstimate = $hasEstimatedTime && $workedSeconds <= $estimatedSeconds;
-                                $comparisonPercentage = $hasEstimatedTime ? (int) round((abs($estimatedSeconds - $workedSeconds) / $estimatedSeconds) * 100) : null;
-                                $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
+                                $comparisonPercentage = $hasEstimatedTime ? (int) round((abs($estimatedSeconds - $workedSeconds) / $estimatedSeconds) * 100) : 0;
+
+                                $comparisonClasses = !$hasEstimatedTime
+                                    ? 'text-bgray-900 dark:text-white'
+                                    : ($isWithinEstimate
+                                        ? 'text-success-400 dark:text-success-300'
+                                        : 'text-red-500 dark:text-red-400');
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
                                 <a href="{{ route('reports.time_tracking', ['project_id' => [$project->id], 'user_id' => [$assignee['id']], 'request_status' => 'approved']) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
@@ -217,23 +222,33 @@
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($estimatedSeconds) }}
                                         </p>
-                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">Estimated</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
                                     </div>
 
                                     <div>
                                         <p class="text-sm font-bold text-bgray-900 dark:text-white">
                                             {{ $formatDuration($workedSeconds) }}
                                         </p>
-                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">Worked</p>
+                                        <p class="text-xs text-bgray-700 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
                                     </div>
 
 
                                     <div>
                                         <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
-                                            </svg>
-                                            {{ $comparisonPercentage ?? 0 }}%
+
+                                            @if ($hasEstimatedTime)
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
+                                                    aria-hidden="true">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            @endif
+
+                                            {{ $comparisonPercentage }}%
                                         </p>
                                     </div>
                                 </div>
@@ -245,4 +260,58 @@
         </section>
     </div>
 
+    <div class="grid gap-6 xl:grid-cols-1">
+        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <div class="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
+                <div>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">
+                        User Wise
+                    </h4>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
+                        {{ $formatDuration($totalWorkedSeconds) }} {{ __('label.project.spent') }}
+                    </span>
+
+                    <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-bgray-700 dark:bg-darkblack-600 dark:text-bgray-300">
+                        {{ $assigneeCount }}
+                        {{ \Illuminate\Support\Str::plural('user', $assigneeCount) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="min-h-[320px] flex-1 p-5">
+                <script type="application/json" data-assignee-bar-chart-data>
+                    @json($taskAssigneeOverview)
+                </script>
+
+                <div class="min-h-[320px] flex-1 p-5">
+                    @if ($taskAssigneeOverview->isEmpty())
+                        <div class="flex h-[320px] items-center justify-center rounded-xl border border-dashed border-bgray-300 px-4 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
+                            No task assignments recorded yet.
+                        </div>
+                    @else
+                        <div
+                            class="relative h-[320px] w-full"
+                            data-assignee-bar-chart-wrapper
+                        >
+                            <div
+                                class="h-full w-full"
+                                data-assignee-chart-scroll
+                            >
+                                <canvas
+                                    data-assignee-bar-chart
+                                    aria-label="User wise {{ __('label.project.estimated') }} and {{ __('label.project.spent') }} time"
+                                ></canvas>
+                            </div>
+                        </div>
+                    @endif
+
+                    <script type="application/json" data-assignee-bar-chart-data>
+                        @json($taskAssigneeOverview)
+                    </script>
+                </div>
+            </div>
+        </section>
+    </div>
 </div>
