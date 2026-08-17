@@ -77,7 +77,7 @@
             </div>
 
             <div class="mt-3" title="{{ $taskName }}">
-                <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : 'text-bgray-900 dark:text-white' }}" name-class="block" class="max-w-full" />
+                <x-task-name-status :name="$taskName" :request-type="$task->request_type" :request-status="$task->request_status" :limit="40" text-class="text-sm font-semibold leading-snug {{ $isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : '' }}" name-class="block" class="max-w-full" />
             </div>
 
             <div class="mt-3 flex items-center justify-between gap-3 text-[11px]">
@@ -129,8 +129,7 @@
                         <span data-task-timer-text>{{ gmdate('H:i:s', $timerCurrentSeconds) }}</span>
                     </div>
 
-                    <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isTimerRunning ? 1 : 0 }}" data-current-user-id="{{ $authUserId ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $assigneeName ?? 'the assignee' }}" data-task-name="{{ $taskName }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-start-disabled="{{ $canStartTimer ? 0 : 1 }}" data-can-control-timer="{{ $canControlTimer ? 1 : 0 }}" data-disabled-variant="soft" data-button-style="icon" data-enable-running-indicator="1"
-                        data-start-switch-enabled="1" @disabled($isTimerDisabled) title="{{ $timerButtonTitle }}" aria-label="{{ $isTimerRunning ? 'Stop timer' : 'Start timer' }}" class="task-timer-btn inline-flex h-7 w-7 items-center justify-center rounded-md transition {{ $isTimerRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isTimerDisabled ? 'cursor-not-allowed bg-bgray-200 text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }} {{ $isTimerRunning ? 'task-timer-btn--running' : '' }}">
+                    <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isTimerRunning ? 1 : 0 }}" data-current-user-id="{{ $authUserId ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $assigneeName ?? 'the assignee' }}" data-task-name="{{ $taskName }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-start-disabled="{{ $canStartTimer ? 0 : 1 }}" data-can-control-timer="{{ $canControlTimer ? 1 : 0 }}" data-disabled-variant="soft" data-button-style="icon" data-enable-running-indicator="1" data-start-switch-enabled="1" @disabled($isTimerDisabled) title="{{ $timerButtonTitle }}" aria-label="{{ $isTimerRunning ? 'Stop timer' : 'Start timer' }}" class="task-timer-btn inline-flex h-7 w-7 items-center justify-center rounded-md transition {{ $isTimerRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isTimerDisabled ? 'cursor-not-allowed bg-bgray-200 text-bgray-700 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }} {{ $isTimerRunning ? 'task-timer-btn--running' : '' }}">
                         @if ($isTimerRunning)
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <rect x="2" y="2" width="8" height="8" rx="1.5" />

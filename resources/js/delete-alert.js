@@ -83,7 +83,7 @@ $(document).on('click', '.delete-form', function (e) {
         });
     };
 
-    const confirmDelete = (message = 'Delete record?') => {
+    const confirmDelete = (message) => {
         const requiresDeleteTextConfirmation = [
             /\/users\/\d+(?:\/)?$/,
             /\/teams\/\d+(?:\/)?$/,
@@ -92,9 +92,12 @@ $(document).on('click', '.delete-form', function (e) {
             /\/tasks\/\d+(?:\/)?$/,
         ].some((pattern) => pattern.test(form.action));
 
+        const title = $(form).data('confirm-title') || 'Confirm Delete';
+        const textMessage = message || $(form).data('confirm-message') || 'Delete record?';
+
         Alert.confirm({
-            title: 'Confirm Delete',
-            text: message,
+            title: title,
+            text: textMessage,
             confirmText: 'Yes, delete it',
             cancelText: 'Cancel',
             requireText: requiresDeleteTextConfirmation ? 'DELETE' : null,

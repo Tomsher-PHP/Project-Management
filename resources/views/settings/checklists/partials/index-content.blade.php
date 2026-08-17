@@ -70,11 +70,7 @@
                             <td class="px-4 py-5">
                                 <div class="flex items-center gap-3">
                                     @can('checklist_template.edit')
-                                        <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                            </svg>
-                                        </button>
+                                        <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.checklists.update', $checklist->id) }}" data-name="{{ $checklist->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-method="PUT" data-module="Checklist Template" aria-label="Edit checklist template" title="Edit checklist template" />
                                     @endcan
 
                                     @can('checklist_template.delete')

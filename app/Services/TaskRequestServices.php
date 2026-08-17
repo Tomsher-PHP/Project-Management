@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRequestServices
 {
-    public function __construct(private readonly NotificationService $notificationService)
-    {
-    }
+    public function __construct(private readonly NotificationService $notificationService) {}
 
     public function getRequestsForUser(User $user, int $perPage, string $status = 'pending', array $filters = []): LengthAwarePaginator
     {
@@ -117,19 +115,7 @@ class TaskRequestServices
 
     private function visibleRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
-
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
-        return $query->where(function (Builder $query) use ($user) {
-            $query
-                ->where('current_assignee_id', $user->id)
-                ->orWhere(function (Builder $accountableQuery) use ($user) {
-                    $this->applyAccountableUserScope($accountableQuery, $user);
-                });
-        });
+        return app(TaskServices::class)->visibleTaskRequestQuery($user);
     }
 
     private function applyFilters(Builder $query, array $filters): void
@@ -180,31 +166,7 @@ class TaskRequestServices
 
     private function accountableRequestQuery(User $user): Builder
     {
-        $query = Task::query()->where('request_type', Task::REQUEST_TYPE_SELF);
-
-        if ($user->is_super_admin) {
-            return $query;
-        }
-
-        return $query->where(function (Builder $query) use ($user) {
-            $this->applyAccountableUserScope($query, $user);
-        });
-    }
-
-    private function applyAccountableUserScope(Builder $query, User $user): void
-    {
-        $query
-            ->whereHas('currentAssignee.details', function (Builder $detailsQuery) use ($user) {
-                $detailsQuery
-                    ->where('reporter_id', $user->id)
-                    ->orWhere('manager_id', $user->id);
-            })
-            ->orWhereHas('project.teamLeader', function (Builder $teamLeaderQuery) use ($user) {
-                $teamLeaderQuery->whereKey($user->id);
-            })
-            ->orWhereHas('projectMilestone', function (Builder $milestoneQuery) use ($user) {
-                $milestoneQuery->where('owner_id', $user->id);
-            });
+        return app(TaskServices::class)->visibleTaskRequestQuery($user);
     }
 
     private function approve(User $user, Task $task): void

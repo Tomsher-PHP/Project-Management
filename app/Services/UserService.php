@@ -355,6 +355,64 @@ class UserService
             ->get();
     }
 
+    /**
+     * Get accessible user IDs for the given user.
+     */
+    public function getAccessibleUserIds(User $authUser, array $excludeIds = [], array $includeIds = []): array
+    {
+        $excludeIds = collect($excludeIds)
+            ->flatten()
+            ->filter(fn($id) => filled($id))
+            ->unique()
+            ->values()
+            ->all();
+
+        $includeIds = collect($includeIds)
+            ->flatten()
+            ->filter(fn($id) => filled($id))
+            ->unique()
+            ->values()
+            ->all();
+
+        $accessibleIds = User::accessibleBy($authUser)->select('id');
+
+        return User::query()
+            ->where(function ($q) use ($accessibleIds, $includeIds) {
+                $q->whereIn('id', $accessibleIds);
+
+                if (!empty($includeIds)) {
+                    $q->orWhereIn('id', $includeIds);
+                }
+            })
+            ->where(function ($q) use ($includeIds) {
+                $q->where(function ($q) {
+                    $q->where('is_active', true)
+                        ->where('delete_status', false)
+                        ->whereNull('deleted_at');
+                });
+
+                if (!empty($includeIds)) {
+                    $q->orWhereIn('id', $includeIds);
+                }
+            })
+            ->when(!empty($excludeIds), function ($q) use ($excludeIds) {
+                $q->whereNotIn('id', $excludeIds);
+            })
+            ->pluck('id')
+            ->values()
+            ->all();
+    }
+
+    public function getRequestAccessibleUsers(User $user, array $excludeIds = [], array $includeIds = [])
+    {
+        $excludeIds = User::getReporterChainUserIds($user->id);
+        return collect($this->getAccessibleUserIds($user, $excludeIds))
+            ->push($user->id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public function getNavSelectableUsers(User $authUser)
     {
         return User::query()

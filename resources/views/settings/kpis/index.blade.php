@@ -81,11 +81,7 @@
                                     <td class="px-6 py-5 xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
                                             @can('kpi.edit')
-                                                <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.kpis.update', $kpi->id) }}" data-name="{{ $kpi->name }}" data-description="{{ $kpi->description }}" data-method="PUT" data-module="KPI">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-600 group-hover:text-indigo-600 transition" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
+                                                 <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.kpis.update', $kpi->id) }}" data-name="{{ $kpi->name }}" data-description="{{ $kpi->description }}" data-method="PUT" data-module="KPI" title="Edit KPI" />
                                             @endcan
                                             @can('kpi.delete')
                                                 @if (!$kpi->is_system)

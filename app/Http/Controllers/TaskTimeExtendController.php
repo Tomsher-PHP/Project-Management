@@ -22,8 +22,7 @@ class TaskTimeExtendController extends Controller
     {
         $this->service = $service;
         $this->pageTitle = 'Task Time Extend Requests';
-        $this->subTitle = 'Manage task time extend requests';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -105,20 +104,30 @@ class TaskTimeExtendController extends Controller
     public function store(TaskTimeExtendStoreRequest $request, Task $task): JsonResponse
     {
         // Check if current user is assignee
-        if ((int) Auth::id() !== (int) $task->current_assignee_id) {
+        if (!$this->service->canRequestEstimate($task)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Only the task assignee can request an estimate change.',
+                'message' => 'You cannot request an estimate change for this task.',
             ], 403);
         }
 
         $validated = $request->validated();
 
-        $this->service->createRequest($task, $validated);
+        $existingRequest = TaskExtendTimeRequest::where('task_id', $task->id)
+            ->latest('id')
+            ->first();
+
+        if ($existingRequest && $existingRequest->status === 'pending') {
+            $this->service->updateRequest($existingRequest, $validated);
+            $message = 'Estimate change request updated successfully.';
+        } else {
+            $this->service->createRequest($task, $validated);
+            $message = 'Estimate change request submitted successfully.';
+        }
 
         return response()->json([
             'status' => true,
-            'message' => 'Estimate change request submitted successfully.',
+            'message' => $message,
         ]);
     }
 
@@ -141,10 +150,14 @@ class TaskTimeExtendController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => [
+                    'id' => $existingRequest->id,
                     'new_estimated_time_minutes' => (int) ($existingRequest->new_estimated_time_seconds / 60),
                     'reason' => $existingRequest->reason,
                     'request_status' => $existingRequest->status,
-                    'message' => 'Only one extend time request is allowed per task.',
+                    'rejection_reason' => $existingRequest->rejection_reason,
+                    'message' => $existingRequest->status === 'pending'
+                        ? 'Edit pending estimate change request.'
+                        : 'Only one extend time request is allowed per task.',
                 ],
             ]);
         }

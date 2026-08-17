@@ -6,13 +6,8 @@
     $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
     $timeBarClasses = $timeComparison['is_over_estimate'] ? 'bg-red-500' : 'bg-success-400';
     $isCompleted = (bool) $task->status?->is_completed;
-    $wasCompletedLate = $isCompleted
-        && $task->completed_at
-        && $task->due_date_time
-        && $task->completed_at->gt($task->due_date_time);
-    $completedAtClasses = $wasCompletedLate
-        ? 'text-red-500 dark:text-red-600'
-        : 'text-success-400 dark:text-success-300';
+    $wasCompletedLate = $isCompleted && $task->completed_at && $task->due_date_time && $task->completed_at->gt($task->due_date_time);
+    $completedAtClasses = $wasCompletedLate ? 'text-red-500 dark:text-red-600' : 'text-success-400 dark:text-success-300';
     $formatDuration = function (?int $seconds): string {
         $normalizedSeconds = max(0, (int) ($seconds ?? 0));
         $hours = intdiv($normalizedSeconds, 3600);
@@ -258,7 +253,7 @@
                             <tr class="align-top">
                                 <td class="py-4 pr-4">
                                     <a href="{{ route('tasks.edit', $subtask) }}" class="block transition hover:text-success-400 dark:hover:text-success-300">
-                                        <x-task-name-status :name="$subtask->name" :request-type="$subtask->request_type" :request-status="$subtask->request_status" :limit="48" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" text-class="text-sm font-semibold text-bgray-900 dark:text-white" />
+                                        <x-task-name-status :name="$subtask->name" :request-type="$subtask->request_type" :request-status="$subtask->request_status" :limit="48" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" text-class="text-sm font-semibold" />
                                         <p class="mt-1 text-xs text-[#7C97C1] dark:text-bgray-300">{{ $subtask->code ?: 'TSK-' . str_pad($subtask->id, 5, '0', STR_PAD_LEFT) }}</p>
                                     </a>
                                 </td>

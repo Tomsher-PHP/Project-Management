@@ -1,20 +1,20 @@
-@props(['name', 'requestType' => null, 'requestStatus' => null, 'limit' => null, 'limitEnd' => '..', 'truncate' => true, 'display' => 'inline-flex', 'textClass' => 'text-gray-900', 'nameClass' => '', 'showPriorityDot' => false, 'showPriorityIndicator' => false, 'priorityIndicator' => 'dot', 'priorityClass' => 'bg-primary'])
+@props(['name', 'requestType' => null, 'requestStatus' => null, 'limit' => null, 'limitEnd' => '..', 'truncate' => true, 'display' => 'inline-flex', 'nameClass' => '', 'showPriorityDot' => false, 'showPriorityIndicator' => false, 'priorityIndicator' => 'dot', 'priorityClass' => 'bg-primary', 'textColorClass' => ''])
 
 @php
     $isSelf = $requestType === 'self';
 
-    $statusTextClass = '';
+    $statusTextClass = 'text-bgray-900 dark:text-white';
     $icon = null;
     $tooltip = '';
 
     if ($isSelf) {
         if ($requestStatus === 'pending') {
-            $statusTextClass = 'text-warning-300';
-            $tooltip = 'Pending approval : '.$name;
+            $statusTextClass = 'text-warning-300 dark:text-warning-300';
+            $tooltip = 'Pending approval : ' . $name;
             $icon = 'hourglass';
         } elseif ($requestStatus === 'rejected') {
-            $statusTextClass = 'text-error-300 font-medium';
-            $tooltip = 'Rejected : '.$name;
+            $statusTextClass = 'text-error-300 dark:text-error-400 font-medium';
+            $tooltip = 'Rejected : ' . $name;
             $icon = 'lock';
         }
     }

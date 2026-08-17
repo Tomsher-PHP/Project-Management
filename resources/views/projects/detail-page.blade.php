@@ -147,6 +147,16 @@
             canRemoveNotesFiles: @json(!$project->trashed() && auth()->user()->can('project.remove_notes_files')),
             tabsUrlTemplate: @json($tabsUrlTemplate),
         };
+
+        window.translations = {
+            labels: {
+                spent_hours: @json(__('label.project.spent_hours')),
+                spent: @json(__('label.project.spent')),
+                estimated_hours: @json(__('label.project.estimated_hours')),
+                estimated: @json(__('label.project.estimated')),
+                exceeded: @json(__('label.project.exceeded')),
+            }
+        };
     </script>
     @vite('resources/js/modules/projects/project-detail.js')
     @vite('resources/js/modules/projects/project-payment.js')

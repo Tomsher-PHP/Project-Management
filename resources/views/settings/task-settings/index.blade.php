@@ -178,11 +178,7 @@
                                                         $dataAttributes .= ' data-' . $k . '="' . htmlspecialchars((string) $v) . '"';
                                                     }
                                                 @endphp
-                                                <a href="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" {!! $dataAttributes !!} data-method="PUT" data-module="{{ $entityLabel }}">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 transition group-hover:text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                    </svg>
-                                                </a>
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" {!! $dataAttributes !!} data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
                                             @endcan
 
                                             @can($deletePermission)

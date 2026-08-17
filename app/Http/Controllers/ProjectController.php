@@ -59,7 +59,10 @@ class ProjectController extends Controller
 
     public function index(Request $request, ProjectServices $service)
     {
-        $perPage = $request->input('per_page', config('constants.per_page_count'));
+        $perPage = $request->input(
+            'per_page',
+            config('constants.per_page_count')
+        );
 
         $projects = Project::accessibleBy(auth()->user())
             ->with(['customer.profileGrade'])
@@ -68,6 +71,7 @@ class ProjectController extends Controller
             ->orderBy('projects.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
+            
 
         $projects->getCollection()->transform(function ($project) use ($service) {
             $timelines = $service->getTimelines($project);
@@ -77,11 +81,27 @@ class ProjectController extends Controller
         });
 
         $customers = Customer::active()->get();
-        $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
+
+        $statuses = ProjectStatus::active()
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
         $priorities = config('project_constants.project_priorities');
+
         $types = config('project_constants.project_flows');
 
-        return view('projects.index', compact('projects', 'perPage', 'customers', 'statuses', 'priorities', 'types'));
+        // Project categories for the category tabs
+        $projectCategories = ProjectCategory::orderBy('name', 'asc')->get();
+
+        return view('projects.index', compact(
+            'projects',
+            'perPage',
+            'customers',
+            'statuses',
+            'priorities',
+            'types',
+            'projectCategories'
+        ));
     }
 
     public function store(ProjectRequest $request, ProjectServices $service)

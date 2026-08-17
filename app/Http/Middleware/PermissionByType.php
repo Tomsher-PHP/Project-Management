@@ -41,12 +41,15 @@ class PermissionByType
 
     private function deny(Request $request): Response
     {
-        if ($request->wantsJson()) {
+        $message = 'You do not have permission to perform this action.';
+
+        if ($request->wantsJson() || $request->ajax() || $request->expectsJson()) {
             return response()->json([
-                'message' => 'You are not allowed to access.',
+                'message' => $message,
+                'error' => $message,
             ], 403);
         }
 
-        throw new UnauthorizedActionException();
+        return redirect()->back()->with('error', $message);
     }
 }

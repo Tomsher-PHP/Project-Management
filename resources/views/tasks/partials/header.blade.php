@@ -14,7 +14,7 @@
 
                 <div class="min-w-0">
                     <h2 class="min-w-0">
-                        <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :truncate="false" display="flex" text-class="text-xl font-bold text-bgray-900 dark:text-white" name-class="break-words" class="max-w-full" />
+                        <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :truncate="false" display="flex" text-class="text-xl font-bold" name-class="break-words" class="max-w-full" />
                     </h2>
                     <p class="text-sm text-bgray-700 dark:text-bgray-300">
                         Code: {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
@@ -105,8 +105,7 @@
             </div>
 
             <div class="flex items-center gap-2" data-task-timer-root data-task-id="{{ $task->id }}">
-                <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" data-current-user-id="{{ auth()->id() ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}" data-task-name="{{ $task->name }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ (int) ($task->estimated_time_seconds ?? 0) }}" data-start-disabled="{{ $isStartDisabled ? 1 : 0 }}" data-disabled-variant="strong" id="task-timer-btn" @disabled($isStartDisabled) @if ($isStartDisabled) title="Move this task to an active status before starting the timer." @endif
-                    class="task-timer-btn inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition {{ $isRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isStartDisabled ? 'cursor-not-allowed bg-bgray-300 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }}">
+                <button type="button" data-task-id="{{ $task->id }}" data-running="{{ $isRunning ? 1 : 0 }}" data-current-user-id="{{ auth()->id() ?? '' }}" data-assignee-id="{{ $task->current_assignee_id ?? '' }}" data-assignee-name="{{ $task->currentAssignee?->name ?? 'the assignee' }}" data-task-name="{{ $task->name }}" data-total-seconds="{{ $totalTrackedSeconds }}" data-estimated-seconds="{{ (int) ($task->estimated_time_seconds ?? 0) }}" data-start-disabled="{{ $isStartDisabled ? 1 : 0 }}" data-disabled-variant="strong" id="task-timer-btn" @disabled($isStartDisabled) @if ($isStartDisabled) title="Move this task to an active status before starting the timer." @endif class="task-timer-btn inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition {{ $isRunning ? 'bg-error-300 text-white hover:bg-red-500' : ($isStartDisabled ? 'cursor-not-allowed bg-bgray-300 text-bgray-600 dark:bg-darkblack-400 dark:text-bgray-300' : 'bg-success-400 text-white hover:bg-success-300') }}">
                     {{ $isRunning ? 'Stop' : 'Start' }}
                 </button>
             </div>

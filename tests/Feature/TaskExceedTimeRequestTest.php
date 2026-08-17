@@ -208,9 +208,9 @@ class TaskExceedTimeRequestTest extends TestCase
     }
 
     /**
-     * Test approved requests are not modified (creates a new request instead).
+     * Test approved or rejected requests cannot be submitted again.
      */
-    public function test_approved_requests_are_not_modified()
+    public function test_approved_or_rejected_requests_cannot_request_again()
     {
         $user = User::factory()->create();
         $project = Project::factory()->create();
@@ -233,32 +233,21 @@ class TaskExceedTimeRequestTest extends TestCase
             'reason' => 'Approved request reason'
         ]);
 
-        // Try to create new request
+        // Try to create new request when approved
         $response = $this->actingAs($user)->postJson(route('tasks.extend-time-requests.store', $task), [
             'new_estimated_time_minutes' => 180,
             'reason' => 'New pending reason'
         ]);
 
-        $response->assertStatus(200);
-        $response->assertJson([
-            'status' => true,
-            'message' => 'Estimate change request submitted successfully.'
-        ]);
+        $response->assertStatus(403);
 
         // Approved request should remain unchanged
         $approvedRequest->refresh();
         $this->assertEquals(7200, $approvedRequest->new_estimated_time_seconds);
         $this->assertEquals('approved', $approvedRequest->status);
 
-        // A new pending request should be created
-        $this->assertEquals(2, TaskExtendTimeRequest::where('task_id', $task->id)->count());
-        $this->assertDatabaseHas('task_extend_time_requests', [
-            'task_id' => $task->id,
-            'user_id' => $user->id,
-            'new_estimated_time_seconds' => 180 * 60,
-            'status' => 'pending',
-            'reason' => 'New pending reason'
-        ]);
+        // No new request created
+        $this->assertEquals(1, TaskExtendTimeRequest::where('task_id', $task->id)->count());
     }
 
     /**

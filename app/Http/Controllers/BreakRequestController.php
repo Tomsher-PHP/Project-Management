@@ -23,8 +23,7 @@ class BreakRequestController extends Controller
     public function __construct()
     {
         $this->pageTitle = 'Break Requests Management';
-        $this->subTitle = 'Manage break work requests and approvals';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, BreakRequestService $breakRequestService)

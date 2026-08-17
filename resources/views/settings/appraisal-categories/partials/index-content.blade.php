@@ -87,11 +87,13 @@
                                 <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2">
                                         @can('appraisal_settings.edit')
-                                            <button type="button" class="edit-record inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-modal="multi-step-modal" data-url="{{ route('settings.appraisal.update', $appraisalCategory->id) }}" data-name="{{ $appraisalCategory->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-is-default="{{ $appraisalCategory->is_default ? '1' : '0' }}" data-method="PUT" data-module="Appraisal Category" aria-label="Edit appraisal category">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                                </svg>
-                                            </button>
+                                            <x-edit-button action="javascript:void(0)" type="button" class="edit-record" data-modal="multi-step-modal" data-url="{{ route('settings.appraisal.update', $appraisalCategory->id) }}" data-name="{{ $appraisalCategory->name }}" data-questions='@json($questionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)' data-is-default="{{ $appraisalCategory->is_default ? '1' : '0' }}" data-method="PUT" data-module="Appraisal Category" aria-label="Edit appraisal category" title="Edit appraisal category" />
+                                        @endcan
+
+                                        @can('appraisal_settings.delete')
+                                            @if (!$appraisalCategory->is_system)
+                                                <x-delete-form :action="route('settings.appraisal.destroy', $appraisalCategory->id)" ajax render-target="#appraisal-category-index-content" render-mode="replace_inner" title="Delete appraisal category" aria-label="Delete appraisal category" />
+                                            @endif
                                         @endcan
                                     </div>
                                 </td>

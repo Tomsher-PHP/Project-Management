@@ -28,6 +28,104 @@
         @endcan
     </div>
 
+    <!-- Project Category Tabs -->
+    <div class="overflow-x-auto">
+        <div class="flex min-w-max items-center gap-1 rounded-lg bg-white p-2 dark:bg-darkblack-700">
+
+            @php
+                $selectedCategories = request()->input('project_category_id', []);
+
+                // Make sure it is always an array
+                if (!is_array($selectedCategories)) {
+                    $selectedCategories = [$selectedCategories];
+                }
+
+                $selectedCategories = array_map('strval', $selectedCategories);
+            @endphp
+
+            {{-- All Projects --}}
+            <a href="{{ route('projects.index', request()->except('project_category_id', 'project_category', 'page')) }}"
+            class="rounded-md px-4 py-2 text-sm font-semibold transition 
+            {{ empty($selectedCategories)
+                    ? 'bg-success-300 text-white'
+                    : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
+                All Projects
+            </a>
+
+            {{-- Project Categories --}}
+            @foreach ($projectCategories as $category)
+
+                @php
+                    $categoryId = (string) $category->id;
+                    $isSelected = in_array($categoryId, $selectedCategories, true);
+
+                    // Remove/add this category from the selected list
+                    if ($isSelected) {
+                        $newCategories = array_values(
+                            array_diff($selectedCategories, [$categoryId])
+                        );
+                    } else {
+                        $newCategories = array_values(
+                            array_merge($selectedCategories, [$categoryId])
+                        );
+                    }
+
+                    $query = request()->except('project_category_id', 'project_category', 'page');
+
+                    if (!empty($newCategories)) {
+                        $query['project_category_id'] = $newCategories;
+                    }
+                @endphp
+
+                <a href="{{ route('projects.index', $query) }}"
+                class="rounded-md px-4 py-2 text-sm font-semibold transition 
+                {{ $isSelected
+                        ? 'bg-success-300 text-white'
+                        : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
+                    {{ $category->name }}
+                </a>
+
+            @endforeach
+
+            {{-- Others --}}
+            @php
+                $selectedCategories = request()->input('project_category_id', []);
+
+                if (!is_array($selectedCategories)) {
+                    $selectedCategories = [$selectedCategories];
+                }
+
+                $isOthersSelected = in_array('others', $selectedCategories, true);
+
+                if ($isOthersSelected) {
+                    $newCategories = array_values(
+                        array_diff($selectedCategories, ['others'])
+                    );
+                } else {
+                    $newCategories = array_values(
+                        array_merge($selectedCategories, ['others'])
+                    );
+                }
+
+                $query = request()->except('project_category_id', 'page');
+
+                if (!empty($newCategories)) {
+                    $query['project_category_id'] = $newCategories;
+                }
+            @endphp
+
+            <a href="{{ route('projects.index', $query) }}"
+            class="rounded-md px-4 py-2 text-sm font-semibold transition
+            {{ $isOthersSelected
+                    ? 'bg-success-300 text-white'
+                    : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
+                Others
+            </a>
+
+        </div>
+    </div>
+
+    
     <!-- write your code here-->
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
@@ -37,32 +135,32 @@
                     <div class="table-content w-full overflow-x-auto">
                         <table class="w-full">
                             <tr class="border-b border-bgray-300 dark:border-darkblack-400">
-                                <td class="inline-block w-[250px] px-6 py-5 lg:w-auto xl:px-0">
+                                <td class="inline-block w-[250px] px-6 py-2 lg:w-auto xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <x-sorting.sortable-column column="name" label="Name" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <x-sorting.sortable-column column="customer.name" label="Customer" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[220px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[220px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status / Stage</span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <x-sorting.sortable-column column="start_date" label="Start Date" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <x-sorting.sortable-column column="end_date" label="End Date" />
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 xl:w-[165px] xl:px-0">
+                                <td class="px-6 py-2 xl:w-[165px] xl:px-0">
                                     <div class="flex w-full items-center space-x-2.5">
                                         <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Actions</span>
                                     </div>
@@ -164,12 +262,7 @@
                                     </td>
                                     <td class="px-6 py-5 xl:w-[165px] xl:px-0">
                                         <div class="flex w-full items-center space-x-2">
-                                            <a href="{{ route('projects.edit', $project->id) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" title="Open project">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 3h7m0 0v7m0-7L10 14" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5v14h14v-5" />
-                                                </svg>
-                                            </a>
+                                            <x-edit-button :action="route('projects.edit', $project->id)" title="Open project" />
 
                                             @can('project.delete')
                                                 <x-delete-form :action="route('projects.destroy', $project->id)" formClass="project-delete-form" />
@@ -204,6 +297,12 @@
                 'name' => $value['label'],
             ],
         );
+    
+        $selectedCategories = request()->input('project_category_id', []);
+
+        if (!is_array($selectedCategories)) {
+            $selectedCategories = [$selectedCategories];
+        }
     @endphp
     <x-filters.drawer>
         <x-filters.input-search name="name" label="Name" />
