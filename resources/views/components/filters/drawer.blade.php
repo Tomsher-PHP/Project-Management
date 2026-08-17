@@ -12,6 +12,21 @@
         </div>
 
         <form method="GET" class="flex min-h-0 flex-1 flex-col overflow-hidden">
+            @php
+                $selectedCategories = request()->input('project_category_id', []);
+
+                if (!is_array($selectedCategories)) {
+                    $selectedCategories = [$selectedCategories];
+                }
+            @endphp
+
+            @foreach ($selectedCategories as $categoryId)
+                <input
+                    type="hidden"
+                    name="project_category_id[]"
+                    value="{{ $categoryId }}"
+                >
+            @endforeach
             <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-6 pr-8">
                 {{ $slot }}
             </div>

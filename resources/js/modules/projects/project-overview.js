@@ -480,7 +480,7 @@ const renderBurnupChart = (overviewRoot) => {
                         },
                     },
                     title: {
-                        display: true,
+                        display: false,
                         text: 'Hours',
                     },
                 },
@@ -502,7 +502,7 @@ const renderBurnupChart = (overviewRoot) => {
                         },
                     },
                     title: {
-                        display: true,
+                        display: false,
                         text: 'Milestones',
                     },
                 },
@@ -531,6 +531,473 @@ const renderBurnupChart = (overviewRoot) => {
     scheduleChartResize(chart);
 };
 
+
+const renderAssigneeBarChart = (overviewRoot) => {
+    const canvas = overviewRoot.querySelector('[data-assignee-bar-chart]');
+    const chartWrapper = overviewRoot.querySelector('[data-assignee-bar-chart-wrapper]');
+    const scrollContainer = overviewRoot.querySelector('[data-assignee-chart-scroll]');
+    const dataElement = overviewRoot.querySelector('[data-assignee-bar-chart-data]');
+
+    if (!canvas || !dataElement || typeof window.Chart === 'undefined') {
+        return;
+    }
+
+    let chartData = [];
+
+    try {
+        chartData = JSON.parse(dataElement.textContent || '[]');
+    } catch (error) {
+        console.error('Unable to parse assignee bar chart data:', error);
+        return;
+    }
+
+    if (!Array.isArray(chartData)) {
+        chartData = [];
+    }
+
+    chartData = chartData.filter((item) => item);
+
+    if (!chartData.length) {
+        return;
+    }
+
+    /*
+     * Destroy existing chart
+     */
+    if (canvas._assigneeBarChart) {
+        canvas._assigneeBarChart.destroy();
+        canvas._assigneeBarChart = null;
+    }
+
+    /*
+     * Prepare data
+     */
+    const labels = chartData.map((item) => {
+        return String(item.name || 'Unassigned');
+    });
+
+    const estimatedHours = chartData.map((item) => {
+        return Number(item.estimated_time_seconds || 0) / 3600;
+    });
+
+    const workedHours = chartData.map((item) => {
+        return Number(item.worked_time_seconds || 0) / 3600;
+    });
+
+    /*
+     * Worked bar colors
+     *
+     * 0% / no worked time = green
+     * Worked <= Estimated = green
+     * Worked > Estimated = blue
+     */
+    const workedColors = chartData.map((item) => {
+        const estimated = Number(item.estimated_time_seconds || 0);
+        const worked = Number(item.worked_time_seconds || 0);
+
+        // No worked time = green
+        if (worked === 0) {
+            return '#22C55E';
+        }
+
+        // Worked exceeds estimated = RED
+        if (estimated > 0 && worked > estimated) {
+            return '#EF4444';
+        }
+
+        // Worked is within estimate = GREEN
+        return '#22C55E';
+    });
+
+    /*
+     * Make the chart wider when there are many users.
+     *
+     * This allows the X-axis to move horizontally while
+     * the Y-axis remains fixed in the visible chart area.
+     */
+    const minimumWidth = 650;
+    const widthPerUser = 110;
+
+    const requiredWidth = Math.max(
+        minimumWidth,
+        labels.length * widthPerUser
+    );
+
+    const wrapperWidth = chartWrapper?.clientWidth || minimumWidth;
+
+    /*
+     * Canvas is wider than the visible area only when
+     * there are enough users.
+     */
+    canvas.style.width = `${requiredWidth}px`;
+    canvas.style.height = '320px';
+
+    /*
+     * Keep the visible graph area fixed.
+     */
+    if (scrollContainer) {
+        scrollContainer.style.width = '100%';
+        scrollContainer.style.height = '320px';
+        scrollContainer.style.overflowX = 'hidden';
+        scrollContainer.style.overflowY = 'hidden';
+        scrollContainer.style.position = 'relative';
+    }
+
+    /*
+     * Determine maximum Y value.
+     */
+    const maxValue = Math.max(
+        ...estimatedHours,
+        ...workedHours,
+        1
+    );
+
+    const yStep = maxValue <= 10
+        ? 2
+        : maxValue <= 25
+            ? 5
+            : 10;
+
+    const yMax = Math.ceil(maxValue / yStep) * yStep;
+
+    /*
+     * Plugin that moves only the chart's X-axis/plot area.
+     */
+    const assigneeDragPlugin = {
+        id: 'assigneeDragPlugin',
+
+        afterInit(chart) {
+            chart.$assigneeDrag = {
+                dragging: false,
+                startX: 0,
+                startOffset: 0,
+                offset: 0,
+            };
+
+            const canvasElement = chart.canvas;
+
+            canvasElement.style.cursor = 'grab';
+
+            canvasElement.addEventListener('mousedown', (event) => {
+                chart.$assigneeDrag.dragging = true;
+                chart.$assigneeDrag.startX = event.clientX;
+                chart.$assigneeDrag.startOffset =
+                    chart.$assigneeDrag.offset;
+
+                canvasElement.style.cursor = 'grabbing';
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                if (!chart.$assigneeDrag?.dragging) {
+                    return;
+                }
+
+                const movement =
+                    event.clientX - chart.$assigneeDrag.startX;
+
+                chart.$assigneeDrag.offset =
+                    chart.$assigneeDrag.startOffset - movement;
+
+                const maxOffset = Math.max(
+                    0,
+                    requiredWidth - (chartWrapper?.clientWidth || requiredWidth)
+                );
+
+                chart.$assigneeDrag.offset = Math.max(
+                    0,
+                    Math.min(
+                        chart.$assigneeDrag.offset,
+                        maxOffset
+                    )
+                );
+
+                chart.update('none');
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!chart.$assigneeDrag?.dragging) {
+                    return;
+                }
+
+                chart.$assigneeDrag.dragging = false;
+                canvasElement.style.cursor = 'grab';
+            });
+        },
+
+        beforeDraw(chart) {
+            const offset = chart.$assigneeDrag?.offset || 0;
+
+            if (!offset) {
+                return;
+            }
+
+            const { ctx } = chart;
+
+            ctx.save();
+
+            /*
+             * Move the complete chart horizontally.
+             *
+             * The Y-axis is redrawn in its original position
+             * below, so it stays visually fixed.
+             */
+            ctx.translate(-offset, 0);
+
+            chart.$assigneeDragOffset = offset;
+        },
+
+        afterDraw(chart) {
+            const offset = chart.$assigneeDrag?.offset || 0;
+
+            if (!offset) {
+                return;
+            }
+
+            const { ctx, chartArea } = chart;
+
+            ctx.restore();
+
+            /*
+             * Redraw the Y-axis area on top of the moved chart.
+             */
+            ctx.save();
+
+            const yAxisWidth = chartArea.left;
+
+            ctx.clearRect(
+                0,
+                0,
+                yAxisWidth,
+                chart.height
+            );
+
+            /*
+             * Background of fixed Y-axis.
+             */
+            ctx.fillStyle =
+                document.documentElement.classList.contains('dark')
+                    ? '#171C24'
+                    : '#FFFFFF';
+
+            ctx.fillRect(
+                0,
+                0,
+                yAxisWidth,
+                chart.height
+            );
+
+            /*
+             * Redraw Y-axis ticks.
+             */
+            const yScale = chart.scales.y;
+
+            if (yScale) {
+                yScale.draw(ctx);
+            }
+
+            ctx.restore();
+        },
+    };
+
+    /*
+     * Create Chart
+     */
+    const chart = new window.Chart(canvas, {
+        type: 'bar',
+
+        data: {
+            labels,
+
+            datasets: [
+                {
+                    label: 'Estimated',
+                    data: estimatedHours,
+
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#3B82F6',
+
+                    borderWidth: 0,
+                    borderRadius: 0,
+                    borderSkipped: false,
+
+                    barThickness: 23,
+                    maxBarThickness: 23,
+
+                    categoryPercentage: 0.55,
+                    barPercentage: 1,
+                },
+
+                {
+                    label: 'Worked',
+                    data: workedHours,
+
+                    backgroundColor: workedColors,
+                    borderColor: workedColors,
+
+                    borderWidth: 0,
+                    borderRadius: 0,
+                    borderSkipped: false,
+
+                    barThickness: 23,
+                    maxBarThickness: 23,
+
+                    categoryPercentage: 0.55,
+                    barPercentage: 1,
+                },
+            ],
+        },
+
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+
+            animation: false,
+
+            /*
+             * Keep normal vertical bar chart.
+             */
+            indexAxis: 'x',
+
+            layout: {
+                padding: {
+                    top: 15,
+                    right: 25,
+                    bottom: 5,
+                    left: 5,
+                },
+            },
+
+            scales: {
+                x: {
+                    stacked: false,
+
+                    grid: {
+                        display: false,
+                    },
+
+                    ticks: {
+                        color: '#64748B',
+
+                        maxRotation: 0,
+                        minRotation: 0,
+
+                        callback(value) {
+                            const label =
+                                this.getLabelForValue(value);
+
+                            if (!label) {
+                                return '';
+                            }
+
+                            return label.length > 12
+                                ? `${label.substring(0, 12)}...`
+                                : label;
+                        },
+                    },
+
+                    title: {
+                        display: false,
+                        text: 'Users',
+                    },
+                },
+
+                y: {
+                    beginAtZero: true,
+
+                    max: yMax,
+
+                    ticks: {
+                        color: '#64748B',
+                        precision: 0,
+
+                        callback(value) {
+                            return `${value}h`;
+                        },
+                    },
+
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.15)',
+                    },
+
+                    title: {
+                        display: false,
+                        text: 'Time',
+                    },
+                },
+            },
+
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        padding: 18,
+
+                        generateLabels() {
+                            return [
+                                {
+                                    text: 'Estimated',
+                                    fillStyle: '#3B82F6',
+                                    strokeStyle: '#3B82F6',
+                                    pointStyle: 'rect',
+                                    lineWidth: 0,
+                                },
+                                {
+                                    text: 'Worked',
+                                    fillStyle: '#22C55E',
+                                    strokeStyle: '#22C55E',
+                                    pointStyle: 'rect',
+                                    lineWidth: 0,
+                                },
+                                {
+                                    text: 'Exceeded',
+                                    fillStyle: '#EF4444',
+                                    strokeStyle: '#EF4444',
+                                    pointStyle: 'rect',
+                                    lineWidth: 0,
+                                },
+                            ];
+                        },
+                    },
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const value =
+                                Number(context.raw) || 0;
+
+                            return `${context.dataset.label}: ${value.toFixed(2)}h`;
+                        },
+                    },
+                },
+            },
+        },
+
+        plugins: [
+            assigneeDragPlugin,
+        ],
+    });
+
+    canvas._assigneeBarChart = chart;
+
+    /*
+     * Resize after the panel becomes visible.
+     */
+    window.requestAnimationFrame(() => {
+        chart.resize();
+        chart.update('none');
+    });
+
+    window.setTimeout(() => {
+        chart.resize();
+        chart.update('none');
+    }, 180);
+};
 const initializeOverviewPanel = (panel) => {
     const overviewRoot = panel?.querySelector('[data-project-overview]');
 
@@ -541,6 +1008,7 @@ const initializeOverviewPanel = (panel) => {
     waitForVisiblePanel(panel, () => {
         renderOverviewChart(overviewRoot);
         renderBurnupChart(overviewRoot);
+        renderAssigneeBarChart(overviewRoot);
     });
 };
 
