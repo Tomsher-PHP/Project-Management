@@ -663,7 +663,7 @@
                         {{ $authUser?->name }}
                     </p>
                     <p class="truncate text-xs font-medium text-bgray-700 dark:text-bgray-300">
-                        {{ $authUser?->role_name ?? 'Employee' }}
+                        {{ $authUser?->role_name ?? 'No Role' }}
                     </p>
                 </div>
             </div>
