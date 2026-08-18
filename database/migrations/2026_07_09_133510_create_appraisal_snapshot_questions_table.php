@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('appraisal_snapshot_questions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->foreignId('appraisal_snapshot_category_id')->constrained(table: 'appraisal_snapshot_categories', indexName: 'fk_appr_snap_q_cat')->cascadeOnDelete();
 
             $table->text('question');
