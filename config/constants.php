@@ -1,69 +1,11 @@
 <?php
 
 return [
-    // User Types constant
-    // 'user_types' => [
-    //     'super_admin' => 'Super Admin',
-    //     'admin' => 'Admin',
-    //     'manager' => 'Manager',
-    //     'team_leader' => 'Team Leader',
-    //     'normal_user' => 'Normal User',
-    // ],
-
-    // User Type Permissions constant
-    'user_type_permissions' => [
-
-        'super_admin' => ['*'],
-
-        'admin' => ['*'],
-
-        'manager' => ['*'],
-
-        'team_leader' => [
-            // Project
-            'project.view',
-            'project.create',
-            'project.edit',
-            'project.delete',
-
-            // Task
-            'task.view',
-            'task.create',
-            'task.edit',
-            'task.delete',
-
-            // User (optional – if allowed)
-            'user.view',
-
-            // Team
-            'team.view',
-
-            // Reports
-            'reports.view',
-        ],
-
-        'normal_user' => [
-            'project.view',
-            'task.view',
-            'task.create',
-            'task.edit',
-        ],
-
-        'tester' => [
-            'project.view',
-            'task.view',
-            'task.create',
-            'task.edit',
-        ],
-
-        'guest' => [
-            'project.view',
-            'task.view',
-        ],
-    ],
-
     // Default list data count per page
     'per_page_count' => 20,
+
+    // workspace auto refresh interval in milliseconds
+    'workspace_auto_refresh_interval_ms' => 0.3 * 60 * 1000, // 5 minutes
 
     // Default team roles for team management
     'team_roles' => [

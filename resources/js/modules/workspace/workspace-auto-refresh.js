@@ -1,4 +1,4 @@
-const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const AUTO_REFRESH_INTERVAL_MS = window.AUTO_REFRESH_INTERVAL_MS ?? 5 * 60 * 1000;
 const CONTROLLER_KEY = '__workspaceAutoRefreshController';
 const WORKSPACE_SELECTOR = '[data-user-workspace]';
 const TIMELINE_CONTROLLER_KEY = '__workspaceTimelineController';
@@ -51,14 +51,17 @@ const toggleRefreshIndicator = (isVisible) => {
 };
 
 const runWorkspaceRefresh = async (state) => {
+    if (document.hidden) {
+        return;
+    }
+
     if (state.isRefreshing || !isTodaySelected() || isWorkspaceBusy()) {
         return;
     }
 
     const timelineController = window[TIMELINE_CONTROLLER_KEY];
-    const kanbanController = window[KANBAN_CONTROLLER_KEY];
 
-    if (!timelineController?.refreshSelectedDate || !kanbanController?.reload) {
+    if (!timelineController?.refreshSelectedDate) {
         return;
     }
 
@@ -66,10 +69,16 @@ const runWorkspaceRefresh = async (state) => {
     toggleRefreshIndicator(true);
 
     try {
-        await Promise.allSettled([
-            timelineController.refreshSelectedDate(),
-            kanbanController.reload(),
-        ]);
+        const result = await timelineController.refreshSelectedDate({ isAutoRefresh: true });
+        if (result?.authFailed || result?.status === 401 || result?.status === 419) {
+            destroyController(window[CONTROLLER_KEY]);
+            window[CONTROLLER_KEY] = null;
+        }
+    } catch (err) {
+        if (err?.status === 401 || err?.status === 419 || err?.authFailed) {
+            destroyController(window[CONTROLLER_KEY]);
+            window[CONTROLLER_KEY] = null;
+        }
     } finally {
         state.isRefreshing = false;
         toggleRefreshIndicator(false);
@@ -83,10 +92,11 @@ const destroyController = (controller) => {
 
     if (controller.intervalId) {
         window.clearInterval(controller.intervalId);
+        controller.intervalId = null;
     }
 
     toggleRefreshIndicator(false);
-}
+};
 
 const initWorkspaceAutoRefresh = () => {
     const workspaceRoot = getWorkspaceRoot();

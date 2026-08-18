@@ -76,6 +76,7 @@
 @push('scripts')
     <script>
         const initialFlowType = @json($selectedFlowType);
+        window.AUTO_REFRESH_INTERVAL_MS = @json(config('constants.workspace_auto_refresh_interval_ms'));
     </script>
     @vite('resources/js/modules/workspace/workspace-kanban-heights.js')
     @vite('resources/js/modules/workspace/user-timeline.js')
