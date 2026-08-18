@@ -1267,6 +1267,14 @@ const initializeTasksRoot = (root) => {
 
             closeAllTaskRowMenus();
         });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const detailModal = document.querySelector('[data-project-task-detail-modal]:not(.hidden)');
+                if (detailModal) {
+                    closeTaskDetailModal(detailModal);
+                }
+            }
+        });
         window.addEventListener('resize', () => {
             closeAllTaskRowMenus();
         });
@@ -1392,9 +1400,16 @@ const initializeTasksRoot = (root) => {
         }
 
         const detailCloseButton = event.target.closest('[data-project-task-detail-close]');
+        const detailModalTarget = event.target.closest('[data-project-task-detail-modal]');
+        const detailContentTarget = event.target.closest('[data-project-task-detail-content]');
 
         if (detailCloseButton && root.contains(detailCloseButton)) {
             closeTaskDetailModal(root.querySelector('[data-project-task-detail-modal]'));
+            return;
+        }
+
+        if (detailModalTarget && !detailContentTarget && root.contains(detailModalTarget)) {
+            closeTaskDetailModal(detailModalTarget);
             return;
         }
 
