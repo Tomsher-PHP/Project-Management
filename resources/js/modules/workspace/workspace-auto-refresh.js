@@ -39,6 +39,32 @@ const isWorkspaceBusy = () => {
     );
 };
 
+const hasRunningTask = () => {
+    const navbarTimerState = window.navbarRunningTaskTimer?.getState?.();
+
+    if (navbarTimerState) {
+        return Boolean(navbarTimerState.active && navbarTimerState.state === 'running');
+    }
+
+    const timerRoot = document.querySelector('[data-running-task-timer]');
+    if (timerRoot) {
+        return timerRoot.dataset.runningTaskActive === '1' && timerRoot.dataset.runningTaskState === 'running';
+    }
+
+    return false;
+};
+
+const isSelfWorkspaceSelected = () => {
+    const userSelect = document.querySelector('[data-workspace-user-select]');
+
+    if (userSelect) {
+        return !String(userSelect.value || '').trim();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    return !urlParams.get('user_id');
+};
+
 const toggleRefreshIndicator = (isVisible) => {
     const indicator = getRefreshIndicator();
 
@@ -51,11 +77,20 @@ const toggleRefreshIndicator = (isVisible) => {
 };
 
 const runWorkspaceRefresh = async (state) => {
-    if (document.hidden) {
+    // check if tab is not active
+    // if (document.hidden) {
+    //     return;
+    // }
+
+    if (state.isRefreshing || !isTodaySelected() || isWorkspaceBusy()) {
         return;
     }
 
-    if (state.isRefreshing || !isTodaySelected() || isWorkspaceBusy()) {
+    if (!hasRunningTask()) {
+        return;
+    }
+
+    if (!isSelfWorkspaceSelected()) {
         return;
     }
 

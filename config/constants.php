@@ -5,7 +5,7 @@ return [
     'per_page_count' => 20,
 
     // workspace auto refresh interval in milliseconds
-    'workspace_auto_refresh_interval_ms' => 0.3 * 60 * 1000, // 5 minutes
+    'workspace_auto_refresh_interval_ms' => 5 * 60 * 1000, // 5 minutes
 
     // Default team roles for team management
     'team_roles' => [
