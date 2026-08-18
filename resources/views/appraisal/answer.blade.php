@@ -31,6 +31,7 @@
 
             <div class="appraisal-answer-right sticky top-20">
                 @include('appraisal.partials.answer-sidebar-progress')
+                @include('appraisal.partials.answer-sidebar-rating-scale')
                 @include('appraisal.partials.answer-sidebar-categories')
             </div>
         </div>
