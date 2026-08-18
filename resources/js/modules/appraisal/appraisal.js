@@ -481,9 +481,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
             const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
-            const kpiAgreement = row.kpi_agreed
-                ? `Agreed: ${escapeHtml(row.kpi_agreed_at || '--')}`
-                : 'Not Agreed';
+            const kpiAgreement = !row.appraisal_id ? 'N/A' : row.kpi_agreed
+                ? `Submitted: ${escapeHtml(row.kpi_agreed_at || '--')}`
+                : 'Pending';
             const completedDate = status === 'completed' && row.completed_at
                 ? `<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(row.completed_at)}</p>`
                 : '';
