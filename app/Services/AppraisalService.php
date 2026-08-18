@@ -1453,11 +1453,12 @@ class AppraisalService
             $snapshotCategory->questions()->createMany(
                 collect($category['questions'] ?? [])
                     ->values()
-                    ->map(function (array $question, int $questionIndex) {
+                    ->map(function (array $question, int $questionIndex) use ($appraisal) {
                         $questionType = $question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
                         $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
 
                         return [
+                            'user_id' => (int) $appraisal->user_id,
                             'question' => $question['question'],
                             'question_type' => $questionType,
                             'measurement_type' => $isTarget ? ($question['measurement_type'] ?? null) : null,

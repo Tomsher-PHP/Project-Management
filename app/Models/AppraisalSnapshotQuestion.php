@@ -34,6 +34,7 @@ class AppraisalSnapshotQuestion extends Model
     ];
 
     protected $fillable = [
+        'user_id',
         'appraisal_snapshot_category_id',
         'question',
         'question_type',
@@ -46,6 +47,7 @@ class AppraisalSnapshotQuestion extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'appraisal_snapshot_category_id' => 'integer',
             'question' => 'string',
             'question_type' => 'string',
@@ -59,6 +61,11 @@ class AppraisalSnapshotQuestion extends Model
     public function category()
     {
         return $this->belongsTo(AppraisalSnapshotCategory::class, 'appraisal_snapshot_category_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function answers()
