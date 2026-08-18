@@ -80,19 +80,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const isQuestionCompleted = (question) => {
         const role = answerFormData.role;
 
-        if (question.question_type === 'answer') {
-            return role !== 'assignee' || hasValue(question.answer?.answer);
+        if (role === 'assignee') {
+            if (question.question_type === 'answer') {
+                return hasValue(question.answer?.answer);
+            }
+
+            if (question.question_type === 'target') {
+                return hasValue(question.answer?.achieved_value) && !Number.isNaN(Number(question.answer.achieved_value));
+            }
+
+            return isRatingCompleted(question.answer?.rating);
         }
 
-        if (question.question_type === 'target') {
-            return role === 'assignee'
+        if (role === 'reviewer') {
+            if (question.question_type === 'answer') {
+                return hasValue(question.answer?.answer);
+            }
+
+            if (question.question_type === 'target') {
+                return hasValue(currentReview(question)?.remark);
+            }
+
+            return isRatingCompleted(currentReview(question)?.rating);
+        }
+
+        const hasAssigneeAnswer = question.question_type === 'answer'
+            ? hasValue(question.answer?.answer)
+            : (question.question_type === 'target'
                 ? hasValue(question.answer?.achieved_value) && !Number.isNaN(Number(question.answer.achieved_value))
-                : role !== 'reviewer' || hasValue(currentReview(question)?.remark);
-        }
+                : isRatingCompleted(question.answer?.rating));
 
-        const response = role === 'reviewer' ? currentReview(question) : question.answer;
+        const reviews = question.reviews || [];
+        const allReviewersCompleted = reviews.length === 0 || reviews.every((review) => {
+            if (question.question_type === 'target') {
+                return hasValue(review.remark);
+            }
 
-        return role === 'viewer' || isRatingCompleted(response?.rating);
+            return isRatingCompleted(review.rating);
+        });
+
+        return hasAssigneeAnswer && allReviewersCompleted;
     };
 
     const persistVisibleAnswerValues = () => {
