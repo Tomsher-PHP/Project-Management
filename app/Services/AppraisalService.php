@@ -311,6 +311,9 @@ class AppraisalService
                 $appraisal->status = $status;
                 $appraisal->published_at = $status === 'published' ? now() : null;
                 $appraisal->published_by = $status === 'published' ? auth()->id() : null;
+                $appraisal->kpi_agreed_at = null;
+                $appraisal->assignee_average_rating = null;
+                $appraisal->final_rating = null;
                 $appraisal->save();
 
                 $this->replaceSnapshot($appraisal, $data['categories'], $isExistingDraft);
