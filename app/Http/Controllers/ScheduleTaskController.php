@@ -133,7 +133,7 @@ class ScheduleTaskController extends Controller
         ]);
     }
 
-    public function destroy(TaskSchedule $taskSchedule): JsonResponse
+    public function destroy(TaskSchedule $taskSchedule)
     {
         abort_unless(
             TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
@@ -142,10 +142,7 @@ class ScheduleTaskController extends Controller
 
         $taskSchedule->delete();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Scheduled task deleted successfully.',
-        ], Response::HTTP_OK);
+        return redirect(session('task_schedules_return_url', route('schedule-tasks.index')))->with('success', 'Scheduled task deleted successfully.');
     }
 
     private function buildDependencies(Collection $projects): array

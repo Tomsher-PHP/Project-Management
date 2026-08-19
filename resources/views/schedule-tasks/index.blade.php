@@ -10,6 +10,9 @@
 
             <x-filters.button />
         </div>
+        @php
+            session(['task_schedules_return_url' => url()->full()]);
+        @endphp
 
         <section>
             <div class="overflow-hidden rounded-[24px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
@@ -46,8 +49,7 @@
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->addedBy?->name ?? '--' }}</td>
                                     <td class="px-4 py-4">
                                         <div class="flex items-center">
-                                            <button type="button" @cannot('task.edit') disabled @endcannot class="status-toggle switch-btn {{ $taskSchedule->is_active ? 'active' : '' }} relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" data-schedule-task-toggle data-url="{{ route('schedule-tasks.toggle-status', $taskSchedule) }}" data-active="{{ $taskSchedule->is_active ? 'true' : 'false' }}" data-entity="schedule-task"
-                                                role="switch" aria-checked="{{ $taskSchedule->is_active ? 'true' : 'false' }}">
+                                            <button type="button" @cannot('task.edit') disabled @endcannot class="status-toggle switch-btn {{ $taskSchedule->is_active ? 'active' : '' }} relative inline-flex h-5 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent text-center transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" data-schedule-task-toggle data-url="{{ route('schedule-tasks.toggle-status', $taskSchedule) }}" data-active="{{ $taskSchedule->is_active ? 'true' : 'false' }}" data-entity="schedule-task" role="switch" aria-checked="{{ $taskSchedule->is_active ? 'true' : 'false' }}">
                                                 <span aria-hidden="true" class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                             </button>
                                         </div>
