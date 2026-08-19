@@ -43,10 +43,10 @@ import{i as Te}from"./tom-select-CrIMTW6-.js";document.addEventListener("DOMCont
             </div>
         `:'<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>'},xt=e=>{const t=Array.isArray(e.average_ratings)?e.average_ratings:[];return t.length?`
             <div class="space-y-1">
-                ${t.map(a=>{const s=a.average_rating,r=s!=null&&s!==""?Number(s):null,n=r!==null&&Number.isFinite(r)?`${i(r.toFixed(2))} / 5`:"--",o=a.name||"--",d=a.role_label||"";return`
-                        <div class="flex items-center justify-between gap-3 whitespace-nowrap text-xs" title="${i(d)}">
-                            <span class="max-w-[120px] truncate font-medium text-bgray-700 dark:text-bgray-50">${i(o)}</span>
-                            <span class="font-semibold text-bgray-900 dark:text-white"><span class="text-warning-300">★</span> ${n}</span>
+                ${t.map(a=>{const s=a.average_rating,r=s!=null&&s!==""?Number(s):null,n=a.rating_count!==void 0&&a.rating_count!==null?` (${i(a.rating_count)})`:"",o=r!==null&&Number.isFinite(r)?`${i(r.toFixed(2))} / 5${n}`:"--",d=a.name||"--",p=a.role_label||"";return`
+                        <div class="flex items-center justify-between gap-3 whitespace-nowrap text-xs" title="${i(p)}">
+                            <span class="max-w-[120px] truncate font-medium text-bgray-700 dark:text-bgray-50">${i(d)}</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white"><span class="text-warning-300">★</span> ${o}</span>
                         </div>
                     `}).join("")}
             </div>
@@ -64,7 +64,7 @@ import{i as Te}from"./tom-select-CrIMTW6-.js";document.addEventListener("DOMCont
             <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
                 <button type="button" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${t==="view"?"border border-bgray-200 bg-white text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50":"bg-success-300 text-white hover:bg-success-400"}" data-appraisal-row-action="${t}" data-user-id="${i(e.id)}" data-appraisal-id="${i(e.appraisal_id||"")}">${a}</button>
             </div>
-        `},se=()=>{if(!je||!E)return;const t=Array.from(E.querySelectorAll("[data-appraisal-user-checkbox]")).filter(s=>!s.disabled),a=t.filter(s=>s.checked);je.textContent=String(h.size),Me&&(Me.disabled=h.size===0),Ue&&(Ue.disabled=Fe().length===0),B&&(B.checked=t.length>0&&t.every(s=>s.checked),B.indeterminate=a.length>0&&!B.checked,B.disabled=t.length===0)},Ye=()=>{if(!pe)return;const e=f.my_appraisals||[];if(!e.length){pe.innerHTML='<tr><td colspan="7" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';return}pe.innerHTML=e.map(t=>{const a=t.user||{},s=[a.department,a.designation].filter(Boolean).join(" · ")||"No department / designation",r=String(t.status||"").toLowerCase(),n=t.is_assignee||Number(a.id)===He,o=t.can_agree||t.appraisal_id&&n&&r==="published"&&!t.kpi_agreed,d=t.can_answer||t.appraisal_id&&n&&t.kpi_agreed,p=t.appraisal_id?t.kpi_agreed?`Submitted: ${i(t.kpi_agreed_at||"--")}`:"Pending":"N/A",S=r==="completed"&&t.completed_at?`<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${i(t.completed_at)}</p>`:"";let L='<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';if(o)L=`<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-kpi-agree data-appraisal-id="${i(t.appraisal_id)}">Agree</button>`;else if(d){const de=t.can_edit_answer?"Answer":"View Answer";L=`<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-link data-appraisal-id="${i(t.appraisal_id)}">${de}</button>`}return`
+        `},se=()=>{if(!je||!E)return;const t=Array.from(E.querySelectorAll("[data-appraisal-user-checkbox]")).filter(s=>!s.disabled),a=t.filter(s=>s.checked);je.textContent=String(h.size),Me&&(Me.disabled=h.size===0),Ue&&(Ue.disabled=Fe().length===0),B&&(B.checked=t.length>0&&t.every(s=>s.checked),B.indeterminate=a.length>0&&!B.checked,B.disabled=t.length===0)},Ye=()=>{if(!pe)return;const e=f.my_appraisals||[];if(!e.length){pe.innerHTML='<tr><td colspan="6" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';return}pe.innerHTML=e.map(t=>{const a=t.user||{},s=[a.department,a.designation].filter(Boolean).join(" · ")||"No department / designation",r=String(t.status||"").toLowerCase(),n=t.is_assignee||Number(a.id)===He,o=t.can_agree||t.appraisal_id&&n&&r==="published"&&!t.kpi_agreed,d=t.can_answer||t.appraisal_id&&n&&t.kpi_agreed,p=t.appraisal_id?t.kpi_agreed?`Submitted: ${i(t.kpi_agreed_at||"--")}`:"Pending":"N/A",S=r==="completed"&&t.completed_at?`<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${i(t.completed_at)}</p>`:"";let L='<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>';if(o)L=`<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-kpi-agree data-appraisal-id="${i(t.appraisal_id)}">Agree</button>`;else if(d){const de=t.can_edit_answer?"Answer":"View Answer";L=`<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-link data-appraisal-id="${i(t.appraisal_id)}">${de}</button>`}return`
                 <tr class="border-b border-bgray-300 hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500">
                     <td class="px-4 py-4 xl:px-0">
                         <div class="flex items-center gap-3">
@@ -81,9 +81,6 @@ import{i as Te}from"./tom-select-CrIMTW6-.js";document.addEventListener("DOMCont
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${i(t.questions_count??0)} / ${i(t.categories_count??0)}</span>
-                    </td>
-                    <td class="px-4 py-4 xl:px-0">
-                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${i(t.current_stage||"--")}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         ${Xe(t)}
