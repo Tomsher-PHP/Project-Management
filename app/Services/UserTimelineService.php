@@ -58,45 +58,56 @@ class UserTimelineService
                 $windowStart = (int) ($shiftSegment['start_seconds'] ?? 0);
                 $windowEnd = (int) ($shiftSegment['end_seconds'] ?? 0);
 
-                if ($currentTimelineSecond !== null) {
-                    if ($windowStart >= $currentTimelineSecond) {
-                        continue;
-                    }
-
-                    $windowEnd = min($windowEnd, $currentTimelineSecond);
-                }
-
-                if ($windowEnd <= $windowStart) {
+                if ($currentTimelineSecond !== null && $windowStart >= $currentTimelineSecond) {
                     continue;
                 }
 
-                $windowWorkIntervals = [];
-
+                $maxWorkedEndAfterStart = null;
                 foreach ($workedIntervals as $interval) {
-                    $overlapStart = max($windowStart, $interval['start_seconds']);
-                    $overlapEnd = min($windowEnd, $interval['end_seconds']);
-
-                    if ($overlapEnd > $overlapStart) {
-                        $windowWorkIntervals[] = [
-                            'start_seconds' => $overlapStart,
-                            'end_seconds' => $overlapEnd,
-                        ];
+                    if ($interval['end_seconds'] > $windowStart) {
+                        $maxWorkedEndAfterStart = max($maxWorkedEndAfterStart ?? 0, $interval['end_seconds']);
                     }
                 }
 
-                $windowWorkIntervals = $this->mergeTimelineIntervals($windowWorkIntervals);
+                $effectiveEnd = $maxWorkedEndAfterStart !== null
+                    ? max($windowEnd, $maxWorkedEndAfterStart)
+                    : $windowEnd;
+
+                if ($currentTimelineSecond !== null) {
+                    $effectiveEnd = min($effectiveEnd, $currentTimelineSecond);
+                }
+
+                if ($effectiveEnd <= $windowStart) {
+                    continue;
+                }
+
                 $cursor = $windowStart;
 
-                foreach ($windowWorkIntervals as $interval) {
+                foreach ($workedIntervals as $interval) {
+                    if ($interval['end_seconds'] <= $cursor) {
+                        continue;
+                    }
+
+                    if ($interval['start_seconds'] >= $effectiveEnd) {
+                        break;
+                    }
+
                     if ($interval['start_seconds'] > $cursor) {
-                        $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $interval['start_seconds']);
+                        $gapEnd = min($interval['start_seconds'], $effectiveEnd);
+                        if ($gapEnd > $cursor) {
+                            $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $gapEnd);
+                        }
+                        if ($interval['start_seconds'] >= $effectiveEnd) {
+                            $cursor = $gapEnd;
+                            break;
+                        }
                     }
 
                     $cursor = max($cursor, $interval['end_seconds']);
                 }
 
-                if ($currentTimelineSecond === null && $cursor < $windowEnd) {
-                    $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $windowEnd);
+                if ($cursor < $effectiveEnd) {
+                    $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $effectiveEnd);
                 }
             }
 

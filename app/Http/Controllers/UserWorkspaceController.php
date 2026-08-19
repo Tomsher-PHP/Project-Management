@@ -31,10 +31,8 @@ class UserWorkspaceController extends Controller
 
     private RunningTaskNavbarService $runningTaskNavbarService;
 
-    public function __construct(
-        UserTimelineService $timeLineService,
-        RunningTaskNavbarService $runningTaskNavbarService
-    ) {
+    public function __construct(UserTimelineService $timeLineService, RunningTaskNavbarService $runningTaskNavbarService)
+    {
         $this->timeLineService = $timeLineService;
         $this->runningTaskNavbarService = $runningTaskNavbarService;
         $this->pageTitle = 'My Workspace';
