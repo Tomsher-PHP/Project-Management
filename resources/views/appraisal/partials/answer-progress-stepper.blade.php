@@ -109,7 +109,7 @@
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" onclick="const m = this.closest('[data-appraisal-ack-details-modal]'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }"></div>
 
         <div class="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                     <h3 class="text-lg font-bold text-bgray-900 dark:text-white" data-appraisal-ack-modal-title>Acknowledgement Details</h3>
                     <button type="button" class="text-2xl leading-none text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" onclick="const m = this.closest('[data-appraisal-ack-details-modal]'); if(m) { m.classList.add('hidden'); m.classList.remove('flex'); }" aria-label="Close">×</button>
