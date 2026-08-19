@@ -32,11 +32,11 @@
     <h2 class="text-sm font-bold uppercase tracking-wide text-bgray-600 dark:text-bgray-300">Rating Milestone Scale</h2>
     <div class="mt-3 space-y-2">
         @foreach ($scales as $scale)
-            <div class="flex items-center gap-2.5 px-2.5 py-1.5 text-xs transition">
-                <span class="inline-flex h-6 min-w-[2.25rem] shrink-0 items-center justify-center text-[11px] font-bold {{ $scale['badge'] }}">
+            <div class="flex items-center gap-2.5 px-2.5 text-xs transition">
+                <span class="inline-flex h-6 min-w-[2.25rem] shrink-0 items-center justify-center text-[14px] font-bold {{ $scale['badge'] }}">
                     {{ $scale['score'] }}
                 </span>
-                <span class="font-semibold text-bgray-800 dark:text-bgray-300">
+                <span class="font-semibold text-bgray-800 dark:text-bgray-300 text-[12px]">
                     {{ $scale['label'] }}
                 </span>
             </div>
