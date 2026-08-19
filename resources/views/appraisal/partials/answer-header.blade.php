@@ -48,4 +48,8 @@
             <dd class="mt-1 text-sm font-semibold text-bgray-900 dark:text-white">{{ $answerData['current_stage'] ?? '--' }}</dd>
         </div>
     </dl>
+
+    <div class="mt-5 border-t border-bgray-200 pt-4 dark:border-darkblack-400">
+        @include('appraisal.partials.answer-progress-stepper')
+    </div>
 </header>

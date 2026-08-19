@@ -710,6 +710,7 @@ class AppraisalService
                 'commentator_name' => $c->reviewer?->reviewer?->name,
                 'created_at' => $c->created_at?->format('M d, Y h:i A'),
             ])->values()->all(),
+            'stepper' => $this->getProgressStepperData($appraisal),
         ];
     }
 
@@ -1755,6 +1756,110 @@ class AppraisalService
             )
             ->values()
             ->all();
+    }
+
+    public function getProgressStepperData(Appraisal $appraisal): array
+    {
+        $appraisal->loadMissing(['user', 'reviewers.reviewer', 'answers']);
+
+        $assigneeName = $appraisal->user?->name ?: 'Assignee';
+
+        $steps = [];
+        $stepNumber = 1;
+
+        // Step 1: KPI Agreement
+        $kpiAgreed = filled($appraisal->kpi_agreed_at);
+        $steps[] = [
+            'key' => 'kpi_agreement',
+            'number' => $stepNumber++,
+            'title' => 'KPI Agreement',
+            'subtitle' => $assigneeName,
+            'is_completed' => $kpiAgreed,
+        ];
+
+        // Step 2: Assignee Answers
+        $assigneeSubmitted = $this->isRoleSubmitted($appraisal, 'assignee')
+            || in_array($appraisal->status, ['completed', 'closed'], true);
+
+        if (! $assigneeSubmitted && $kpiAgreed && ! in_array($appraisal->current_stage, [null, '', 'Assignee'], true)) {
+            $assigneeSubmitted = true;
+        }
+
+        $steps[] = [
+            'key' => 'assignee_answers',
+            'number' => $stepNumber++,
+            'title' => 'Assignee Answers',
+            'subtitle' => $assigneeName,
+            'is_completed' => $assigneeSubmitted,
+        ];
+
+        // Reviewer Steps (Level 1, Level 2, etc.)
+        $reviewers = $appraisal->reviewers->sortBy('level')->values();
+        foreach ($reviewers as $reviewer) {
+            $reviewerSubmitted = filled($reviewer->submitted_at);
+            $reviewerAcknowledged = filled($reviewer->acknowledged_at);
+
+            if (in_array($appraisal->status, ['completed', 'closed'], true)) {
+                $reviewerSubmitted = true;
+                $reviewerAcknowledged = true;
+            }
+
+            $steps[] = [
+                'key' => "reviewer_answers_{$reviewer->id}",
+                'number' => $stepNumber++,
+                'title' => "Reviewer L{$reviewer->level} Answers",
+                'subtitle' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                'is_completed' => $reviewerSubmitted,
+            ];
+
+            $steps[] = [
+                'key' => "reviewer_ack_{$reviewer->id}",
+                'number' => $stepNumber++,
+                'title' => "L{$reviewer->level} Acknowledgement",
+                'subtitle' => $assigneeName,
+                'is_completed' => $reviewerAcknowledged,
+            ];
+        }
+
+        // Final Step: Completed
+        $allPriorCompleted = count($steps) > 0 && collect($steps)->every(fn($s) => $s['is_completed']);
+        $isAllCompleted = in_array($appraisal->status, ['completed', 'closed'], true) || $allPriorCompleted;
+
+        $steps[] = [
+            'key' => 'completed',
+            'number' => $stepNumber++,
+            'title' => 'Completed',
+            'subtitle' => 'Finalized',
+            'is_completed' => $isAllCompleted,
+        ];
+
+        $activeFound = false;
+        $activeStepIndex = null;
+
+        foreach ($steps as $index => &$step) {
+            if (! $step['is_completed'] && ! $activeFound) {
+                $step['is_active'] = true;
+                $activeFound = true;
+                $activeStepIndex = $index;
+            } else {
+                $step['is_active'] = false;
+            }
+        }
+        unset($step);
+
+        if ($isAllCompleted) {
+            foreach ($steps as &$step) {
+                $step['is_completed'] = true;
+                $step['is_active'] = false;
+            }
+            unset($step);
+        }
+
+        return [
+            'steps' => $steps,
+            'current_step_index' => $activeStepIndex,
+            'is_all_completed' => $isAllCompleted,
+        ];
     }
 
     private function getMyAppraisalSummary(Request $request, int $month, int $year): array
