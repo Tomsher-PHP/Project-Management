@@ -386,9 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const numericRating = rawRating !== null && rawRating !== undefined && rawRating !== ''
                 ? Number(rawRating)
                 : null;
+            const ratingCountStr = contributor.rating_count !== undefined && contributor.rating_count !== null
+                ? ` (${escapeHtml(contributor.rating_count)})`
+                : '';
             const rating = numericRating !== null && Number.isFinite(numericRating)
-                ? `${escapeHtml(numericRating.toFixed(2))} / 5`
-                : '--';
+                ? `${escapeHtml(numericRating.toFixed(2))} / 5${ratingCountStr}`
+                : `--`;
             const name = contributor.name || '--';
             const roleLabel = contributor.role_label || '';
 

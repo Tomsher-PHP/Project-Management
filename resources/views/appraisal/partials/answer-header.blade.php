@@ -14,7 +14,7 @@
                 <dt class="max-w-[140px] truncate font-semibold text-bgray-600 dark:text-bgray-300" title="{{ data_get($answerData, 'assignee.name', '--') }}">{{ data_get($answerData, 'assignee.name', '--') }}</dt>
                 <dd class="mt-0.5 font-bold text-bgray-900 dark:text-white">
                     <span class="text-warning-300">★</span>
-                    {{ $answerData['assignee_average_rating'] !== null ? number_format((float) $answerData['assignee_average_rating'], 2) . ' / 5' : '--' }}
+                    {{ $answerData['assignee_average_rating'] !== null ? number_format((float) $answerData['assignee_average_rating'], 2) . ' / 5 (' . ($answerData['assignee_rating_count'] ?? 0) . ')' : '--' }}
                 </dd>
             </div>
 
@@ -23,7 +23,7 @@
                     <dt class="max-w-[140px] truncate font-semibold text-bgray-600 dark:text-bgray-300" title="{{ $reviewer['name'] ?? '--' }}">{{ $reviewer['name'] ?? '--' }}</dt>
                     <dd class="mt-0.5 font-bold text-bgray-900 dark:text-white">
                         <span class="text-warning-300">★</span>
-                        {{ $reviewer['average_rating'] !== null ? number_format((float) $reviewer['average_rating'], 2) . ' / 5' : '--' }}
+                        {{ $reviewer['average_rating'] !== null ? number_format((float) $reviewer['average_rating'], 2) . ' / 5 (' . ($reviewer['rating_count'] ?? 0) . ')' : '--' }}
                     </dd>
                 </div>
             @endforeach

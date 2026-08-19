@@ -198,7 +198,8 @@ class AppraisalService
             ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
-                'answers:id,appraisal_id,rating,submitted_at',
+                'answers:id,appraisal_id,appraisal_snapshot_question_id,rating,submitted_at',
+                'answers.reviews',
                 'reviewers.reviewer:id,name',
             ])
             ->get()
@@ -582,6 +583,19 @@ class AppraisalService
             ? $appraisal->comments->firstWhere('appraisal_reviewer_id', $pendingAcknowledgement->id)
             : null;
 
+        $ratingQuestionIds = $appraisal->snapshotCategories
+            ->flatMap(fn($category) => $category->questions)
+            ->filter(fn($question) => ($question->question_type ?? AppraisalSnapshotQuestion::QUESTION_TYPE_RATING) === AppraisalSnapshotQuestion::QUESTION_TYPE_RATING)
+            ->pluck('id')
+            ->all();
+
+        $ratingAnswers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
+
+        $assigneeRatingCount = $ratingAnswers
+            ->pluck('rating')
+            ->filter(fn($rating) => $rating !== null)
+            ->count();
+
         return [
             'id' => $appraisal->id,
             'role' => $role,
@@ -614,6 +628,7 @@ class AppraisalService
             'status' => $appraisal->status,
             'current_stage' => $appraisal->current_stage,
             'assignee_average_rating' => $appraisal->assignee_average_rating,
+            'assignee_rating_count' => $assigneeRatingCount,
             'final_rating' => $appraisal->final_rating,
             'categories' => $appraisal->snapshotCategories
                 ->map(fn($category) => [
@@ -664,17 +679,27 @@ class AppraisalService
                 ])
                 ->values()
                 ->all(),
-            'reviewers' => $reviewers->map(fn($reviewer) => [
-                'id' => $reviewer->id,
-                'reviewer_user_id' => $reviewer->reviewer_user_id,
-                'name' => $reviewer->reviewer?->name,
-                'role' => $reviewer->role,
-                'level' => $reviewer->level,
-                'average_rating' => $reviewer->average_rating,
-                'submitted_at' => $reviewer->submitted_at?->toISOString(),
-                'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
-                'acknowledgement_remark' => $reviewer->acknowledgement_remark,
-            ])->all(),
+            'reviewers' => $reviewers->map(function ($reviewer) use ($ratingAnswers) {
+                $reviewerRatingCount = $ratingAnswers
+                    ->flatMap(fn($answer) => $answer->reviews)
+                    ->where('appraisal_reviewer_id', $reviewer->id)
+                    ->pluck('rating')
+                    ->filter(fn($rating) => $rating !== null)
+                    ->count();
+
+                return [
+                    'id' => $reviewer->id,
+                    'reviewer_user_id' => $reviewer->reviewer_user_id,
+                    'name' => $reviewer->reviewer?->name,
+                    'role' => $reviewer->role,
+                    'level' => $reviewer->level,
+                    'average_rating' => $reviewer->average_rating,
+                    'rating_count' => $reviewerRatingCount,
+                    'submitted_at' => $reviewer->submitted_at?->toISOString(),
+                    'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
+                    'acknowledgement_remark' => $reviewer->acknowledgement_remark,
+                ];
+            })->all(),
             'comments' => $appraisal->comments->map(fn($c) => [
                 'appraisal_reviewer_id' => $c->appraisal_reviewer_id,
                 'level' => $c->reviewer?->level,
@@ -1614,7 +1639,8 @@ class AppraisalService
             ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
-                'answers:id,appraisal_id,rating,submitted_at',
+                'answers:id,appraisal_id,appraisal_snapshot_question_id,rating,submitted_at',
+                'answers.reviews',
                 'reviewers.reviewer:id,name',
             ])
             ->get()
@@ -1684,19 +1710,45 @@ class AppraisalService
             return [];
         }
 
+        $appraisal->loadMissing(['snapshotCategories.questions', 'answers.reviews', 'reviewers.reviewer']);
+
+        $ratingQuestionIds = $appraisal->snapshotCategories
+            ->flatMap(fn($category) => $category->questions)
+            ->filter(fn($question) => ($question->question_type ?? AppraisalSnapshotQuestion::QUESTION_TYPE_RATING) === AppraisalSnapshotQuestion::QUESTION_TYPE_RATING)
+            ->pluck('id')
+            ->all();
+
+        $ratingAnswers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
+
+        $assigneeRatingCount = $ratingAnswers
+            ->pluck('rating')
+            ->filter(fn($rating) => $rating !== null)
+            ->count();
+
         return collect([[
             'name' => $appraisal->user?->name,
             'role_label' => 'Assignee',
             'average_rating' => $appraisal->assignee_average_rating,
+            'rating_count' => $assigneeRatingCount,
         ]])
             ->concat(
                 $appraisal->reviewers
                     ->sortBy('level')
-                    ->map(fn(AppraisalReviewer $reviewer) => [
-                        'name' => $reviewer->reviewer?->name,
-                        'role_label' => 'Reviewer L' . $reviewer->level,
-                        'average_rating' => $reviewer->average_rating,
-                    ])
+                    ->map(function (AppraisalReviewer $reviewer) use ($ratingAnswers) {
+                        $reviewerRatingCount = $ratingAnswers
+                            ->flatMap(fn($answer) => $answer->reviews)
+                            ->where('appraisal_reviewer_id', $reviewer->id)
+                            ->pluck('rating')
+                            ->filter(fn($rating) => $rating !== null)
+                            ->count();
+
+                        return [
+                            'name' => $reviewer->reviewer?->name,
+                            'role_label' => 'Reviewer L' . $reviewer->level,
+                            'average_rating' => $reviewer->average_rating,
+                            'rating_count' => $reviewerRatingCount,
+                        ];
+                    })
             )
             ->values()
             ->all();
