@@ -75,9 +75,6 @@
                                 <th class="px-4 py-4 text-left xl:w-[150px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Questions / Categories</span>
                                 </th>
-                                <th class="px-4 py-4 text-left xl:w-[150px] xl:px-0">
-                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Current Stage</span>
-                                </th>
                                 <th class="px-4 py-4 text-left xl:w-[130px] xl:px-0">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>

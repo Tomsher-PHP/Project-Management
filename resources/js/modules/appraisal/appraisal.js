@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const appraisals = assignmentData.my_appraisals || [];
 
         if (!appraisals.length) {
-            myAppraisalsContainer.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
+            myAppraisalsContainer.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
             return;
         }
 
@@ -516,9 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
-                    </td>
-                    <td class="px-4 py-4 xl:px-0">
-                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage || '--')}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         ${statusBadge(row)}
