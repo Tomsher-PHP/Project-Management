@@ -1764,6 +1764,8 @@ class AppraisalService
 
         $assigneeName = $appraisal->user?->name ?: 'Assignee';
 
+        $assigneeSubmittedAt = $appraisal->answers->pluck('submitted_at')->filter()->max();
+
         $steps = [];
         $stepNumber = 1;
 
@@ -1774,6 +1776,7 @@ class AppraisalService
             'number' => $stepNumber++,
             'title' => 'KPI Agreement',
             'subtitle' => $assigneeName,
+            'completed_at' => $appraisal->kpi_agreed_at,
             'is_completed' => $kpiAgreed,
         ];
 
@@ -1790,6 +1793,7 @@ class AppraisalService
             'number' => $stepNumber++,
             'title' => 'Assignee Answers',
             'subtitle' => $assigneeName,
+            'completed_at' => $assigneeSubmittedAt,
             'is_completed' => $assigneeSubmitted,
         ];
 
@@ -1809,6 +1813,7 @@ class AppraisalService
                 'number' => $stepNumber++,
                 'title' => "Reviewer L{$reviewer->level} Answers",
                 'subtitle' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                'completed_at' => $reviewer->submitted_at,
                 'is_completed' => $reviewerSubmitted,
             ];
 
@@ -1817,7 +1822,16 @@ class AppraisalService
                 'number' => $stepNumber++,
                 'title' => "L{$reviewer->level} Acknowledgement",
                 'subtitle' => $assigneeName,
+                'completed_at' => $reviewer->acknowledged_at,
                 'is_completed' => $reviewerAcknowledged,
+                'is_acknowledgement' => true,
+                'acknowledgement_data' => [
+                    'assignee_name' => $assigneeName,
+                    'reviewer_name' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                    'level' => $reviewer->level,
+                    'acknowledged_at' => $reviewer->acknowledged_at,
+                    'acknowledgement_remark' => $reviewer->acknowledgement_remark,
+                ],
             ];
         }
 
@@ -1830,6 +1844,7 @@ class AppraisalService
             'number' => $stepNumber++,
             'title' => 'Completed',
             'subtitle' => 'Finalized',
+            'completed_at' => $appraisal->completed_at,
             'is_completed' => $isAllCompleted,
         ];
 
