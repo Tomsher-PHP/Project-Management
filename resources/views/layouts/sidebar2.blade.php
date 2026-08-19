@@ -364,8 +364,8 @@
                                         <a href="{{ route('appraisal.index') }}">
                                             <span class="item-ico">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                                    <path d="M4 20H20V22H2V4H4V20Z" fill="#1A202C" class="path-1" />
-                                                    <path d="M7 16L11 12L14 15L20 8L21.5 9.5L14 17L11 14L8.5 16.5L7 16Z" fill="#22C55E" class="path-2" />
+                                                    <path d="M12 2L14.9 8.3L22 9.2L17 14L18.2 21L12 17.7L5.8 21L7 14L2 9.2L9.1 8.3L12 2Z" fill="#1A202C" class="path-1" />
+                                                    <path d="M12 5.2L13.7 9L17.8 9.4L14.8 12.2L15.6 16.2L12 14.2V5.2Z" fill="#22C55E" class="path-2" />
                                                 </svg>
                                             </span>
                                         </a>
