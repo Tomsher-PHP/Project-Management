@@ -22,6 +22,7 @@ const readTriggerData = (trigger, key) => {
 const fieldSelectors = {
     taskTimeLogId: '#timeLogChangeRequestTaskTimeLogId',
     taskId: '#timeLogChangeRequestTaskId',
+    taskName: '[data-time-log-change-request-task-name]',
     originalStartedAt: '#timeLogChangeRequestOriginalStartedAt',
     originalEndedAt: '#timeLogChangeRequestOriginalEndedAt',
     newStartedAt: '#timeLogChangeRequestNewStartedAt',
@@ -161,6 +162,7 @@ const populateFromTrigger = (trigger) => {
     clearErrors(form);
 
     const userNameNode = document.querySelector(fieldSelectors.userName);
+    const taskNameNode = document.querySelector(fieldSelectors.taskName);
     const taskTimeLogIdField = document.querySelector(fieldSelectors.taskTimeLogId);
     const taskIdField = document.querySelector(fieldSelectors.taskId);
     const originalStartedAtField = document.querySelector(fieldSelectors.originalStartedAt);
@@ -168,16 +170,33 @@ const populateFromTrigger = (trigger) => {
     const newStartedAtField = document.querySelector(fieldSelectors.newStartedAt);
     const newEndedAtField = document.querySelector(fieldSelectors.newEndedAt);
     const reasonField = document.querySelector(fieldSelectors.reason);
+    const submitButton = document.querySelector(fieldSelectors.submit);
+    const modalTitleNode = document.querySelector('#timeLogChangeRequestModalTitle');
+
     const mode = readTriggerData(trigger, 'time_log_change_request_mode') === 'edit' ? 'edit' : 'create';
     const storeUrl = form.dataset.storeUrl || form.getAttribute('action') || '';
     const updateUrl = readTriggerData(trigger, 'time_log_change_request_update_url');
 
     form.action = mode === 'edit' && updateUrl ? updateUrl : storeUrl;
     form.dataset.requestMethod = mode === 'edit' ? 'PATCH' : 'POST';
+    form.dataset.mode = mode;
+
+    if (modalTitleNode) {
+        modalTitleNode.textContent = mode === 'edit' ? 'Update Time Log Change Request' : 'Request Time Log Change';
+    }
+
+    if (submitButton) {
+        submitButton.textContent = mode === 'edit' ? 'Update' : 'Submit';
+    }
 
     if (userNameNode) {
         const userName = readTriggerData(trigger, 'time_log_user_name') || 'Unknown User';
         userNameNode.textContent = `${userName}'s selected time log values are loaded below.`;
+    }
+
+    const taskName = readTriggerData(trigger, 'task_name');
+    if (taskNameNode && taskName) {
+        taskNameNode.textContent = taskName;
     }
 
     setFieldValue(taskTimeLogIdField, readTriggerData(trigger, 'task_time_log_id'));
@@ -208,10 +227,15 @@ const setSubmittingState = (isSubmitting) => {
         return;
     }
 
+    const form = getForm();
+    const mode = form?.dataset.mode === 'edit' ? 'edit' : 'create';
+    const defaultText = mode === 'edit' ? 'Update' : 'Submit';
+    const submittingText = mode === 'edit' ? 'Updating...' : 'Submitting...';
+
     submitButton.disabled = isSubmitting;
     submitButton.classList.toggle('opacity-60', isSubmitting);
     submitButton.classList.toggle('cursor-not-allowed', isSubmitting);
-    submitButton.textContent = isSubmitting ? 'Submitting...' : 'Submit';
+    submitButton.textContent = isSubmitting ? submittingText : defaultText;
 };
 
 const closeModal = () => {
@@ -476,13 +500,25 @@ const submitForm = async () => {
     setSubmittingState(true);
 
     try {
+        const formData = new FormData(form);
+        const requestMethod = form.dataset.requestMethod || 'POST';
+
+        if (requestMethod !== 'POST') {
+            formData.set('_method', requestMethod);
+        }
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            || form.querySelector('input[name="_token"]')?.value
+            || '';
+
         const response = await fetch(form.action, {
-            method: form.dataset.requestMethod || 'POST',
+            method: 'POST',
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
             },
-            body: new FormData(form),
+            body: formData,
         });
 
         const result = await response.json().catch(() => ({}));

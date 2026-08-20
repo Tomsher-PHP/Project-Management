@@ -115,6 +115,7 @@
                         @if ($canRequestOwnTimeLogChange) data-target="#timeLogChangeRequestModal"
                             data-time-log-change-request-open
                             data-task_id="{{ $segment['task_id'] }}"
+                            data-task_name="{{ $segment['task_name'] }}"
                             data-task_time_log_id="{{ $segment['task_time_log_id'] }}"
                             data-new_started_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_started_at'] : $segment['original_started_at'] }}"
                             data-new_ended_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_ended_at'] : $segment['original_ended_at'] }}"
