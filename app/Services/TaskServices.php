@@ -357,8 +357,8 @@ class TaskServices
     {
         return [
             self::KANBAN_SORT_RECOMMENDED => 'Recommended',
-            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: Urgent to Low',
-            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low to Urgent',
+            self::KANBAN_SORT_PRIORITY_DESC => 'Priority: High to Low',
+            self::KANBAN_SORT_PRIORITY_ASC => 'Priority: Low to High',
         ];
     }
 

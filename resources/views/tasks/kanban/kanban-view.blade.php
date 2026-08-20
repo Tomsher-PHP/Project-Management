@@ -21,9 +21,9 @@
                 <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
             @endcan
 
-            <x-filters.list-search />
 
             <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
+                <x-filters.list-search />
                 <x-filters.button />
 
                 @include('tasks.kanban._sort_dropdown')
