@@ -3,6 +3,7 @@
         <div class="border-b border-[#edf1f7] bg-white px-4 py-3 dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex min-w-0 items-center gap-3">
+                    @include('tasks.kanban._project_flow_btn')
 
                     @can('task.create')
                         <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
@@ -41,7 +42,7 @@
                     </button>
 
                     @include('tasks.kanban._sort_dropdown')
-                    @include('tasks.kanban._project_flow_btn')
+
                 </div>
             </div>
         </div>

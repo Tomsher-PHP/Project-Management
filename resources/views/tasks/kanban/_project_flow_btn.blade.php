@@ -1,4 +1,4 @@
-<div id="flow-switcher" class="inline-flex rounded-lg border sm:ml-auto">
+<div id="flow-switcher" class="inline-flex rounded-lg border border-bgray-500">
     <div class="relative inline-flex">
         <button data-flow="agile" class="flow-btn rounded-l-lg px-4 py-2 text-sm font-semibold transition text-bgray-700 dark:text-bgray-300 dark:hover:text-bgray-900">
             Agile
