@@ -45,3 +45,24 @@ if (!function_exists('formatMinutesToHoursMinutes')) {
         return sprintf('%02dh : %02dm', $hours, $mins);
     }
 }
+
+if (!function_exists('prettySecondsToHMS')) {
+
+    function prettySecondsToHMS(int $seconds)
+    {
+        $totalSeconds = max(0, (int) ($seconds ?? 0));
+        $hours = intdiv($totalSeconds, 3600);
+        $minutes = intdiv($totalSeconds % 3600, 60);
+        $remainingSeconds = $totalSeconds % 60;
+
+        if ($hours > 0) {
+            return sprintf('%02dh %02dm', $hours, $minutes);
+        }
+
+        if ($minutes > 0) {
+            return sprintf('%02dh %02dm', $minutes, $remainingSeconds);
+        }
+
+        return sprintf('00m %02ds', $remainingSeconds);
+    }
+}

@@ -141,6 +141,45 @@ class UserTimelineService
         return (int) collect($segments)->sum(fn(array $segment) => (int) ($segment['duration_seconds'] ?? 0));
     }
 
+    public function getWorkedShiftDiff(?array $assignedShift, int $workedTotalSeconds): array
+    {
+        $isWorkingDay = !empty($assignedShift['is_working_day']) && empty($assignedShift['is_weekend']);
+        $targetShiftSeconds = 0;
+
+        if ($isWorkingDay && !empty($assignedShift['timeline_segments'])) {
+            foreach ($assignedShift['timeline_segments'] as $segment) {
+                $targetShiftSeconds += (int) ($segment['actual_working_duration_seconds'] ?? $segment['duration_seconds'] ?? 0);
+            }
+        }
+
+        $diffSeconds = $workedTotalSeconds - $targetShiftSeconds;
+        $isNegative = $diffSeconds < 0;
+        $absSeconds = abs($diffSeconds);
+
+        $hours = intdiv($absSeconds, 3600);
+        $minutes = intdiv($absSeconds % 3600, 60);
+
+        if ($diffSeconds > 0) {
+            $sign = '+';
+        } elseif ($diffSeconds < 0) {
+            $sign = '-';
+        } else {
+            $sign = '';
+        }
+
+        $formatted = sprintf('%02dh %02dm', $hours, $minutes);
+
+        return [
+            'target_shift_seconds' => $targetShiftSeconds,
+            'diff_seconds' => $diffSeconds,
+            'is_negative' => $isNegative,
+            'formatted' => $formatted,
+            'sign' => $sign,
+            'hours' => $hours,
+            'minutes' => $minutes,
+        ];
+    }
+
     public function getAssignedShift(int $userId, string|Carbon $date): ?array
     {
         $date = $date instanceof Carbon
@@ -364,7 +403,7 @@ class UserTimelineService
         $actualEndLabel = $this->formatTimelineTime($assignment->time_to);
         $actualBreakLabel = formatSecondsToHMS($breakDurationSeconds);
         $actualWorkingDurationSeconds = max(0, $totalShiftDurationSeconds - $breakDurationSeconds);
-        $actualWorkingDurationLabel = formatSecondsToHMS($actualWorkingDurationSeconds);
+        $actualWorkingDurationLabel = prettySecondsToHMS($actualWorkingDurationSeconds);
         $tooltipLabel = trim(implode(' | ', array_filter([
             $assignment->shift_name,
             "{$actualStartLabel} - {$actualEndLabel}",
