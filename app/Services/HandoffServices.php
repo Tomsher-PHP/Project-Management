@@ -43,6 +43,7 @@ class HandoffServices
         return $query->where(function (Builder $q) use ($user, $canViewAccountable, $canViewProject) {
             // Direct recipient access, in addition to the existing role-based access.
             $q->where('target_user_id', $user->id);
+            $q->orWhere('user_id', $user->id);
 
             if ($canViewAccountable) {
                 // Case 2: Accountable user hierarchy
