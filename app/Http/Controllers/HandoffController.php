@@ -164,6 +164,36 @@ class HandoffController extends Controller
         ]);
     }
 
+    public function update(HandoffFormRequest $request, HandoffRequest $handoff_request)
+    {
+        if ((int) $handoff_request->user_id !== (int) $request->user()->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You can only edit your own handoff request.',
+            ], 403);
+        }
+
+        if ((int) $handoff_request->status !== HandoffRequest::STATUS_PENDING) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Only pending handoff requests can be edited.',
+            ], 422);
+        }
+
+        $validated = $request->validated();
+        $handoffRequest = $this->handoffServices->updateHandoffRequest(
+            $handoff_request,
+            $validated,
+            $request->user()->id
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Handoff request updated successfully.',
+            'data' => $handoffRequest,
+        ]);
+    }
+
     public function noted(Request $request, HandoffRequest $handoff_request)
     {
         $this->handoffServices->markAsNoted($handoff_request, $request->user()->id);

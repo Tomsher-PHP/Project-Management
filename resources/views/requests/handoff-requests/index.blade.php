@@ -165,26 +165,34 @@
                                                 @endif
                                             @endcan
 
-                                            <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300 group" title="View Details"
-                                                onclick="openHandoffViewModal({{ json_encode([
-                                                    'date' => $request->created_at->format('Y-m-d H:i:s'),
-                                                    'requestedBy' => $requestUser?->name ?? '--',
-                                                    'targetUser' => $request->targetUser?->name ?? '--',
-                                                    'project' => $request->project?->name ?? '--',
-                                                    'projectFlow' => $request->project?->project_flow ?? '',
-                                                    'milestone' => $request->projectMilestone?->name ?? '--',
-                                                    'sprint' => $request->projectSprint?->name ?? '--',
-                                                    'sourceTask' => $request->sourceTask?->name ?? '--',
-                                                    'createdTask' => $request->createdTask?->name ?? '--',
-                                                    'purpose' => $request->purpose ?? '--',
-                                                    'status' => $currentStatusLabel,
-                                                    'description' => $request->description ?? '--',
-                                                ]) }})">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </button>
+                                            @if ($request->status == \App\Models\HandoffRequest::STATUS_PENDING && $request->user_id === auth()->id())
+                                                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300 group" title="Edit Request" data-handoff-edit-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-source-task-id="{{ $request->source_task_id ?? '' }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-purpose="{{ e($request->purpose ?? '') }}" data-description="{{ e($request->description ?? '') }}">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                    </svg>
+                                                </button>
+                                            @else
+                                                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300 group" title="View Details"
+                                                    onclick="openHandoffViewModal({{ json_encode([
+                                                        'date' => $request->created_at->format('Y-m-d H:i:s'),
+                                                        'requestedBy' => $requestUser?->name ?? '--',
+                                                        'targetUser' => $request->targetUser?->name ?? '--',
+                                                        'project' => $request->project?->name ?? '--',
+                                                        'projectFlow' => $request->project?->project_flow ?? '',
+                                                        'milestone' => $request->projectMilestone?->name ?? '--',
+                                                        'sprint' => $request->projectSprint?->name ?? '--',
+                                                        'sourceTask' => $request->sourceTask?->name ?? '--',
+                                                        'createdTask' => $request->createdTask?->name ?? '--',
+                                                        'purpose' => $request->purpose ?? '--',
+                                                        'status' => $currentStatusLabel,
+                                                        'description' => $request->description ?? '--',
+                                                    ]) }})">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -299,6 +307,8 @@
             </script>
         @endif
 
+        @include('tasks.partials.handoff-create-modal')
+
     </main>
 @endsection
 
@@ -306,5 +316,6 @@
     @if (auth()->user()->can('task.create') || auth()->user()->can('request-task'))
         @vite('resources/js/modules/task-list-create.js')
     @endif
+    @vite('resources/js/modules/tasks/handoff.js')
     @vite('resources/js/modules/tasks/handoff-blend.js')
 @endpush

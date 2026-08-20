@@ -14,6 +14,12 @@
             ->values()
             ->map(fn ($member) => ['value' => (string) $member->id, 'text' => $member->name])];
     });
+    $handoffMilestones = \App\Models\ProjectMilestone::query()
+        ->whereIn('project_id', $handoffAccessibleProjects->pluck('id'))
+        ->get(['id', 'name', 'project_id']);
+    $handoffSprints = \App\Models\ProjectSprint::query()
+        ->whereIn('project_id', $handoffAccessibleProjects->pluck('id'))
+        ->get(['id', 'name', 'project_id', 'project_milestone_id']);
 @endphp
 
 <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-handoff-create-modal id="handoff_create_modal">
@@ -24,7 +30,7 @@
             <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
-                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">
+                        <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-handoff-modal-title>
                             Create Handoff Request
                         </h3>
                     </div>
@@ -34,7 +40,7 @@
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}">
+                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}" data-update-url-template="{{ route('handoff_requests.update', '__ID__') }}">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
@@ -119,4 +125,11 @@
 
 <script id="handoff-target-user-dependencies" type="application/json">
     @json($handoffTargetUsersByProject)
+</script>
+
+<script id="handoff-filter-dependencies" type="application/json">
+    @json([
+        'milestones' => $handoffMilestones,
+        'sprints' => $handoffSprints,
+    ])
 </script>

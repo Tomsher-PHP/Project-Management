@@ -212,6 +212,35 @@ class HandoffServices
         });
     }
 
+    public function updateHandoffRequest(HandoffRequest $handoffRequest, array $data, int $userId): HandoffRequest
+    {
+        if ((int) $handoffRequest->user_id !== $userId) {
+            throw new \Exception('You can only edit your own handoff requests.');
+        }
+
+        if ((int) $handoffRequest->status !== HandoffRequest::STATUS_PENDING) {
+            throw new \Exception('Only pending handoff requests can be edited.');
+        }
+
+        return DB::transaction(function () use ($handoffRequest, $data) {
+            $handoffRequest->update([
+                'project_id' => $data['project_id'],
+                'project_milestone_id' => $data['project_milestone_id'] ?? null,
+                'project_sprint_id' => $data['project_sprint_id'] ?? null,
+                'source_task_id' => $data['source_task_id'] ?? null,
+                'target_user_id' => $data['target_user_id'] ?? null,
+                'purpose' => $data['purpose'],
+                'description' => $data['description'],
+            ]);
+
+            HandoffPurpose::firstOrCreate([
+                'name' => $data['purpose'],
+            ]);
+
+            return $handoffRequest->load('targetUser');
+        });
+    }
+
     public function markAsNoted(HandoffRequest $handoffRequest, int $userId): HandoffRequest
     {
         return DB::transaction(function () use ($handoffRequest, $userId) {
