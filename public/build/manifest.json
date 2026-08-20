@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-B8dONRiF.css",
+    "file": "assets/app-D472qbMU.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -313,7 +313,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-CIRn8iwc.js",
+    "file": "assets/task-detail-BJhlRDV5.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -383,10 +383,14 @@
     ]
   },
   "resources/js/modules/tasks/handoff.js": {
-    "file": "assets/handoff-CuX8LU59.js",
+    "file": "assets/handoff-B19FuBHu.js",
     "name": "handoff",
     "src": "resources/js/modules/tasks/handoff.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
     "file": "assets/kanban-board-CTMqVctk.js",
@@ -412,7 +416,7 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-t6lisTAL.js",
+    "file": "assets/time-log-change-request-Dri893O8.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
@@ -482,7 +486,7 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-CSrDk8z3.js",
+    "file": "assets/user-timeline-CDvDr91c.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
