@@ -2,6 +2,7 @@
 
 return [
     'project_roles' => [
+        'manager' => 'Manager',
         'team_leader' => 'Team Leader',
         'coordinator' => 'Coordinator',
         'member' => 'Member',
