@@ -60,7 +60,7 @@ if (!function_exists('prettySecondsToHMS')) {
         }
 
         if ($minutes > 0) {
-            return sprintf('%02dh %02dm', $minutes, $remainingSeconds);
+            return sprintf('%02dm %02ds', $minutes, $remainingSeconds);
         }
 
         return sprintf('00m %02ds', $remainingSeconds);
