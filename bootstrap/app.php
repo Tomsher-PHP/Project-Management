@@ -51,32 +51,46 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handle rendering globally (like global try-catch)
         $exceptions->render(function (Throwable $e, Request $request) {
 
-            // Let Laravel handle expected exceptions normally
+            // Let Laravel handle validation and authentication redirects
             if (
                 $e instanceof ValidationException ||
-                $e instanceof AuthenticationException ||
-                $e instanceof TokenMismatchException ||
-                $e instanceof AuthorizationException ||
-                ($e instanceof HttpException && in_array(
-                    $e->getStatusCode(),
-                    [401, 403, 404, 419]
-                ))
+                $e instanceof AuthenticationException
             ) {
                 return null;
             }
+
+            // Determine status code
+            $status = 500;
+            if ($e instanceof AuthorizationException) {
+                $status = 403;
+            } elseif ($e instanceof TokenMismatchException) {
+                $status = 419;
+            } elseif ($e instanceof HttpException) {
+                $status = $e->getStatusCode();
+            } elseif (method_exists($e, 'getStatusCode')) {
+                $status = $e->getStatusCode();
+            }
+
+            $message = $e->getMessage();
 
             // For AJAX / API
             if ($request->expectsJson()) {
                 Log::error('Application Error', [
                     'route'   => optional($request->route())->getName(),
-                    'message' => $e->getMessage(),
+                    'message' => $message ?: 'Something went wrong.',
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Something went wrong.',
-                ], 500);
+                    'message' => $message ?: 'Something went wrong.',
+                ], $status);
             }
-            return response()->view('errors.403', [], 403);
+
+            return response()->view('errors.403', [
+                'code'      => $status,
+                'status'    => $status,
+                'message'   => $message,
+                'exception' => $e,
+            ], $status);
         });
     })->create();

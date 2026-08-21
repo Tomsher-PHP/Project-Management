@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher Pmt</title>
+    <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher PMS</title>
 
     <script>
         window.authUserId = {{ auth()->id() }};
