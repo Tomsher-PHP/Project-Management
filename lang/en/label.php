@@ -9,5 +9,4 @@ return [
         'spent_hours' => 'Spent Hours',
         'exceeded' => 'Exceeded',
     ],
-
 ];
