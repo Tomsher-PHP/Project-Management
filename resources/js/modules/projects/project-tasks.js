@@ -876,6 +876,87 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
     }
 };
 
+
+const openTaskLogModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+};
+
+const closeTaskLogModal = (modal) => {
+    if (!modal) {
+        return;
+    }
+
+    const content = modal.querySelector('[data-project-task-log-content]');
+
+    modal.classList.add('hidden');
+
+    if (content) {
+        content.innerHTML = '';
+    }
+};
+
+const showTaskLogLoading = (modal) => {
+    const content = modal?.querySelector('[data-project-task-log-content]');
+
+    if (!content) {
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                Loading task logs...
+            </div>
+        </div>
+    `;
+};
+
+// Load task log modal
+const loadTaskLogModal = async (root, loadUrl) => {
+
+    const modal = root.querySelector('[data-project-task-log-modal]');
+
+    const content = modal?.querySelector('[data-project-task-log-content]');
+
+    if (!modal || !content || !loadUrl) {
+        return;
+    }
+
+    openTaskLogModal(modal);
+    showTaskLogLoading(modal);
+
+    try {
+        const response = await fetch(loadUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.status) {
+            throw new Error(result.message || 'Unable to load task log details.');
+        }
+
+        content.innerHTML = result.html;
+
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(content);
+        }
+
+    } catch (error) {
+        closeTaskLogModal(modal);
+        Alert.errorModal(
+            error.message || 'Unable to load task log details.'
+        );
+    }
+};
+
 const replaceTasksRoot = (currentRoot, html) => {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = html.trim();
@@ -1376,6 +1457,16 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
+        const logOpenButton = event.target.closest('[data-project-task-log-open]');
+
+        if (logOpenButton && root.contains(logOpenButton)) {
+            await loadTaskLogModal(
+                root,
+                logOpenButton.dataset.projectTaskLogUrl || ''
+            );
+            return;
+        }
+
         const advancedToggle = event.target.closest('[data-project-task-advanced-toggle]');
 
         if (advancedToggle && root.contains(advancedToggle)) {
@@ -1395,6 +1486,13 @@ const initializeTasksRoot = (root) => {
 
         if (detailCloseButton && root.contains(detailCloseButton)) {
             closeTaskDetailModal(root.querySelector('[data-project-task-detail-modal]'));
+            return;
+        }
+
+        const taskLogCloseButton = event.target.closest('[data-project-task-log-close]');
+
+        if (taskLogCloseButton && root.contains(taskLogCloseButton)) {
+            closeTaskLogModal(root.querySelector('[data-project-task-log-modal]'));
             return;
         }
 
@@ -1629,7 +1727,7 @@ const initializeTasksRoot = (root) => {
         }
 
         const detailForm = event.target.closest('[data-project-task-detail-form]');
-        
+
         if (!detailForm || !root.contains(detailForm)) {
             return;
         }
@@ -1651,7 +1749,7 @@ const initializeTasksRoot = (root) => {
         const actionUrl = detailForm.getAttribute('action');
         const submitLabel = detailForm.dataset.submitLabel || 'Update Task';
         const submittingLabel = detailForm.dataset.submittingLabel || 'Updating...';
-        
+
         if (!actionUrl) {
             Alert.errorModal('Unable to update the task right now.');
             return;

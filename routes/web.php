@@ -351,6 +351,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('tasks/{task}/requests/approve-with-update', [TaskRequestController::class, 'updateAndApprove'])->name('projects.tasks.requests.update-approve');
         Route::patch('tasks/{task}/move', [ProjectTaskController::class, 'moveTask'])->middleware(['permission.type:task.move', 'can:update,project', 'can:move,task'])->name('projects.tasks.move');
         Route::delete('tasks/{task}', [ProjectTaskController::class, 'destroyTask'])->middleware(['permission.type:task.delete', 'can:update,project', 'can:delete,task'])->name('projects.tasks.destroy');
+        Route::get('tasks/{task}/logs', [ProjectTaskController::class, 'taskLog'])->name('projects.tasks.logs');
     });
 
     // Project Restore Routes

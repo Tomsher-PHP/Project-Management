@@ -202,6 +202,45 @@ class ProjectTaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function taskLog(Request $request, Project $project, Task $task): JsonResponse
+    {
+        abort_unless(
+            (int) $task->project_id === (int) $project->id,
+            Response::HTTP_NOT_FOUND
+        );
+
+        abort_unless(
+            $this->canViewTaskModal($task),
+            Response::HTTP_FORBIDDEN
+        );
+
+        $timeLogs = $task->timeLogs()
+            ->with([
+                'user:id,name',
+                'user.primaryAttachment',
+                'assignmentLog.user:id,name',
+                'assignmentLog.user.primaryAttachment',
+            ])
+            ->withExists([
+                'changeRequests as has_pending_change_request' => fn ($query) =>
+                    $query->where('status', 'pending'),
+            ])
+            ->reorder('started_at', 'desc')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'html' => view(
+                'projects.partials.tasks.modals.log-content',
+                [
+                    'project'  => $project,
+                    'task'     => $task,
+                    'timeLogs' => $timeLogs,
+                ]
+            )->render(),
+        ], Response::HTTP_OK);
+    }
     public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
@@ -969,4 +1008,6 @@ class ProjectTaskController extends Controller
 
         return (string) (array_key_first($priorities) ?? 'medium');
     }
+
+
 }

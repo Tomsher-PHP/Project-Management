@@ -12,7 +12,6 @@ class UserLoginActivityController extends Controller
     {
         view()->share([
             'pageTitle' => 'User Login Activity',
-            'subTitle' => 'Review recent login and session history',
         ]);
     }
 
