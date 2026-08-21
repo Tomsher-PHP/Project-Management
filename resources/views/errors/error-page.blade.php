@@ -22,6 +22,84 @@
     ];
 
     $pageTitle = $title ?? ($defaultTitles[$errorCode] ?? 'Error ' . $errorCode);
+
+    // Resolve safe Go Back URL
+    $currentUrl = request()->fullUrl();
+    $currentPath = ltrim(request()->getPathInfo(), '/');
+    $fallbackUrl = url('/');
+
+    $isValidGetUrl = function ($url) use ($currentUrl, $currentPath) {
+        if (empty($url) || $url === '#' || str_starts_with($url, 'javascript:')) {
+            return false;
+        }
+
+        if ($url === $currentUrl) {
+            return false;
+        }
+
+        $parsedUrl = parse_url($url);
+        $path = ltrim($parsedUrl['path'] ?? '', '/');
+
+        if ($path === $currentPath) {
+            return false;
+        }
+
+        if (isset($parsedUrl['scheme']) && !in_array(strtolower($parsedUrl['scheme']), ['http', 'https'])) {
+            return false;
+        }
+
+        $ignoredPatterns = [
+            'api/*',
+            '*/refresh*',
+            '*/chart/*',
+            '*/summary*',
+            '*/worked-time*',
+            '*/running-tasks*',
+            '*/tile-details*',
+            'livewire/*',
+            '_debugbar/*',
+            '*.json',
+            '*.js',
+            '*.css',
+        ];
+
+        foreach ($ignoredPatterns as $pattern) {
+            if (\Illuminate\Support\Str::is($pattern, $path)) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    $goBackUrl = null;
+
+    $history = session('valid_get_history', []);
+    if (is_array($history)) {
+        for ($i = count($history) - 1; $i >= 0; $i--) {
+            $candidate = $history[$i];
+            if ($isValidGetUrl($candidate)) {
+                $goBackUrl = $candidate;
+                break;
+            }
+        }
+    }
+
+    if (!$goBackUrl) {
+        $previousUrl = url()->previous();
+        if ($isValidGetUrl($previousUrl)) {
+            $goBackUrl = $previousUrl;
+        }
+    }
+
+    if (!$goBackUrl) {
+        $referer = request()->headers->get('referer');
+        if ($isValidGetUrl($referer)) {
+            $goBackUrl = $referer;
+        }
+    }
+
+    $goBackUrl = $goBackUrl ?: $fallbackUrl;
 @endphp
 
 @extends('layouts.master')
@@ -31,8 +109,8 @@
 @section('page-content')
     <div class="flex flex-col items-center justify-center h-screen text-center">
         <h1 class="text-xl font-bold text-error-300 dark:text-error-50 lg:text-3xl" style="font-size: 100px;">{{ $errorCode }}</h1>
-        <p class="text-xl mt-4">{{ $defaultMessages[$errorCode ?? 403] }}</p>
-        <a href="{{ url()->previous() }}" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <p class="text-xl mt-4">{{ $defaultMessages[$errorCode ?? 403] ?? 'Oops! Something went wrong.' }}</p>
+        <a href="{{ $goBackUrl }}" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
             Go Back
         </a>
     </div>
