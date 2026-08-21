@@ -16,13 +16,11 @@ class TeamController extends Controller
 {
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Team Management';
-        $this->subTitle = 'Keep your team organized and secure';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -66,12 +64,16 @@ class TeamController extends Controller
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
-        $teamUsers = $team->users()->with('primaryAttachment')->get();
+        $teamUsers = $team->users()
+            ->with('primaryAttachment')
+            ->orderByRaw("CASE WHEN team_user.team_role = 'team_leader' THEN 0 ELSE 1 END")
+            ->orderBy('users.is_active', 'desc')
+            ->orderBy('users.name', 'asc')
+            ->get();
 
         $users = $this->getAvailableTeamUsers($team);
 
         $teamRoles = config('constants.team_roles');
-
 
         return view('teams.edit', compact('team', 'teamUsers', 'users', 'teamRoles'));
     }
@@ -122,6 +124,10 @@ class TeamController extends Controller
         return app(UserService::class)
             ->getAccessibleUsers(auth()->user())
             ->whereNotIn('id', $assignedUserIds)
+            ->sortBy([
+                ['is_active', 'desc'],
+                ['name', 'asc'],
+            ])
             ->values();
     }
 }

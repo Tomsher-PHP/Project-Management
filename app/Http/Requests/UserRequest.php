@@ -23,7 +23,11 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('user') ?? null;
+        $user = $this->route('user');
+
+        $userId = $user?->id;
+        $userDetailId = $user?->details?->id;
+
         // works if route model binding: users.update/{user}
         $passwordRules = [
             Password::min(8)->letters()->numbers(),
@@ -57,8 +61,8 @@ class UserRequest extends FormRequest
 
             // Personal Info
             'gender' => ['nullable', 'in:male,female,other'],
-            'phone' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userId),],
-            'whatsapp' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'whatsapp')->ignore($userId)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'phone')->ignore($userDetailId),],
+            'whatsapp' => ['nullable', 'string', 'max:20', Rule::unique('user_details', 'whatsapp')->ignore($userDetailId)],
 
             // Emergency Contact
             'contact_person' => ['nullable', 'string', 'max:255'],
@@ -81,7 +85,7 @@ class UserRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique('user_details', 'employee_id')->ignore($userId),
+                Rule::unique('user_details', 'employee_id')->ignore($userDetailId),
             ],
 
             'remove_profile_image' => 'nullable',

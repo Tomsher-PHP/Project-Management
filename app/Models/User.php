@@ -99,7 +99,7 @@ class User extends Authenticatable
         });
     }
 
-    public function scopeAccessibleBy($query, $user)
+    public function scopeAccessibleBy(Builder $query, User $user)
     {
         // Superadmin or view all users permission
         if ($user->is_super_admin || $user->can('user.view_all_users')) {
@@ -226,12 +226,12 @@ class User extends Authenticatable
         return (bool) $this->primaryAttachment;
     }
 
-    public function scopeActive($query)
+    public function scopeActive(Builder $query)
     {
         return $query->where('is_active', true);
     }
 
-    public function scopeDeleted($query)
+    public function scopeDeleted(Builder $query)
     {
         return $query->where('delete_status', true);
     }

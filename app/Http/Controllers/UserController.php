@@ -17,19 +17,21 @@ use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
+    protected UserService $service;
 
     public function __construct()
     {
+        $this->service = app(UserService::class);
+
         $this->pageTitle = 'User Management';
-        $this->subTitle = 'Keep your team organized and secure';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -133,7 +135,9 @@ class UserController extends Controller
             $user->details?->manager_id,
         ])->filter()->unique()->values()->all();
 
-        $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $managerIds);
+        $DownLevelUserIds = User::getReporterHierarchyUserIds($user->id); // Get downlevel users for exclude in manager select
+        $excludeIds = array_merge($DownLevelUserIds, [$user->id]);
+        $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), $excludeIds, $managerIds);
         $kpis = Kpi::active()->orderBy('id', 'asc')->get();
 
         return view('users.edit', compact(
@@ -166,14 +170,24 @@ class UserController extends Controller
             'is_active' => false,
         ]);
 
+        $this->service->disableUserDependencies($user);
+
         return redirect(session('users_return_url', route('users.index')))->with('success', 'User deleted successfully.');
     }
 
     public function toggleStatus(Request $request)
     {
-        $user = User::findOrFail($request->id);
-        $user->is_active = ! $user->is_active;
-        $user->save();
+        DB::transaction(function () use ($request, &$user) {
+            $user = User::findOrFail($request->id);
+
+            $user->is_active = ! $user->is_active;
+            $user->save();
+
+            // only disabled users
+            if ($user->is_active == false) {
+                $this->service->disableUserDependencies($user);
+            }
+        });
 
         return response()->json([
             'success' => true,
