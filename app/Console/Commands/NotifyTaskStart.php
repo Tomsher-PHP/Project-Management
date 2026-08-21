@@ -60,7 +60,9 @@ class NotifyTaskStart extends Command
                 }
             }
 
-            Log::info("Task start notifications sent: {$sentCount}");
+            if ($sentCount > 0) {
+                Log::info("Task start notifications sent: {$sentCount}");
+            }
         }
 
         return self::SUCCESS;

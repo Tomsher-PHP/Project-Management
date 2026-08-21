@@ -7,7 +7,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-        {{-- LEFT SIDE - IMAGE --}}
+        <!-- LEFT SIDE - IMAGE -->
         <div class="lg:col-span-1">
             <div class="flex justify-center lg:justify-start pb-8 lg:pb-0">
 
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        {{-- RIGHT SIDE - FORM --}}
+        <!-- RIGHT SIDE - FORM -->
         <div class="lg:col-span-3">
             <div class="flex flex-col gap-2">
                 <label for="team_name" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
@@ -61,7 +61,7 @@
 
     </div>
 
-    {{-- ================= Team Members Information ================= --}}
+    <!-- ================= Team Members Information ================= -->
     <div>
         @php
             $oldMembers = session()->hasOldInput('members') ? collect(old('members', []))->values() : null;
@@ -145,12 +145,12 @@
             </p>
         @enderror
 
-        {{-- Add Member Section --}}
+        <!-- Add Member Section -->
         <div class="mt-6 p-6 border rounded-lg dark:border-darkblack-400 bg-gray-50 dark:bg-darkblack-500">
 
             <div class="grid md:grid-cols-3 gap-6 items-end">
 
-                {{-- Role --}}
+                <!-- Role -->
                 <div class="flex flex-col gap-2">
                     <label for="team_role" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
                         Team Role
@@ -167,7 +167,7 @@
                     </select>
                 </div>
 
-                {{-- User --}}
+                <!-- User -->
                 <div class="flex flex-col gap-2">
                     <label for="team_member" class="text-sm font-medium text-bgray-600 dark:text-bgray-50">
                         Team Member
@@ -185,7 +185,7 @@
                     </select>
                 </div>
 
-                {{-- Add Button --}}
+                <!-- Add Button -->
                 <div class="flex md:justify-end col-span-full md:col-span-1">
                     <button type="button" id="add-member-btn" class="px-4 py-2 text-sm rounded-md bg-success-300 text-white font-medium hover:bg-success-400 transition">
                         + Add Member
@@ -198,7 +198,7 @@
 
     </div>
 
-    {{-- ================= SUBMIT ================= --}}
+    <!-- ================= SUBMIT ================= -->
     <div class="pt-6 border-t flex justify-end dark:border-darkblack-400">
         <button type="submit" class="px-6 py-2.5 rounded-lg bg-success-300 text-white font-semibold hover:bg-success-400 transition">
 

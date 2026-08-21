@@ -17,6 +17,7 @@ use App\Models\UserNotificationSetting;
 use App\Notifications\TaskAssignedNotification;
 use App\Models\TaskExtendTimeRequest;
 use App\Providers\AppServiceProvider;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -47,6 +48,9 @@ class NotificationService
         $setting = UserNotificationSetting::query()
             ->where('user_id', $userId)
             ->where('action', $notificationType)
+            ->whereHas('user', function (Builder $query) {
+                $query->active();
+            })
             ->first();
 
         if (! $setting) {

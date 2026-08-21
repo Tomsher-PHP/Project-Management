@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\SendWelcomeMailJob;
 use App\Mail\WelcomeUserMail;
 use App\Models\Configuration;
+use App\Models\ProjectMember;
 use App\Models\Role;
 use App\Models\Shift;
 use App\Models\User;
@@ -20,7 +21,7 @@ use Spatie\Activitylog\Facades\LogBatch;
 class UserService
 {
 
-    protected $attachmentService;
+    protected AttachmentService $attachmentService;
 
     public function __construct(AttachmentService $attachmentService)
     {
@@ -449,5 +450,14 @@ class UserService
 
             return $user->load(['details', 'primaryAttachment']);
         });
+    }
+
+    // Disable dependentcies when user is deleted
+    public function disableUserDependencies(User $user)
+    {
+        // Disable the user in project members
+        ProjectMember::where('user_id', $user->id)->update([
+            'is_active' => false,
+        ]);
     }
 }
