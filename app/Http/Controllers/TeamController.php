@@ -64,6 +64,7 @@ class TeamController extends Controller
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
+
         $teamUsers = $team->users()
             ->with('primaryAttachment')
             ->orderByRaw("CASE WHEN team_user.team_role = 'team_leader' THEN 0 ELSE 1 END")

@@ -117,7 +117,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
-    Route::resource('users', UserController::class)->only(['show']);
+    Route::resource('users', UserController::class)->middleware('can:view,user')->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware(['permission.type:user.delete', 'can:delete,user']);
 
