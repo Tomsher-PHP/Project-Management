@@ -75,7 +75,6 @@ class TeamController extends Controller
 
         $teamRoles = config('constants.team_roles');
 
-
         return view('teams.edit', compact('team', 'teamUsers', 'users', 'teamRoles'));
     }
 
