@@ -25,13 +25,11 @@ class ActivityLogController extends Controller
     use BuildsProjectActivityQueries;
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Activity Log';
-        $this->subTitle = 'Track changes across all milestones';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function activityLog(Request $request)
@@ -61,14 +59,14 @@ class ActivityLogController extends Controller
                     $request->input('search_condition', 'contains')
                 );
             })
-            ->when($request->filled('log_name'), fn (Builder $query) => $query->whereIn('log_name', (array) $request->input('log_name')))
-            ->when($request->filled('event'), fn (Builder $query) => $query->where('event', $request->input('event')))
+            ->when($request->filled('log_name'), fn(Builder $query) => $query->whereIn('log_name', (array) $request->input('log_name')))
+            ->when($request->filled('event'), fn(Builder $query) => $query->where('event', $request->input('event')))
             ->when($request->filled('causer_id'), function (Builder $query) use ($request) {
                 $query->where('causer_type', User::class)
                     ->whereIn('causer_id', (array) $request->input('causer_id'));
             })
-            ->when($request->filled('date_from'), fn (Builder $query) => $query->whereDate('created_at', '>=', $request->input('date_from')))
-            ->when($request->filled('date_to'), fn (Builder $query) => $query->whereDate('created_at', '<=', $request->input('date_to')))
+            ->when($request->filled('date_from'), fn(Builder $query) => $query->whereDate('created_at', '>=', $request->input('date_from')))
+            ->when($request->filled('date_to'), fn(Builder $query) => $query->whereDate('created_at', '<=', $request->input('date_to')))
             ->when($request->filled('subject_type'), function (Builder $query) use ($request) {
                 $subjectType = $this->resolveSubjectTypeFilter($request->input('subject_type'));
 
@@ -76,7 +74,7 @@ class ActivityLogController extends Controller
                     $query->where('subject_type', $subjectType);
                 }
             })
-            ->when($request->filled('subject_id'), fn (Builder $query) => $query->where('subject_id', $request->input('subject_id')));
+            ->when($request->filled('subject_id'), fn(Builder $query) => $query->where('subject_id', $request->input('subject_id')));
 
         $sortBy = $request->input('sort_by', 'created_at');
         $sortDir = $request->input('sort_dir', 'desc');
@@ -101,7 +99,7 @@ class ActivityLogController extends Controller
             ->distinct()
             ->orderBy('log_name')
             ->get()
-            ->map(fn (Activity $activity) => (object) [
+            ->map(fn(Activity $activity) => (object) [
                 'id' => $activity->log_name,
                 'name' => Str::headline($activity->log_name),
             ]);

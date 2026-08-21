@@ -12,13 +12,11 @@ class ConfigurationController extends Controller
 {
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Configuration Management';
-        $this->subTitle = 'Manage configuration settings for the application';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function edit()

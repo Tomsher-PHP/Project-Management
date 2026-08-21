@@ -10,13 +10,11 @@ use Illuminate\Http\Response;
 class DepartmentController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Departments';
-        $this->subTitle = 'Organize your company into structured departments for better management and reporting';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

@@ -10,13 +10,11 @@ use Illuminate\Http\Response;
 class AgileSprintController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Agile Flow';
-        $this->subTitle = 'Manage reusable agile milestones and sprints for your project workflow';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

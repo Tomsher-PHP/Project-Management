@@ -17,13 +17,10 @@ class CustomerController extends Controller
 {
     protected string $pageTitle;
 
-    protected string $subTitle;
-
     public function __construct()
     {
         $this->pageTitle = 'Customer Management';
-        $this->subTitle = 'Manage customer information and details';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)

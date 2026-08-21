@@ -7,13 +7,11 @@ use Exception;
 class UnauthorizedActionException extends Exception
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Unauthorized';
-        $this->subTitle = 'You do not have permission to access this page.';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function render($request)

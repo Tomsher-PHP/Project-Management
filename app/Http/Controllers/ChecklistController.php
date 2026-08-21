@@ -13,13 +13,11 @@ use Illuminate\Support\Facades\DB;
 class ChecklistController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Checklist Templates';
-        $this->subTitle = 'Manage your checklist templates here';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request): View
@@ -145,7 +143,7 @@ class ChecklistController extends Controller
         $checklist->items()->createMany(
             collect($questions)
                 ->values()
-                ->map(fn (string $question, int $index) => [
+                ->map(fn(string $question, int $index) => [
                     'question' => $question,
                     'sort_order' => $index + 1,
                     'is_active' => true,

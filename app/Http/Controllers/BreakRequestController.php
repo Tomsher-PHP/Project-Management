@@ -18,7 +18,6 @@ use Illuminate\Validation\ValidationException;
 class BreakRequestController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
