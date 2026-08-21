@@ -435,6 +435,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('handoff-requests')->as('handoff_requests.')->group(function () {
         Route::get('/', [HandoffController::class, 'index'])->name('index');
         Route::post('/', [HandoffController::class, 'store'])->middleware(['permission.type:handoff_request.create'])->name('store');
+        Route::match(['put', 'patch'], '{handoff_request}', [HandoffController::class, 'update'])->name('update');
         Route::patch('{handoff_request}/assign', [HandoffController::class, 'assign'])->middleware(['permission.type:task.create'])->name('assign');
         Route::patch('{handoff_request}/noted', [HandoffController::class, 'noted'])->middleware(['permission.type:handoff_request.note'])->name('note');
     });

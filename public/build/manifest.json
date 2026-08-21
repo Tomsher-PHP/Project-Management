@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-FrE2eIOv.css",
+    "file": "assets/app-D472qbMU.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -166,13 +166,13 @@
     ]
   },
   "resources/js/modules/appraisal/appraisal-answer.js": {
-    "file": "assets/appraisal-answer-Dc5FdSWo.js",
+    "file": "assets/appraisal-answer-BVQ0kmCU.js",
     "name": "appraisal-answer",
     "src": "resources/js/modules/appraisal/appraisal-answer.js",
     "isEntry": true
   },
   "resources/js/modules/appraisal/appraisal.js": {
-    "file": "assets/appraisal-Cm6TnQ98.js",
+    "file": "assets/appraisal-CDK_0pTY.js",
     "name": "appraisal",
     "src": "resources/js/modules/appraisal/appraisal.js",
     "isEntry": true,
@@ -255,7 +255,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CLQnQH5N.js",
+    "file": "assets/project-detail-ChLQCWQw.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -288,7 +288,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-VM85gUxR.js",
+    "file": "assets/project-tasks-BAVGJMYz.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -313,7 +313,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-DU9T21Go.js",
+    "file": "assets/task-detail-BJhlRDV5.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -383,10 +383,14 @@
     ]
   },
   "resources/js/modules/tasks/handoff.js": {
-    "file": "assets/handoff-CuX8LU59.js",
+    "file": "assets/handoff-B19FuBHu.js",
     "name": "handoff",
     "src": "resources/js/modules/tasks/handoff.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/tasks/kanban-board.js": {
     "file": "assets/kanban-board-CTMqVctk.js",
@@ -412,7 +416,7 @@
     ]
   },
   "resources/js/modules/tasks/time-log-change-request.js": {
-    "file": "assets/time-log-change-request-t6lisTAL.js",
+    "file": "assets/time-log-change-request-Dri893O8.js",
     "name": "time-log-change-request",
     "src": "resources/js/modules/tasks/time-log-change-request.js",
     "isEntry": true,
@@ -482,7 +486,7 @@
     ]
   },
   "resources/js/modules/workspace/user-timeline.js": {
-    "file": "assets/user-timeline-BkZwi0R3.js",
+    "file": "assets/user-timeline-CDvDr91c.js",
     "name": "user-timeline",
     "src": "resources/js/modules/workspace/user-timeline.js",
     "isEntry": true,
@@ -495,7 +499,7 @@
     ]
   },
   "resources/js/modules/workspace/workspace-auto-refresh.js": {
-    "file": "assets/workspace-auto-refresh-BMdeCazp.js",
+    "file": "assets/workspace-auto-refresh-D2uSWKG3.js",
     "name": "workspace-auto-refresh",
     "src": "resources/js/modules/workspace/workspace-auto-refresh.js",
     "isEntry": true

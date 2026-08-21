@@ -189,18 +189,41 @@ class AppraisalController extends Controller
     private function isAnswerQuestionCompleted(array $question, string $role): bool
     {
         $answer = $question['answer'] ?? [];
-        $review = collect($question['reviews'] ?? [])->firstWhere('is_current', true) ?? [];
+        $reviews = collect($question['reviews'] ?? []);
+        $review = $reviews->firstWhere('is_current', true) ?? [];
+        $type = $question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
 
-        return match ($question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING) {
-            AppraisalQuestion::QUESTION_TYPE_ANSWER => $role !== 'assignee'
-                || filled(trim((string) ($answer['answer'] ?? ''))),
-            AppraisalQuestion::QUESTION_TYPE_TARGET => $role === 'assignee'
-                ? $this->hasAnswerValue($answer['achieved_value'] ?? null)
-                : ($role !== 'reviewer' || filled(trim((string) ($review['remark'] ?? '')))),
-            default => $role === 'viewer' || $this->isRatingResponseCompleted(
-                $role === 'reviewer' ? ($review['rating'] ?? null) : ($answer['rating'] ?? null),
-            ),
+        if ($role === 'assignee') {
+            return match ($type) {
+                AppraisalQuestion::QUESTION_TYPE_ANSWER => filled(trim((string) ($answer['answer'] ?? ''))),
+                AppraisalQuestion::QUESTION_TYPE_TARGET => $this->hasAnswerValue($answer['achieved_value'] ?? null),
+                default => $this->isRatingResponseCompleted($answer['rating'] ?? null),
+            };
+        }
+
+        if ($role === 'reviewer') {
+            return match ($type) {
+                AppraisalQuestion::QUESTION_TYPE_ANSWER => filled(trim((string) ($answer['answer'] ?? ''))),
+                AppraisalQuestion::QUESTION_TYPE_TARGET => filled(trim((string) ($review['remark'] ?? ''))),
+                default => $this->isRatingResponseCompleted($review['rating'] ?? null),
+            };
+        }
+
+        $hasAssigneeAnswer = match ($type) {
+            AppraisalQuestion::QUESTION_TYPE_ANSWER => filled(trim((string) ($answer['answer'] ?? ''))),
+            AppraisalQuestion::QUESTION_TYPE_TARGET => $this->hasAnswerValue($answer['achieved_value'] ?? null),
+            default => $this->isRatingResponseCompleted($answer['rating'] ?? null),
         };
+
+        $allReviewersCompleted = $reviews->isEmpty() || $reviews->every(function (array $rev) use ($type) {
+            if ($type === AppraisalQuestion::QUESTION_TYPE_TARGET) {
+                return filled(trim((string) ($rev['remark'] ?? '')));
+            }
+
+            return $this->isRatingResponseCompleted($rev['rating'] ?? null);
+        });
+
+        return $hasAssigneeAnswer && $allReviewersCompleted;
     }
 
     private function hasAnswerValue(mixed $value): bool

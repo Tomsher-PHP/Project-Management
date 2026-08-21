@@ -33,7 +33,7 @@
     ];
 @endphp
 
-<div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+<div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">{{ $modalTitle }}</h3>
@@ -281,6 +281,22 @@
                     <div class="rounded-2xl border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Context</p>
                         <dl class="mt-4 space-y-3 text-sm">
+                            <div class="flex items-start justify-between gap-3">
+                                <dt class="text-bgray-700 dark:text-bgray-300">Project</dt>
+                                <dd class="text-right font-medium">
+                                    @if ($task->project)
+                                        @if (auth()->user()->can('project.view'))
+                                            <a href="{{ route('projects.edit', $task->project) }}" class="text-bgray-900 hover:text-success-300 dark:text-white">
+                                                {{ $task->project->name }}
+                                            </a>
+                                        @else
+                                            <span class="text-bgray-900 dark:text-white">{{ $task->project->name }}</span>
+                                        @endif
+                                    @else
+                                        <span class="text-bgray-900 dark:text-white">--</span>
+                                    @endif
+                                </dd>
+                            </div>
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-bgray-700 dark:text-bgray-300">Milestone</dt>
                                 <dd class="text-right font-medium text-bgray-900 dark:text-white">{{ $task->projectMilestone?->name ?? '--' }}</dd>

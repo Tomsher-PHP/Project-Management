@@ -2,16 +2,19 @@
 
 use App\Http\Middleware\EnsureActiveLoginSession;
 use App\Http\Middleware\PermissionByType;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        channels: __DIR__.'/../routes/channels.php',
+        channels: __DIR__ . '/../routes/channels.php',
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
@@ -26,8 +29,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Log all exceptions
+        // Log unexpected application errors (skip expected auth and session failures)
         $exceptions->report(function (Throwable $e) {
+            if (
+                $e instanceof AuthenticationException ||
+                $e instanceof TokenMismatchException ||
+                ($e instanceof HttpException && in_array($e->getStatusCode(), [401, 419]))
+            ) {
+                return false;
+            }
+
             $request = request();
 
             Log::error('Application Error', [
@@ -39,8 +50,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Handle rendering globally (like global try-catch)
         $exceptions->render(function (Throwable $e, Request $request) {
 
-            // ✅ Let validation errors behave normally
-            if ($e instanceof ValidationException) {
+            // ✅ Let validation errors, authentication, and session expiration errors behave normally
+            if (
+                $e instanceof ValidationException ||
+                $e instanceof AuthenticationException ||
+                $e instanceof TokenMismatchException ||
+                ($e instanceof HttpException && in_array($e->getStatusCode(), [401, 419]))
+            ) {
                 return null;
             }
 

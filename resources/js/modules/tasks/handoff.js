@@ -1,3 +1,5 @@
+import Alert from '../../alert';
+
 document.addEventListener('DOMContentLoaded', () => {
     const modalEl = document.getElementById('handoff_create_modal');
     const openBtns = document.querySelectorAll('[data-handoff-create-open]');
@@ -7,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!modalEl || !form) return;
 
     // Elements
+    const modalTitleEl = modalEl.querySelector('[data-handoff-modal-title]');
     const projectSelect = form.querySelector('[data-handoff-project-select]');
     const milestoneSelect = form.querySelector('[data-handoff-milestone-select]');
     const sprintSelect = form.querySelector('[data-handoff-sprint-select]');
@@ -16,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = form.querySelector('[data-handoff-create-submit]');
     const descriptionInput = form.querySelector('#handoff_description_input');
     const descriptionEditorElement = form.querySelector('#handoff_description_editor');
+
+    // State
+    let currentEditId = null;
 
     // TomSelect Instances
     let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose, descriptionEditor;
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load dependencies from JSON block
     const getDependencies = () => {
-        const depBlock = document.getElementById('task-filter-dependencies');
+        const depBlock = document.getElementById('handoff-filter-dependencies') || document.getElementById('task-filter-dependencies');
         return depBlock ? JSON.parse(depBlock.textContent) : { milestones: [], sprints: [] };
     };
 
@@ -199,6 +205,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const resetHandoffForm = () => {
+        currentEditId = null;
+        if (modalTitleEl) modalTitleEl.textContent = 'Create Handoff Request';
+        if (submitBtn) submitBtn.textContent = 'Create Handoff';
         form.reset();
         if (descriptionEditor) descriptionEditor.setContents([]);
         if (descriptionInput) descriptionInput.value = '';
@@ -227,8 +236,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const populateEditForm = async (btn) => {
+        resetHandoffForm();
+
+        const handoffId = btn.dataset.handoffRequestId;
+        const projectId = btn.dataset.projectId;
+        const milestoneId = btn.dataset.projectMilestoneId;
+        const sprintId = btn.dataset.projectSprintId;
+        const sourceTaskId = btn.dataset.sourceTaskId;
+        const targetUserId = btn.dataset.targetUserId;
+        const purpose = btn.dataset.purpose;
+        const description = btn.dataset.description;
+
+        currentEditId = handoffId;
+
+        if (modalTitleEl) modalTitleEl.textContent = 'Edit Handoff Request';
+        if (submitBtn) submitBtn.textContent = 'Update Handoff';
+
+        if (projectId && tsProject) {
+            tsProject.setValue(projectId);
+
+            if (targetUserId && tsTargetUser) {
+                tsTargetUser.setValue(targetUserId);
+            }
+
+            if (milestoneId && tsMilestone) {
+                tsMilestone.setValue(milestoneId);
+            }
+
+            if (sprintId && tsSprint) {
+                tsSprint.setValue(sprintId);
+            }
+
+            await fetchTasks();
+
+            if (sourceTaskId && tsTask) {
+                tsTask.setValue(sourceTaskId);
+            }
+        }
+
+        if (purpose && tsPurpose) {
+            tsPurpose.setValue(purpose);
+        }
+
+        if (description) {
+            let cleanHtml = description.trim();
+            if (/&lt;[a-z][\s\S]*&gt;/i.test(cleanHtml) && !/<[a-z][\s\S]*>/i.test(cleanHtml)) {
+                const txt = document.createElement('textarea');
+                txt.innerHTML = cleanHtml;
+                cleanHtml = txt.value;
+            }
+            if (descriptionEditor) {
+                descriptionEditor.setContents([]);
+                descriptionEditor.clipboard.dangerouslyPasteHTML(0, cleanHtml);
+            } else if (descriptionEditorElement) {
+                const qlEditor = descriptionEditorElement.querySelector('.ql-editor');
+                if (qlEditor) qlEditor.innerHTML = cleanHtml;
+            }
+            if (descriptionInput) descriptionInput.value = cleanHtml;
+        }
+
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('flex');
+    };
+
     openBtns.forEach(btn => btn.addEventListener('click', () => toggleModal(true)));
     closeBtns.forEach(btn => btn.addEventListener('click', () => toggleModal(false)));
+
+    document.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('[data-handoff-edit-btn]');
+        if (editBtn) {
+            populateEditForm(editBtn);
+        }
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -245,10 +325,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const formData = new FormData(form);
-        const submitUrl = form.getAttribute('data-store-url');
+        let submitUrl = form.getAttribute('data-store-url');
+        if (currentEditId) {
+            const template = form.getAttribute('data-update-url-template') || '/handoff-requests/:id';
+            submitUrl = template.replace(':id', currentEditId).replace('__ID__', currentEditId);
+            formData.append('_method', 'PUT');
+        }
 
         const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = 'Saving...';
+        submitBtn.innerHTML = currentEditId ? 'Updating...' : 'Saving...';
         submitBtn.disabled = true;
 
         try {
@@ -266,13 +351,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok && data.status) {
                 toggleModal(false);
+                const msg = data.message || (currentEditId ? 'Handoff updated successfully.' : 'Handoff created successfully.');
                 if (window.Toast && window.Toast.success) {
-                    window.Toast.success(data.message || 'Handoff created successfully.');
+                    window.Toast.success(msg);
                 } else if (window.toastr) {
-                    window.toastr.success(data.message || 'Handoff created successfully.');
+                    window.toastr.success(msg);
+                } else if (Alert && Alert.success) {
+                    Alert.success(msg);
                 } else {
-                    Alert.success(data.message || 'Handoff created successfully.');
+                    alert(msg);
                 }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
             } else {
                 if (data.errors) {
                     for (const [key, messages] of Object.entries(data.errors)) {
@@ -283,15 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 } else {
-                    Alert.error(data.message || 'An error occurred.');
+                    if (Alert && Alert.error) {
+                        Alert.error(data.message || 'An error occurred.');
+                    } else {
+                        alert(data.message || 'An error occurred.');
+                    }
                 }
             }
         } catch (err) {
             console.error('Submit error:', err);
-            Alert.error('A network error occurred.');
+            if (Alert && Alert.error) {
+                Alert.error('A network error occurred.');
+            } else {
+                alert('A network error occurred.');
+            }
         } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         }
     });
 });
+

@@ -8,6 +8,11 @@
 @section('page-content')
     <main class="w-full px-6 pb-6 pt-[100px] sm:pt-[120px] xl:px-[48px] xl:pb-[48px]" data-task-create-root data-project-tasks-root data-project-task-response-mode="reload">
         <div class="mb-6 flex flex-wrap items-center gap-3">
+            @include('tasks.kanban._project_flow_btn', [
+                'agileNewTaskCount' => $agileNewTaskCount,
+                'linearNewTaskCount' => $linearNewTaskCount,
+            ])
+
             @can('task.create')
                 <x-button.create-button type="button" data-task-create-open title="Create new task" label="Task" />
             @endcan
@@ -16,17 +21,12 @@
                 <x-button.create-button type="button" data-task-create-open data-task-create-request-type="self" title="Create new request task for your self" label="Request" />
             @endcan
 
-            <x-filters.button />
-
-            <x-filters.list-search />
 
             <div class="flex flex-wrap items-center gap-3 sm:ml-auto">
-                @include('tasks.kanban._sort_dropdown')
+                <x-filters.list-search />
+                <x-filters.button />
 
-                @include('tasks.kanban._project_flow_btn', [
-                    'agileNewTaskCount' => $agileNewTaskCount,
-                    'linearNewTaskCount' => $linearNewTaskCount,
-                ])
+                @include('tasks.kanban._sort_dropdown')
             </div>
         </div>
 
@@ -74,7 +74,7 @@
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-detail-close></div>
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-                <div class="relative z-10 w-full max-w-7xl" data-project-task-detail-content></div>
+                <div class="relative z-10 w-full max-w-[95vw] 2xl:max-w-[1550px]" data-project-task-detail-content></div>
             </div>
         </div>
 

@@ -20,7 +20,7 @@ class AppraisalPolicy
     public function viewAnswer(User $authUser, Appraisal $model): bool
     {
         // 1. The Appraisal Assignee.
-        if ((int) $model->user_id === (int) $authUser->id) {
+        if ((int) $model->user_id === (int) $authUser->id || (int) $model->created_by == (int) $authUser->id) {
             return true;
         }
 

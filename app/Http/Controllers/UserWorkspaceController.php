@@ -31,10 +31,8 @@ class UserWorkspaceController extends Controller
 
     private RunningTaskNavbarService $runningTaskNavbarService;
 
-    public function __construct(
-        UserTimelineService $timeLineService,
-        RunningTaskNavbarService $runningTaskNavbarService
-    ) {
+    public function __construct(UserTimelineService $timeLineService, RunningTaskNavbarService $runningTaskNavbarService)
+    {
         $this->timeLineService = $timeLineService;
         $this->runningTaskNavbarService = $runningTaskNavbarService;
         $this->pageTitle = 'My Workspace';
@@ -281,6 +279,7 @@ class UserWorkspaceController extends Controller
             : '--';
         $workedTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($workedTaskSegments);
         $breakTotalSeconds = $this->timeLineService->getTotalTimelineSeconds($breakTaskSegments);
+        $workedDiffData = $this->timeLineService->getWorkedShiftDiff($assignedShift, $workedTotalSeconds);
 
         $dateFormat = config('constants.date_format');
         return [
@@ -288,8 +287,9 @@ class UserWorkspaceController extends Controller
             'workedTaskSegments' => $workedTaskSegments,
             'breakTaskSegments' => $breakTaskSegments,
             'shiftSummaryDuration' => $shiftSummaryDuration,
-            'workedSummaryDuration' => formatSecondsToHMS($workedTotalSeconds),
-            'breakSummaryDuration' => formatSecondsToHMS($breakTotalSeconds),
+            'workedSummaryDuration' => prettySecondsToHMS($workedTotalSeconds),
+            'breakSummaryDuration' => prettySecondsToHMS($breakTotalSeconds),
+            'workedDiffData' => $workedDiffData,
             'selectedDateValue' => $selectedDate->toDateString(),
             'todayDate' => now($selectedDate->getTimezone())->toDateString(),
             'workspaceGreetingLabel' => $isOwnWorkspace ? $this->buildWorkspaceGreetingLabel($workspaceUser->name) : null,

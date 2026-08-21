@@ -17,7 +17,7 @@
     };
 @endphp
 
-<div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+<div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Task Time Log Details</h3>

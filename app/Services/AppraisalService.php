@@ -198,7 +198,8 @@ class AppraisalService
             ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
-                'answers:id,appraisal_id,rating,submitted_at',
+                'answers:id,appraisal_id,appraisal_snapshot_question_id,rating,submitted_at',
+                'answers.reviews',
                 'reviewers.reviewer:id,name',
             ])
             ->get()
@@ -310,6 +311,9 @@ class AppraisalService
                 $appraisal->status = $status;
                 $appraisal->published_at = $status === 'published' ? now() : null;
                 $appraisal->published_by = $status === 'published' ? auth()->id() : null;
+                $appraisal->kpi_agreed_at = null;
+                $appraisal->assignee_average_rating = null;
+                $appraisal->final_rating = null;
                 $appraisal->save();
 
                 $this->replaceSnapshot($appraisal, $data['categories'], $isExistingDraft);
@@ -582,6 +586,19 @@ class AppraisalService
             ? $appraisal->comments->firstWhere('appraisal_reviewer_id', $pendingAcknowledgement->id)
             : null;
 
+        $ratingQuestionIds = $appraisal->snapshotCategories
+            ->flatMap(fn($category) => $category->questions)
+            ->filter(fn($question) => ($question->question_type ?? AppraisalSnapshotQuestion::QUESTION_TYPE_RATING) === AppraisalSnapshotQuestion::QUESTION_TYPE_RATING)
+            ->pluck('id')
+            ->all();
+
+        $ratingAnswers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
+
+        $assigneeRatingCount = $ratingAnswers
+            ->pluck('rating')
+            ->filter(fn($rating) => $rating !== null)
+            ->count();
+
         return [
             'id' => $appraisal->id,
             'role' => $role,
@@ -614,6 +631,7 @@ class AppraisalService
             'status' => $appraisal->status,
             'current_stage' => $appraisal->current_stage,
             'assignee_average_rating' => $appraisal->assignee_average_rating,
+            'assignee_rating_count' => $assigneeRatingCount,
             'final_rating' => $appraisal->final_rating,
             'categories' => $appraisal->snapshotCategories
                 ->map(fn($category) => [
@@ -664,17 +682,27 @@ class AppraisalService
                 ])
                 ->values()
                 ->all(),
-            'reviewers' => $reviewers->map(fn($reviewer) => [
-                'id' => $reviewer->id,
-                'reviewer_user_id' => $reviewer->reviewer_user_id,
-                'name' => $reviewer->reviewer?->name,
-                'role' => $reviewer->role,
-                'level' => $reviewer->level,
-                'average_rating' => $reviewer->average_rating,
-                'submitted_at' => $reviewer->submitted_at?->toISOString(),
-                'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
-                'acknowledgement_remark' => $reviewer->acknowledgement_remark,
-            ])->all(),
+            'reviewers' => $reviewers->map(function ($reviewer) use ($ratingAnswers) {
+                $reviewerRatingCount = $ratingAnswers
+                    ->flatMap(fn($answer) => $answer->reviews)
+                    ->where('appraisal_reviewer_id', $reviewer->id)
+                    ->pluck('rating')
+                    ->filter(fn($rating) => $rating !== null)
+                    ->count();
+
+                return [
+                    'id' => $reviewer->id,
+                    'reviewer_user_id' => $reviewer->reviewer_user_id,
+                    'name' => $reviewer->reviewer?->name,
+                    'role' => $reviewer->role,
+                    'level' => $reviewer->level,
+                    'average_rating' => $reviewer->average_rating,
+                    'rating_count' => $reviewerRatingCount,
+                    'submitted_at' => $reviewer->submitted_at?->toISOString(),
+                    'acknowledged_at' => $reviewer->acknowledged_at?->toISOString(),
+                    'acknowledgement_remark' => $reviewer->acknowledgement_remark,
+                ];
+            })->all(),
             'comments' => $appraisal->comments->map(fn($c) => [
                 'appraisal_reviewer_id' => $c->appraisal_reviewer_id,
                 'level' => $c->reviewer?->level,
@@ -682,6 +710,7 @@ class AppraisalService
                 'commentator_name' => $c->reviewer?->reviewer?->name,
                 'created_at' => $c->created_at?->format('M d, Y h:i A'),
             ])->values()->all(),
+            'stepper' => $this->getProgressStepperData($appraisal),
         ];
     }
 
@@ -1453,11 +1482,12 @@ class AppraisalService
             $snapshotCategory->questions()->createMany(
                 collect($category['questions'] ?? [])
                     ->values()
-                    ->map(function (array $question, int $questionIndex) {
+                    ->map(function (array $question, int $questionIndex) use ($appraisal) {
                         $questionType = $question['question_type'] ?? AppraisalQuestion::QUESTION_TYPE_RATING;
                         $isTarget = $questionType === AppraisalQuestion::QUESTION_TYPE_TARGET;
 
                         return [
+                            'user_id' => (int) $appraisal->user_id,
                             'question' => $question['question'],
                             'question_type' => $questionType,
                             'measurement_type' => $isTarget ? ($question['measurement_type'] ?? null) : null,
@@ -1613,7 +1643,8 @@ class AppraisalService
             ->withCount(['snapshotQuestions', 'snapshotCategories'])
             ->with([
                 'user.details',
-                'answers:id,appraisal_id,rating,submitted_at',
+                'answers:id,appraisal_id,appraisal_snapshot_question_id,rating,submitted_at',
+                'answers.reviews',
                 'reviewers.reviewer:id,name',
             ])
             ->get()
@@ -1683,22 +1714,167 @@ class AppraisalService
             return [];
         }
 
+        $appraisal->loadMissing(['snapshotCategories.questions', 'answers.reviews', 'reviewers.reviewer']);
+
+        $ratingQuestionIds = $appraisal->snapshotCategories
+            ->flatMap(fn($category) => $category->questions)
+            ->filter(fn($question) => ($question->question_type ?? AppraisalSnapshotQuestion::QUESTION_TYPE_RATING) === AppraisalSnapshotQuestion::QUESTION_TYPE_RATING)
+            ->pluck('id')
+            ->all();
+
+        $ratingAnswers = $appraisal->answers->whereIn('appraisal_snapshot_question_id', $ratingQuestionIds);
+
+        $assigneeRatingCount = $ratingAnswers
+            ->pluck('rating')
+            ->filter(fn($rating) => $rating !== null)
+            ->count();
+
         return collect([[
             'name' => $appraisal->user?->name,
             'role_label' => 'Assignee',
             'average_rating' => $appraisal->assignee_average_rating,
+            'rating_count' => $assigneeRatingCount,
         ]])
             ->concat(
                 $appraisal->reviewers
                     ->sortBy('level')
-                    ->map(fn(AppraisalReviewer $reviewer) => [
-                        'name' => $reviewer->reviewer?->name,
-                        'role_label' => 'Reviewer L' . $reviewer->level,
-                        'average_rating' => $reviewer->average_rating,
-                    ])
+                    ->map(function (AppraisalReviewer $reviewer) use ($ratingAnswers) {
+                        $reviewerRatingCount = $ratingAnswers
+                            ->flatMap(fn($answer) => $answer->reviews)
+                            ->where('appraisal_reviewer_id', $reviewer->id)
+                            ->pluck('rating')
+                            ->filter(fn($rating) => $rating !== null)
+                            ->count();
+
+                        return [
+                            'name' => $reviewer->reviewer?->name,
+                            'role_label' => 'Reviewer L' . $reviewer->level,
+                            'average_rating' => $reviewer->average_rating,
+                            'rating_count' => $reviewerRatingCount,
+                        ];
+                    })
             )
             ->values()
             ->all();
+    }
+
+    public function getProgressStepperData(Appraisal $appraisal): array
+    {
+        $appraisal->loadMissing(['user', 'reviewers.reviewer', 'answers']);
+
+        $assigneeName = $appraisal->user?->name ?: 'Assignee';
+
+        $assigneeSubmittedAt = $appraisal->answers->pluck('submitted_at')->filter()->max();
+
+        $steps = [];
+        $stepNumber = 1;
+
+        // Step 1: KPI Agreement
+        $kpiAgreed = filled($appraisal->kpi_agreed_at);
+        $steps[] = [
+            'key' => 'kpi_agreement',
+            'number' => $stepNumber++,
+            'title' => 'KPI Agreement',
+            'subtitle' => $assigneeName,
+            'completed_at' => $appraisal->kpi_agreed_at,
+            'is_completed' => $kpiAgreed,
+        ];
+
+        // Step 2: Assignee Answers
+        $assigneeSubmitted = $this->isRoleSubmitted($appraisal, 'assignee')
+            || in_array($appraisal->status, ['completed', 'closed'], true);
+
+        if (! $assigneeSubmitted && $kpiAgreed && ! in_array($appraisal->current_stage, [null, '', 'Assignee'], true)) {
+            $assigneeSubmitted = true;
+        }
+
+        $steps[] = [
+            'key' => 'assignee_answers',
+            'number' => $stepNumber++,
+            'title' => 'Assignee Answers',
+            'subtitle' => $assigneeName,
+            'completed_at' => $assigneeSubmittedAt,
+            'is_completed' => $assigneeSubmitted,
+        ];
+
+        // Reviewer Steps (Level 1, Level 2, etc.)
+        $reviewers = $appraisal->reviewers->sortBy('level')->values();
+        foreach ($reviewers as $reviewer) {
+            $reviewerSubmitted = filled($reviewer->submitted_at);
+            $reviewerAcknowledged = filled($reviewer->acknowledged_at);
+
+            if (in_array($appraisal->status, ['completed', 'closed'], true)) {
+                $reviewerSubmitted = true;
+                $reviewerAcknowledged = true;
+            }
+
+            $steps[] = [
+                'key' => "reviewer_answers_{$reviewer->id}",
+                'number' => $stepNumber++,
+                'title' => "Reviewer L{$reviewer->level} Answers",
+                'subtitle' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                'completed_at' => $reviewer->submitted_at,
+                'is_completed' => $reviewerSubmitted,
+            ];
+
+            $steps[] = [
+                'key' => "reviewer_ack_{$reviewer->id}",
+                'number' => $stepNumber++,
+                'title' => "L{$reviewer->level} Acknowledgement",
+                'subtitle' => $assigneeName,
+                'completed_at' => $reviewer->acknowledged_at,
+                'is_completed' => $reviewerAcknowledged,
+                'is_acknowledgement' => true,
+                'acknowledgement_data' => [
+                    'assignee_name' => $assigneeName,
+                    'reviewer_name' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                    'level' => $reviewer->level,
+                    'acknowledged_at' => $reviewer->acknowledged_at,
+                    'acknowledgement_remark' => $reviewer->acknowledgement_remark,
+                ],
+            ];
+        }
+
+        // Final Step: Completed
+        $allPriorCompleted = count($steps) > 0 && collect($steps)->every(fn($s) => $s['is_completed']);
+        $isAllCompleted = in_array($appraisal->status, ['completed', 'closed'], true) || $allPriorCompleted;
+
+        $steps[] = [
+            'key' => 'completed',
+            'number' => $stepNumber++,
+            'title' => 'Completed',
+            'subtitle' => 'Finalized',
+            'completed_at' => $appraisal->completed_at,
+            'is_completed' => $isAllCompleted,
+        ];
+
+        $activeFound = false;
+        $activeStepIndex = null;
+
+        foreach ($steps as $index => &$step) {
+            if (! $step['is_completed'] && ! $activeFound) {
+                $step['is_active'] = true;
+                $activeFound = true;
+                $activeStepIndex = $index;
+            } else {
+                $step['is_active'] = false;
+            }
+        }
+        unset($step);
+
+        if ($isAllCompleted) {
+            foreach ($steps as &$step) {
+                $step['is_completed'] = true;
+                $step['is_active'] = false;
+            }
+            unset($step);
+        }
+
+        return [
+            'steps' => $steps,
+            'current_step_index' => $activeStepIndex,
+            'is_all_completed' => $isAllCompleted,
+        ];
     }
 
     private function getMyAppraisalSummary(Request $request, int $month, int $year): array

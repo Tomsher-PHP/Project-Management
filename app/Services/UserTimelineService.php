@@ -58,45 +58,56 @@ class UserTimelineService
                 $windowStart = (int) ($shiftSegment['start_seconds'] ?? 0);
                 $windowEnd = (int) ($shiftSegment['end_seconds'] ?? 0);
 
-                if ($currentTimelineSecond !== null) {
-                    if ($windowStart >= $currentTimelineSecond) {
-                        continue;
-                    }
-
-                    $windowEnd = min($windowEnd, $currentTimelineSecond);
-                }
-
-                if ($windowEnd <= $windowStart) {
+                if ($currentTimelineSecond !== null && $windowStart >= $currentTimelineSecond) {
                     continue;
                 }
 
-                $windowWorkIntervals = [];
-
+                $maxWorkedEndAfterStart = null;
                 foreach ($workedIntervals as $interval) {
-                    $overlapStart = max($windowStart, $interval['start_seconds']);
-                    $overlapEnd = min($windowEnd, $interval['end_seconds']);
-
-                    if ($overlapEnd > $overlapStart) {
-                        $windowWorkIntervals[] = [
-                            'start_seconds' => $overlapStart,
-                            'end_seconds' => $overlapEnd,
-                        ];
+                    if ($interval['end_seconds'] > $windowStart) {
+                        $maxWorkedEndAfterStart = max($maxWorkedEndAfterStart ?? 0, $interval['end_seconds']);
                     }
                 }
 
-                $windowWorkIntervals = $this->mergeTimelineIntervals($windowWorkIntervals);
+                $effectiveEnd = $maxWorkedEndAfterStart !== null
+                    ? max($windowEnd, $maxWorkedEndAfterStart)
+                    : $windowEnd;
+
+                if ($currentTimelineSecond !== null) {
+                    $effectiveEnd = min($effectiveEnd, $currentTimelineSecond);
+                }
+
+                if ($effectiveEnd <= $windowStart) {
+                    continue;
+                }
+
                 $cursor = $windowStart;
 
-                foreach ($windowWorkIntervals as $interval) {
+                foreach ($workedIntervals as $interval) {
+                    if ($interval['end_seconds'] <= $cursor) {
+                        continue;
+                    }
+
+                    if ($interval['start_seconds'] >= $effectiveEnd) {
+                        break;
+                    }
+
                     if ($interval['start_seconds'] > $cursor) {
-                        $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $interval['start_seconds']);
+                        $gapEnd = min($interval['start_seconds'], $effectiveEnd);
+                        if ($gapEnd > $cursor) {
+                            $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $gapEnd);
+                        }
+                        if ($interval['start_seconds'] >= $effectiveEnd) {
+                            $cursor = $gapEnd;
+                            break;
+                        }
                     }
 
                     $cursor = max($cursor, $interval['end_seconds']);
                 }
 
-                if ($currentTimelineSecond === null && $cursor < $windowEnd) {
-                    $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $windowEnd);
+                if ($cursor < $effectiveEnd) {
+                    $breakSegments[] = $this->formatBreakTimelineSegment($cursor, $effectiveEnd);
                 }
             }
 
@@ -128,6 +139,45 @@ class UserTimelineService
     public function getTotalTimelineSeconds(array $segments): int
     {
         return (int) collect($segments)->sum(fn(array $segment) => (int) ($segment['duration_seconds'] ?? 0));
+    }
+
+    public function getWorkedShiftDiff(?array $assignedShift, int $workedTotalSeconds): array
+    {
+        $isWorkingDay = !empty($assignedShift['is_working_day']) && empty($assignedShift['is_weekend']);
+        $targetShiftSeconds = 0;
+
+        if ($isWorkingDay && !empty($assignedShift['timeline_segments'])) {
+            foreach ($assignedShift['timeline_segments'] as $segment) {
+                $targetShiftSeconds += (int) ($segment['actual_working_duration_seconds'] ?? $segment['duration_seconds'] ?? 0);
+            }
+        }
+
+        $diffSeconds = $workedTotalSeconds - $targetShiftSeconds;
+        $isNegative = $diffSeconds < 0;
+        $absSeconds = abs($diffSeconds);
+
+        $hours = intdiv($absSeconds, 3600);
+        $minutes = intdiv($absSeconds % 3600, 60);
+
+        if ($diffSeconds > 0) {
+            $sign = '+';
+        } elseif ($diffSeconds < 0) {
+            $sign = '-';
+        } else {
+            $sign = '';
+        }
+
+        $formatted = sprintf('%02dh %02dm', $hours, $minutes);
+
+        return [
+            'target_shift_seconds' => $targetShiftSeconds,
+            'diff_seconds' => $diffSeconds,
+            'is_negative' => $isNegative,
+            'formatted' => $formatted,
+            'sign' => $sign,
+            'hours' => $hours,
+            'minutes' => $minutes,
+        ];
     }
 
     public function getAssignedShift(int $userId, string|Carbon $date): ?array
@@ -353,7 +403,7 @@ class UserTimelineService
         $actualEndLabel = $this->formatTimelineTime($assignment->time_to);
         $actualBreakLabel = formatSecondsToHMS($breakDurationSeconds);
         $actualWorkingDurationSeconds = max(0, $totalShiftDurationSeconds - $breakDurationSeconds);
-        $actualWorkingDurationLabel = formatSecondsToHMS($actualWorkingDurationSeconds);
+        $actualWorkingDurationLabel = prettySecondsToHMS($actualWorkingDurationSeconds);
         $tooltipLabel = trim(implode(' | ', array_filter([
             $assignment->shift_name,
             "{$actualStartLabel} - {$actualEndLabel}",

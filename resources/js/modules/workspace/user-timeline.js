@@ -98,7 +98,8 @@ const replaceTimelineRoot = (currentRoot, html) => {
     bindTimeline(nextRoot);
 };
 
-const requestTimeline = async (root, date) => {
+const requestTimeline = async (root, date, options = {}) => {
+    const isAutoRefresh = Boolean(options?.isAutoRefresh);
     const normalizedDate = formatDate(parseDate(date) || new Date());
 
     if (activeTimelineRequest) {
@@ -106,8 +107,10 @@ const requestTimeline = async (root, date) => {
     }
 
     activeTimelineRequest = new AbortController();
-    setLoadingState(root, true);
-    showError(root, '');
+    if (!isAutoRefresh) {
+        setLoadingState(root, true);
+        showError(root, '');
+    }
 
     try {
         const response = await fetch(buildTimelineUrl(root, normalizedDate), {
@@ -118,6 +121,10 @@ const requestTimeline = async (root, date) => {
             signal: activeTimelineRequest.signal,
         });
 
+        if (response.status === 401 || response.status === 419) {
+            return { success: false, status: response.status, authFailed: true };
+        }
+
         if (!response.ok) {
             throw new Error('Failed to load the selected day.');
         }
@@ -125,33 +132,35 @@ const requestTimeline = async (root, date) => {
         const data = await response.json();
         replaceTimelineRoot(root, data.html || '');
         updateBrowserUrl(normalizedDate);
-        return true;
+        return { success: true, status: response.status };
     } catch (error) {
         if (error.name === 'AbortError') {
-            return false;
+            return { success: false, aborted: true };
         }
 
-        showError(root, 'Could not update the daily timeline. Please try again.');
+        if (!isAutoRefresh) {
+            showError(root, 'Could not update the daily timeline. Please try again.');
+            setLoadingState(root, false);
+        }
         console.error(error);
-        setLoadingState(root, false);
-        return false;
+        return { success: false, status: error.status || 500 };
     } finally {
         activeTimelineRequest = null;
     }
 };
 
-const refreshTimelineForCurrentDate = () => {
+const refreshTimelineForCurrentDate = (options = {}) => {
     const root = getTimelineRoot();
 
     if (!root) {
-        return Promise.resolve(false);
+        return Promise.resolve({ success: false });
     }
 
-    return requestTimeline(root, root.dataset.userTimelineSelectedDate || root.dataset.userTimelineToday);
+    return requestTimeline(root, root.dataset.userTimelineSelectedDate || root.dataset.userTimelineToday, options);
 };
 
 const createTimelineController = () => ({
-    refreshSelectedDate: refreshTimelineForCurrentDate,
+    refreshSelectedDate: (options = {}) => refreshTimelineForCurrentDate(options),
     bindCurrentRoot: () => bindTimeline(getTimelineRoot()),
     isBusy: () => {
         const root = getTimelineRoot();

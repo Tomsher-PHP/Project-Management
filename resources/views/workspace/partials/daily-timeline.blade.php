@@ -70,17 +70,33 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-6 text-center xl:justify-items-end">
-            <div>
-                <p class="text-[26px] font-extrabold leading-none" style="color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);">{{ $shiftSummaryDuration ?? '--' }}</p>
-                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
-                    <span class="h-2.5 w-2.5 rounded-sm" style="background-color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);"></span>
-                    Shift
-                </p>
-            </div>
+        <div class="grid grid-cols-4 gap-x-1 text-center xl:justify-items-end">
+            @if (!empty($workedDiffData))
+                <div>
+                    <p class="flex items-center justify-center gap-1.5 text-[22px] font-extrabold leading-none {{ $workedDiffData['is_negative'] ? 'text-error-300 dark:text-error-100' : 'text-emerald-600 dark:text-emerald-400' }}" title="Shift comparison: Worked vs Required Shift Hours">
+
+                        @if ($workedDiffData['is_negative'])
+                            <svg class="h-5 w-5 shrink-0 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                        @else
+                            <svg class="h-5 w-5 shrink-0 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            </svg>
+                        @endif
+
+                        <span>{{ $workedDiffData['formatted'] }}</span>
+                    </p>
+
+                    <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
+                        <span class="h-2.5 w-2.5 rounded-sm {{ $workedDiffData['is_negative'] ? 'bg-error-300 dark:bg-error-100' : 'bg-emerald-600 dark:bg-emerald-400' }}"></span>
+                        {{ $workedDiffData['is_negative'] ? 'Time Left' : 'Extra Time' }}
+                    </p>
+                </div>
+            @endif
 
             <div>
-                <p class="text-[26px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0s' }}</p>
+                <p class="text-[22px] font-extrabold leading-none text-[#4f5bff]">{{ $workedSummaryDuration ?? '0s' }}</p>
                 <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#4f5bff]"></span>
                     Worked
@@ -88,10 +104,18 @@
             </div>
 
             <div>
-                <p class="text-[26px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0s' }}</p>
+                <p class="text-[22px] font-extrabold leading-none text-[#d78900]">{{ $breakSummaryDuration ?? '0s' }}</p>
                 <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
                     <span class="h-2.5 w-2.5 rounded-sm bg-[#d78900]"></span>
                     Break
+                </p>
+            </div>
+
+            <div>
+                <p class="text-[22px] font-extrabold leading-none" style="color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);">{{ $shiftSummaryDuration ?? '--' }}</p>
+                <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
+                    <span class="h-2.5 w-2.5 rounded-sm" style="background-color: color-mix(in srgb, {{ $assignedShift['color_code'] ?? '#f3f4f6' }} 78%, #000 22%);"></span>
+                    Shift
                 </p>
             </div>
         </div>
@@ -115,6 +139,7 @@
                         @if ($canRequestOwnTimeLogChange) data-target="#timeLogChangeRequestModal"
                             data-time-log-change-request-open
                             data-task_id="{{ $segment['task_id'] }}"
+                            data-task_name="{{ $segment['task_name'] }}"
                             data-task_time_log_id="{{ $segment['task_time_log_id'] }}"
                             data-new_started_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_started_at'] : $segment['original_started_at'] }}"
                             data-new_ended_at="{{ $hasPendingTimeLogChangeRequest ? $segment['pending_new_ended_at'] : $segment['original_ended_at'] }}"
@@ -125,7 +150,8 @@
                             @if ($hasPendingTimeLogChangeRequest)
                                 data-time_log_change_request_id="{{ $segment['pending_change_request_id'] }}"
                                 data-time_log_change_request_update_url="{{ $segment['pending_change_request_update_url'] }}"
-                                data-time_log_change_request_reason="{{ $segment['pending_reason'] }}" @endif @endif>
+                                data-time_log_change_request_reason="{{ $segment['pending_reason'] }}" @endif
+                        @endif>
                     </button>
                 @endforeach
                 <!-- Worked Task End-->
@@ -156,7 +182,8 @@
                                 data-break-request-update-url="{{ $segment['pending_break_request_update_url'] }}"
                                 data-break-request-start="{{ $segment['pending_break_request_start_label'] }}"
                                 data-break-request-end="{{ $segment['pending_break_request_end_label'] }}"
-                                data-break-request-description="{{ $segment['pending_break_request_description'] }}" @endif @endif>
+                                data-break-request-description="{{ $segment['pending_break_request_description'] }}" @endif
+                        @endif>
                     </button>
                 @endforeach
                 <!-- Break End-->

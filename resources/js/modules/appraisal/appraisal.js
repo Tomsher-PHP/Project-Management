@@ -386,9 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const numericRating = rawRating !== null && rawRating !== undefined && rawRating !== ''
                 ? Number(rawRating)
                 : null;
+            const ratingCountStr = contributor.rating_count !== undefined && contributor.rating_count !== null
+                ? ` (${escapeHtml(contributor.rating_count)})`
+                : '';
             const rating = numericRating !== null && Number.isFinite(numericRating)
-                ? `${escapeHtml(numericRating.toFixed(2))} / 5`
-                : '--';
+                ? `${escapeHtml(numericRating.toFixed(2))} / 5${ratingCountStr}`
+                : `--`;
             const name = contributor.name || '--';
             const roleLabel = contributor.role_label || '';
 
@@ -470,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const appraisals = assignmentData.my_appraisals || [];
 
         if (!appraisals.length) {
-            myAppraisalsContainer.innerHTML = '<tr><td colspan="7" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
+            myAppraisalsContainer.innerHTML = '<tr><td colspan="6" class="px-4 py-10 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No users found.</td></tr>';
             return;
         }
 
@@ -481,9 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAssignee = row.is_assignee || Number(user.id) === authUserId;
             const canAgree = row.can_agree || (row.appraisal_id && isAssignee && status === 'published' && !row.kpi_agreed);
             const canAnswer = row.can_answer || (row.appraisal_id && isAssignee && row.kpi_agreed);
-            const kpiAgreement = row.kpi_agreed
-                ? `Agreed: ${escapeHtml(row.kpi_agreed_at || '--')}`
-                : 'Not Agreed';
+            const kpiAgreement = !row.appraisal_id ? 'N/A' : row.kpi_agreed
+                ? `Submitted: ${escapeHtml(row.kpi_agreed_at || '--')}`
+                : 'Pending';
             const completedDate = status === 'completed' && row.completed_at
                 ? `<p class="mt-1 text-xs font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(row.completed_at)}</p>`
                 : '';
@@ -513,9 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         <span class="whitespace-nowrap text-sm font-bold text-bgray-900 dark:text-white">${escapeHtml(row.questions_count ?? 0)} / ${escapeHtml(row.categories_count ?? 0)}</span>
-                    </td>
-                    <td class="px-4 py-4 xl:px-0">
-                        <span class="text-sm font-semibold text-bgray-700 dark:text-bgray-50">${escapeHtml(row.current_stage || '--')}</span>
                     </td>
                     <td class="px-4 py-4 xl:px-0">
                         ${statusBadge(row)}

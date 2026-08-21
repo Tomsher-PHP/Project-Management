@@ -25,6 +25,15 @@
 
                     <div class="max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-7">
                         <div class="space-y-6">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">
+                                    Task Name
+                                </label>
+                                <p id="timeLogChangeRequestTaskName" class="text-base font-semibold text-bgray-900 dark:text-white" data-time-log-change-request-task-name>
+                                    {{ isset($task) ? $task->name : ($taskName ?? '--') }}
+                                </p>
+                            </div>
+
                             <div class="grid gap-5 md:grid-cols-2">
                                 <div>
                                     <label for="timeLogChangeRequestNewStartedAt" class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50">

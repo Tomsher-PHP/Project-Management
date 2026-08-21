@@ -1,4 +1,4 @@
-const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const AUTO_REFRESH_INTERVAL_MS = window.AUTO_REFRESH_INTERVAL_MS ?? 5 * 60 * 1000;
 const CONTROLLER_KEY = '__workspaceAutoRefreshController';
 const WORKSPACE_SELECTOR = '[data-user-workspace]';
 const TIMELINE_CONTROLLER_KEY = '__workspaceTimelineController';
@@ -39,6 +39,32 @@ const isWorkspaceBusy = () => {
     );
 };
 
+const hasRunningTask = () => {
+    const navbarTimerState = window.navbarRunningTaskTimer?.getState?.();
+
+    if (navbarTimerState) {
+        return Boolean(navbarTimerState.active && navbarTimerState.state === 'running');
+    }
+
+    const timerRoot = document.querySelector('[data-running-task-timer]');
+    if (timerRoot) {
+        return timerRoot.dataset.runningTaskActive === '1' && timerRoot.dataset.runningTaskState === 'running';
+    }
+
+    return false;
+};
+
+const isSelfWorkspaceSelected = () => {
+    const userSelect = document.querySelector('[data-workspace-user-select]');
+
+    if (userSelect) {
+        return !String(userSelect.value || '').trim();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    return !urlParams.get('user_id');
+};
+
 const toggleRefreshIndicator = (isVisible) => {
     const indicator = getRefreshIndicator();
 
@@ -51,14 +77,26 @@ const toggleRefreshIndicator = (isVisible) => {
 };
 
 const runWorkspaceRefresh = async (state) => {
+    // check if tab is not active
+    // if (document.hidden) {
+    //     return;
+    // }
+
     if (state.isRefreshing || !isTodaySelected() || isWorkspaceBusy()) {
         return;
     }
 
-    const timelineController = window[TIMELINE_CONTROLLER_KEY];
-    const kanbanController = window[KANBAN_CONTROLLER_KEY];
+    if (!hasRunningTask()) {
+        return;
+    }
 
-    if (!timelineController?.refreshSelectedDate || !kanbanController?.reload) {
+    if (!isSelfWorkspaceSelected()) {
+        return;
+    }
+
+    const timelineController = window[TIMELINE_CONTROLLER_KEY];
+
+    if (!timelineController?.refreshSelectedDate) {
         return;
     }
 
@@ -66,10 +104,16 @@ const runWorkspaceRefresh = async (state) => {
     toggleRefreshIndicator(true);
 
     try {
-        await Promise.allSettled([
-            timelineController.refreshSelectedDate(),
-            kanbanController.reload(),
-        ]);
+        const result = await timelineController.refreshSelectedDate({ isAutoRefresh: true });
+        if (result?.authFailed || result?.status === 401 || result?.status === 419) {
+            destroyController(window[CONTROLLER_KEY]);
+            window[CONTROLLER_KEY] = null;
+        }
+    } catch (err) {
+        if (err?.status === 401 || err?.status === 419 || err?.authFailed) {
+            destroyController(window[CONTROLLER_KEY]);
+            window[CONTROLLER_KEY] = null;
+        }
     } finally {
         state.isRefreshing = false;
         toggleRefreshIndicator(false);
@@ -83,10 +127,11 @@ const destroyController = (controller) => {
 
     if (controller.intervalId) {
         window.clearInterval(controller.intervalId);
+        controller.intervalId = null;
     }
 
     toggleRefreshIndicator(false);
-}
+};
 
 const initWorkspaceAutoRefresh = () => {
     const workspaceRoot = getWorkspaceRoot();
