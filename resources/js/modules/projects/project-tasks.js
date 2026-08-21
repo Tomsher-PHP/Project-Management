@@ -1499,15 +1499,22 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
-        // if (detailModalTarget && !detailContentTarget && root.contains(detailModalTarget)) {
-        //     closeTaskDetailModal(detailModalTarget);
-        //     return;
-        // }
+        if (detailModalTarget && !detailContentTarget && root.contains(detailModalTarget)) {
+            closeTaskDetailModal(detailModalTarget);
+            return;
+        }
 
         const taskLogCloseButton = event.target.closest('[data-project-task-log-close]');
+        const taskLogTarget = event.target.closest('[data-project-task-log-modal]');
+        const taskLogContentTarget = event.target.closest('[data-project-task-log-content]');
 
         if (taskLogCloseButton && root.contains(taskLogCloseButton)) {
             closeTaskLogModal(root.querySelector('[data-project-task-log-modal]'));
+            return;
+        }
+
+        if (taskLogTarget && !taskLogContentTarget && root.contains(taskLogTarget)) {
+            closeTaskDetailModal(taskLogTarget);
             return;
         }
 
