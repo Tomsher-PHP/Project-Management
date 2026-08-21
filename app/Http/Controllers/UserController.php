@@ -133,7 +133,9 @@ class UserController extends Controller
             $user->details?->manager_id,
         ])->filter()->unique()->values()->all();
 
-        $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), [], $managerIds);
+        $DownLevelUserIds = User::getReporterHierarchyUserIds($user->id); // Get downlevel users for exclude in manager select
+        $excludeIds = array_merge($DownLevelUserIds, [$user->id]);
+        $managers = app(UserService::class)->getAccessibleUsers(auth()->user(), $excludeIds, $managerIds);
         $kpis = Kpi::active()->orderBy('id', 'asc')->get();
 
         return view('users.edit', compact(
