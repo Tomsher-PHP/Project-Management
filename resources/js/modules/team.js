@@ -21,13 +21,26 @@ $(document).ready(function () {
         badge.classList.add('bg-gray-200', 'text-gray-600');
     };
 
-    const addMemberCard = (userId, userName, userEmail, userAvatar, teamRole, teamRoleText) => {
+    const addMemberCard = (userId, userName, userEmail, userAvatar, teamRole, teamRoleText, isActive = true) => {
         const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.team-member-card');
+        if (card) {
+            card.setAttribute('data-is-active', isActive ? '1' : '0');
+        }
         clone.querySelector('.member-name').textContent = userName;
         clone.querySelector('.member-email').textContent = userEmail || '--';
         clone.querySelector('.member-avatar').src = userAvatar || clone.querySelector('.member-avatar').src;
         clone.querySelector('.member-avatar').alt = userName;
         applyRoleBadge(clone.querySelector('.member-role-badge'), teamRole, teamRoleText);
+
+        const inactiveBadge = clone.querySelector('.member-inactive-badge');
+        if (inactiveBadge) {
+            if (!isActive) {
+                inactiveBadge.classList.remove('hidden');
+            } else {
+                inactiveBadge.classList.add('hidden');
+            }
+        }
 
         clone.querySelector('.input-user-id').name = `members[${userId}][user_id]`;
         clone.querySelector('.input-user-id').value = userId;
@@ -46,12 +59,14 @@ $(document).ready(function () {
         const userEmail = row.find('.member-email').text().trim();
         const userAvatar = row.find('.member-avatar').attr('src') || '';
         const teamRole = String(row.find('.input-team-role').val() || '');
+        const isActiveAttr = row.attr('data-is-active');
+        const isActive = isActiveAttr !== undefined ? isActiveAttr === '1' : true;
 
         if (!userId) {
             return;
         }
 
-        members.push({ user_id: userId, team_role: teamRole, text: userName, email: userEmail, avatar: userAvatar });
+        members.push({ user_id: userId, team_role: teamRole, text: userName, email: userEmail, avatar: userAvatar, is_active: isActive });
     });
 
     const getDefaultRole = () => members.some((member) => member.team_role === 'team_leader')
@@ -104,10 +119,11 @@ $(document).ready(function () {
             const userName = option.text;
             const userEmail = option.email || '';
             const userAvatar = option.profile_image_url || '';
+            const isActive = option.is_active !== undefined ? Boolean(option.is_active) : true;
 
-            members.push({ user_id: userId, team_role: teamRole, text: userName, email: userEmail, avatar: userAvatar });
+            members.push({ user_id: userId, team_role: teamRole, text: userName, email: userEmail, avatar: userAvatar, is_active: isActive });
             teamSelect.removeOption(userId);
-            addMemberCard(userId, userName, userEmail, userAvatar, teamRole, teamRoleText);
+            addMemberCard(userId, userName, userEmail, userAvatar, teamRole, teamRoleText, isActive);
         });
 
         clearSelect(teamSelect);
@@ -134,6 +150,7 @@ $(document).ready(function () {
                 text: name,
                 email: member.email || '',
                 profile_image_url: member.avatar || '',
+                is_active: member.is_active !== undefined ? member.is_active : true,
             });
             teamSelect.refreshOptions(false);
         }

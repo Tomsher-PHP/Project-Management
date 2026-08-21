@@ -64,7 +64,12 @@ class TeamController extends Controller
     public function edit(int $id)
     {
         $team = Team::findOrFail($id);
-        $teamUsers = $team->users()->with('primaryAttachment')->get();
+        $teamUsers = $team->users()
+            ->with('primaryAttachment')
+            ->orderByRaw("CASE WHEN team_user.team_role = 'team_leader' THEN 0 ELSE 1 END")
+            ->orderBy('users.is_active', 'desc')
+            ->orderBy('users.name', 'asc')
+            ->get();
 
         $users = $this->getAvailableTeamUsers($team);
 
@@ -120,6 +125,10 @@ class TeamController extends Controller
         return app(UserService::class)
             ->getAccessibleUsers(auth()->user())
             ->whereNotIn('id', $assignedUserIds)
+            ->sortBy([
+                ['is_active', 'desc'],
+                ['name', 'asc'],
+            ])
             ->values();
     }
 }

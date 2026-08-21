@@ -77,6 +77,7 @@
                         'email' => $user->email ?? '',
                         'profile_image_url' => $user?->profile_image_url ?? asset(config('assets.images.default_avatar')),
                         'team_role' => $member['team_role'] ?? 'member',
+                        'is_active' => (bool) ($user?->is_active ?? true),
                     ];
                 })
                 : $teamUsers->map(function ($teamUser) {
@@ -86,8 +87,14 @@
                         'email' => $teamUser->email,
                         'profile_image_url' => $teamUser->profile_image_url,
                         'team_role' => $teamUser->pivot->team_role,
+                        'is_active' => (bool) ($teamUser->is_active ?? true),
                     ];
                 });
+            $displayMembers = $displayMembers->sortBy([
+                fn ($a, $b) => ($a->team_role === 'team_leader' ? 0 : 1) <=> ($b->team_role === 'team_leader' ? 0 : 1),
+                ['is_active', 'desc'],
+                ['name', 'asc'],
+            ])->values();
             $selectedMemberIds = $displayMembers->pluck('user_id')->filter()->map(fn($id) => (int) $id)->all();
             $availableUsers = $users->whereNotIn('id', $selectedMemberIds);
             $defaultTeamRole = $displayMembers->contains(fn($member) => $member->team_role === 'team_leader') ? 'member' : 'team_leader';
@@ -99,7 +106,7 @@
 
         <div id="members-table" class="grid grid-cols-1 gap-5 rounded-lg border p-5 dark:border-darkblack-400 sm:grid-cols-2 xl:grid-cols-3">
             @forelse ($displayMembers as $memberEntry)
-                <div class="relative rounded-lg border border-bgray-200 bg-gray-50 p-4 team-member-card transition-shadow dark:border-darkblack-400 dark:bg-darkblack-500" data-member-id="{{ $memberEntry->user_id }}">
+                <div class="relative rounded-lg border border-bgray-200 bg-gray-50 p-4 team-member-card transition-shadow dark:border-darkblack-400 dark:bg-darkblack-500" data-member-id="{{ $memberEntry->user_id }}" data-is-active="{{ $memberEntry->is_active ? 1 : 0 }}">
                     <span class="absolute right-4 top-4 inline-block rounded-full px-3 py-1 text-xs
                         @if ($memberEntry->team_role === 'team_leader') bg-purple-100 text-purple-600
                         @else bg-gray-200 text-gray-600 @endif">
@@ -111,9 +118,14 @@
                             <x-user-avatar :name="$memberEntry->name" :image="$memberEntry->profile_image_url" class="h-10 w-10" />
 
                             <div class="min-w-0">
-                                <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white">
-                                    {{ $memberEntry->name }}
-                                </h4>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white">
+                                        {{ $memberEntry->name }}
+                                    </h4>
+                                    @if (!$memberEntry->is_active)
+                                        <span class="member-inactive-badge shrink-0 rounded-full bg-error-50 px-2 py-0.5 text-xs font-semibold text-error-300 dark:bg-darkblack-600">Inactive</span>
+                                    @endif
+                                </div>
                                 <p class="member-email truncate text-sm text-gray-500 dark:text-bgray-50">
                                     {{ $memberEntry->email ?: '--' }}
                                 </p>
@@ -175,11 +187,8 @@
 
                     <select id="team_member" class="tom-select-multiple w-full" multiple>
                         @foreach ($availableUsers as $user)
-                            <option value="{{ $user->id }}" data-data='@json([
-                                'email' => $user->email,
-                                'profile_image_url' => $user->profile_image_url,
-                            ])'>
-                                {{ $user->name }}
+                            <option value="{{ $user->id }}" data-data='@json(['email' => $user->email, 'profile_image_url' => $user->profile_image_url, 'is_active' => (bool) $user->is_active])'>
+                                {{ $user->name }}{{ $user->is_active ? '' : ' (Inactive)' }}
                             </option>
                         @endforeach
                     </select>
@@ -221,7 +230,10 @@
                 <img src="{{ asset(config('assets.images.default_avatar')) }}" class="member-avatar h-10 w-10 rounded-full object-cover" alt="">
 
                 <div class="min-w-0">
-                    <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white"></h4>
+                    <div class="flex items-center gap-2">
+                        <h4 class="member-name truncate text-base font-bold text-bgray-900 dark:text-white"></h4>
+                        <span class="member-inactive-badge hidden shrink-0 rounded-full bg-error-50 px-2 py-0.5 text-xs font-semibold text-error-300 dark:bg-darkblack-600">Inactive</span>
+                    </div>
                     <p class="member-email truncate text-sm text-gray-500 dark:text-bgray-50"></p>
                 </div>
             </div>
