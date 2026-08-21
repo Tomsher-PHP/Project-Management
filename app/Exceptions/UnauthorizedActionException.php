@@ -16,6 +16,6 @@ class UnauthorizedActionException extends Exception
 
     public function render($request)
     {
-        return response()->view('errors.403', [], 403);
+        return response()->view('errors.error-page', [], 403);
     }
 }

@@ -86,7 +86,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], $status);
             }
 
-            return response()->view('errors.403', [
+            return response()->view('errors.error-page', [
                 'code'      => $status,
                 'status'    => $status,
                 'message'   => $message,
