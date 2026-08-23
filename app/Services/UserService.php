@@ -113,52 +113,6 @@ class UserService
         }
     }
 
-    private function assignDefaultShift(User $user): void
-    {
-        if ($user->shiftAssignments()->exists()) {
-            return;
-        }
-
-        $defaultShift = Shift::query()
-            ->active()
-            ->where('is_default', true)
-            ->with('weekends')
-            ->first();
-
-        if (! $defaultShift) {
-            return;
-        }
-
-        $createdDate = $user->created_at
-            ? $user->created_at->copy()->timezone((string) config('constants.timezone', config('app.timezone')))->toDateString()
-            : Carbon::now((string) config('constants.timezone', config('app.timezone')))->toDateString();
-
-        $assignment = UserShiftAssignment::create([
-            'user_id' => $user->id,
-            'shift_id' => $defaultShift->id,
-            'shift_name' => $defaultShift->name,
-            'time_from' => $defaultShift->time_from,
-            'time_to' => $defaultShift->time_to,
-            'break_duration' => $defaultShift->break_duration,
-            'color_code' => $defaultShift->color_code,
-            'date_from' => $createdDate,
-            'date_to' => null,
-        ]);
-
-        if ($defaultShift->weekends->isEmpty()) {
-            return;
-        }
-
-        $assignment->weekends()->createMany(
-            $defaultShift->weekends
-                ->map(fn($weekend) => [
-                    'weekday' => $weekend->weekday,
-                    'week_number' => $weekend->week_number,
-                ])
-                ->all()
-        );
-    }
-
     public function updateUser(User $user, array $data)
     {
         return $this->runInActivityBatch(function () use ($user, $data) {
@@ -187,7 +141,6 @@ class UserService
                 ->only((new UserDetail())->getFillable())
                 ->toArray();
 
-            // dd($detailsData);
             $user->details()->updateOrCreate([], $detailsData);
 
             // kpis
