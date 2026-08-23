@@ -36,13 +36,13 @@ class TaskController extends Controller
     private const KANBAN_STATUS_PAGE_SIZE = 5;
 
     protected string $pageTitle;
-    protected string $subTitle;
+    protected string $filesystemDisk;
 
     public function __construct()
     {
         $this->pageTitle = 'Task Management';
-        $this->subTitle = 'Manage your tasks';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
@@ -458,7 +458,7 @@ class TaskController extends Controller
                         $file,
                         $directory,
                         $note,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         false,
                         'task_note'

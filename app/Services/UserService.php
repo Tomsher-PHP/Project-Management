@@ -3,17 +3,13 @@
 namespace App\Services;
 
 use App\Jobs\SendWelcomeMailJob;
-use App\Mail\WelcomeUserMail;
 use App\Models\Configuration;
 use App\Models\ProjectMember;
 use App\Models\Role;
-use App\Models\Shift;
 use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
-use App\Models\UserShiftAssignment;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Facades\LogBatch;
@@ -22,10 +18,12 @@ class UserService
 {
 
     protected AttachmentService $attachmentService;
+    protected string $avatarDisk;
 
     public function __construct(AttachmentService $attachmentService)
     {
         $this->attachmentService = $attachmentService;
+        $this->avatarDisk = env('AVATAR_DISK', 'public');
     }
 
     public function createUser(array $data)
@@ -62,7 +60,7 @@ class UserService
 
             // 4. Image upload can be handled here if needed
             if (!empty($data['profile_image'])) {
-                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, 'public', 'public', true);
+                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, $this->avatarDisk, 'public', true);
             }
 
             // KPI sync
@@ -170,7 +168,7 @@ class UserService
             $image,
             'user_profile',
             $user,
-            'public',
+            $this->avatarDisk,
             'public',
             true
         );

@@ -23,6 +23,8 @@ use InvalidArgumentException;
 
 class ProjectServices
 {
+    protected string $filesystemDisk;
+
     private const BACKLOG_MILESTONE_NAME = 'Unplanned Work';
     private const BACKLOG_SPRINT_NAME = 'Backlog';
     private const BACKLOG_MILESTONE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
@@ -34,13 +36,14 @@ class ProjectServices
         'estimated_time_seconds' => 'Estimated Time',
     ];
 
-    protected $attachmentService;
-    protected $notificationService;
+    protected AttachmentService $attachmentService;
+    protected NotificationService $notificationService;
 
     public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
         $this->notificationService = $notificationService;
+        $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
     }
 
     public function create(array $data)
@@ -293,7 +296,7 @@ class ProjectServices
                         $file,
                         $directory,
                         $project,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         true,
                         $category
@@ -321,7 +324,7 @@ class ProjectServices
                         $file,
                         $directory,
                         $note,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         false,
                         'project_note'
