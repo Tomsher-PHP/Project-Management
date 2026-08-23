@@ -33,7 +33,7 @@
         <div class="flex min-w-max items-center gap-1 rounded-lg bg-white p-2 dark:bg-darkblack-700">
 
             @php
-                $selectedCategories = request()->input('project_category_id', []);
+                $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
 
                 // Make sure it is always an array
                 if (!is_array($selectedCategories)) {
@@ -44,7 +44,7 @@
             @endphp
 
             {{-- All Projects --}}
-            <a href="{{ route('projects.index', request()->except('project_category_id', 'project_category', 'page')) }}"
+            <a href="{{ route('projects.index', request()->except('project_category_ids', 'project_category_id', 'project_category', 'page')) }}"
             class="rounded-md px-4 py-2 text-sm font-semibold transition 
             {{ empty($selectedCategories)
                     ? 'bg-success-300 text-white'
@@ -70,10 +70,10 @@
                         );
                     }
 
-                    $query = request()->except('project_category_id', 'project_category', 'page');
+                    $query = request()->except('project_category_ids', 'project_category_id', 'project_category', 'page');
 
                     if (!empty($newCategories)) {
-                        $query['project_category_id'] = $newCategories;
+                        $query['project_category_ids'] = $newCategories;
                     }
                 @endphp
 
@@ -89,7 +89,7 @@
 
             {{-- Others --}}
             @php
-                $selectedCategories = request()->input('project_category_id', []);
+                $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
 
                 if (!is_array($selectedCategories)) {
                     $selectedCategories = [$selectedCategories];
@@ -107,10 +107,10 @@
                     );
                 }
 
-                $query = request()->except('project_category_id', 'page');
+                $query = request()->except('project_category_ids', 'project_category_id', 'page');
 
                 if (!empty($newCategories)) {
-                    $query['project_category_id'] = $newCategories;
+                    $query['project_category_ids'] = $newCategories;
                 }
             @endphp
 
@@ -298,7 +298,7 @@
             ],
         );
     
-        $selectedCategories = request()->input('project_category_id', []);
+        $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
 
         if (!is_array($selectedCategories)) {
             $selectedCategories = [$selectedCategories];

@@ -173,15 +173,15 @@
 
             <!-- Project Category -->
             <div class="flex flex-col gap-2">
-                <label for="project_category_id" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                <label for="project_category_ids" class="text-base font-medium text-bgray-600 dark:text-bgray-50">
                     Project Category
                 </label>
 
                 <div class="flex items-center gap-2">
-                    <select name="project_category_id" id="project_category_id" class="tom-select w-full" x-on:change="markDirty()">
+                    <select name="project_category_ids[]" id="project_category_ids" multiple class="tom-select-multiple w-full" x-on:change="markDirty()">
                         <option value="">Select Project Category</option>
                         @foreach ($projectCategories as $category)
-                            <option value="{{ $category->id }}" {{ old('project_category_id', $project->project_category_id ?? '') == $category->id ? 'selected' : '' }}>
+                            <option value="{{ $category->id }}" {{ in_array($category->id, old('project_category_ids', $project->project_category_ids ?? [])) ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>
                         @endforeach
@@ -189,7 +189,7 @@
 
                     @if ($canEdit)
                         @can('project_category.create')
-                            <button type="button" data-target="#project-category-modal" data-select-target="project_category_id" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextProjectCategorySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Project Category" aria-label="Add Project Category">
+                            <button type="button" data-target="#project-category-modal" data-select-target="project_category_ids[]" data-module="Project Category" data-url="{{ route('settings.project-categories.store') }}" data-method="POST" data-sort_order="{{ $nextProjectCategorySortOrder ?? 1 }}" class="modal-open inline-flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-lg border border-success-200 bg-success-50 text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-100" title="Add Project Category" aria-label="Add Project Category">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                 </svg>
@@ -198,7 +198,7 @@
                     @endif
                 </div>
 
-                @error('project_category_id')
+                @error('project_category_ids')
                     <p class="mt-1 text-sm text-error-300">{{ $message }}</p>
                 @enderror
             </div>

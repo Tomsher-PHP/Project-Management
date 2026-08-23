@@ -64,6 +64,15 @@ class ProjectServices
 
             $customer = Customer::find($data['customer_id']);
 
+            $categoryIds = null;
+            if (array_key_exists('project_category_ids', $data)) {
+                $categoryIds = is_array($data['project_category_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                    : null;
+            } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
+                $categoryIds = [(int) $data['project_category_id']];
+            }
+
             $project = Project::create([
                 'project_code' => Project::generateProjectCode(),
                 'name' => $data['name'],
@@ -75,6 +84,7 @@ class ProjectServices
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
                 'sales_person_id' => $customer ? $customer->sales_person_id : null,
+                'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
                 'default_billable' => $data['default_billable'] ?? 1,
             ]);
 
@@ -133,9 +143,18 @@ class ProjectServices
                 'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
-                'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ];
+
+            if (array_key_exists('project_category_ids', $data)) {
+                $categoryIds = is_array($data['project_category_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                    : null;
+                $projectData['project_category_ids'] = ! empty($categoryIds) ? $categoryIds : null;
+            } elseif (array_key_exists('project_category_id', $data)) {
+                $catId = $data['project_category_id'];
+                $projectData['project_category_ids'] = ($catId !== null && $catId !== '') ? [(int) $catId] : null;
+            }
 
             if (array_key_exists('customer_end_date', $data)) {
                 $projectData['customer_end_date'] = $data['customer_end_date'];

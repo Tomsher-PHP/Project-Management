@@ -75,9 +75,10 @@ trait Filterable
         }
 
         // Project category filter
-        if (!empty($filters['project_category_id'])) {
+        $categoryFilter = $filters['project_category_ids'] ?? $filters['project_category_id'] ?? null;
+        if (!empty($categoryFilter)) {
 
-            $categoryIds = $filters['project_category_id'];
+            $categoryIds = $categoryFilter;
 
             // Convert to array if a single value is passed
             if (!is_array($categoryIds)) {
@@ -87,7 +88,7 @@ trait Filterable
             // If only "Others" is selected
             if (in_array('others', $categoryIds, true) && count($categoryIds) === 1) {
 
-                $query->whereNull('project_category_id');
+                $query->whereNull('project_category_ids');
 
             } else {
 
@@ -103,12 +104,17 @@ trait Filterable
 
                     // Selected categories
                     if (!empty($categoryIds)) {
-                        $q->whereIn('project_category_id', $categoryIds);
+                        $q->where(function ($jsonQ) use ($categoryIds) {
+                            foreach ($categoryIds as $catId) {
+                                $jsonQ->orWhereJsonContains('project_category_ids', (int) $catId)
+                                    ->orWhereJsonContains('project_category_ids', (string) $catId);
+                            }
+                        });
                     }
 
                     // Others = NULL category
                     if ($hasOthers) {
-                        $q->orWhereNull('project_category_id');
+                        $q->orWhereNull('project_category_ids');
                     }
                 });
             }
@@ -116,7 +122,7 @@ trait Filterable
 
         // 3. Handle dynamic filters
         $dynamicFilters = collect($filters)
-            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id']);
+            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id', 'project_category_ids']);
 
         foreach ($dynamicFilters as $field => $value) {
             if (!Schema::hasColumn($query->getModel()->getTable(), $field) || $value === null || $value === '') {

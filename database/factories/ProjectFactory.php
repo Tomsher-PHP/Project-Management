@@ -52,7 +52,7 @@ class ProjectFactory extends Factory
                 : null,
             'estimated_time_seconds' => fake()->numberBetween(8, 160) * 3600,
             'domain' => fake()->optional()->domainName(),
-            'project_category_id' => ProjectCategory::query()->inRandomOrder()->value('id'),
+            'project_category_ids' => ($catId = ProjectCategory::query()->inRandomOrder()->value('id')) ? [(int) $catId] : null,
             'default_billable' => fake()->boolean(75),
             'is_active' => true,
             'sales_person_id' => User::query()->inRandomOrder()->value('id'),

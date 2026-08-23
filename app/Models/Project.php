@@ -31,7 +31,7 @@ class Project extends Model
         'customer_estimate_seconds',
         'default_task_estimate_seconds',
         'domain',
-        'project_category_id',
+        'project_category_ids',
         'default_billable',
         'is_active',
         'sales_person_id',
@@ -46,6 +46,7 @@ class Project extends Model
         'estimated_time_seconds' => 'integer',
         'customer_estimate_seconds' => 'integer',
         'default_task_estimate_seconds' => 'integer',
+        'project_category_ids' => 'array',
         'default_billable' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -350,6 +351,20 @@ class Project extends Model
             ->whereNull('project_members.removed_at');
     }
 
+    public function getProjectCategoriesAttribute()
+    {
+        if (empty($this->project_category_ids)) {
+            return collect();
+        }
+
+        return ProjectCategory::whereIn('id', $this->project_category_ids)->get();
+    }
+
+    public function getCategoriesAttribute()
+    {
+        return $this->project_categories;
+    }
+
     /*----------------Activity Log Customization----------------*/
 
     // Never show these fields in activity log details.
@@ -367,7 +382,7 @@ class Project extends Model
             'project_flow' => 'Project Flow',
             'status_id' => 'Status',
             'project_stage_id' => 'Project Stage',
-            'project_category_id' => 'Project Category',
+            'project_category_ids' => 'Project Categories',
             'sales_person_id' => 'Sales Person',
             'default_task_estimate_seconds' => 'Default Task Estimate',
             'estimated_time_seconds' => 'Estimated Time',
@@ -383,7 +398,9 @@ class Project extends Model
         return match ($attribute) {
             'status_id' => ProjectStatus::find($value)?->name ?? $value,
             'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
-            'project_category_id' => ProjectCategory::find($value)?->name ?? $value,
+            'project_category_ids' => is_array($value) && ! empty($value)
+                ? ProjectCategory::whereIn('id', $value)->pluck('name')->implode(', ')
+                : 'None',
             'sales_person_id' => User::find($value)?->name ?? $value,
             'customer_id' => Customer::find($value)?->name ?? $value,
             'default_billable' => $value ? 'Yes' : 'No',
