@@ -28,6 +28,7 @@ class Project extends Model
         'end_date',
         'customer_end_date',
         'estimated_time_seconds',
+        'customer_estimate_seconds',
         'default_task_estimate_seconds',
         'domain',
         'project_category_id',
@@ -43,6 +44,7 @@ class Project extends Model
         'end_date' => 'date',
         'customer_end_date' => 'date',
         'estimated_time_seconds' => 'integer',
+        'customer_estimate_seconds' => 'integer',
         'default_task_estimate_seconds' => 'integer',
         'default_billable' => 'boolean',
         'added_by' => 'integer',
@@ -203,6 +205,16 @@ class Project extends Model
         $this->attributes['estimated_time_seconds'] = $value ? (int) ($value * 3600) : null;
     }
 
+    public function getCustomerEstimateHoursAttribute()
+    {
+        return $this->customer_estimate_seconds ? $this->customer_estimate_seconds / 3600 : null;
+    }
+
+    public function setCustomerEstimateHoursAttribute($value)
+    {
+        $this->attributes['customer_estimate_seconds'] = $value ? (int) ($value * 3600) : null;
+    }
+
     public function getIsAgileAttribute()
     {
         return $this->project_flow === 'agile';
@@ -359,6 +371,7 @@ class Project extends Model
             'sales_person_id' => 'Sales Person',
             'default_task_estimate_seconds' => 'Default Task Estimate',
             'estimated_time_seconds' => 'Estimated Time',
+            'customer_estimate_seconds' => 'Customer Estimate Time',
             'default_billable' => 'Default Billable',
             'is_active' => 'Active',
         ];
@@ -376,6 +389,7 @@ class Project extends Model
             'default_billable' => $value ? 'Yes' : 'No',
             'is_active' => $value ? 'Active' : 'Inactive',
             'estimated_time_seconds' => $this->secondsToReadable($value),
+            'customer_estimate_seconds' => $this->secondsToReadable($value),
             'default_task_estimate_seconds' => $this->secondsToReadable($value),
             default => $value,
         };

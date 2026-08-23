@@ -34,6 +34,7 @@ class ProjectServices
         'end_date' => 'End Date',
         'customer_end_date' => 'Customer End Date',
         'estimated_time_seconds' => 'Estimated Time',
+        'customer_estimate_seconds' => 'Customer Estimate Time',
     ];
 
     protected AttachmentService $attachmentService;
@@ -104,6 +105,13 @@ class ProjectServices
                 unset($data['estimated_time_minutes']);
             }
 
+            if (array_key_exists('customer_estimate_minutes', $data)) {
+                $data['customer_estimate_seconds'] = $data['customer_estimate_minutes'] !== null
+                    ? (int) $data['customer_estimate_minutes'] * 60
+                    : null;
+                unset($data['customer_estimate_minutes']);
+            }
+
             if (array_key_exists('default_task_estimate_minutes', $data)) {
                 $data['default_task_estimate_seconds'] = $data['default_task_estimate_minutes'] !== null
                     ? (int) $data['default_task_estimate_minutes'] * 60
@@ -131,6 +139,10 @@ class ProjectServices
 
             if (array_key_exists('customer_end_date', $data)) {
                 $projectData['customer_end_date'] = $data['customer_end_date'];
+            }
+
+            if (array_key_exists('customer_estimate_seconds', $data)) {
+                $projectData['customer_estimate_seconds'] = $data['customer_estimate_seconds'];
             }
 
             $originalTimelineValues = $project->only(array_keys(self::PROJECT_TIMELINE_FIELDS));
@@ -176,7 +188,7 @@ class ProjectServices
 
     private function formatProjectTimelineValue(string $field, mixed $value): string
     {
-        if ($field === 'estimated_time_seconds') {
+        if (in_array($field, ['estimated_time_seconds', 'customer_estimate_seconds'], true)) {
             return $value === null ? '--' : formatSecondsToHoursMinutes((int) $value);
         }
 
