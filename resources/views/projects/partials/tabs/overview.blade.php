@@ -1,8 +1,10 @@
 @php
     $workedSeconds = (int) $progressbar->get('worked_seconds', 0);
     $estimatedSeconds = (int) $progressbar->get('estimated_seconds', 0);
+    $customerEstimateSeconds = (int) $progressbar->get('customer_estimate_seconds', 0);
     $workedPercent = (float) $progressbar->get('worked_percent', 0);
     $estimatedPercent = (float) $progressbar->get('estimated_percent', 0);
+    $customerEstimatePercent = (float) $progressbar->get('customer_estimate_percent', 0);
     $differencePercentage = $progressbar->get('difference_percentage');
     $hasEstimate = (bool) $progressbar->get('has_estimate', false);
     $isExceeded = (bool) $progressbar->get('is_exceeded', false);
@@ -10,10 +12,10 @@
     $statusLabel = (string) $progressbar->get('status_label', 'No estimate added');
     $statusTextColor = (string) $progressbar->get('status_text_color', 'text-bgray-700 dark:text-bgray-300');
     $workedBarColor = (string) $progressbar->get('worked_bar_color', 'bg-green-500');
-    $estimatedBarColor = 'bg-blue-500';
+    $estimatedBarColor = 'bg-blue-400';
+    $customerEstimateBarColor = 'bg-purple-400';
     $comparisonClasses = $isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
     $workedTrackColor = $isExceeded ? 'bg-red-50 dark:bg-red-900/20' : 'bg-success-50 dark:bg-success-900/20';
-    $estimatedTrackColor = 'bg-warning-100 bg-opacity-30 dark:bg-darkblack-500';
     $chartItems = $taskStatusOverview
         ->map(
             fn(array $status) => [
@@ -65,13 +67,23 @@
                         </div>
                     </div>
 
-                    <div class="relative h-6 overflow-hidden {{ $estimatedTrackColor }}">
+                    <div class="relative h-6 overflow-hidden">
                         <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $estimatedBarColor }}" style="width: {{ $estimatedPercent }}%;"></div>
                         <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
                             <span>{{ __('label.project.estimated') }}</span>
                             <span>{{ $formatDuration($estimatedSeconds) }}</span>
                         </div>
                     </div>
+
+                    @if ($customerEstimateSeconds > 0 && auth()->user()?->can('project.customer_end_date'))
+                        <div class="relative h-6 overflow-hidden">
+                            <div class="absolute inset-y-0 left-0 transition-all duration-500 {{ $customerEstimateBarColor }}" style="width: {{ $customerEstimatePercent }}%;"></div>
+                            <div class="relative z-10 flex h-full items-center justify-between px-4 text-xs font-semibold text-bgray-900 dark:text-white">
+                                <span>{{ __('label.project.customer_estimated') }}</span>
+                                <span>{{ $formatDuration($customerEstimateSeconds) }}</span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </section>
@@ -201,11 +213,7 @@
                                 $isWithinEstimate = $hasEstimatedTime && $workedSeconds <= $estimatedSeconds;
                                 $comparisonPercentage = $hasEstimatedTime ? (int) round((abs($estimatedSeconds - $workedSeconds) / $estimatedSeconds) * 100) : 0;
 
-                                $comparisonClasses = !$hasEstimatedTime
-                                    ? 'text-bgray-900 dark:text-white'
-                                    : ($isWithinEstimate
-                                        ? 'text-success-400 dark:text-success-300'
-                                        : 'text-red-500 dark:text-red-400');
+                                $comparisonClasses = !$hasEstimatedTime ? 'text-bgray-900 dark:text-white' : ($isWithinEstimate ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400');
                             @endphp
                             <div class="flex items-center justify-between gap-4 rounded-xl border border-bgray-200 p-4 dark:border-darkblack-400">
                                 <a href="{{ route('reports.time_tracking', ['project_id' => [$project->id], 'user_id' => [$assignee['id']], 'request_status' => 'approved']) }}" target="_blank" class="flex min-w-0 items-center gap-3 group">
@@ -237,14 +245,8 @@
                                         <p class="inline-flex items-center justify-end gap-1 text-xs font-semibold {{ $comparisonClasses }}">
 
                                             @if ($hasEstimatedTime)
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                    class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                    aria-hidden="true">
-                                                    <path fill-rule="evenodd"
-                                                        d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z"
-                                                        clip-rule="evenodd" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 {{ $isWithinEstimate ? 'comparison-arrow-up' : '' }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M10 3a.75.75 0 01.75.75v10.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3.75A.75.75 0 0110 3z" clip-rule="evenodd" />
                                                 </svg>
                                             @endif
 
@@ -291,18 +293,9 @@
                             No task assignments recorded yet.
                         </div>
                     @else
-                        <div
-                            class="relative h-[320px] w-full"
-                            data-assignee-bar-chart-wrapper
-                        >
-                            <div
-                                class="h-full w-full"
-                                data-assignee-chart-scroll
-                            >
-                                <canvas
-                                    data-assignee-bar-chart
-                                    aria-label="User wise {{ __('label.project.estimated') }} and {{ __('label.project.spent') }} time"
-                                ></canvas>
+                        <div class="relative h-[320px] w-full" data-assignee-bar-chart-wrapper>
+                            <div class="h-full w-full" data-assignee-chart-scroll>
+                                <canvas data-assignee-bar-chart aria-label="User wise {{ __('label.project.estimated') }} and {{ __('label.project.spent') }} time"></canvas>
                             </div>
                         </div>
                     @endif
