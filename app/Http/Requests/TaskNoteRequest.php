@@ -29,7 +29,7 @@ class TaskNoteRequest extends FormRequest
         return [
             'description' => ['nullable', 'string', 'required_without:attachments'],
             'attachments' => ['nullable', 'array', 'required_without:description'],
-            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,jpg,jpeg,png', 'max:5120'],
+            'attachments.*' => ['file', 'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png', 'max:15360'],
         ];
     }
 
