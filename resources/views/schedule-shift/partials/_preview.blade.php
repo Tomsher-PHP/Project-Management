@@ -19,18 +19,22 @@
 
                 <div class="space-y-2">
                     @foreach ($userAssignments as $assignment)
+                        @php
+                            $timeFrom = $assignment ? \Carbon\Carbon::parse($assignment->time_from)->format($globalTimeFormat) : null;
+                            $timeTo = $assignment ? \Carbon\Carbon::parse($assignment->time_to)->format($globalTimeFormat) : null;
+                        @endphp
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between bg-white dark:bg-darkblack-500 border border-gray-200 dark:border-darkblack-400 rounded-lg p-3 shadow-sm hover:shadow-md transition">
                             <div class="flex items-center gap-2 mb-1 md:mb-0 rounded-md" style="background-color: {{ $assignment->color_code }}; color: #000">
                                 <span class="block rounded-sm px-4 py-1.5 text-sm font-semibold leading-[22px]">
                                     {{ $assignment->shift_name ?? 'None' }}
-                                    ({{ $assignment->time_from_formatted ?? '' }} -
-                                    {{ $assignment->time_to_formatted ?? '' }})
+                                    ({{ $timeFrom }} -
+                                    {{ $timeTo ?? '' }})
                                 </span>
                             </div>
 
                             <div class="text-sm text-gray-600 dark:text-bgray-50">
-                                {{ \Carbon\Carbon::parse($assignment->date_from)->format('d M Y') }} -
-                                {{ $assignment->date_to ? \Carbon\Carbon::parse($assignment->date_to)->format('d M Y') : '...' }}
+                                {{ \Carbon\Carbon::parse($assignment->date_from)->format($globalDateFormat) }} -
+                                {{ $assignment->date_to ? \Carbon\Carbon::parse($assignment->date_to)->format($globalDateFormat) : '...' }}
                             </div>
                         </div>
                     @endforeach

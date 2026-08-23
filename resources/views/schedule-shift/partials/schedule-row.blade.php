@@ -24,8 +24,8 @@
             $bg = $shift->color_code ?? '#e5e7eb';
             $text = '#000';
 
-            $timeFrom = $shift ? \Carbon\Carbon::parse($shift->time_from)->format('h:i A') : null;
-            $timeTo = $shift ? \Carbon\Carbon::parse($shift->time_to)->format('h:i A') : null;
+            $timeFrom = $shift ? \Carbon\Carbon::parse($shift->time_from)->format($globalTimeFormat) : null;
+            $timeTo = $shift ? \Carbon\Carbon::parse($shift->time_to)->format($globalTimeFormat) : null;
         @endphp
 
         @include('schedule-shift.partials.schedule-cell')
