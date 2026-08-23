@@ -41,7 +41,6 @@ class ProjectController extends Controller
     use BuildsProjectActivityQueries, ProjectHeaderTrait;
 
     protected string $pageTitle;
-    protected string $subTitle;
     protected ProjectPaymentServices $projectPaymentService;
     protected ProjectServices $projectServices;
     protected ProjectAnalyticsService $analyticsService;
@@ -53,8 +52,7 @@ class ProjectController extends Controller
         $this->analyticsService = $analyticsService;
 
         $this->pageTitle = 'Project Management';
-        $this->subTitle = 'Manage your projects';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, ProjectServices $service)
@@ -71,7 +69,7 @@ class ProjectController extends Controller
             ->orderBy('projects.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
-            
+
 
         $projects->getCollection()->transform(function ($project) use ($service) {
             $timelines = $service->getTimelines($project);
