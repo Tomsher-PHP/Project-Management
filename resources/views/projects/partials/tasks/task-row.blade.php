@@ -141,7 +141,7 @@
                         </svg>
                     </button>
 
-                    <div class="hidden min-w-[148px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-row-menu>
+                    <div class="hidden min-w-[148px] overflow-hidden rounded-xl border border-bgray-200 bg-white py-1 shadow-lg dark:border-darkblack-400 dark:bg-darkblack-500 z-1" data-project-task-row-menu>
                         @if ($canAddSubTask)
                             <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-modal-open data-project-task-module-id="{{ $shouldPrefillPlacement ? $task->project_milestone_id ?? '' : '' }}" data-project-task-sprint-id="{{ $shouldPrefillPlacement ? $task->project_sprint_id ?? '' : '' }}" data-project-task-parent-task-id="{{ $task->id }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -160,6 +160,19 @@
                                 <span>Edit</span>
                             </button>
                         @endif
+
+                        <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white"
+                            data-project-task-log-open
+                            data-project-task-log-url="{{ route('projects.tasks.logs', [$project, $task]) }}"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 3a.75.75 0 00-1.5 0v5c0 .199.079.389.22.53l2.5 2.5a.75.75 0 001.06-1.06l-2.28-2.28V5z" clip-rule="evenodd" />
+                            </svg>
+
+                            <span>View Logs</span>
+                        </button>
 
                         @if ($canMoveTask)
                             <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-move-open data-project-task-move-url="{{ route('projects.tasks.move', [$project, $task]) }}" data-project-task-name="{{ $task->name }}" data-project-task-current-sprint="{{ $task->projectSprint?->name ?? 'Unscheduled' }}" data-project-task-current-module="{{ $task->projectMilestone?->name ?? 'None' }}">
