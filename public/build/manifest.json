@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D472qbMU.css",
+    "file": "assets/app-AC9obqJx.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -255,7 +255,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-ChLQCWQw.js",
+    "file": "assets/project-detail-CrZfseYb.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -288,7 +288,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-BAVGJMYz.js",
+    "file": "assets/project-tasks-C_DJcMvd.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -313,7 +313,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-BJhlRDV5.js",
+    "file": "assets/task-detail-C058HI6n.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -428,7 +428,7 @@
     ]
   },
   "resources/js/modules/team.js": {
-    "file": "assets/team-BtdavKLX.js",
+    "file": "assets/team-DuRfBcKQ.js",
     "name": "team",
     "src": "resources/js/modules/team.js",
     "isEntry": true
