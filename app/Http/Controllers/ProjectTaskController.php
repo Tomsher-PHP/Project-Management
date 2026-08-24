@@ -222,8 +222,8 @@ class ProjectTaskController extends Controller
                 'assignmentLog.user.primaryAttachment',
             ])
             ->withExists([
-                'changeRequests as has_pending_change_request' => fn ($query) =>
-                    $query->where('status', 'pending'),
+                'changeRequests as has_pending_change_request' => fn($query) =>
+                $query->where('status', 'pending'),
             ])
             ->reorder('started_at', 'desc')
             ->orderByDesc('id')
@@ -324,7 +324,7 @@ class ProjectTaskController extends Controller
             : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
         $taskTypeOptions = TaskType::query()
             ->active()
             ->orderByDesc('is_default')
@@ -842,13 +842,13 @@ class ProjectTaskController extends Controller
         // Base assignable users on project members with access to the task, ordered by name
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
 
         // Include current assignee if missing
         if ($currentAssigneeId && !$assignableUsers->contains('id', $currentAssigneeId)) {
             $currentAssignee = User::query()
                 ->where('id', $currentAssigneeId)
-                ->first(['id', 'name']);
+                ->first(['id', 'name', 'email']);
 
             if ($currentAssignee) {
                 $assignableUsers->push($currentAssignee);
@@ -1008,6 +1008,4 @@ class ProjectTaskController extends Controller
 
         return (string) (array_key_first($priorities) ?? 'medium');
     }
-
-
 }

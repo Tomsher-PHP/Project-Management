@@ -820,6 +820,7 @@ class TaskController extends Controller
                         ->map(fn(User $user) => [
                             'value' => (string) $user->id,
                             'text' => $user->name,
+                            'subtype' => $user->email ?? '',
                         ]),
                 ]];
             }),

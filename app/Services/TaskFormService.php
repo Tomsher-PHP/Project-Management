@@ -31,7 +31,7 @@ class TaskFormService
             ->with([
                 'projectMilestones:id,project_id,name,is_backlog,is_system',
                 'projectSprints:id,project_id,project_milestone_id,name,is_backlog,is_system',
-                'activeMembers:id,name',
+                'activeMembers:id,name,email',
             ])
             ->orderBy('name')
             ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']);

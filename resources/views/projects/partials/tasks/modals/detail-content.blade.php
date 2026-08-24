@@ -161,7 +161,7 @@
                     <select name="current_assignee_id" class="tom-select w-full" data-sort="0" @disabled(!$canEditTask)>
                         <option value="">Select assignee</option>
                         @foreach ($assignableUsers as $assignableUser)
-                            <option value="{{ $assignableUser->id }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
+                            <option value="{{ $assignableUser->id }}" data-subtype="{{ $assignableUser->email }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
                                 {{ $assignableUser->name }}
                             </option>
                         @endforeach

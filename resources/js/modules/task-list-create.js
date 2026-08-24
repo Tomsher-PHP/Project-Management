@@ -232,6 +232,9 @@ const setSelectOptions = (field, options = [], { placeholder = 'Select option', 
         const optionElement = document.createElement('option');
         optionElement.value = option.value;
         optionElement.textContent = option.text;
+        if (option.subtype) {
+            optionElement.dataset.subtype = option.subtype;
+        }
         field.appendChild(optionElement);
     });
 
