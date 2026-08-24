@@ -12,7 +12,7 @@
             <select name="users[]" multiple id="user-select" class="tom-select-multiple w-full">
                 <option value="">Select Users</option>
                 @foreach ($users as $user)
-                    <option value="{{ $user->id }}" {{ in_array($user->id, old('users', [])) ? 'selected' : '' }}>
+                    <option value="{{ $user->id }}" data-subtype="{{ $user->email }}" {{ in_array($user->id, old('users', [])) ? 'selected' : '' }}>
                         {{ $user->name }}
                     </option>
                 @endforeach
