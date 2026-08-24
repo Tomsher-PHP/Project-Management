@@ -91,6 +91,9 @@ const setSelectOptions = (field, options, placeholder, value = '') => {
         const element = document.createElement('option');
         element.value = option.value;
         element.textContent = option.text;
+        if (option.subtype) {
+            element.dataset.subtype = option.subtype;
+        }
         field.appendChild(element);
     });
     field.value = normalizedValue;

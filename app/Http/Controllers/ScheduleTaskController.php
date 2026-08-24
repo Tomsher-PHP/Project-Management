@@ -37,7 +37,7 @@ class ScheduleTaskController extends Controller
         $filterProjects = $projectIds->isEmpty() ? collect() : Project::whereIn('id', $projectIds)->orderBy('name')->get(['id', 'name']);
 
         $assigneeIds = (clone $baseQuery)->whereNotNull('current_assignee_id')->distinct()->pluck('current_assignee_id')->filter();
-        $filterAssignees = $assigneeIds->isEmpty() ? collect() : User::whereIn('id', $assigneeIds)->orderBy('name')->get(['id', 'name']);
+        $filterAssignees = $assigneeIds->isEmpty() ? collect() : User::whereIn('id', $assigneeIds)->orderBy('name')->get(['id', 'name', 'email']);
 
         $taskSchedules = (clone $baseQuery)
             ->filter($request->all())
@@ -80,31 +80,30 @@ class ScheduleTaskController extends Controller
 
     public function edit(Request $request, TaskSchedule $taskSchedule, TaskFormService $taskFormService): JsonResponse
     {
+        $user = $request->user();
+
         abort_unless(
-            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
+            $user->is_super_admin || $user->can('task.create') || (int) $taskSchedule->added_by_id === (int) $user->id,
             Response::HTTP_FORBIDDEN
         );
 
-        $formData = $taskFormService->getCreateData($request->user());
+        $formData = $taskFormService->getCreateData($user);
         $projects = $formData['taskCreateProjects'] ?? collect();
 
+        $html = view('schedule-tasks.partials.create-modal', [
+            'taskSchedule' => $taskSchedule,
+            'scheduleDependencies' => $this->buildDependencies($projects),
+            ...$formData,
+        ])->render();
+
         return response()->json([
-            'status' => true,
-            'html' => view('schedule-tasks.partials.create-modal', [
-                'taskSchedule' => $taskSchedule,
-                'scheduleDependencies' => $this->buildDependencies($projects),
-                ...$formData,
-            ])->render(),
+            'html' => $html,
+            'dependencies' => $this->buildDependencies($projects),
         ]);
     }
 
     public function update(ScheduleTaskRequest $request, TaskSchedule $taskSchedule, ScheduleTaskService $service): JsonResponse
     {
-        abort_unless(
-            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
-            Response::HTTP_FORBIDDEN
-        );
-
         $taskSchedule = $service->update($taskSchedule, $request->validated());
 
         return response()->json([
@@ -133,10 +132,12 @@ class ScheduleTaskController extends Controller
         ]);
     }
 
-    public function destroy(TaskSchedule $taskSchedule)
+    public function destroy(Request $request, TaskSchedule $taskSchedule)
     {
+        $user = $request->user();
+
         abort_unless(
-            TaskSchedule::accessibleBy(auth()->user())->whereKey($taskSchedule->id)->exists(),
+            $user->is_super_admin || $user->can('task.delete') || (int) $taskSchedule->added_by_id === (int) $user->id,
             Response::HTTP_FORBIDDEN
         );
 
@@ -169,6 +170,7 @@ class ScheduleTaskController extends Controller
                     ->map(fn(User $user) => [
                         'value' => (string) $user->id,
                         'text' => $user->name,
+                        'subtype' => $user->email ?? '',
                     ])->values(),
             ]]),
         ];
