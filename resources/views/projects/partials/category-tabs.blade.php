@@ -30,7 +30,7 @@
         ->toArray();
 @endphp
 
-<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-full rounded-lg bg-success-300 p-3 shadow-sm dark:bg-darkblack-600 mb-6">
+<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-[70%] rounded-lg p-3 shadow-sm dark:bg-darkblack-600 mb-6">
     <div class="flex w-full min-w-0 items-center gap-2">
         <!-- 1. Pinned All Projects Chip (Fixed Width / Left) -->
         <button type="button" @click="selectAll()" :data-active="isAllSelected()" :class="isAllSelected() ?
@@ -42,7 +42,7 @@
         <div class="h-5 w-[1px] bg-bgray-300 dark:bg-darkblack-500 shrink-0 mx-1"></div>
 
         <!-- 2. Flexible Category Chips Area (Scrollable Middle) -->
-        <div class="relative min-w-0 flex-1 flex items-center max-w-[40%]">
+        <div class="relative min-w-0 flex-1 flex items-center max-w-[100%]">
             <!-- Left Scroll Button -->
             <button type="button" x-show="canScrollLeft" x-cloak @click="scrollLeft()" class="absolute left-0 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-bgray-300 bg-white/90 text-bgray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white dark:border-darkblack-400 dark:bg-darkblack-700/90 dark:text-bgray-50 dark:hover:bg-darkblack-600 focus:outline-none" title="Scroll Left" aria-label="Scroll Left" style="display: none;">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
