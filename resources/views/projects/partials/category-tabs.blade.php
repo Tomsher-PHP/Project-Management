@@ -30,8 +30,8 @@
         ->toArray();
 @endphp
 
-<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-full max-w-full min-w-0 overflow-hidden rounded-lg bg-white p-3 shadow-sm dark:bg-darkblack-600 mb-6">
-    <div class="flex w-full min-w-0 items-center gap-2 overflow-hidden">
+<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-full max-w-full min-w-0 rounded-lg bg-white p-3 shadow-sm dark:bg-darkblack-600 mb-6">
+    <div class="flex w-full min-w-0 items-center gap-2">
         <!-- 1. Pinned All Projects Chip (Fixed Width / Left) -->
         <button type="button" @click="selectAll()" :data-active="isAllSelected()" :class="isAllSelected() ?
             'bg-success-300 text-white font-semibold shadow-sm' :
