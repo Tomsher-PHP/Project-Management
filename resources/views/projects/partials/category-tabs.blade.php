@@ -30,8 +30,8 @@
         ->toArray();
 @endphp
 
-<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-[70%] rounded-lg p-3 shadow-sm dark:bg-darkblack-600 mb-6">
-    <div class="flex w-full min-w-0 items-center gap-2">
+<div x-data="projectCategoryTabs({ categories: {{ json_encode($categoriesList) }}, selected: {{ json_encode($selectedCategoryIds) }} })" class="w-full max-w-full min-w-0 overflow-hidden rounded-lg bg-white p-3 shadow-sm dark:bg-darkblack-600 mb-6">
+    <div class="flex w-full min-w-0 items-center gap-2 overflow-hidden">
         <!-- 1. Pinned All Projects Chip (Fixed Width / Left) -->
         <button type="button" @click="selectAll()" :data-active="isAllSelected()" :class="isAllSelected() ?
             'bg-success-300 text-white font-semibold shadow-sm' :
@@ -42,20 +42,20 @@
         <div class="h-5 w-[1px] bg-bgray-300 dark:bg-darkblack-500 shrink-0 mx-1"></div>
 
         <!-- 2. Flexible Category Chips Area (Scrollable Middle) -->
-        <div class="relative min-w-0 flex-1 flex items-center max-w-[100%]">
+        <div class="relative w-0 flex-1 min-w-0 overflow-hidden">
             <!-- Left Scroll Button -->
-            <button type="button" x-show="canScrollLeft" x-cloak @click="scrollLeft()" class="absolute left-0 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-bgray-300 bg-white/90 text-bgray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white dark:border-darkblack-400 dark:bg-darkblack-700/90 dark:text-bgray-50 dark:hover:bg-darkblack-600 focus:outline-none" title="Scroll Left" aria-label="Scroll Left" style="display: none;">
+            <button type="button" x-show="canScrollLeft" x-cloak @click="scrollLeft()" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-bgray-300 bg-white/90 text-bgray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white dark:border-darkblack-400 dark:bg-darkblack-700/90 dark:text-bgray-50 dark:hover:bg-darkblack-600 focus:outline-none" title="Scroll Left" aria-label="Scroll Left" style="display: none;">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
 
             <!-- Scroll Container -->
-            <div x-ref="scrollContainer" @scroll.debounce.50ms="checkScroll()" @resize.window.debounce.100ms="checkScroll()" class="no-scrollbar flex w-full min-w-0 items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <div x-ref="scrollContainer" @scroll.debounce.50ms="checkScroll()" @resize.window.debounce.100ms="checkScroll()" class="no-scrollbar block w-full overflow-x-auto whitespace-nowrap scroll-smooth py-1 px-1" style="scrollbar-width: none; -ms-overflow-style: none;">
                 <template x-for="cat in categories" :key="cat.id">
                     <button type="button" @click="toggleCategory(cat.id)" :data-active="isSelected(cat.id)" :title="cat.label" :class="isSelected(cat.id) ?
                         'bg-success-300 text-white font-semibold shadow-sm' :
-                        'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="shrink-0 rounded-lg px-4 py-2 text-sm transition-all duration-200 focus:outline-none inline-flex items-center gap-1.5 max-w-[180px]">
+                        'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-4 py-2 text-sm transition-all duration-200 focus:outline-none max-w-[180px] align-middle mr-1.5">
                         <span class="truncate" x-text="cat.label"></span>
                         <span x-show="cat.count !== null && cat.count !== undefined" class="text-xs opacity-80" x-text="'(' + cat.count + ')'"></span>
                     </button>
@@ -64,13 +64,13 @@
                 <!-- Others Chip -->
                 <button type="button" @click="toggleOthers()" :data-active="isSelected('others')" :class="isSelected('others') ?
                     'bg-success-300 text-white font-semibold shadow-sm' :
-                    'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="shrink-0 rounded-lg px-4 py-2 text-sm transition-all duration-200 focus:outline-none inline-flex items-center gap-1.5" title="Others">
+                    'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-4 py-2 text-sm transition-all duration-200 focus:outline-none align-middle" title="Others">
                     <span>Others</span>
                 </button>
             </div>
 
             <!-- Right Scroll Button -->
-            <button type="button" x-show="canScrollRight" x-cloak @click="scrollRight()" class="absolute right-0 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-bgray-300 bg-white/90 text-bgray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white dark:border-darkblack-400 dark:bg-darkblack-700/90 dark:text-bgray-50 dark:hover:bg-darkblack-600 focus:outline-none" title="Scroll Right" aria-label="Scroll Right" style="display: none;">
+            <button type="button" x-show="canScrollRight" x-cloak @click="scrollRight()" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-bgray-300 bg-white/90 text-bgray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white dark:border-darkblack-400 dark:bg-darkblack-700/90 dark:text-bgray-50 dark:hover:bg-darkblack-600 focus:outline-none" title="Scroll Right" aria-label="Scroll Right" style="display: none;">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>

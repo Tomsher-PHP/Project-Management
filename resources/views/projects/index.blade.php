@@ -29,7 +29,7 @@
     </div>
 
     <div class="2xl:flex 2xl:space-x-[48px]">
-        <section class="mb-6 2xl:mb-0 2xl:flex-1">
+        <section class="mb-6 2xl:mb-0 2xl:flex-1 min-w-0">
             <!-- Project Category Tabs -->
             @include('projects.partials.category-tabs', [
                 'projectCategories' => $projectCategories,
