@@ -191,29 +191,31 @@
 
     <!-- Filter drawer -->
     @php
-        $typesFilter = collect($types)->map(
-            fn($label, $key) => (object) [
-                'id' => $key,
-                'name' => $label,
-            ],
-        );
         $prioritiesFilter = collect($priorities)->map(
             fn($value, $key) => (object) [
                 'id' => $key,
                 'name' => $value['label'],
             ],
         );
-
-        $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
-
-        if (!is_array($selectedCategories)) {
-            $selectedCategories = [$selectedCategories];
-        }
+        $categoriesFilter = collect($projectCategories)
+            ->map(
+                fn($cat) => (object) [
+                    'id' => (string) $cat->id,
+                    'name' => $cat->name,
+                ],
+            )
+            ->push(
+                (object) [
+                    'id' => 'others',
+                    'name' => 'Others',
+                ],
+            );
     @endphp
     <x-filters.drawer>
         <x-filters.input-search name="name" label="Name" />
         <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
-        <x-filters.multi-select name="project_flow" label="Project Flow" :options="$typesFilter" />
+        <x-filters.select name="project_flow" label="Project Flow" :options="$types" />
+        <x-filters.multi-select name="project_category_ids" label="Project Category" :options="$categoriesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
     </x-filters.drawer>
