@@ -70,7 +70,7 @@
                 <select name="sales_person_id" id="sales_person_id" class="tom-select w-full border-gray-300 dark:border-darkblack-400" data-sort="0">
                     <option value="">Select Sales Person</option>
                     @foreach ($salesPeople as $salesPerson)
-                        <option value="{{ $salesPerson->id }}" {{ old('sales_person_id', $customer->sales_person_id ?? '') == $salesPerson->id ? 'selected' : '' }}>
+                        <option value="{{ $salesPerson->id }}" data-subtype="{{ $salesPerson->email }}" {{ old('sales_person_id', $customer->sales_person_id ?? '') == $salesPerson->id ? 'selected' : '' }}>
                             {{ $salesPerson->name }}
                         </option>
                     @endforeach

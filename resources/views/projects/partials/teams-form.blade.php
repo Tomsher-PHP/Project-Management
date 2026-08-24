@@ -30,7 +30,7 @@
             <select name="user_id[]" id="user_id" class="tom-select-multiple w-full">
                 <option value="">Select User</option>
                 @foreach ($users as $user)
-                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <option value="{{ $user->id }}" data-subtype="{{ $user->email }}">{{ $user->name }}</option>
                 @endforeach
             </select>
         </div>

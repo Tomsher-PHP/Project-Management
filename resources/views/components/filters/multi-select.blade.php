@@ -21,7 +21,7 @@
     <select name="{{ $name }}[]" class="tom-select-multiple w-full" multiple data-sort="0" id="{{ $id }}" {{ $attributes }}>
         <option value="">Select {{ $label }}</option>
         @foreach ($options as $value)
-            <option value="{{ $value->id }}" {{ in_array((string) $value->id, $selectedValues, true) ? 'selected' : '' }}>
+            <option value="{{ $value->id }}" {{ in_array((string) $value->id, $selectedValues, true) ? 'selected' : '' }} @if(!empty($value->email)) data-subtype="{{ $value->email }}" @endif>
                 {{ $value->name }}
             </option>
         @endforeach

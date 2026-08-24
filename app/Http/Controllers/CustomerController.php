@@ -45,7 +45,7 @@ class CustomerController extends Controller
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');
-        $salesPeople = User::active()->orderBy('name')->get(['id', 'name']);
+        $salesPeople = User::active()->orderBy('name')->get(['id', 'name', 'email']);
 
         // Generate customer code
         $customerCode = Customer::generateCustomerCode();
@@ -109,7 +109,7 @@ class CustomerController extends Controller
                 }
             })
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'email']);
 
         // Generate customer code
         $customerCode = $customer->customer_code;

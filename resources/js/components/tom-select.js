@@ -237,6 +237,55 @@ export function initTomSelect(root = document) {
     };
 
     // Standard Select
+    const syncOptionSubtypes = (instance, el) => {
+        if (!el || el.tagName !== 'SELECT') return;
+
+        let hasSubtype = false;
+
+        Array.from(el.options).forEach((option) => {
+            const optionValue = String(option.value ?? '');
+
+            if (!Object.prototype.hasOwnProperty.call(instance.options, optionValue)) {
+                return;
+            }
+
+            let subtype = option.dataset.subtype || '';
+            let email = option.dataset.email || '';
+
+            if (option.dataset.data) {
+                try {
+                    const parsedData = JSON.parse(option.dataset.data);
+                    if (!subtype && parsedData?.subtype) subtype = parsedData.subtype;
+                    if (!subtype && parsedData?.email) subtype = parsedData.email;
+                    if (!email && parsedData?.email) email = parsedData.email;
+                } catch (error) {
+                    // ignore JSON error
+                }
+            }
+
+            if (subtype || email) {
+                hasSubtype = true;
+                instance.options[optionValue] = {
+                    ...instance.options[optionValue],
+                    subtype: subtype || email,
+                    email: email || subtype,
+                };
+            }
+        });
+
+        if (hasSubtype) {
+            instance.clearCache();
+            instance.refreshOptions(false);
+
+            const currentValue = instance.getValue();
+
+            if (currentValue !== undefined && currentValue !== null && currentValue !== '' && (Array.isArray(currentValue) ? currentValue.length > 0 : true)) {
+                instance.setValue(currentValue, true);
+            }
+        }
+    };
+
+    // Standard Select
     root.querySelectorAll('select.tom-select-no-search, input.tom-select-no-search').forEach(el => {
 
         if (el.tomselect) return; // Prevent double init
@@ -252,18 +301,20 @@ export function initTomSelect(root = document) {
         if (el.dataset.renderSubtype === 'true') {
             config.render = {
                 option: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text)}</div>
-                            <div class="text-sm text-gray-600">${escape(data.subtype || '')}</div>
+                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
                 item: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
                     return `
                         <div class="flex items-center justify-between gap-3">
                             <span class="font-medium">${escape(data.text)}</span>
-                            <span class="text-sm text-gray-600 ml-2">${escape(data.subtype || '')}</span>
+                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
@@ -273,38 +324,7 @@ export function initTomSelect(root = document) {
         const instance = new TomSelect(el, config);
 
         if (el.dataset.renderSubtype === 'true' && el.tagName === 'SELECT') {
-            Array.from(el.options).forEach((option) => {
-                const optionValue = String(option.value ?? '');
-
-                if (!Object.prototype.hasOwnProperty.call(instance.options, optionValue)) {
-                    return;
-                }
-
-                let subtype = option.dataset.subtype || '';
-
-                if (!subtype && option.dataset.data) {
-                    try {
-                        const parsedData = JSON.parse(option.dataset.data);
-                        subtype = parsedData?.subtype || '';
-                    } catch (error) {
-                        subtype = '';
-                    }
-                }
-
-                instance.options[optionValue] = {
-                    ...instance.options[optionValue],
-                    subtype,
-                };
-            });
-
-            instance.clearCache();
-            instance.refreshOptions(false);
-
-            const currentValue = instance.getValue();
-
-            if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
-                instance.setValue(currentValue, true);
-            }
+            syncOptionSubtypes(instance, el);
         }
 
         applyDisabledStyles(instance, el);
@@ -322,22 +342,24 @@ export function initTomSelect(root = document) {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'remove_button'],
-            searchField: ['text', 'subtype'],
+            searchField: ['text', 'subtype', 'email'],
             dropdownParent: 'body',
             render: {
                 option: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text)}</div>
-                            <div class="text-sm text-gray-600">${escape(data.subtype || '')}</div>
+                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
                 item: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
                     return `
                         <div>
                             <span class="font-medium">${escape(data.text)}</span>
-                            <span class="text-sm text-gray-600 ml-2">${escape(data.subtype || '')}</span>
+                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
@@ -349,6 +371,7 @@ export function initTomSelect(root = document) {
         }
 
         const instance = new TomSelect(el, config);
+        syncOptionSubtypes(instance, el);
         applyDisabledStyles(instance, el);
     });
 
@@ -430,9 +453,31 @@ export function initTomSelect(root = document) {
         const instance = new TomSelect(el, {
             plugins: ['remove_button', 'dropdown_input'],
             maxItems: null,
+            searchField: ['text', 'subtype', 'email'],
             dropdownParent: 'body',
+            render: {
+                option: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
+                    return `
+                        <div>
+                            <div class="font-medium">${escape(data.text)}</div>
+                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                        </div>
+                    `;
+                },
+                item: function (data, escape) {
+                    const sub = data.subtype || data.email || '';
+                    return `
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${escape(data.text)}</span>
+                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                        </div>
+                    `;
+                }
+            }
         });
 
+        syncOptionSubtypes(instance, el);
         enableCompactMultipleDisplay(instance);
         applyDisabledStyles(instance, el);
     });

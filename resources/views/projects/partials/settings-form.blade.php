@@ -161,7 +161,7 @@
                 <select name="sales_person_id" id="sales_person_id" class="tom-select w-full @error('sales_person_id') border-b-alertsErrorBase @else border-gray-300 dark:border-darkblack-400 @enderror" data-sort="0" x-on:change="markDirty()">
                     <option value="">Select</option>
                     @foreach ($users as $user)
-                        <option value="{{ $user->id }}" {{ old('sales_person_id', $project->sales_person_id ?? '') == $user->id ? 'selected' : '' }}>
+                        <option value="{{ $user->id }}" data-subtype="{{ $user->email }}" {{ old('sales_person_id', $project->sales_person_id ?? '') == $user->id ? 'selected' : '' }}>
                             {{ $user->name }}
                         </option>
                     @endforeach
