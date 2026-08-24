@@ -55,7 +55,7 @@
                 <template x-for="cat in categories" :key="cat.id">
                     <button type="button" @click="toggleCategory(cat.id)" :data-active="isSelected(cat.id)" :title="cat.label" :class="isSelected(cat.id) ?
                         'bg-success-300 text-white font-semibold shadow-sm' :
-                        'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-4 py-2 text-sm transition-all duration-200 focus:outline-none max-w-[180px] align-middle mr-1.5">
+                        'bg-bgray-200 text-bgray-600 hover:bg-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 font-medium'" class="inline-flex items-center gap-1.5 shrink-0 rounded-lg ml-2 px-2 py-2 text-sm transition-all duration-200 focus:outline-none max-w-[180px] align-middle mr-1.5">
                         <span class="truncate" x-text="cat.label"></span>
                         <span x-show="cat.count !== null && cat.count !== undefined" class="text-xs opacity-80" x-text="'(' + cat.count + ')'"></span>
                     </button>
