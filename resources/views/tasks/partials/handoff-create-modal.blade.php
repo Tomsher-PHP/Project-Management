@@ -1,18 +1,11 @@
 @php
     $handoffAccessibleProjects = \App\Models\Project::accessibleBy(auth()->user())
         ->where('is_active', true)
-        ->with('activeMembers:id,name')
-        // ->whereHas('projectStatus', function ($q) {
-        //     $q->where('is_completed', false);
-        // })
+        ->with('activeMembers:id,name,email')
         ->get();
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
     $handoffTargetUsersByProject = $handoffAccessibleProjects->mapWithKeys(function ($project) {
-        return [$project->id => $project->activeMembers
-            ->reject(fn ($member) => $member->id === auth()->id())
-            ->sortBy('name')
-            ->values()
-            ->map(fn ($member) => ['value' => (string) $member->id, 'text' => $member->name])];
+        return [$project->id => $project->activeMembers->reject(fn($member) => $member->id === auth()->id())->sortBy('name')->values()->map(fn($member) => ['value' => (string) $member->id, 'text' => $member->name, 'subtype' => $member->email ?? ''])];
     });
     $handoffMilestones = \App\Models\ProjectMilestone::query()
         ->whereIn('project_id', $handoffAccessibleProjects->pluck('id'))
