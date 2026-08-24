@@ -97,6 +97,7 @@ class ScheduleTaskController extends Controller
         ])->render();
 
         return response()->json([
+            'status' => true,
             'html' => $html,
             'dependencies' => $this->buildDependencies($projects),
         ]);

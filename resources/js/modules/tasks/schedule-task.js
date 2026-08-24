@@ -404,11 +404,20 @@ const initializeScheduleTasks = () => {
             editButton.disabled = true;
             try {
                 const { response, result } = await requestJson(editButton.dataset.url);
-                if (!response.ok || !result.status) throw new Error(result.message || 'Unable to load the schedule.');
+                if (!response.ok || result.status === false || !result.html) throw new Error(result.message || 'Unable to load the schedule.');
+
+                if (result.dependencies?.projects) {
+                    Object.assign(dependencies.projects, result.dependencies.projects);
+                }
 
                 const host = page.querySelector('[data-schedule-task-edit-host]');
                 host.innerHTML = result.html;
-                openModal(host.querySelector('[data-schedule-task-modal="edit"]'));
+                initTomSelect(host);
+                initDatepicker('.datepicker', {}, host);
+                initializeEstimatedTimeInputs(host);
+
+                const editModal = host.querySelector('[data-schedule-task-modal="edit"]');
+                openModal(editModal);
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to load the schedule.');
             } finally {
