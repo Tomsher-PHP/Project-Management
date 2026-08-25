@@ -136,6 +136,29 @@ class TaskFormService
         ];
     }
 
+    public function buildDependencies($projects = null): array
+    {
+        if ($projects instanceof Project) {
+            return [
+                'projects' => [
+                    (string) $projects->id => $this->getProjectDependencies($projects),
+                ],
+            ];
+        }
+
+        if ($projects instanceof \Illuminate\Support\Collection && $projects->isNotEmpty()) {
+            return [
+                'projects' => $projects->mapWithKeys(fn(Project $project) => [
+                    (string) $project->id => $this->getProjectDependencies($project),
+                ])->toArray(),
+            ];
+        }
+
+        return [
+            'projects' => [],
+        ];
+    }
+
     public function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
     {
         if (blank($flowType)) {

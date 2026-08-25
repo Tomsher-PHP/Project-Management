@@ -55,12 +55,11 @@ class ScheduleTaskController extends Controller
             ->withQueryString();
 
         $formData = $taskFormService->getCreateData($user);
-        $projects = $formData['taskCreateProjects'] ?? collect();
 
         return view('schedule-tasks.index', [
             'taskSchedules' => $taskSchedules,
             'perPage' => $perPage,
-            'scheduleDependencies' => $this->buildDependencies($projects),
+            'scheduleDependencies' => $taskFormService->buildDependencies(),
             'filterProjects' => $filterProjects,
             'filterAssignees' => $filterAssignees,
             ...$formData,
@@ -88,18 +87,20 @@ class ScheduleTaskController extends Controller
         );
 
         $formData = $taskFormService->getCreateData($user);
-        $projects = $formData['taskCreateProjects'] ?? collect();
+        $scheduleDependencies = $taskSchedule->project
+            ? $taskFormService->buildDependencies($taskSchedule->project)
+            : $taskFormService->buildDependencies();
 
         $html = view('schedule-tasks.partials.create-modal', [
             'taskSchedule' => $taskSchedule,
-            'scheduleDependencies' => $this->buildDependencies($projects),
+            'scheduleDependencies' => $scheduleDependencies,
             ...$formData,
         ])->render();
 
         return response()->json([
             'status' => true,
             'html' => $html,
-            'dependencies' => $this->buildDependencies($projects),
+            'dependencies' => $scheduleDependencies,
         ]);
     }
 
@@ -145,35 +146,5 @@ class ScheduleTaskController extends Controller
         $taskSchedule->delete();
 
         return redirect(session('task_schedules_return_url', route('schedule-tasks.index')))->with('success', 'Scheduled task deleted successfully.');
-    }
-
-    private function buildDependencies(Collection $projects): array
-    {
-        return [
-            'projects' => $projects->mapWithKeys(fn(Project $project) => [(string) $project->id => [
-                'default_billable' => (bool) $project->default_billable,
-                'default_task_estimate_minutes' => intdiv((int) ($project->default_task_estimate_seconds ?? 0), 60),
-                'milestones' => $project->projectMilestones
-                    ->reject(fn(ProjectMilestone $milestone) => $milestone->is_backlog || $milestone->is_system)
-                    ->map(fn(ProjectMilestone $milestone) => [
-                        'value' => (string) $milestone->id,
-                        'text' => $milestone->name,
-                    ])->values(),
-                'sprints' => $project->projectSprints
-                    ->reject(fn(ProjectSprint $sprint) => $sprint->is_backlog || $sprint->is_system)
-                    ->map(fn(ProjectSprint $sprint) => [
-                        'value' => (string) $sprint->id,
-                        'text' => $sprint->name,
-                        'project_milestone_id' => (string) ($sprint->project_milestone_id ?? ''),
-                    ])->values(),
-                'assignees' => $project->activeMembers
-                    ->sortBy('name')
-                    ->map(fn(User $user) => [
-                        'value' => (string) $user->id,
-                        'text' => $user->name,
-                        'subtype' => $user->email ?? '',
-                    ])->values(),
-            ]]),
-        ];
     }
 }

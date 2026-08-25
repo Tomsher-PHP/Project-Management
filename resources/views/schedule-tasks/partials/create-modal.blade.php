@@ -33,10 +33,15 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                                <select name="project_id" class="tom-select w-full" data-sort="0">
+                                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
                                     <option value="">Select project</option>
+                                    @if ($schedule?->project)
+                                        <option value="{{ $schedule->project->id }}" selected data-data='@json(['subtype' => $schedule->project->project_code ?: '--'])'>
+                                            {{ $schedule->project->name }}
+                                        </option>
+                                    @endif
                                     @foreach ($taskCreateProjects as $project)
-                                        <option value="{{ $project->id }}" @selected((string) $schedule?->project_id === (string) $project->id)>{{ $project->name }}</option>
+                                        <option value="{{ $project->id }}" @selected((string) $schedule?->project_id === (string) $project->id) data-data='@json(['subtype' => $project->project_code ?: '--'])'>{{ $project->name }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="project_id"></p>
