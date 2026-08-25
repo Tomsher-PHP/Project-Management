@@ -14,7 +14,7 @@ class TaskFormService
     public function getCreateData($user): array
     {
         return [
-            'taskCreateProjects' => $this->getProjects($user),
+            'taskCreateProjects' => [], // $this->getProjects($user),
 
             'taskTypeOptions' => $this->getTaskTypes(),
             'taskModeOptions' => $this->getTaskModes(),
@@ -196,4 +196,3 @@ class TaskFormService
         return (string) (array_key_first($priorities) ?? 'medium');
     }
 }
-

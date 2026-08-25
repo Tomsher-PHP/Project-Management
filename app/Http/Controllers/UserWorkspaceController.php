@@ -71,7 +71,6 @@ class UserWorkspaceController extends Controller
         $linearNewTaskCount = $selectedFlowType === 'linear' ? $newTaskCount : $otherFlowNewTaskCount;
 
         $formData = $taskFormService->getCreateData($user);
-        $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
         $taskCreateDependencies = $taskFormService->getInitialDependencies();
 
         $workspaceFilterCount = collect([
