@@ -368,6 +368,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
     });
 
+    Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
+    Route::get('projects/{project}/task-create-dependencies', [ProjectController::class, 'taskCreateDependencies'])->name('projects.task-create-dependencies');
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);
     Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.edit');

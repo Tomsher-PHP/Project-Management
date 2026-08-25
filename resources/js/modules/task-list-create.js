@@ -428,6 +428,67 @@ const setEmptyProjectState = (form) => {
     setCheckboxValue(form.querySelector('input[type="checkbox"][name="is_billable"]'), false);
 };
 
+const setProjectLoadingState = (form) => {
+    setTaskCreateRequiredIndicators(form, false);
+    setTaskCreatePlacementHint(form, null);
+
+    setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], {
+        placeholder: 'Loading milestones...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], {
+        placeholder: 'Loading sprints...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
+        placeholder: 'Loading parent tasks...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], {
+        placeholder: 'Loading assignees...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="status_id"]'), [], {
+        placeholder: 'Loading statuses...',
+        disabled: true,
+    });
+};
+
+const fetchProjectDependencies = async (dependencies, projectId) => {
+    if (!projectId) {
+        return null;
+    }
+
+    const key = String(projectId);
+
+    if (dependencies.projects && dependencies.projects[key]) {
+        return dependencies.projects[key];
+    }
+
+    if (!dependencies.projects) {
+        dependencies.projects = {};
+    }
+
+    const urlTemplate = dependencies.dependencies_url_template || '/projects/:id/task-create-dependencies';
+    const requestUrl = urlTemplate.replace(':id', encodeURIComponent(key));
+
+    const response = await fetch(requestUrl, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.status || !result.data) {
+        throw new Error(result.message || 'Unable to load project task dependencies.');
+    }
+
+    dependencies.projects[key] = result.data;
+    return result.data;
+};
+
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
@@ -436,7 +497,23 @@ const applyProjectDefaults = async (form, dependencies) => {
     const priorityField = form.querySelector('[name="priority"]');
     const dueDateField = form.querySelector('[name="due_date_time"]');
     const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
-    const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
+
+    const projectId = projectField?.value || '';
+
+    if (!projectId) {
+        setEmptyProjectState(form);
+        return;
+    }
+
+    setProjectLoadingState(form);
+
+    let projectMeta = null;
+    try {
+        projectMeta = await fetchProjectDependencies(dependencies, projectId);
+    } catch (error) {
+        setEmptyProjectState(form);
+        throw error;
+    }
 
     if (!projectMeta) {
         setEmptyProjectState(form);

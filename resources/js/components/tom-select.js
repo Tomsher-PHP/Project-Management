@@ -494,24 +494,51 @@ export function initTomSelect(root = document) {
             persist: false,
             hideDropdownArrow: false,
             plugins: ['dropdown_input', 'remove_button'],
+            searchField: ['text', 'subtype', 'email'],
             sortField: sort ? { field: "text", direction: "asc" } : null,
             dropdownParent: 'body',
 
+            render: {
+                option: function (data, escape) {
+                    const sub = data.subtype || data.email || data.project_code || '';
+                    return `
+                        <div>
+                            <div class="font-medium">${escape(data.text || data.name)}</div>
+                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                        </div>
+                    `;
+                },
+                item: function (data, escape) {
+                    const sub = data.subtype || data.email || data.project_code || '';
+                    return `
+                        <div>
+                            <span class="font-medium">${escape(data.text || data.name)}</span>
+                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                        </div>
+                    `;
+                }
+            },
+
             // Lazy load items via AJAX
             load: function (query, callback) {
-                if (!query.length) return callback();
+                if (!route) return callback();
 
-                fetch(`${route}?q=${encodeURIComponent(query)}`)
+                fetch(`${route}?q=${encodeURIComponent(query || '')}`)
                     .then(res => res.json())
                     .then(json => {
-                        // Expect JSON array [{id: 1, name: 'Afghanistan'}, ...]
-                        callback(json.map(c => ({ value: c.id, text: c.name })));
+                        // Expect JSON array [{id: 1, name: '...', subtype: '...'}, ...]
+                        callback(json.map(c => ({
+                            value: String(c.value ?? c.id),
+                            text: c.text ?? c.name,
+                            subtype: c.subtype ?? c.project_code ?? '',
+                        })));
                     })
                     .catch(() => callback());
             }
         };
 
         const instance = new TomSelect(el, config);
+        syncOptionSubtypes(instance, el);
         applyDisabledStyles(instance, el);
     });
 

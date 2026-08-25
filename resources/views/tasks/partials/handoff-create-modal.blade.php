@@ -1,18 +1,8 @@
 @php
-    $handoffAccessibleProjects = \App\Models\Project::accessibleBy(auth()->user())
+    $handoffAccessibleProjects = $taskCreateProjects ?? \App\Models\Project::accessibleBy(auth()->user())
         ->where('is_active', true)
-        ->with('activeMembers:id,name,email')
-        ->get();
+        ->get(['id', 'name', 'project_code', 'project_flow']);
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
-    $handoffTargetUsersByProject = $handoffAccessibleProjects->mapWithKeys(function ($project) {
-        return [$project->id => $project->activeMembers->reject(fn($member) => $member->id === auth()->id())->sortBy('name')->values()->map(fn($member) => ['value' => (string) $member->id, 'text' => $member->name, 'subtype' => $member->email ?? ''])];
-    });
-    $handoffMilestones = \App\Models\ProjectMilestone::query()
-        ->whereIn('project_id', $handoffAccessibleProjects->pluck('id'))
-        ->get(['id', 'name', 'project_id']);
-    $handoffSprints = \App\Models\ProjectSprint::query()
-        ->whereIn('project_id', $handoffAccessibleProjects->pluck('id'))
-        ->get(['id', 'name', 'project_id', 'project_milestone_id']);
 @endphp
 
 <div class="modal fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto" data-handoff-create-modal id="handoff_create_modal">
@@ -33,14 +23,14 @@
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}" data-update-url-template="{{ route('handoff_requests.update', '__ID__') }}">
+                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}" data-update-url-template="{{ route('handoff_requests.update', '__ID__') }}" data-current-user-id="{{ auth()->id() }}">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                            <select id="handoff_project_id" name="project_id" class="tom-select w-full" data-handoff-project-select>
+                            <select id="handoff_project_id" name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-handoff-project-select>
                                 <option value="">Select project</option>
                                 @foreach ($handoffAccessibleProjects as $projectOption)
-                                    <option value="{{ $projectOption->id }}" data-flow="{{ $projectOption->project_flow }}">
+                                    <option value="{{ $projectOption->id }}" data-flow="{{ $projectOption->project_flow }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
                                         {{ $projectOption->name }} ({{ $projectOption->project_code }})
                                     </option>
                                 @endforeach
@@ -116,13 +106,5 @@
     </div>
 </div>
 
-<script id="handoff-target-user-dependencies" type="application/json">
-    @json($handoffTargetUsersByProject)
-</script>
-
-<script id="handoff-filter-dependencies" type="application/json">
-    @json([
-        'milestones' => $handoffMilestones,
-        'sprints' => $handoffSprints,
-    ])
-</script>
+<script id="handoff-target-user-dependencies" type="application/json">{}</script>
+<script id="handoff-filter-dependencies" type="application/json">{"milestones":[],"sprints":[]}</script>

@@ -60,7 +60,7 @@ class HandoffController extends Controller
         $taskCreateDependencies = [];
         if ($request->user()->can('task.create') || $request->user()->can('request-task')) {
             $taskFormData = $taskFormService->getCreateData($request->user());
-            $taskCreateDependencies = $this->buildTaskCreateDependencies($taskFormData['taskCreateProjects'] ?? collect());
+            $taskCreateDependencies = $taskFormService->getInitialDependencies();
         }
 
         return view('requests.handoff-requests.index', array_merge([
@@ -69,84 +69,6 @@ class HandoffController extends Controller
             'selectedStatus' => $selectedStatus,
             'taskCreateDependencies' => $taskCreateDependencies,
         ], $filterOptions, $taskFormData));
-    }
-
-    private function buildTaskCreateDependencies(Collection $projects): array
-    {
-        $statusOptionsByFlow = TaskStatus::query()
-            ->active()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'flow_type'])
-            ->groupBy('flow_type')
-            ->map(fn($statuses) => $statuses->map(fn($status) => [
-                'value' => (string) $status->id,
-                'text' => $status->name,
-            ])->values())
-            ->toArray();
-
-        $defaultStatusIdsByFlow = collect(array_keys(config('project_constants.project_flows', [])))
-            ->mapWithKeys(fn(string $flowType) => [$flowType => $this->getDefaultTaskStatusIdForFlow($flowType)]);
-
-        return [
-            'projects' => $projects->mapWithKeys(function ($project) use ($defaultStatusIdsByFlow) {
-                return [(string) $project->id => [
-                    'id' => $project->id,
-                    'flow' => $project->project_flow,
-                    'default_billable' => (bool) $project->default_billable,
-                    'default_status_id' => $defaultStatusIdsByFlow->get($project->project_flow),
-                    'default_task_estimate_minutes' => $project->default_task_estimate_seconds !== null
-                        ? intdiv((int) $project->default_task_estimate_seconds, 60)
-                        : 0,
-                    'milestones' => $project->projectMilestones
-                        ->reject(fn($m) => (bool) ($m->is_backlog || $m->is_system))
-                        ->map(fn($m) => [
-                            'value' => (string) $m->id,
-                            'text' => $m->name,
-                        ])->values()->toArray(),
-                    'sprints' => $project->projectSprints
-                        ->reject(fn($s) => (bool) ($s->is_backlog || $s->is_system))
-                        ->map(fn($s) => [
-                            'value' => (string) $s->id,
-                            'text' => $s->name,
-                            'project_milestone_id' => (string) ($s->project_milestone_id ?? ''),
-                        ])->values()->toArray(),
-                    'assignees' => $project->activeMembers
-                        ->sortBy('name')
-                        ->values()
-                        ->map(fn($m) => [
-                            'value' => (string) $m->id,
-                            'text' => $m->name,
-                        ])->values()->toArray(),
-                ]];
-            })->toArray(),
-            'statuses_by_flow' => $statusOptionsByFlow,
-            'defaults' => [
-                'project_id' => null,
-                'priority' => 'medium',
-                'due_date_time' => now(config('constants.timezone'))->addDay()->format('Y-m-d H:i'),
-            ],
-            'parent_options_url' => route('tasks.quick-create-parent-options'),
-        ];
-    }
-
-    private function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
-    {
-        $status = TaskStatus::query()
-            ->active()
-            ->where('flow_type', $flowType)
-            ->where('is_default', 1)
-            ->first();
-
-        if (!$status) {
-            $status = TaskStatus::query()
-                ->active()
-                ->where('flow_type', $flowType)
-                ->orderBy('sort_order')
-                ->first();
-        }
-
-        return $status?->id;
     }
 
     public function store(HandoffFormRequest $request)

@@ -26,6 +26,7 @@ use App\Services\AttachmentService;
 use App\Services\ProjectAnalyticsService;
 use App\Services\ProjectPaymentServices;
 use App\Services\ProjectServices;
+use App\Services\TaskFormService;
 use App\Services\UserService;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -692,4 +693,42 @@ class ProjectController extends Controller
             'project_header' => $this->renderProjectHeader($project, $service),
         ], Response::HTTP_OK);
     }
+
+    public function taskCreateDependencies(Request $request, Project $project, TaskFormService $taskFormService): JsonResponse
+    {
+        $user = $request->user();
+
+        $isAccessible = Project::query()->accessibleBy($user)->where('id', $project->id)->exists();
+        if (! $isAccessible) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to access this project.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $dependencies = $taskFormService->getProjectDependencies($project);
+
+        return response()->json([
+            'status' => true,
+            'data' => $dependencies,
+        ]);
+    }
+
+    public function searchProjects(Request $request, TaskFormService $taskFormService): JsonResponse
+    {
+        $query = $request->input('q', '');
+        $user = $request->user();
+
+        $projects = $taskFormService->searchProjects($user, $query);
+
+        return response()->json($projects->map(fn(Project $p) => [
+            'id' => $p->id,
+            'value' => (string) $p->id,
+            'name' => $p->name,
+            'text' => $p->name,
+            'subtype' => $p->project_code ?: '--',
+            'project_code' => $p->project_code ?: '--',
+        ]));
+    }
 }
+
