@@ -27,7 +27,7 @@
     $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
     $settingsPermissions = config('constants.settings_permissions');
-    $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+    $canViewSettings = $authUser?->canAny($settingsPermissions) ?? false;
 
     $canViewActivityLog = $authUser?->can('activity_log.view');
 

@@ -6,6 +6,7 @@
         'task_time' => 0,
         'task_handoff' => 0,
         'break_requests' => 0,
+        'task_time_extend_requests' => 0,
         'has_any_pending' => false,
     ];
 
@@ -26,7 +27,8 @@
     $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
     $settingsPermissions = config('constants.settings_permissions');
-    $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+    // $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+    $canViewSettings = $authUser?->canAny($settingsPermissions) ?? false;
 
     $canViewActivityLog = $authUser?->can('activity_log.view');
 

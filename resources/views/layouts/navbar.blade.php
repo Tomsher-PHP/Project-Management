@@ -1,8 +1,8 @@
 @php
     $authUser = auth()->user();
-    $notifications = $authUser->unreadNotifications->take(10); // last 10 notifications unread
-    $unreadCount = $authUser->unreadNotifications->count(); // unread badge
-    $userRoleName = $authUser->role_name ?? 'No Role';
+    $notifications = $authUser?->unreadNotifications->take(10) ?? collect([]); // last 10 notifications unread
+    $unreadCount = $authUser?->unreadNotifications->count() ?? 0; // unread badge
+    $userRoleName = $authUser?->role_name ?? 'No Role';
     $workspaceSelectableUsers = collect($workspaceSelectableUsers ?? []);
     $workspaceSelectedUserId = (string) ($workspaceSelectedUserId ?? '');
 @endphp
