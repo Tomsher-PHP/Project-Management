@@ -618,7 +618,7 @@ class DailyTimeReportService
             'start_time_status' => $isWeekend
                 ? 'success'
                 : ($actualStart
-                    ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
+                    ? ($actualStart->lessThanOrEqualTo($shiftStart->copy()->addSeconds(60)) ? 'success' : 'danger')
                     : null),
             'end_time_status' => $isWeekend
                 ? 'success'
