@@ -21,7 +21,6 @@ class ScheduleTaskController extends Controller
     {
         view()->share([
             'pageTitle' => 'Schedule Tasks',
-            'subTitle' => 'Manage recurring task schedules',
         ]);
     }
 

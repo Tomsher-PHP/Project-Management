@@ -61,7 +61,6 @@ class TaskController extends Controller
         $filters = $filterService->getFilters($user, $baseQuery);
 
         $formData = $taskFormService->getCreateData($user);
-        $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
         $taskCreateDependencies = $taskFormService->getInitialDependencies();
 
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
