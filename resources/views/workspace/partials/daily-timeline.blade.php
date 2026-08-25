@@ -1,5 +1,12 @@
 @php
     $selectedDateLabel = \Illuminate\Support\Carbon::parse($selectedDateValue)->format('l, ' . $globalDateFormat);
+    $hasWorkedDiff = !empty($workedDiffData);
+    $isNegative = $hasWorkedDiff && $workedDiffData['is_negative'];
+
+    $diffClass = $isNegative ? 'grid grid-cols-4 gap-x-1 text-center xl:justify-items-end' : 'grid grid-cols-3 gap-x-4 text-center xl:justify-items-end';
+    $diffColorClass = $isNegative ? 'text-error-300 dark:text-error-100' : 'text-emerald-600 dark:text-emerald-400';
+    $diffBgClass = $isNegative ? 'bg-error-300 dark:bg-error-100' : 'bg-emerald-600 dark:bg-emerald-400';
+    $diffLabel = $isNegative ? 'Time Left' : 'Extra Time';
 @endphp
 
 <section class="rounded-[18px] border border-[var(--workspace-border)] bg-white px-5 py-5 shadow-[var(--workspace-panel-shadow)] dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-7 sm:py-6" data-user-timeline-root data-user-timeline-url="{{ route('workspace.daily-timeline.refresh') }}" data-user-timeline-user-id="{{ $workspaceTimelineUserId }}" data-user-timeline-selected-date="{{ $selectedDateValue }}" data-user-timeline-today="{{ $todayDate }}" aria-busy="false">
@@ -70,10 +77,10 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-x-1 text-center xl:justify-items-end">
-            @if (!empty($workedDiffData))
+        <div class="{{ $diffClass }} ">
+            @if ($isNegative)
                 <div>
-                    <p class="flex items-center justify-center gap-1.5 text-[22px] font-extrabold leading-none {{ $workedDiffData['is_negative'] ? 'text-error-300 dark:text-error-100' : 'text-emerald-600 dark:text-emerald-400' }}" title="Shift comparison: Worked vs Required Shift Hours">
+                    <p class="flex items-center justify-center gap-1.5 text-[22px] font-extrabold leading-none {{ $diffColorClass }}" title="Shift comparison: Worked vs Required Shift Hours">
 
                         @if ($workedDiffData['is_negative'])
                             <svg class="h-5 w-5 shrink-0 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,8 +96,8 @@
                     </p>
 
                     <p class="mt-2 flex items-center justify-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-[#6b7280] dark:text-bgray-300">
-                        <span class="h-2.5 w-2.5 rounded-sm {{ $workedDiffData['is_negative'] ? 'bg-error-300 dark:bg-error-100' : 'bg-emerald-600 dark:bg-emerald-400' }}"></span>
-                        {{ $workedDiffData['is_negative'] ? 'Time Left' : 'Extra Time' }}
+                        <span class="h-2.5 w-2.5 rounded-sm {{ $diffBgClass }}"></span>
+                        {{ $diffLabel }}
                     </p>
                 </div>
             @endif
