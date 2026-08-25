@@ -691,6 +691,33 @@ const bindChecklistListeners = () => {
             const url = toggleInput.dataset.url;
             const isCompleted = toggleInput.checked;
 
+            const checklistCard = toggleInput.closest('[data-checklist-card]');
+            const userCard = toggleInput.closest('[data-user-card]');
+
+            const updateDomCounts = () => {
+                if (checklistCard) {
+                    const checklistId = checklistCard.dataset.checklistCard;
+                    const items = checklistCard.querySelectorAll('[data-project-checklist-item-toggle]');
+                    const checkedItems = checklistCard.querySelectorAll('[data-project-checklist-item-toggle]:checked');
+                    const summaryEl = checklistCard.querySelector(`[data-checklist-summary="${checklistId}"]`);
+                    if (summaryEl) {
+                        summaryEl.textContent = `${checkedItems.length} / ${items.length}`;
+                    }
+                }
+
+                if (userCard) {
+                    const userId = userCard.dataset.userCard;
+                    const userItems = userCard.querySelectorAll('[data-project-checklist-item-toggle]');
+                    const userCheckedItems = userCard.querySelectorAll('[data-project-checklist-item-toggle]:checked');
+                    const userSummaryEl = userCard.querySelector(`[data-user-summary="${userId}"]`);
+                    if (userSummaryEl) {
+                        userSummaryEl.textContent = `${userCheckedItems.length} / ${userItems.length}`;
+                    }
+                }
+            };
+
+            updateDomCounts();
+
             try {
                 const response = await fetch(url, {
                     method: 'PATCH',
@@ -707,9 +734,24 @@ const bindChecklistListeners = () => {
                     throw new Error(result.message || 'Failed to update item.');
                 }
 
+                if (result.checklist_id && result.checklist_summary !== undefined) {
+                    const checklistSummaryEl = document.querySelector(`[data-checklist-summary="${result.checklist_id}"]`);
+                    if (checklistSummaryEl) {
+                        checklistSummaryEl.textContent = result.checklist_summary;
+                    }
+                }
+
+                if (result.user_id && result.user_summary !== undefined) {
+                    const userSummaryEl = document.querySelector(`[data-user-summary="${result.user_id}"]`);
+                    if (userSummaryEl) {
+                        userSummaryEl.textContent = result.user_summary;
+                    }
+                }
+
                 Alert.success(result.message || 'Checklist item updated successfully.');
             } catch (error) {
                 toggleInput.checked = !isCompleted;
+                updateDomCounts();
                 Alert.error(error.message || 'Failed to update checklist item.');
             }
         }
