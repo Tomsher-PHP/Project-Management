@@ -1,7 +1,9 @@
 @php
-    $handoffAccessibleProjects = $taskCreateProjects ?? \App\Models\Project::accessibleBy(auth()->user())
-        ->where('is_active', true)
-        ->get(['id', 'name', 'project_code', 'project_flow']);
+    $handoffAccessibleProjects =
+        $taskCreateProjects ??
+        \App\Models\Project::accessibleBy(auth()->user())
+            ->where('is_active', true)
+            ->get(['id', 'name', 'project_code', 'project_flow']);
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
 @endphp
 
@@ -10,7 +12,7 @@
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
         <div class="relative z-10 w-full max-w-3xl transition-all duration-200" data-handoff-create-modal-panel>
-            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-handoff-modal-title>
