@@ -63,8 +63,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!tsProject) return;
 
+        const loadedHandoffProjectDependencies = {};
+
+        const fetchHandoffProjectDependencies = async (projectId) => {
+            if (!projectId) return null;
+            const key = String(projectId);
+            if (loadedHandoffProjectDependencies[key]) {
+                return loadedHandoffProjectDependencies[key];
+            }
+
+            const requestUrl = `/projects/${encodeURIComponent(key)}/task-create-dependencies`;
+            const response = await fetch(requestUrl, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.status || !result.data) {
+                throw new Error(result.message || 'Unable to load project task dependencies.');
+            }
+
+            loadedHandoffProjectDependencies[key] = result.data;
+            return result.data;
+        };
+
         // Cascading updates
-        tsProject.on('change', (projectId) => {
+        tsProject.on('change', async (projectId) => {
             tsMilestone.clear();
             tsMilestone.clearOptions();
             tsSprint.clear();
@@ -76,26 +102,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!projectId) return;
 
-            (targetUserDependencies[projectId] || []).forEach((user) => {
-                tsTargetUser?.addOption(user);
-            });
-            tsTargetUser?.refreshOptions(false);
+            try {
+                const projectDeps = await fetchHandoffProjectDependencies(projectId);
+                if (!projectDeps) return;
 
-            // Filter milestones
-            const projectMilestones = dependencies.milestones.filter(m => String(m.project_id) === String(projectId));
-            projectMilestones.forEach(m => {
-                tsMilestone.addOption({ value: m.id, text: m.name });
-            });
-            tsMilestone.refreshOptions(false);
+                const currentUserId = String(form.dataset.currentUserId || '');
+                const targetUsers = (projectDeps.assignees || []).filter(u => String(u.value) !== currentUserId);
 
-            // Filter sprints
-            const projectSprints = dependencies.sprints.filter(s => String(s.project_id) === String(projectId));
-            projectSprints.forEach(s => {
-                tsSprint.addOption({ value: s.id, text: s.name });
-            });
-            tsSprint.refreshOptions(false);
+                targetUsers.forEach((user) => {
+                    tsTargetUser?.addOption(user);
+                });
+                tsTargetUser?.refreshOptions(false);
 
-            fetchTasks();
+                (projectDeps.milestones || []).forEach(m => {
+                    tsMilestone.addOption({ value: m.value || m.id, text: m.text || m.name });
+                });
+                tsMilestone.refreshOptions(false);
+
+                (projectDeps.sprints || []).forEach(s => {
+                    tsSprint.addOption({ value: s.value || s.id, text: s.text || s.name });
+                });
+                tsSprint.refreshOptions(false);
+
+                fetchTasks();
+            } catch (error) {
+                Alert.errorModal(error.message || 'Unable to load project handoff options.');
+            }
         });
 
         tsMilestone.on('change', (milestoneId) => {
@@ -104,14 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tsSprint.clear();
             tsSprint.clearOptions();
 
-            // Re-filter sprints based on milestone
-            const projectSprints = dependencies.sprints.filter(s => {
-                const matchProject = String(s.project_id) === String(projectId);
-                const matchMilestone = String(s.project_milestone_id) === String(milestoneId);
-                return matchProject && matchMilestone;
+            const projectDeps = loadedHandoffProjectDependencies[String(projectId)];
+            const availableSprints = (projectDeps?.sprints || []).filter(s => {
+                return String(s.project_milestone_id || '') === String(milestoneId);
             });
-            projectSprints.forEach(s => {
-                tsSprint.addOption({ value: s.id, text: s.name });
+
+            availableSprints.forEach(s => {
+                tsSprint.addOption({ value: s.value || s.id, text: s.text || s.name });
             });
             tsSprint.refreshOptions(false);
             fetchTasks();
@@ -121,21 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchTasks();
         });
     };
-
-    // Load dependencies from JSON block
-    const getDependencies = () => {
-        const depBlock = document.getElementById('handoff-filter-dependencies') || document.getElementById('task-filter-dependencies');
-        return depBlock ? JSON.parse(depBlock.textContent) : { milestones: [], sprints: [] };
-    };
-
-    const dependencies = getDependencies();
-
-    const getTargetUserDependencies = () => {
-        const depBlock = document.getElementById('handoff-target-user-dependencies');
-        return depBlock ? JSON.parse(depBlock.textContent) : {};
-    };
-
-    const targetUserDependencies = getTargetUserDependencies();
 
     initDescriptionEditor();
 

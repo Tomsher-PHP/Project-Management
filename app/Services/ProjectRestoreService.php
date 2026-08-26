@@ -231,7 +231,7 @@ class ProjectRestoreService
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
         $trashedProjectMilestones = ProjectMilestone::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')

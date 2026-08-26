@@ -8,6 +8,7 @@ use App\Exports\SprintReportExport;
 use App\Exports\TaskReportExport;
 use App\Models\Customer;
 use App\Models\Project;
+use App\Models\ProjectCategory;
 use App\Models\ProjectStatus;
 use App\Models\Task;
 use App\Services\Reports\DailyTimeReportService;
@@ -85,6 +86,7 @@ class ReportController extends Controller
         $statuses = ProjectStatus::active()->orderBy('sort_order', 'asc')->get();
         $priorities = config('project_constants.project_priorities');
         $types = config('project_constants.project_flows');
+        $projectCategories = ProjectCategory::orderBy('name', 'asc')->get();
 
         // Project dropdown filter
         $projectsFilter = Project::select('id', 'name')
@@ -147,6 +149,7 @@ class ReportController extends Controller
             'statuses',
             'priorities',
             'types',
+            'projectCategories',
             'projectsFilter',
             'columns',
             'projectStats'

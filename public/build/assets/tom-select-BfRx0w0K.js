@@ -1,0 +1,49 @@
+function C(f=document){const v=(e="")=>String(e).trim().toLowerCase(),y=e=>{const l="ts-selection-count",n="ts-selection-item-hidden";let t=null;e.wrapper.classList.add("ts-wrapper-multiple-compact");const o=()=>{e.control.querySelector(`.${l}`)?.setAttribute("aria-expanded","false"),t&&(t.remove(),t=null,document.removeEventListener("mousedown",s),document.removeEventListener("keydown",r),window.removeEventListener("resize",o))},s=c=>{t?.contains(c.target)||c.target instanceof Element&&c.target.closest(`.${l}`)||o()},r=c=>{c.key==="Escape"&&(o(),e.focus())},i=c=>{t&&(!(c.target instanceof Element)||!c.target.closest(`.${l}`))&&o()},m=()=>{if(!t)return;const c=t.querySelector(".ts-selected-items-list"),b=c.scrollTop,a=new Map(Array.from(c.children).map(u=>[u.dataset.value,u]));e.items.forEach(u=>{const d=String(u);let p=a.get(d);if(!p){p=document.createElement("div"),p.className="ts-selected-items-option",p.dataset.value=d;const E=document.createElement("span");E.className="ts-selected-items-label";const h=document.createElement("button");h.type="button",h.className="ts-selected-items-remove",h.textContent="×",h.addEventListener("click",I=>{const $=e.getItem(d);e.isLocked||!$||!e.shouldDelete([$],I)||(e.removeItem($),e.refreshOptions(!1),e.inputState())}),p.append(E,h)}const g=p.querySelector(".ts-selected-items-label"),L=p.querySelector(".ts-selected-items-remove");g.textContent=String(e.options[d]?.text??d),L.setAttribute("aria-label",`Remove ${g.textContent}`),c.append(p),a.delete(d)}),a.forEach(u=>u.remove()),c.scrollTop=b},A=c=>{const b=e.ignoreFocus;try{e.ignoreFocus=!0,e.close()}finally{e.ignoreFocus=b}o(),t=document.createElement("div"),t.className="ts-selected-items-popover",t.setAttribute("role","dialog"),t.setAttribute("aria-label","Selected items"),t.innerHTML=`
+                <div class="ts-selected-items-heading">Selected items</div>
+                <div class="ts-selected-items-list"></div>
+            `,document.body.append(t),t.addEventListener("mousedown",g=>{g.stopPropagation()}),t.addEventListener("click",g=>{g.stopPropagation()});const a=e.wrapper.getBoundingClientRect(),u=8,d=Math.min(a.width,window.innerWidth-u*2),p=Math.min(Math.max(u,a.left),window.innerWidth-d-u);t.style.width=`${d}px`,t.style.left=`${p+window.scrollX}px`,t.style.top=`${a.bottom+window.scrollY+4}px`,m(),document.addEventListener("mousedown",s),document.addEventListener("keydown",r),window.addEventListener("resize",o),t.querySelector(".ts-selected-items-remove")?.focus(),c.setAttribute("aria-expanded","true")},S=()=>{const c=Array.from(e.control.querySelectorAll(".item")),b=Math.max(0,c.length-1);c.forEach((u,d)=>{u.classList.toggle(n,d>0)});let a=e.control.querySelector(`.${l}`);if(b===0){a?.remove(),m();return}if(!a){a=document.createElement("button"),a.type="button",a.className=l,a.setAttribute("aria-haspopup","dialog"),a.setAttribute("aria-expanded","false"),a.addEventListener("mousedown",d=>d.preventDefault()),a.addEventListener("click",d=>{d.preventDefault(),d.stopPropagation(),e.isDisabled||A(a)});const u=e.control.querySelector("input");e.control.insertBefore(a,u)}a.textContent=`+${b}`,a.setAttribute("aria-label",`Show all ${c.length} selected items`),a.disabled=e.isDisabled,m()};e.on("item_add",S),e.on("item_remove",S),e.on("change",S),e.control.addEventListener("mousedown",i),e.on("destroy",()=>{e.control.removeEventListener("mousedown",i),o()}),S()},x=(e,l)=>{!e?.wrapper||!e?.control||!l.disabled||(e.wrapper.classList.add("opacity-100"),e.control.classList.add("border-bgray-200","bg-bgray-50","text-bgray-600","dark:border-darkblack-400","dark:bg-darkblack-500","dark:text-bgray-300"),e.control.classList.remove("bg-white"),e.control.querySelectorAll(".item, input, .ts-control > div").forEach(n=>{n.classList.add("text-bgray-600","dark:text-bgray-300")}))},w=(e,l)=>{if(!l||l.tagName!=="SELECT")return;let n=!1;if(Array.from(l.options).forEach(t=>{const o=String(t.value??"");if(!Object.prototype.hasOwnProperty.call(e.options,o))return;let s=t.dataset.subtype||"",r=t.dataset.email||"";if(t.dataset.data)try{const i=JSON.parse(t.dataset.data);!s&&i?.subtype&&(s=i.subtype),!s&&i?.email&&(s=i.email),!r&&i?.email&&(r=i.email)}catch{}(s||r)&&(n=!0,e.options[o]={...e.options[o],subtype:s||r,email:r||s})}),n){e.clearCache(),e.refreshOptions(!1);const t=e.getValue();t!=null&&t!==""&&(!Array.isArray(t)||t.length>0)&&e.setValue(t,!0)}};f.querySelectorAll("select.tom-select-no-search, input.tom-select-no-search").forEach(e=>{if(e.tomselect)return;const l={create:!1,persist:!1,hideDropdownArrow:!1,plugins:["remove_button"],dropdownParent:"body"};e.dataset.renderSubtype==="true"&&(l.render={option:function(t,o){const s=t.subtype||t.email||"";return`
+                        <div>
+                            <div class="font-medium">${o(t.text)}</div>
+                            ${s?`<div class="text-sm text-gray-600">${o(s)}</div>`:""}
+                        </div>
+                    `},item:function(t,o){const s=t.subtype||t.email||"";return`
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${o(t.text)}</span>
+                            ${s?`<span class="text-sm text-gray-600 ml-2">${o(s)}</span>`:""}
+                        </div>
+                    `}});const n=new TomSelect(e,l);e.dataset.renderSubtype==="true"&&e.tagName==="SELECT"&&w(n,e),x(n,e)}),f.querySelectorAll("select.tom-select, input.tom-select").forEach(e=>{if(e.tomselect)return;const l=e.dataset.sort!="0",n={create:!1,persist:!1,hideDropdownArrow:!1,plugins:["dropdown_input","remove_button"],searchField:["text","subtype","email"],dropdownParent:"body",render:{option:function(o,s){const r=o.subtype||o.email||"";return`
+                        <div>
+                            <div class="font-medium">${s(o.text)}</div>
+                            ${r?`<div class="text-sm text-gray-600">${s(r)}</div>`:""}
+                        </div>
+                    `},item:function(o,s){const r=o.subtype||o.email||"";return`
+                        <div>
+                            <span class="font-medium">${s(o.text)}</span>
+                            ${r?`<span class="text-sm text-gray-600 ml-2">${s(r)}</span>`:""}
+                        </div>
+                    `}}};l&&(n.sortField={field:"text",direction:"asc"});const t=new TomSelect(e,n);w(t,e),x(t,e)}),f.querySelectorAll("select.tom-select-tags, input.tom-select-tags, select.tom-select-add").forEach(e=>{if(e.tomselect)return;const l=e.dataset.placeholder||"Search or add tags",n=e.dataset.maxItems||null,t=new TomSelect(e,{plugins:["remove_button"],maxItems:n,persist:!1,dropdownParent:"body",createOnBlur:!0,hideSelected:!0,closeAfterSelect:!1,placeholder:l,create:e.disabled?!1:o=>{const s=String(o||"").trim();return{value:s,text:s}},createFilter(o){const s=v(o);return s?!Object.values(this.options).some(r=>v(r?.text??r?.value??"")===s):!1},score(o){const s=v(o);return function(r){const i=v(r.text);return s?i===s?2:i.includes(s)?1:0:1}},render:{option(o,s){return`
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${s(o.text)}</span>
+                            ${o.$option?"":'<span class="text-xs font-semibold text-success-400">Create</span>'}
+                        </div>
+                    `},item(o,s){return`<div class="font-medium">${s(o.text)}</div>`}}});x(t,e)}),f.querySelectorAll("select.tom-select-multiple, input.tom-select-multiple").forEach(e=>{if(e.tomselect)return;const l=new TomSelect(e,{plugins:["remove_button","dropdown_input"],maxItems:null,searchField:["text","subtype","email"],dropdownParent:"body",render:{option:function(n,t){const o=n.subtype||n.email||"";return`
+                        <div>
+                            <div class="font-medium">${t(n.text)}</div>
+                            ${o?`<div class="text-sm text-gray-600">${t(o)}</div>`:""}
+                        </div>
+                    `},item:function(n,t){const o=n.subtype||n.email||"";return`
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-medium">${t(n.text)}</span>
+                            ${o?`<span class="text-sm text-gray-600 ml-2">${t(o)}</span>`:""}
+                        </div>
+                    `}}});w(l,e),y(l),x(l,e)}),f.querySelectorAll("select.tom-select-lazy, input.tom-select-lazy").forEach(e=>{if(e.tomselect)return;const l=e.dataset.sort!="0",n=e.dataset.route,t={create:!1,persist:!1,hideDropdownArrow:!1,plugins:["dropdown_input","remove_button"],searchField:["text","subtype","email"],sortField:l?{field:"text",direction:"asc"}:null,dropdownParent:"body",render:{option:function(s,r){const i=s.subtype||s.email||s.project_code||"";return`
+                        <div>
+                            <div class="font-medium">${r(s.text||s.name)}</div>
+                            ${i?`<div class="text-sm text-gray-600">${r(i)}</div>`:""}
+                        </div>
+                    `},item:function(s,r){const i=s.subtype||s.email||s.project_code||"";return`
+                        <div>
+                            <span class="font-medium">${r(s.text||s.name)}</span>
+                            ${i?`<span class="text-sm text-gray-600 ml-2">${r(i)}</span>`:""}
+                        </div>
+                    `}},load:function(s,r){if(!n)return r();fetch(`${n}?q=${encodeURIComponent(s||"")}`).then(i=>i.json()).then(i=>{r(i.map(m=>({value:String(m.value??m.id),text:m.text??m.name,subtype:m.subtype??m.project_code??""})))}).catch(()=>r())}},o=new TomSelect(e,t);w(o,e),x(o,e)}),document.dispatchEvent(new Event("tomselect:ready"))}const P=(f,v)=>{const y=document.getElementById(f);!y||!y.tomselect||(v?y.tomselect.setValue(v):y.tomselect.clear())};export{P as a,C as i};

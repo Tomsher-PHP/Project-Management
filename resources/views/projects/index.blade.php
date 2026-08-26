@@ -28,107 +28,13 @@
         @endcan
     </div>
 
-    <!-- Project Category Tabs -->
-    <div class="overflow-x-auto">
-        <div class="flex min-w-max items-center gap-1 rounded-lg bg-white p-2 dark:bg-darkblack-700">
-
-            @php
-                $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
-
-                // Make sure it is always an array
-                if (!is_array($selectedCategories)) {
-                    $selectedCategories = [$selectedCategories];
-                }
-
-                $selectedCategories = array_map('strval', $selectedCategories);
-            @endphp
-
-            {{-- All Projects --}}
-            <a href="{{ route('projects.index', request()->except('project_category_ids', 'project_category_id', 'project_category', 'page')) }}"
-            class="rounded-md px-4 py-2 text-sm font-semibold transition 
-            {{ empty($selectedCategories)
-                    ? 'bg-success-300 text-white'
-                    : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
-                All Projects
-            </a>
-
-            {{-- Project Categories --}}
-            @foreach ($projectCategories as $category)
-
-                @php
-                    $categoryId = (string) $category->id;
-                    $isSelected = in_array($categoryId, $selectedCategories, true);
-
-                    // Remove/add this category from the selected list
-                    if ($isSelected) {
-                        $newCategories = array_values(
-                            array_diff($selectedCategories, [$categoryId])
-                        );
-                    } else {
-                        $newCategories = array_values(
-                            array_merge($selectedCategories, [$categoryId])
-                        );
-                    }
-
-                    $query = request()->except('project_category_ids', 'project_category_id', 'project_category', 'page');
-
-                    if (!empty($newCategories)) {
-                        $query['project_category_ids'] = $newCategories;
-                    }
-                @endphp
-
-                <a href="{{ route('projects.index', $query) }}"
-                class="rounded-md px-4 py-2 text-sm font-semibold transition 
-                {{ $isSelected
-                        ? 'bg-success-300 text-white'
-                        : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
-                    {{ $category->name }}
-                </a>
-
-            @endforeach
-
-            {{-- Others --}}
-            @php
-                $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
-
-                if (!is_array($selectedCategories)) {
-                    $selectedCategories = [$selectedCategories];
-                }
-
-                $isOthersSelected = in_array('others', $selectedCategories, true);
-
-                if ($isOthersSelected) {
-                    $newCategories = array_values(
-                        array_diff($selectedCategories, ['others'])
-                    );
-                } else {
-                    $newCategories = array_values(
-                        array_merge($selectedCategories, ['others'])
-                    );
-                }
-
-                $query = request()->except('project_category_ids', 'project_category_id', 'page');
-
-                if (!empty($newCategories)) {
-                    $query['project_category_ids'] = $newCategories;
-                }
-            @endphp
-
-            <a href="{{ route('projects.index', $query) }}"
-            class="rounded-md px-4 py-2 text-sm font-semibold transition
-            {{ $isOthersSelected
-                    ? 'bg-success-300 text-white'
-                    : 'bg-bgray-200 text-bgray-600 hover:bg-bgray-100 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500' }}">
-                Others
-            </a>
-
-        </div>
-    </div>
-
-    
-    <!-- write your code here-->
     <div class="2xl:flex 2xl:space-x-[48px]">
-        <section class="mb-6 2xl:mb-0 2xl:flex-1">
+        <section class="mb-6 2xl:mb-0 2xl:flex-1 min-w-0">
+            <!-- Project Category Tabs -->
+            @include('projects.partials.category-tabs', [
+                'projectCategories' => $projectCategories,
+            ])
+
             <!--list table-->
             <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
                 <div class="flex flex-col space-y-5">
@@ -285,29 +191,31 @@
 
     <!-- Filter drawer -->
     @php
-        $typesFilter = collect($types)->map(
-            fn($label, $key) => (object) [
-                'id' => $key,
-                'name' => $label,
-            ],
-        );
         $prioritiesFilter = collect($priorities)->map(
             fn($value, $key) => (object) [
                 'id' => $key,
                 'name' => $value['label'],
             ],
         );
-    
-        $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
-
-        if (!is_array($selectedCategories)) {
-            $selectedCategories = [$selectedCategories];
-        }
+        $categoriesFilter = collect($projectCategories)
+            ->map(
+                fn($cat) => (object) [
+                    'id' => (string) $cat->id,
+                    'name' => $cat->name,
+                ],
+            )
+            ->push(
+                (object) [
+                    'id' => 'others',
+                    'name' => 'Others',
+                ],
+            );
     @endphp
     <x-filters.drawer>
         <x-filters.input-search name="name" label="Name" />
         <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
-        <x-filters.multi-select name="project_flow" label="Project Flow" :options="$typesFilter" />
+        <x-filters.select name="project_flow" label="Project Flow" :options="$types" />
+        <x-filters.multi-select name="project_category_ids" label="Project Category" :options="$categoriesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
     </x-filters.drawer>

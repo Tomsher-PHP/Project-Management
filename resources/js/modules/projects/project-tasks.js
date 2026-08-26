@@ -359,7 +359,7 @@ const prepareTaskModal = async (root, {
     await loadParentTaskOptions(form, {
         sprintId: resolvedSprintId,
         selectedParentTaskId: parentTaskId || '',
-    }).catch(() => {});
+    }).catch(() => { });
 };
 
 const applyTaskFormErrors = (form, errors = {}) => {
@@ -805,7 +805,7 @@ const showTaskDetailLoading = (modal) => {
     }
 
     content.innerHTML = `
-        <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+        <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
             <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                 Loading task details...
             </div>
@@ -851,7 +851,7 @@ const loadTaskDetailModal = async (root, loadUrl, groupKey = '') => {
         if (form) {
             form.dataset.groupKey = groupKey || '';
             syncProjectTaskPlacement(form);
-            loadParentTaskOptions(form).catch(() => {});
+            loadParentTaskOptions(form).catch(() => { });
 
             const editorElement = form.querySelector('#project_task_detail_description_editor');
             if (editorElement && !projectTaskDetailEditors.has(form)) {
@@ -907,7 +907,7 @@ const showTaskLogLoading = (modal) => {
     }
 
     content.innerHTML = `
-        <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+        <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
             <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                 Loading task logs...
             </div>

@@ -34,6 +34,14 @@ class ProjectChecklistController extends Controller
                 $user->total_checklists = $totalChecklists;
                 $user->completed_checklists = $completedChecklists;
 
+                foreach ($checklists as $checklist) {
+                    $totalItems = $checklist->items->count();
+                    $completedItems = $checklist->items->filter(fn($item) => (int) $item->status === 1)->count();
+                    $checklist->checklist_summary = $completedItems . ' / ' . $totalItems;
+                    $checklist->completed_items_count = $completedItems;
+                    $checklist->total_items_count = $totalItems;
+                }
+
                 return $user;
             });
 
@@ -62,10 +70,32 @@ class ProjectChecklistController extends Controller
             'completed_at' => $request->is_completed ? now() : null,
         ]);
 
+        $checklistItems = $checklist->items()->get();
+        $checklistTotal = $checklistItems->count();
+        $checklistCompleted = $checklistItems->filter(fn($i) => (int) $i->status === 1)->count();
+        $checklistSummary = $checklistCompleted . ' / ' . $checklistTotal;
+
+        $userChecklists = ProjectChecklist::where('project_id', $project->id)
+            ->where('assigned_to', $checklist->assigned_to)
+            ->with('items')
+            ->get();
+
+        $userTotal = $userChecklists->sum(fn($c) => $c->items->count());
+        $userCompleted = $userChecklists->sum(fn($c) => $c->items->filter(fn($i) => (int) $i->status === 1)->count());
+        $userSummary = $userCompleted . ' / ' . $userTotal;
+
         return response()->json([
             'success' => true,
             'message' => 'Checklist item updated successfully.',
             'status' => $item->status,
+            'checklist_id' => $checklist->id,
+            'checklist_summary' => $checklistSummary,
+            'checklist_completed' => $checklistCompleted,
+            'checklist_total' => $checklistTotal,
+            'user_id' => $checklist->assigned_to,
+            'user_summary' => $userSummary,
+            'user_completed' => $userCompleted,
+            'user_total' => $userTotal,
         ], Response::HTTP_OK);
     }
     

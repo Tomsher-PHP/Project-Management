@@ -307,7 +307,7 @@
                         <option value="">Select Reporting Manager</option>
 
                         @foreach ($managers as $key => $reporter)
-                            <option value="{{ $reporter->id }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }}>
+                            <option value="{{ $reporter->id }}" data-subtype="{{ $reporter->email }}" {{ old('reporter_id', $user->details->reporter_id ?? '') == $reporter->id ? 'selected' : '' }}>
                                 {{ $reporter->name }}
                             </option>
                         @endforeach
@@ -330,7 +330,7 @@
                         <option value="">Select Manager</option>
 
                         @foreach ($managers as $key => $manager)
-                            <option value="{{ $manager->id }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }}>
+                            <option value="{{ $manager->id }}" data-subtype="{{ $manager->email }}" {{ old('manager_id', $user->details->manager_id ?? '') == $manager->id ? 'selected' : '' }}>
                                 {{ $manager->name }}
                             </option>
                         @endforeach

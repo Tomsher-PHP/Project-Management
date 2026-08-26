@@ -6,11 +6,16 @@
         </label>
     </td>
     <td class="border border-gray-300 px-4 py-2 text-center">
-        <label class="flex items-center gap-2">
+        <label class="flex flex-col items-center justify-center gap-0.5">
             <!-- make the checkbox mark when click -->
             <span class="label-user-name text-sm font-semibold text-gray-600 dark:text-bgray-50 cursor-pointer">
                 {{ $user->name }}
             </span>
+            @if (filled($user->email))
+                <span class="text-xs text-gray-500 dark:text-bgray-300">
+                    {{ $user->email }}
+                </span>
+            @endif
         </label>
     </td>
 

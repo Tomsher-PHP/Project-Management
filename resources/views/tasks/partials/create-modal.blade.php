@@ -3,7 +3,7 @@
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
         <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-task-create-modal-panel>
-            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-task-create-title data-default-title="Add Task" data-request-title="Request Task">
@@ -23,7 +23,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                            <select name="project_id" class="tom-select w-full" data-sort="0">
+                            <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
                                 <option value="">Select project</option>
                                 @foreach ($taskCreateProjects as $projectOption)
                                     <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>

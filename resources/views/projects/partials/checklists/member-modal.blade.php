@@ -3,7 +3,7 @@
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
         <div class="relative z-10 w-full max-w-7xl">
-            <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex flex-col gap-4 border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:flex-row sm:items-start sm:justify-between sm:px-7">
                     <div class="min-w-0">
                         <h3 class="mt-2 text-xl font-semibold text-bgray-900 dark:text-white">

@@ -86,10 +86,10 @@
                             #
                         </th>
                         <th scope="col" class="col-user px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[220px]">
-                            User
+                            <x-sorting.sortable-column column="user" label="Users" />
                         </th>
                         <th scope="col" class="col-date px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[150px]">
-                            Date
+                            <x-sorting.sortable-column column="date" label="Date" />
                         </th>
                         <th scope="col" class="col-shift_name px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[190px]">
                             Shift Name
@@ -101,13 +101,13 @@
                             Shift End
                         </th>
                         <th scope="col" class="col-start_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
-                            Start Time
+                            <x-sorting.sortable-column column="start_time" label="Start Time" />
                         </th>
                         <th scope="col" class="col-end_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[140px]">
-                            End Time
+                            <x-sorting.sortable-column column="end_time" label="End Time" />
                         </th>
                         <th scope="col" class="col-worked_time px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
-                            Worked Hours
+                            <x-sorting.sortable-column column="worked_time" label="Worked Hours" />
                         </th>
                         <th scope="col" class="col-shift_hour px-2 py-5 text-left text-sm font-semibold text-bgray-600 dark:text-bgray-50 xl:w-[160px]">
                             Shift Hours
@@ -120,9 +120,7 @@
                         @php
                             $reportNumber++;
                             $shiftColor = $row['shift_color_code'] ?? null;
-                            $safeShiftColor = is_string($shiftColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $shiftColor)
-                                ? $shiftColor
-                                : '#6b7280';
+                            $safeShiftColor = is_string($shiftColor) && preg_match('/^#[0-9A-Fa-f]{6}$/', $shiftColor) ? $shiftColor : '#6b7280';
                             $startTimeStatusClass = match ($row['start_time_status'] ?? null) {
                                 'success' => 'font-semibold text-success-400 dark:text-success-300',
                                 'danger' => 'font-semibold text-error-300 dark:text-error-300',
@@ -224,14 +222,22 @@
         $isUserFilterApplied = $selectedUserFilterIds->isNotEmpty();
 
         $dailyTimeFilterDependencies = [
-            'teams' => $teams->map(fn($team) => [
-                'id' => $team->id,
-                'name' => $team->name,
-                'users' => $team->users->map(fn($user) => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ])->values(),
-            ])->values(),
+            'teams' => $teams
+                ->map(
+                    fn($team) => [
+                        'id' => $team->id,
+                        'name' => $team->name,
+                        'users' => $team->users
+                            ->map(
+                                fn($user) => [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                ],
+                            )
+                            ->values(),
+                    ],
+                )
+                ->values(),
             'hasExplicitUserFilter' => $isUserFilterApplied,
             'hasUserFilterAppliedParameter' => request()->has('user_filter_applied'),
         ];

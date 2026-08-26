@@ -365,7 +365,7 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
 };
 
 const renderProjectModuleSprintsState = (message, extraClasses = '') => `
-    <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
+    <div class="rounded-[10px] border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(message)}</p>
     </div>
 `;
@@ -912,7 +912,7 @@ const initializeProjectModuleBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-milestone-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-milestone-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
+        <div class="flex items-center gap-3 rounded-[10px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
             <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
@@ -925,7 +925,7 @@ const initializeProjectModuleBuilderModal = () => {
         </div>
     `;
     const dropzoneMarkup = `
-        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
+        <div class="h-24 rounded-[10px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
     `;
 
     const createWorkspaceGuide = (markup) => {
@@ -1008,8 +1008,8 @@ const initializeProjectModuleBuilderModal = () => {
 
         if (!cards.length && !emptyState) {
             workspace.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
-                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <div class="rounded-[10px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[10px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -1964,8 +1964,8 @@ const initializeProjectSprintBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-sprint-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-sprint-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+        <div class="flex items-center gap-3 rounded-[10px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-[10px] bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
@@ -1977,7 +1977,7 @@ const initializeProjectSprintBuilderModal = () => {
         </div>
     `;
     const dropzoneMarkup = `
-        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-sprint-builder-dropzone></div>
+        <div class="h-24 rounded-[10px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-sprint-builder-dropzone></div>
     `;
 
     const createWorkspaceGuide = (markup) => {
@@ -1992,8 +1992,8 @@ const initializeProjectSprintBuilderModal = () => {
 
     const renderWorkspaceLoadingState = () => {
         workspace.innerHTML = `
-            <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+            <div class="rounded-[10px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+                <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[10px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                     <svg class="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M8 12H4m13.657-5.657l-2.829 2.829M9.172 14.828l-2.829 2.829m0-11.314l2.829 2.829m5.656 5.656l2.829 2.829" />
                     </svg>
@@ -2100,8 +2100,8 @@ const initializeProjectSprintBuilderModal = () => {
 
         if (!cards.length && !emptyState) {
             workspace.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-sprint-builder-empty>
-                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <div class="rounded-[10px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-sprint-builder-empty>
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[10px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>

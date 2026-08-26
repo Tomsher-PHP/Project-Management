@@ -183,9 +183,7 @@
                             $actualSeconds = (int) ($project->projectMilestones->sum('actual_time_seconds') ?? 0);
                             $progressPercentage = $estimatedSeconds > 0 ? round(($actualSeconds / $estimatedSeconds) * 100, 2) : 0;
                             $progressBarWidth = min($progressPercentage, 100);
-                            $actualTimeClasses = $actualSeconds <= $estimatedSeconds
-                                ? 'text-success-400 dark:text-success-300'
-                                : 'text-red-500 dark:text-red-400';
+                            $actualTimeClasses = $actualSeconds <= $estimatedSeconds ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
                             $progressColorClasses = match (true) {
                                 $estimatedSeconds <= 0 => 'bg-gray-300 text-bgray-700 dark:text-bgray-300',
                                 $progressPercentage <= 50 => 'bg-success-400 text-success-400 dark:text-success-300',
@@ -293,13 +291,26 @@
                 'name' => $value['label'],
             ],
         );
-
+        $categoriesFilter = collect($projectCategories ?? [])
+            ->map(
+                fn($cat) => (object) [
+                    'id' => (string) $cat->id,
+                    'name' => $cat->name,
+                ],
+            )
+            ->push(
+                (object) [
+                    'id' => 'others',
+                    'name' => 'Others',
+                ],
+            );
     @endphp
     <x-filters.drawer>
-        <x-filters.input-search name="name" label="Name" />
+        {{-- <x-filters.input-search name="name" label="Name" /> --}}
+        <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
         <x-filters.multi-select id="project-flow-filter" name="project_flow" label="Project Flow" :options="$typesFilter" />
         <x-filters.multi-select id="project-filter" name="id" label="Project" :options="$projectsFilter" />
-        <x-filters.multi-select name="customer_id" label="Customer" :options="$customers" />
+        <x-filters.multi-select name="project_category_ids" label="Project Category" :options="$categoriesFilter" />
         <x-filters.multi-select name="priority" label="Priority" :options="$prioritiesFilter" />
         <x-filters.multi-select name="status_id" label="Project Status" :options="$statuses" />
         <x-filters.date-range label="Project Date Range" startName="start_date" endName="end_date" />
