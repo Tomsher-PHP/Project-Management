@@ -77,4 +77,7 @@ return [
         'kpi.view',
         'checklist_template.view'
     ],
+
+    // Daily work notification grace period in minutes
+    'daily_work_notify' => 60,
 ];
