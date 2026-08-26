@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-AC9obqJx.css",
+    "file": "assets/app-BWdqz2by.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -255,7 +255,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-CrZfseYb.js",
+    "file": "assets/project-detail-CINF6FaR.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -288,7 +288,7 @@
     "isEntry": true
   },
   "resources/js/modules/projects/project-tasks.js": {
-    "file": "assets/project-tasks-C_DJcMvd.js",
+    "file": "assets/project-tasks-BhGBuDzo.js",
     "name": "project-tasks",
     "src": "resources/js/modules/projects/project-tasks.js",
     "isEntry": true,
@@ -313,7 +313,7 @@
     ]
   },
   "resources/js/modules/task-detail.js": {
-    "file": "assets/task-detail-C058HI6n.js",
+    "file": "assets/task-detail-I6fVBwBh.js",
     "name": "task-detail",
     "src": "resources/js/modules/task-detail.js",
     "isEntry": true,
@@ -402,7 +402,7 @@
     ]
   },
   "resources/js/modules/tasks/schedule-task.js": {
-    "file": "assets/schedule-task-HLM51AC-.js",
+    "file": "assets/schedule-task-CeOL8wNR.js",
     "name": "schedule-task",
     "src": "resources/js/modules/tasks/schedule-task.js",
     "isEntry": true,
