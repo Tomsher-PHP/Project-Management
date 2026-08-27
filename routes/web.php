@@ -32,6 +32,7 @@ use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\QuickNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -532,6 +533,20 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('help-center')->as('help-center.')->group(function () {
         Route::get('/', [HelpCenterController::class, 'index'])->name('index');
         Route::get('/{article}', [HelpCenterController::class, 'show'])->name('show');
+    });
+
+    // Quick Notes routes
+    Route::prefix('quick-notes')->as('quick-notes.')->group(function () {
+        Route::get('/', [QuickNoteController::class, 'index'])->name('index');
+        Route::get('/drawer', [QuickNoteController::class, 'drawer'])->name('drawer');
+        Route::post('/', [QuickNoteController::class, 'store'])->name('store');
+        Route::post('/reorder', [QuickNoteController::class, 'reorder'])->name('reorder');
+        Route::get('/{quickNote}', [QuickNoteController::class, 'show'])->name('show');
+        Route::put('/{quickNote}', [QuickNoteController::class, 'update'])->name('update');
+        Route::patch('/{quickNote}', [QuickNoteController::class, 'update']);
+        Route::delete('/{quickNote}', [QuickNoteController::class, 'destroy'])->name('destroy');
+        Route::patch('/{quickNote}/pin', [QuickNoteController::class, 'togglePin'])->name('pin');
+        Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
 });
 

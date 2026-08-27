@@ -336,6 +336,8 @@
                             </li>
                         @endif
 
+
+
                         @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests)
                             <!-- Requests -->
                             <li class="item py-[8px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">

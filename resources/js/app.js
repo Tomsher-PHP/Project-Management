@@ -18,6 +18,7 @@ import './components/filterDrawer';
 import './components/list-search';
 import './components/estimated-time-input';
 import './modules/tasks/task-running-timer'
+import './modules/quick-notes-drawer';
 import './components/calendar';
 
 import "tom-select/dist/css/tom-select.css";

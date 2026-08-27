@@ -77,6 +77,10 @@
 
     <x-activity-log.details-modal />
 
+    @auth
+        @include('quick-notes.partials.drawer')
+    @endauth
+
     <!--scripts -->
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>
     <script src="{{ asset(config('assets.js.aos')) }}"></script>
