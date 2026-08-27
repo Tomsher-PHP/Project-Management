@@ -107,8 +107,8 @@
                 </svg>
             </div>
             <h4 class="mt-3 text-base font-semibold text-bgray-900 dark:text-white">No active quick notes</h4>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Capture ideas, tasks, and quick thoughts here.</p>
-            <button type="button" data-trigger-create class="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-success-300 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
+            <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">Capture ideas, tasks, and quick thoughts here.</p>
+            <button type="button" data-trigger-create class="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-success-300 px-2 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
                 + Create Note
             </button>
         </div>
