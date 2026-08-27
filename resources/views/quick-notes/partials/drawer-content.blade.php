@@ -111,7 +111,7 @@
 
     <!-- Archived Notes Section -->
     <div id="archived-notes-section" class="hidden space-y-4">
-        <div class="text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">
+        <div class="text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-400">
             ARCHIVED NOTES
         </div>
 
