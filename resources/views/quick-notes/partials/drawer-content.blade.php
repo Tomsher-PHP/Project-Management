@@ -7,7 +7,7 @@
 <!-- Drawer Header -->
 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400">
     <div class="flex items-center gap-3">
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-success-900/40 dark:text-success-300">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-black dark:text-white">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -15,20 +15,18 @@
         <div>
             <div class="flex items-center gap-2">
                 <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Quick Notes</h2>
-                <span id="notes-count-badge" class="inline-flex items-center rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-semibold text-success-700 dark:bg-success-900/40 dark:text-success-300">
+                <span id="notes-count-badge" class="inline-flex text-xs font-semibold text-gray-700 dark:text-gray-300">
                     {{ $notes->where('is_archived', false)->count() }}
                 </span>
             </div>
-            <p class="text-xs text-bgray-500 dark:text-bgray-400">Capture thoughts and reminders on the fly</p>
         </div>
     </div>
 
     <div class="flex items-center gap-2">
-        <button type="button" id="open-create-note-btn" class="inline-flex items-center gap-1.5 rounded-xl bg-success-300 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-success-400 focus:outline-none">
+        <button type="button" id="open-create-note-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-success-300 text-white shadow-sm transition hover:bg-success-400 focus:outline-none" aria-label="New Note" title="New Note">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            <span>New Note</span>
         </button>
 
         <button type="button" id="quick-notes-drawer-close-btn" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-red-400" aria-label="Close drawer">
@@ -69,7 +67,7 @@
     <div id="active-notes-section" class="space-y-6">
         <!-- Pinned Section -->
         <div id="pinned-section" class="{{ $pinnedNotes->isEmpty() ? 'hidden' : '' }}">
-            <div class="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400">
+            <div class="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-400">
                 <svg class="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
@@ -85,7 +83,7 @@
 
         <!-- Others Section -->
         <div id="others-section" class="{{ $otherActiveNotes->isEmpty() && !$pinnedNotes->isEmpty() ? 'hidden' : '' }}">
-            <div id="others-header-label" class="mb-3 text-xs font-semibold uppercase tracking-wider text-bgray-500 dark:text-bgray-400 {{ $pinnedNotes->isEmpty() ? 'hidden' : '' }}">
+            <div id="others-header-label" class="mb-3 text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-400 {{ $pinnedNotes->isEmpty() ? 'hidden' : '' }}">
                 OTHERS
             </div>
 
