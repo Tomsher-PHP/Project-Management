@@ -41,7 +41,7 @@
         </button>
 
         <!-- '+' New Note Button -->
-        <button type="button" id="open-create-note-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="New Note" title="New Note">
+        <button type="button" id="open-create-note-btn" class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="New Note" title="New Note">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
