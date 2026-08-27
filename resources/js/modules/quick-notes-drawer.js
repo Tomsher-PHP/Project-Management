@@ -133,6 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const openCreateBtn = document.getElementById('open-create-note-btn');
         openCreateBtn?.addEventListener('click', openCreateModal);
 
+        document.getElementById('close-quick-notes-drawer-btn')?.addEventListener('click', closeDrawer);
+
         document.querySelectorAll('[data-trigger-create]').forEach(b => b.addEventListener('click', openCreateModal));
 
         // Tab Switching

@@ -79,20 +79,10 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="flex items-center justify-between border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                        <div>
-                            <button type="button" id="quick_note_archive_toggle_btn" class="hidden inline-flex items-center gap-1.5 rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-xs font-semibold text-bgray-700 hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8zm2-2h10V4a2 2 0 00-2-2H9a2 2 0 00-2 2v2z" />
-                                </svg>
-                                <span id="quick_note_archive_btn_label">Archive Note</span>
-                            </button>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <button type="button" data-modal-close class="rounded-xl border border-bgray-300 bg-white px-5 py-2.5 text-sm font-semibold text-bgray-700 hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
-                                Cancel
-                            </button>
+                    <div class="flex items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
+                        <button type="button" data-modal-close class="rounded-xl border border-bgray-300 bg-white px-5 py-2.5 text-sm font-semibold text-bgray-700 hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
+                            Cancel
+                        </button>
 
                             <button type="submit" id="quick_note_submit_btn" class="inline-flex items-center gap-2 rounded-xl bg-success-300 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-success-400 focus:outline-none">
                                 <svg class="hidden h-4 w-4 animate-spin text-white" id="quick_note_submit_spinner" viewBox="0 0 24 24" fill="none">

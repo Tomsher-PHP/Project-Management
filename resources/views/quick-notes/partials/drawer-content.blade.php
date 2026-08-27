@@ -56,6 +56,13 @@
                 Archived (<span id="archived-count-label">{{ $archivedNotes->count() }}</span>)
             </button>
         </div>
+
+        <!-- Close Drawer Button -->
+        <button type="button" id="close-quick-notes-drawer-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:text-bgray-400 dark:hover:bg-darkblack-500 dark:hover:text-white" title="Close Quick Notes" aria-label="Close Quick Notes">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
     </div>
 </div>
 
