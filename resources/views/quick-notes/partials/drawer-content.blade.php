@@ -28,7 +28,6 @@
                 </svg>
             </span>
             <input type="text" id="notes-search-input" placeholder="Search notes..." class="w-full rounded-xl border border-bgray-200 bg-bgray-50/50 pl-9 pr-8 py-1.5 text-xs text-bgray-900 placeholder-bgray-400 focus:border-success-300 focus:bg-white focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:placeholder-bgray-500">
-            <button type="button" id="clear-search-btn" class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-xs text-bgray-400 hover:text-bgray-600 dark:text-bgray-500 dark:hover:text-bgray-300" title="Close search">✕</button>
         </div>
     </div>
 
@@ -73,7 +72,7 @@
                 <span>PINNED</span>
             </div>
 
-            <div id="pinned-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="pinned-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 @foreach ($pinnedNotes as $note)
                     @include('quick-notes.partials.note-card', ['note' => $note])
                 @endforeach
@@ -86,7 +85,7 @@
                 OTHERS
             </div>
 
-            <div id="others-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="others-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 @foreach ($otherActiveNotes as $note)
                     @include('quick-notes.partials.note-card', ['note' => $note])
                 @endforeach
@@ -114,7 +113,7 @@
             ARCHIVED NOTES
         </div>
 
-        <div id="archived-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="archived-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             @foreach ($archivedNotes as $note)
                 @include('quick-notes.partials.note-card', ['note' => $note])
             @endforeach
