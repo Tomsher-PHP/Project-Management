@@ -124,9 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Drawer Handlers after AJAX content loads
     function initDrawerHandlers() {
-        const closeBtn = document.getElementById('quick-notes-drawer-close-btn');
-        closeBtn?.addEventListener('click', closeDrawer);
-
         const openCreateBtn = document.getElementById('open-create-note-btn');
         openCreateBtn?.addEventListener('click', openCreateModal);
 
@@ -139,33 +136,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const archivedSection = document.getElementById('archived-notes-section');
 
         tabActiveBtn?.addEventListener('click', () => {
-            tabActiveBtn.className = 'rounded-lg px-3 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
-            tabArchivedBtn.className = 'rounded-lg px-3 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
+            tabActiveBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
+            tabArchivedBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
             activeSection?.classList.remove('hidden');
             archivedSection?.classList.add('hidden');
         });
 
         tabArchivedBtn?.addEventListener('click', () => {
-            tabArchivedBtn.className = 'rounded-lg px-3 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
-            tabActiveBtn.className = 'rounded-lg px-3 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
+            tabArchivedBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
+            tabActiveBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
             archivedSection?.classList.remove('hidden');
             activeSection?.classList.add('hidden');
         });
 
-        // Search Input Filtering
+        // Search Bar Toggle & Input Filtering
+        const toggleSearchBtn = document.getElementById('toggle-search-btn');
+        const titleWrapper = document.getElementById('drawer-title-wrapper');
+        const searchWrapper = document.getElementById('drawer-search-wrapper');
         const searchInput = document.getElementById('notes-search-input');
         const clearSearchBtn = document.getElementById('clear-search-btn');
         let searchTimer = null;
 
+        function showSearchBar() {
+            titleWrapper?.classList.add('hidden');
+            searchWrapper?.classList.remove('hidden');
+            searchInput?.focus();
+        }
+
+        function hideSearchBar() {
+            if (searchInput) searchInput.value = '';
+            searchWrapper?.classList.add('hidden');
+            titleWrapper?.classList.remove('hidden');
+            applySearch();
+        }
+
+        toggleSearchBtn?.addEventListener('click', () => {
+            if (searchWrapper?.classList.contains('hidden')) {
+                showSearchBar();
+            } else {
+                hideSearchBar();
+            }
+        });
+
+        clearSearchBtn?.addEventListener('click', hideSearchBar);
+
         function applySearch() {
             const query = searchInput?.value.toLowerCase().trim() || '';
-            if (query) {
-                clearSearchBtn?.classList.remove('hidden');
-                clearSearchBtn?.classList.add('flex');
-            } else {
-                clearSearchBtn?.classList.add('hidden');
-                clearSearchBtn?.classList.remove('flex');
-            }
 
             document.querySelectorAll('#quick-notes-drawer-body .note-card').forEach(card => {
                 const title = (card.querySelector('.note-card-title')?.textContent || '').toLowerCase();
@@ -181,11 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput?.addEventListener('input', () => {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(applySearch, 150);
-        });
-
-        clearSearchBtn?.addEventListener('click', () => {
-            if (searchInput) searchInput.value = '';
-            applySearch();
         });
 
         // Delegate Card Click Actions (Edit, Pin, Archive, Delete)
@@ -227,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (othersGrid) setupGridDropEvents(othersGrid);
         if (archivedGrid) setupGridDropEvents(archivedGrid);
 
-        // Modal initialization if not already done
+        // Modal initialization
         initModalLogic();
     }
 
@@ -502,7 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const pinToggleBtn = document.getElementById('quick_note_pin_toggle_btn');
         const submitBtn = document.getElementById('quick_note_submit_btn');
         const submitSpinner = document.getElementById('quick_note_submit_spinner');
-        const submitLabel = document.getElementById('quick_note_submit_label');
         const modalTitle = document.getElementById('quick-note-modal-title');
 
         const editorEl = document.getElementById('quick_note_quill_editor');

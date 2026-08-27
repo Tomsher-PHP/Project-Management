@@ -4,57 +4,56 @@
     $archivedNotes = $notes->filter(fn($n) => $n->is_archived);
 @endphp
 
-<!-- Drawer Header -->
-<div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400">
-    <div class="flex items-center gap-3">
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-black dark:text-white">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-        </span>
-        <div>
-            <div class="flex items-center gap-2">
-                <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Quick Notes</h2>
-                <span id="notes-count-badge" class="inline-flex text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    {{ $notes->where('is_archived', false)->count() }}
-                </span>
+<!-- Drawer Header (Single Row) -->
+<div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
+    <!-- Left: Title OR Search Bar -->
+    <div class="flex items-center flex-1 mr-3 min-w-0">
+        <!-- Title Block (Default Visible) -->
+        <div id="drawer-title-wrapper" class="flex items-center">
+            <span class="inline-flex h-9 w-9 items-center justify-center text-black dark:text-white">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </span>
+            <div class="flex items-center">
+                <h2 class="text-md font-bold text-bgray-900 dark:text-white whitespace-nowrap">Quick Notes</h2>
             </div>
         </div>
-    </div>
 
-    <div class="flex items-center gap-2">
-        <button type="button" id="open-create-note-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-success-300 text-white shadow-sm transition hover:bg-success-400 focus:outline-none" aria-label="New Note" title="New Note">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-        </button>
-
-        <button type="button" id="quick-notes-drawer-close-btn" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-red-400" aria-label="Close drawer">
-            ✕
-        </button>
-    </div>
-</div>
-
-<!-- Toolbar: Search & Active/Archived Tabs -->
-<div class="border-b border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30 space-y-3">
-    <div class="flex items-center gap-3">
-        <!-- Search Input -->
-        <div class="relative flex-1">
+        <!-- Search Bar (Default Hidden) -->
+        <div id="drawer-search-wrapper" class="hidden relative flex-1 max-w-sm">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-bgray-400 dark:text-bgray-500">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </span>
-            <input type="text" id="notes-search-input" placeholder="Search notes..." class="w-full rounded-xl border border-bgray-200 bg-white pl-9 pr-8 py-2 text-xs text-bgray-900 placeholder-bgray-400 focus:border-success-300 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:placeholder-bgray-500 dark:focus:border-success-300">
-            <button type="button" id="clear-search-btn" class="hidden absolute inset-y-0 right-0 items-center pr-2.5 text-xs text-bgray-400 hover:text-bgray-600 dark:text-bgray-500 dark:hover:text-bgray-300">✕</button>
+            <input type="text" id="notes-search-input" placeholder="Search notes..." class="w-full rounded-xl border border-bgray-200 bg-bgray-50/50 pl-9 pr-8 py-1.5 text-xs text-bgray-900 placeholder-bgray-400 focus:border-success-300 focus:bg-white focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:placeholder-bgray-500">
+            <button type="button" id="clear-search-btn" class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-xs text-bgray-400 hover:text-bgray-600 dark:text-bgray-500 dark:hover:text-bgray-300" title="Close search">✕</button>
         </div>
+    </div>
+
+    <!-- Right: Search Icon -> '+' Button -> Active/Archived Toggle -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- Search Toggle Icon Button -->
+        <button type="button" id="toggle-search-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Search Notes" aria-label="Search Notes">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+
+        <!-- '+' New Note Button -->
+        <button type="button" id="open-create-note-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="New Note" title="New Note">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+        </button>
 
         <!-- Active / Archived Tab Toggle -->
-        <div class="inline-flex rounded-xl border border-bgray-200 bg-white p-1 dark:border-darkblack-400 dark:bg-darkblack-500">
-            <button type="button" id="tab-active-btn" class="rounded-lg px-3 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm">
-                Active
+        <div class="inline-flex rounded-lg border border-bgray-200 bg-white p-0.5 dark:border-darkblack-400 dark:bg-darkblack-500">
+            <button type="button" id="tab-active-btn" class="rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm">
+                Active (<span id="notes-count-badge">{{ $notes->where('is_archived', false)->count() }}</span>)
             </button>
-            <button type="button" id="tab-archived-btn" class="rounded-lg px-3 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition">
+            <button type="button" id="tab-archived-btn" class="rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition">
                 Archived (<span id="archived-count-label">{{ $archivedNotes->count() }}</span>)
             </button>
         </div>
