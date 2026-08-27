@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let currentEditId = null;
+    let isPopulatingEdit = false;
 
     // TomSelect Instances
     let tsProject, tsMilestone, tsSprint, tsTask, tsTargetUser, tsPurpose, descriptionEditor;
@@ -43,130 +44,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const initSelects = () => {
-        tsProject = projectSelect.tomselect;
-        tsMilestone = milestoneSelect.tomselect;
-        tsSprint = sprintSelect.tomselect;
-        tsTask = taskSelect.tomselect;
-        tsTargetUser = targetUserSelect?.tomselect;
-        tsPurpose = purposeSelect?.tomselect;
+    const loadedHandoffProjectDependencies = {};
 
-        if (tsPurpose) {
-            tsPurpose.on('item_add', () => {
-                tsPurpose.close();
-                tsPurpose.blur();
-            });
-            tsPurpose.on('change', () => {
-                tsPurpose.close();
-            });
+    const fetchHandoffProjectDependencies = async (projectId) => {
+        if (!projectId) return null;
+        const key = String(projectId);
+        if (loadedHandoffProjectDependencies[key]) {
+            return loadedHandoffProjectDependencies[key];
         }
 
-        if (!tsProject) return;
-
-        const loadedHandoffProjectDependencies = {};
-
-        const fetchHandoffProjectDependencies = async (projectId) => {
-            if (!projectId) return null;
-            const key = String(projectId);
-            if (loadedHandoffProjectDependencies[key]) {
-                return loadedHandoffProjectDependencies[key];
-            }
-
-            const requestUrl = `/projects/${encodeURIComponent(key)}/task-create-dependencies`;
-            const response = await fetch(requestUrl, {
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-
-            const result = await response.json();
-            if (!response.ok || !result.status || !result.data) {
-                throw new Error(result.message || 'Unable to load project task dependencies.');
-            }
-
-            loadedHandoffProjectDependencies[key] = result.data;
-            return result.data;
-        };
-
-        // Cascading updates
-        tsProject.on('change', async (projectId) => {
-            tsMilestone.clear();
-            tsMilestone.clearOptions();
-            tsSprint.clear();
-            tsSprint.clearOptions();
-            tsTask.clear();
-            tsTask.clearOptions();
-            tsTargetUser?.clear();
-            tsTargetUser?.clearOptions();
-
-            if (!projectId) return;
-
-            try {
-                const projectDeps = await fetchHandoffProjectDependencies(projectId);
-                if (!projectDeps) return;
-
-                const currentUserId = String(form.dataset.currentUserId || '');
-                const targetUsers = (projectDeps.assignees || []).filter(u => String(u.value) !== currentUserId);
-
-                targetUsers.forEach((user) => {
-                    tsTargetUser?.addOption(user);
-                });
-                tsTargetUser?.refreshOptions(false);
-
-                (projectDeps.milestones || []).forEach(m => {
-                    tsMilestone.addOption({ value: m.value || m.id, text: m.text || m.name });
-                });
-                tsMilestone.refreshOptions(false);
-
-                (projectDeps.sprints || []).forEach(s => {
-                    tsSprint.addOption({ value: s.value || s.id, text: s.text || s.name });
-                });
-                tsSprint.refreshOptions(false);
-
-                fetchTasks();
-            } catch (error) {
-                Alert.errorModal(error.message || 'Unable to load project handoff options.');
-            }
+        const requestUrl = `/projects/${encodeURIComponent(key)}/task-create-dependencies`;
+        const response = await fetch(requestUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
         });
 
-        tsMilestone.on('change', (milestoneId) => {
-            if (!milestoneId) return;
-            const projectId = tsProject.getValue();
-            tsSprint.clear();
-            tsSprint.clearOptions();
+        const result = await response.json();
+        if (!response.ok || !result.status || !result.data) {
+            throw new Error(result.message || 'Unable to load project task dependencies.');
+        }
 
-            const projectDeps = loadedHandoffProjectDependencies[String(projectId)];
-            const availableSprints = (projectDeps?.sprints || []).filter(s => {
-                return String(s.project_milestone_id || '') === String(milestoneId);
-            });
-
-            availableSprints.forEach(s => {
-                tsSprint.addOption({ value: s.value || s.id, text: s.text || s.name });
-            });
-            tsSprint.refreshOptions(false);
-            fetchTasks();
-        });
-
-        tsSprint.on('change', () => {
-            fetchTasks();
-        });
+        loadedHandoffProjectDependencies[key] = result.data;
+        return result.data;
     };
-
-    initDescriptionEditor();
-
-    if (projectSelect.tomselect) {
-        initSelects();
-    } else {
-        document.addEventListener('tomselect:ready', initSelects);
-    }
-
-    purposeSelect?.addEventListener('change', () => {
-        if (purposeSelect.tomselect) {
-            purposeSelect.tomselect.close();
-            purposeSelect.tomselect.blur();
-        }
-    });
 
     const fetchTasks = async () => {
         const projectId = projectSelect?.value || '';
@@ -174,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const sprintId = sprintSelect?.value || '';
 
         if (!projectId) {
-            tsTask.clearOptions();
-            tsTask.clear();
+            tsTask?.clearOptions();
+            tsTask?.clear();
             return;
         }
 
@@ -204,24 +106,139 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             const tasks = data.options || data.data || [];
 
-            tsTask.clearOptions();
-            tsTask.clear();
+            tsTask?.clearOptions();
+            tsTask?.clear();
 
             tasks.forEach(task => {
-                tsTask.addOption({
-                    value: task.id,
+                tsTask?.addOption({
+                    value: String(task.id),
                     text: task.name || task.text,
                 });
             });
 
-            tsTask.refreshOptions(false);
+            tsTask?.refreshOptions(false);
         } catch (err) {
             console.error('Could not fetch handoff tasks', err);
         }
     };
 
+    const initSelects = () => {
+        tsProject = projectSelect.tomselect;
+        tsMilestone = milestoneSelect.tomselect;
+        tsSprint = sprintSelect.tomselect;
+        tsTask = taskSelect.tomselect;
+        tsTargetUser = targetUserSelect?.tomselect;
+        tsPurpose = purposeSelect?.tomselect;
+
+        if (tsPurpose) {
+            tsPurpose.on('item_add', () => {
+                tsPurpose.close();
+                tsPurpose.blur();
+            });
+            tsPurpose.on('change', () => {
+                tsPurpose.close();
+            });
+        }
+
+        if (!tsProject) return;
+
+        // Cascading updates on manual change
+        tsProject.on('change', async (projectId) => {
+            if (isPopulatingEdit) return;
+
+            tsMilestone?.clear();
+            tsMilestone?.clearOptions();
+            tsSprint?.clear();
+            tsSprint?.clearOptions();
+            tsTask?.clear();
+            tsTask?.clearOptions();
+            tsTargetUser?.clear();
+            tsTargetUser?.clearOptions();
+
+            if (!projectId) return;
+
+            try {
+                const projectDeps = await fetchHandoffProjectDependencies(projectId);
+                if (!projectDeps) return;
+
+                const currentUserId = String(form.dataset.currentUserId || '');
+                const targetUsers = (projectDeps.assignees || []).filter(u => String(u.value) !== currentUserId);
+
+                targetUsers.forEach((user) => {
+                    tsTargetUser?.addOption(user);
+                });
+                tsTargetUser?.refreshOptions(false);
+
+                (projectDeps.milestones || []).forEach(m => {
+                    tsMilestone?.addOption({ value: String(m.value || m.id), text: m.text || m.name });
+                });
+                tsMilestone?.refreshOptions(false);
+
+                (projectDeps.sprints || []).forEach(s => {
+                    tsSprint?.addOption({ value: String(s.value || s.id), text: s.text || s.name });
+                });
+                tsSprint?.refreshOptions(false);
+
+                await fetchTasks();
+            } catch (error) {
+                Alert.errorModal(error.message || 'Unable to load project handoff options.');
+            }
+        });
+
+        tsMilestone?.on('change', (milestoneId) => {
+            if (isPopulatingEdit) return;
+
+            tsSprint?.clear();
+            tsSprint?.clearOptions();
+
+            if (!milestoneId) {
+                const projectId = tsProject?.getValue();
+                const projectDeps = loadedHandoffProjectDependencies[String(projectId)];
+                (projectDeps?.sprints || []).forEach(s => {
+                    tsSprint?.addOption({ value: String(s.value || s.id), text: s.text || s.name });
+                });
+                tsSprint?.refreshOptions(false);
+                fetchTasks();
+                return;
+            }
+
+            const projectId = tsProject?.getValue();
+            const projectDeps = loadedHandoffProjectDependencies[String(projectId)];
+            const availableSprints = (projectDeps?.sprints || []).filter(s => {
+                return String(s.project_milestone_id || '') === String(milestoneId);
+            });
+
+            availableSprints.forEach(s => {
+                tsSprint?.addOption({ value: String(s.value || s.id), text: s.text || s.name });
+            });
+            tsSprint?.refreshOptions(false);
+            fetchTasks();
+        });
+
+        tsSprint?.on('change', () => {
+            if (isPopulatingEdit) return;
+            fetchTasks();
+        });
+    };
+
+    initDescriptionEditor();
+
+    if (projectSelect.tomselect) {
+        initSelects();
+    } else {
+        document.addEventListener('tomselect:ready', initSelects);
+    }
+
+    purposeSelect?.addEventListener('change', () => {
+        if (purposeSelect.tomselect) {
+            purposeSelect.tomselect.close();
+            purposeSelect.tomselect.blur();
+        }
+    });
+
     const resetHandoffForm = () => {
         currentEditId = null;
+        isPopulatingEdit = false;
         if (modalTitleEl) modalTitleEl.textContent = 'Create Handoff Request';
         if (submitBtn) submitBtn.textContent = 'Create Handoff';
         form.reset();
@@ -254,13 +271,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const populateEditForm = async (btn) => {
         resetHandoffForm();
+        isPopulatingEdit = true;
 
         const handoffId = btn.dataset.handoffRequestId;
         const projectId = btn.dataset.projectId;
+        const projectName = btn.dataset.projectName;
+        const projectCode = btn.dataset.projectCode;
         const milestoneId = btn.dataset.projectMilestoneId;
         const sprintId = btn.dataset.projectSprintId;
         const sourceTaskId = btn.dataset.sourceTaskId;
+        const sourceTaskName = btn.dataset.sourceTaskName;
         const targetUserId = btn.dataset.targetUserId;
+        const targetUserName = btn.dataset.targetUserName;
         const purpose = btn.dataset.purpose;
         const description = btn.dataset.description;
 
@@ -270,29 +292,91 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitBtn) submitBtn.textContent = 'Update Handoff';
 
         if (projectId && tsProject) {
-            tsProject.setValue(projectId);
-
-            if (targetUserId && tsTargetUser) {
-                tsTargetUser.setValue(targetUserId);
+            // Ensure option exists in tsProject (which is tom-select-lazy)
+            if (!tsProject.options[projectId]) {
+                const label = projectName
+                    ? (projectCode ? `${projectName} (${projectCode})` : projectName)
+                    : `Project #${projectId}`;
+                tsProject.addOption({
+                    value: String(projectId),
+                    text: label,
+                    subtype: projectCode || '',
+                });
             }
+            tsProject.setValue(projectId, true);
 
-            if (milestoneId && tsMilestone) {
-                tsMilestone.setValue(milestoneId);
+            try {
+                const projectDeps = await fetchHandoffProjectDependencies(projectId);
+
+                // Populate Target Users
+                tsTargetUser?.clearOptions();
+                tsTargetUser?.clear();
+                if (projectDeps) {
+                    const currentUserId = String(form.dataset.currentUserId || '');
+                    const targetUsers = (projectDeps.assignees || []).filter(u => String(u.value) !== currentUserId);
+                    targetUsers.forEach((user) => {
+                        tsTargetUser?.addOption(user);
+                    });
+                }
+                if (targetUserId && targetUserName && tsTargetUser && !tsTargetUser.options[targetUserId]) {
+                    tsTargetUser.addOption({ value: String(targetUserId), text: targetUserName });
+                }
+                tsTargetUser?.refreshOptions(false);
+                if (targetUserId && tsTargetUser) {
+                    tsTargetUser.setValue(targetUserId, true);
+                }
+
+                // Populate Milestones
+                tsMilestone?.clearOptions();
+                tsMilestone?.clear();
+                if (projectDeps) {
+                    (projectDeps.milestones || []).forEach(m => {
+                        tsMilestone?.addOption({ value: String(m.value || m.id), text: m.text || m.name });
+                    });
+                }
+                tsMilestone?.refreshOptions(false);
+                if (milestoneId && tsMilestone) {
+                    tsMilestone.setValue(milestoneId, true);
+                }
+
+                // Populate Sprints (filtered by milestone if selected)
+                tsSprint?.clearOptions();
+                tsSprint?.clear();
+                if (projectDeps) {
+                    const sprintsToLoad = (projectDeps.sprints || []).filter(s => {
+                        if (!milestoneId) return true;
+                        return String(s.project_milestone_id || '') === String(milestoneId);
+                    });
+                    sprintsToLoad.forEach(s => {
+                        tsSprint?.addOption({ value: String(s.value || s.id), text: s.text || s.name });
+                    });
+                }
+                tsSprint?.refreshOptions(false);
+                if (sprintId && tsSprint) {
+                    tsSprint.setValue(sprintId, true);
+                }
+
+                // Fetch source task options
+                await fetchTasks();
+
+                if (sourceTaskId && sourceTaskName && tsTask && !tsTask.options[sourceTaskId]) {
+                    tsTask.addOption({ value: String(sourceTaskId), text: sourceTaskName });
+                    tsTask.refreshOptions(false);
+                }
+                if (sourceTaskId && tsTask) {
+                    tsTask.setValue(sourceTaskId, true);
+                }
+            } catch (error) {
+                console.error('Error loading handoff edit dependencies:', error);
+            } finally {
+                isPopulatingEdit = false;
             }
-
-            if (sprintId && tsSprint) {
-                tsSprint.setValue(sprintId);
-            }
-
-            await fetchTasks();
-
-            if (sourceTaskId && tsTask) {
-                tsTask.setValue(sourceTaskId);
-            }
+        } else {
+            isPopulatingEdit = false;
         }
 
         if (purpose && tsPurpose) {
-            tsPurpose.setValue(purpose);
+            tsPurpose.setValue(purpose, true);
         }
 
         if (description) {

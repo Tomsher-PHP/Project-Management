@@ -1,9 +1,4 @@
 @php
-    $handoffAccessibleProjects =
-        $taskCreateProjects ??
-        \App\Models\Project::accessibleBy(auth()->user())
-            ->where('is_active', true)
-            ->get(['id', 'name', 'project_code', 'project_flow']);
     $handoffPurposes = \App\Models\HandoffPurpose::active()->get();
 @endphp
 
@@ -29,13 +24,8 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                            <select id="handoff_project_id" name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-handoff-project-select>
+                            <select id="handoff_project_id" name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0" data-handoff-project-select>
                                 <option value="">Select project</option>
-                                @foreach ($handoffAccessibleProjects as $projectOption)
-                                    <option value="{{ $projectOption->id }}" data-flow="{{ $projectOption->project_flow }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
-                                        {{ $projectOption->name }} ({{ $projectOption->project_code }})
-                                    </option>
-                                @endforeach
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_id"></p>
                         </div>
