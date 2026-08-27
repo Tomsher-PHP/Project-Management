@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CC3gagzL.css",
+    "file": "assets/app-BiJbj93w.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BJX9b74p.js",
+    "file": "assets/app-bAtgi4ET.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -373,7 +373,7 @@
     ]
   },
   "resources/js/modules/tasks/handoff-blend.js": {
-    "file": "assets/handoff-blend-DOMUIU-W.js",
+    "file": "assets/handoff-blend-DFiE0lNY.js",
     "name": "handoff-blend",
     "src": "resources/js/modules/tasks/handoff-blend.js",
     "isEntry": true,
@@ -383,7 +383,7 @@
     ]
   },
   "resources/js/modules/tasks/handoff.js": {
-    "file": "assets/handoff-BjAofee4.js",
+    "file": "assets/handoff-CKtlsnXC.js",
     "name": "handoff",
     "src": "resources/js/modules/tasks/handoff.js",
     "isEntry": true,
