@@ -537,7 +537,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Quick Notes routes
     Route::prefix('quick-notes')->as('quick-notes.')->group(function () {
-        Route::get('/', [QuickNoteController::class, 'index'])->name('index');
         Route::get('/drawer', [QuickNoteController::class, 'drawer'])->name('drawer');
         Route::post('/', [QuickNoteController::class, 'store'])->name('store');
         Route::post('/reorder', [QuickNoteController::class, 'reorder'])->name('reorder');
