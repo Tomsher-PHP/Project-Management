@@ -1,4 +1,5 @@
 @php
+    $isHexColor = str_starts_with($note->color ?? '', '#');
     $colorClass = match ($note->color) {
         'yellow' => 'bg-amber-50/90 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50',
         'green' => 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/50',
@@ -7,15 +8,17 @@
         'pink' => 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/50',
         'orange' => 'bg-orange-50/90 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800/50',
         'gray' => 'bg-slate-100/90 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50',
-        default => 'bg-white dark:bg-darkblack-600 border-bgray-200 dark:border-darkblack-400',
+        default => $isHexColor ? 'border-gray-300' : 'bg-white dark:bg-darkblack-600 border-bgray-200 dark:border-darkblack-400',
     };
+    $cardStyle = $isHexColor ? "background-color: {$note->color}; color: #111827;" : '';
+    $titleColorClass = $isHexColor ? 'text-gray-900' : 'text-bgray-900 dark:text-white';
 @endphp
 
-<div class="note-card group relative flex flex-col justify-between rounded-[10px] border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-grab active:cursor-grabbing {{ $colorClass }}" draggable="true" data-note-id="{{ $note->id }}" data-note-pinned="{{ $note->is_pinned ? '1' : '0' }}" data-note-archived="{{ $note->is_archived ? '1' : '0' }}" data-note-color="{{ $note->color ?? '' }}" data-project-id="{{ $note->project_id ?? '' }}" data-task-id="{{ $note->task_id ?? '' }}">
+<div class="note-card group relative flex flex-col justify-between rounded-[10px] border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-grab active:cursor-grabbing {{ $colorClass }}" @if($cardStyle) style="{{ $cardStyle }}" @endif draggable="true" data-note-id="{{ $note->id }}" data-note-pinned="{{ $note->is_pinned ? '1' : '0' }}" data-note-archived="{{ $note->is_archived ? '1' : '0' }}" data-note-color="{{ $note->color ?? '' }}" data-project-id="{{ $note->project_id ?? '' }}" data-task-id="{{ $note->task_id ?? '' }}">
     <div>
         <!-- Top row: Title and Pin button -->
         <div class="mb-3 flex items-start justify-between gap-3">
-            <h4 class="note-card-title text-base font-semibold text-bgray-900 dark:text-white line-clamp-2 break-words">
+            <h4 class="note-card-title text-base font-semibold {{ $titleColorClass }} line-clamp-2 break-words">
                 {{ $note->title ?: 'Untitled Note' }}
             </h4>
 

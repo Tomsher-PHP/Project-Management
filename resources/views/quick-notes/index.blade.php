@@ -493,10 +493,14 @@
             function updateModalColor(color) {
                 const swatchBtns = document.querySelectorAll('#quick_note_color_swatches .color-swatch-btn');
                 swatchBtns.forEach(b => {
-                    if (b.getAttribute('data-color') === (color || '')) {
-                        b.classList.add('ring-success-300', 'scale-110');
+                    const btnColor = b.getAttribute('data-color');
+                    const checkMark = b.querySelector('.swatch-check');
+                    if (btnColor === (color || '')) {
+                        b.classList.add('ring-2', 'ring-success-400', 'border-success-400', 'scale-110');
+                        if (checkMark) checkMark.classList.remove('opacity-0');
                     } else {
-                        b.classList.remove('ring-success-300', 'scale-110');
+                        b.classList.remove('ring-2', 'ring-success-400', 'border-success-400', 'scale-110');
+                        if (checkMark) checkMark.classList.add('opacity-0');
                     }
                 });
             }

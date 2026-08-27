@@ -643,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isArchivedInput = document.getElementById('quick_note_is_archived_input');
         const modalTitle = document.getElementById('quick-note-modal-title');
         const submitLabel = document.getElementById('quick_note_submit_label');
+        const archiveBtn = document.getElementById('quick_note_archive_toggle_btn');
 
         form.action = '/quick-notes';
         methodInput.value = 'POST';
@@ -653,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         colorInput.value = '';
         isPinnedInput.value = '0';
         isArchivedInput.value = '0';
+        archiveBtn?.classList.add('hidden');
         updateModalColor('');
         updatePinButtonUI(false);
         modalTitle.textContent = 'New Quick Note';
@@ -700,6 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
             isPinnedInput.value = note.is_pinned ? '1' : '0';
             isArchivedInput.value = note.is_archived ? '1' : '0';
 
+            const archiveBtn = document.getElementById('quick_note_archive_toggle_btn');
+            archiveBtn?.classList.remove('hidden');
+
             updateModalColor(note.color || '');
             updatePinButtonUI(note.is_pinned);
 
@@ -739,10 +744,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateModalColor(color) {
         const swatchBtns = document.querySelectorAll('#quick_note_color_swatches .color-swatch-btn');
         swatchBtns.forEach(b => {
-            if (b.getAttribute('data-color') === (color || '')) {
-                b.classList.add('ring-success-300', 'scale-110');
+            const btnColor = b.getAttribute('data-color');
+            const checkMark = b.querySelector('.swatch-check');
+            if (btnColor === (color || '')) {
+                b.classList.add('ring-2', 'ring-success-400', 'border-success-400', 'scale-110');
+                if (checkMark) checkMark.classList.remove('opacity-0');
             } else {
-                b.classList.remove('ring-success-300', 'scale-110');
+                b.classList.remove('ring-2', 'ring-success-400', 'border-success-400', 'scale-110');
+                if (checkMark) checkMark.classList.add('opacity-0');
             }
         });
     }
