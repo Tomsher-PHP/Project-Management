@@ -216,9 +216,15 @@
                 });
             }
 
-            // Toast notification helper
+            // Toast notification helper using window.Alert
             function showToast(message, icon = 'success') {
-                if (window.Swal) {
+                if (window.Alert && typeof window.Alert.success === 'function') {
+                    if (icon === 'error') {
+                        window.Alert.error(message);
+                    } else {
+                        window.Alert.success(message);
+                    }
+                } else if (window.Swal) {
                     window.Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -644,6 +650,14 @@
 
             // Toggle Pin Action via AJAX
             function togglePinNote(noteId, card) {
+                const currentPinnedCards = pinnedGrid ? pinnedGrid.querySelectorAll('.note-card').length : 0;
+                const isCurrentlyPinned = card.getAttribute('data-note-pinned') === '1';
+
+                if (!isCurrentlyPinned && currentPinnedCards >= 4) {
+                    showToast('You can pin a maximum of 4 notes.', 'error');
+                    return;
+                }
+
                 fetch(`/quick-notes/${noteId}/pin`, {
                     method: 'PATCH',
                     headers: {
@@ -739,21 +753,29 @@
                     .catch(() => showToast('Failed to delete note', 'error'));
                 };
 
-                if (window.Swal) {
+                if (window.Alert && typeof window.Alert.confirm === 'function') {
+                    window.Alert.confirm({
+                        title: 'Delete Quick Note?',
+                        text: 'Are you sure you want to delete this note? This action cannot be undone.',
+                        confirmText: 'Yes, delete it',
+                        confirmColor: '#EF4444',
+                        cancelColor: '#6B7280'
+                    }).then(result => {
+                        if (result.isConfirmed) doDelete();
+                    });
+                } else if (window.Swal) {
                     window.Swal.fire({
                         title: 'Delete Quick Note?',
-                        text: 'Are you sure you want to delete this quick note? This action cannot be undone.',
+                        text: 'Are you sure you want to delete this note? This action cannot be undone.',
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#EF4444',
                         cancelButtonColor: '#6B7280',
                         confirmButtonText: 'Yes, delete it'
                     }).then(result => {
-                        if (result.isConfirmed) {
-                            doDelete();
-                        }
+                        if (result.isConfirmed) doDelete();
                     });
-                } else if (confirm('Are you sure you want to delete this quick note?')) {
+                } else if (confirm('Are you sure you want to delete this note?')) {
                     doDelete();
                 }
             }

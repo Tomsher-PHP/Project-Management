@@ -12,9 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let drawerLoaded = false;
     let quill = null;
 
-    // Toast Helper
+    // Toast Helper using project Alert library
     function showToast(message, icon = 'success') {
-        if (window.Swal) {
+        if (window.Alert && typeof window.Alert.success === 'function') {
+            if (icon === 'error') {
+                window.Alert.error(message);
+            } else {
+                window.Alert.success(message);
+            }
+        } else if (window.Swal) {
             window.Swal.fire({
                 toast: true,
                 position: 'top-end',
@@ -378,6 +384,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Action Handlers
     function togglePinNote(noteId, card) {
+        const pinnedGrid = document.getElementById('pinned-notes-grid');
+        const currentPinnedCards = pinnedGrid ? pinnedGrid.querySelectorAll('.note-card').length : 0;
+        const isCurrentlyPinned = card.getAttribute('data-note-pinned') === '1';
+
+        if (!isCurrentlyPinned && currentPinnedCards >= 4) {
+            showToast('You can pin a maximum of 4 notes.', 'error');
+            return;
+        }
+
         fetch(`/quick-notes/${noteId}/pin`, {
             method: 'PATCH',
             headers: {
@@ -395,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.remove();
 
                 const note = res.data;
-                const pinnedGrid = document.getElementById('pinned-notes-grid');
                 const othersGrid = document.getElementById('others-notes-grid');
 
                 if (note.is_pinned && pinnedGrid) {
@@ -478,7 +492,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(() => showToast('Failed to delete note', 'error'));
         };
 
-        if (window.Swal) {
+        if (window.Alert && typeof window.Alert.confirm === 'function') {
+            window.Alert.confirm({
+                title: 'Delete Quick Note?',
+                text: 'Are you sure you want to delete this note? This action cannot be undone.',
+                confirmText: 'Yes, delete it',
+                confirmColor: '#EF4444',
+                cancelColor: '#6B7280'
+            }).then(result => {
+                if (result.isConfirmed) doDelete();
+            });
+        } else if (window.Swal) {
             window.Swal.fire({
                 title: 'Delete Quick Note?',
                 text: 'Are you sure you want to delete this note? This action cannot be undone.',
@@ -513,7 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const pinToggleBtn = document.getElementById('quick_note_pin_toggle_btn');
         const submitBtn = document.getElementById('quick_note_submit_btn');
         const submitSpinner = document.getElementById('quick_note_submit_spinner');
-        const modalTitle = document.getElementById('quick-note-modal-title');
 
         const editorEl = document.getElementById('quick_note_quill_editor');
         if (editorEl && window.Quill && !quill) {
@@ -550,6 +573,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pin toggle
         pinToggleBtn?.addEventListener('click', () => {
             const current = isPinnedInput.value === '1';
+            const pinnedGrid = document.getElementById('pinned-notes-grid');
+            const currentPinnedCount = pinnedGrid ? pinnedGrid.querySelectorAll('.note-card').length : 0;
+
+            if (!current && currentPinnedCount >= 4) {
+                showToast('You can pin a maximum of 4 notes.', 'error');
+                return;
+            }
+
             isPinnedInput.value = current ? '0' : '1';
             updatePinButtonUI(!current);
         });
