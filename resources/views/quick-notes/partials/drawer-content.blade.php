@@ -73,7 +73,7 @@
                 <span>PINNED</span>
             </div>
 
-            <div id="pinned-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <div id="pinned-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($pinnedNotes as $note)
                     @include('quick-notes.partials.note-card', ['note' => $note])
                 @endforeach
@@ -86,7 +86,7 @@
                 OTHERS
             </div>
 
-            <div id="others-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <div id="others-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($otherActiveNotes as $note)
                     @include('quick-notes.partials.note-card', ['note' => $note])
                 @endforeach
@@ -114,7 +114,7 @@
             ARCHIVED NOTES
         </div>
 
-        <div id="archived-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        <div id="archived-notes-grid" class="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($archivedNotes as $note)
                 @include('quick-notes.partials.note-card', ['note' => $note])
             @endforeach

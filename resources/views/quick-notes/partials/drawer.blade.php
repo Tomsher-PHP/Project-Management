@@ -5,7 +5,7 @@
 
     <div class="fixed inset-y-0 right-0 flex max-w-full pl-6 sm:pl-10">
         <!-- Right Drawer Panel -->
-        <div id="quick-notes-drawer-panel" class="w-screen max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl bg-white dark:bg-darkblack-600 shadow-2xl flex flex-col h-full transform transition-transform duration-300 ease-in-out translate-x-full">
+        <div id="quick-notes-drawer-panel" class="w-screen max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl 2xl:max-5xl bg-white dark:bg-darkblack-600 shadow-2xl flex flex-col h-full transform transition-transform duration-300 ease-in-out translate-x-full">
             <!-- Dynamic Drawer Content (Loaded asynchronously via AJAX) -->
             <div id="quick-notes-drawer-body" class="flex-1 flex flex-col min-h-0 overflow-y-auto">
                 <!-- Initial Loading State Placeholder -->
