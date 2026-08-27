@@ -79,5 +79,5 @@ return [
     ],
 
     // Daily work notification grace period in minutes
-    'daily_work_notify' => 60,
+    'daily_work_notify' => 120,
 ];
