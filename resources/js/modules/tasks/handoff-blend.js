@@ -239,7 +239,7 @@ document.addEventListener('click', (e) => {
     if (!assignBtn) return;
 
     // Wait for the modal script (task-list-create.js) to finish setup and reset
-    setTimeout(() => {
+    setTimeout(async () => {
         const root = document.querySelector('[data-task-create-root]');
         if (!root) return;
 
@@ -284,53 +284,89 @@ document.addEventListener('click', (e) => {
         }
 
         const projectId = assignBtn.dataset.projectId;
+        const projectName = assignBtn.dataset.projectName;
+        const projectCode = assignBtn.dataset.projectCode;
         const targetUserId = assignBtn.dataset.targetUserId;
+        const milestoneId = assignBtn.dataset.projectMilestoneId;
+        const sprintId = assignBtn.dataset.projectSprintId;
+
         const projectField = form.querySelector('[name="project_id"]');
         if (projectId && projectField) {
             if (projectField.tomselect) {
+                if (!projectField.tomselect.options[projectId]) {
+                    const label = projectName
+                        ? (projectCode ? `${projectName} (${projectCode})` : projectName)
+                        : `Project #${projectId}`;
+                    projectField.tomselect.addOption({
+                        value: String(projectId),
+                        text: label,
+                        subtype: projectCode || '',
+                    });
+                }
                 projectField.tomselect.setValue(projectId);
             } else {
                 projectField.value = projectId;
                 projectField.dispatchEvent(new Event('change', { bubbles: true }));
             }
 
-            // Wait for project fields (milestones) to update
-            setTimeout(() => {
-                const assigneeField = form.querySelector('[name="current_assignee_id"]');
-                if (targetUserId && assigneeField) {
-                    if (assigneeField.tomselect) {
-                        assigneeField.tomselect.setValue(targetUserId);
-                    } else {
-                        assigneeField.value = targetUserId;
-                        assigneeField.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                }
-
-                const milestoneId = assignBtn.dataset.projectMilestoneId;
-                const milestoneField = form.querySelector('[name="project_milestone_id"]');
-                if (milestoneId && milestoneField) {
-                    if (milestoneField.tomselect) {
-                        milestoneField.tomselect.setValue(milestoneId);
-                    } else {
-                        milestoneField.value = milestoneId;
-                        milestoneField.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-
-                    // Wait for sprints to load based on milestone
-                    setTimeout(() => {
-                        const sprintId = assignBtn.dataset.projectSprintId;
-                        const sprintField = form.querySelector('[name="project_sprint_id"]');
-                        if (sprintId && sprintField) {
-                            if (sprintField.tomselect) {
-                                sprintField.tomselect.setValue(sprintId);
-                            } else {
-                                sprintField.value = sprintId;
-                                sprintField.dispatchEvent(new Event('change', { bubbles: true }));
-                            }
+            // Poll for dependencies to load into task-create-dependencies script tag or dependencies state
+            const waitForDependencies = () => {
+                return new Promise((resolve) => {
+                    let attempts = 0;
+                    const maxAttempts = 30; // 3 seconds timeout max
+                    const checkInterval = setInterval(() => {
+                        attempts++;
+                        const scriptDepsNode = document.getElementById('task-create-dependencies');
+                        let dependencies = {};
+                        if (scriptDepsNode) {
+                            try {
+                                dependencies = JSON.parse(scriptDepsNode.textContent || '{}');
+                            } catch (_) {}
                         }
-                    }, 200);
+                        if ((dependencies.projects && dependencies.projects[String(projectId)]) || attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            };
+
+            await waitForDependencies();
+
+            // Set Assignee
+            const assigneeField = form.querySelector('[name="current_assignee_id"]');
+            if (targetUserId && assigneeField) {
+                if (assigneeField.tomselect) {
+                    assigneeField.tomselect.setValue(targetUserId);
+                } else {
+                    assigneeField.value = targetUserId;
+                    assigneeField.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-            }, 200);
+            }
+
+            // Set Milestone
+            const milestoneField = form.querySelector('[name="project_milestone_id"]');
+            if (milestoneId && milestoneField) {
+                if (milestoneField.tomselect) {
+                    milestoneField.tomselect.setValue(milestoneId);
+                } else {
+                    milestoneField.value = milestoneId;
+                    milestoneField.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
+                // Small pause for sprint field options update after milestone change
+                setTimeout(() => {
+                    const sprintField = form.querySelector('[name="project_sprint_id"]');
+                    if (sprintId && sprintField) {
+                        if (sprintField.tomselect) {
+                            sprintField.tomselect.setValue(sprintId);
+                        } else {
+                            sprintField.value = sprintId;
+                            sprintField.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                }, 150);
+            }
         }
-    }, 100);
+    }, 150);
 });
