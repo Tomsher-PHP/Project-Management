@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DailyShiftHourNotification;
 use App\Models\TaskTimeLog;
 use App\Models\User;
+use App\Models\UserSetting;
 use App\Notifications\DailyShiftHoursShortNotification;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -37,10 +38,16 @@ class DailyShiftHoursService
             $now->copy()->subDays(2)->toDateString(),
         ];
 
+        $settingKey = UserSetting::DAILY_WORK_HOURS_WARNING_MAIL;
+
         $activeEmployees = User::query()
             ->active()
             ->where('delete_status', false)
-            ->with(['details.reporter', 'details.manager'])
+            ->whereHas('settings', function ($query) use ($settingKey) {
+                $query->where('key', $settingKey)
+                    ->where('value', true);
+            })
+            ->with(['details.reporter', 'details.manager', 'settings'])
             ->get();
 
         $evaluatedCount = 0;
@@ -80,6 +87,14 @@ class DailyShiftHoursService
         int $gracePeriodMinutes,
         string $timezone
     ): bool {
+        // 0. Verify user has daily_work_hours_warning_mail setting enabled
+        $settingKey = 'daily_work_hours_warning_mail';
+        $warningMailSetting = $employee->settings?->firstWhere('key', $settingKey);
+
+        if (!$warningMailSetting || !(bool) $warningMailSetting->value) {
+            return false;
+        }
+
         // 1. Check if notification has already been sent for this user & work date
         $alreadyNotified = DailyShiftHourNotification::query()
             ->where('user_id', $employee->id)
