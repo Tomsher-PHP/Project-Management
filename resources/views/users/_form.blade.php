@@ -79,7 +79,7 @@
                         </label>
 
                         <div class="relative" data-password-field>
-                            <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" placeholder="Enter password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @error('password') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                            <input type="password" id="password" name="password" autocomplete="new-password" value="{{ old('password') }}" placeholder="Enter password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if($errors->has('password') && !str_contains(strtolower($errors->first('password')), 'confirm')) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
                             <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-700 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -93,11 +93,15 @@
                             </button>
                         </div>
 
-                        @error('password')
-                            <p class="mt-2 text-sm text-error-300">
-                                {{ $message }}
-                            </p>
-                        @enderror
+                        @if ($errors->has('password'))
+                            @foreach ($errors->get('password') as $message)
+                                @unless (str_contains(strtolower($message), 'confirm'))
+                                    <p class="mt-2 text-sm text-error-300">
+                                        {{ $message }}
+                                    </p>
+                                @endunless
+                            @endforeach
+                        @endif
                     </div>
 
                     <div class="flex flex-col gap-2">
@@ -106,7 +110,7 @@
                         </label>
 
                         <div class="relative" data-password-field>
-                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" value="{{ old('password_confirmation') }}" placeholder="Confirm password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @error('password_confirmation') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" value="{{ old('password_confirmation') }}" placeholder="Confirm password" data-password-input class="user-password-input w-full rounded-lg border border-gray-300 bg-white p-2 pr-12 text-gray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white @if($errors->has('password_confirmation') || ($errors->has('password') && str_contains(strtolower($errors->first('password')), 'confirm'))) border-red-500 focus:ring-red-500 focus:border-red-500 @endif">
                             <button type="button" class="absolute inset-y-0 right-4 inline-flex items-center text-bgray-700 transition hover:text-bgray-700 dark:text-bgray-300 dark:hover:text-white" data-password-toggle aria-label="Show password" aria-pressed="false">
                                 <svg data-password-icon="show" class="h-5 w-5" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                     <path d="M1 10C2.714 5.83333 6.04733 3.75 11 3.75C15.9527 3.75 19.286 5.83333 21 10C19.286 14.1667 15.9527 16.25 11 16.25C6.04733 16.25 2.714 14.1667 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -120,11 +124,19 @@
                             </button>
                         </div>
 
-                        @error('password_confirmation')
+                        @if ($errors->has('password_confirmation'))
                             <p class="mt-2 text-sm text-error-300">
-                                {{ $message }}
+                                {{ $errors->first('password_confirmation') }}
                             </p>
-                        @enderror
+                        @elseif ($errors->has('password'))
+                            @foreach ($errors->get('password') as $message)
+                                @if (str_contains(strtolower($message), 'confirm'))
+                                    <p class="mt-2 text-sm text-error-300">
+                                        {{ $message }}
+                                    </p>
+                                @endif
+                            @endforeach
+                        @endif
                     </div>
                 @endunless
 
