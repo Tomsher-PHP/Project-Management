@@ -80,4 +80,7 @@ return [
 
     // Daily work notification grace period in minutes
     'daily_work_notify' => 120,
+
+    // User settings keys
+    'daily_work_hours_warning_mail' => 'daily_work_hours_warning_mail',
 ];

@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
+use App\Models\UserSetting;
 use App\Services\ScheduleShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -210,6 +211,7 @@ class UserController extends Controller
             'roles',
             'primaryAttachment',
             'generalSettings',
+            'settings',
         ]);
 
         $userNotificationSettings = config('notification_settings');
@@ -244,17 +246,39 @@ class UserController extends Controller
 
     public function updateGeneralSettings(Request $request)
     {
+        $warningMailKey = config('constants.daily_work_hours_warning_mail');
+
         $request->validate([
-            'field' => 'required|in:kanban_view,theme',
-            'value' => 'required|string'
+            'user_id' => 'required|exists:users,id',
+            'field' => 'required|in:kanban_view,theme,' . $warningMailKey,
         ]);
 
-        UserGeneralSetting::updateOrCreate(
-            ['user_id' => $request->user_id],
-            [
-                $request->field => $request->value
-            ]
-        );
+        if ($request->field === $warningMailKey) {
+            $request->validate([
+                'value' => 'required|boolean',
+            ]);
+
+            UserSetting::updateOrCreate(
+                [
+                    'user_id' => $request->user_id,
+                    'key' => $warningMailKey,
+                ],
+                [
+                    'value' => filter_var($request->value, FILTER_VALIDATE_BOOLEAN),
+                ]
+            );
+        } else {
+            $request->validate([
+                'value' => 'required|string',
+            ]);
+
+            UserGeneralSetting::updateOrCreate(
+                ['user_id' => $request->user_id],
+                [
+                    $request->field => $request->value
+                ]
+            );
+        }
 
         return response()->json([
             'success' => true,
