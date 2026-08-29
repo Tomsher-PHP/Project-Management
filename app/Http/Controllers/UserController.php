@@ -215,10 +215,11 @@ class UserController extends Controller
         ]);
 
         $userNotificationSettings = config('notification_settings');
+        $userSettings = config('constants.user_settings');
 
         $generalSettings = $user->generalSettings;
 
-        return view('users.show', compact('user', 'userNotificationSettings', 'generalSettings'));
+        return view('users.show', compact('user', 'userNotificationSettings', 'userSettings', 'generalSettings'));
     }
 
     public function updateNotificationSettings(Request $request)
@@ -246,14 +247,14 @@ class UserController extends Controller
 
     public function updateGeneralSettings(Request $request)
     {
-        $warningMailKey = config('constants.daily_work_hours_warning_mail');
+        $userSettingKeys = array_keys(config('constants.user_settings', []));
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'field' => 'required|in:kanban_view,theme,' . $warningMailKey,
+            'field' => 'required|in:kanban_view,theme,' . implode(',', $userSettingKeys),
         ]);
 
-        if ($request->field === $warningMailKey) {
+        if (in_array($request->field, $userSettingKeys, true)) {
             $request->validate([
                 'value' => 'required|boolean',
             ]);
@@ -261,7 +262,7 @@ class UserController extends Controller
             UserSetting::updateOrCreate(
                 [
                     'user_id' => $request->user_id,
-                    'key' => $warningMailKey,
+                    'key' => $request->field,
                 ],
                 [
                     'value' => filter_var($request->value, FILTER_VALIDATE_BOOLEAN),

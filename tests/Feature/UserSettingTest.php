@@ -13,7 +13,7 @@ class UserSettingTest extends TestCase
 
     public function test_constant_setting_key_exists()
     {
-        $this->assertEquals('daily_work_hours_warning_mail', config('constants.daily_work_hours_warning_mail'));
+        $this->assertEquals('daily_work_hours_warning_mail', config('constants.user_settings.daily_work_hours_warning_mail'));
     }
 
     public function test_user_settings_relationship()
@@ -22,7 +22,7 @@ class UserSettingTest extends TestCase
 
         $setting = UserSetting::create([
             'user_id' => $user->id,
-            'key' => config('constants.daily_work_hours_warning_mail'),
+            'key' => config('constants.user_settings.daily_work_hours_warning_mail'),
             'value' => false,
         ]);
 
@@ -36,7 +36,7 @@ class UserSettingTest extends TestCase
 
         $response = $this->postJson(route('users.general.settings'), [
             'user_id' => $user->id,
-            'field' => config('constants.daily_work_hours_warning_mail'),
+            'field' => config('constants.user_settings.daily_work_hours_warning_mail'),
             'value' => false,
         ]);
 
@@ -45,7 +45,7 @@ class UserSettingTest extends TestCase
 
         $this->assertDatabaseHas('user_settings', [
             'user_id' => $user->id,
-            'key' => config('constants.daily_work_hours_warning_mail'),
+            'key' => config('constants.user_settings.daily_work_hours_warning_mail'),
             'value' => 0,
         ]);
     }
@@ -56,7 +56,7 @@ class UserSettingTest extends TestCase
 
         $response = $this->postJson(route('users.general.settings'), [
             'user_id' => $user->id,
-            'field' => config('constants.daily_work_hours_warning_mail'),
+            'field' => config('constants.user_settings.daily_work_hours_warning_mail'),
             'value' => true,
         ]);
 
@@ -65,7 +65,7 @@ class UserSettingTest extends TestCase
 
         $this->assertDatabaseHas('user_settings', [
             'user_id' => $user->id,
-            'key' => config('constants.daily_work_hours_warning_mail'),
+            'key' => config('constants.user_settings.daily_work_hours_warning_mail'),
             'value' => 1,
         ]);
     }

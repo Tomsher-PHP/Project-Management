@@ -82,5 +82,7 @@ return [
     'daily_work_notify' => 120,
 
     // User settings keys
-    'daily_work_hours_warning_mail' => 'daily_work_hours_warning_mail',
+    'user_settings' => [
+        'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
+    ],
 ];

@@ -40,26 +40,26 @@
                     </div>
                 </div>
 
-                @php
-                    $warningMailSettingKey = config('constants.daily_work_hours_warning_mail');
-                    $warningMailSetting = $user->settings->firstWhere('key', $warningMailSettingKey);
-                    $warningMailEnabled = $warningMailSetting ? (bool) $warningMailSetting->value : true;
-                @endphp
+                @if (!empty($userSettings))
+                    @foreach ($userSettings as $settingKey => $settingLabel)
+                        @php
+                            $userSettingRecord = $user->settings->firstWhere('key', $settingKey);
+                            $isSettingEnabled = $userSettingRecord ? (bool) $userSettingRecord->value : true;
+                        @endphp
 
-                <div class="flex flex-col gap-4">
-                    <label class="text-lg font-semibold text-bgray-800 dark:text-white">
-                        Daily Work Hours Warning Mail
-                    </label>
-                    <div class="flex flex-col gap-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="{{ $warningMailSettingKey }}" value="1" class="general-setting h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-field="{{ $warningMailSettingKey }}" data-user="{{ $user->id }}" {{ $warningMailEnabled ? 'checked' : '' }}>
-                            <span class="text-bgray-700 dark:text-bgray-50">Enabled</span>
-                        </label>
-                        <p class="text-sm text-bgray-600 dark:text-bgray-400">
-                            Send a warning email when the user does not complete the required daily shift hours.
-                        </p>
-                    </div>
-                </div>
+                        <div class="flex flex-col gap-4">
+                            <label class="text-lg font-semibold text-bgray-800 dark:text-white">
+                                {{ $settingLabel }}
+                            </label>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="{{ $settingKey }}" value="1" class="general-setting h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-field="{{ $settingKey }}" data-user="{{ $user->id }}" {{ $isSettingEnabled ? 'checked' : '' }}>
+                                    <span class="text-bgray-700 dark:text-bgray-50">Enabled</span>
+                                </label>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
