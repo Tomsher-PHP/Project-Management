@@ -24,7 +24,7 @@ class UserSettingsSeeder extends Seeder
                         'key' => $key,
                     ],
                     [
-                        'value' => true,
+                        'value' => false,
                     ]
                 );
             }

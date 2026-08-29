@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
+use App\Models\UserSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Facades\LogBatch;
@@ -85,6 +86,20 @@ class UserService
                 'theme' => 'light',
             ]
         );
+
+        // Add user settings for this user
+        $userSettings = config('constants.user_settings', []);
+        foreach ($userSettings as $key => $label) {
+            UserSetting::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'key' => $key,
+                ],
+                [
+                    'value' => false,
+                ]
+            );
+        }
     }
 
     private function createDefaultNotificationSettings(User $user): void
