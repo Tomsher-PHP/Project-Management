@@ -255,6 +255,13 @@ class UserController extends Controller
         ]);
 
         if (in_array($request->field, $userSettingKeys, true)) {
+            if (!auth()->user()->can('user.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to update user settings.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
             $request->validate([
                 'value' => 'required|boolean',
             ]);
