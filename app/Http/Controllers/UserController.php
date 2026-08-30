@@ -231,12 +231,34 @@ class UserController extends Controller
             'value' => 'required|boolean',
         ]);
 
+        $boolVal = filter_var($request->value, FILTER_VALIDATE_BOOLEAN);
+
+        if ($request->action === 'all') {
+            $userNotificationSettings = config('notification_settings', []);
+            $actions = collect($userNotificationSettings)->pluck('action')->filter()->unique();
+
+            foreach ($actions as $act) {
+                $setting = UserNotificationSetting::firstOrCreate([
+                    'user_id' => $request->user_id,
+                    'action' => $act,
+                ]);
+
+                $setting->{$request->field} = $boolVal;
+                $setting->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification settings updated successfully'
+            ], Response::HTTP_OK);
+        }
+
         $setting = UserNotificationSetting::firstOrCreate([
             'user_id' => $request->user_id,
             'action' => $request->action,
         ]);
 
-        $setting->{$request->field} = $request->value;
+        $setting->{$request->field} = $boolVal;
         $setting->save();
 
         return response()->json([
