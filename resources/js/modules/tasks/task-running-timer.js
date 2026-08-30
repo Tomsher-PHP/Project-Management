@@ -105,7 +105,8 @@ const renderState = (elements, state) => {
             'dark:text-red-300'
         );
 
-        if (parseSeconds(state.estimatedSeconds) <= 0 || parseSeconds(state.seconds) <= parseSeconds(state.estimatedSeconds)) {
+        const estimatedSeconds = parseSeconds(state.estimatedSeconds);
+        if (estimatedSeconds > 0 && parseSeconds(state.seconds) <= estimatedSeconds) {
             elements.timer.classList.add('text-success-400', 'dark:text-success-300');
         } else {
             elements.timer.classList.add('text-error-300', 'dark:text-red-300');

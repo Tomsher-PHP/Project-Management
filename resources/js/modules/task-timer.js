@@ -96,7 +96,7 @@ const renderDisplay = (display, totalSeconds) => {
             'dark:text-red-300'
         );
 
-        if (estimatedSeconds <= 0 || parseSeconds(totalSeconds) <= estimatedSeconds) {
+        if (estimatedSeconds > 0 && parseSeconds(totalSeconds) <= estimatedSeconds) {
             display.classList.add('text-success-400', 'dark:text-success-300');
             return;
         }

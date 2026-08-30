@@ -236,7 +236,7 @@ class RunningTaskNavbarService
     private function resolveTimeColorClass(int $currentSeconds, int $estimatedSeconds): string
     {
         if ($estimatedSeconds <= 0) {
-            return 'text-success-400 dark:text-success-300';
+            return 'text-error-300 dark:text-red-300';
         }
 
         return $currentSeconds <= $estimatedSeconds
@@ -246,6 +246,6 @@ class RunningTaskNavbarService
 
     private function taskUserKey(int $taskId, int $userId): string
     {
-        return $taskId.':'.$userId;
+        return $taskId . ':' . $userId;
     }
 }
