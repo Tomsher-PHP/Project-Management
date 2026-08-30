@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BiJbj93w.css",
+    "file": "assets/app-B_laYyzK.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -95,7 +95,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-bAtgi4ET.js",
+    "file": "assets/app-r1CK7ne4.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -333,7 +333,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-CLg6TrVM.js",
+    "file": "assets/task-list-create-Bek_vYuq.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,
@@ -444,7 +444,7 @@
     ]
   },
   "resources/js/modules/users/general-settings.js": {
-    "file": "assets/general-settings-Bx7X_IjL.js",
+    "file": "assets/general-settings-BpbT8igl.js",
     "name": "general-settings",
     "src": "resources/js/modules/users/general-settings.js",
     "isEntry": true
@@ -456,10 +456,14 @@
     "isEntry": true
   },
   "resources/js/modules/users/user-notification-settings.js": {
-    "file": "assets/user-notification-settings-DXeJtXMb.js",
+    "file": "assets/user-notification-settings-DZvPl9Qo.js",
     "name": "user-notification-settings",
     "src": "resources/js/modules/users/user-notification-settings.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/users/user-restore.js": {
     "file": "assets/user-restore-H_EPGKwb.js",
