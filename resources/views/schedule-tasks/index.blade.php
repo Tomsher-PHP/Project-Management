@@ -20,7 +20,7 @@
                     <table class="min-w-full border-separate border-spacing-0">
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
-                                @foreach (['Name', 'Project', 'Assignee', 'Estimate time', 'Frequency', 'Date range', 'Is Active', 'Actions'] as $heading)
+                                @foreach (['Name', 'Project', 'Assignee', 'Estimate', 'Frequency', 'Date range', 'Is Active', 'Actions'] as $heading)
                                     <th class="border-b border-bgray-200 px-4 py-4 text-left text-base font-medium text-bgray-600 dark:border-b-darkblack-400 dark:text-bgray-50">
                                         {{ $heading }}
                                     </th>
