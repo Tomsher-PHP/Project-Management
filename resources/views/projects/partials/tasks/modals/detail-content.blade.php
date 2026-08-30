@@ -31,6 +31,9 @@
             )
             ->values(),
     ];
+    $detailEstimatedSeconds = (int) ($task->estimated_time_seconds ?? 0);
+    $detailActualSeconds = (int) ($task->actual_time_seconds ?? 0);
+    $actualTimeClasses = $detailEstimatedSeconds <= 0 || $detailActualSeconds > $detailEstimatedSeconds ? 'text-error-300 dark:text-red-300' : 'text-success-400 dark:text-success-300';
 @endphp
 
 <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
@@ -268,12 +271,12 @@
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Summary</p>
                         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Estimated</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
                             </div>
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Actual</p>
-                                <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->actual_time_formatted }}</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
+                                <p class="mt-1 text-base font-semibold {{ $actualTimeClasses }}">{{ $task->actual_time_formatted }}</p>
                             </div>
                         </div>
                     </div>
