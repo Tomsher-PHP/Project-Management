@@ -327,6 +327,7 @@ class TaskController extends Controller
     public function quickCreateParentOptions(Request $request): JsonResponse
     {
         $projectId = $request->filled('project_id') ? (int) $request->input('project_id') : null;
+        $milestoneId = $request->filled('project_milestone_id') ? (int) $request->input('project_milestone_id') : null;
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
 
         abort_unless($projectId, Response::HTTP_NOT_FOUND);
@@ -353,11 +354,25 @@ class TaskController extends Controller
             );
 
             $query->where('project_sprint_id', $sprintId);
-        } else {
+        } elseif ($milestoneId) {
             return response()->json([
                 'status' => true,
                 'options' => [],
             ], Response::HTTP_OK);
+        } else {
+            $backlogSprintId = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->value('id');
+
+            if (! $backlogSprintId) {
+                return response()->json([
+                    'status' => true,
+                    'options' => [],
+                ], Response::HTTP_OK);
+            }
+
+            $query->where('project_sprint_id', $backlogSprintId);
         }
 
         return response()->json([

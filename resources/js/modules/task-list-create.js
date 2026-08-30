@@ -561,6 +561,7 @@ const applyProjectDefaults = async (form, dependencies) => {
 const loadParentTaskOptions = async (form, dependencies) => {
     const parentField = form.querySelector('[data-task-create-parent-select]');
     const projectField = form.querySelector('[name="project_id"]');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 
@@ -576,7 +577,7 @@ const loadParentTaskOptions = async (form, dependencies) => {
         return;
     }
 
-    if (projectMeta.flow === 'agile' && !sprintField?.value) {
+    if (projectMeta.flow === 'agile' && milestoneField?.value && !sprintField?.value) {
         setSelectOptions(parentField, [], {
             placeholder: 'Select sprint first',
             disabled: true,
@@ -600,11 +601,13 @@ const loadParentTaskOptions = async (form, dependencies) => {
     const requestUrl = new URL(dependencies.parent_options_url, window.location.origin);
     requestUrl.searchParams.set('project_id', String(projectMeta.id));
 
+    if (milestoneField?.value) {
+        requestUrl.searchParams.set('project_milestone_id', String(milestoneField.value));
+    }
+
     if (sprintField?.value) {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
-    console.log(requestUrl);
-    
 
     const response = await fetch(requestUrl.toString(), {
         headers: {
