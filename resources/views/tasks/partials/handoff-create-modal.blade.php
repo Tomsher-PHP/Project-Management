@@ -25,7 +25,7 @@
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
                             <select id="handoff_project_id" name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0" data-handoff-project-select>
-                                <option value="">Select project</option>
+                                <option value="">Search you project here..</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_id"></p>
                         </div>
@@ -33,7 +33,7 @@
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
                             <select id="handoff_project_milestone_id" name="project_milestone_id" class="tom-select w-full" data-handoff-milestone-select>
-                                <option value="">Select project first</option>
+                                <option value="">Choose any</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_milestone_id"></p>
                         </div>
@@ -41,7 +41,7 @@
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Sprint</label>
                             <select id="handoff_project_sprint_id" name="project_sprint_id" class="tom-select w-full" data-handoff-sprint-select>
-                                <option value="">Select project first</option>
+                                <option value="">Choose any</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="project_sprint_id"></p>
                         </div>
@@ -49,7 +49,7 @@
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Source Task</label>
                             <select id="handoff_source_task_id" name="source_task_id" class="tom-select w-full" data-handoff-task-select>
-                                <option value="">Select project first</option>
+                                <option value="">Choose any</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="source_task_id"></p>
                         </div>
@@ -57,7 +57,7 @@
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</label>
                             <select id="handoff_target_user_id" name="target_user_id" class="tom-select w-full" data-handoff-target-user-select>
-                                <option value="">Select project first</option>
+                                <option value="">Choose any</option>
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="target_user_id"></p>
                         </div>
