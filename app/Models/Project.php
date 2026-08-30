@@ -336,6 +336,26 @@ class Project extends Model
             ->whereNotNull('removed_at');
     }
 
+    public function hasActiveMember($user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $userId = $user instanceof User ? $user->id : (int) $user;
+
+        if ($this->relationLoaded('activeMembers')) {
+            return $this->activeMembers->contains(function (User $member) use ($userId) {
+                return (int) $member->id === $userId && (bool) $member->is_active;
+            });
+        }
+
+        return $this->activeMembers()
+            ->where('users.id', $userId)
+            ->where('users.is_active', true)
+            ->exists();
+    }
+
     public function teamLeader()
     {
         return $this->hasOneThrough(

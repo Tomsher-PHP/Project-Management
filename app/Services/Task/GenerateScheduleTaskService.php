@@ -34,10 +34,27 @@ class GenerateScheduleTaskService
                     ->orWhereDate('end_date', '>=', $scheduledFor->toDateString());
             })
             ->whereHas('project', fn($query) => $query->whereNull('projects.deleted_at'))
+            ->where(function ($query) {
+                $query->whereNull('current_assignee_id')
+                    ->orWhereHas('project.activeMembers', function ($subQuery) {
+                        $subQuery->whereColumn('users.id', 'task_schedules.current_assignee_id')
+                            ->where('users.is_active', true);
+                    });
+            })
             ->with('project')
             ->orderBy('id')
             ->chunkById(100, function ($taskSchedules) use ($scheduledFor, &$generatedCount) {
                 foreach ($taskSchedules as $taskSchedule) {
+                    if ($taskSchedule->current_assignee_id && ! $this->isAssigneeActiveMember($taskSchedule)) {
+                        Log::info('Skipped scheduled task generation.', [
+                            'task_schedule_id' => $taskSchedule->id,
+                            'scheduled_for_date' => $scheduledFor->toDateString(),
+                            'reason' => 'Assignee is not an active project member',
+                        ]);
+
+                        continue;
+                    }
+
                     if ($taskSchedule->frequency_type === TaskSchedule::FREQUENCY_DAILY) {
                         $skipReason = $this->getDailySkipReason($taskSchedule, $scheduledFor);
 
@@ -93,6 +110,10 @@ class GenerateScheduleTaskService
             return 'No assignee';
         }
 
+        if (! $this->isAssigneeActiveMember($taskSchedule)) {
+            return 'Assignee is not an active project member';
+        }
+
         $assignment = $this->resolveShiftAssignmentForDate(
             (int) $taskSchedule->current_assignee_id,
             $date
@@ -107,6 +128,19 @@ class GenerateScheduleTaskService
         }
 
         return null;
+    }
+
+    protected function isAssigneeActiveMember(TaskSchedule $taskSchedule): bool
+    {
+        if (! $taskSchedule->current_assignee_id) {
+            return true;
+        }
+
+        if (! $taskSchedule->project && ! $taskSchedule->project_id) {
+            return true;
+        }
+
+        return (bool) $taskSchedule->project?->hasActiveMember($taskSchedule->current_assignee_id);
     }
 
     protected function resolveShiftAssignmentForDate(int $userId, Carbon $date): ?UserShiftAssignment
@@ -139,6 +173,16 @@ class GenerateScheduleTaskService
         $scheduledDate = $scheduledFor->toDateString();
 
         if ($this->occurrenceExists($taskSchedule, $scheduledDate)) {
+            return null;
+        }
+
+        if ($taskSchedule->current_assignee_id && ! $this->isAssigneeActiveMember($taskSchedule)) {
+            Log::info('Skipped scheduled task generation.', [
+                'task_schedule_id' => $taskSchedule->id,
+                'scheduled_for_date' => $scheduledDate,
+                'reason' => 'Assignee is not an active project member',
+            ]);
+
             return null;
         }
 
