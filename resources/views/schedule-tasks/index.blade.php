@@ -20,7 +20,7 @@
                     <table class="min-w-full border-separate border-spacing-0">
                         <thead class="bg-bgray-50/80 dark:bg-darkblack-500">
                             <tr>
-                                @foreach (['Name', 'Project', 'Assignee', 'Frequency', 'Date range', 'Is Active', 'Actions'] as $heading)
+                                @foreach (['Name', 'Project', 'Assignee', 'Estimate time', 'Frequency', 'Date range', 'Is Active', 'Actions'] as $heading)
                                     <th class="border-b border-bgray-200 px-4 py-4 text-left text-base font-medium text-bgray-600 dark:border-b-darkblack-400 dark:text-bgray-50">
                                         {{ $heading }}
                                     </th>
@@ -43,10 +43,11 @@
                                     <td class="px-4 py-4 font-semibold text-bgray-900 dark:text-white">{{ $taskSchedule->name }}</td>
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->project?->name ?? '--' }}</td>
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->currentAssignee?->name ?? '--' }}</td>
+                                    <td class="whitespace-nowrap px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->estimated_time_formatted }}</td>
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $frequencyLabel }}</td>
                                     <td class="whitespace-nowrap px-4 py-4 text-bgray-600 dark:text-bgray-300">
                                         <div class="text-md text-bgray-600 dark:text-bgray-300 font-bold">@appDate($taskSchedule->start_date) - @appDate($taskSchedule->end_date)</div>
-                                        <div class="text-sm text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->addedBy?->name ?? '--' }}</div>
+                                        <div class="text-sm text-bgray-600 dark:text-bgray-300">by {{ $taskSchedule->addedBy?->name ?? '--' }}</div>
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="flex items-center">
@@ -67,7 +68,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data col-span="7" message="No scheduled tasks found." sub-message="Create a schedule to automate recurring task setup." />
+                                <x-table-no-data col-span="8" message="No scheduled tasks found." sub-message="Create a schedule to automate recurring task setup." />
                             @endforelse
                         </tbody>
                     </table>
