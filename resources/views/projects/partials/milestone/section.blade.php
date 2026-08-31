@@ -167,7 +167,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-1.5 xl:max-w-[320px] xl:justify-end">
+                            <div class="flex flex-wrap items-center gap-1.5 xl:max-w-[350px] xl:justify-end">
                                 @php
                                     $trashedSprints = $trashedProjectSprintsByModule->get($milestone->id, collect());
                                     $trashedSprintCount = $trashedSprints->count();
@@ -199,7 +199,7 @@
 
                                 @if (!$isProtectedModule && !$isDeletedProjectView)
                                     @can('project_milestone.edit')
-                                        <x-edit-button action="javascript:void(0)" type="button" class="project-milestone-builder-edit h-8 w-8" data-milestone-id="{{ $milestone->id }}" />
+                                        <x-edit-button action="javascript:void(0)" type="button" class="project-milestone-builder-edit" data-milestone-id="{{ $milestone->id }}" />
                                     @endcan
 
                                     @can('project_milestone.delete')
@@ -207,7 +207,7 @@
                                     @endcan
                                 @endif
 
-                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-milestone-id="{{ $milestone->id }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <button type="button" @click="activeModuleId = activeModuleId === {{ $milestone->id }} ? null : {{ $milestone->id }}" data-project-milestone-toggle data-milestone-id="{{ $milestone->id }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300">
                                     <svg class="h-4 w-4 transition duration-200" :style="{ transform: activeModuleId === {{ $milestone->id }} ? 'rotate(180deg)' : 'rotate(0deg)' }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
