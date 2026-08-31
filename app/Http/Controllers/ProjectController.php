@@ -114,13 +114,13 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(Project $project, ProjectServices $service)
+    public function edit(Project $project)
     {
         return view('projects.detail-page', array_merge([
             'project' => $project,
             'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
-        ], $this->getProjectHeaderData($project, $service)));
+        ], $this->getProjectHeaderData($project)));
     }
 
     public function activityModal(Project $project): JsonResponse
@@ -731,4 +731,3 @@ class ProjectController extends Controller
         ]));
     }
 }
-

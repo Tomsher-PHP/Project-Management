@@ -9,7 +9,10 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('task:notify-start')->everyMinute()->withoutOverlapping();
-Schedule::command('projects:recalculate-times')->everySixHours()->withoutOverlapping();
+
+// Do not need this recalculation for now
+// Schedule::command('projects:recalculate-times')->everySixHours()->withoutOverlapping();
+
 Schedule::command('tasks:generate-scheduled')->hourly()->withoutOverlapping();
 Schedule::command('notify:check-daily-shift-hours')->everyFiveMinutes()->withoutOverlapping();
 
