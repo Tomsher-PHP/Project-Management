@@ -13,6 +13,10 @@ class ProjectMilestone extends Model
 {
     use SoftDeletes, LogsModelActivity;
 
+    public const STATUS_PLANNED = 1;
+    public const STATUS_IN_PROGRESS = 2;
+    public const STATUS_COMPLETED = 3;
+
     protected $fillable = [
         'project_id',
         'name',

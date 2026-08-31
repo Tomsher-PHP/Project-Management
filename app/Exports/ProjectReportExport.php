@@ -645,8 +645,8 @@ class ProjectReportExport implements FromCollection, WithCustomStartCell, WithEv
         }
 
         return $this->projectMetricCache[$cacheKey] = [
-            'estimated_seconds' => (int) ($project->projectMilestones->sum('estimated_time_seconds') ?? 0),
-            'actual_seconds' => (int) ($project->projectMilestones->sum('actual_time_seconds') ?? 0),
+            'estimated_seconds' => (int) ($project->estimated_time_seconds ?? 0),
+            'actual_seconds' => (int) ($project->tasks_sum_actual_time_seconds ?? $project->tasks()->sum('actual_time_seconds') ?? 0),
             'completed_milestones' => (int) ($project->completed_milestones ?? 0),
             'total_milestones' => (int) ($project->total_milestones ?? 0),
         ];

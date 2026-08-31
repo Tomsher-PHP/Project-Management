@@ -179,8 +179,8 @@
                             $projectStatusColor = $project->projectStatus->color ?? '#94A3B8';
                             $projectStageColor = $project->projectStage->color ?? '#94A3B8';
                             $priorityConfig = config('project_constants.project_priorities.' . $project->priority);
-                            $estimatedSeconds = (int) ($project->projectMilestones->sum('estimated_time_seconds') ?? 0);
-                            $actualSeconds = (int) ($project->projectMilestones->sum('actual_time_seconds') ?? 0);
+                            $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
+                            $actualSeconds = (int) ($project->tasks_sum_actual_time_seconds ?? $project->tasks()->sum('actual_time_seconds') ?? 0);
                             $progressPercentage = $estimatedSeconds > 0 ? round(($actualSeconds / $estimatedSeconds) * 100, 2) : 0;
                             $progressBarWidth = min($progressPercentage, 100);
                             $actualTimeClasses = $actualSeconds <= $estimatedSeconds ? 'text-success-400 dark:text-success-300' : 'text-red-500 dark:text-red-400';
@@ -225,11 +225,11 @@
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 whitespace-nowrap col-estimated_hours">
-                                {{ formatSecondsToHoursMinutes($project->projectMilestones->sum('estimated_time_seconds')) }}
+                                {{ formatSecondsToHoursMinutes($estimatedSeconds) }}
                             </td>
 
                             <td class="px-2 py-2 text-sm font-medium whitespace-nowrap col-actual_hours {{ $actualTimeClasses }}">
-                                {{ formatSecondsToHoursMinutes($project->projectMilestones->sum('actual_time_seconds')) }}
+                                {{ formatSecondsToHoursMinutes($actualSeconds) }}
                             </td>
 
                             <td class="px-2 py-2 text-sm text-bgray-700 dark:text-bgray-300 min-w-[220px] col-progress">
