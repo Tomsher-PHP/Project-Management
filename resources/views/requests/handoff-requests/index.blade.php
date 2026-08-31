@@ -131,7 +131,7 @@
                                     <td class="border-b border-bgray-100 px-4 py-4 text-center dark:border-darkblack-400">
                                         <div class="flex items-center justify-center gap-2">
 
-                                             @if (auth()->user()->can('task.create') && !auth()->user()->can('request-task'))
+                                            @if (auth()->user()->can('task.create') && !auth()->user()->can('request-task'))
                                                 @if (in_array($request->status, [App\Models\HandoffRequest::STATUS_PENDING, App\Models\HandoffRequest::STATUS_NOTED]))
                                                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-success-500 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-600 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Assign Task" data-task-create-open data-handoff-assign-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-name="{{ e($request->project?->name ?? '') }}" data-project-code="{{ e($request->project?->project_code ?? '') }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-target-user-name="{{ e($request->targetUser?->name ?? '') }}" data-description="{{ e($request->description ?? '') }}" data-purpose="{{ e($request->purpose ?? '') }}">
                                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -165,7 +165,7 @@
                                                 @endif
                                             @endcan
 
-                                             @if ($request->status == \App\Models\HandoffRequest::STATUS_PENDING && $request->user_id === auth()->id())
+                                            @if ($request->status == \App\Models\HandoffRequest::STATUS_PENDING && $request->user_id === auth()->id())
                                                 <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-400 bg-white text-bgray-700 shadow-sm transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300 group" title="Edit Request" data-handoff-edit-btn data-handoff-request-id="{{ $request->id }}" data-project-id="{{ $request->project_id ?? '' }}" data-project-name="{{ e($request->project?->name ?? '') }}" data-project-code="{{ e($request->project?->project_code ?? '') }}" data-project-milestone-id="{{ $request->project_milestone_id ?? '' }}" data-project-sprint-id="{{ $request->project_sprint_id ?? '' }}" data-source-task-id="{{ $request->source_task_id ?? '' }}" data-source-task-name="{{ e($request->sourceTask?->name ?? '') }}" data-target-user-id="{{ $request->target_user_id ?? '' }}" data-target-user-name="{{ e($request->targetUser?->name ?? '') }}" data-purpose="{{ e($request->purpose ?? '') }}" data-description="{{ e($request->description ?? '') }}">
                                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -225,7 +225,7 @@
 
         <!-- View Details Modal -->
         <div id="handoffViewModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl dark:bg-darkblack-600">
+            <div class="w-full max-w-4xl rounded-[8px] bg-white p-6 shadow-xl dark:bg-darkblack-600">
                 <div class="mb-4 flex items-center justify-between border-b border-bgray-200 pb-3 dark:border-darkblack-400">
                     <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Handoff Request Details</h3>
                     <button type="button" onclick="closeHandoffViewModal()" class="text-bgray-700 hover:text-error-300 transition">

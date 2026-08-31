@@ -1,5 +1,5 @@
 <aside id="help-mobile-navigation" data-mobile-nav class="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
-    <nav aria-label="Help Center articles" class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+    <nav aria-label="Help Center articles" class="rounded-[8px] border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <a href="{{ route('help-center.index') }}" class="mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition hover:bg-bgray-50 dark:hover:bg-darkblack-500 {{ request()->routeIs('help-center.index') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : 'text-bgray-700 dark:text-bgray-300' }}">
             <svg class="stroke-current" width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />

@@ -1,5 +1,5 @@
 @php
-    $cardClasses = 'rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600';
+    $cardClasses = 'rounded-[8px] border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600';
     $cardTitleClasses = 'text-base font-semibold text-bgray-900 dark:text-white';
     $cardTextClasses = 'text-sm text-bgray-600 dark:text-bgray-300';
     $emptyTextClasses = 'text-sm italic text-bgray-600 dark:text-bgray-300';

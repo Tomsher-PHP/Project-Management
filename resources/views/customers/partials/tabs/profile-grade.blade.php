@@ -1,11 +1,9 @@
 @php
     $profileGrade = $customer->profileGrade;
-    $gradeColor = $profileGrade && preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) $profileGrade->color)
-        ? $profileGrade->color
-        : '#22C55E';
+    $gradeColor = $profileGrade && preg_match('/^#[0-9a-fA-F]{3,8}$/', (string) $profileGrade->color) ? $profileGrade->color : '#22C55E';
 @endphp
 
-<section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-customer-profile-grade-content>
+<section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-customer-profile-grade-content>
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
         <div>
             <h3 class="text-base font-bold text-bgray-900 dark:text-white">Customer Profile Grade</h3>
@@ -23,7 +21,7 @@
     </div>
 
     <div class="min-h-[260px] p-5">
-        @if (! $profileGrade)
+        @if (!$profileGrade)
             <div class="rounded-xl border border-dashed border-bgray-300 px-4 py-10 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                 No profile grade has been assigned to this customer yet.
             </div>
@@ -35,7 +33,7 @@
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
                             <h4 class="text-lg font-bold text-bgray-900 dark:text-white">{{ $profileGrade->name }}</h4>
-                            @if (! $profileGrade->is_active)
+                            @if (!$profileGrade->is_active)
                                 <span class="rounded-full bg-bgray-100 px-2.5 py-1 text-[11px] font-semibold text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300">Inactive</span>
                             @endif
                         </div>

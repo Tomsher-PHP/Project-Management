@@ -22,7 +22,7 @@
     $pinBtnClass = $hasColor ? 'text-bgray-700 dark:text-bgray-800 hover:bg-black/10 dark:hover:bg-black/10' : 'text-bgray-600 dark:text-bgray-300 hover:bg-black/5 dark:hover:bg-white/10';
 @endphp
 
-<div class="note-card group relative flex flex-col justify-between rounded-[10px] border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-grab active:cursor-grabbing {{ $colorClass }}" @if ($cardStyle) style="{{ $cardStyle }}" @endif draggable="true" data-note-id="{{ $note->id }}" data-note-pinned="{{ $note->is_pinned ? '1' : '0' }}" data-note-archived="{{ $note->is_archived ? '1' : '0' }}" data-note-color="{{ $note->color ?? '' }}" data-project-id="{{ $note->project_id ?? '' }}" data-task-id="{{ $note->task_id ?? '' }}">
+<div class="note-card group relative flex flex-col justify-between rounded-[8px] border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-grab active:cursor-grabbing {{ $colorClass }}" @if ($cardStyle) style="{{ $cardStyle }}" @endif draggable="true" data-note-id="{{ $note->id }}" data-note-pinned="{{ $note->is_pinned ? '1' : '0' }}" data-note-archived="{{ $note->is_archived ? '1' : '0' }}" data-note-color="{{ $note->color ?? '' }}" data-project-id="{{ $note->project_id ?? '' }}" data-task-id="{{ $note->task_id ?? '' }}">
     <div>
         <!-- Top row: Title and Pin button -->
         <div class="mb-3 flex items-start justify-between gap-3">

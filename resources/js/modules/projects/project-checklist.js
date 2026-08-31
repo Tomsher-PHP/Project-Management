@@ -92,9 +92,9 @@ const setModalVisibility = (visible) => {
 };
 
 const renderWorkspaceEmptyState = () => `
-    <div class="rounded-2xl border border-dashed border-bgray-200 bg-white/80 px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600/80" data-project-checklist-dropzone>
+    <div class="rounded-[8px] border border-dashed border-bgray-200 bg-white/80 px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600/80" data-project-checklist-dropzone>
         <div class="mx-auto flex max-w-sm flex-col items-center gap-3">
-            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -150,7 +150,7 @@ const renderWorkspace = async () => {
 
     if (state.loading) {
         workspace.innerHTML = `
-            <div class="flex h-full min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="flex h-full min-h-[320px] items-center justify-center rounded-[8px] border border-dashed border-bgray-200 bg-white text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 Loading checklist assignments...
             </div>
         `;
@@ -162,7 +162,7 @@ const renderWorkspace = async () => {
     const cards = cardsArray.join('');
 
     workspace.innerHTML = state.checklists.length
-        ? `${cards}<div class="h-24 rounded-2xl border border-dashed border-bgray-200 bg-bgray-50/50 dark:border-darkblack-400 dark:bg-darkblack-500/20" data-project-checklist-dropzone></div>`
+        ? `${cards}<div class="h-24 rounded-[8px] border border-dashed border-bgray-200 bg-bgray-50/50 dark:border-darkblack-400 dark:bg-darkblack-500/20" data-project-checklist-dropzone></div>`
         : renderWorkspaceEmptyState();
 };
 
@@ -176,7 +176,7 @@ const renderLibrary = async () => {
 
     if (state.loading) {
         library.innerHTML = `
-            <div class="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-bgray-200 bg-white px-4 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="flex h-full min-h-[240px] items-center justify-center rounded-[8px] border border-dashed border-bgray-200 bg-white px-4 text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 Loading checklist library...
             </div>
         `;
@@ -199,7 +199,7 @@ const renderLibrary = async () => {
 
     if (!filteredTemplates.length) {
         library.innerHTML = `
-            <div class="rounded-2xl border border-dashed border-bgray-200 bg-white px-5 py-10 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
+            <div class="rounded-[8px] border border-dashed border-bgray-200 bg-white px-5 py-10 text-center text-sm text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300">
                 No checklist templates match your search.
             </div>
         `;

@@ -35,7 +35,7 @@
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-7xl">
-                <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">
@@ -72,7 +72,7 @@
                                 </button>
                             </div>
 
-                            <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
+                            <div class="min-h-0 flex-1 overflow-y-auto rounded-[8px] border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                 <div class="space-y-4" data-project-milestone-builder-workspace>
                                     @forelse ($editableProjectModules as $milestone)
                                         <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-milestone-builder-card data-milestone-id="{{ $milestone->id }}" data-milestone-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
@@ -159,8 +159,8 @@
                                             </div>
                                         </article>
                                     @empty
-                                        <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
-                                            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                        <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
+                                            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                 </svg>
@@ -172,7 +172,7 @@
                                         </div>
                                     @endforelse
                                     @if ($editableProjectModules->isNotEmpty())
-                                        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
+                                        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
                                             <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
                                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
@@ -184,7 +184,7 @@
                                             </div>
                                         </div>
                                     @endif
-                                    <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
+                                    <div class="h-24 rounded-[8px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
                                 </div>
                             </div>
                         </div>
@@ -254,7 +254,7 @@
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
-                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Milestone</h3>
 
@@ -318,7 +318,7 @@
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-7xl">
-                <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Build Project Sprints</h3>
@@ -361,7 +361,7 @@
                                 </button>
                             </div>
 
-                            <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
+                            <div class="min-h-0 flex-1 overflow-y-auto rounded-[8px] border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                 <div class="space-y-4" data-project-sprint-builder-workspace></div>
                             </div>
                         </div>
@@ -431,7 +431,7 @@
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
-                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Sprint</h3>
 

@@ -40,7 +40,7 @@
 
 <div class="space-y-6" data-project-overview data-project-id="{{ $project->id }}">
     @if ($hasEstimate)
-        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Project Time Progress</h4>
@@ -92,7 +92,7 @@
     @if ($project->isAgile)
         <!-- Milestone burn up chart -->
         <div class="grid gap-6 xl:grid-cols-1">
-            <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+            <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                 <div class="rounded-lg bg-white p-5 shadow-sm dark:bg-darkblack-600">
                     <div class="mb-4">
                         <h3 class="text-lg font-bold text-bgray-900 dark:text-white">
@@ -118,7 +118,7 @@
     @endif
 
     <div class="grid gap-6 xl:grid-cols-2">
-        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Task Status Breakdown</h4>
@@ -182,7 +182,7 @@
             </div>
         </section>
 
-        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">User Wise</h4>
@@ -263,7 +263,7 @@
     </div>
 
     <div class="grid gap-6 xl:grid-cols-1">
-        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="flex min-h-[380px] max-h-[400px] flex-col overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-2 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">

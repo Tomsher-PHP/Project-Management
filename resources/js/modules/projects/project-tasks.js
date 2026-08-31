@@ -805,7 +805,7 @@ const showTaskDetailLoading = (modal) => {
     }
 
     content.innerHTML = `
-        <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
+        <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
             <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                 Loading task details...
             </div>
@@ -907,7 +907,7 @@ const showTaskLogLoading = (modal) => {
     }
 
     content.innerHTML = `
-        <div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
+        <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
             <div class="flex h-[82vh] items-center justify-center px-6 py-12 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                 Loading task logs...
             </div>

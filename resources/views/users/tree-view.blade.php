@@ -291,13 +291,13 @@
             box-shadow: 0 24px 48px rgba(0, 0, 0, 0.38);
         }
 
-        .org-user-modal-row + .org-user-modal-row {
+        .org-user-modal-row+.org-user-modal-row {
             margin-top: 0.65rem;
             padding-top: 0.65rem;
             border-top: 1px solid rgba(226, 232, 240, 0.82);
         }
 
-        .dark .org-user-modal-row + .org-user-modal-row {
+        .dark .org-user-modal-row+.org-user-modal-row {
             border-top-color: rgba(58, 67, 81, 0.82);
         }
 
@@ -529,94 +529,82 @@
 @endpush
 
 @section('page-content')
-        <div class="org-panel org-surface overflow-visible border border-bgray-200 p-6 shadow-sm dark:border-darkblack-400">
-            <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Reporting Tree</h2>
-                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">Understand reporting lines across your team.</p>
-                </div>
+    <div class="org-panel org-surface overflow-visible border border-bgray-200 p-6 shadow-sm dark:border-darkblack-400">
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-bgray-900 dark:text-white">Reporting Tree</h2>
+                <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">Understand reporting lines across your team.</p>
+            </div>
 
-                <div class="ml-auto flex flex-col items-stretch gap-3">
-                    <div class="grid gap-2 sm:grid-cols-3">
-                        <div class="org-stat-card">
-                            <p class="org-stat-label text-bgray-700 dark:text-bgray-300">Users : {{ $totalUsers }}</p>
-                        </div>
-
-                        <div class="org-stat-card">
-                            <p class="org-stat-label text-bgray-700 dark:text-bgray-300">No Reporter : {{ $usersWithoutReporterCount }}</p>
-                        </div>
+            <div class="ml-auto flex flex-col items-stretch gap-3">
+                <div class="grid gap-2 sm:grid-cols-3">
+                    <div class="org-stat-card">
+                        <p class="org-stat-label text-bgray-700 dark:text-bgray-300">Users : {{ $totalUsers }}</p>
                     </div>
 
-                    @if ($hasDetachedNodes)
-                        <div class="org-alert-warning">
-                            Some users were attached to the root because their reporter chain was incomplete.
-                        </div>
-                    @endif
+                    <div class="org-stat-card">
+                        <p class="org-stat-label text-bgray-700 dark:text-bgray-300">No Reporter : {{ $usersWithoutReporterCount }}</p>
+                    </div>
                 </div>
-            </div>
 
-            @if ($hasDetachedNodes === false)
-                <div class="sr-only">
-                    All users are connected to a valid reporter chain.
-                </div>
-            @endif
-
-            <div class="org-chart-scroll">
-                <ul class="org-root-list">
-                    @forelse ($roots as $root)
-                        @php
-                            $rootUser = $root['user'] ?? null;
-                            $rootChildren = $root['children'] ?? [];
-                            $rootIsVirtual = (bool) ($root['is_virtual'] ?? false);
-                            $rootRole = $rootUser?->is_super_admin ? 'Super Admin' : $rootUser?->roles?->first()?->name ?? 'No Role';
-                            $isAuthRootUser = $rootUser && (int) $rootUser->id === (int) auth()->id();
-                            $rootEmail = $rootUser?->email ?? '-';
-                            $rootEmployeeId = $rootUser?->details?->employee_id ?? '-';
-                            $rootDesignation = $rootIsVirtual ? 'Virtual Root' : $rootUser?->details?->designation?->name ?? $rootRole;
-                        @endphp
-
-                        <li class="org-node {{ !empty($rootChildren) ? 'org-node--branch' : '' }}">
-                            <div class="org-card org-card--root {{ $isAuthRootUser ? 'org-card--auth' : '' }}"
-                                data-user-card
-                                data-user-name="{{ $rootUser?->name ?? ($root['label'] ?? 'Super Admin') }}"
-                                data-user-email="{{ $rootEmail }}"
-                                data-user-employee-id="{{ $rootEmployeeId }}"
-                                data-user-role="{{ $rootRole }}"
-                                data-user-designation="{{ $rootDesignation }}"
-                                data-user-reporting-to="-"
-                                data-user-is-super-admin="true"
-                                role="button"
-                                tabindex="0"
-                                aria-haspopup="dialog"
-                                aria-controls="org-user-modal">
-                                <x-user-avatar :user="$rootUser" :name="$rootUser?->name ?? ($root['label'] ?? 'Super Admin')" class="org-avatar" />
-
-                                <div class="org-meta">
-                                    <h3 class="org-name text-sm font-bold text-bgray-900 dark:text-white">
-                                        {{ $rootUser?->name ?? ($root['label'] ?? 'Super Admin') }}
-                                    </h3>
-                                    <p class="org-role mt-0.5 text-xs font-medium text-bgray-600 dark:text-bgray-300">
-                                        {{ $rootIsVirtual ? 'Virtual Root' : $rootRole }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            @if (!empty($rootChildren))
-                                <ul class="org-children">
-                                    @foreach ($rootChildren as $node)
-                                        @include('users.partials.hierarchy-node', ['node' => $node])
-                                    @endforeach
-                                </ul>
-                            @endif
-                        </li>
-                    @empty
-                        <li class="org-empty-state rounded-2xl border border-dashed border-bgray-300 px-5 py-8 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
-                            No users found for the hierarchy view.
-                        </li>
-                    @endforelse
-                </ul>
+                @if ($hasDetachedNodes)
+                    <div class="org-alert-warning">
+                        Some users were attached to the root because their reporter chain was incomplete.
+                    </div>
+                @endif
             </div>
         </div>
+
+        @if ($hasDetachedNodes === false)
+            <div class="sr-only">
+                All users are connected to a valid reporter chain.
+            </div>
+        @endif
+
+        <div class="org-chart-scroll">
+            <ul class="org-root-list">
+                @forelse ($roots as $root)
+                    @php
+                        $rootUser = $root['user'] ?? null;
+                        $rootChildren = $root['children'] ?? [];
+                        $rootIsVirtual = (bool) ($root['is_virtual'] ?? false);
+                        $rootRole = $rootUser?->is_super_admin ? 'Super Admin' : $rootUser?->roles?->first()?->name ?? 'No Role';
+                        $isAuthRootUser = $rootUser && (int) $rootUser->id === (int) auth()->id();
+                        $rootEmail = $rootUser?->email ?? '-';
+                        $rootEmployeeId = $rootUser?->details?->employee_id ?? '-';
+                        $rootDesignation = $rootIsVirtual ? 'Virtual Root' : $rootUser?->details?->designation?->name ?? $rootRole;
+                    @endphp
+
+                    <li class="org-node {{ !empty($rootChildren) ? 'org-node--branch' : '' }}">
+                        <div class="org-card org-card--root {{ $isAuthRootUser ? 'org-card--auth' : '' }}" data-user-card data-user-name="{{ $rootUser?->name ?? ($root['label'] ?? 'Super Admin') }}" data-user-email="{{ $rootEmail }}" data-user-employee-id="{{ $rootEmployeeId }}" data-user-role="{{ $rootRole }}" data-user-designation="{{ $rootDesignation }}" data-user-reporting-to="-" data-user-is-super-admin="true" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="org-user-modal">
+                            <x-user-avatar :user="$rootUser" :name="$rootUser?->name ?? ($root['label'] ?? 'Super Admin')" class="org-avatar" />
+
+                            <div class="org-meta">
+                                <h3 class="org-name text-sm font-bold text-bgray-900 dark:text-white">
+                                    {{ $rootUser?->name ?? ($root['label'] ?? 'Super Admin') }}
+                                </h3>
+                                <p class="org-role mt-0.5 text-xs font-medium text-bgray-600 dark:text-bgray-300">
+                                    {{ $rootIsVirtual ? 'Virtual Root' : $rootRole }}
+                                </p>
+                            </div>
+                        </div>
+
+                        @if (!empty($rootChildren))
+                            <ul class="org-children">
+                                @foreach ($rootChildren as $node)
+                                    @include('users.partials.hierarchy-node', ['node' => $node])
+                                @endforeach
+                            </ul>
+                        @endif
+                    </li>
+                @empty
+                    <li class="org-empty-state rounded-[8px] border border-dashed border-bgray-300 px-5 py-8 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
+                        No users found for the hierarchy view.
+                    </li>
+                @endforelse
+            </ul>
+        </div>
+    </div>
 
     <div id="org-user-modal" class="org-user-modal-backdrop" aria-hidden="true">
         <div class="org-user-modal" role="dialog" aria-modal="true" aria-labelledby="org-user-modal-title">

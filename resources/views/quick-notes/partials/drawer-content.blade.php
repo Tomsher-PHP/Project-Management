@@ -100,8 +100,8 @@
         </div>
 
         <!-- Active Empty State -->
-        <div id="active-empty-state" class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-bgray-300 bg-white py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600 {{ $notes->where('is_archived', false)->isNotEmpty() ? 'hidden' : '' }}">
-            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-bgray-100 text-bgray-400 dark:bg-darkblack-500 dark:text-bgray-500">
+        <div id="active-empty-state" class="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-bgray-300 bg-white py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600 {{ $notes->where('is_archived', false)->isNotEmpty() ? 'hidden' : '' }}">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-[8px] bg-bgray-100 text-bgray-400 dark:bg-darkblack-500 dark:text-bgray-500">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -127,8 +127,8 @@
         </div>
 
         <!-- Archived Empty State -->
-        <div id="archived-empty-state" class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-bgray-300 bg-white py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600 {{ $archivedNotes->isNotEmpty() ? 'hidden' : '' }}">
-            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-bgray-100 text-bgray-400 dark:bg-darkblack-500 dark:text-bgray-500">
+        <div id="archived-empty-state" class="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-bgray-300 bg-white py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600 {{ $archivedNotes->isNotEmpty() ? 'hidden' : '' }}">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-[8px] bg-bgray-100 text-bgray-400 dark:bg-darkblack-500 dark:text-bgray-500">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V8zm2-2h10V4a2 2 0 00-2-2H9a2 2 0 00-2 2v2z" />
                 </svg>

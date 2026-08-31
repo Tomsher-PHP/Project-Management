@@ -9,11 +9,11 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        #{{ $modalId }} .form-modal-fields > .grid {
+        #{{ $modalId }} .form-modal-fields>.grid {
             grid-column: 1 / -1;
         }
 
-        #{{ $modalId }} .form-modal-fields > *:has(textarea) {
+        #{{ $modalId }} .form-modal-fields>*:has(textarea) {
             grid-column: 1 / -1;
         }
     }
@@ -24,7 +24,7 @@
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
         <div class="modal-content relative z-10 w-full max-w-3xl">
-            <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                     <h3 class="modal-title text-2xl font-semibold text-bgray-900 dark:text-white">
                         Add {{ $module }}

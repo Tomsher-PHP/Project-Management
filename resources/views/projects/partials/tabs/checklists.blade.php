@@ -1,7 +1,7 @@
 <div class="space-y-4 p-4 sm:p-6">
     @if ($users->isEmpty())
         <div class="rounded-xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
-            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
@@ -13,7 +13,7 @@
         <div class="space-y-4">
             @foreach ($users as $user)
                 <!-- User Accordion -->
-                <div class="rounded-2xl border border-bgray-200 bg-white overflow-hidden shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" x-data="{ expandedUser: false }" data-user-card="{{ $user->id }}">
+                <div class="rounded-[8px] border border-bgray-200 bg-white overflow-hidden shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" x-data="{ expandedUser: false }" data-user-card="{{ $user->id }}">
                     <button type="button" @click="expandedUser = !expandedUser" class="flex w-full items-center justify-between bg-white px-6 py-4 transition hover:bg-bgray-50 dark:bg-darkblack-600 dark:hover:bg-darkblack-500">
                         <div class="flex items-center gap-4">
                             <x-user-avatar :name="$user->name" :image="$user->profile_image_url ?: null" class="h-12 w-12 border border-bgray-200 dark:border-darkblack-400" />
@@ -38,7 +38,7 @@
                                 @php
                                     $checklistCompletedCount = $checklist->completed_items_count ?? $checklist->items->filter(fn($item) => (int) $item->status === 1)->count();
                                     $checklistTotalCount = $checklist->total_items_count ?? $checklist->items->count();
-                                    $checklistSummaryText = $checklist->checklist_summary ?? ($checklistCompletedCount . ' / ' . $checklistTotalCount);
+                                    $checklistSummaryText = $checklist->checklist_summary ?? $checklistCompletedCount . ' / ' . $checklistTotalCount;
                                 @endphp
                                 <!-- Checklist Accordion -->
                                 <div class="rounded-xl border border-bgray-200 bg-white overflow-hidden shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" x-data="{ expandedChecklist: false }" data-checklist-card="{{ $checklist->id }}">

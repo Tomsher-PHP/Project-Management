@@ -3,7 +3,7 @@
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
         <div class="modal-content relative z-10 w-full max-w-2xl">
-            <div id="quick-note-modal-card" class="overflow-hidden rounded-[10px] bg-white shadow-2xl transition-colors duration-200 dark:bg-darkblack-600">
+            <div id="quick-note-modal-card" class="overflow-hidden rounded-[8px] bg-white shadow-2xl transition-colors duration-200 dark:bg-darkblack-600">
                 <!-- Header -->
                 <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                     <div class="flex items-center gap-2">
@@ -54,16 +54,7 @@
                         <!-- Color Swatches -->
                         <div>
                             @php
-                                $softColors = config('constants.soft_colors', [
-                                    '#f3f4f6',
-                                    '#fee2e2',
-                                    '#fde68a',
-                                    '#d1fae5',
-                                    '#dbeafe',
-                                    '#e9d5ff',
-                                    '#fbcfe8',
-                                    '#cffafe',
-                                ]);
+                                $softColors = config('constants.soft_colors', ['#f3f4f6', '#fee2e2', '#fde68a', '#d1fae5', '#dbeafe', '#e9d5ff', '#fbcfe8', '#cffafe']);
                             @endphp
                             <div class="flex flex-wrap items-center gap-3" id="quick_note_color_swatches">
                                 <button type="button" data-color="" title="Default" class="color-swatch-btn relative block w-9 h-9 rounded-md border border-gray-300 transition transform hover:scale-110 focus:outline-none bg-white dark:bg-darkblack-500">
@@ -84,17 +75,17 @@
                             Cancel
                         </button>
 
-                            <button type="submit" id="quick_note_submit_btn" class="inline-flex items-center gap-2 rounded-xl bg-success-300 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-success-400 focus:outline-none">
-                                <svg class="hidden h-4 w-4 animate-spin text-white" id="quick_note_submit_spinner" viewBox="0 0 24 24" fill="none">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span id="quick_note_submit_label">Save Note</span>
-                            </button>
-                        </div>
+                        <button type="submit" id="quick_note_submit_btn" class="inline-flex items-center gap-2 rounded-xl bg-success-300 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-success-400 focus:outline-none">
+                            <svg class="hidden h-4 w-4 animate-spin text-white" id="quick_note_submit_spinner" viewBox="0 0 24 24" fill="none">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="quick_note_submit_label">Save Note</span>
+                        </button>
                     </div>
-                </form>
             </div>
+            </form>
         </div>
     </div>
+</div>
 </div>

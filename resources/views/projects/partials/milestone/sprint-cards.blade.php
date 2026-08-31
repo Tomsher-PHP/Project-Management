@@ -16,9 +16,7 @@
         $timeDifferencePrefix = $timeDifferenceSeconds > 0 ? '+' : '-';
         $statusName = $projectSprint->status?->name ?? 'No status';
         $formatDate = static fn($date) => \App\Providers\AppServiceProvider::formatAppDate($date);
-        $dragHandleClasses = $allPagesLoaded
-            ? 'cursor-move'
-            : 'cursor-not-allowed opacity-50';
+        $dragHandleClasses = $allPagesLoaded ? 'cursor-move' : 'cursor-not-allowed opacity-50';
     @endphp
     <div class="overflow-hidden rounded-none border border-bgray-200 bg-bgray-50 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-sprint-card data-project-sprint-id="{{ $projectSprint->id }}" draggable="false" style="border-color: {{ $projectSprint->color ?: '#D1D5DB' }}">
         <div class="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
@@ -30,9 +28,9 @@
                         </svg>
                     </span>
                 @else
-                    @if (! $isDeletedProjectView)
+                    @if (!$isDeletedProjectView)
                         @can('project_sprint.edit')
-                            <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 {{ $dragHandleClasses }}" data-project-sprint-drag-handle @if (! $allPagesLoaded) disabled title="Scroll to load all sprints before reordering" @endif>
+                            <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 {{ $dragHandleClasses }}" data-project-sprint-drag-handle @if (!$allPagesLoaded) disabled title="Scroll to load all sprints before reordering" @endif>
                                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                 </svg>
@@ -69,7 +67,7 @@
                                 {{ \Illuminate\Support\Str::limit($projectSprint->description, 100) }}
                             </p>
                         @endif
-                        @if (! $milestone->is_backlog)
+                        @if (!$milestone->is_backlog)
                             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-bgray-600 dark:text-bgray-300">
                                 <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Status: {{ $statusName }}</span>
                                 <span class="inline-flex rounded-full bg-white px-2.5 py-1 dark:bg-darkblack-600">Start: {{ $formatDate($projectSprint->start_date) }}</span>
@@ -81,10 +79,9 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-                @if (! $isProtectedSprint && ! $isDeletedProjectView)
+                @if (!$isProtectedSprint && !$isDeletedProjectView)
                     @can('project_sprint.edit')
-                        <button type="button" class="project-sprint-builder-edit inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-project-sprint-id="{{ $projectSprint->id }}" data-project-milestone-id="{{ $projectSprint->project_milestone_id }}" data-project-milestone-name="{{ $milestone->name }}"
-                            data-project-sprint-load-url="{{ $isDeletedProjectView ? route('projects.restore.milestones.sprints.index', ['id' => $project->id, 'projectMilestone' => $milestone->id]) : route('projects.milestones.sprints.index', [$project, $milestone]) }}" title="Edit sprint">
+                        <button type="button" class="project-sprint-builder-edit inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-project-sprint-id="{{ $projectSprint->id }}" data-project-milestone-id="{{ $projectSprint->project_milestone_id }}" data-project-milestone-name="{{ $milestone->name }}" data-project-sprint-load-url="{{ $isDeletedProjectView ? route('projects.restore.milestones.sprints.index', ['id' => $project->id, 'projectMilestone' => $milestone->id]) : route('projects.milestones.sprints.index', [$project, $milestone]) }}" title="Edit sprint">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
                             </svg>
@@ -100,7 +97,7 @@
     </div>
 @empty
     @if ($showEmptyState)
-        <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+        <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
             <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">No sprints added under this milestone yet.</p>
         </div>
     @endif

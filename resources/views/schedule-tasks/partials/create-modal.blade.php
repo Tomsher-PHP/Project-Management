@@ -17,7 +17,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-schedule-task-close></div>
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
         <div class="relative z-10 w-full max-w-5xl" data-schedule-task-panel>
-            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">{{ $isEdit ? 'Edit Scheduled Task' : 'Schedule Task' }}</h3>
                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300" data-schedule-task-close>✕</button>
@@ -80,7 +80,7 @@
                         </div>
                     </section>
 
-                    <section class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-schedule-task-advanced {{ $isEdit ? '' : 'hidden' }}>
+                    <section class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-schedule-task-advanced {{ $isEdit ? '' : 'hidden' }}>
                         <h4 class="mb-3 text-sm font-semibold uppercase tracking-wide text-bgray-900 dark:text-white">Advanced</h4>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
@@ -130,7 +130,7 @@
                         </div>
                     </section>
 
-                    <section class="rounded-2xl border border-success-200 bg-success-50/40 p-4 dark:border-success-900/40 dark:bg-darkblack-500/40">
+                    <section class="rounded-[8px] border border-success-200 bg-success-50/40 p-4 dark:border-success-900/40 dark:bg-darkblack-500/40">
                         <h4 class="mb-3 text-sm font-semibold uppercase tracking-wide text-bgray-900 dark:text-white">Schedule Configuration</h4>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>

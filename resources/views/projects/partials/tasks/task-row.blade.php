@@ -18,7 +18,7 @@
 @endphp
 
 <tr class="transition hover:bg-bgray-50/70 dark:hover:bg-darkblack-500/60 {{ $isSubtask ? 'hidden bg-bgray-50/30 dark:bg-darkblack-500/20' : '' }}" data-project-task-id="{{ $task->id }}" @if ($isSubtask) data-project-task-parent-id="{{ $parentTaskId }}" hidden @endif>
-    <td class="group border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="group border border-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         <div class="flex items-start gap-2.5">
             @if ($isSubtask)
                 <span class="mt-1 h-5 flex-shrink-0" style="width: {{ max(0, $depth) * 16 }}px" aria-hidden="true"></span>
@@ -73,7 +73,7 @@
         </div>
     </td>
 
-    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         @if ($task->currentAssignee)
             <div class="flex items-center gap-2">
                 <x-user-avatar :user="$task->currentAssignee" size="xs" class="ring-2 ring-white dark:ring-darkblack-500" />
@@ -88,7 +88,7 @@
         @endif
     </td>
 
-    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         @if ($task->status)
             <span class="inline-flex items-center gap-1.5 rounded-full border border-bgray-200 px-2 py-0.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                 <span class="h-2 w-2 rounded-full" style="background-color: {{ $statusColor }}"></span>
@@ -101,28 +101,28 @@
         @endif
     </td>
 
-    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         <span class="inline-flex items-center gap-1.5 rounded-full border border-bgray-200 px-2 py-0.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             <span class="h-2 w-2 rounded-full" style="background-color: {{ $typeColor }}"></span>
             {{ $typeLabel }}
         </span>
     </td>
 
-    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         <span class="inline-flex items-center gap-1.5 rounded-full border border-bgray-200 px-2 py-0.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             <span class="h-2 w-2 rounded-full" style="background-color: {{ $modeColor }}"></span>
             {{ $modeLabel }}
         </span>
     </td>
 
-    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400 dark:border-r-darkblack-400">
+    <td class="border-b border-r border-bgray-200 border-r-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         <div class="text-xs font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>
         <div class="text-xs text-bgray-700 dark:text-bgray-300">Actual {{ $task->actual_time_formatted }}</div>
     </td>
 
-    <td class="border-b border-bgray-200 px-3 py-2 align-top dark:border-b-darkblack-400">
+    <td class="border-b border-bgray-200 px-3 py-2 align-top dark:border-darkblack-400">
         @if ($task->due_date_time)
-            <div class="inline-flex items-center gap-0.5 text-xs font-medium text-bgray-900 dark:text-white {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
+            <div class="inline-flex items-center gap-0.5 text-xs font-medium text-bgray-900 {{ taskDueDateClass($task->due_date_time, $task->estimated_time_seconds, $task) }}">
                 {!! taskDueDateIcon($task->due_date_time, $task->estimated_time_seconds, $task) !!}
                 <span>@appDateTime($task->due_date_time)</span>
             </div>
@@ -132,7 +132,7 @@
     </td>
 
     @if ($showTaskActionColumn)
-        <td class="border-b border-bgray-200 px-3 py-2 align-top text-right dark:border-b-darkblack-400">
+        <td class="border-b border-bgray-200 px-3 py-2 align-top text-right dark:border-darkblack-400">
             @if ($canAddSubTask || $canMoveTask || $canDeleteTask || $canEditTask)
                 <div class="relative inline-flex" data-project-task-row-dropdown>
                     <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-bgray-200 bg-white text-bgray-700 transition hover:border-success-200 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-900/40 dark:hover:text-success-300" data-project-task-row-menu-trigger aria-expanded="false" aria-label="Task actions">
@@ -161,12 +161,7 @@
                             </button>
                         @endif
 
-                        <button
-                            type="button"
-                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white"
-                            data-project-task-log-open
-                            data-project-task-log-url="{{ route('projects.tasks.logs', [$project, $task]) }}"
-                        >
+                        <button type="button" class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-project-task-log-open data-project-task-log-url="{{ route('projects.tasks.logs', [$project, $task]) }}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm.75 3a.75.75 0 00-1.5 0v5c0 .199.079.389.22.53l2.5 2.5a.75.75 0 001.06-1.06l-2.28-2.28V5z" clip-rule="evenodd" />
                             </svg>

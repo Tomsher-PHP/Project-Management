@@ -14,7 +14,7 @@
         <div class="flex items-start justify-center xl:justify-start">
             @if (!empty($workspaceTimelineShowsUser))
                 <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-success-50 text-lg font-bold text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-success-50 text-lg font-bold text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         @if (!empty($workspaceTimelineUserAvatarUrl))
                             <img src="{{ $workspaceTimelineUserAvatarUrl }}" alt="{{ $workspaceTimelineUserName }}" class="h-full w-full object-cover" />
                         @else

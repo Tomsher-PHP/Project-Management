@@ -45,7 +45,7 @@
 @endphp
 
 <div class="space-y-3" data-project-tasks-root data-default-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
-    <div class="flex flex-col gap-2 rounded-[20px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-col gap-2 rounded-[8px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
             <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">
@@ -109,7 +109,7 @@
 
                 <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
                     <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-project-task-modal-panel>
-                        <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+                        <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                             <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                                 <div>
                                     <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Add Task</h3>
@@ -184,7 +184,7 @@
                                     </div>
                                 </div>
 
-                                <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-project-task-advanced-section hidden>
+                                <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-project-task-advanced-section hidden>
                                     <div class="grid gap-4 md:grid-cols-2">
                                         <div class="md:col-span-2">
                                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
@@ -297,7 +297,7 @@
 
             <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
                 <div class="relative z-10 w-full max-w-md transition-all duration-200">
-                    <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+                    <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                             <div>
                                 <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
@@ -315,7 +315,7 @@
                         <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)'>
                             <input type="hidden" name="_method" value="PATCH">
 
-                            <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300">
+                            <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300">
                                 <p>
                                     Current sprint:
                                     <span class="font-medium text-bgray-900 dark:text-white" data-project-task-move-current-sprint>--</span>
