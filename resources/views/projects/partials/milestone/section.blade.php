@@ -199,11 +199,7 @@
 
                                 @if (!$isProtectedModule && !$isDeletedProjectView)
                                     @can('project_milestone.edit')
-                                        <button type="button" class="project-milestone-builder-edit inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300" data-milestone-id="{{ $milestone->id }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M17.414 2.586a2 2 0 010 2.828l-9.193 9.193a1 1 0 01-.464.263l-4 1a1 1 0 01-1.213-1.213l1-4a1 1 0 01.263-.464l9.193-9.193a2 2 0 012.828 0z" />
-                                            </svg>
-                                        </button>
+                                        <x-edit-button action="javascript:void(0)" type="button" class="project-milestone-builder-edit h-8 w-8" data-milestone-id="{{ $milestone->id }}" />
                                     @endcan
 
                                     @can('project_milestone.delete')
