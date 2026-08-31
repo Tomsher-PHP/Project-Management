@@ -85,18 +85,18 @@
                 @php
                     $isProtectedModule = (bool) ($milestone->is_backlog || $milestone->is_system);
                 @endphp
-                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-none border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-milestone-card data-milestone-id="{{ $milestone->id }}" draggable="false" style="border-color: {{ $milestone->color ?: '#D1D5DB' }}">
+                <div x-data="{ showFullDescription: false }" class="overflow-hidden rounded-[8px] border-2 border-bgray-200 bg-bgray-50/60 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500/50" data-project-milestone-card data-milestone-id="{{ $milestone->id }}" draggable="false" style="border-color: {{ $milestone->color ?: '#D1D5DB' }}">
                     <div class="border-b border-bgray-200 bg-white px-4 py-4 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-600 sm:px-5" data-project-milestone-card-header>
                         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div class="flex items-start gap-4">
                                 @if ($isProtectedModule || $isDeletedProjectView)
-                                    <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-600 opacity-70 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" title="System milestone">
+                                    <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] border border-bgray-200 bg-bgray-50 text-bgray-600 opacity-70 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" title="System milestone">
                                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                         </svg>
                                     </span>
                                 @else
-                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-xl border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-drag-handle>
+                                    <button type="button" class="mt-0.5 inline-flex h-10 w-10 shrink-0 cursor-move items-center justify-center rounded-[8px] border border-bgray-200 bg-bgray-50 text-bgray-700 transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" data-project-milestone-drag-handle>
                                         <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M7 4a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM7 13a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
                                         </svg>
