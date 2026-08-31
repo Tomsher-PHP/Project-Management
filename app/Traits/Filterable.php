@@ -66,11 +66,23 @@ trait Filterable
         // date range filter 
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $dateColumn = $filters['date_column'] ?? 'start_date';
-            if (Schema::hasColumn($query->getModel()->getTable(), $dateColumn)) {
-                $query->whereBetween($dateColumn, [
-                    $filters['start_date'],
-                    $filters['end_date']
-                ]);
+            $table = $query->getModel()->getTable();
+
+            if (Schema::hasColumn($table, $dateColumn)) {
+                $endDateColumn = match ($dateColumn) {
+                    'start_date' => 'end_date',
+                    default => null,
+                };
+
+                if ($endDateColumn && Schema::hasColumn($table, $endDateColumn)) {
+                    $query->where($dateColumn, '<=', $filters['end_date'])
+                        ->where($endDateColumn, '>=', $filters['start_date']);
+                } else {
+                    $query->whereBetween($dateColumn, [
+                        $filters['start_date'],
+                        $filters['end_date'],
+                    ]);
+                }
             }
         }
 
@@ -89,7 +101,6 @@ trait Filterable
             if (in_array('others', $categoryIds, true) && count($categoryIds) === 1) {
 
                 $query->whereNull('project_category_ids');
-
             } else {
 
                 // Check whether Others is selected along with categories
@@ -97,7 +108,7 @@ trait Filterable
 
                 // Remove "others"
                 $categoryIds = array_values(
-                    array_filter($categoryIds, fn ($id) => $id !== 'others')
+                    array_filter($categoryIds, fn($id) => $id !== 'others')
                 );
 
                 $query->where(function ($q) use ($categoryIds, $hasOthers) {
