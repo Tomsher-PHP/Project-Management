@@ -41,7 +41,7 @@ class ScheduleTaskController extends Controller
         $taskSchedules = (clone $baseQuery)
             ->filter($request->all())
             ->with([
-                'project:id,name,project_code',
+                'project:id,name,project_code,project_flow',
                 'projectMilestone:id,name',
                 'projectSprint:id,name',
                 'currentAssignee:id,name',

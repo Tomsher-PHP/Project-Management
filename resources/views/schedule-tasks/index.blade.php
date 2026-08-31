@@ -41,7 +41,21 @@
                                 @endphp
                                 <tr class="border-b border-bgray-200 {{ config('assets.classes.table_row_hover') }} dark:border-darkblack-400">
                                     <td class="px-4 py-4 font-semibold text-bgray-900 dark:text-white">{{ $taskSchedule->name }}</td>
-                                    <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->project?->name ?? '--' }}</td>
+                                    <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">
+                                        @if ($taskSchedule->project)
+                                            <a href="{{ auth()->user()?->can('project.view') ? route('projects.edit', $taskSchedule->project) : 'javascript:void(0)' }}" class="inline-flex min-w-0 flex-col items-start gap-1 font-semibold text-bgray-900 transition duration-200 hover:text-success-400 dark:text-white dark:hover:text-success-300">
+                                                <span class="inline-flex min-w-0 items-center gap-2">
+                                                    <x-project-flow-icon :flow="$taskSchedule->project->project_flow" size="sm" />
+                                                    <span class="truncate" title="{{ $taskSchedule->project->name }}">{{ limitStringChar($taskSchedule->project->name, 20, '..') }}</span>
+                                                </span>
+                                                <span class="pl-6 text-xs font-normal text-[#7C97C1] dark:text-bgray-300">
+                                                    {{ $taskSchedule->project->project_code ?: '--' }}
+                                                </span>
+                                            </a>
+                                        @else
+                                            <span class="truncate">--</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->currentAssignee?->name ?? '--' }}</td>
                                     <td class="whitespace-nowrap px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $taskSchedule->estimated_time_formatted }}</td>
                                     <td class="px-4 py-4 text-bgray-600 dark:text-bgray-300">{{ $frequencyLabel }}</td>
