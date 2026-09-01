@@ -291,7 +291,7 @@
         @endcan
     @endif
 
-    @if (!$isDeletedProjectView && !$isLinearFlow && auth()->user()?->can('task.move'))
+    @if (!$isDeletedProjectView && auth()->user()?->can('task.move'))
         <div class="modal fixed inset-0 z-[75] hidden items-center justify-center overflow-y-auto" data-project-task-move-modal>
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-project-task-move-close></div>
 
@@ -303,7 +303,7 @@
                                 <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
                                 <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                                     Move <span class="font-medium text-bgray-700 dark:text-bgray-300" data-project-task-move-task-name>this task</span>
-                                    to another sprint.
+                                    <span data-project-task-move-subtitle-text>to another sprint</span>.
                                 </p>
                             </div>
 
@@ -312,7 +312,7 @@
                             </button>
                         </div>
 
-                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)'>
+                        <form class="space-y-4 overflow-y-auto px-5 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}">
                             <input type="hidden" name="_method" value="PATCH">
 
                             <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 px-4 py-3 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300">
@@ -322,24 +322,48 @@
                                 </p>
                             </div>
 
+                            {{-- Move to another project Checkbox --}}
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="project_task_move_to_another_project" name="move_to_another_project" value="1" class="h-4 w-4 rounded border-gray-300 text-success-500 focus:ring-success-400 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-move-another-project-toggle>
+                                <label for="project_task_move_to_another_project" class="cursor-pointer text-sm font-medium text-bgray-700 dark:text-bgray-300 select-none">
+                                    Move to another project
+                                </label>
+                            </div>
+
+                            {{-- Project selection (shown when checkbox is checked) --}}
+                            <div class="hidden space-y-1" data-project-task-move-project-container>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                    Project <x-red-star />
+                                </label>
+                                <select id="move_target_project_id" name="target_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0" data-project-task-move-project-select disabled>
+                                    <option value="">Search project here..</option>
+                                </select>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_project_id"></p>
+                            </div>
+
+                            {{-- Milestone selection --}}
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Milestone</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
+                                    Milestone
+                                </label>
                                 <select name="project_milestone_id" class="tom-select w-full" data-sort="0" data-project-task-move-module-select>
                                     <option value="">All milestones</option>
                                     @foreach ($projectMilestones as $projectMilestone)
                                         <option value="{{ $projectMilestone->id }}">{{ $projectMilestone->name }}</option>
                                     @endforeach
                                 </select>
-                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">
+                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300" data-project-task-move-milestone-hint>
                                     Optional. Choose a milestone to narrow the sprint list.
                                 </p>
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_milestone_id"></p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_milestone_id"></p>
                             </div>
 
+                            {{-- Sprint selection --}}
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Sprint
-                                    <x-red-star />
+                                    <span data-project-task-move-sprint-star><x-red-star /></span>
                                 </label>
                                 <select name="project_sprint_id" class="tom-select w-full" data-sort="0">
                                     <option value="">Select sprint</option>
@@ -351,7 +375,9 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300 hidden" data-project-task-move-sprint-hint></p>
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="project_sprint_id"></p>
+                                <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_sprint_id"></p>
                             </div>
 
                             <div class="flex items-center justify-end gap-3 pt-1">

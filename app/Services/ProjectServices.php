@@ -579,26 +579,69 @@ class ProjectServices
         return $task->fresh();
     }
 
+    public function moveTaskToProject(
+        Project $sourceProject,
+        Project $targetProject,
+        Task $task,
+        ?int $targetMilestoneId = null,
+        ?int $targetSprintId = null
+    ): Task {
+        if ((int) $task->project_id !== (int) $sourceProject->id) {
+            throw new InvalidArgumentException('The provided task does not belong to the source project.');
+        }
+
+        $placement = $this->finalizeTaskPlacement($targetProject, $targetMilestoneId, $targetSprintId);
+
+        $resolvedMilestoneId = $placement['project_milestone_id'];
+        $resolvedSprintId = $placement['project_sprint_id'];
+
+        return DB::transaction(function () use ($targetProject, $task, $resolvedMilestoneId, $resolvedSprintId) {
+            $isSubtask = $task->parent_task_id !== null;
+            $newParentTaskId = $isSubtask ? null : $task->parent_task_id;
+
+            $task->update([
+                'project_id' => $targetProject->id,
+                'parent_task_id' => $newParentTaskId,
+                'project_milestone_id' => $resolvedMilestoneId,
+                'project_sprint_id' => $resolvedSprintId,
+                'sort_order' => Task::nextSortOrder($targetProject->id, $resolvedSprintId ? (int) $resolvedSprintId : null),
+            ]);
+
+            $this->syncTaskDescendantPlacement(
+                $task,
+                $resolvedMilestoneId ? (int) $resolvedMilestoneId : null,
+                $resolvedSprintId ? (int) $resolvedSprintId : null,
+                (int) $targetProject->id
+            );
+
+            return $task->fresh();
+        });
+    }
+
     public function syncTaskPlacementToDescendants(Task $task): void
     {
         $this->syncTaskDescendantPlacement(
             $task,
             $task->project_milestone_id ? (int) $task->project_milestone_id : null,
-            $task->project_sprint_id ? (int) $task->project_sprint_id : null
+            $task->project_sprint_id ? (int) $task->project_sprint_id : null,
+            (int) $task->project_id
         );
     }
 
-    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId): void
+    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId, ?int $projectId = null): void
     {
+        $targetProjectId = $projectId ?: (int) $task->project_id;
+
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId) {
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId) {
                 $childTask->update([
+                    'project_id' => $targetProjectId,
                     'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
                 ]);
 
-                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId);
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId);
             });
     }
 

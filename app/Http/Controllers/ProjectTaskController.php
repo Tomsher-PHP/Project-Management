@@ -268,6 +268,38 @@ class ProjectTaskController extends Controller
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
         $validated = $request->validated();
+
+        $isCrossProject = ! empty($validated['move_to_another_project']);
+
+        if ($isCrossProject) {
+            $targetProjectId = (int) $validated['target_project_id'];
+            $targetProject = Project::query()->findOrFail($targetProjectId);
+
+            abort_unless(Project::query()->accessibleBy(auth()->user())->where('id', $targetProject->id)->exists(), Response::HTTP_FORBIDDEN);
+
+            $targetMilestoneId = ! empty($validated['target_milestone_id'])
+                ? (int) $validated['target_milestone_id']
+                : (! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null);
+
+            $targetSprintId = ! empty($validated['target_sprint_id'])
+                ? (int) $validated['target_sprint_id']
+                : (! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null);
+
+            $task = $projectService->moveTaskToProject(
+                $project,
+                $targetProject,
+                $task,
+                $targetMilestoneId,
+                $targetSprintId
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Task moved to another project successfully.',
+                'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
+            ], Response::HTTP_OK);
+        }
+
         $task = $projectService->moveTaskToSprint(
             $project,
             $task,

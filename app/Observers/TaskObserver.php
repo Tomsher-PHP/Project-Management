@@ -46,11 +46,12 @@ class TaskObserver
     {
         $original = $task->getOriginal();
 
-        if ($task->wasChanged(['parent_task_id', 'project_sprint_id', 'project_milestone_id'])) {
+        if ($task->wasChanged(['project_id', 'parent_task_id', 'project_sprint_id', 'project_milestone_id'])) {
             $this->projectTimeService->recalculateOldTaskRelations($original);
         }
 
         if ($task->wasChanged([
+            'project_id',
             'estimated_time_seconds',
             'request_status',
             'parent_task_id',
