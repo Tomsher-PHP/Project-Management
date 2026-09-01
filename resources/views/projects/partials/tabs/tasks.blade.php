@@ -322,7 +322,7 @@
                                 </p>
                             </div>
 
-                            {{-- Move to another project Checkbox --}}
+                            <!-- Move to another project Checkbox -->
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="project_task_move_to_another_project" name="move_to_another_project" value="1" class="h-4 w-4 rounded border-gray-300 text-success-500 focus:ring-success-400 dark:border-darkblack-400 dark:bg-darkblack-500" data-project-task-move-another-project-toggle>
                                 <label for="project_task_move_to_another_project" class="cursor-pointer text-sm font-medium text-bgray-700 dark:text-bgray-300 select-none">
@@ -330,7 +330,7 @@
                                 </label>
                             </div>
 
-                            {{-- Project selection (shown when checkbox is checked) --}}
+                            <!-- Project selection (shown when checkbox is checked) -->
                             <div class="hidden space-y-1" data-project-task-move-project-container>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Project <x-red-star />
@@ -341,7 +341,7 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_project_id"></p>
                             </div>
 
-                            {{-- Milestone selection --}}
+                            <!-- Milestone selection -->
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Milestone
@@ -359,7 +359,7 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_milestone_id"></p>
                             </div>
 
-                            {{-- Sprint selection --}}
+                            <!-- Sprint selection -->
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Sprint

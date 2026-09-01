@@ -16,6 +16,7 @@ use App\Models\ProjectStatusHistory;
 use App\Models\Task;
 use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
+use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
@@ -622,6 +623,12 @@ class ProjectServices
             ];
 
             if ($isFlowChanged && $newStatusId) {
+                if ((int) $task->status_id !== (int) $newStatusId) {
+                    TaskStatusHistory::create([
+                        'task_id' => $task->id,
+                        'status_id' => $newStatusId,
+                    ]);
+                }
                 $updateData['status_id'] = $newStatusId;
             }
 
@@ -772,6 +779,12 @@ class ProjectServices
                 ];
 
                 if ($newStatusId) {
+                    if ((int) $childTask->status_id !== (int) $newStatusId) {
+                        TaskStatusHistory::create([
+                            'task_id' => $childTask->id,
+                            'status_id' => $newStatusId,
+                        ]);
+                    }
                     $childUpdateData['status_id'] = $newStatusId;
                 }
 
