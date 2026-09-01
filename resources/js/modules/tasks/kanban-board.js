@@ -22,7 +22,23 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentSort = sortDropdown?.dataset.selectedSort || new URLSearchParams(window.location.search).get('sort') || '';
     const defaultSortLabel = sortDropdown?.querySelector('[data-kanban-sort-label]')?.textContent?.trim() || 'Sort Tasks';
 
+    let activeBoardAbortController = null;
+    const activeColumnAbortControllers = new Map();
+    let currentBoardToken = 0;
+
     /** ================= FUNCTIONS ================= */
+
+    const abortAllKanbanRequests = () => {
+        if (activeBoardAbortController) {
+            activeBoardAbortController.abort();
+            activeBoardAbortController = null;
+        }
+
+        for (const controller of activeColumnAbortControllers.values()) {
+            controller.abort();
+        }
+        activeColumnAbortControllers.clear();
+    };
 
     const initKanbanDrag = () => {
         document.querySelectorAll(".kanban-board").forEach(board => {
@@ -119,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const movedFromDefault = fromColumn.dataset.isDefault === '1';
         const movedToDefault = toColumn.dataset.isDefault === '1';
         const taskFlow = currentFlow;
+        const requestToken = currentBoardToken;
 
         const previousFromTaskIds = [...getBoardTaskIds(fromColumn)];
         const previousToTaskIds = fromColumn === toColumn
@@ -152,6 +169,10 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(handleFetchError)
             .then((response) => {
+                if (requestToken !== currentBoardToken || taskFlow !== currentFlow) {
+                    return;
+                }
+
                 syncAutoStoppedTimer(response.timer_stopped, response.navbar_timer);
 
                 if (movedBetweenStatuses && movedFromDefault !== movedToDefault) {
@@ -169,6 +190,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 replaceMovedCard(evt.item, response.html);
             })
             .catch(err => {
+                if (requestToken !== currentBoardToken || taskFlow !== currentFlow) {
+                    return;
+                }
+
                 setBoardTaskIds(fromColumn, previousFromTaskIds);
                 setBoardTaskIds(toColumn, previousToTaskIds);
 
@@ -191,11 +216,19 @@ document.addEventListener("DOMContentLoaded", () => {
             return Promise.resolve(false);
         }
 
+        abortAllKanbanRequests();
+        currentBoardToken += 1;
+        const requestToken = currentBoardToken;
+        const requestFlow = flow;
+
+        activeBoardAbortController = new AbortController();
+
         isKanbanLoading = true;
         container.dataset.loading = 'true';
         toggleLoading(container, true);
 
         return fetch(buildKanbanUrl({ flow }), {
+            signal: activeBoardAbortController.signal,
             headers: {
                 Accept: shouldRefreshFlowCounts ? 'application/json' : 'text/html',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -203,11 +236,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(res => shouldRefreshFlowCounts ? handleFetchError(res) : res.text())
             .then(response => {
+                if (requestToken !== currentBoardToken || requestFlow !== currentFlow) {
+                    return false;
+                }
+
                 container.innerHTML = shouldRefreshFlowCounts ? response.html : response;
 
                 if (shouldRefreshFlowCounts && response.flowCounts) {
-                    Object.entries(response.flowCounts).forEach(([flow, count]) => {
-                        setNewTaskBadge(flow, count);
+                    Object.entries(response.flowCounts).forEach(([flowKey, count]) => {
+                        setNewTaskBadge(flowKey, count);
                     });
                 }
 
@@ -216,30 +253,56 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.dispatchEvent(new CustomEvent('workspace:kanban-refreshed'));
                 return true;
             })
-            .catch(() => {
+            .catch((err) => {
+                if (err?.name === 'AbortError' || requestToken !== currentBoardToken || requestFlow !== currentFlow) {
+                    return false;
+                }
                 Alert.error('Failed to load board');
                 return false;
             })
             .finally(() => {
-                isKanbanLoading = false;
-                container.dataset.loading = 'false';
-                toggleLoading(container, false);
+                if (requestToken === currentBoardToken) {
+                    isKanbanLoading = false;
+                    container.dataset.loading = 'false';
+                    toggleLoading(container, false);
+                }
             });
     };
 
     const loadMoreStatusTasks = (board) => {
-        if (!board || board.dataset.hasMore !== 'true' || board.dataset.loading === 'true') {
+        if (
+            !board ||
+            board.dataset.hasMore !== 'true' ||
+            board.dataset.loading === 'true' ||
+            board.dataset.loadFailed === 'true'
+        ) {
             return;
         }
+
+        const statusId = board.dataset.statusId;
+        if (!statusId) {
+            return;
+        }
+
+        const requestToken = currentBoardToken;
+        const requestFlow = currentFlow;
+
+        if (activeColumnAbortControllers.has(statusId)) {
+            activeColumnAbortControllers.get(statusId).abort();
+        }
+
+        const columnController = new AbortController();
+        activeColumnAbortControllers.set(statusId, columnController);
 
         board.dataset.loading = 'true';
         toggleLoadIndicator(board, true);
 
         fetch(buildKanbanUrl({
             flow: currentFlow,
-            status_id: board.dataset.statusId,
+            status_id: statusId,
             page: board.dataset.nextPage || 1,
         }), {
+            signal: columnController.signal,
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -247,21 +310,39 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then(handleFetchError)
             .then((response) => {
+                if (requestToken !== currentBoardToken || requestFlow !== currentFlow || !document.body.contains(board)) {
+                    return;
+                }
+
                 appendCards(board, response.html);
                 board.dataset.hasMore = response.hasMore ? 'true' : 'false';
                 board.dataset.nextPage = response.nextPage ?? '';
+                board.dataset.loadFailed = 'false';
 
                 if (Array.isArray(response.taskIds)) {
                     setBoardTaskIds(board, response.taskIds);
                 }
             })
             .catch((err) => {
-                Alert.error(err.message || 'Failed to load more tasks');
+                if (err?.name === 'AbortError' || requestToken !== currentBoardToken || requestFlow !== currentFlow || !document.body.contains(board)) {
+                    return;
+                }
+
+                board.dataset.loadFailed = 'true';
+                board.dataset.hasMore = 'false';
+                Alert.error(err?.message || 'Failed to load more tasks');
             })
             .finally(() => {
-                board.dataset.loading = 'false';
-                toggleLoadIndicator(board, false);
-                maybeLoadMore(board);
+                activeColumnAbortControllers.delete(statusId);
+
+                if (requestToken === currentBoardToken && requestFlow === currentFlow && document.body.contains(board)) {
+                    board.dataset.loading = 'false';
+                    toggleLoadIndicator(board, false);
+
+                    if (board.dataset.loadFailed !== 'true' && board.dataset.hasMore === 'true') {
+                        maybeLoadMore(board);
+                    }
+                }
             });
     };
 
@@ -294,6 +375,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const params = new URLSearchParams(window.location.search);
 
         params.set('kanban', '1');
+        params.delete('status_id');
+        params.delete('page');
 
         if (currentSort) {
             params.set('sort', currentSort);
@@ -410,7 +493,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const maybeLoadMore = (board) => {
-        if (!board || board.dataset.hasMore !== 'true' || board.dataset.loading === 'true') {
+        if (
+            !board ||
+            board.dataset.hasMore !== 'true' ||
+            board.dataset.loading === 'true' ||
+            board.dataset.loadFailed === 'true' ||
+            !document.body.contains(board)
+        ) {
             return;
         }
 
