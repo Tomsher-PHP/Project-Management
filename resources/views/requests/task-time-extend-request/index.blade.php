@@ -104,7 +104,14 @@
                                     <span class="text-sm text-bgray-700 dark:text-bgray-300">{{ $extendRequest->estimated_time_formatted }}</span>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <span class="text-sm text-bgray-700 dark:text-bgray-300 font-semibold">{{ $extendRequest->new_estimated_time_formatted }}</span>
+                                    @if ($extendRequest->hasDifference())
+                                        <div class="text-sm">
+                                            <p class="text-xs text-bgray-700 dark:text-bgray-300">Requested: <span class="font-semibold text-bgray-700 dark:text-bgray-300">{{ $extendRequest->user_requested_time_formatted }}</span></p>
+                                            <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-0.5">Approved: <span class="font-semibold text-success-500 dark:text-success-400">{{ $extendRequest->new_estimated_time_formatted }}</span></p>
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-bgray-700 dark:text-bgray-300 font-semibold">{{ $extendRequest->new_estimated_time_formatted }}</span>
+                                    @endif
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="min-w-[200px] text-sm text-bgray-700 dark:text-bgray-300">
@@ -230,6 +237,10 @@
                         <div>
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">Current Estimate Time</span>
                             <span class="font-semibold text-bgray-900 dark:text-white" data-approve-current-estimate>--</span>
+                        </div>
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">User Requested Time</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-requested-time>--</span>
                         </div>
                     </div>
 

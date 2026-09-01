@@ -59,7 +59,8 @@ class TaskTimeExtendController extends Controller
                 'task_name' => $extendTimeRequest->task?->name ?? '--',
                 'user_name' => $extendTimeRequest->user?->name ?? '--',
                 'current_estimate_formatted' => $extendTimeRequest->estimated_time_formatted,
-                'new_estimated_time_minutes' => (int) ($extendTimeRequest->new_estimated_time_seconds / 60),
+                'user_requested_time_formatted' => $extendTimeRequest->user_requested_time_formatted,
+                'new_estimated_time_minutes' => (int) (($extendTimeRequest->user_requested_time_seconds ?? $extendTimeRequest->new_estimated_time_seconds) / 60),
                 'reason' => $extendTimeRequest->reason ?? '--',
             ]
         ]);
@@ -151,7 +152,7 @@ class TaskTimeExtendController extends Controller
                 'status' => true,
                 'data' => [
                     'id' => $existingRequest->id,
-                    'new_estimated_time_minutes' => (int) ($existingRequest->new_estimated_time_seconds / 60),
+                    'new_estimated_time_minutes' => (int) (($existingRequest->user_requested_time_seconds ?? $existingRequest->new_estimated_time_seconds) / 60),
                     'reason' => $existingRequest->reason,
                     'request_status' => $existingRequest->status,
                     'rejection_reason' => $existingRequest->rejection_reason,

@@ -42,14 +42,16 @@ class TaskTimeExtendService
             }
 
             $user = Auth::user();
+            $requestedSeconds = array_key_exists('new_estimated_time_minutes', $data)
+                ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
+                : 0;
 
             $request = TaskExtendTimeRequest::create([
                 'task_id' => $lockedTask->id,
                 'user_id' => $user->id,
                 'estimated_time_seconds' => $lockedTask->estimated_time_seconds ?? 0,
-                'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
-                    ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
-                    : 0,
+                'new_estimated_time_seconds' => $requestedSeconds,
+                'user_requested_time_seconds' => $requestedSeconds,
                 'status' => 'pending',
                 'reason' => $data['reason'] ?? null,
             ]);
@@ -65,10 +67,13 @@ class TaskTimeExtendService
      */
     public function updateRequest(TaskExtendTimeRequest $request, array $data): TaskExtendTimeRequest
     {
+        $requestedSeconds = array_key_exists('new_estimated_time_minutes', $data)
+            ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
+            : 0;
+
         $request->update([
-            'new_estimated_time_seconds' => array_key_exists('new_estimated_time_minutes', $data)
-                ? (int) (($data['new_estimated_time_minutes'] ?? 0) * 60)
-                : 0,
+            'new_estimated_time_seconds' => $requestedSeconds,
+            'user_requested_time_seconds' => $requestedSeconds,
             'reason' => $data['reason'] ?? null,
         ]);
 
