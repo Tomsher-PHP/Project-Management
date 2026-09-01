@@ -14,8 +14,10 @@ use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
 use App\Models\Task;
+use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
 use App\Models\TaskTimeLog;
+use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -579,13 +581,8 @@ class ProjectServices
         return $task->fresh();
     }
 
-    public function moveTaskToProject(
-        Project $sourceProject,
-        Project $targetProject,
-        Task $task,
-        ?int $targetMilestoneId = null,
-        ?int $targetSprintId = null
-    ): Task {
+    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null): Task
+    {
         if ((int) $task->project_id !== (int) $sourceProject->id) {
             throw new InvalidArgumentException('The provided task does not belong to the source project.');
         }
@@ -595,27 +592,155 @@ class ProjectServices
         $resolvedMilestoneId = $placement['project_milestone_id'];
         $resolvedSprintId = $placement['project_sprint_id'];
 
-        return DB::transaction(function () use ($targetProject, $task, $resolvedMilestoneId, $resolvedSprintId) {
+        $isFlowChanged = ($sourceProject->project_flow !== $targetProject->project_flow);
+        $newStatusId = $isFlowChanged ? $this->resolveTargetStatusIdForFlow($targetProject->project_flow) : null;
+
+        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
+            $movingTasks = $this->collectTaskTree($task);
+
+            foreach ($movingTasks as $t) {
+                // If assigned to a user, add user to target project team if not exists
+                if ($t->current_assignee_id) {
+                    $this->ensureUserInProjectTeam($targetProject, (int) $t->current_assignee_id);
+                }
+
+                // Stop running task timer ONLY if flow changed
+                if ($isFlowChanged) {
+                    $this->stopTaskIfRunning($t);
+                }
+            }
+
             $isSubtask = $task->parent_task_id !== null;
             $newParentTaskId = $isSubtask ? null : $task->parent_task_id;
 
-            $task->update([
+            $updateData = [
                 'project_id' => $targetProject->id,
                 'parent_task_id' => $newParentTaskId,
                 'project_milestone_id' => $resolvedMilestoneId,
                 'project_sprint_id' => $resolvedSprintId,
                 'sort_order' => Task::nextSortOrder($targetProject->id, $resolvedSprintId ? (int) $resolvedSprintId : null),
-            ]);
+            ];
+
+            if ($isFlowChanged && $newStatusId) {
+                $updateData['status_id'] = $newStatusId;
+            }
+
+            $task->update($updateData);
 
             $this->syncTaskDescendantPlacement(
                 $task,
                 $resolvedMilestoneId ? (int) $resolvedMilestoneId : null,
                 $resolvedSprintId ? (int) $resolvedSprintId : null,
-                (int) $targetProject->id
+                (int) $targetProject->id,
+                $isFlowChanged ? $newStatusId : null
             );
 
             return $task->fresh();
         });
+    }
+
+    public function ensureUserInProjectTeam(Project $project, ?int $userId): void
+    {
+        if (! $userId) {
+            return;
+        }
+
+        $existing = $project->membersAll()->where('users.id', $userId)->first();
+
+        if ($existing) {
+            if ($existing->pivot->removed_at || ! $existing->pivot->is_active) {
+                $project->membersAll()->updateExistingPivot($userId, [
+                    'is_active' => true,
+                    'removed_at' => null,
+                    'removed_by' => null,
+                ]);
+            }
+        } else {
+            $project->membersAll()->syncWithoutDetaching([
+                $userId => [
+                    'project_role' => 'member',
+                    'is_active' => true,
+                ],
+            ]);
+        }
+    }
+
+    public function stopTaskIfRunning(Task $task): void
+    {
+        $runningLogs = TaskTimeLog::query()
+            ->where('task_id', $task->id)
+            ->where('is_running', true)
+            ->get();
+
+        if ($runningLogs->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $totalDuration = 0;
+
+        foreach ($runningLogs as $log) {
+            $duration = max(0, $log->started_at?->diffInSeconds($now) ?? 0);
+
+            $log->update([
+                'ended_at' => $now,
+                'duration_seconds' => $duration,
+                'is_running' => false,
+            ]);
+
+            if ($log->task_assignment_log_id && class_exists(TaskAssignmentLog::class)) {
+                TaskAssignmentLog::query()
+                    ->whereKey($log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
+
+            $totalDuration += $duration;
+        }
+
+        if ($totalDuration > 0) {
+            $task->increment('actual_time_seconds', $totalDuration);
+        }
+    }
+
+    public function resolveTargetStatusIdForFlow(string $targetFlowType): ?int
+    {
+        $defaultStatusId = TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->where('is_default', true)
+            ->value('id');
+
+        if ($defaultStatusId) {
+            return (int) $defaultStatusId;
+        }
+
+        $fallbackStatusId = TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->where('type', TaskStatus::TYPE_PENDING)
+            ->orderBy('sort_order', 'asc')
+            ->value('id');
+
+        if ($fallbackStatusId) {
+            return (int) $fallbackStatusId;
+        }
+
+        return TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->orderBy('sort_order', 'asc')
+            ->value('id');
+    }
+
+    private function collectTaskTree(Task $task): array
+    {
+        $tasks = [$task];
+
+        foreach ($task->childTasks()->get() as $childTask) {
+            $tasks = array_merge($tasks, $this->collectTaskTree($childTask));
+        }
+
+        return $tasks;
     }
 
     public function syncTaskPlacementToDescendants(Task $task): void
@@ -628,20 +753,31 @@ class ProjectServices
         );
     }
 
-    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId, ?int $projectId = null): void
-    {
+    private function syncTaskDescendantPlacement(
+        Task $task,
+        ?int $projectMilestoneId,
+        ?int $projectSprintId,
+        ?int $projectId = null,
+        ?int $newStatusId = null
+    ): void {
         $targetProjectId = $projectId ?: (int) $task->project_id;
 
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId) {
-                $childTask->update([
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId) {
+                $childUpdateData = [
                     'project_id' => $targetProjectId,
                     'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
-                ]);
+                ];
 
-                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId);
+                if ($newStatusId) {
+                    $childUpdateData['status_id'] = $newStatusId;
+                }
+
+                $childTask->update($childUpdateData);
+
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId);
             });
     }
 
