@@ -4,7 +4,7 @@
     <div x-data="{ openEdit: false }" x-on:close-edit-modal.window="openEdit = false" x-cloak>
 
 
-        <div class="grid grid-cols-1 rounded-xl bg-white dark:bg-darkblack-600 xl:grid-cols-12">
+        <div class="grid grid-cols-1 rounded-xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 xl:grid-cols-12">
             <!-- Sidebar -->
             <aside class="col-span-3 border-r border-bgray-200 dark:border-darkblack-400">
                 <!-- Sidebar Tabs -->

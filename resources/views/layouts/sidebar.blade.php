@@ -88,8 +88,8 @@
     $sidebarSubLinkActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarSubLinkInactiveClass = 'text-bgray-600 dark:text-bgray-50 hover:text-bgray-800 hover:dark:text-success-300';
 @endphp
-<aside class="sidebar-wrapper fixed top-0 z-30 block h-full bg-white dark:bg-darkblack-600 sm:hidden xl:block">
-    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] pl-8 pb-4 dark:border-darkblack-400">
+<aside class="sidebar-wrapper fixed top-0 z-30 block h-full border-r border-bgray-200 bg-white dark:border-darkblack-500 dark:bg-darkblack-600 sm:hidden xl:block">
+    <div class="sidebar-header relative z-30 flex h-[60px] w-full items-center border-b border-r border-bgray-200 pl-8 pb-4 dark:border-darkblack-400">
         <a href="{{ $canViewDashboard ? route('dashboard') : route('user.workspace') }}" class="flex items-center">
             <span class="relative inline-flex">
                 <img src="{{ asset(config('assets.icons.logo')) }}" class="block h-10 w-auto dark:hidden" alt="logo" />
