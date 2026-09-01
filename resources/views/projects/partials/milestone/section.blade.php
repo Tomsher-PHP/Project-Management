@@ -41,7 +41,7 @@
         <div class="border-b border-bgray-200 bg-bgray-50/70 px-4 py-3 dark:border-darkblack-400 dark:bg-darkblack-500/60">
             <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <div class="min-w-0">
-                    <h4 class="text-base font-bold text-bgray-900 dark:text-white">Milestone -> Sprint Planner</h4>
+                    <h4 class="text-base font-bold text-bgray-900 dark:text-white"><span class="text-[14px] font-semibold uppercase tracking-[0.22em] text-success-400">Milestone & Sprint</span></h4>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 lg:justify-end">

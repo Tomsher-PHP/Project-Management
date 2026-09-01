@@ -45,7 +45,7 @@
 @endphp
 
 <div class="space-y-3" data-project-tasks-root data-default-sprint-id="{{ $taskCreateDefaultSprintId ?? '' }}">
-    <div class="flex flex-col gap-2 rounded-[8px] border border-bgray-200 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_55%,#f4f8ff_100%)] px-4 py-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex flex-col gap-2 rounded-[8px] border-b border-bgray-200 bg-bgray-50/70 dark:border-darkblack-400 dark:bg-darkblack-500/60 px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
             <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-success-400">Tasks</p>
             <h3 class="mt-0.5 text-[15px] font-bold text-bgray-900 dark:text-white">
