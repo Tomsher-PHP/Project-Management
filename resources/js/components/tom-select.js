@@ -523,7 +523,13 @@ export function initTomSelect(root = document) {
             load: function (query, callback) {
                 if (!route) return callback();
 
-                fetch(`${route}?q=${encodeURIComponent(query || '')}`)
+                const sep = route.includes('?') ? '&' : '?';
+                let fetchUrl = `${route}${sep}q=${encodeURIComponent(query || '')}`;
+                if (el.dataset.excludeId) {
+                    fetchUrl += `&exclude_id=${encodeURIComponent(el.dataset.excludeId)}`;
+                }
+
+                fetch(fetchUrl)
                     .then(res => res.json())
                     .then(json => {
                         // Expect JSON array [{id: 1, name: '...', subtype: '...'}, ...]

@@ -35,12 +35,15 @@ class TaskFormService
             ->get(['id', 'project_code', 'name', 'project_flow', 'default_billable', 'default_task_estimate_seconds']);
     }
 
-    public function searchProjects($user, ?string $query = null)
+    public function searchProjects($user, ?string $query = null, ?int $excludeProjectId = null)
     {
         $search = trim((string) $query);
 
         return Project::query()
             ->accessibleBy($user)
+            ->when($excludeProjectId, function ($q) use ($excludeProjectId) {
+                $q->where('id', '!=', $excludeProjectId);
+            })
             ->when($search !== '', function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $sub->where('name', 'like', "%{$search}%")

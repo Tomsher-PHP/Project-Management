@@ -299,20 +299,14 @@
                 <div class="relative z-10 w-full max-w-xl transition-all duration-200">
                     <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                         <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
-                            <div>
-                                <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
-                                <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
-                                    Move <span class="font-medium text-bgray-700 dark:text-bgray-300" data-project-task-move-task-name>this task</span>
-                                    <span data-project-task-move-subtitle-text>to another sprint</span>.
-                                </p>
-                            </div>
+                            <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Move Task</h3>
 
                             <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent bg-bgray-100 text-bgray-700 transition duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-red-900/40 dark:hover:bg-darkblack-400 dark:hover:text-red-300" data-project-task-move-close>
                                 ✕
                             </button>
                         </div>
 
-                        <form class="space-y-4 overflow-y-auto px-6 py-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}" data-source-project-flow="{{ $project->project_flow }}">
+                        <form class="space-y-4 overflow-y-auto px-6 pb-5" data-project-task-move-form data-task-move-placement='@json($taskMovePlacementOptions)' data-dependencies-url-template="{{ route('projects.task-create-dependencies', ['project' => '__PROJECT_ID__']) }}" data-source-project-flow="{{ $project->project_flow }}">
                             <input type="hidden" name="_method" value="PATCH">
 
                             <div class="rounded-lg border border-bgray-200 bg-bgray-50/70 p-3.5 text-sm text-bgray-600 dark:border-darkblack-400 dark:bg-darkblack-500/40 dark:text-bgray-300 space-y-1.5">
@@ -343,7 +337,7 @@
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                     Project <x-red-star />
                                 </label>
-                                <select id="move_target_project_id" name="target_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0" data-project-task-move-project-select disabled>
+                                <select id="move_target_project_id" name="target_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-exclude-id="{{ $project->id }}" data-sort="0" data-project-task-move-project-select disabled>
                                     <option value="">Search project here..</option>
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-project-task-move-error="target_project_id"></p>

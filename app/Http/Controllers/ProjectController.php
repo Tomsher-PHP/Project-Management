@@ -717,9 +717,10 @@ class ProjectController extends Controller
     public function searchProjects(Request $request, TaskFormService $taskFormService): JsonResponse
     {
         $query = $request->input('q', '');
+        $excludeId = $request->input('exclude_id') ?: $request->input('exclude_project_id');
         $user = $request->user();
 
-        $projects = $taskFormService->searchProjects($user, $query);
+        $projects = $taskFormService->searchProjects($user, $query, $excludeId ? (int) $excludeId : null);
 
         return response()->json($projects->map(fn(Project $p) => [
             'id' => $p->id,
