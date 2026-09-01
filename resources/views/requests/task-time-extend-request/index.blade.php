@@ -44,10 +44,10 @@
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Task</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Current Estimate Time</span>
+                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $selectedStatus === 'approved' ? 'Old Estimate' : 'Current Estimate' }}</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">New Estimated Time</span>
+                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">New Estimated</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reason</span>
