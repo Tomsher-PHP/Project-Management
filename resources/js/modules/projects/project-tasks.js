@@ -542,6 +542,13 @@ const syncTaskMoveUI = async (
     const sprintStarNode = form.querySelector('[data-project-task-move-sprint-star]');
     const milestoneHintNode = form.querySelector('[data-project-task-move-milestone-hint]');
     const sprintHintNode = form.querySelector('[data-project-task-move-sprint-hint]');
+    const targetFlowContainer = form.querySelector('[data-project-task-move-target-flow-container]');
+    const targetFlowText = form.querySelector('[data-project-task-move-target-flow-text]');
+    const flowNotice = form.querySelector('[data-project-task-move-flow-notice]');
+    const sourceFlowLabel = form.querySelector('[data-project-task-move-source-flow-label]');
+    const targetFlowLabel = form.querySelector('[data-project-task-move-target-flow-label]');
+    const targetFlowLabel2 = form.querySelector('[data-project-task-move-target-flow-label-2]');
+    const targetStatusName = form.querySelector('[data-project-task-move-target-status-name]');
 
     const isAnotherProject = Boolean(toggleCheckbox?.checked);
 
@@ -550,6 +557,9 @@ const syncTaskMoveUI = async (
     }
 
     if (!isAnotherProject) {
+        if (targetFlowContainer) targetFlowContainer.classList.add('hidden');
+        if (flowNotice) flowNotice.classList.add('hidden');
+
         // --- Same Project Move Mode ---
         if (subtitleNode) subtitleNode.textContent = 'to another sprint';
 
@@ -621,6 +631,9 @@ const syncTaskMoveUI = async (
     const targetProjectId = String(projectSelect?.value || '');
 
     if (!targetProjectId) {
+        if (targetFlowContainer) targetFlowContainer.classList.add('hidden');
+        if (flowNotice) flowNotice.classList.add('hidden');
+
         setPlacementSelectOptions(milestoneField, [], {
             placeholder: 'Select project to load milestones',
             disabled: false,
@@ -645,7 +658,33 @@ const syncTaskMoveUI = async (
         const projectDeps = await fetchMoveProjectDependencies(form, targetProjectId);
         if (!projectDeps) return;
 
-        const isLinear = projectDeps?.is_linear !== undefined ? Boolean(projectDeps.is_linear) : projectDeps?.flow === 'linear';
+        const sourceProjectFlow = String(form.dataset.sourceProjectFlow || 'agile').toLowerCase();
+        const targetProjectFlow = String(projectDeps.flow || (projectDeps.is_linear ? 'linear' : 'agile')).toLowerCase();
+
+        if (targetFlowContainer && targetFlowText) {
+            if (targetProjectFlow === 'agile') {
+                targetFlowText.innerHTML = '<span class="inline-flex items-center gap-1.5 text-purple-600 dark:text-purple-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg> Agile</span>';
+            } else {
+                targetFlowText.innerHTML = '<span class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg> Linear</span>';
+            }
+            targetFlowContainer.classList.remove('hidden');
+        }
+
+        const isFlowDifferent = sourceProjectFlow !== targetProjectFlow;
+
+        if (flowNotice) {
+            if (isFlowDifferent) {
+                if (sourceFlowLabel) sourceFlowLabel.textContent = sourceProjectFlow.charAt(0).toUpperCase() + sourceProjectFlow.slice(1);
+                if (targetFlowLabel) targetFlowLabel.textContent = targetProjectFlow.charAt(0).toUpperCase() + targetProjectFlow.slice(1);
+                if (targetFlowLabel2) targetFlowLabel2.textContent = targetProjectFlow.charAt(0).toUpperCase() + targetProjectFlow.slice(1);
+                if (targetStatusName) targetStatusName.textContent = projectDeps.default_status_name || (targetProjectFlow === 'linear' ? 'Pending' : 'Pending');
+                flowNotice.classList.remove('hidden');
+            } else {
+                flowNotice.classList.add('hidden');
+            }
+        }
+
+        const isLinear = targetProjectFlow === 'linear';
 
         if (isLinear) {
             setPlacementSelectOptions(milestoneField, [], {

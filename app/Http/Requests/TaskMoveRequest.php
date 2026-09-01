@@ -148,10 +148,6 @@ class TaskMoveRequest extends FormRequest
 
                 if ($targetMilestoneId && ! $targetSprintId) {
                     $validator->errors()->add(
-                        'target_sprint_id',
-                        'Please choose a sprint for the selected milestone.'
-                    );
-                    $validator->errors()->add(
                         'project_sprint_id',
                         'Please choose a sprint for the selected milestone.'
                     );

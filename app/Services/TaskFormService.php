@@ -124,11 +124,14 @@ class TaskFormService
             ->values()
             ->toArray();
 
+        $defaultStatusName = $defaultStatusId ? TaskStatus::query()->find($defaultStatusId)?->name : null;
+
         return [
             'id' => $project->id,
             'flow' => $flow,
             'default_billable' => (bool) $project->default_billable,
             'default_status_id' => $defaultStatusId,
+            'default_status_name' => $defaultStatusName ?: 'Pending',
             'default_task_estimate_minutes' => $defaultEstimateMinutes,
             'milestones' => $milestones,
             'sprints' => $sprints,
