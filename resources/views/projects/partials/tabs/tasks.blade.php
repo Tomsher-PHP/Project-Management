@@ -169,13 +169,13 @@
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                                        <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
+                                        <select name="current_assignee_ids[]" class="tom-select w-full" multiple data-sort="0">
                                             <option value="">Select assignee</option>
                                             @foreach ($assignableUsers as $assignableUser)
                                                 <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
                                             @endforeach
                                         </select>
-                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_id"></p>
+                                        <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
                                     </div>
 
                                     <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
