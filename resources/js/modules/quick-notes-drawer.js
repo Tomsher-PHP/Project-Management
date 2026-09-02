@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 drawerBody.innerHTML = res.html;
                 drawerLoaded = true;
                 initDrawerHandlers();
+                updateUIState();
             } else {
                 throw new Error(res.message || 'Failed to load notes');
             }
@@ -299,6 +300,18 @@ document.addEventListener('DOMContentLoaded', () => {
             archivedEmptyState?.classList.remove('hidden');
         } else {
             archivedEmptyState?.classList.add('hidden');
+        }
+
+        const totalNotesCount = activeCount + archivedCount;
+        const iconSvg = document.getElementById('quick-notes-icon') || document.querySelector('#quick-notes-toggle-btn svg');
+        if (iconSvg) {
+            if (totalNotesCount > 0) {
+                iconSvg.classList.remove('text-bgray-900', 'dark:text-white', 'stroke-bgray-900', 'text-warning-500', 'dark:text-warning-500', 'stroke-warning-500', 'text-warning-600', 'dark:text-warning-600', 'stroke-warning-600');
+                iconSvg.classList.add('text-warning-300', 'stroke-warning-300', 'dark:text-warning-300', 'dark:stroke-warning-300');
+            } else {
+                iconSvg.classList.remove('text-warning-300', 'stroke-warning-300', 'dark:text-warning-300', 'dark:stroke-warning-300', 'text-warning-500', 'dark:text-warning-500', 'stroke-warning-500', 'text-warning-600', 'dark:text-warning-600', 'stroke-warning-600');
+                iconSvg.classList.add('text-bgray-900', 'stroke-bgray-900', 'dark:text-white', 'dark:stroke-white');
+            }
         }
     }
 

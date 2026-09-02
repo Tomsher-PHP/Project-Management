@@ -3460,6 +3460,18 @@ select {
   stroke: #fff;
 }
 
+.stroke-warning-300 {
+  stroke: #eab308;
+}
+
+.stroke-warning-500 {
+  stroke: #ca8a04;
+}
+
+.stroke-warning-600 {
+  stroke: #a16207;
+}
+
 .object-cover {
   -o-object-fit: cover;
   object-fit: cover;
@@ -4414,6 +4426,16 @@ select {
   color: rgb(234 179 8 / var(--tw-text-opacity));
 }
 
+.text-warning-500 {
+  --tw-text-opacity: 1;
+  color: rgb(202 138 4 / var(--tw-text-opacity));
+}
+
+.text-warning-600 {
+  --tw-text-opacity: 1;
+  color: rgb(161 98 7 / var(--tw-text-opacity));
+}
+
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
@@ -5113,6 +5135,18 @@ select {
   stroke: #16A34A;
 }
 
+:is(.dark .dark\:stroke-warning-300) {
+  stroke: #eab308;
+}
+
+:is(.dark .dark\:stroke-warning-500) {
+  stroke: #eab308;
+}
+
+:is(.dark .dark\:stroke-warning-600) {
+  stroke: #facc15;
+}
+
 :is(.dark .dark\:stroke-white) {
   stroke: #fff;
 }
@@ -5155,6 +5189,16 @@ select {
 :is(.dark .dark\:text-warning-300) {
   --tw-text-opacity: 1;
   color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-warning-500) {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-warning-600) {
+  --tw-text-opacity: 1;
+  color: rgb(250 204 21 / var(--tw-text-opacity));
 }
 
 :is(.dark .dark\:text-error-300) {

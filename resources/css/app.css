@@ -119,3 +119,29 @@
 .dark #viewModalDescription h6 {
     color: #ffffff;
 }
+
+.text-warning-300, .stroke-warning-300 {
+    color: #eab308;
+    stroke: #eab308;
+}
+.text-warning-500, .stroke-warning-500 {
+    color: #ca8a04;
+    stroke: #ca8a04;
+}
+.text-warning-600, .stroke-warning-600 {
+    color: #a16207;
+    stroke: #a16207;
+}
+
+.dark .dark\:text-warning-300, .dark .dark\:stroke-warning-300 {
+    color: #eab308;
+    stroke: #eab308;
+}
+.dark .dark\:text-warning-500, .dark .dark\:stroke-warning-500 {
+    color: #eab308;
+    stroke: #eab308;
+}
+.dark .dark\:text-warning-600, .dark .dark\:stroke-warning-600 {
+    color: #facc15;
+    stroke: #facc15;
+}
