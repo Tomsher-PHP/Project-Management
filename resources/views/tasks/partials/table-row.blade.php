@@ -23,7 +23,7 @@
             <div class="min-w-0">
                 <a href="{{ route('tasks.edit', $task) }}" class="block">
                     <x-task-name-status :name="$task->name" :request-type="$task->request_type" :request-status="$task->request_status" :limit="30" limit-end=".." show-priority-indicator priority-indicator="line" :priority-class="$priorityConfig['bg_class'] ?? 'bg-primary'" :text-class="($isSubtask ? 'text-base' : 'text-lg') . ' font-semibold transition hover:text-success-400 dark:hover:text-success-300'" class="max-w-full" />
-                    <p class="mt-1 text-sm text-[#7C97C1] dark:text-bgray-300">
+                    <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
                         {{ $task->code ?: 'TSK-' . str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
                     </p>
                 </a>
@@ -108,7 +108,7 @@
         </div>
     </td>
 
-    <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
+    {{-- <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <span class="inline-flex items-center gap-2 rounded-full border border-bgray-200 px-3 py-1 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $typeColor }}"></span>
             {{ $typeLabel }}
@@ -120,7 +120,7 @@
             <span class="h-2.5 w-2.5 rounded-full" style="background-color: {{ $modeColor }}"></span>
             {{ $modeLabel }}
         </span>
-    </td>
+    </td> --}}
 
     <td class="border-b border-bgray-200 px-4 py-4 align-top dark:border-b-darkblack-400">
         <div class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</div>

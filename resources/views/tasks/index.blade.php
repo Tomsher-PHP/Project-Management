@@ -58,14 +58,14 @@
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Status</span>
                                 </th>
-                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                {{-- <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Type</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Mode</span>
-                                </th>
+                                </th> --}}
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                    <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate Time" />
+                                    <x-sorting.sortable-column column="estimated_time_seconds" label="Estimate" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <x-sorting.sortable-column column="due_date_time" label="Due Date" />
