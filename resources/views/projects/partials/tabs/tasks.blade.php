@@ -178,7 +178,7 @@
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="current_assignee_ids"></p>
                                     </div>
 
-                                    <div class="{{ $isLinearFlow ? 'md:col-span-2' : '' }}">
+                                    <div class="{{ $isLinearFlow ? '' : '' }}">
                                         <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$defaultTaskEstimateMinutes ?? 0" :show-label="false" />
                                         <p class="mt-1 hidden text-xs text-red-500" data-project-task-error="estimated_time_minutes"></p>
                                     </div>
