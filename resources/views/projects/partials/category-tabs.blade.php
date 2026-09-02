@@ -82,7 +82,7 @@
         <!-- 3. All Categories Searchable Overflow Dropdown (Fixed Width / Right) -->
         <div class="relative shrink-0" @click.away="dropdownOpen = false">
             <button type="button" @click="dropdownOpen = !dropdownOpen" class="flex items-center gap-2 rounded-lg border border-bgray-300 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:bg-darkblack-500 focus:outline-none" :aria-expanded="dropdownOpen.toString()">
-                <svg class="h-4 w-4 text-bgray-500 dark:text-bgray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <svg class="h-4 w-4 text-bgray-500 dark:text-bgray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
                 <span class="hidden sm:inline">All Categories</span>
@@ -134,7 +134,7 @@
                         </svg>
                     </button>
 
-                    <div x-show="filteredCategories().length === 0" class="px-2.5 py-3 text-center text-xs text-bgray-500 dark:text-bgray-400">
+                    <div x-show="filteredCategories().length === 0" class="px-2.5 py-3 text-center text-xs text-bgray-500 dark:text-bgray-300">
                         No categories found
                     </div>
                 </div>

@@ -102,30 +102,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status && res.html) {
-                drawerBody.innerHTML = res.html;
-                drawerLoaded = true;
-                initDrawerHandlers();
-                updateUIState();
-            } else {
-                throw new Error(res.message || 'Failed to load notes');
-            }
-        })
-        .catch(err => {
-            drawerBody.innerHTML = `
+            .then(res => res.json())
+            .then(res => {
+                if (res.status && res.html) {
+                    drawerBody.innerHTML = res.html;
+                    drawerLoaded = true;
+                    initDrawerHandlers();
+                    updateUIState();
+                } else {
+                    throw new Error(res.message || 'Failed to load notes');
+                }
+            })
+            .catch(err => {
+                drawerBody.innerHTML = `
                 <div class="flex flex-col items-center justify-center py-20 text-center px-6">
                     <div class="h-12 w-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-3">✕</div>
                     <h3 class="text-base font-bold text-bgray-900 dark:text-white">Unable to load quick notes</h3>
-                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">${err.message || 'An error occurred while fetching notes.'}</p>
+                    <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">${err.message || 'An error occurred while fetching notes.'}</p>
                     <button type="button" id="quick-notes-retry-btn" class="mt-4 rounded-xl bg-success-300 px-4 py-2 text-xs font-semibold text-white transition hover:bg-success-400">
                         Retry Loading
                     </button>
                 </div>
             `;
-            document.getElementById('quick-notes-retry-btn')?.addEventListener('click', loadDrawerContent);
-        });
+                document.getElementById('quick-notes-retry-btn')?.addEventListener('click', loadDrawerContent);
+            });
     }
 
     // Toggle button & backdrop clicks
@@ -156,14 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabActiveBtn?.addEventListener('click', () => {
             tabActiveBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
-            tabArchivedBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
+            tabArchivedBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white transition';
             activeSection?.classList.remove('hidden');
             archivedSection?.classList.add('hidden');
         });
 
         tabArchivedBtn?.addEventListener('click', () => {
             tabArchivedBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm';
-            tabActiveBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition';
+            tabActiveBtn.className = 'rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white transition';
             archivedSection?.classList.remove('hidden');
             activeSection?.classList.add('hidden');
         });
@@ -449,11 +449,11 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             body: JSON.stringify({ notes: notesPayload })
         })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status) showToast('Notes reordered', 'success');
-        })
-        .catch(() => {});
+            .then(res => res.json())
+            .then(res => {
+                if (res.status) showToast('Notes reordered', 'success');
+            })
+            .catch(() => { });
     }
 
     // Action Handlers
@@ -476,29 +476,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-CSRF-TOKEN': csrfToken
             }
         })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status && res.html) {
-                const newCard = createElementFromHTML(res.html);
-                bindCardDragEvents(newCard);
-                card.remove();
+            .then(res => res.json())
+            .then(res => {
+                if (res.status && res.html) {
+                    const newCard = createElementFromHTML(res.html);
+                    bindCardDragEvents(newCard);
+                    card.remove();
 
-                const note = res.data;
-                const othersGrid = document.getElementById('others-notes-grid');
+                    const note = res.data;
+                    const othersGrid = document.getElementById('others-notes-grid');
 
-                if (note.is_pinned && pinnedGrid) {
-                    pinnedGrid.prepend(newCard);
-                } else if (othersGrid) {
-                    othersGrid.prepend(newCard);
+                    if (note.is_pinned && pinnedGrid) {
+                        pinnedGrid.prepend(newCard);
+                    } else if (othersGrid) {
+                        othersGrid.prepend(newCard);
+                    }
+
+                    updateUIState();
+                    showToast(res.message);
+                } else {
+                    showToast(res.message || 'Failed to update pin status', 'error');
                 }
-
-                updateUIState();
-                showToast(res.message);
-            } else {
-                showToast(res.message || 'Failed to update pin status', 'error');
-            }
-        })
-        .catch(() => showToast('Failed to update pin status', 'error'));
+            })
+            .catch(() => showToast('Failed to update pin status', 'error'));
     }
 
     function toggleArchiveNote(noteId, card) {
@@ -511,33 +511,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-CSRF-TOKEN': csrfToken
             }
         })
-        .then(res => res.json())
-        .then(res => {
-            if (res.status && res.html) {
-                const newCard = createElementFromHTML(res.html);
-                bindCardDragEvents(newCard);
-                card.remove();
+            .then(res => res.json())
+            .then(res => {
+                if (res.status && res.html) {
+                    const newCard = createElementFromHTML(res.html);
+                    bindCardDragEvents(newCard);
+                    card.remove();
 
-                const note = res.data;
-                const archivedGrid = document.getElementById('archived-notes-grid');
-                const pinnedGrid = document.getElementById('pinned-notes-grid');
-                const othersGrid = document.getElementById('others-notes-grid');
+                    const note = res.data;
+                    const archivedGrid = document.getElementById('archived-notes-grid');
+                    const pinnedGrid = document.getElementById('pinned-notes-grid');
+                    const othersGrid = document.getElementById('others-notes-grid');
 
-                if (note.is_archived && archivedGrid) {
-                    archivedGrid.prepend(newCard);
-                } else if (note.is_pinned && pinnedGrid) {
-                    pinnedGrid.prepend(newCard);
-                } else if (othersGrid) {
-                    othersGrid.prepend(newCard);
+                    if (note.is_archived && archivedGrid) {
+                        archivedGrid.prepend(newCard);
+                    } else if (note.is_pinned && pinnedGrid) {
+                        pinnedGrid.prepend(newCard);
+                    } else if (othersGrid) {
+                        othersGrid.prepend(newCard);
+                    }
+
+                    updateUIState();
+                    showToast(res.message);
+                } else {
+                    showToast(res.message || 'Failed to update archive status', 'error');
                 }
-
-                updateUIState();
-                showToast(res.message);
-            } else {
-                showToast(res.message || 'Failed to update archive status', 'error');
-            }
-        })
-        .catch(() => showToast('Failed to update archive status', 'error'));
+            })
+            .catch(() => showToast('Failed to update archive status', 'error'));
     }
 
     function deleteNote(noteId, card) {
@@ -550,20 +550,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     'X-CSRF-TOKEN': csrfToken
                 }
             })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status) {
-                    card.classList.add('scale-90', 'opacity-0', 'transition-all', 'duration-200');
-                    setTimeout(() => {
-                        card.remove();
-                        updateUIState();
-                    }, 200);
-                    showToast(res.message);
-                } else {
-                    showToast(res.message || 'Failed to delete note', 'error');
-                }
-            })
-            .catch(() => showToast('Failed to delete note', 'error'));
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status) {
+                        card.classList.add('scale-90', 'opacity-0', 'transition-all', 'duration-200');
+                        setTimeout(() => {
+                            card.remove();
+                            updateUIState();
+                        }, 200);
+                        showToast(res.message);
+                    } else {
+                        showToast(res.message || 'Failed to delete note', 'error');
+                    }
+                })
+                .catch(() => showToast('Failed to delete note', 'error'));
         };
 
         if (window.Alert && typeof window.Alert.confirm === 'function') {
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modules: {
                     toolbar: [
                         ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                         ['link', 'clean']
                     ]
                 }
@@ -684,55 +684,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: formData
             })
-            .then(res => res.json().then(data => ({ status: res.status, ok: res.ok, body: data })))
-            .then(res => {
-                submitBtn.disabled = false;
-                submitSpinner?.classList.add('hidden');
+                .then(res => res.json().then(data => ({ status: res.status, ok: res.ok, body: data })))
+                .then(res => {
+                    submitBtn.disabled = false;
+                    submitSpinner?.classList.add('hidden');
 
-                if (!res.ok) {
-                    if (res.status === 422 && res.body.errors) {
-                        displayErrors(res.body.errors);
-                    } else {
-                        showToast(res.body.message || 'Error saving note', 'error');
-                    }
-                    return;
-                }
-
-                const note = res.body.data;
-                const html = res.body.html;
-
-                if (html) {
-                    const newCard = createElementFromHTML(html);
-                    bindCardDragEvents(newCard);
-
-                    const existingCard = document.querySelector(`#quick-notes-drawer-body .note-card[data-note-id="${note.id}"]`);
-                    if (existingCard) {
-                        existingCard.remove();
+                    if (!res.ok) {
+                        if (res.status === 422 && res.body.errors) {
+                            displayErrors(res.body.errors);
+                        } else {
+                            showToast(res.body.message || 'Error saving note', 'error');
+                        }
+                        return;
                     }
 
-                    const archivedGrid = document.getElementById('archived-notes-grid');
-                    const pinnedGrid = document.getElementById('pinned-notes-grid');
-                    const othersGrid = document.getElementById('others-notes-grid');
+                    const note = res.body.data;
+                    const html = res.body.html;
 
-                    if (note.is_archived && archivedGrid) {
-                        archivedGrid.prepend(newCard);
-                    } else if (note.is_pinned && pinnedGrid) {
-                        pinnedGrid.prepend(newCard);
-                    } else if (othersGrid) {
-                        othersGrid.prepend(newCard);
+                    if (html) {
+                        const newCard = createElementFromHTML(html);
+                        bindCardDragEvents(newCard);
+
+                        const existingCard = document.querySelector(`#quick-notes-drawer-body .note-card[data-note-id="${note.id}"]`);
+                        if (existingCard) {
+                            existingCard.remove();
+                        }
+
+                        const archivedGrid = document.getElementById('archived-notes-grid');
+                        const pinnedGrid = document.getElementById('pinned-notes-grid');
+                        const othersGrid = document.getElementById('others-notes-grid');
+
+                        if (note.is_archived && archivedGrid) {
+                            archivedGrid.prepend(newCard);
+                        } else if (note.is_pinned && pinnedGrid) {
+                            pinnedGrid.prepend(newCard);
+                        } else if (othersGrid) {
+                            othersGrid.prepend(newCard);
+                        }
+
+                        updateUIState();
                     }
 
-                    updateUIState();
-                }
-
-                closeModal();
-                showToast(res.body.message || 'Saved successfully');
-            })
-            .catch(err => {
-                submitBtn.disabled = false;
-                submitSpinner?.classList.add('hidden');
-                showToast('An unexpected error occurred.', 'error');
-            });
+                    closeModal();
+                    showToast(res.body.message || 'Saved successfully');
+                })
+                .catch(err => {
+                    submitBtn.disabled = false;
+                    submitSpinner?.classList.add('hidden');
+                    showToast('An unexpected error occurred.', 'error');
+                });
         });
     }
 
@@ -780,54 +780,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(res => res.json())
-        .then(res => {
-            if (!res.status) throw new Error(res.message || 'Note not found');
-            const note = res.data;
+            .then(res => res.json())
+            .then(res => {
+                if (!res.status) throw new Error(res.message || 'Note not found');
+                const note = res.data;
 
-            const form = document.getElementById('quick-note-form');
-            const titleInput = document.getElementById('quick_note_title_input');
-            const contentInput = document.getElementById('quick_note_content_input');
-            const noteIdInput = document.getElementById('quick_note_id');
-            const methodInput = document.getElementById('quick_note_method');
-            const colorInput = document.getElementById('quick_note_color_input');
-            const isPinnedInput = document.getElementById('quick_note_is_pinned_input');
-            const isArchivedInput = document.getElementById('quick_note_is_archived_input');
-            const modalTitle = document.getElementById('quick-note-modal-title');
-            const submitLabel = document.getElementById('quick_note_submit_label');
+                const form = document.getElementById('quick-note-form');
+                const titleInput = document.getElementById('quick_note_title_input');
+                const contentInput = document.getElementById('quick_note_content_input');
+                const noteIdInput = document.getElementById('quick_note_id');
+                const methodInput = document.getElementById('quick_note_method');
+                const colorInput = document.getElementById('quick_note_color_input');
+                const isPinnedInput = document.getElementById('quick_note_is_pinned_input');
+                const isArchivedInput = document.getElementById('quick_note_is_archived_input');
+                const modalTitle = document.getElementById('quick-note-modal-title');
+                const submitLabel = document.getElementById('quick_note_submit_label');
 
-            form.action = `/quick-notes/${note.id}`;
-            methodInput.value = 'PUT';
-            noteIdInput.value = note.id;
-            titleInput.value = note.title || '';
-            contentInput.value = note.content || '';
-            
-            if (quill) {
-                quill.clipboard.dangerouslyPasteHTML(note.content || '');
-            }
+                form.action = `/quick-notes/${note.id}`;
+                methodInput.value = 'PUT';
+                noteIdInput.value = note.id;
+                titleInput.value = note.title || '';
+                contentInput.value = note.content || '';
 
-            colorInput.value = note.color || '';
-            isPinnedInput.value = note.is_pinned ? '1' : '0';
-            isArchivedInput.value = note.is_archived ? '1' : '0';
+                if (quill) {
+                    quill.clipboard.dangerouslyPasteHTML(note.content || '');
+                }
 
-            const archiveBtn = document.getElementById('quick_note_archive_toggle_btn');
-            archiveBtn?.classList.remove('hidden');
+                colorInput.value = note.color || '';
+                isPinnedInput.value = note.is_pinned ? '1' : '0';
+                isArchivedInput.value = note.is_archived ? '1' : '0';
 
-            updateModalColor(note.color || '');
-            updatePinButtonUI(note.is_pinned);
+                const archiveBtn = document.getElementById('quick_note_archive_toggle_btn');
+                archiveBtn?.classList.remove('hidden');
 
-            modalTitle.textContent = 'Edit Quick Note';
-            submitLabel.textContent = 'Update Note';
+                updateModalColor(note.color || '');
+                updatePinButtonUI(note.is_pinned);
 
-            if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
-                window.syncSearchBoxStateOnModalOpen();
-            }
+                modalTitle.textContent = 'Edit Quick Note';
+                submitLabel.textContent = 'Update Note';
 
-            modal.classList.remove('hidden');
-        })
-        .catch(err => {
-            showToast(err.message || 'Failed to load note details', 'error');
-        });
+                if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
+                    window.syncSearchBoxStateOnModalOpen();
+                }
+
+                modal.classList.remove('hidden');
+            })
+            .catch(err => {
+                showToast(err.message || 'Failed to load note details', 'error');
+            });
     }
 
     function closeModal() {

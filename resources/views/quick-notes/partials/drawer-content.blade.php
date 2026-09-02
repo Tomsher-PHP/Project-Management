@@ -39,14 +39,14 @@
     <!-- Right: Search Icon -> '+' Button -> Active/Archived Toggle -->
     <div class="flex items-center gap-2 flex-shrink-0">
         <!-- Search Toggle Icon Button -->
-        <button type="button" id="toggle-search-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Search Notes" aria-label="Search Notes">
+        <button type="button" id="toggle-search-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-bgray-500 bg-white text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:bg-darkblack-500 dark:border-bgray-300 dark:text-bgray-300 hover:border-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-white" title="Search Notes" aria-label="Search Notes">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </button>
 
         <!-- '+' New Note Button -->
-        <button type="button" id="open-create-note-btn" class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="New Note" title="New Note">
+        <button type="button" id="open-create-note-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-[8px] border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300" aria-label="New Note" title="New Note">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -57,13 +57,13 @@
             <button type="button" id="tab-active-btn" class="rounded-md px-2.5 py-1 text-xs font-semibold text-white bg-success-300 transition shadow-sm">
                 Active (<span id="notes-count-badge">{{ $notes->where('is_archived', false)->count() }}</span>)
             </button>
-            <button type="button" id="tab-archived-btn" class="rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-400 dark:hover:text-white transition">
+            <button type="button" id="tab-archived-btn" class="rounded-md px-2.5 py-1 text-xs font-semibold text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white transition">
                 Archived (<span id="archived-count-label">{{ $archivedNotes->count() }}</span>)
             </button>
         </div>
 
         <!-- Close Drawer Button -->
-        <button type="button" id="close-quick-notes-drawer-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:text-bgray-400 dark:hover:bg-darkblack-500 dark:hover:text-white" title="Close Quick Notes" aria-label="Close Quick Notes">
+        <button type="button" id="close-quick-notes-drawer-btn" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-500 transition hover:bg-bgray-100 hover:text-bgray-900 focus:outline-none dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" title="Close Quick Notes" aria-label="Close Quick Notes">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -121,7 +121,7 @@
 
     <!-- Archived Notes Section -->
     <div id="archived-notes-section" class="hidden space-y-4">
-        <div class="text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-400">
+        <div class="text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">
             ARCHIVED NOTES
         </div>
 
@@ -139,7 +139,7 @@
                 </svg>
             </div>
             <h4 class="mt-3 text-base font-semibold text-bgray-900 dark:text-white">No archived notes</h4>
-            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-400">Notes you archive will appear here.</p>
+            <p class="mt-1 text-xs text-bgray-500 dark:text-bgray-300">Notes you archive will appear here.</p>
         </div>
     </div>
 </div>

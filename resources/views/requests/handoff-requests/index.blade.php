@@ -273,7 +273,7 @@
                         <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Requested By</span>
                             <p id="viewModalRequestedBy" class="mt-1 text-base font-semibold text-bgray-900 dark:text-white"></p>
-                            <p id="viewModalDate" class="mt-0.5 text-xs text-bgray-600 dark:text-bgray-400"></p>
+                            <p id="viewModalDate" class="mt-0.5 text-xs text-bgray-600 dark:text-bgray-300"></p>
                         </div>
                         <div>
                             <span class="block text-sm font-medium text-bgray-700 dark:text-bgray-300">Target User</span>

@@ -12,7 +12,7 @@
             <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-success-50 text-sm font-semibold text-success-400 dark:bg-darkblack-400 dark:text-success-300">{{ $index + 1 }}</span>
             <p class="text-sm font-semibold text-bgray-900 dark:text-white">{{ $question['question'] }}</p>
         </div>
-        <button type="button" class="text-bgray-900 transition-transform duration-200 hover:text-bgray-800 focus:outline-none dark:text-bgray-400 dark:hover:text-white" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
+        <button type="button" class="text-bgray-900 transition-transform duration-200 hover:text-bgray-800 focus:outline-none dark:text-bgray-300 dark:hover:text-white" aria-label="Toggle answer body" data-appraisal-answer-question-toggle>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-180 transform transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
