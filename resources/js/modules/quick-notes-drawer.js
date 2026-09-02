@@ -40,16 +40,22 @@ document.addEventListener('DOMContentLoaded', () => {
         drawer.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
 
-        // Slide in animation
+        if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
+            window.syncSearchBoxStateOnModalOpen();
+        }
+
+        // Slide in animation from right
         requestAnimationFrame(() => {
-            if (backdrop) {
-                backdrop.classList.remove('opacity-0');
-                backdrop.classList.add('opacity-100');
-            }
-            if (panel) {
-                panel.classList.remove('translate-x-full');
-                panel.classList.add('translate-x-0');
-            }
+            requestAnimationFrame(() => {
+                if (backdrop) {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                }
+                if (panel) {
+                    panel.classList.remove('translate-x-full');
+                    panel.classList.add('translate-x-0');
+                }
+            });
         });
 
         if (!drawerLoaded) {
@@ -59,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close Drawer
     function closeDrawer() {
+        if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
+            window.syncSearchBoxStateOnModalOpen();
+        }
+
         if (backdrop) {
             backdrop.classList.remove('opacity-100');
             backdrop.classList.add('opacity-0');
@@ -166,28 +176,77 @@ document.addEventListener('DOMContentLoaded', () => {
         const clearSearchBtn = document.getElementById('clear-search-btn');
         let searchTimer = null;
 
-        function showSearchBar() {
-            titleWrapper?.classList.add('hidden');
-            searchWrapper?.classList.remove('hidden');
-            searchInput?.focus();
+        function showSearchBar(autoFocus = true) {
+            if (!titleWrapper || !searchWrapper) return;
+
+            searchWrapper.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    titleWrapper?.classList.add('opacity-0', 'max-w-0', 'overflow-hidden');
+                    titleWrapper?.classList.remove('opacity-100', 'max-w-full');
+
+                    searchWrapper?.classList.remove('opacity-0', 'max-w-0', 'overflow-hidden');
+                    searchWrapper?.classList.add('opacity-100', 'max-w-sm');
+
+                    if (autoFocus && searchInput) {
+                        searchInput.focus();
+                    }
+                });
+            });
         }
 
-        function hideSearchBar() {
-            if (searchInput) searchInput.value = '';
-            searchWrapper?.classList.add('hidden');
-            titleWrapper?.classList.remove('hidden');
-            applySearch();
+        function hideSearchBar(force = false) {
+            if (!titleWrapper || !searchWrapper) return;
+
+            const query = searchInput?.value.trim() || '';
+            if (query !== '' && !force) {
+                return;
+            }
+
+            if (force && searchInput) {
+                searchInput.value = '';
+                applySearch();
+            }
+
+            titleWrapper?.classList.remove('hidden', 'overflow-hidden');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    titleWrapper?.classList.remove('opacity-0', 'max-w-0');
+                    titleWrapper?.classList.add('opacity-100', 'max-w-full');
+
+                    searchWrapper?.classList.remove('opacity-100', 'max-w-sm');
+                    searchWrapper?.classList.add('opacity-0', 'max-w-0', 'overflow-hidden');
+
+                    setTimeout(() => {
+                        searchWrapper?.classList.add('hidden');
+                    }, 300);
+                });
+            });
         }
+
+        function syncSearchBoxStateOnModalOpen() {
+            const query = searchInput?.value.trim() || '';
+            if (query === '') {
+                hideSearchBar(true);
+            } else {
+                showSearchBar(false);
+            }
+        }
+        window.syncSearchBoxStateOnModalOpen = syncSearchBoxStateOnModalOpen;
+        syncSearchBoxStateOnModalOpen();
 
         toggleSearchBtn?.addEventListener('click', () => {
-            if (searchWrapper?.classList.contains('hidden')) {
-                showSearchBar();
+            const isHidden = searchWrapper?.classList.contains('hidden') || searchWrapper?.classList.contains('opacity-0');
+            if (isHidden) {
+                showSearchBar(true);
             } else {
-                hideSearchBar();
+                hideSearchBar(true);
             }
         });
 
-        clearSearchBtn?.addEventListener('click', hideSearchBar);
+        clearSearchBtn?.addEventListener('click', () => {
+            hideSearchBar(true);
+        });
 
         function applySearch() {
             const query = searchInput?.value.toLowerCase().trim() || '';
@@ -706,6 +765,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle.textContent = 'New Quick Note';
         submitLabel.textContent = 'Save Note';
         clearErrors();
+        if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
+            window.syncSearchBoxStateOnModalOpen();
+        }
         modal.classList.remove('hidden');
     }
 
@@ -756,6 +818,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             modalTitle.textContent = 'Edit Quick Note';
             submitLabel.textContent = 'Update Note';
+
+            if (typeof window.syncSearchBoxStateOnModalOpen === 'function') {
+                window.syncSearchBoxStateOnModalOpen();
+            }
 
             modal.classList.remove('hidden');
         })

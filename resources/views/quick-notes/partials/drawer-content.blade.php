@@ -7,9 +7,9 @@
 <!-- Drawer Header (Single Row) -->
 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
     <!-- Left: Title OR Search Bar -->
-    <div class="flex items-center flex-1 mr-3 min-w-0">
+    <div class="flex items-center flex-1 mr-3 min-w-0 relative h-9">
         <!-- Title Block (Default Visible) -->
-        <div id="drawer-title-wrapper" class="flex items-center">
+        <div id="drawer-title-wrapper" class="flex items-center transition-all duration-300 ease-in-out opacity-100 max-w-full">
             <span class="inline-flex h-9 w-9 items-center justify-center text-black dark:text-white">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -21,13 +21,18 @@
         </div>
 
         <!-- Search Bar (Default Hidden) -->
-        <div id="drawer-search-wrapper" class="hidden relative flex-1 max-w-sm">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-bgray-400 dark:text-bgray-500">
+        <div id="drawer-search-wrapper" class="hidden relative flex-1 max-w-sm transition-all duration-300 ease-in-out opacity-0 max-w-0 overflow-hidden">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-bgray-400 dark:text-bgray-500 pointer-events-none">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </span>
             <input type="text" id="notes-search-input" placeholder="Search notes..." class="w-full rounded-xl border border-bgray-200 bg-bgray-50/50 pl-9 pr-8 py-1.5 text-xs text-bgray-900 placeholder-bgray-400 focus:border-success-300 focus:bg-white focus:outline-none dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white dark:placeholder-bgray-500">
+            <button type="button" id="clear-search-btn" class="absolute inset-y-0 right-0 flex items-center pr-4 text-bgray-400 hover:text-bgray-600 dark:text-bgray-500 dark:hover:text-white" title="Clear Search" aria-label="Clear Search">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
     </div>
 

@@ -61,7 +61,7 @@
         @endphp
 
         <button type="button" id="quick-notes-toggle-btn" title="Quick Notes" aria-label="Open Quick Notes" class="relative flex h-5 w-5 items-center justify-center focus:outline-none transition hover:opacity-80">
-            <svg id="quick-notes-icon" class="{{ $hasQuickNotes ? 'text-warning-500 stroke-warning-300 dark:text-warning-300 dark:stroke-warning-300' : 'text-bgray-900 stroke-bgray-900 dark:text-white dark:stroke-white' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <svg id="quick-notes-icon" class="{{ $hasQuickNotes ? 'stroke-warning-500 dark:text-warning-300 dark:stroke-warning-300' : 'text-bgray-900 stroke-bgray-900 dark:text-white dark:stroke-white' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 3H17C18.1046 3 19 3.89543 19 5V19C19 20.1046 18.1046 21 17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M9 7H15M9 11H15M9 15H13" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
