@@ -143,14 +143,14 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="frequency_type"></p>
                                 <div class="mt-1 rounded-lg dark:border-darkblack-400 dark:bg-darkblack-600/70">
-                                    <p class="break-words text-xs leading-5 text-bgray-500 dark:text-bgray-300" data-schedule-frequency-note>
+                                    <p class="break-words text-xs leading-5 text-bgray-600 dark:text-bgray-300" data-schedule-frequency-note>
                                         A task will be generated every working day based on the assigned user's active shift. No task will be generated on shift week-off days or when no valid shift assignment exists.
                                     </p>
                                 </div>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After</label>
-                                <x-forms.estimated-time-input name="due_after_seconds" :total-minutes="$isEdit ? intdiv((int) $schedule->due_after_seconds, 60) : 0" :show-label="false" help-text="Duration after task generation to set the due date. Leave empty if no due date should be assigned." />
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After <x-red-star /></label>
+                                <x-forms.estimated-time-input name="due_after_seconds" :total-minutes="$isEdit ? intdiv((int) $schedule->due_after_seconds, 60) : 0" :show-label="false" help-text="Set the time from task generation to its due date." />
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_seconds"></p>
                             </div>
                             <div>
