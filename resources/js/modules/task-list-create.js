@@ -9,7 +9,6 @@ const ADVANCED_TASK_FIELDS = new Set([
     'task_type_id',
     'task_mode_id',
     'priority',
-    'due_date_time',
     'tag_ids',
     'is_billable',
 ]);
