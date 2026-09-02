@@ -372,6 +372,9 @@ export function initTomSelect(root = document) {
 
         const instance = new TomSelect(el, config);
         syncOptionSubtypes(instance, el);
+        if (el.multiple) {
+            enableCompactMultipleDisplay(instance);
+        }
         applyDisabledStyles(instance, el);
     });
 

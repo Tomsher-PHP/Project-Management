@@ -169,7 +169,7 @@
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                                        <select name="current_assignee_ids[]" class="tom-select w-full" multiple data-sort="0">
+                                        <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
                                             <option value="">Select assignee</option>
                                             @foreach ($assignableUsers as $assignableUser)
                                                 <option value="{{ $assignableUser->id }}">{{ $assignableUser->name }}</option>
