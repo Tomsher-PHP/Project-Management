@@ -225,16 +225,23 @@ class TaskController extends Controller
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
 
-        $task = $taskServices->createQuickTask($project, $validated);
+        $tasks = $taskServices->createQuickTask($project, $validated);
+        $firstTask = $tasks->first();
+        $createdCount = $tasks->count();
+
+        $message = $createdCount > 1
+            ? "{$createdCount} tasks added successfully."
+            : ($requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => $requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.',
-            'task_id' => $task->id,
-            'request_type' => $task->request_type,
-            'request_status' => $task->request_status,
+            'message' => $message,
+            'task_id' => $firstTask?->id,
+            'created_count' => $createdCount,
+            'request_type' => $firstTask?->request_type,
+            'request_status' => $firstTask?->request_status,
         ], Response::HTTP_OK);
     }
 

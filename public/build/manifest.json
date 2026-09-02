@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CVlHFSdQ.css",
+    "file": "assets/app-Dm1kpUC8.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -333,7 +333,7 @@
     ]
   },
   "resources/js/modules/task-list-create.js": {
-    "file": "assets/task-list-create-CsmUBsmo.js",
+    "file": "assets/task-list-create-BtOuLgBV.js",
     "name": "task-list-create",
     "src": "resources/js/modules/task-list-create.js",
     "isEntry": true,

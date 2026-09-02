@@ -154,18 +154,25 @@ class ProjectTaskController extends Controller
     {
         $validated = $request->validated();
         $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
-        $task = $taskService->createQuickTask($project, $validated);
+        $tasks = $taskService->createQuickTask($project, $validated);
+        $firstTask = $tasks->first();
+        $createdCount = $tasks->count();
 
         $project->refresh();
 
+        $message = $createdCount > 1
+            ? "{$createdCount} tasks added successfully."
+            : ($requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.');
+
         return response()->json([
             'status' => true,
-            'message' => $requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.',
+            'message' => $message,
+            'created_count' => $createdCount,
             'html' => $this->renderTasksTab(
                 $project,
-                $this->resolveTaskGroupKey($project, $task)
+                $firstTask ? $this->resolveTaskGroupKey($project, $firstTask) : null
             ),
         ], Response::HTTP_OK);
     }

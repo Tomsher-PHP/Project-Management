@@ -204,7 +204,10 @@ const setSelectOptions = (field, options = [], { placeholder = 'Select option', 
         }
 
         if (field.multiple) {
-            field.tomselect.setValue(normalizedValue, true);
+            const multiValues = Array.isArray(normalizedValue)
+                ? normalizedValue
+                : (normalizedValue !== '' ? [normalizedValue] : []);
+            field.tomselect.setValue(multiValues, true);
             return;
         }
 
@@ -305,7 +308,7 @@ const syncSelfAssignee = (form, options = []) => {
         return;
     }
 
-    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const selfAssigneeId = String(form.dataset.selfAssigneeId || '');
 
     if (!assigneeField || !selfAssigneeId) {
@@ -320,11 +323,17 @@ const syncSelfAssignee = (form, options = []) => {
     }
 
     if (assigneeField.tomselect) {
-        assigneeField.tomselect.setValue(selfAssigneeId, true);
+        assigneeField.tomselect.setValue(assigneeField.multiple ? [selfAssigneeId] : selfAssigneeId, true);
         return;
     }
 
-    assigneeField.value = selfAssigneeId;
+    if (assigneeField.multiple) {
+        Array.from(assigneeField.options).forEach((opt) => {
+            opt.selected = String(opt.value) === selfAssigneeId;
+        });
+    } else {
+        assigneeField.value = selfAssigneeId;
+    }
 };
 
 const openTaskCreateModal = (modal) => {
@@ -416,7 +425,7 @@ const setEmptyProjectState = (form) => {
         placeholder: 'Select project first',
         disabled: true,
     });
-    setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], {
+    setSelectOptions(form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
     });
@@ -444,7 +453,7 @@ const setProjectLoadingState = (form) => {
         placeholder: 'Loading parent tasks...',
         disabled: true,
     });
-    setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], {
+    setSelectOptions(form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]'), [], {
         placeholder: 'Loading assignees...',
         disabled: true,
     });
@@ -492,7 +501,7 @@ const fetchProjectDependencies = async (dependencies, projectId) => {
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
-    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
     const dueDateField = form.querySelector('[name="due_date_time"]');

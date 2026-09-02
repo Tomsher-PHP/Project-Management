@@ -100,6 +100,17 @@ class TaskQuickStoreRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
+            'current_assignee_ids' => ['nullable', 'array'],
+            'current_assignee_ids.*' => [
+                'nullable',
+                'integer',
+                Rule::exists('project_members', 'user_id')->where(
+                    fn($query) => $query
+                        ->where('project_id', $projectId)
+                        ->whereNull('removed_at')
+                        ->where('is_active', true)
+                ),
+            ],
             'due_date_time' => ['nullable', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
@@ -122,6 +133,7 @@ class TaskQuickStoreRequest extends FormRequest
             'task_type_id.exists' => 'The selected task type is invalid.',
             'task_mode_id.exists' => 'The selected task mode is invalid.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
+            'current_assignee_ids.*.exists' => 'The selected assignee is invalid.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',
         ];

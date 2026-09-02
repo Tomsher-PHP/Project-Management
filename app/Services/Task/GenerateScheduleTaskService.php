@@ -199,10 +199,11 @@ class GenerateScheduleTaskService
                 $guard->forgetUser();
             }
 
-            $task = $this->taskServices->createQuickTask(
+            $tasks = $this->taskServices->createQuickTask(
                 $taskSchedule->project,
                 $this->buildTaskPayload($taskSchedule, $scheduledFor)
             );
+            $task = $tasks instanceof \Illuminate\Support\Collection ? $tasks->first() : $tasks;
 
             $taskSchedule->forceFill([
                 'last_generated_for' => $scheduledDate,
