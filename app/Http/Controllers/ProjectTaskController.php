@@ -248,6 +248,7 @@ class ProjectTaskController extends Controller
             )->render(),
         ], Response::HTTP_OK);
     }
+
     public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);

@@ -150,7 +150,7 @@
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date</label>
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
                                 <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
                             </div>
