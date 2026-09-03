@@ -16,7 +16,8 @@
             )
             ->values(),
         'projectEstimatedTimeSeconds' => (int) ($project->estimated_time_seconds ?? 0),
-        'otherMilestonesSeconds' => (int) $project->projectMilestones()
+        'otherMilestonesSeconds' => (int) $project
+            ->projectMilestones()
             ->where(function ($q) {
                 $q->where('is_backlog', true)->orWhere('is_system', true);
             })
@@ -70,8 +71,8 @@
 
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
-                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div class="flex flex-col gap-1">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex flex-wrap items-center gap-4 sm:gap-6">
                                     <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
                                         Estimate: <span data-project-milestone-workarea-estimate>0 h : 0 m</span>
                                     </div>
@@ -364,20 +365,16 @@
 
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
-                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div class="flex flex-col gap-2">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-300 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
-                                            Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
-                                        </span>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex flex-wrap items-center gap-4 sm:gap-6">
+                                    <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-300 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
+                                        Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
+                                    </span>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Estimate: <span data-project-sprint-workarea-estimate>0 h : 0 m</span>
                                     </div>
-                                    <div class="flex flex-col gap-1">
-                                        <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
-                                            Estimate: <span data-project-sprint-workarea-estimate>0 h : 0 m</span>
-                                        </div>
-                                        <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
-                                            Available: <span data-project-sprint-workarea-available>0 h : 0 m</span>
-                                        </div>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Available: <span data-project-sprint-workarea-available>0 h : 0 m</span>
                                     </div>
                                 </div>
 
