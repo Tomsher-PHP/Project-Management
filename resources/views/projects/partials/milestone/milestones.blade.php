@@ -193,7 +193,7 @@
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
                                 @can('agile_milestone.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
@@ -344,7 +344,7 @@
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
-                                        <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
+                                        <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-300 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
                                             Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
                                         </span>
                                     </div>
@@ -370,7 +370,7 @@
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
                                 @can('agile_sprint.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>

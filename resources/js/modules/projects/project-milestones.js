@@ -631,15 +631,15 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
+            <button type="button" class="inline-flex items-center justify-center rounded-[8px] border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-300 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
                 Save
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-error-200 bg-error-50 text-error-200 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-bgray-200 dark:border-bgray-300 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
                 <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-milestone-builder-toggle-icon>
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
@@ -912,14 +912,14 @@ const initializeProjectModuleBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-milestone-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-milestone-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-bgray-50 dark:bg-darkblack-500 px-4 py-3 text-success-500 dark:border-success-900/40 dark:text-success-300" data-project-milestone-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-white">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
             </span>
             <div>
-                <p class="text-sm font-semibold">Drag here for more milestones</p>
+                <p class="text-sm font-semibold text-bgray-700 dark:text-bgray-300">Drag here for more milestones</p>
                 <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
             </div>
         </div>
@@ -1757,17 +1757,17 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
             </div>
 
             <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-sprint-builder-save>
+                <button type="button" class="inline-flex items-center justify-center rounded-[8px] border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-300 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-sprint-builder-save>
                     Save
                 </button>
                 ${config?.canDelete ? `
-                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-error-200 bg-error-50 text-error-500 transition duration-200 hover:border-error-300 hover:bg-error-100 dark:border-error-900/40 dark:bg-darkblack-500 dark:text-error-300 dark:hover:border-error-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                 ` : ''}
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-bgray-200 dark:border-bgray-300 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
                     <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                     </svg>
@@ -1964,14 +1964,14 @@ const initializeProjectSprintBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-sprint-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-sprint-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-bgray-50 dark:bg-darkblack-500 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-white">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
             </span>
             <div>
-                <p class="text-sm font-semibold">Drag here for more sprints</p>
+                <p class="text-sm font-semibold text-bgray-700 dark:text-bgray-300">Drag here for more sprints</p>
                 <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected milestone.</p>
             </div>
         </div>
