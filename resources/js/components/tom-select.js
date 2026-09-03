@@ -305,7 +305,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
@@ -314,7 +314,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div class="flex items-center justify-between gap-3">
                             <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
@@ -350,7 +350,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
@@ -359,7 +359,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
@@ -464,7 +464,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
@@ -473,7 +473,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div class="flex items-center justify-between gap-3">
                             <span class="font-medium">${escape(data.text)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
@@ -507,7 +507,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <div class="font-medium">${escape(data.text || data.name)}</div>
-                            ${sub ? `<div class="text-sm text-gray-600">${escape(sub)}</div>` : ''}
+                            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400">${escape(sub)}</div>` : ''}
                         </div>
                     `;
                 },
@@ -516,7 +516,7 @@ export function initTomSelect(root = document) {
                     return `
                         <div>
                             <span class="font-medium">${escape(data.text || data.name)}</span>
-                            ${sub ? `<span class="text-sm text-gray-600 ml-2">${escape(sub)}</span>` : ''}
+                            ${sub ? `<span class="text-sm text-gray-600 dark:text-gray-400 ml-2">${escape(sub)}</span>` : ''}
                         </div>
                     `;
                 }
