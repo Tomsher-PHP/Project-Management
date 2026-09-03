@@ -714,6 +714,29 @@ const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
     </article>
 `;
 
+const formatEstimateTime = (totalSeconds) => {
+    const isNegative = totalSeconds < 0;
+    const absSeconds = Math.abs(totalSeconds);
+    const hours = Math.floor(absSeconds / 3600);
+    const minutes = Math.floor((absSeconds % 3600) / 60);
+
+    return `${isNegative ? '-' : ''}${hours} h : ${minutes} m`;
+};
+
+const updateAvailableDisplayStyle = (element, availableSeconds) => {
+    if (!element) {
+        return;
+    }
+
+    element.classList.remove('text-success-300', 'text-error-300');
+
+    if (availableSeconds > 0) {
+        element.classList.add('text-success-300');
+    } else if (availableSeconds < 0) {
+        element.classList.add('text-error-300');
+    }
+};
+
 const initializeProjectModuleBuilderModal = () => {
     const modal = document.getElementById('project-milestone-modal');
 
@@ -744,6 +767,42 @@ const initializeProjectModuleBuilderModal = () => {
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const recalculateAvailableTime = () => {
+        const projectSeconds = Number(config.projectEstimatedTimeSeconds) || 0;
+        const otherSeconds = Number(config.otherMilestonesSeconds) || 0;
+
+        let workspaceSeconds = 0;
+        getCards().forEach((card) => {
+            const totalMinutesInput = card.querySelector('[data-estimated-total-minutes]');
+            if (totalMinutesInput) {
+                const minutes = Number.parseInt(totalMinutesInput.value || '0', 10) || 0;
+                workspaceSeconds += (minutes * 60);
+            }
+        });
+
+        const totalMilestoneSeconds = workspaceSeconds + otherSeconds;
+        const availableSeconds = projectSeconds - totalMilestoneSeconds;
+
+        const formattedEstimate = formatEstimateTime(projectSeconds);
+        const formattedAvailable = formatEstimateTime(availableSeconds);
+
+        const estimateHeaderEl = modal.querySelector('[data-project-milestone-header-estimate]');
+        const estimateWorkareaEl = modal.querySelector('[data-project-milestone-workarea-estimate]');
+        if (estimateHeaderEl) estimateHeaderEl.textContent = formattedEstimate;
+        if (estimateWorkareaEl) estimateWorkareaEl.textContent = formattedEstimate;
+
+        const availableHeaderEl = modal.querySelector('[data-project-milestone-header-available]');
+        const availableWorkareaEl = modal.querySelector('[data-project-milestone-workarea-available]');
+        if (availableHeaderEl) {
+            availableHeaderEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableHeaderEl, availableSeconds);
+        }
+        if (availableWorkareaEl) {
+            availableWorkareaEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableWorkareaEl, availableSeconds);
+        }
+    };
 
     const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-milestone-library-item]'))
         .map((item) => Number(item.dataset.sortOrder) || 0);
@@ -899,6 +958,8 @@ const initializeProjectModuleBuilderModal = () => {
             renderWorkspaceFromModules(latestModules);
         }
 
+        recalculateAvailableTime();
+
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     };
@@ -978,6 +1039,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         ensureEmptyState();
         getCards().forEach((card) => setCardExpanded(card, false));
+        recalculateAvailableTime();
     };
 
     const appendCardToWorkspace = (card) => {
@@ -1025,6 +1087,7 @@ const initializeProjectModuleBuilderModal = () => {
         updateCount();
         syncOrderBadges();
         syncWorkspaceGuides();
+        recalculateAvailableTime();
     };
 
     const setCardStatus = (card, status, classes = '') => {
@@ -1250,6 +1313,7 @@ const initializeProjectModuleBuilderModal = () => {
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
+        recalculateAvailableTime();
     };
 
     const createLibraryModuleCard = async (libraryModule) => {
@@ -1608,6 +1672,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateAvailableTime();
     });
 
     workspace.addEventListener('change', function (event) {
@@ -1627,6 +1692,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateAvailableTime();
     });
 
     workspace.addEventListener('click', function (event) {
@@ -1694,6 +1760,7 @@ const initializeProjectModuleBuilderModal = () => {
     getCards().forEach((card) => initializeCardTomSelect(card));
     getCards().forEach((card) => initializeCardEstimatedTime(card));
     getCards().forEach((card) => syncDescriptionCount(card));
+    recalculateAvailableTime();
     modal.dataset.projectModuleBuilderInitialized = 'true';
 };
 
@@ -1862,12 +1929,47 @@ const initializeProjectSprintBuilderModal = () => {
 
     const config = JSON.parse(configNode.textContent || '{}');
     let activeMilestoneId = null;
+    let activeMilestoneEstimateSeconds = 0;
     let activeModuleName = '';
     let draggedLibrarySprint = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const recalculateSprintAvailableTime = () => {
+        const milestoneSeconds = Number(activeMilestoneEstimateSeconds) || 0;
+
+        let workspaceSeconds = 0;
+        getCards().forEach((card) => {
+            const totalMinutesInput = card.querySelector('[data-estimated-total-minutes]');
+            if (totalMinutesInput) {
+                const minutes = Number.parseInt(totalMinutesInput.value || '0', 10) || 0;
+                workspaceSeconds += (minutes * 60);
+            }
+        });
+
+        const availableSeconds = milestoneSeconds - workspaceSeconds;
+
+        const formattedEstimate = formatEstimateTime(milestoneSeconds);
+        const formattedAvailable = formatEstimateTime(availableSeconds);
+
+        const estimateHeaderEl = modal.querySelector('[data-project-sprint-header-estimate]');
+        const estimateWorkareaEl = modal.querySelector('[data-project-sprint-workarea-estimate]');
+        if (estimateHeaderEl) estimateHeaderEl.textContent = formattedEstimate;
+        if (estimateWorkareaEl) estimateWorkareaEl.textContent = formattedEstimate;
+
+        const availableHeaderEl = modal.querySelector('[data-project-sprint-header-available]');
+        const availableWorkareaEl = modal.querySelector('[data-project-sprint-workarea-available]');
+        if (availableHeaderEl) {
+            availableHeaderEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableHeaderEl, availableSeconds);
+        }
+        if (availableWorkareaEl) {
+            availableWorkareaEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableWorkareaEl, availableSeconds);
+        }
+    };
 
     const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-sprint-library-item]'))
         .map((item) => Number(item.dataset.sortOrder) || 0);
@@ -2016,6 +2118,7 @@ const initializeProjectSprintBuilderModal = () => {
         document.body.classList.add('overflow-hidden');
 
         if (!activeMilestoneId) {
+            activeMilestoneEstimateSeconds = 0;
             renderWorkspaceFromSprints([]);
             return;
         }
@@ -2025,9 +2128,11 @@ const initializeProjectSprintBuilderModal = () => {
         try {
             const payload = await fetchProjectModuleSprints(activeMilestoneId, { loadUrl, all: true });
             activeModuleName = milestoneName || payload.milestone?.name || activeModuleName;
+            activeMilestoneEstimateSeconds = Number(payload.milestone?.estimated_time_seconds) || 0;
             updateModuleContext();
             renderWorkspaceFromSprints(payload.sprints || []);
         } catch (error) {
+            activeMilestoneEstimateSeconds = 0;
             renderWorkspaceFromSprints([]);
             showModalError(error.message || 'Unable to load project sprints.');
             return;
@@ -2117,6 +2222,7 @@ const initializeProjectSprintBuilderModal = () => {
         updateCount();
         syncOrderBadges();
         syncWorkspaceGuides();
+        recalculateSprintAvailableTime();
     };
 
     const renderWorkspaceFromSprints = (sprints) => {
@@ -2140,6 +2246,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         ensureEmptyState();
         getCards().forEach((card) => setCardExpanded(card, false));
+        recalculateSprintAvailableTime();
     };
 
     const setCardStatus = (card, status, classes = '') => {
@@ -2371,6 +2478,7 @@ const initializeProjectSprintBuilderModal = () => {
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setSprintCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
+        recalculateSprintAvailableTime();
     };
 
     const createLibrarySprintCard = async (librarySprint) => {
@@ -2487,6 +2595,7 @@ const initializeProjectSprintBuilderModal = () => {
             ensureEmptyState();
             clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
+            recalculateSprintAvailableTime();
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
             showModalError(error.message || 'Unable to delete the project sprint.');
@@ -2744,6 +2853,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateSprintAvailableTime();
     });
 
     workspace.addEventListener('change', function (event) {
@@ -2763,6 +2873,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateSprintAvailableTime();
     });
 
     workspace.addEventListener('click', function (event) {
@@ -2826,6 +2937,7 @@ const initializeProjectSprintBuilderModal = () => {
 
     ensureEmptyState();
     updateModuleContext();
+    recalculateSprintAvailableTime();
     modal.dataset.projectSprintBuilderInitialized = 'true';
 };
 

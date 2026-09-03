@@ -15,6 +15,12 @@
                 ],
             )
             ->values(),
+        'projectEstimatedTimeSeconds' => (int) ($project->estimated_time_seconds ?? 0),
+        'otherMilestonesSeconds' => (int) $project->projectMilestones()
+            ->where(function ($q) {
+                $q->where('is_backlog', true)->orWhere('is_system', true);
+            })
+            ->sum('estimated_time_seconds'),
     ];
     $projectSprintBuilderConfig = [
         'storeUrlTemplate' => route('projects.milestones.sprints.store', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
@@ -43,7 +49,15 @@
                             </h3>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Estimate: <span class="text-bgray-900 dark:text-white" data-project-milestone-header-estimate>0 h : 0 m</span>
+                            </div>
+
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Available: <span data-project-milestone-header-available>0 h : 0 m</span>
+                            </div>
+
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-milestone-builder-count>{{ $editableProjectModules->count() }}</span>
                             </div>
@@ -57,11 +71,13 @@
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
                             <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
-                                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
-                                        Drop needed milestones here, then adjust only the working details your team needs right now.
-                                    </p>
+                                <div class="flex flex-col gap-1">
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Estimate: <span data-project-milestone-workarea-estimate>0 h : 0 m</span>
+                                    </div>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Available: <span data-project-milestone-workarea-available>0 h : 0 m</span>
+                                    </div>
                                 </div>
 
                                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-reset-search>
@@ -327,7 +343,15 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Estimate: <span class="text-bgray-900 dark:text-white" data-project-sprint-header-estimate>0 h : 0 m</span>
+                            </div>
+
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Available: <span data-project-sprint-header-available>0 h : 0 m</span>
+                            </div>
+
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-sprint-builder-count>0</span>
                             </div>
@@ -341,16 +365,20 @@
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
                             <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
+                                <div class="flex flex-col gap-2">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
                                         <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-300 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
                                             Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
-                                        Drag needed sprints here, then fine-tune each sprint directly inside this milestone workspace.
-                                    </p>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                            Estimate: <span data-project-sprint-workarea-estimate>0 h : 0 m</span>
+                                        </div>
+                                        <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                            Available: <span data-project-sprint-workarea-available>0 h : 0 m</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-reset-search>
