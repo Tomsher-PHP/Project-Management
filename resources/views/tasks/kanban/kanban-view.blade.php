@@ -85,6 +85,9 @@
 
         <!-- Task Insights Modal -->
         @include('tasks.partials.modals.insights-modal')
+
+        <!-- Task Notes & Files Modal -->
+        @include('tasks.partials.modals.notes-modal')
     </main>
 
     <x-filters.drawer>

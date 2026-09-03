@@ -1693,6 +1693,10 @@ const initializeTasksRoot = (root) => {
             return;
         }
 
+        if (event.target.closest('[data-task-notes-modal-trigger]')) {
+            return;
+        }
+
         const detailOpenButton = event.target.closest('[data-project-task-detail-open]');
 
         if (detailOpenButton && root.contains(detailOpenButton)) {

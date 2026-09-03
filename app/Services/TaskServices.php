@@ -114,6 +114,8 @@ class TaskServices
             ->withCount([
                 'childTasks',
                 'comments',
+                'taskNotes',
+                'taskNoteAttachments',
                 'childTasks as completed_child_tasks_count' => function ($query) {
                     $query->where(function ($childTaskQuery) {
                         $childTaskQuery

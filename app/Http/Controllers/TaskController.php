@@ -410,6 +410,26 @@ class TaskController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function notesModal(Task $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+
+        $taskNotes = $task->taskNotes()
+            ->with(['addedBy', 'attachments.addedBy'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('tasks.partials.modals.notes-content', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'viewAllUrl' => route('tasks.edit', ['task' => $task, 'tab' => 'notes']),
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
     public function storeComment(TaskCommentRequest $request, Task $task): JsonResponse
     {
         $task->comments()->create([
@@ -570,7 +590,7 @@ class TaskController extends Controller
             'updatedBy:id,name',
             'currentAssignmentLog.user:id,name',
             'activeTimeLog.user:id,name',
-        ])->loadCount('comments');
+        ])->loadCount(['comments', 'taskNotes', 'taskNoteAttachments']);
 
         return $task;
     }

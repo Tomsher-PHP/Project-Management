@@ -387,6 +387,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('activity.modal');
         Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.modal');
+        Route::get('notes-modal', [TaskController::class, 'notesModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('notes.modal');
         Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.store');
 
         // Task notes and attachments routes

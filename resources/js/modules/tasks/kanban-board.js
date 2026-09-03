@@ -1,5 +1,6 @@
 import Sortable from "sortablejs";
 import '../task-insights-modal';
+import '../task-notes-modal';
 import '../task-comments';
 
 const CONTROLLER_KEY = '__workspaceKanbanBoardController';

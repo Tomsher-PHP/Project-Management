@@ -62,6 +62,9 @@
             <!-- Task Insights Modal -->
             @include('tasks.partials.modals.insights-modal')
 
+            <!-- Task Notes & Files Modal -->
+            @include('tasks.partials.modals.notes-modal')
+
             <script id="task-filter-dependencies" type="application/json">
                 @json([
                     'milestones' => $projectMilestones->values(),
