@@ -3,7 +3,7 @@
         <h4 class="truncate text-lg font-bold text-bgray-900 dark:text-white">
             Notes & Files
         </h4>
-        <p class="mt-0.5 truncate text-xs text-bgray-600 dark:text-bgray-400">
+        <p class="mt-0.5 truncate text-xs text-bgray-700 dark:text-bgray-400">
             {{ $task->name ?? ($task->code ?? 'Untitled task') }}
         </p>
     </div>
@@ -37,7 +37,7 @@
             </div>
 
             @if (!empty(trim(strip_tags($note->description ?? ''))))
-                <div class="prose mt-3 max-w-none text-xs text-bgray-700 dark:prose-invert dark:text-bgray-300">
+                <div class="prose mt-3 max-h-48 max-w-none overflow-y-auto pr-2 text-xs text-bgray-700 dark:prose-invert dark:text-bgray-300">
                     {!! $note->description !!}
                 </div>
             @endif

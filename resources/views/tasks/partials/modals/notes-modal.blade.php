@@ -1,7 +1,7 @@
 <div id="task-notes-modal" class="fixed inset-0 z-[70] hidden items-center justify-center overflow-y-auto px-4 py-6">
     <div data-task-notes-modal-overlay class="fixed inset-0 bg-gray-500 opacity-75 dark:bg-bgray-900 dark:opacity-60"></div>
 
-    <div class="relative flex min-h-[300px] max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[12px] bg-white shadow-2xl dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
+    <div class="relative flex min-h-[300px] max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[12px] bg-white shadow-2xl dark:border dark:border-darkblack-400 dark:bg-darkblack-600">
         <div id="task-notes-modal-content" class="flex min-h-[300px] flex-1 flex-col overflow-hidden">
             <div class="flex min-h-[300px] flex-1 items-center justify-center px-6 py-10">
                 <div class="text-center">
