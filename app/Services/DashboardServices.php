@@ -465,4 +465,75 @@ class DashboardServices
             'isProject' => $isProject,
         ];
     }
+
+    /**
+     * Get aggregated projects count grouped by start_date year
+     *
+     * @param User $user
+     * @param array $statusIds
+     * @param int|null $month
+     * @param string|null $projectFlow
+     * @param array $categoryIds
+     * @param int|null $customerId
+     * @return array
+     */
+    public function getProjectsCountChartData(
+        User $user,
+        array $statusIds = [],
+        ?int $month = null,
+        ?string $projectFlow = null,
+        array $categoryIds = [],
+        ?int $customerId = null
+    ): array {
+        $query = Project::accessibleBy($user)
+            ->whereNotNull('projects.start_date');
+
+        if (!empty($projectFlow) && in_array(strtolower($projectFlow), ['agile', 'linear'], true)) {
+            $query->where('projects.project_flow', strtolower($projectFlow));
+        }
+
+        if (!empty($categoryIds)) {
+            $categoryIds = array_values(array_filter(array_map('intval', (array) $categoryIds)));
+
+            if (!empty($categoryIds)) {
+                $query->where(function ($q) use ($categoryIds) {
+                    foreach ($categoryIds as $catId) {
+                        $q->orWhereJsonContains('projects.project_category_ids', (int) $catId)
+                          ->orWhereJsonContains('projects.project_category_ids', (string) $catId);
+                    }
+                });
+            }
+        }
+
+        if ($customerId !== null && $customerId > 0) {
+            $query->where('projects.customer_id', $customerId);
+        }
+
+        if ($month !== null && $month >= 1 && $month <= 12) {
+            $query->whereMonth('projects.start_date', $month);
+        }
+
+        if (!empty($statusIds)) {
+            $query->whereIn('projects.status_id', $statusIds);
+        }
+
+        $results = $query
+            ->selectRaw('YEAR(projects.start_date) as year, COUNT(projects.id) as count')
+            ->groupByRaw('YEAR(projects.start_date)')
+            ->orderByRaw('YEAR(projects.start_date) ASC')
+            ->get();
+
+        $labels = [];
+        $data = [];
+
+        foreach ($results as $row) {
+            $labels[] = (int) $row->year;
+            $data[] = (int) $row->count;
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+        ];
+    }
 }

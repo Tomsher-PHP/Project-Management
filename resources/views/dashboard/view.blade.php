@@ -21,6 +21,8 @@
 
                 @include('dashboard.partials.daily-time')
 
+                @include('dashboard.partials.projects-count')
+
                 @include('dashboard.partials.running-tasks')
 
             </div>
@@ -51,4 +53,5 @@
 
 @push('scripts')
     @vite('resources/js/dashboard.js')
+    @vite('resources/js/projects-count-chart.js')
 @endpush

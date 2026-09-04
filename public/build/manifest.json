@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-4YnGeE78.css",
+    "file": "assets/app-Jv6g4ZhV.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -530,6 +530,12 @@
     "file": "assets/project-flow-Ba6M30vJ.js",
     "name": "project-flow",
     "src": "resources/js/project-flow.js",
+    "isEntry": true
+  },
+  "resources/js/projects-count-chart.js": {
+    "file": "assets/projects-count-chart-BcP4XvYE.js",
+    "name": "projects-count-chart",
+    "src": "resources/js/projects-count-chart.js",
     "isEntry": true
   }
 }
