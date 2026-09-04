@@ -1,5 +1,5 @@
 <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-sm dark:border-darkblack-500 dark:bg-darkblack-600">
-    <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-darkblack-500 cursor-pointer rounded-lg px-1.5 py-0.5 transition-colors duration-200 hover:bg-slate-500/40 dark:hover:bg-darkblack-100" data-dashboard-tile="total_tasks">
+    <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-100 dark:border-darkblack-500 cursor-pointer rounded-lg px-1.5 py-0.5 transition-colors duration-200 hover:bg-slate-300/40 dark:hover:bg-darkblack-100" data-dashboard-tile="total_tasks">
         <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
             <span class="text-xs font-semibold text-bgray-600 dark:text-bgray-300 uppercase tracking-wider">Total Tasks</span>
