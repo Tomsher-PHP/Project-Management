@@ -477,14 +477,8 @@ class DashboardServices
      * @param int|null $customerId
      * @return array
      */
-    public function getProjectsCountChartData(
-        User $user,
-        array $statusIds = [],
-        ?int $month = null,
-        ?string $projectFlow = null,
-        array $categoryIds = [],
-        ?int $customerId = null
-    ): array {
+    public function getProjectsCountChartData(User $user, array $statusIds = [], ?int $month = null, ?string $projectFlow = null, array $categoryIds = [], ?int $customerId = null): array
+    {
         $query = Project::accessibleBy($user)
             ->whereNotNull('projects.start_date');
 
@@ -499,7 +493,7 @@ class DashboardServices
                 $query->where(function ($q) use ($categoryIds) {
                     foreach ($categoryIds as $catId) {
                         $q->orWhereJsonContains('projects.project_category_ids', (int) $catId)
-                          ->orWhereJsonContains('projects.project_category_ids', (string) $catId);
+                            ->orWhereJsonContains('projects.project_category_ids', (string) $catId);
                     }
                 });
             }
