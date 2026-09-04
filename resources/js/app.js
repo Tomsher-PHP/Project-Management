@@ -71,3 +71,13 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById(activeTab)?.classList.add('active');
     }
 });
+
+import { Calendar } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
+window.FullCalendar = {
+    Calendar: Calendar,
+    dayGridPlugin: dayGridPlugin,
+    interactionPlugin: interactionPlugin,
+};

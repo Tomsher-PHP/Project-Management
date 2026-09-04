@@ -19,6 +19,9 @@ return [
     ['name' => 'user.delete',         'sort_order' => 2080, 'default_checked' => false],
     ['name' => 'user.restore',        'sort_order' => 2100, 'default_checked' => false],
     ['name' => 'user.tree_view',      'sort_order' => 2120, 'default_checked' => true],
+    ['name' => 'user.leave_details.view',      'sort_order' => 2130, 'default_checked' => true],
+    ['name' => 'user.leave_details.create', 'sort_order' => 2130, 'default_checked' => true],
+    ['name' => 'user.leave_details.edit', 'sort_order' => 2130, 'default_checked' => true],
 
     // TEAM (3000)
     ['name' => 'team.view_all_teams', 'sort_order' => 3000, 'default_checked' => false],
@@ -221,6 +224,24 @@ return [
     ['name' => 'appraisal.view',   'sort_order' => 31000, 'default_checked' => true],
     ['name' => 'appraisal.create', 'sort_order' => 31020, 'default_checked' => false],
     ['name' => 'appraisal.edit',   'sort_order' => 31040, 'default_checked' => false],
-    ['name' => 'appraisal.delete', 'sort_order' => 31060, 'default_checked' => false]
+    ['name' => 'appraisal.delete', 'sort_order' => 31060, 'default_checked' => false],
+
+
+    // LEAVE REQUEST (2140)
+    ['name' => 'leave_request.view', 'sort_order' => 2140, 'default_checked' => true],
+    ['name' => 'leave_request.create', 'sort_order' => 2141, 'default_checked' => true],
+    ['name' => 'leave_request.edit', 'sort_order' => 2142, 'default_checked' => true],
+    ['name' => 'leave_request.delete', 'sort_order' => 2143, 'default_checked' => false],
+    ['name' => 'leave_request.approve', 'sort_order' => 2144, 'default_checked' => true],
+    ['name' => 'leave_request.reject', 'sort_order' => 2145, 'default_checked' => true],
+    ['name' => 'leave_request.cancel', 'sort_order' => 2146, 'default_checked' => true],
+
+    // ATTENDANCE (2150)
+    ['name' => 'attendance.view', 'sort_order' => 2150, 'default_checked' => true],
+    ['name' => 'attendance.create', 'sort_order' => 2151, 'default_checked' => true],
+    ['name' => 'attendance.edit', 'sort_order' => 2152, 'default_checked' => true],
+    ['name' => 'attendance.delete', 'sort_order' => 2153, 'default_checked' => false],
+
+    ['name' => 'user_leave_balance.import', 'sort_order' => 2160, 'default_checked' => true,],
 
 ];

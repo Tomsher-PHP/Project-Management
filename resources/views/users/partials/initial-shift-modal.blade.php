@@ -88,7 +88,9 @@
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
-                        <a href="{{ route('users.index') }}" class="rounded-lg border border-bgray-300 bg-white px-4 py-2 text-sm text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400 dark:hover:text-white">
+                        <a href="{{ route('users.index', ['leave_assignment_user_id' => $user->id]) }}"
+                        class="rounded-lg border border-bgray-300 bg-white px-4 py-2 text-sm text-bgray-700 transition duration-200 hover:border-bgray-400 hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:border-darkblack-300 dark:hover:bg-darkblack-400"
+                        >
                             Skip Assignment
                         </a>
 

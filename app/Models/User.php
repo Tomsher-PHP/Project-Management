@@ -405,4 +405,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Appraisal::class);
     }
+
+    public function leaveBalances()
+    {
+        return $this->hasMany(UserLeaveBalance::class);
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function approvedLeaveRequests()
+    {
+        return $this->hasMany(
+            LeaveRequest::class,
+            'approver_id'
+        );
+    }
 }

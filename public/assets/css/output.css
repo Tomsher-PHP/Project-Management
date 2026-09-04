@@ -1733,6 +1733,10 @@ select {
   display: grid;
 }
 
+.grid-cols-7{
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
 .contents {
   display: contents;
 }
@@ -3293,6 +3297,9 @@ select {
   background-color: rgb(255 120 75 / var(--tw-bg-opacity));
 }
 
+.bg-orange-600 {
+    background-color: var(--color-orange-600);
+}
 .bg-othersOrange {
   --tw-bg-opacity: 1;
   background-color: rgb(255 120 75 / var(--tw-bg-opacity));

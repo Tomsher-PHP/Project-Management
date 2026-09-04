@@ -12,6 +12,7 @@
             <x-filters.list-search />
         </div>
 
+        <div>
         @can('user.restore')
             <a href="{{ route('users.restore.index') }}" class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -24,6 +25,42 @@
                 <span>Restore Users</span>
             </a>
         @endcan
+        @can('user_leave_balance.import')
+            <a
+                href="{{ route('user-leave-balances.import') }}"
+                class="inline-flex items-center gap-2 rounded-md border border-success-300 px-4 py-1.5 text-sm font-semibold text-success-400 transition duration-200 hover:bg-success-300 hover:text-white"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2">
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M14 3v6h6"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 17V11"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.5 13.5L12 11l2.5 2.5"
+            />
+        </svg>
+                <span>Import Leave Balances</span>
+            </a>
+        @endcan
+        </div>
     </div>
     @php
         session(['users_return_url' => url()->full()]);
@@ -143,6 +180,29 @@
                                                     <x-delete-form :action="route('users.destroy', $user->id)" />
                                                 @endcan
                                             @endif
+                                            @can('user.leave_details.view')
+                                                <a href="{{ route('users.leave-details', $user->id) }}"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 transition hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300"
+                                                title="Leave Details">
+
+                                                    <svg class="h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.8"
+                                                        viewBox="0 0 24 24">
+
+                                                        <path stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"/>
+
+                                                        <path stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            d="M8 13H10M14 13H16M8 17H10M14 17H16"/>
+
+                                                    </svg>
+
+                                                </a>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -163,6 +223,31 @@
         @endphp
         @if ($initialShiftUser)
             @include('users.partials.initial-shift-modal', ['user' => $initialShiftUser, 'shifts' => $onboardingShifts])
+        @endif
+    @endif
+
+    @if (request('leave_assignment_user_id'))
+        @php
+            $leaveAssignmentUser = \App\Models\User::find(
+                request('leave_assignment_user_id')
+            );
+
+            $leaveTypes = \App\Models\LeaveType::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        @endphp
+
+        @if($leaveAssignmentUser)
+            @include('users.partials.leave-assignment-modal', [
+                'user' => $leaveAssignmentUser,
+                'leaveTypes' => $leaveTypes,
+                'balances' => collect(),
+                'previousBalances' => collect(),
+                'mode' => 'create',
+                'returnTo' => 'users.index',
+            ])
         @endif
     @endif
     <!-- write your code here-->

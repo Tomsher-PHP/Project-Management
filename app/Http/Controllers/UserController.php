@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use App\Models\UserLeaveBalance;
+use App\Models\LeaveType;
 
 class UserController extends Controller
 {
@@ -103,7 +105,10 @@ class UserController extends Controller
 
         $scheduleShiftService->schedule($data);
 
-        return redirect()->route('users.index')
+        return redirect()
+            ->route('users.index', [
+                'leave_assignment_user_id' => $user->id,
+            ])
             ->with('success', 'Initial shift assigned successfully.');
     }
 
@@ -198,7 +203,7 @@ class UserController extends Controller
 
     /**
      * Function to view user details.
-     * 
+     *
      * @param User $user
      */
     public function show(User $user)
@@ -473,5 +478,1143 @@ class UserController extends Controller
             $b = 235;
         }
         return "rgba($r, $g, $b, $opacity)";
+    }
+
+    public function skipInitialShift(User $user)
+    {
+        return redirect()
+            ->route('users.index')
+            ->with('leave_assignment_user_id', $user->id);
+    }
+
+   public function leaveDetails(User $user, Request $request)
+    {
+        /*
+        * --------------------------------------------------------------------------
+        * Get all leave balances for the user.
+        * --------------------------------------------------------------------------
+        */
+        $leaveBalances = UserLeaveBalance::query()
+            ->with('leaveType')
+            ->where('user_id', $user->id)
+            ->orderByDesc('year')
+            ->orderBy('valid_from')
+            ->orderBy('leave_type_id')
+            ->get();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Group leave balances by entitlement year.
+        * --------------------------------------------------------------------------
+        */
+        $leavePeriods = $leaveBalances->groupBy('year');
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Get active leave types.
+        * --------------------------------------------------------------------------
+        */
+        $leaveTypes = LeaveType::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Check whether Add New Leave Year modal should be shown.
+        * --------------------------------------------------------------------------
+        */
+        $showLeaveAssignmentModal = $request->boolean('add');
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Check whether Edit Leave Assignment modal should be shown.
+        * --------------------------------------------------------------------------
+        */
+        $editYear = $request->input('edit_year');
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Edit balances.
+        * --------------------------------------------------------------------------
+        */
+        $editBalances = collect();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Previous year balances used for carry forward.
+        * This is needed for both:
+        *
+        * 1. Add New Leave Year
+        * 2. Edit Existing Leave Year
+        * --------------------------------------------------------------------------
+        */
+        $previousBalances = collect();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Default dates for a new leave period.
+        *
+        * If the user has no leave details:
+        *
+        *     From = current year's first day
+        *     To   = current year's last day
+        *
+        * Example:
+        *
+        *     01-Jan-2026 → 31-Dec-2026
+        * --------------------------------------------------------------------------
+        */
+        $defaultValidFrom = now()->startOfYear();
+        $defaultValidTo = now()->endOfYear();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Get the latest entitlement record.
+        *
+        * All leave types for the same period have the same valid_from/valid_to,
+        * so we can use the latest record to determine the next entitlement period.
+        * --------------------------------------------------------------------------
+        */
+        $latestBalance = UserLeaveBalance::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('valid_to')
+            ->first();
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * If an existing leave period exists, determine the next period.
+        * --------------------------------------------------------------------------
+        */
+        if ($latestBalance) {
+
+            $latestValidFrom = Carbon::parse(
+                $latestBalance->valid_from
+            );
+
+            $latestValidTo = Carbon::parse(
+                $latestBalance->valid_to
+            );
+
+
+            /*
+            * New period starts immediately after the latest period.
+            */
+            $defaultValidFrom = $latestValidTo
+                ->copy()
+                ->addDay();
+
+
+            /*
+            * Calculate the number of months in the existing period.
+            *
+            * Example:
+            *
+            * 01-Jan-2026 → 31-Dec-2026 = 12 months
+            *
+            * 01-Apr-2026 → 31-Mar-2027 = 12 months
+            */
+            $periodMonths = $latestValidFrom
+                ->diffInMonths($latestValidTo) + 1;
+
+
+            /*
+            * Create the next period using the same month duration.
+            */
+            $defaultValidTo = $defaultValidFrom
+                ->copy()
+                ->addMonthsNoOverflow($periodMonths)
+                ->subDay();
+        }
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * EDIT EXISTING LEAVE YEAR
+        * --------------------------------------------------------------------------
+        */
+        if ($editYear) {
+
+            /*
+            * Get current year's leave balances.
+            */
+            $editBalances = UserLeaveBalance::query()
+                ->with('leaveType')
+                ->where('user_id', $user->id)
+                ->where('year', $editYear)
+                ->orderBy('leave_type_id')
+                ->get();
+
+
+            /*
+            * If no balances exist for the selected year,
+            * redirect back with an error.
+            */
+            if ($editBalances->isEmpty()) {
+
+                return redirect()
+                    ->route(
+                        'users.leave-details',
+                        $user->id
+                    )
+                    ->with(
+                        'error',
+                        'The selected leave entitlement period was not found.'
+                    );
+            }
+
+
+            /*
+            * Do not show Add New Year modal while editing.
+            */
+            $showLeaveAssignmentModal = false;
+
+
+            /*
+            * Get the current period start date.
+            */
+            $currentValidFrom = $editBalances
+                ->first()
+                ->valid_from;
+
+
+            /*
+            * Find the immediately previous entitlement period.
+            */
+            $previousValidTo = UserLeaveBalance::query()
+                ->where('user_id', $user->id)
+                ->whereDate(
+                    'valid_to',
+                    '<',
+                    $currentValidFrom
+                )
+                ->max('valid_to');
+
+
+            /*
+            * Load the previous period balances.
+            *
+            * We intentionally get balances even when current_balance = 0
+            * so that the previous year's details can still be displayed.
+            */
+            if ($previousValidTo) {
+
+                $previousBalances = UserLeaveBalance::query()
+                    ->with('leaveType')
+                    ->where('user_id', $user->id)
+                    ->whereDate(
+                        'valid_to',
+                        $previousValidTo
+                    )
+                    ->orderBy('leave_type_id')
+                    ->get();
+            }
+        }
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * ADD NEW LEAVE YEAR
+        * --------------------------------------------------------------------------
+        */
+        if ($showLeaveAssignmentModal && !$editYear) {
+
+            /*
+            * Find the previous entitlement period.
+            *
+            * This is the period immediately before the newly generated period.
+            */
+            $previousValidTo = UserLeaveBalance::query()
+                ->where('user_id', $user->id)
+                ->whereDate(
+                    'valid_to',
+                    '<',
+                    $defaultValidFrom->toDateString()
+                )
+                ->max('valid_to');
+
+
+            /*
+            * Get balances from the previous entitlement period.
+            *
+            * Only balances greater than zero are shown as
+            * available for carry forward.
+            */
+            if ($previousValidTo) {
+
+                $previousBalances = UserLeaveBalance::query()
+                    ->with('leaveType')
+                    ->where('user_id', $user->id)
+                    ->whereDate(
+                        'valid_to',
+                        $previousValidTo
+                    )
+                    ->where('current_balance', '>', 0)
+                    ->orderBy('leave_type_id')
+                    ->get();
+            }
+        }
+
+
+        /*
+        * --------------------------------------------------------------------------
+        * Return view.
+        * --------------------------------------------------------------------------
+        */
+        return view('users.leave-details', [
+            'user' => $user,
+
+            'leaveBalances' => $leaveBalances,
+
+            'leavePeriods' => $leavePeriods,
+
+            'leaveTypes' => $leaveTypes,
+
+            'showLeaveAssignmentModal' => $showLeaveAssignmentModal,
+
+            'editYear' => $editYear,
+
+            'editBalances' => $editBalances,
+
+            /*
+            * Previous year's balances.
+            * Used in both create and edit modes.
+            */
+            'previousBalances' => $previousBalances,
+
+            /*
+            * Defaults for Add New Leave Year.
+            */
+            'defaultValidFrom' => $defaultValidFrom,
+
+            'defaultValidTo' => $defaultValidTo,
+        ]);
+    }
+
+    public function storeLeaveAssignment(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'valid_from' => [
+                'required',
+                'date',
+            ],
+
+            'valid_to' => [
+                'required',
+                'date',
+                'after_or_equal:valid_from',
+            ],
+
+            'leave_balances' => [
+                'required',
+                'array',
+            ],
+
+            'leave_balances.*.leave_type_id' => [
+                'required',
+                'exists:leave_types,id',
+            ],
+
+            'leave_balances.*.yearly_entitlement' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'leave_balances.*.monthly_entitlement' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'leave_balances.*.opening_balance' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            /*
+            * Carry-forward selection.
+            */
+            'carry_forward' => [
+                'nullable',
+                'in:yes,no',
+            ],
+
+            'carry_forward_items' => [
+                'nullable',
+                'array',
+            ],
+
+            'carry_forward_items.*.selected' => [
+                'nullable',
+                'boolean',
+            ],
+
+            'carry_forward_items.*.amount' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+        ]);
+
+        $validFrom = Carbon::parse($validated['valid_from']);
+        $validTo = Carbon::parse($validated['valid_to']);
+
+        /*
+        * The entitlement year is based on the
+        * starting year of the period.
+        *
+        * Example:
+        * 01-Apr-2027 → 31-Mar-2028
+        * year = 2027
+        */
+        $year = $validFrom->year;
+
+
+        /*
+        * Validate each leave entitlement.
+        */
+        foreach ($validated['leave_balances'] as $balance) {
+
+            $yearlyEntitlement = (float) $balance['yearly_entitlement'];
+            $monthlyEntitlement = (float) $balance['monthly_entitlement'];
+            $openingBalance = (float) $balance['opening_balance'];
+
+            /*
+            * Monthly entitlement cannot exceed yearly entitlement.
+            */
+            if ($monthlyEntitlement > $yearlyEntitlement) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Monthly entitlement cannot be greater than yearly entitlement.'
+                    );
+            }
+
+            /*
+            * Opening balance cannot exceed yearly entitlement.
+            */
+            if ($openingBalance > $yearlyEntitlement) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Opening balance cannot be greater than yearly entitlement.'
+                    );
+            }
+        }
+
+
+        /*
+        * Check whether the user already has an overlapping
+        * entitlement period.
+        *
+        * Example:
+        * Existing: 01-Jan-2027 → 31-Dec-2027
+        * New:      01-Jun-2027 → 31-May-2028
+        *
+        * This should not be allowed.
+        */
+        $overlappingPeriod = UserLeaveBalance::query()
+            ->where('user_id', $user->id)
+            ->whereDate(
+                'valid_from',
+                '<=',
+                $validTo->toDateString()
+            )
+            ->whereDate(
+                'valid_to',
+                '>=',
+                $validFrom->toDateString()
+            )
+            ->exists();
+
+        if ($overlappingPeriod) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'A leave entitlement already exists for this user within the selected date range. Please edit the existing entitlement or choose a different period.'
+                );
+        }
+
+
+        /*
+        * Find the immediately previous entitlement period.
+        *
+        * We look for the latest valid_to date before
+        * the new period starts.
+        */
+        $previousValidTo = UserLeaveBalance::query()
+            ->where('user_id', $user->id)
+            ->whereDate(
+                'valid_to',
+                '<',
+                $validFrom->toDateString()
+            )
+            ->max('valid_to');
+
+
+        /*
+        * Load all leave balances belonging to the
+        * previous entitlement period.
+        */
+        $previousBalances = collect();
+
+        if ($previousValidTo) {
+
+            $previousBalances = UserLeaveBalance::query()
+                ->where('user_id', $user->id)
+                ->whereDate('valid_to', $previousValidTo)
+                ->get()
+                ->keyBy('leave_type_id');
+        }
+
+
+        /*
+        * Prepare carry-forward values.
+        */
+        $carryForwardItems = [];
+
+        if (
+            $request->input('carry_forward') === 'yes' &&
+            $previousBalances->isNotEmpty()
+        ) {
+
+            foreach (
+                $request->input('carry_forward_items', [])
+                as $leaveTypeId => $item
+            ) {
+
+                /*
+                * Ignore unselected rows.
+                */
+                if (
+                    empty($item['selected']) ||
+                    (float) ($item['amount'] ?? 0) <= 0
+                ) {
+                    continue;
+                }
+
+                $carryForwardAmount = (float) $item['amount'];
+
+                /*
+                * Find previous balance for this leave type.
+                */
+                $previousBalance = $previousBalances->get(
+                    (int) $leaveTypeId
+                );
+
+                if (!$previousBalance) {
+                    return back()
+                        ->withInput()
+                        ->with(
+                            'error',
+                            'Invalid carry-forward leave type selected.'
+                        );
+                }
+
+                $previousCurrentBalance =
+                    (float) $previousBalance->current_balance;
+
+                /*
+                * Never allow carrying forward more than
+                * the previous year's remaining balance.
+                */
+                if ($carryForwardAmount > $previousCurrentBalance) {
+
+                    return back()
+                        ->withInput()
+                        ->with(
+                            'error',
+                            'The carry-forward amount for ' .
+                            ($previousBalance->leaveType->name ?? 'the selected leave type') .
+                            ' cannot be greater than the previous remaining balance of ' .
+                            number_format($previousCurrentBalance, 2) .
+                            ' days.'
+                        );
+                }
+
+                $carryForwardItems[(int) $leaveTypeId] =
+                    $carryForwardAmount;
+            }
+        }
+
+
+        /*
+        * Save everything in one transaction.
+        */
+        DB::transaction(function () use (
+            $validated,
+            $user,
+            $year,
+            $validFrom,
+            $validTo,
+            $carryForwardItems
+        ) {
+
+            foreach ($validated['leave_balances'] as $balance) {
+
+                $leaveTypeId = (int) $balance['leave_type_id'];
+
+                $openingBalance =
+                    (float) $balance['opening_balance'];
+
+                /*
+                * Carry-forward for this particular leave type.
+                *
+                * If nothing was selected, it will be 0.
+                */
+                $carryForwardBalance =
+                    (float) ($carryForwardItems[$leaveTypeId] ?? 0);
+
+                /*
+                * New current balance:
+                *
+                * Opening Balance
+                * +
+                * Carry Forward
+                */
+                $currentBalance = $openingBalance + $carryForwardBalance;
+
+                $isCarryForward = $carryForwardBalance > 0;
+
+                UserLeaveBalance::create([
+                    'user_id' => $user->id,
+
+                    'leave_type_id' => $leaveTypeId,
+
+                    'year' => $year,
+
+                    'valid_from' => $validFrom->toDateString(),
+                    'valid_to' => $validTo->toDateString(),
+
+                    'yearly_entitlement' => $balance['yearly_entitlement'],
+                    'monthly_entitlement' => $balance['monthly_entitlement'],
+
+                    /*
+                    * New year's own allocation.
+                    */
+                    'opening_balance' => $openingBalance,
+
+                    /*
+                    * Previous year's carried balance.
+                    */
+                    'carry_forward_balance' => $carryForwardBalance,
+
+                    'is_carry_forward' => $isCarryForward,
+
+
+                    /*
+                    * Combined available balance.
+                    */
+                    'current_balance' => $currentBalance,
+
+                    /*
+                    * No leave has been used in the new period yet.
+                    */
+                    'used_balance' => 0,
+
+                    'paid_days_used' => 0,
+                    'unpaid_days_used' => 0,
+
+                    'status' => true,
+
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]);
+            }
+        });
+
+
+        /*
+        * Return to Leave Details if this was opened
+        * from the user's Leave Details page.
+        */
+        if ($request->input('return_to') === 'leave_details') {
+
+            return redirect()
+                ->route(
+                    'users.leave-details',
+                    $user->id
+                )
+                ->with(
+                    'success',
+                    'Leave assignment saved successfully.'
+                );
+        }
+
+
+        /*
+        * Initial leave assignment after user creation.
+        */
+        return redirect()
+            ->route('users.index')
+            ->with(
+                'success',
+                'Leave assignment saved successfully for ' .
+                $user->name .
+                '.'
+            );
+    }
+
+
+ public function updateLeaveAssignment(
+    Request $request,
+    User $user,
+    int $year
+) {
+    $validated = $request->validate([
+        'valid_from' => [
+            'required',
+            'date',
+        ],
+
+        'valid_to' => [
+            'required',
+            'date',
+            'after_or_equal:valid_from',
+        ],
+
+        'leave_balances' => [
+            'required',
+            'array',
+        ],
+
+        'leave_balances.*.leave_type_id' => [
+            'required',
+            'exists:leave_types,id',
+        ],
+
+        'leave_balances.*.yearly_entitlement' => [
+            'required',
+            'numeric',
+            'min:0',
+        ],
+
+        'leave_balances.*.monthly_entitlement' => [
+            'required',
+            'numeric',
+            'min:0',
+        ],
+
+        'leave_balances.*.opening_balance' => [
+            'required',
+            'numeric',
+            'min:0',
+        ],
+
+        'leave_balances.*.carry_forward_balance' => [
+            'nullable',
+            'numeric',
+            'min:0',
+        ],
+    ]);
+
+    $validFrom = Carbon::parse($validated['valid_from']);
+    $validTo = Carbon::parse($validated['valid_to']);
+
+    /*
+     * The existing entitlement year must not be changed
+     * through the Edit screen.
+     */
+    if ($validFrom->year !== (int) $year) {
+        return back()
+            ->withInput()
+            ->with(
+                'year_change_warning',
+                "You are trying to change the entitlement year from {$year} to {$validFrom->year}. To create a new year's leave entitlement, close this form and use the \"Add New Leave Year\" option."
+            );
+    }
+
+    /*
+     * Get all existing balances for this year.
+     */
+    $existingBalances = UserLeaveBalance::query()
+        ->where('user_id', $user->id)
+        ->where('year', $year)
+        ->get()
+        ->keyBy('leave_type_id');
+
+    if ($existingBalances->isEmpty()) {
+        return redirect()
+            ->route('users.leave-details', $user->id)
+            ->with(
+                'error',
+                'The selected leave entitlement period was not found.'
+            );
+    }
+
+    /*
+     * Find the previous entitlement period.
+     */
+    $previousValidTo = UserLeaveBalance::query()
+        ->where('user_id', $user->id)
+        ->whereDate('valid_to', '<', $validFrom->toDateString())
+        ->max('valid_to');
+
+    $previousBalances = collect();
+
+    if ($previousValidTo) {
+        $previousBalances = UserLeaveBalance::query()
+            ->where('user_id', $user->id)
+            ->whereDate('valid_to', $previousValidTo)
+            ->get()
+            ->keyBy('leave_type_id');
+    }
+
+    /*
+     * Validate each leave type.
+     */
+    foreach ($validated['leave_balances'] as $balanceData) {
+
+        $yearlyEntitlement =
+            (float) $balanceData['yearly_entitlement'];
+
+        $monthlyEntitlement =
+            (float) $balanceData['monthly_entitlement'];
+
+        $openingBalance =
+            (float) $balanceData['opening_balance'];
+
+        $carryForwardBalance =
+            (float) ($balanceData['carry_forward_balance'] ?? 0);
+
+
+        /*
+         * Monthly cannot exceed yearly.
+         */
+        if ($monthlyEntitlement > $yearlyEntitlement) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Monthly entitlement cannot be greater than yearly entitlement.'
+                );
+        }
+
+
+        /*
+         * Opening cannot exceed yearly.
+         */
+        if ($openingBalance > $yearlyEntitlement) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Opening balance cannot be greater than yearly entitlement.'
+                );
+        }
+
+
+        /*
+         * Carry forward must come from the previous period.
+         */
+        if ($carryForwardBalance > 0) {
+
+            $previousBalance =
+                $previousBalances->get(
+                    (int) $balanceData['leave_type_id']
+                );
+
+            $previousAvailable =
+                $previousBalance
+                    ? (float) $previousBalance->current_balance
+                    : 0;
+
+            if ($carryForwardBalance > $previousAvailable) {
+
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Carry forward balance cannot be greater than the previous year available balance.'
+                    );
+            }
+        }
+    }
+
+
+    /*
+     * Check whether the edited date range overlaps another
+     * entitlement period for this user.
+     */
+    $overlappingPeriod = UserLeaveBalance::query()
+        ->where('user_id', $user->id)
+        ->where('year', '!=', $year)
+        ->whereDate(
+            'valid_from',
+            '<=',
+            $validTo->toDateString()
+        )
+        ->whereDate(
+            'valid_to',
+            '>=',
+            $validFrom->toDateString()
+        )
+        ->exists();
+
+    if ($overlappingPeriod) {
+
+        return back()
+            ->withInput()
+            ->with(
+                'error',
+                'The selected date range overlaps another leave entitlement period for this user.'
+            );
+    }
+
+
+    /*
+     * Save all changes in one transaction.
+     */
+    DB::transaction(function () use (
+        $validated,
+        $user,
+        $year,
+        $validFrom,
+        $validTo,
+        $existingBalances
+    ) {
+
+        foreach ($validated['leave_balances'] as $balanceData) {
+
+            $leaveTypeId =
+                (int) $balanceData['leave_type_id'];
+
+            /*
+             * Find the current record.
+             */
+            $balance =
+                $existingBalances->get($leaveTypeId);
+
+
+            /*
+             * If the leave type did not exist in the
+             * original period, create it.
+             */
+            if (!$balance) {
+
+                $openingBalance =
+                    (float) $balanceData['opening_balance'];
+
+                $carryForwardBalance =
+                    (float) (
+                        $balanceData['carry_forward_balance'] ?? 0
+                    );
+
+                $isCarryForward =
+                    $carryForwardBalance > 0;
+
+                UserLeaveBalance::create([
+                    'user_id' => $user->id,
+
+                    'leave_type_id' => $leaveTypeId,
+
+                    'year' => $year,
+
+                    'valid_from' =>
+                        $validFrom->toDateString(),
+
+                    'valid_to' =>
+                        $validTo->toDateString(),
+
+                    'yearly_entitlement' =>
+                        $balanceData['yearly_entitlement'],
+
+                    'monthly_entitlement' =>
+                        $balanceData['monthly_entitlement'],
+
+                    'opening_balance' =>
+                        $openingBalance,
+
+                    'carry_forward_balance' =>
+                        $carryForwardBalance,
+
+                    'is_carry_forward' =>
+                        $isCarryForward,
+
+                    'current_balance' =>
+                        $openingBalance +
+                        $carryForwardBalance,
+
+                    'used_balance' => 0,
+
+                    'paid_days_used' => 0,
+
+                    'unpaid_days_used' => 0,
+
+                    'status' => true,
+
+                    'created_by' => auth()->id(),
+
+                    'updated_by' => auth()->id(),
+                ]);
+
+                continue;
+            }
+
+
+            /*
+             * Read the existing used balance.
+             */
+            $usedBalance =
+                (float) $balance->used_balance;
+
+
+            /*
+             * Read the new values from the form.
+             */
+            $openingBalance =
+                (float) $balanceData['opening_balance'];
+
+            $carryForwardBalance =
+                (float) (
+                    $balanceData['carry_forward_balance'] ?? 0
+                );
+
+
+            /*
+             * Determine whether carry forward is enabled.
+             */
+            $isCarryForward =
+                $carryForwardBalance > 0;
+
+
+            /*
+             * Base update.
+             */
+            $updateData = [
+
+                'valid_from' =>
+                    $validFrom->toDateString(),
+
+                'valid_to' =>
+                    $validTo->toDateString(),
+
+                'yearly_entitlement' =>
+                    $balanceData['yearly_entitlement'],
+
+                'monthly_entitlement' =>
+                    $balanceData['monthly_entitlement'],
+
+                /*
+                 * Carry-forward must always be updated
+                 * from the submitted value.
+                 */
+                'carry_forward_balance' =>
+                    $carryForwardBalance,
+
+                'is_carry_forward' =>
+                    $isCarryForward,
+
+                'updated_by' =>
+                    auth()->id(),
+            ];
+
+
+            /*
+             * If no leave has been used yet, the opening
+             * balance and current balance can be changed.
+             */
+            if ($usedBalance == 0) {
+
+                $updateData['opening_balance'] =
+                    $openingBalance;
+
+                $updateData['current_balance'] =
+                    $openingBalance +
+                    $carryForwardBalance;
+            }
+
+            /*
+             * If leave has already been used:
+             *
+             * Don't overwrite the current balance.
+             *
+             * The carry-forward flag/value is still preserved,
+             * but current balance remains based on the existing
+             * leave usage.
+             */
+            else {
+
+                $updateData['current_balance'] =
+                    $openingBalance +
+                    $carryForwardBalance -
+                    $usedBalance;
+            }
+
+
+            $balance->update($updateData);
+        }
+    });
+
+
+    return redirect()
+        ->route(
+            'users.leave-details',
+            $user->id
+        )
+        ->with(
+            'success',
+            'Leave assignment updated successfully.'
+        );
+}
+    public function destroyLeaveAssignment(User $user, int $year)
+    {
+        $leaveBalances = UserLeaveBalance::query()
+            ->where('user_id', $user->id)
+            ->where('year', $year)
+            ->get();
+
+        if ($leaveBalances->isEmpty()) {
+            return redirect()
+                ->route('users.leave-details', $user->id)
+                ->with('error', 'The selected leave assignment was not found.');
+        }
+
+        /*
+        * Do not allow deletion if any leave has already been used.
+        */
+        $hasUsedLeave = $leaveBalances->contains(function ($balance) {
+            return (float) $balance->used_balance > 0;
+        });
+
+        if ($hasUsedLeave) {
+            return redirect()
+                ->route('users.leave-details', $user->id)
+                ->with(
+                    'error',
+                    'This leave assignment cannot be deleted because leave has already been used in this period.'
+                );
+        }
+
+        /*
+        * Delete all leave type balances for this period.
+        */
+        DB::transaction(function () use ($leaveBalances) {
+            foreach ($leaveBalances as $balance) {
+                $balance->delete();
+            }
+        });
+
+        return redirect()
+            ->route('users.leave-details', $user->id)
+            ->with(
+                'success',
+                "{$year} leave assignment deleted successfully."
+            );
     }
 }

@@ -99,3 +99,9 @@ npm run dev
 composer require maatwebsite/excel
 php artisan make:export ProjectReportExport --model=Project
 composer dump-autoload
+
+# Commands run for Leave Module
+# full caledar package
+npm install @fullcalendar/core @fullcalendar/daygrid @fullcalendar/interaction
+
+composer show maatwebsite/excel

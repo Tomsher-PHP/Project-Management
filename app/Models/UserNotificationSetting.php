@@ -10,21 +10,22 @@ class UserNotificationSetting extends Model
     public const PROJECT_STATUS_CHANGED = 'project_status_changed';
     public const PROJECT_STAGE_CHANGED = 'project_stage_changed';
     public const PROJECT_TIMELINE_CHANGED = 'project_timeline_changed';
-    
+
     public const TASK_ASSIGNED = 'task_assigned';
     public const TASK_STATUS_CHANGED = 'task_status_changed';
     public const TASK_TIMELINE_CHANGED = 'task_timeline_changed';
-    
+
     public const TEAM_ASSIGNED = 'team_assigned';
     public const SHIFT_SCHEDULED = 'shift_scheduled';
     public const APPRAISAL_ASSIGNED = 'appraisal_assigned';
     public const APPRAISAL_SUBMITTED = 'appraisal_submitted';
-    
+
     public const TASK_REQUEST = 'task_request';
     public const TASK_LOG_REQUEST = 'task_log_request';
     public const HANDOFF_REQUEST = 'handoff_request';
     public const BREAK_REQUEST = 'break_request';
     public const TASK_TIME_EXTEND_REQUEST = 'task_time_extension_request';
+    public const LEAVE_REQUEST = 'leave_request';
 
     protected $fillable = [
         'user_id',

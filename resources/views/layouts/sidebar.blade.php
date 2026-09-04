@@ -7,6 +7,7 @@
         'task_handoff' => 0,
         'break_requests' => 0,
         'task_time_extend_requests' => 0,
+        'leave_requests' => 0,
         'has_any_pending' => false,
     ];
 
@@ -41,9 +42,11 @@
     $canViewProductivityReports = $authUser?->can('reports.productivity_view');
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
+    $canViewLeaveRequests = $authUser?->can('leave_request.view');
+    $canViewAttendance = $authUser?->can('attendance.view');
 
     $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewAppraisal;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -63,7 +66,13 @@
     $isHandoffsActive = request()->routeIs('handoff_requests.*');
     $isBreakRequestsActive = request()->routeIs('break-requests.*');
     $isTaskTimeExtendRequestsActive = request()->routeIs('tasks.extend-time-requests.*');
-    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive;
+    $isLeaveRequestsActive = request()->routeIs('leave-requests.*');
+    $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.approval*');
+    $isLeavesActive = request()->routeIs('leaves.*');
+
+
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive  ||
+    $isLeaveApprovalRequestsActive;
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
 
     $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
@@ -82,6 +91,8 @@
     $isActivityLogActive = request()->routeIs('activity.log*');
 
     $isAppraisalActive = request()->routeIs('appraisal.*');
+
+
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -336,7 +347,7 @@
                             </li>
                         @endif
 
-                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests)
+                        @if ($canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewHandoffs || $canViewBreakRequests || $canViewLeaveRequests)
                             <!-- Requests -->
                             <li class="item py-[8px] {{ $isRequestsMenuActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="javascript:void(0)" aria-expanded="{{ $isRequestsMenuActive ? 'true' : 'false' }}">
@@ -426,6 +437,25 @@
                                             </a>
                                         </li>
                                     @endif
+                                    @if ($canViewLeaveRequests)
+                                        <!-- Leave Requests -->
+                                        <li>
+                                            <a
+                                                href="{{ route('leave-requests.pending') }}"
+                                                class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveApprovalRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}"
+                                            >
+                                                <span>Leave Requests</span>
+
+                                                @if (($requestMenuBadges['leave_requests'] ?? 0) > 0)
+                                                    <span class="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                                        {{ $requestMenuBadges['leave_requests'] }}
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endif
+
+
                                 </ul>
                             </li>
                         @endif
@@ -448,6 +478,121 @@
                                 </a>
                             </li>
                         @endif
+
+                        @if ($canViewLeaveRequests)
+                            <!-- Leave Requests -->
+                            <li class="item py-[8px] {{ $isLeavesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('leave-requests.index') }}">
+                                    <div class="flex items-center justify-between">
+
+                                        <div class="flex items-center">
+
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg
+                                                    width="16"
+                                                    height="18"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
+                                                        stroke="#1A202C"
+                                                        stroke-width="1.8"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+
+                                                    <path
+                                                        d="M8 13H10M14 13H16M8 17H10M14 17H16"
+                                                        stroke="#22C55E"
+                                                        stroke-width="1.8"
+                                                        stroke-linecap="round"
+                                                    />
+                                                </svg>
+                                            </span>
+
+                                            <span class="item-text text-base font-medium leading-none {{ $isLeavesActive ? $sidebarItemActiveClass : '' }}">
+                                                Leaves
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+
+                        @if ($canViewAttendance)
+                            <!-- Attendance -->
+                            <li class="item py-[8px] {{ request()->routeIs('attendance.*') ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('attendance.index') }}">
+                                    <div class="flex items-center">
+                                        <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                            <svg
+                                                width="18"
+                                                height="18"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.8"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                                <path
+                                                    d="M8 13L10 15L14 11"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.8"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                            </svg>
+                                        </span>
+                                        <span class="item-text text-base font-medium leading-none">
+                                            Attendance
+                                        </span>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+                        {{-- @if ($canViewAttendance) --}}
+                            <!-- Holidays -->
+                            <li class="item py-[8px]">
+                                <a href="{{ route('holidays.index') }}">
+                                    <div class="flex items-center">
+                                        <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                            <svg
+                                                width="18"
+                                                height="18"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.8"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                                <path
+                                                    d="M8 13L10 15L14 11"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.8"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                            </svg>
+                                        </span>
+                                        <span class="item-text text-base font-medium leading-none">
+                                            Holidays
+                                        </span>
+                                    </div>
+                                </a>
+                            </li>
+                        {{-- @endif --}}
                     </ul>
                 </div>
             @endif

@@ -20,6 +20,8 @@ use App\Http\Controllers\HandoffController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectCategoryController;
 use App\Http\Controllers\ProjectChecklistController;
@@ -51,6 +53,9 @@ use App\Http\Controllers\UserLoginActivityController;
 use App\Http\Controllers\UserRestoreController;
 use App\Http\Controllers\UserWorkspaceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\UserLeaveBalanceImportController;
 
 
 Route::get('/', function () {
@@ -247,6 +252,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.edit')->only(['update']);
         Route::post('/appraisal/import-questions', [AppraisalCategoryController::class, 'importQuestions'])->middleware('permission.type:appraisal_settings.create')->name('appraisal.importQuestions');
         Route::resource('appraisal', AppraisalCategoryController::class)->middleware('permission.type:appraisal_settings.delete')->only(['destroy']);
+        Route::resource('leave-types', LeaveTypeController::class)->except(['show'])->names('leave-types');
     });
 
     // Team management Routes
@@ -531,6 +537,167 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [HelpCenterController::class, 'index'])->name('index');
         Route::get('/{article}', [HelpCenterController::class, 'show'])->name('show');
     });
+
+
+
+    Route::get(
+        '/leave-requests/check-balance',
+        [LeaveRequestController::class, 'checkBalance']
+    )->name('leave-requests.check-balance');
+
+
+    // User leave details routes
+    Route::prefix('users/{user}')->group(function () {
+        Route::post(
+            'initial-shift/skip',
+            [UserController::class, 'skipInitialShift']
+        )->name('users.initial-shift.skip');
+
+        Route::get(
+            'leave-details',
+            [UserController::class, 'leaveDetails']
+        )->name('users.leave-details');
+
+        Route::post(
+            'leave-assignment',
+            [UserController::class, 'storeLeaveAssignment']
+        )->name('users.leave-assignment.store');
+
+        Route::put(
+            'leave-details/{year}',
+            [UserController::class, 'updateLeaveAssignment']
+        )->name('users.leave-details.update');
+
+        Route::delete(
+            'leave-details/{year}',
+            [UserController::class, 'destroyLeaveAssignment']
+        )->name('users.leave-details.destroy');
+    });
+
+
+
+    Route::prefix('leave-requests')->as('leave-requests.')->group(function () {
+        // All leave requests
+        Route::get('/', [LeaveRequestController::class, 'index'])
+            ->middleware('permission.type:leave_request.view')
+            ->name('index');
+
+        // Create
+        Route::get('/create', [LeaveRequestController::class, 'create'])
+            ->middleware('permission.type:leave_request.create')
+            ->name('create');
+
+        Route::post('/', [LeaveRequestController::class, 'store'])
+            ->middleware('permission.type:leave_request.create')
+            ->name('store');
+
+        // Pending requests for approval/rejection
+        Route::get('/pending', [LeaveRequestController::class, 'pending'])
+            ->middleware('permission.type:leave_request.approve')
+            ->name('pending');
+
+        // Balance check
+        Route::get('/check-balance', [LeaveRequestController::class, 'checkBalance'])
+            ->middleware('permission.type:leave_request.view')
+            ->name('check-balance');
+
+        // View
+        Route::get('/{leaveRequest}', [LeaveRequestController::class, 'show'])
+            ->middleware('permission.type:leave_request.view')
+            ->name('show');
+
+        // Edit
+        Route::get('/{leaveRequest}/edit', [LeaveRequestController::class, 'edit'])
+            ->middleware('permission.type:leave_request.edit')
+            ->name('edit');
+
+        Route::put('/{leaveRequest}', [LeaveRequestController::class, 'update'])
+            ->middleware('permission.type:leave_request.edit')
+            ->name('update');
+
+        // Approve
+        Route::post('/{leaveRequest}/approve', [LeaveRequestController::class, 'approve'])
+            ->middleware('permission.type:leave_request.approve')
+            ->name('approve');
+
+        // Reject
+        Route::post('/{leaveRequest}/reject', [LeaveRequestController::class, 'reject'])
+            ->middleware('permission.type:leave_request.reject')
+            ->name('reject');
+
+        // Cancel
+        Route::post('/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel'])
+            ->middleware('permission.type:leave_request.cancel')
+            ->name('cancel');
+
+        Route::get('/{leaveRequest}/approve', [LeaveRequestController::class, 'approveForm'])
+            ->middleware('permission.type:leave_request.approve')
+            ->name('approve-form');
+    });
+
+    Route::prefix('attendance')->as('attendance.')->group(function () {
+
+        /*
+        * Attendance listing / calendar.
+        */
+        Route::get('/', [AttendanceController::class, 'index'])
+            ->middleware('permission.type:attendance.view')
+            ->name('index');
+
+        /*
+        * Mark attendance.
+        */
+        Route::post('/', [AttendanceController::class, 'store'])
+            ->middleware('permission.type:attendance.create')
+            ->name('store');
+
+        /*
+        * Update attendance.
+        */
+        Route::put('/{attendance}', [AttendanceController::class, 'update'])
+            ->middleware('permission.type:attendance.edit')
+            ->name('update');
+    });
+
+
+
+Route::resource('holidays', HolidayController::class);
+
+Route::prefix('user-leave-balances')
+    ->name('user-leave-balances.')
+    ->group(function () {
+
+        Route::get(
+            '/import',
+            [
+                UserLeaveBalanceImportController::class,
+                'create'
+            ]
+        )
+            ->middleware('permission.type:user_leave_balance.import')
+            ->name('import');
+
+        Route::post(
+            '/import',
+            [
+                UserLeaveBalanceImportController::class,
+                'store'
+            ]
+        )
+            ->middleware('permission.type:user_leave_balance.import')
+            ->name('import.store');
+
+            Route::get(
+    '/import/sample',
+    [
+        UserLeaveBalanceImportController::class,
+        'sample'
+    ]
+)
+    ->middleware('permission.type:user_leave_balance.import')
+    ->name('import.sample');
+    });
+
 });
 
 Route::get('api-test', function () {
