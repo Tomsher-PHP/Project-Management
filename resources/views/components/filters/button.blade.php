@@ -8,7 +8,7 @@
 
     $classes = $hasActiveFilters ? 'border-success-300 bg-success-50/80 text-success-400 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300' : 'border-bgray-500 bg-white text-bgray-700 dark:border-bgray-300 dark:bg-darkblack-500 dark:text-bgray-50 dark:hover:bg-darkblack-400';
 
-    $classes .= 'ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1.5 text-sm font-semibold shadow-sm transition duration-200 hover:border-success-300 hover:text-success-400 dark:hover:border-success-300 dark:hover:text-success-300';
+    $classes .= 'ml-auto inline-flex items-center gap-1 rounded-md border px-2 py-1.5 text-sm font-semibold shadow-sm transition duration-200 hover:border-success-300 hover:text-success-300 dark:hover:border-success-300 dark:hover:text-success-300';
 @endphp
 
 @props([

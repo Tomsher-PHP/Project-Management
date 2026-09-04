@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const emptyState = cardSection.querySelector('[data-projects-count-empty-state]');
     const loadingOverlay = cardSection.querySelector('[data-projects-count-loading]');
 
+    const filterToggleBtn = cardSection.querySelector('[data-projects-count-filter-toggle]');
+    const filtersWrapper = cardSection.querySelector('[data-projects-count-filters-wrapper]');
+    const filterBadge = cardSection.querySelector('[data-projects-count-filter-badge]');
+
     const flowFilter = document.getElementById('projects-count-flow-filter');
     const categoryFilter = document.getElementById('projects-count-category-filter');
     const customerFilter = document.getElementById('projects-count-customer-filter');
@@ -21,6 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let chartInstance = null;
+
+    if (filterToggleBtn && filtersWrapper) {
+        filterToggleBtn.addEventListener('click', () => {
+            const isCollapsed = filtersWrapper.classList.contains('max-h-0');
+            if (isCollapsed) {
+                filtersWrapper.classList.remove('max-h-0', 'opacity-0', 'pointer-events-none', 'mt-0');
+                filtersWrapper.classList.add('max-h-[600px]', 'opacity-100', 'mt-4');
+                filterToggleBtn.setAttribute('aria-expanded', 'true');
+            } else {
+                filtersWrapper.classList.remove('max-h-[600px]', 'opacity-100', 'mt-4');
+                filtersWrapper.classList.add('max-h-0', 'opacity-0', 'pointer-events-none', 'mt-0');
+                filterToggleBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
 
     const getSelectedFlow = () => {
         if (!flowFilter) return '';
@@ -60,6 +79,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(statusFilter.selectedOptions).map((opt) => opt.value).filter(Boolean);
     };
 
+    const updateFilterBadge = () => {
+        const flow = getSelectedFlow();
+        const categories = getSelectedCategories();
+        const customer = getSelectedCustomer();
+        const month = getSelectedMonth();
+        const statuses = getSelectedStatuses();
+
+        let activeCount = 0;
+        if (flow) activeCount++;
+        if (categories.length > 0) activeCount++;
+        if (customer) activeCount++;
+        if (month) activeCount++;
+        if (statuses.length > 0) activeCount++;
+
+        if (filterBadge) {
+            if (activeCount > 0) {
+                filterBadge.textContent = String(activeCount);
+                filterBadge.classList.remove('hidden');
+            } else {
+                filterBadge.textContent = '0';
+                filterBadge.classList.add('hidden');
+            }
+        }
+
+        if (filterToggleBtn) {
+            if (activeCount > 0) {
+                filterToggleBtn.classList.add('border-success-300', 'bg-success-50/80', 'text-success-400', 'dark:border-success-900/30', 'dark:bg-darkblack-500', 'dark:text-success-300');
+            } else {
+                filterToggleBtn.classList.remove('border-success-300', 'bg-success-50/80', 'text-success-400', 'dark:border-success-900/30', 'dark:bg-darkblack-500', 'dark:text-success-300');
+            }
+        }
+    };
+
     const destroyChart = () => {
         if (chartInstance) {
             chartInstance.destroy();
@@ -81,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadChartData = async () => {
         showLoading();
+        updateFilterBadge();
 
         try {
             const params = new URLSearchParams();
