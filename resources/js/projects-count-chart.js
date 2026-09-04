@@ -146,6 +146,21 @@ document.addEventListener('DOMContentLoaded', () => {
         chartWrapper?.classList.remove('hidden');
         emptyState?.classList.add('hidden');
 
+        const maxValue = Math.max(...dataValues.map((v) => Number(v) || 0), 1);
+        let yStep = 1;
+        if (maxValue > 100) {
+            yStep = 20;
+        } else if (maxValue > 50) {
+            yStep = 10;
+        } else if (maxValue > 20) {
+            yStep = 5;
+        } else if (maxValue > 10) {
+            yStep = 2;
+        } else {
+            yStep = 1;
+        }
+        const yMax = Math.ceil(maxValue / yStep) * yStep;
+
         chartInstance = new window.Chart(canvas, {
             type: 'bar',
             data: {
@@ -201,10 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     y: {
                         beginAtZero: true,
+                        max: yMax,
                         ticks: {
                             color: '#64748B',
                             precision: 0,
-                            stepSize: 1,
+                            stepSize: yStep,
                         },
                         grid: {
                             color: 'rgba(148, 163, 184, 0.15)',
