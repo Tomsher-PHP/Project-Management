@@ -4,7 +4,7 @@
 @section('help-description', 'Find answers, learn features, and quickly get help with using the project management system.')
 
 @section('help-content')
-    <section class="rounded-2xl border border-bgray-200 bg-white px-4 py-2 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+    <section class="rounded-[8px] border border-bgray-200 bg-white px-4 py-2 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <div class="max-w-3xl">
             <h2 class="mt-2 text-2xl font-bold tracking-tight text-bgray-900 dark:text-white">
                 Browse help articles
@@ -17,7 +17,7 @@
 
     <section class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-help-cards>
         @foreach ($articles as $article)
-            <a href="{{ $article['url'] }}" data-help-card data-search-text="{{ $article['searchable'] }}" class="group flex min-h-[190px] flex-col rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-success-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300">
+            <a href="{{ $article['url'] }}" data-help-card data-search-text="{{ $article['searchable'] }}" class="group flex min-h-[190px] flex-col rounded-[8px] border border-bgray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-success-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600 dark:hover:border-success-300">
                 <span class="text-xs font-semibold uppercase tracking-[0.14em] text-success-400">{{ $article['category'] }}</span>
                 <h3 class="mt-3 text-lg font-bold leading-7 text-bgray-900 dark:text-white">
                     {{ $article['title'] }}
@@ -35,7 +35,7 @@
         @endforeach
     </section>
 
-    <div data-card-no-results hidden class="mt-6 rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-16 text-center dark:border-darkblack-400 dark:bg-darkblack-600" role="status">
+    <div data-card-no-results hidden class="mt-6 rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-16 text-center dark:border-darkblack-400 dark:bg-darkblack-600" role="status">
         <h2 class="text-lg font-semibold text-bgray-900 dark:text-white">No results found</h2>
         <p class="mt-1 text-sm text-bgray-500 dark:text-bgray-300">Try another keyword or clear your search.</p>
     </div>

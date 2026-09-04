@@ -13,7 +13,7 @@
 
         <form method="GET" class="flex min-h-0 flex-1 flex-col overflow-hidden">
             @php
-                $selectedCategories = request()->input('project_category_id', []);
+                $selectedCategories = request()->input('project_category_ids', request()->input('project_category_id', []));
 
                 if (!is_array($selectedCategories)) {
                     $selectedCategories = [$selectedCategories];
@@ -23,7 +23,7 @@
             @foreach ($selectedCategories as $categoryId)
                 <input
                     type="hidden"
-                    name="project_category_id[]"
+                    name="project_category_ids[]"
                     value="{{ $categoryId }}"
                 >
             @endforeach

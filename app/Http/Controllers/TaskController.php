@@ -36,13 +36,13 @@ class TaskController extends Controller
     private const KANBAN_STATUS_PAGE_SIZE = 5;
 
     protected string $pageTitle;
-    protected string $subTitle;
+    protected string $filesystemDisk;
 
     public function __construct()
     {
         $this->pageTitle = 'Task Management';
-        $this->subTitle = 'Manage your tasks';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, TaskServices $taskServices, TaskFilterService $filterService, TaskFormService $taskFormService)
@@ -61,8 +61,7 @@ class TaskController extends Controller
         $filters = $filterService->getFilters($user, $baseQuery);
 
         $formData = $taskFormService->getCreateData($user);
-        $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
-        $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
+        $taskCreateDependencies = $taskFormService->getInitialDependencies();
 
         // Preload relations for all tasks in the list to avoid N+1 queries when rendering the list and task cards
         $taskRowRelations = [
@@ -100,7 +99,7 @@ class TaskController extends Controller
         $formData = $taskFormService->getCreateData($user);
 
         $taskCreateProjects = $formData['taskCreateProjects'] ?? collect();
-        $taskCreateDependencies = $this->buildTaskCreateDependencies($taskCreateProjects);
+        $taskCreateDependencies = $taskFormService->getInitialDependencies();
 
         $boardStatuses = collect($filters['statuses'] ?? [])
             ->when(
@@ -226,16 +225,23 @@ class TaskController extends Controller
             ->accessibleBy($request->user())
             ->findOrFail($validated['project_id']);
 
-        $task = $taskServices->createQuickTask($project, $validated);
+        $tasks = $taskServices->createQuickTask($project, $validated);
+        $firstTask = $tasks->first();
+        $createdCount = $tasks->count();
+
+        $message = $createdCount > 1
+            ? "{$createdCount} tasks added successfully."
+            : ($requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.');
 
         return response()->json([
             'status' => true,
-            'message' => $requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.',
-            'task_id' => $task->id,
-            'request_type' => $task->request_type,
-            'request_status' => $task->request_status,
+            'message' => $message,
+            'task_id' => $firstTask?->id,
+            'created_count' => $createdCount,
+            'request_type' => $firstTask?->request_type,
+            'request_status' => $firstTask?->request_status,
         ], Response::HTTP_OK);
     }
 
@@ -328,6 +334,7 @@ class TaskController extends Controller
     public function quickCreateParentOptions(Request $request): JsonResponse
     {
         $projectId = $request->filled('project_id') ? (int) $request->input('project_id') : null;
+        $milestoneId = $request->filled('project_milestone_id') ? (int) $request->input('project_milestone_id') : null;
         $sprintId = $request->filled('project_sprint_id') ? (int) $request->input('project_sprint_id') : null;
 
         abort_unless($projectId, Response::HTTP_NOT_FOUND);
@@ -354,11 +361,25 @@ class TaskController extends Controller
             );
 
             $query->where('project_sprint_id', $sprintId);
-        } else {
+        } elseif ($milestoneId) {
             return response()->json([
                 'status' => true,
                 'options' => [],
             ], Response::HTTP_OK);
+        } else {
+            $backlogSprintId = ProjectSprint::query()
+                ->where('project_id', $project->id)
+                ->where('is_backlog', true)
+                ->value('id');
+
+            if (! $backlogSprintId) {
+                return response()->json([
+                    'status' => true,
+                    'options' => [],
+                ], Response::HTTP_OK);
+            }
+
+            $query->where('project_sprint_id', $backlogSprintId);
         }
 
         return response()->json([
@@ -385,6 +406,26 @@ class TaskController extends Controller
                 'task' => $task,
                 'comments' => $comments,
                 'totalComments' => $totalComments,
+            ])->render(),
+        ], Response::HTTP_OK);
+    }
+
+    public function notesModal(Task $task): JsonResponse
+    {
+        $task = $this->loadTaskForDetail($task);
+
+        $taskNotes = $task->taskNotes()
+            ->with(['addedBy', 'attachments.addedBy'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'html' => view('tasks.partials.modals.notes-content', [
+                'task' => $task,
+                'taskNotes' => $taskNotes,
+                'viewAllUrl' => route('tasks.edit', ['task' => $task, 'tab' => 'notes']),
             ])->render(),
         ], Response::HTTP_OK);
     }
@@ -458,7 +499,7 @@ class TaskController extends Controller
                         $file,
                         $directory,
                         $note,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         false,
                         'task_note'
@@ -549,7 +590,7 @@ class TaskController extends Controller
             'updatedBy:id,name',
             'currentAssignmentLog.user:id,name',
             'activeTimeLog.user:id,name',
-        ])->loadCount('comments');
+        ])->loadCount(['comments', 'taskNotes', 'taskNoteAttachments']);
 
         return $task;
     }
@@ -771,104 +812,6 @@ class TaskController extends Controller
             ->get()
             ->sortBy('created_at')
             ->values();
-    }
-
-    private function buildTaskCreateDependencies(Collection $projects): array
-    {
-        $statusOptionsByFlow = TaskStatus::query()
-            ->active()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'flow_type'])
-            ->groupBy('flow_type')
-            ->map(fn(Collection $statuses) => $statuses->map(fn(TaskStatus $status) => [
-                'value' => (string) $status->id,
-                'text' => $status->name,
-            ])->values())
-            ->toArray();
-        $defaultStatusIdsByFlow = collect(array_keys(config('project_constants.project_flows', [])))
-            ->mapWithKeys(fn(string $flowType) => [$flowType => $this->getDefaultTaskStatusIdForFlow($flowType)]);
-
-        return [
-            'projects' => $projects->mapWithKeys(function (Project $project) use ($defaultStatusIdsByFlow) {
-                return [(string) $project->id => [
-                    'id' => $project->id,
-                    'flow' => $project->project_flow,
-                    'default_billable' => (bool) $project->default_billable,
-                    'default_status_id' => $defaultStatusIdsByFlow[$project->project_flow] ?? null,
-                    'default_task_estimate_minutes' => $project->default_task_estimate_seconds !== null
-                        ? intdiv((int) $project->default_task_estimate_seconds, 60)
-                        : 0,
-                    'milestones' => $project->projectMilestones
-                        ->reject(fn(ProjectMilestone $projectMilestone) => (bool) ($projectMilestone->is_backlog || $projectMilestone->is_system))
-                        ->map(fn(ProjectMilestone $projectMilestone) => [
-                            'value' => (string) $projectMilestone->id,
-                            'text' => $projectMilestone->name,
-                        ])
-                        ->values(),
-                    'sprints' => $project->projectSprints
-                        ->reject(fn(ProjectSprint $projectSprint) => (bool) ($projectSprint->is_backlog || $projectSprint->is_system))
-                        ->map(fn(ProjectSprint $projectSprint) => [
-                            'value' => (string) $projectSprint->id,
-                            'text' => $projectSprint->name,
-                            'project_milestone_id' => (string) ($projectSprint->project_milestone_id ?? ''),
-                        ])
-                        ->values(),
-                    'assignees' => $project->activeMembers
-                        ->sortBy('name')
-                        ->values()
-                        ->map(fn(User $user) => [
-                            'value' => (string) $user->id,
-                            'text' => $user->name,
-                        ]),
-                ]];
-            }),
-            'status_options_by_flow' => $statusOptionsByFlow,
-            'defaults' => [
-                'project_id' => $projects->firstWhere('id', $this->resolveDefaultTaskCreateProjectId($projects))?->id,
-                'priority' => $this->getDefaultTaskPriorityValue(),
-                'due_date_time' => now(config('constants.timezone'))->addDay()->format('Y-m-d H:i'),
-            ],
-            'parent_options_url' => route('tasks.quick-create-parent-options'),
-        ];
-    }
-
-    private function resolveDefaultTaskCreateProjectId(Collection $projects): ?int
-    {
-        $userId = auth()->id();
-
-        if (! $userId) {
-            return null;
-        }
-
-        $projectId = Task::query()
-            ->where('added_by', $userId)
-            ->whereNotNull('project_id')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->value('project_id');
-
-        if (! $projectId) {
-            return null;
-        }
-
-        return $projects->contains('id', $projectId) ? (int) $projectId : null;
-    }
-
-    private function getDefaultTaskStatusIdForFlow(?string $flowType): ?int
-    {
-        if (blank($flowType)) {
-            return null;
-        }
-
-        return TaskStatus::query()
-            ->active()
-            ->where('flow_type', $flowType)
-            ->orderByDesc('is_default')
-            ->orderByRaw('CASE WHEN sort_order = 1 THEN 0 ELSE 1 END')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->value('id');
     }
 
     private function getDefaultTaskPriorityValue(): string

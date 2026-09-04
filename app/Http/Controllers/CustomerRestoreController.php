@@ -8,14 +8,12 @@ use Illuminate\Http\Request;
 class CustomerRestoreController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Restore Customers';
-        $this->subTitle = 'Review deleted customers and restore them when there is no active email conflict';
 
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function restoreIndex(Request $request, CustomerRestoreService $customerRestoreService)

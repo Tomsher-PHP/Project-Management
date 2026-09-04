@@ -38,6 +38,7 @@
     $sprintName = $sprint?->name;
     $assigneeName = $task->currentAssignee?->name;
     $commentsCount = $task->comments_count ?? ($task->relationLoaded('comments') ? $task->comments->count() : 0);
+    $taskNotesCount = (int) ($task->task_notes_count ?? ($task->relationLoaded('taskNotes') ? $task->taskNotes->count() : 0));
 
     $prjLimit = $milestoneName ? 16 : 40;
 @endphp
@@ -85,6 +86,17 @@
                     <span class="inline-flex shrink-0 border bg-white px-1 py-0 font-semibold {{ $priorityTextClass }}" style="border-color: currentColor;" title="Priority: {{ $priorityLabel }}">
                         {{ $priorityLabel }}
                     </span>
+
+                    @if ($taskNotesCount > 0)
+                        <button type="button" class="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-semibold text-bgray-600 transition-all duration-150 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-bgray-200" title="Notes & Files ({{ $taskNotesCount }})" data-task-notes-modal-trigger data-task-notes-modal-url="{{ route('tasks.notes.modal', $task) }}">
+                            <span class="inline-flex shrink-0 text-bgray-500 transition-colors group-hover:text-bgray-700 dark:text-bgray-300 dark:group-hover:text-bgray-200">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                                </svg>
+                            </span>
+                            <span class="text-[11px] font-medium">{{ $taskNotesCount }}</span>
+                        </button>
+                    @endif
                 </div>
 
                 @if ($dueDate)

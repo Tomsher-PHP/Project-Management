@@ -16,7 +16,7 @@
 
         <!-- Notification 1: Task Approvals -->
         @if ($task_request_count > 0)
-            <a href="{{ route('tasks.requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-purple-200 bg-slate-50/50 hover:bg-purple-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-purple-900/50 dark:bg-darkblack-500/20 dark:hover:bg-purple-950/10">
+            <a href="{{ route('tasks.requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-purple-200 bg-slate-200/10 hover:bg-purple-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-purple-900/50 dark:bg-darkblack-500/20 dark:hover:bg-purple-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-purple-500 dark:text-purple-400">
                         <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -36,7 +36,7 @@
 
         <!-- Notification: Time Log Approvals -->
         @if ($task_log_time_request_count > 0)
-            <a href="{{ route('tasks.time-log-change-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-amber-200 bg-slate-50/50 hover:bg-amber-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-amber-900/50 dark:bg-darkblack-500/20 dark:hover:bg-amber-950/10">
+            <a href="{{ route('tasks.time-log-change-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-amber-200 bg-slate-200/10 hover:bg-amber-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-amber-900/50 dark:bg-darkblack-500/20 dark:hover:bg-amber-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-amber-500 dark:text-amber-400">
                         <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -56,7 +56,7 @@
 
         <!-- Notification 2: Handoff -->
         @if ($handoff_request_count > 0)
-            <a href="{{ route('handoff_requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-blue-200 bg-slate-50/50 hover:bg-blue-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-blue-900/50 dark:bg-darkblack-500/20 dark:hover:bg-blue-950/10">
+            <a href="{{ route('handoff_requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-blue-200 bg-slate-200/10 hover:bg-blue-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-blue-900/50 dark:bg-darkblack-500/20 dark:hover:bg-blue-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-blue-500 dark:text-blue-400">
                         <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -76,7 +76,7 @@
 
         <!-- Notification 3: Breaks -->
         @if ($break_request_count > 0)
-            <a href="{{ route('break-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-rose-200 bg-slate-50/50 hover:bg-rose-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-rose-900/50 dark:bg-darkblack-500/20 dark:hover:bg-rose-950/10">
+            <a href="{{ route('break-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-rose-200 bg-slate-200/10 hover:bg-rose-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-rose-900/50 dark:bg-darkblack-500/20 dark:hover:bg-rose-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-rose-500 dark:text-rose-400">
                         <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +96,7 @@
 
         <!-- Notification: Task Time Extend Requests -->
         @if ($task_time_extend_request_count > 0)
-            <a href="{{ route('tasks.extend-time-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-emerald-200 bg-slate-50/50 hover:bg-emerald-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-emerald-900/50 dark:bg-darkblack-500/20 dark:hover:bg-emerald-950/10">
+            <a href="{{ route('tasks.extend-time-requests.index') }}" class="group block rounded-lg p-3.5 xl:p-2.5 border border-slate-50 hover:border-emerald-200 bg-slate-200/10 hover:bg-emerald-50/30 transition-all duration-300 dark:border-darkblack-500 dark:hover:border-emerald-900/50 dark:bg-darkblack-500/20 dark:hover:bg-emerald-950/10">
                 <div class="flex space-x-3">
                     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-emerald-500 dark:text-emerald-400">
                         <svg class="h-6.5 w-6.5 stroke-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

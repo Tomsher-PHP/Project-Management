@@ -77,4 +77,12 @@ return [
         'kpi.view',
         'checklist_template.view'
     ],
+
+    // Daily work notification grace period in minutes
+    'daily_work_notify' => 120,
+
+    // User settings keys
+    'user_settings' => [
+        'daily_work_hours_warning_mail' => 'Daily Work Hours Warning Email',
+    ],
 ];

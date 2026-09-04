@@ -19,7 +19,7 @@
             </div>
         </article>
     @empty
-        <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
+        <div class="rounded-[8px] border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
             No comments have been added to this project yet.
         </div>
     @endforelse

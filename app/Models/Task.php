@@ -410,6 +410,18 @@ class Task extends Model
         return $this->hasMany(TaskNote::class, 'task_id')->orderBy('created_at', 'desc');
     }
 
+    public function taskNoteAttachments()
+    {
+        return $this->hasManyThrough(
+            Attachment::class,
+            TaskNote::class,
+            'task_id',
+            'link_id',
+            'id',
+            'id'
+        )->where('attachments.link_type', TaskNote::class);
+    }
+
     public function tagLinks()
     {
         return $this->hasMany(TaskTag::class);

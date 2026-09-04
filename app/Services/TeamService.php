@@ -8,14 +8,16 @@ use Illuminate\Support\Facades\DB;
 class TeamService
 {
 
-    protected $attachmentService;
-    protected $notificationService;
-    protected $avatarDir = 'team_avatar';
+    protected AttachmentService $attachmentService;
+    protected NotificationService $notificationService;
+    protected string $avatarDir = 'team_avatar';
+    protected string $avatarDisk;
 
     public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
         $this->notificationService = $notificationService;
+        $this->avatarDisk = env('AVATAR_DISK', 'public');
     }
 
     public function createTeam(array $data)
@@ -36,7 +38,7 @@ class TeamService
             }
 
             if (!empty($data['profile_image'])) {
-                $this->attachmentService->upload($data['profile_image'], $this->avatarDir, $team, 'public', 'public', true);
+                $this->attachmentService->upload($data['profile_image'], $this->avatarDir, $team, $this->avatarDisk, 'public', true);
             }
 
             return $team;
@@ -89,7 +91,7 @@ class TeamService
             $image,
             $this->avatarDir,
             $team,
-            'public',
+            $this->avatarDisk,
             'public',
             true
         );
@@ -164,7 +166,7 @@ class TeamService
                     'role_name' => $this->resolveTeamRoleName($member['team_role'] ?? null),
                 ];
             })
-            ->filter(fn ($member) => $member['user_id'] > 0)
+            ->filter(fn($member) => $member['user_id'] > 0)
             ->groupBy('role_name');
 
         return $groupedMembers->map(function ($members, $roleName) {
@@ -178,10 +180,10 @@ class TeamService
     private function groupNotificationsByRoleName(array $membersByUserId): array
     {
         return collect($membersByUserId)
-            ->groupBy(fn ($roleName) => $roleName, true)
+            ->groupBy(fn($roleName) => $roleName, true)
             ->map(function ($roleNames, $roleName) {
                 return [
-                    'user_ids' => $roleNames->keys()->map(fn ($userId) => (int) $userId)->values()->all(),
+                    'user_ids' => $roleNames->keys()->map(fn($userId) => (int) $userId)->values()->all(),
                     'role_name' => $roleName ?: null,
                 ];
             })

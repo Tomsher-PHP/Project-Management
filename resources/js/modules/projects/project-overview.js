@@ -284,6 +284,10 @@ const renderBurnupChart = (overviewRoot) => {
     chartWrapper?.classList.remove('hidden');
     emptyState?.classList.add('hidden');
 
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#E2E8F0' : '#4A5568';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
+
     const estimatedDataset = datasets[0] || {};
     const actualDataset = datasets[1] || {};
     const endLabel = typeof burnupData.end_label === 'string' ? burnupData.end_label : null;
@@ -474,20 +478,26 @@ const renderBurnupChart = (overviewRoot) => {
                     max: maxHours,
                     grace: '8%',
                     ticks: {
+                        color: labelColor,
                         stepSize: interval,
                         callback(value) {
                             return `${value}h`;
                         },
                     },
+                    grid: {
+                        color: gridColor,
+                    },
                     title: {
                         display: false,
                         text: 'Hours',
+                        color: labelColor,
                     },
                 },
                 y: {
                     type: 'category',
                     labels,
                     ticks: {
+                        color: labelColor,
                         callback(value, index) {
                             const label = this.getLabelForValue(value) || labels[index] || '';
 
@@ -501,9 +511,13 @@ const renderBurnupChart = (overviewRoot) => {
                             return estimatedHours ? `${axisLabel} (${estimatedHours})` : axisLabel;
                         },
                     },
+                    grid: {
+                        color: gridColor,
+                    },
                     title: {
                         display: false,
                         text: 'Milestones',
+                        color: labelColor,
                     },
                 },
             },
@@ -521,6 +535,9 @@ const renderBurnupChart = (overviewRoot) => {
                 },
                 legend: {
                     position: 'bottom',
+                    labels: {
+                        color: labelColor,
+                    },
                 },
             },
         },
@@ -560,6 +577,10 @@ const renderAssigneeBarChart = (overviewRoot) => {
     if (!chartData.length) {
         return;
     }
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const labelColor = isDark ? '#E2E8F0' : '#4A5568';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
 
     /*
      * Destroy existing chart
@@ -876,7 +897,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     },
 
                     ticks: {
-                        color: '#64748B',
+                        color: labelColor,
 
                         maxRotation: 0,
                         minRotation: 0,
@@ -898,6 +919,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     title: {
                         display: false,
                         text: 'Users',
+                        color: labelColor,
                     },
                 },
 
@@ -907,7 +929,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     max: yMax,
 
                     ticks: {
-                        color: '#64748B',
+                        color: labelColor,
                         precision: 0,
 
                         callback(value) {
@@ -916,12 +938,13 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     },
 
                     grid: {
-                        color: 'rgba(148, 163, 184, 0.15)',
+                        color: gridColor,
                     },
 
                     title: {
                         display: false,
                         text: 'Time',
+                        color: labelColor,
                     },
                 },
             },
@@ -932,6 +955,7 @@ const renderAssigneeBarChart = (overviewRoot) => {
                     position: 'bottom',
 
                     labels: {
+                        color: labelColor,
                         usePointStyle: true,
                         boxWidth: 10,
                         boxHeight: 10,

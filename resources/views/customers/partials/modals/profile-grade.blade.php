@@ -6,7 +6,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-customer-profile-grade-close></div>
 
     <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-        <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-darkblack-600">
+        <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-[8px] bg-white shadow-xl dark:bg-darkblack-600">
             <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                 <div>
                     <h3 class="text-lg font-bold text-bgray-900 dark:text-white">Manage Profile Grade</h3>

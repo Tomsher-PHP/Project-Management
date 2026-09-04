@@ -177,6 +177,12 @@ class DailyTimeReportService
             return collect();
         }
 
+        $users = User::query()
+            ->whereIn('id', $userIds)
+            ->with(['shiftAssignments.weekends', 'primaryAttachment'])
+            ->get()
+            ->keyBy('id');
+
         $rangeStartLocal = $dateRange['start']?->copy()->startOfDay();
         $rangeEndExclusiveLocal = $dateRange['end']
             ? $dateRange['end']->copy()->addDay()->startOfDay()
@@ -235,9 +241,11 @@ class DailyTimeReportService
                     $rowKey = $log->user_id . '|' . $dayStartLocal->toDateString();
 
                     if (! isset($aggregates[$rowKey])) {
+                        $userModel = $users->get($log->user_id) ?? $log->user;
+
                         $aggregates[$rowKey] = [
                             'user_id' => $log->user_id,
-                            'user' => $log->user,
+                            'user' => $userModel,
                             'date' => $dayStartLocal->copy(),
                             'earliest_start' => null,
                             'latest_end' => null,
@@ -282,6 +290,63 @@ class DailyTimeReportService
             }
         }
 
+        $matrixStartDate = $rangeStartLocal?->copy();
+        if (! $matrixStartDate) {
+            $minLogDate = null;
+            foreach ($logs as $log) {
+                if ($log->started_at) {
+                    $logStartLocal = $log->started_at->copy()->timezone($timezone)->startOfDay();
+                    if (! $minLogDate || $logStartLocal->lessThan($minLogDate)) {
+                        $minLogDate = $logStartLocal;
+                    }
+                }
+            }
+            $matrixStartDate = $minLogDate ?? $nowLocal->copy()->startOfDay();
+        }
+
+        $matrixEndDate = $dateRange['end']
+            ? $dateRange['end']->copy()->startOfDay()
+            : $nowLocal->copy()->startOfDay();
+
+        if ($matrixEndDate->greaterThan($nowLocal->copy()->startOfDay())) {
+            $matrixEndDate = $nowLocal->copy()->startOfDay();
+        }
+
+        if ($matrixStartDate->greaterThan($matrixEndDate)) {
+            $matrixStartDate = $matrixEndDate->copy();
+        }
+
+        $matrixDates = [];
+        $cursorDate = $matrixStartDate->copy();
+        while ($cursorDate->lessThanOrEqualTo($matrixEndDate)) {
+            $matrixDates[] = $cursorDate->copy();
+            $cursorDate->addDay();
+        }
+
+        foreach ($userIds as $userId) {
+            $user = $users->get($userId);
+            if (! $user) {
+                continue;
+            }
+
+            foreach ($matrixDates as $date) {
+                $rowKey = $userId . '|' . $date->toDateString();
+
+                if (! isset($aggregates[$rowKey])) {
+                    $aggregates[$rowKey] = [
+                        'user_id' => $userId,
+                        'user' => $user,
+                        'date' => $date->copy(),
+                        'earliest_start' => null,
+                        'latest_end' => null,
+                        'latest_activity_at' => null,
+                        'total_worked_seconds' => 0,
+                        'has_running' => false,
+                    ];
+                }
+            }
+        }
+
         $rows = collect($aggregates)->map(function (array $row) use ($dateFormat, $timeFormat) {
             /** @var Carbon $selectedDate */
             $selectedDate = $row['date'];
@@ -295,6 +360,13 @@ class DailyTimeReportService
                 $timeFormat
             );
             $totalWorkedSeconds = (int) $row['total_worked_seconds'];
+
+            $totalWorkedTimeDisplay = '--';
+            if ($totalWorkedSeconds > 0) {
+                $totalWorkedTimeDisplay = formatSecondsToHMS($totalWorkedSeconds);
+            } elseif ($row['earliest_start'] !== null) {
+                $totalWorkedTimeDisplay = formatSecondsToHMS($totalWorkedSeconds);
+            }
 
             return [
                 'user_id' => $row['user_id'],
@@ -316,7 +388,7 @@ class DailyTimeReportService
                 'end_time_status' => $shiftDetails['end_time_status'],
                 'shift_working_hour' => $shiftDetails['shift_working_hour'],
                 'shift_working_seconds' => $shiftDetails['shift_working_seconds'],
-                'total_worked_time' => formatSecondsToHMS($totalWorkedSeconds),
+                'total_worked_time' => $totalWorkedTimeDisplay,
                 'total_worked_seconds' => $totalWorkedSeconds,
                 'worked_time_status' => $shiftDetails['is_non_working_day']
                     ? 'success'
@@ -325,6 +397,9 @@ class DailyTimeReportService
                         : null),
                 'sort_date' => $selectedDate->toDateString(),
                 'latest_activity_timestamp' => $row['latest_activity_at']?->getTimestamp() ?? 0,
+                'earliest_start' => $row['earliest_start'],
+                'latest_end' => $row['latest_end'],
+                'has_running' => $row['has_running'],
             ];
         })
             ->when($selectedShiftIds !== [], function (Collection $rows) use ($selectedShiftIds) {
@@ -332,21 +407,104 @@ class DailyTimeReportService
             })
             ->values();
 
-        return $rows->sort(function (array $left, array $right) {
-            if ($left['sort_date'] !== $right['sort_date']) {
-                return strcmp($right['sort_date'], $left['sort_date']);
+        return $this->sortRows($rows, $request);
+    }
+
+    protected function sortRows(Collection $rows, Request $request): Collection
+    {
+        $sortBy = (string) $request->input('sort_by');
+        $sortDir = strtolower((string) $request->input('sort_dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if (! in_array($sortBy, ['user', 'date', 'start_time', 'end_time', 'worked_time'], true)) {
+            return $rows->sort(function (array $left, array $right) {
+                if ($left['sort_date'] !== $right['sort_date']) {
+                    return strcmp($right['sort_date'], $left['sort_date']);
+                }
+
+                if ($left['latest_activity_timestamp'] !== $right['latest_activity_timestamp']) {
+                    return $right['latest_activity_timestamp'] <=> $left['latest_activity_timestamp'];
+                }
+
+                return strcmp($left['user_name'], $right['user_name']);
+            })->values()->map(function (array $row) {
+                unset($row['sort_date'], $row['latest_activity_timestamp'], $row['earliest_start'], $row['latest_end'], $row['has_running']);
+
+                return $row;
+            });
+        }
+
+        $sorted = $rows->sort(function (array $left, array $right) use ($sortBy, $sortDir) {
+            $comparison = $this->compareSortValues($left, $right, $sortBy);
+
+            if ($comparison === 0) {
+                if ($left['sort_date'] !== $right['sort_date']) {
+                    $comparison = strcmp($right['sort_date'], $left['sort_date']);
+                } else {
+                    $comparison = strcasecmp((string) ($left['user_name'] ?? ''), (string) ($right['user_name'] ?? ''));
+                }
             }
 
-            if ($left['latest_activity_timestamp'] !== $right['latest_activity_timestamp']) {
-                return $right['latest_activity_timestamp'] <=> $left['latest_activity_timestamp'];
-            }
+            return $sortDir === 'desc' ? -$comparison : $comparison;
+        });
 
-            return strcmp($left['user_name'], $right['user_name']);
-        })->values()->map(function (array $row) {
-            unset($row['sort_date'], $row['latest_activity_timestamp']);
+        return $sorted->values()->map(function (array $row) {
+            unset($row['sort_date'], $row['latest_activity_timestamp'], $row['earliest_start'], $row['latest_end'], $row['has_running']);
 
             return $row;
         });
+    }
+
+    protected function compareSortValues(array $left, array $right, string $sortBy): int
+    {
+        switch ($sortBy) {
+            case 'user':
+                return strcasecmp((string) ($left['user_name'] ?? ''), (string) ($right['user_name'] ?? ''));
+
+            case 'date':
+                return strcmp((string) ($left['sort_date'] ?? ''), (string) ($right['sort_date'] ?? ''));
+
+            case 'worked_time':
+                return ((int) ($left['total_worked_seconds'] ?? 0)) <=> ((int) ($right['total_worked_seconds'] ?? 0));
+
+            case 'start_time':
+                $leftStart = $left['earliest_start']?->getTimestamp();
+                $rightStart = $right['earliest_start']?->getTimestamp();
+
+                if ($leftStart === null && $rightStart === null) {
+                    return 0;
+                }
+                if ($leftStart === null) {
+                    return 1;
+                }
+                if ($rightStart === null) {
+                    return -1;
+                }
+
+                return $leftStart <=> $rightStart;
+
+            case 'end_time':
+                $leftEnd = ! empty($left['has_running'])
+                    ? PHP_INT_MAX
+                    : $left['latest_end']?->getTimestamp();
+                $rightEnd = ! empty($right['has_running'])
+                    ? PHP_INT_MAX
+                    : $right['latest_end']?->getTimestamp();
+
+                if ($leftEnd === null && $rightEnd === null) {
+                    return 0;
+                }
+                if ($leftEnd === null) {
+                    return 1;
+                }
+                if ($rightEnd === null) {
+                    return -1;
+                }
+
+                return $leftEnd <=> $rightEnd;
+
+            default:
+                return 0;
+        }
     }
 
     protected function getBaseLogsQuery(array $dateRange, array $userIds, Carbon $nowLocal)
@@ -460,7 +618,7 @@ class DailyTimeReportService
             'start_time_status' => $isWeekend
                 ? 'success'
                 : ($actualStart
-                    ? ($actualStart->lessThanOrEqualTo($shiftStart) ? 'success' : 'danger')
+                    ? ($actualStart->lessThanOrEqualTo($shiftStart->copy()->addSeconds(60)) ? 'success' : 'danger')
                     : null),
             'end_time_status' => $isWeekend
                 ? 'success'

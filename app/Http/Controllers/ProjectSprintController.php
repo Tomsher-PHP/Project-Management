@@ -62,6 +62,7 @@ class ProjectSprintController extends Controller
             'milestone' => [
                 'id' => $projectMilestone->id,
                 'name' => $projectMilestone->name,
+                'estimated_time_seconds' => (int) ($projectMilestone->estimated_time_seconds ?? 0),
             ],
             'count' => $totalCount,
             'sprints' => $projectSprints

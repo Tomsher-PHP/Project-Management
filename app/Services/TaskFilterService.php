@@ -98,7 +98,7 @@ class TaskFilterService
     {
         return User::active()
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'email']);
     }
 
     private function getPriorities()

@@ -9,6 +9,13 @@ use Illuminate\Validation\Rules\Password;
 class UserRequest extends FormRequest
 {
     /**
+     * The attributes that should not be flashed for validation.
+     *
+     * @var array<int, string>
+     */
+    protected $dontFlash = [];
+
+    /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
@@ -108,5 +115,25 @@ class UserRequest extends FormRequest
             'password.required' => 'Password is required.',
             'password.confirmed' => 'Password confirmation does not match.',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('password')) {
+                $messages = $validator->errors()->get('password');
+                $confirmMessages = array_filter($messages, fn($msg) => str_contains(strtolower($msg), 'confirm'));
+                if (!empty($confirmMessages)) {
+                    foreach ($confirmMessages as $msg) {
+                        $validator->errors()->add('password_confirmation', $msg);
+                    }
+                    $remaining = array_values(array_filter($messages, fn($msg) => !str_contains(strtolower($msg), 'confirm')));
+                    $validator->errors()->forget('password');
+                    foreach ($remaining as $msg) {
+                        $validator->errors()->add('password', $msg);
+                    }
+                }
+            }
+        });
     }
 }

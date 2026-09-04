@@ -1,5 +1,5 @@
 <header class="mobile-wrapper fixed z-20 block w-full md:hidden">
-    <div class="flex h-[80px] w-full items-center justify-between bg-white dark:bg-darkblack-600">
+    <div class="flex h-[80px] w-full items-center justify-between border-b border-bgray-200 bg-white dark:border-darkblack-500 dark:bg-darkblack-600">
         <div class="flex h-full w-full items-center space-x-5">
             <button type="button" class="drawer-btn rotate-180 transform">
                 <span>

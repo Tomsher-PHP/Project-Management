@@ -16,7 +16,7 @@
     </span> --}}
 
     @foreach ($flowOptions as $flowKey => $flowLabel)
-        <span class="inline-flex items-center gap-2 rounded-full bg-bgray-50 border border-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:border-darkblack-450 dark:text-bgray-300">
+        <span class="inline-flex items-center gap-1 rounded-full px-1 py-1 text-xs font-medium text-bgray-700 dark:text-bgray-300">
             <x-project-flow-icon :flow="$flowKey" size="sm" />
             <span>{{ $flowLabel }}</span>
         </span>

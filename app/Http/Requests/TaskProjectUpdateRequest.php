@@ -82,7 +82,7 @@ class TaskProjectUpdateRequest extends FormRequest
                     }
                 },
             ],
-            'due_date_time' => ['nullable', 'date'],
+            'due_date_time' => ['required', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],
@@ -107,6 +107,8 @@ class TaskProjectUpdateRequest extends FormRequest
             'task_mode_id.exists' => 'The selected task mode is invalid.',
             'priority.required' => 'Please choose a task priority.',
             'current_assignee_id.exists' => 'The selected assignee is invalid.',
+            'due_date_time.required' => 'Please select a due date.',
+            'due_date_time.date' => 'The selected due date is invalid.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
             'sort_order.min' => 'Sort order must be at least 1.',
             'tag_ids.*.max' => 'Tags cannot be longer than 100 characters.',

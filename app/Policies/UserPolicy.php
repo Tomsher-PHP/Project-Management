@@ -20,9 +20,13 @@ class UserPolicy
      */
     public function view(User $authUser, User $model): bool
     {
+        if ($authUser->is_super_admin || $authUser->can('user.view_all_users')) {
+            return true;
+        }
+
         $reporterHierarchyUserIds = User::getReporterHierarchyUserIds($authUser->id);
 
-        if ($model->added_by === $authUser->id) {
+        if (in_array($authUser->id, [$model->added_by, $model->id])) {
             return true;
         }
 

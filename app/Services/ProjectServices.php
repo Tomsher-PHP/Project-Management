@@ -14,8 +14,11 @@ use App\Models\ProjectStageHistory;
 use App\Models\ProjectStatus;
 use App\Models\ProjectStatusHistory;
 use App\Models\Task;
+use App\Models\TaskAssignmentLog;
 use App\Models\TaskStatus;
+use App\Models\TaskStatusHistory;
 use App\Models\TaskTimeLog;
+use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +26,8 @@ use InvalidArgumentException;
 
 class ProjectServices
 {
+    protected string $filesystemDisk;
+
     private const BACKLOG_MILESTONE_NAME = 'Unplanned Work';
     private const BACKLOG_SPRINT_NAME = 'Backlog';
     private const BACKLOG_MILESTONE_DESCRIPTION = 'Contains unplanned tasks waiting to be organized into the proper work area.';
@@ -32,15 +37,17 @@ class ProjectServices
         'end_date' => 'End Date',
         'customer_end_date' => 'Customer End Date',
         'estimated_time_seconds' => 'Estimated Time',
+        'customer_estimate_seconds' => 'Customer Estimate Time',
     ];
 
-    protected $attachmentService;
-    protected $notificationService;
+    protected AttachmentService $attachmentService;
+    protected NotificationService $notificationService;
 
     public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
         $this->notificationService = $notificationService;
+        $this->filesystemDisk = env('FILESYSTEM_DISK', 'public');
     }
 
     public function create(array $data)
@@ -60,6 +67,15 @@ class ProjectServices
 
             $customer = Customer::find($data['customer_id']);
 
+            $categoryIds = null;
+            if (array_key_exists('project_category_ids', $data)) {
+                $categoryIds = is_array($data['project_category_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                    : null;
+            } elseif (array_key_exists('project_category_id', $data) && $data['project_category_id'] !== null && $data['project_category_id'] !== '') {
+                $categoryIds = [(int) $data['project_category_id']];
+            }
+
             $project = Project::create([
                 'project_code' => Project::generateProjectCode(),
                 'name' => $data['name'],
@@ -71,6 +87,7 @@ class ProjectServices
                 'start_date' => $startDate,
                 'end_date' => $data['end_date'],
                 'sales_person_id' => $customer ? $customer->sales_person_id : null,
+                'project_category_ids' => ! empty($categoryIds) ? $categoryIds : null,
                 'default_billable' => $data['default_billable'] ?? 1,
             ]);
 
@@ -101,6 +118,13 @@ class ProjectServices
                 unset($data['estimated_time_minutes']);
             }
 
+            if (array_key_exists('customer_estimate_minutes', $data)) {
+                $data['customer_estimate_seconds'] = $data['customer_estimate_minutes'] !== null
+                    ? (int) $data['customer_estimate_minutes'] * 60
+                    : null;
+                unset($data['customer_estimate_minutes']);
+            }
+
             if (array_key_exists('default_task_estimate_minutes', $data)) {
                 $data['default_task_estimate_seconds'] = $data['default_task_estimate_minutes'] !== null
                     ? (int) $data['default_task_estimate_minutes'] * 60
@@ -122,12 +146,25 @@ class ProjectServices
                 'default_task_estimate_seconds' => $data['default_task_estimate_seconds'] ?? null,
                 'domain' => $data['domain'] ?? null,
                 'sales_person_id' => $data['sales_person_id'] ?? null,
-                'project_category_id' => $data['project_category_id'] ?? null,
                 'default_billable' => $data['default_billable'],
             ];
 
+            if (array_key_exists('project_category_ids', $data)) {
+                $categoryIds = is_array($data['project_category_ids'])
+                    ? array_values(array_unique(array_filter(array_map('intval', $data['project_category_ids']))))
+                    : null;
+                $projectData['project_category_ids'] = ! empty($categoryIds) ? $categoryIds : null;
+            } elseif (array_key_exists('project_category_id', $data)) {
+                $catId = $data['project_category_id'];
+                $projectData['project_category_ids'] = ($catId !== null && $catId !== '') ? [(int) $catId] : null;
+            }
+
             if (array_key_exists('customer_end_date', $data)) {
                 $projectData['customer_end_date'] = $data['customer_end_date'];
+            }
+
+            if (array_key_exists('customer_estimate_seconds', $data)) {
+                $projectData['customer_estimate_seconds'] = $data['customer_estimate_seconds'];
             }
 
             $originalTimelineValues = $project->only(array_keys(self::PROJECT_TIMELINE_FIELDS));
@@ -173,7 +210,7 @@ class ProjectServices
 
     private function formatProjectTimelineValue(string $field, mixed $value): string
     {
-        if ($field === 'estimated_time_seconds') {
+        if (in_array($field, ['estimated_time_seconds', 'customer_estimate_seconds'], true)) {
             return $value === null ? '--' : formatSecondsToHoursMinutes((int) $value);
         }
 
@@ -293,7 +330,7 @@ class ProjectServices
                         $file,
                         $directory,
                         $project,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         true,
                         $category
@@ -321,7 +358,7 @@ class ProjectServices
                         $file,
                         $directory,
                         $note,
-                        'public',
+                        $this->filesystemDisk,
                         'public',
                         false,
                         'project_note'
@@ -545,26 +582,215 @@ class ProjectServices
         return $task->fresh();
     }
 
+    public function moveTaskToProject(Project $sourceProject, Project $targetProject, Task $task, ?int $targetMilestoneId = null, ?int $targetSprintId = null): Task
+    {
+        if ((int) $task->project_id !== (int) $sourceProject->id) {
+            throw new InvalidArgumentException('The provided task does not belong to the source project.');
+        }
+
+        $placement = $this->finalizeTaskPlacement($targetProject, $targetMilestoneId, $targetSprintId);
+
+        $resolvedMilestoneId = $placement['project_milestone_id'];
+        $resolvedSprintId = $placement['project_sprint_id'];
+
+        $isFlowChanged = ($sourceProject->project_flow !== $targetProject->project_flow);
+        $newStatusId = $isFlowChanged ? $this->resolveTargetStatusIdForFlow($targetProject->project_flow) : null;
+
+        return DB::transaction(function () use ($sourceProject, $targetProject, $task, $resolvedMilestoneId, $resolvedSprintId, $isFlowChanged, $newStatusId) {
+            $movingTasks = $this->collectTaskTree($task);
+
+            foreach ($movingTasks as $t) {
+                // If assigned to a user, add user to target project team if not exists
+                if ($t->current_assignee_id) {
+                    $this->ensureUserInProjectTeam($targetProject, (int) $t->current_assignee_id);
+                }
+
+                // Stop running task timer ONLY if flow changed
+                if ($isFlowChanged) {
+                    $this->stopTaskIfRunning($t);
+                }
+            }
+
+            $isSubtask = $task->parent_task_id !== null;
+            $newParentTaskId = $isSubtask ? null : $task->parent_task_id;
+
+            $updateData = [
+                'project_id' => $targetProject->id,
+                'parent_task_id' => $newParentTaskId,
+                'project_milestone_id' => $resolvedMilestoneId,
+                'project_sprint_id' => $resolvedSprintId,
+                'sort_order' => Task::nextSortOrder($targetProject->id, $resolvedSprintId ? (int) $resolvedSprintId : null),
+            ];
+
+            if ($isFlowChanged && $newStatusId) {
+                if ((int) $task->status_id !== (int) $newStatusId) {
+                    TaskStatusHistory::create([
+                        'task_id' => $task->id,
+                        'status_id' => $newStatusId,
+                    ]);
+                }
+                $updateData['status_id'] = $newStatusId;
+            }
+
+            $task->update($updateData);
+
+            $this->syncTaskDescendantPlacement(
+                $task,
+                $resolvedMilestoneId ? (int) $resolvedMilestoneId : null,
+                $resolvedSprintId ? (int) $resolvedSprintId : null,
+                (int) $targetProject->id,
+                $isFlowChanged ? $newStatusId : null
+            );
+
+            return $task->fresh();
+        });
+    }
+
+    public function ensureUserInProjectTeam(Project $project, ?int $userId): void
+    {
+        if (! $userId) {
+            return;
+        }
+
+        $existing = $project->membersAll()->where('users.id', $userId)->first();
+
+        if ($existing) {
+            if ($existing->pivot->removed_at || ! $existing->pivot->is_active) {
+                $project->membersAll()->updateExistingPivot($userId, [
+                    'is_active' => true,
+                    'removed_at' => null,
+                    'removed_by' => null,
+                ]);
+            }
+        } else {
+            $project->membersAll()->syncWithoutDetaching([
+                $userId => [
+                    'project_role' => 'member',
+                    'is_active' => true,
+                ],
+            ]);
+        }
+    }
+
+    public function stopTaskIfRunning(Task $task): void
+    {
+        $runningLogs = TaskTimeLog::query()
+            ->where('task_id', $task->id)
+            ->where('is_running', true)
+            ->get();
+
+        if ($runningLogs->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $totalDuration = 0;
+
+        foreach ($runningLogs as $log) {
+            $duration = max(0, $log->started_at?->diffInSeconds($now) ?? 0);
+
+            $log->update([
+                'ended_at' => $now,
+                'duration_seconds' => $duration,
+                'is_running' => false,
+            ]);
+
+            if ($log->task_assignment_log_id && class_exists(TaskAssignmentLog::class)) {
+                TaskAssignmentLog::query()
+                    ->whereKey($log->task_assignment_log_id)
+                    ->increment('worked_time_seconds', $duration);
+            }
+
+            $totalDuration += $duration;
+        }
+
+        if ($totalDuration > 0) {
+            $task->increment('actual_time_seconds', $totalDuration);
+        }
+    }
+
+    public function resolveTargetStatusIdForFlow(string $targetFlowType): ?int
+    {
+        $defaultStatusId = TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->where('is_default', true)
+            ->value('id');
+
+        if ($defaultStatusId) {
+            return (int) $defaultStatusId;
+        }
+
+        $fallbackStatusId = TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->where('type', TaskStatus::TYPE_PENDING)
+            ->orderBy('sort_order', 'asc')
+            ->value('id');
+
+        if ($fallbackStatusId) {
+            return (int) $fallbackStatusId;
+        }
+
+        return TaskStatus::query()
+            ->active()
+            ->where('flow_type', $targetFlowType)
+            ->orderBy('sort_order', 'asc')
+            ->value('id');
+    }
+
+    private function collectTaskTree(Task $task): array
+    {
+        $tasks = [$task];
+
+        foreach ($task->childTasks()->get() as $childTask) {
+            $tasks = array_merge($tasks, $this->collectTaskTree($childTask));
+        }
+
+        return $tasks;
+    }
+
     public function syncTaskPlacementToDescendants(Task $task): void
     {
         $this->syncTaskDescendantPlacement(
             $task,
             $task->project_milestone_id ? (int) $task->project_milestone_id : null,
-            $task->project_sprint_id ? (int) $task->project_sprint_id : null
+            $task->project_sprint_id ? (int) $task->project_sprint_id : null,
+            (int) $task->project_id
         );
     }
 
-    private function syncTaskDescendantPlacement(Task $task, ?int $projectMilestoneId, ?int $projectSprintId): void
-    {
+    private function syncTaskDescendantPlacement(
+        Task $task,
+        ?int $projectMilestoneId,
+        ?int $projectSprintId,
+        ?int $projectId = null,
+        ?int $newStatusId = null
+    ): void {
+        $targetProjectId = $projectId ?: (int) $task->project_id;
+
         $task->childTasks()
             ->get()
-            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId) {
-                $childTask->update([
+            ->each(function (Task $childTask) use ($projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId) {
+                $childUpdateData = [
+                    'project_id' => $targetProjectId,
                     'project_milestone_id' => $projectMilestoneId,
                     'project_sprint_id' => $projectSprintId,
-                ]);
+                ];
 
-                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId);
+                if ($newStatusId) {
+                    if ((int) $childTask->status_id !== (int) $newStatusId) {
+                        TaskStatusHistory::create([
+                            'task_id' => $childTask->id,
+                            'status_id' => $newStatusId,
+                        ]);
+                    }
+                    $childUpdateData['status_id'] = $newStatusId;
+                }
+
+                $childTask->update($childUpdateData);
+
+                $this->syncTaskDescendantPlacement($childTask, $projectMilestoneId, $projectSprintId, $targetProjectId, $newStatusId);
             });
     }
 

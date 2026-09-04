@@ -81,7 +81,7 @@ class AttachmentService
         );
 
         // 2. Resolve Storage Disk and Visibility
-        $actualDisk = config('filesystems.default', $disk);
+        $actualDisk = $disk ?? config('filesystems.default');
         $actualVisibility = $actualDisk === 's3' ? config('filesystems.disks.s3.visibility', $visibility) : $visibility;
 
         // 3. Store File

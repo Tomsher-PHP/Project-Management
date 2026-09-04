@@ -91,6 +91,9 @@ const setSelectOptions = (field, options, placeholder, value = '') => {
         const element = document.createElement('option');
         element.value = option.value;
         element.textContent = option.text;
+        if (option.subtype) {
+            element.dataset.subtype = option.subtype;
+        }
         field.appendChild(element);
     });
     field.value = normalizedValue;
@@ -104,12 +107,65 @@ const setDuration = (form, name, minutes) => {
     field.closest('[data-estimated-time]')?.dispatchEvent(new Event('estimated-time:refresh'));
 };
 
-const syncProjectFields = (form, initial = {}, useProjectDefaults = false) => {
+const fetchScheduleProjectDependencies = async (projectId) => {
+    if (!projectId) return null;
+    const key = String(projectId);
+
+    if (dependencies.projects && dependencies.projects[key]) {
+        return dependencies.projects[key];
+    }
+
+    if (!dependencies.projects) {
+        dependencies.projects = {};
+    }
+
+    const requestUrl = `/projects/${encodeURIComponent(key)}/task-create-dependencies`;
+    const response = await fetch(requestUrl, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.status || !result.data) {
+        throw new Error(result.message || 'Unable to load project task dependencies.');
+    }
+
+    dependencies.projects[key] = result.data;
+    return result.data;
+};
+
+const syncProjectFields = async (form, initial = {}, useProjectDefaults = false) => {
     const projectId = String(form.querySelector('[name="project_id"]')?.value || '');
+
+    if (!projectId) {
+        setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], 'Select project first', '');
+        setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], 'Select project first', '');
+        setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], 'Select project first', '');
+        return;
+    }
+
+    if (!dependencies.projects?.[projectId]) {
+        setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], 'Loading milestones...', '');
+        setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], 'Loading sprints...', '');
+        setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], 'Loading assignees...', '');
+
+        try {
+            await fetchScheduleProjectDependencies(projectId);
+        } catch (error) {
+            setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], 'Select project first', '');
+            setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], 'Select project first', '');
+            setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], 'Select project first', '');
+            Alert.errorModal(error.message || 'Unable to load project task dependencies.');
+            return;
+        }
+    }
+
     const project = dependencies.projects?.[projectId];
-    const milestoneValue = String(initial.project_milestone_id || '');
-    const sprintValue = String(initial.project_sprint_id || '');
-    const assigneeValue = String(initial.current_assignee_id || '');
+    const milestoneValue = String(initial.project_milestone_id || form.querySelector('[name="project_milestone_id"]')?.value || '');
+    const sprintValue = String(initial.project_sprint_id || form.querySelector('[name="project_sprint_id"]')?.value || '');
+    const assigneeValue = String(initial.current_assignee_id || form.querySelector('[name="current_assignee_id"]')?.value || '');
 
     setSelectOptions(
         form.querySelector('[name="project_milestone_id"]'),
@@ -230,7 +286,7 @@ const showErrors = (form, errors) => {
     }
 };
 
-const prepareModal = (modal) => {
+const prepareModal = async (modal) => {
     const form = modal?.querySelector('[data-schedule-task-form]');
     if (!form) return;
 
@@ -239,7 +295,7 @@ const prepareModal = (modal) => {
     initializeScheduleDates(modal);
 
     const initial = parseJson(modal.querySelector('[data-schedule-task-initial]'), {});
-    syncProjectFields(form, initial);
+    await syncProjectFields(form, initial);
     setDuration(form, 'estimated_time_minutes', initial.estimated_time_minutes ?? form.querySelector('[name="estimated_time_minutes"]')?.value);
 
     const dueAfterField = form.querySelector('[name="due_after_seconds"]');
@@ -335,8 +391,8 @@ const resetCreateModal = (modal) => {
     updateEndDateFromStartDate(form, true);
 };
 
-const openModal = (modal) => {
-    prepareModal(modal);
+const openModal = async (modal) => {
+    await prepareModal(modal);
     modal?.classList.remove('hidden');
     modal?.classList.add('flex');
 };
@@ -374,9 +430,9 @@ const initializeScheduleTasks = () => {
             if (editHost) editHost.innerHTML = '';
 
             const freshCreateModal = page.querySelector('[data-schedule-task-modal="create"]');
-            prepareModal(freshCreateModal);
+            await prepareModal(freshCreateModal);
             resetCreateModal(freshCreateModal);
-            openModal(freshCreateModal);
+            await openModal(freshCreateModal);
             return;
         }
 
@@ -401,11 +457,20 @@ const initializeScheduleTasks = () => {
             editButton.disabled = true;
             try {
                 const { response, result } = await requestJson(editButton.dataset.url);
-                if (!response.ok || !result.status) throw new Error(result.message || 'Unable to load the schedule.');
+                if (!response.ok || result.status === false || !result.html) throw new Error(result.message || 'Unable to load the schedule.');
+
+                if (result.dependencies?.projects) {
+                    Object.assign(dependencies.projects, result.dependencies.projects);
+                }
 
                 const host = page.querySelector('[data-schedule-task-edit-host]');
                 host.innerHTML = result.html;
-                openModal(host.querySelector('[data-schedule-task-modal="edit"]'));
+                initTomSelect(host);
+                initDatepicker('.datepicker', {}, host);
+                initializeEstimatedTimeInputs(host);
+
+                const editModal = host.querySelector('[data-schedule-task-modal="edit"]');
+                await openModal(editModal);
             } catch (error) {
                 Alert.errorModal(error.message || 'Unable to load the schedule.');
             } finally {
@@ -455,12 +520,12 @@ const initializeScheduleTasks = () => {
         }
     });
 
-    page.addEventListener('change', (event) => {
+    page.addEventListener('change', async (event) => {
         const form = event.target.closest('[data-schedule-task-form]');
         if (!form) return;
 
         if (event.target.matches('[name="project_id"]')) {
-            syncProjectFields(form, {}, true);
+            await syncProjectFields(form, {}, true);
         } else if (event.target.matches('[name="project_milestone_id"]')) {
             syncSprintFields(form);
         } else if (event.target.matches('[name="frequency_type"]')) {

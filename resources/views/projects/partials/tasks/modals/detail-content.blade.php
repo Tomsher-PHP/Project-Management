@@ -31,9 +31,12 @@
             )
             ->values(),
     ];
+    $detailEstimatedSeconds = (int) ($task->estimated_time_seconds ?? 0);
+    $detailActualSeconds = (int) ($task->actual_time_seconds ?? 0);
+    $actualTimeClasses = $detailEstimatedSeconds <= 0 || $detailActualSeconds > $detailEstimatedSeconds ? 'text-error-300 dark:text-red-300' : 'text-success-400 dark:text-success-300';
 @endphp
 
-<div class="overflow-hidden rounded-[10px] bg-white shadow-2xl dark:bg-darkblack-600">
+<div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
         <div>
             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">{{ $modalTitle }}</h3>
@@ -161,7 +164,7 @@
                     <select name="current_assignee_id" class="tom-select w-full" data-sort="0" @disabled(!$canEditTask)>
                         <option value="">Select assignee</option>
                         @foreach ($assignableUsers as $assignableUser)
-                            <option value="{{ $assignableUser->id }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
+                            <option value="{{ $assignableUser->id }}" data-subtype="{{ $assignableUser->email }}" {{ (int) $task->current_assignee_id === (int) $assignableUser->id ? 'selected' : '' }}>
                                 {{ $assignableUser->name }}
                             </option>
                         @endforeach
@@ -233,7 +236,7 @@
                 </div>
 
                 <div>
-                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Due Date</label>
+                    <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Due Date <x-red-star /></label>
                     <input type="text" name="due_date_time" value="{{ $task->due_date_time?->copy()->timezone(config('constants.timezone'))->format('Y-m-d H:i') }}" class="datepicker {{ $textInputClasses }}" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Select a date and time" autocomplete="off" @disabled(!$canEditTask)>
                     <p class="mt-1 hidden text-sm text-red-500" data-project-task-detail-error="due_date_time"></p>
                 </div>
@@ -264,21 +267,21 @@
         <aside class="flex min-h-0 flex-col overflow-hidden bg-bgray-50/60 p-6 dark:bg-darkblack-500/40">
             <div class="min-h-0 flex-1 overflow-y-auto pr-1">
                 <div class="space-y-4">
-                    <div class="rounded-2xl border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Summary</p>
                         <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Estimated</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
                                 <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->estimated_time_formatted }}</p>
                             </div>
                             <div class="rounded-xl bg-bgray-50 px-4 py-3 dark:bg-darkblack-500">
-                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">Actual</p>
-                                <p class="mt-1 text-base font-semibold text-bgray-900 dark:text-white">{{ $task->actual_time_formatted }}</p>
+                                <p class="text-xs font-medium text-bgray-700 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
+                                <p class="mt-1 text-base font-semibold {{ $actualTimeClasses }}">{{ $task->actual_time_formatted }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-2xl border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <div class="rounded-[8px] border border-bgray-200 bg-white p-5 dark:border-darkblack-400 dark:bg-darkblack-600">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-bgray-700 dark:text-bgray-300">Context</p>
                         <dl class="mt-4 space-y-3 text-sm">
                             <div class="flex items-start justify-between gap-3">

@@ -23,7 +23,7 @@
     @endphp
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Status Timeline</h4>
@@ -82,7 +82,7 @@
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+        <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
                 <div>
                     <h4 class="text-base font-bold text-bgray-900 dark:text-white">Task Time Log</h4>
@@ -147,8 +147,7 @@
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-3 text-right font-semibold text-bgray-900 dark:text-white">{{ $formatDuration((int) $timeLog->duration_seconds) }}</td>
                                         <td class="px-3 py-3 text-right">
-                                            <button type="button" class="{{ $canOpenTimeLogChangeRequest ? 'modal-open hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300' : 'cursor-not-allowed opacity-50' }} relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" title="{{ $timeLogChangeRestrictionMessage }}"
-                                                aria-label="{{ $timeLogChangeRestrictionMessage }}" data-target="#timeLogChangeRequestModal" data-time-log-change-request-open data-task_id="{{ $task->id }}" data-task_name="{{ $task->name }}" data-task_time_log_id="{{ $timeLog->id }}" data-new_started_at="{{ $timeLogStartedAtForInput }}" data-new_ended_at="{{ $timeLogEndedAtForInput }}" data-original_started_at="{{ $timeLogStartedAtForInput }}" data-original_ended_at="{{ $timeLogEndedAtForInput }}" data-time_log_user_name="{{ $timeLogUser?->name ?? 'Unknown User' }}" @disabled(!$canOpenTimeLogChangeRequest)>
+                                            <button type="button" class="{{ $canOpenTimeLogChangeRequest ? 'modal-open hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-300' : 'cursor-not-allowed opacity-50' }} relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-200 bg-white text-bgray-600 shadow-sm transition duration-200 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300" title="{{ $timeLogChangeRestrictionMessage }}" aria-label="{{ $timeLogChangeRestrictionMessage }}" data-target="#timeLogChangeRequestModal" data-time-log-change-request-open data-task_id="{{ $task->id }}" data-task_name="{{ $task->name }}" data-task_time_log_id="{{ $timeLog->id }}" data-new_started_at="{{ $timeLogStartedAtForInput }}" data-new_ended_at="{{ $timeLogEndedAtForInput }}" data-original_started_at="{{ $timeLogStartedAtForInput }}" data-original_ended_at="{{ $timeLogEndedAtForInput }}" data-time_log_user_name="{{ $timeLogUser?->name ?? 'Unknown User' }}" @disabled(!$canOpenTimeLogChangeRequest)>
                                                 @if ($hasPendingTimeLogChangeRequest)
                                                     <span class="absolute -right-1 -top-1 inline-flex h-3 w-3 rounded-full bg-warning-300 ring-2 ring-white dark:ring-darkblack-500"></span>
                                                 @endif
@@ -170,7 +169,7 @@
         </section>
     </div>
 
-    <section class="overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+    <section class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-bgray-200 bg-bgray-50/80 px-5 py-4 dark:border-darkblack-400 dark:bg-darkblack-500/60">
             <div>
                 <h4 class="text-base font-bold text-bgray-900 dark:text-white">Task Assignment History</h4>

@@ -157,15 +157,22 @@ class UserTimelineService
         $absSeconds = abs($diffSeconds);
 
         $hours = intdiv($absSeconds, 3600);
-        $minutes = intdiv($absSeconds % 3600, 60);
+        $remainingSeconds = $absSeconds % 3600;
 
-        if ($diffSeconds > 0) {
-            $sign = '+';
-        } elseif ($diffSeconds < 0) {
-            $sign = '-';
+        // Round up partial minutes for negative differences
+        if ($isNegative) {
+            $minutes = (int) ceil($remainingSeconds / 60);
         } else {
-            $sign = '';
+            $minutes = intdiv($remainingSeconds, 60);
         }
+
+        // Handle 60 minutes becoming another hour
+        if ($minutes === 60) {
+            $hours++;
+            $minutes = 0;
+        }
+
+        $sign = $diffSeconds > 0 ? '+' : ($diffSeconds < 0 ? '-' : '');
 
         $formatted = sprintf('%02dh %02dm', $hours, $minutes);
 

@@ -114,6 +114,8 @@ class TaskServices
             ->withCount([
                 'childTasks',
                 'comments',
+                'taskNotes',
+                'taskNoteAttachments',
                 'childTasks as completed_child_tasks_count' => function ($query) {
                     $query->where(function ($childTaskQuery) {
                         $childTaskQuery
@@ -401,69 +403,91 @@ class TaskServices
     }
 
     // Create a simple task with default placement and tags
-    public function createQuickTask(Project $project, array $validated): Task
+    public function createQuickTask(Project $project, array $validated): \Illuminate\Support\Collection
     {
         $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
 
-        $task = DB::transaction(function () use ($project, $validated, $requestType) {
+        $assigneeIds = [];
+        if ($requestType === 'self') {
+            $assigneeIds = [(int) auth()->id()];
+        } elseif (array_key_exists('current_assignee_ids', $validated) && is_array($validated['current_assignee_ids'])) {
+            $assigneeIds = array_values(array_unique(array_filter(
+                array_map(fn($v) => is_numeric($v) ? (int) $v : null, $validated['current_assignee_ids']),
+                fn($v) => !is_null($v)
+            )));
+        } elseif (!empty($validated['current_assignee_id'])) {
+            $assigneeIds = [(int) $validated['current_assignee_id']];
+        }
+
+        if (empty($assigneeIds)) {
+            $assigneeIds = [null];
+        }
+
+        $tasks = DB::transaction(function () use ($project, $validated, $requestType, $assigneeIds) {
             $defaults = $this->resolveDefaults($project);
-            $assigneeId = $requestType === 'self'
-                ? auth()->id()
-                : (! empty($validated['current_assignee_id']) ? (int) $validated['current_assignee_id'] : null);
             $placement = $this->finalizePlacement(
                 $project,
                 ! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null,
                 ! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null
             );
 
-            $payload = $this->buildCreatePayload(
+            $payloadTemplate = $this->buildCreatePayload(
                 project: $project,
                 validated: $validated,
                 defaults: $defaults,
                 placement: $placement
             );
 
-            $payload['current_assignee_id'] = $assigneeId;
-            $payload['request_type'] = $requestType;
-            $payload['request_status'] = $requestType === 'self' ? 'pending' : 'approved';
-            $payload['approved_by'] = $requestType === 'assigned' ? auth()->id() : null;
-            $payload['approved_at'] = $requestType === 'assigned' ? now() : null;
-            $payload['rejected_by'] = null;
-            $payload['rejected_at'] = null;
-            $payload['rejection_reason'] = null;
+            $createdTasks = collect();
 
-            $task = $project->tasks()->create($payload);
-            $this->recordStatusHistoryIfChanged($task, null, $task->status_id ? (int) $task->status_id : null);
+            foreach ($assigneeIds as $assigneeId) {
+                $payload = $payloadTemplate;
+                $payload['current_assignee_id'] = $assigneeId;
+                $payload['request_type'] = $requestType;
+                $payload['request_status'] = $requestType === 'self' ? 'pending' : 'approved';
+                $payload['approved_by'] = $requestType === 'assigned' ? auth()->id() : null;
+                $payload['approved_at'] = $requestType === 'assigned' ? now() : null;
+                $payload['rejected_by'] = null;
+                $payload['rejected_at'] = null;
+                $payload['rejection_reason'] = null;
 
-            if (! empty($task->current_assignee_id)) {
-                $this->syncTaskAssignmentState($task, $task->current_assignee_id);
+                $task = $project->tasks()->create($payload);
+                $this->recordStatusHistoryIfChanged($task, null, $task->status_id ? (int) $task->status_id : null);
+
+                if (! empty($task->current_assignee_id)) {
+                    $this->syncTaskAssignmentState($task, $task->current_assignee_id);
+                }
+
+                if (array_key_exists('tag_ids', $validated)) {
+                    $this->syncTags($task, $validated['tag_ids'] ?? []);
+                }
+
+                $createdTasks->push($task);
             }
 
-            if (array_key_exists('tag_ids', $validated)) {
-                $this->syncTags($task, $validated['tag_ids'] ?? []);
-            }
-
-            if (!empty($validated['handoff_request_id'])) {
+            if (!empty($validated['handoff_request_id']) && $createdTasks->isNotEmpty()) {
                 $this->handoffServices->markAsAssigned(
                     (int) $validated['handoff_request_id'],
-                    $task,
+                    $createdTasks->first(),
                     auth()->user()
                 );
             }
 
-            return $task;
+            return $createdTasks;
         });
 
-        if ($task->isApprovedRequest()) {
-            $this->notificationService->sendTaskAssignmentIfNeeded(
-                $task,
-                $task->current_assignee_id ? (int) $task->current_assignee_id : null
-            );
-        } elseif ($requestType === 'self') {
-            $this->notificationService->notifyTaskRequestCreated($task);
+        foreach ($tasks as $task) {
+            if ($task->isApprovedRequest()) {
+                $this->notificationService->sendTaskAssignmentIfNeeded(
+                    $task,
+                    $task->current_assignee_id ? (int) $task->current_assignee_id : null
+                );
+            } elseif ($requestType === 'self') {
+                $this->notificationService->notifyTaskRequestCreated($task);
+            }
         }
 
-        return $task;
+        return $tasks;
     }
 
     // Update task data and record any status or assignment changes

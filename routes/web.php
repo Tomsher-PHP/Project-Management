@@ -34,6 +34,7 @@ use App\Http\Controllers\ProjectSprintController;
 use App\Http\Controllers\ProjectStageController;
 use App\Http\Controllers\ProjectStatusController;
 use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\QuickNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\ScheduleShiftController;
@@ -90,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/worked-time', [DashboardController::class, 'workedTime'])->middleware('permission.type:dashboard.view')->name('dashboard.worked-time');
     Route::get('/dashboard/running-tasks', [DashboardController::class, 'runningTasks'])->middleware('permission.type:dashboard.view')->name('dashboard.running-tasks');
     Route::get('/dashboard/tile-details', [DashboardController::class, 'tileDetails'])->middleware('permission.type:dashboard.view')->name('dashboard.tile-details');
+    Route::get('/dashboard/projects-count', [DashboardController::class, 'projectsCount'])->middleware('permission.type:dashboard.view')->name('dashboard.projects-count');
 
     // User workspace route
     Route::get('/user-workspace', [UserWorkspaceController::class, 'index'])->name('user.workspace');
@@ -122,7 +124,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/users/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus')->middleware('permission.type:user.edit');
     Route::resource('users', UserController::class)->middleware('permission.type:user.view')->only(['index']);
     Route::resource('users', UserController::class)->middleware('permission.type:user.create')->only(['create', 'store']);
-    Route::resource('users', UserController::class)->only(['show']);
+    Route::resource('users', UserController::class)->middleware('can:view,user')->only(['show']);
     Route::resource('users', UserController::class)->middleware(['permission.type:user.edit', 'can:update,user'])->only(['edit', 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware(['permission.type:user.delete', 'can:delete,user']);
 
@@ -374,6 +376,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
     });
 
+    Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
+    Route::get('projects/{project}/task-create-dependencies', [ProjectController::class, 'taskCreateDependencies'])->name('projects.task-create-dependencies');
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.view'])->only(['index']);
     Route::resource('projects', ProjectController::class)->middleware(['permission.type:project.create'])->only(['create', 'store']);
     Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.edit');
@@ -390,6 +394,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('activity-modal', [TaskController::class, 'activityModal'])->middleware(['permission.type:activity_log.view', 'can:view,task'])->name('activity.modal');
         Route::get('comments-modal', [TaskController::class, 'commentsModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.modal');
+        Route::get('notes-modal', [TaskController::class, 'notesModal'])->middleware(['permission.type:task.view', 'can:view,task'])->name('notes.modal');
         Route::post('comments', [TaskController::class, 'storeComment'])->middleware(['permission.type:task.view', 'can:view,task'])->name('comments.store');
 
         // Task notes and attachments routes
@@ -661,43 +666,55 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::resource('holidays', HolidayController::class);
+    Route::resource('holidays', HolidayController::class);
 
-Route::prefix('user-leave-balances')
-    ->name('user-leave-balances.')
-    ->group(function () {
-
-        Route::get(
-            '/import',
-            [
-                UserLeaveBalanceImportController::class,
-                'create'
-            ]
-        )
-            ->middleware('permission.type:user_leave_balance.import')
-            ->name('import');
-
-        Route::post(
-            '/import',
-            [
-                UserLeaveBalanceImportController::class,
-                'store'
-            ]
-        )
-            ->middleware('permission.type:user_leave_balance.import')
-            ->name('import.store');
+    Route::prefix('user-leave-balances')
+        ->name('user-leave-balances.')
+        ->group(function () {
 
             Route::get(
-    '/import/sample',
-    [
-        UserLeaveBalanceImportController::class,
-        'sample'
-    ]
-)
-    ->middleware('permission.type:user_leave_balance.import')
-    ->name('import.sample');
-    });
+                '/import',
+                [
+                    UserLeaveBalanceImportController::class,
+                    'create'
+                ]
+            )
+                ->middleware('permission.type:user_leave_balance.import')
+                ->name('import');
 
+            Route::post(
+                '/import',
+                [
+                    UserLeaveBalanceImportController::class,
+                    'store'
+                ]
+            )
+                ->middleware('permission.type:user_leave_balance.import')
+                ->name('import.store');
+
+            Route::get(
+                '/import/sample',
+                [
+                    UserLeaveBalanceImportController::class,
+                    'sample'
+                ]
+            )
+                ->middleware('permission.type:user_leave_balance.import')
+                ->name('import.sample');
+        });
+
+    // Quick Notes routes
+    Route::prefix('quick-notes')->as('quick-notes.')->group(function () {
+        Route::get('/drawer', [QuickNoteController::class, 'drawer'])->name('drawer');
+        Route::post('/', [QuickNoteController::class, 'store'])->name('store');
+        Route::post('/reorder', [QuickNoteController::class, 'reorder'])->name('reorder');
+        Route::get('/{quickNote}', [QuickNoteController::class, 'show'])->name('show');
+        Route::put('/{quickNote}', [QuickNoteController::class, 'update'])->name('update');
+        Route::patch('/{quickNote}', [QuickNoteController::class, 'update']);
+        Route::delete('/{quickNote}', [QuickNoteController::class, 'destroy'])->name('destroy');
+        Route::patch('/{quickNote}/pin', [QuickNoteController::class, 'togglePin'])->name('pin');
+        Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
+    });
 });
 
 Route::get('api-test', function () {

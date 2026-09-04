@@ -5,7 +5,7 @@
     $questions = $checklist['questions'] ?? [];
 @endphp
 
-<article class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-project-checklist-card data-client-key="{{ $clientKey }}">
+<article class="rounded-[8px] border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-project-checklist-card data-client-key="{{ $clientKey }}">
     <div class="flex flex-col gap-3 border-b border-bgray-200 pb-4 dark:border-darkblack-400 md:flex-row md:items-start md:justify-between">
         <div class="min-w-0 flex-1">
             <input type="text" value="{{ $title }}" class="w-full rounded-xl border {{ $titleError ? 'border-red-500' : 'border-bgray-200' }} bg-white px-4 py-3 text-sm font-semibold text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Checklist title" data-project-checklist-title-input data-checklist-index="{{ $checklistIndex }}">

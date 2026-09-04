@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskNameNode = modal.querySelector('[data-approve-task-name]');
     const userNameNode = modal.querySelector('[data-approve-user-name]');
     const currentEstimateNode = modal.querySelector('[data-approve-current-estimate]');
+    const requestedTimeNode = modal.querySelector('[data-approve-requested-time]');
     const reasonNode = modal.querySelector('[data-approve-reason]');
     const submitBtn = form.querySelector('[data-extend-request-approve-submit]');
 
@@ -94,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (taskNameNode) taskNameNode.textContent = result.data.task_name || '--';
                 if (userNameNode) userNameNode.textContent = result.data.user_name || '--';
                 if (currentEstimateNode) currentEstimateNode.textContent = result.data.current_estimate_formatted || '--';
+                if (requestedTimeNode) requestedTimeNode.textContent = result.data.user_requested_time_formatted || '--';
                 if (reasonNode) reasonNode.textContent = result.data.reason || '--';
 
                 if (totalInput) {

@@ -1,6 +1,6 @@
 <div class="space-y-6">
 
-    <section class="rounded-2xl bg-white px-6 py-5 shadow-sm dark:bg-darkblack-600">
+    <section class="rounded-[8px] bg-white px-6 py-5 shadow-sm dark:bg-darkblack-600">
 
         <div class="overflow-x-auto">
             <table class="w-full min-w-[760px]">
@@ -74,7 +74,7 @@
                                     @endcan
 
                                     @can('checklist_template.delete')
-                                        @if (! $checklist->is_system)
+                                        @if (!$checklist->is_system)
                                             <x-delete-form :action="route('settings.checklists.destroy', $checklist->id)" />
                                         @endif
                                     @endcan

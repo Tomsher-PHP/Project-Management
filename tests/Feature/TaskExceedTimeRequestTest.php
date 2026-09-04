@@ -918,6 +918,7 @@ class TaskExceedTimeRequestTest extends TestCase
             'user_id' => $requester->id,
             'estimated_time_seconds' => 3600,
             'new_estimated_time_seconds' => 7200,
+            'user_requested_time_seconds' => 7200,
             'status' => 'pending',
             'reason' => 'Need more time'
         ]);
@@ -936,6 +937,9 @@ class TaskExceedTimeRequestTest extends TestCase
         $this->assertEquals(3600, $task->initial_estimated_time_seconds); // preserved original
 
         $this->assertEquals('approved', $request->status);
+        $this->assertEquals(180 * 60, $request->new_estimated_time_seconds);
+        $this->assertEquals(7200, $request->user_requested_time_seconds);
+        $this->assertTrue($request->hasDifference());
         $this->assertEquals($manager->id, $request->approved_by);
         $this->assertNotNull($request->approved_at);
         $this->assertNull($request->rejected_by);

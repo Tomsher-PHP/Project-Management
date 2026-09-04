@@ -1,7 +1,7 @@
 document.querySelectorAll('.general-setting').forEach(input => {
     input.addEventListener('change', function () {
 
-        const value = this.value;
+        const value = this.type === 'checkbox' ? this.checked : this.value;
         const field = this.dataset.field;
         const authUser = this.dataset.loginUser;
         const userId = this.dataset.user;

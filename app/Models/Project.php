@@ -28,9 +28,10 @@ class Project extends Model
         'end_date',
         'customer_end_date',
         'estimated_time_seconds',
+        'customer_estimate_seconds',
         'default_task_estimate_seconds',
         'domain',
-        'project_category_id',
+        'project_category_ids',
         'default_billable',
         'is_active',
         'sales_person_id',
@@ -43,7 +44,9 @@ class Project extends Model
         'end_date' => 'date',
         'customer_end_date' => 'date',
         'estimated_time_seconds' => 'integer',
+        'customer_estimate_seconds' => 'integer',
         'default_task_estimate_seconds' => 'integer',
+        'project_category_ids' => 'array',
         'default_billable' => 'boolean',
         'added_by' => 'integer',
         'updated_by' => 'integer',
@@ -203,6 +206,16 @@ class Project extends Model
         $this->attributes['estimated_time_seconds'] = $value ? (int) ($value * 3600) : null;
     }
 
+    public function getCustomerEstimateHoursAttribute()
+    {
+        return $this->customer_estimate_seconds ? $this->customer_estimate_seconds / 3600 : null;
+    }
+
+    public function setCustomerEstimateHoursAttribute($value)
+    {
+        $this->attributes['customer_estimate_seconds'] = $value ? (int) ($value * 3600) : null;
+    }
+
     public function getIsAgileAttribute()
     {
         return $this->project_flow === 'agile';
@@ -323,6 +336,26 @@ class Project extends Model
             ->whereNotNull('removed_at');
     }
 
+    public function hasActiveMember($user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $userId = $user instanceof User ? $user->id : (int) $user;
+
+        if ($this->relationLoaded('activeMembers')) {
+            return $this->activeMembers->contains(function (User $member) use ($userId) {
+                return (int) $member->id === $userId && (bool) $member->is_active;
+            });
+        }
+
+        return $this->activeMembers()
+            ->where('users.id', $userId)
+            ->where('users.is_active', true)
+            ->exists();
+    }
+
     public function teamLeader()
     {
         return $this->hasOneThrough(
@@ -336,6 +369,20 @@ class Project extends Model
             ->where('project_members.project_role', 'team_leader')
             ->where('project_members.is_active', true)
             ->whereNull('project_members.removed_at');
+    }
+
+    public function getProjectCategoriesAttribute()
+    {
+        if (empty($this->project_category_ids)) {
+            return collect();
+        }
+
+        return ProjectCategory::whereIn('id', $this->project_category_ids)->get();
+    }
+
+    public function getCategoriesAttribute()
+    {
+        return $this->project_categories;
     }
 
     /*----------------Activity Log Customization----------------*/
@@ -355,10 +402,11 @@ class Project extends Model
             'project_flow' => 'Project Flow',
             'status_id' => 'Status',
             'project_stage_id' => 'Project Stage',
-            'project_category_id' => 'Project Category',
+            'project_category_ids' => 'Project Categories',
             'sales_person_id' => 'Sales Person',
             'default_task_estimate_seconds' => 'Default Task Estimate',
             'estimated_time_seconds' => 'Estimated Time',
+            'customer_estimate_seconds' => 'Customer Estimate Time',
             'default_billable' => 'Default Billable',
             'is_active' => 'Active',
         ];
@@ -370,12 +418,15 @@ class Project extends Model
         return match ($attribute) {
             'status_id' => ProjectStatus::find($value)?->name ?? $value,
             'project_stage_id' => ProjectStage::find($value)?->name ?? $value,
-            'project_category_id' => ProjectCategory::find($value)?->name ?? $value,
+            'project_category_ids' => is_array($value) && ! empty($value)
+                ? ProjectCategory::whereIn('id', $value)->pluck('name')->implode(', ')
+                : 'None',
             'sales_person_id' => User::find($value)?->name ?? $value,
             'customer_id' => Customer::find($value)?->name ?? $value,
             'default_billable' => $value ? 'Yes' : 'No',
             'is_active' => $value ? 'Active' : 'Inactive',
             'estimated_time_seconds' => $this->secondsToReadable($value),
+            'customer_estimate_seconds' => $this->secondsToReadable($value),
             'default_task_estimate_seconds' => $this->secondsToReadable($value),
             default => $value,
         };

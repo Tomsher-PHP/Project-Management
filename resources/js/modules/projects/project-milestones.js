@@ -365,7 +365,7 @@ const handleProjectModuleDeepLink = async (section = getProjectModuleSectionRoot
 };
 
 const renderProjectModuleSprintsState = (message, extraClasses = '') => `
-    <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
+    <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-5 py-6 text-center dark:border-darkblack-400 dark:bg-darkblack-600 ${extraClasses}" data-project-milestone-sprints-state>
         <p class="text-sm font-medium text-bgray-600 dark:text-bgray-300">${escapeHtml(message)}</p>
     </div>
 `;
@@ -631,15 +631,15 @@ const renderModuleBuilderCard = (milestone, config, extraClass = '') => `
             </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
+            <button type="button" class="inline-flex items-center justify-center rounded-[8px] border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-300 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-milestone-builder-save>
                 Save
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-error-200 bg-error-50 text-error-200 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-milestone-builder-delete aria-label="Delete milestone" title="Delete milestone">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </button>
-            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
+            <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-bgray-200 dark:border-bgray-300 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-toggle aria-label="Expand milestone" title="Expand milestone">
                 <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-milestone-builder-toggle-icon>
                     <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
@@ -714,6 +714,29 @@ const renderModuleLibraryCard = (libraryModule, extraClass = '') => `
     </article>
 `;
 
+const formatEstimateTime = (totalSeconds) => {
+    const isNegative = totalSeconds < 0;
+    const absSeconds = Math.abs(totalSeconds);
+    const hours = Math.floor(absSeconds / 3600);
+    const minutes = Math.floor((absSeconds % 3600) / 60);
+
+    return `${isNegative ? '-' : ''}${hours} h : ${minutes} m`;
+};
+
+const updateAvailableDisplayStyle = (element, availableSeconds) => {
+    if (!element) {
+        return;
+    }
+
+    element.classList.remove('text-success-300', 'text-error-300');
+
+    if (availableSeconds > 0) {
+        element.classList.add('text-success-300');
+    } else if (availableSeconds < 0) {
+        element.classList.add('text-error-300');
+    }
+};
+
 const initializeProjectModuleBuilderModal = () => {
     const modal = document.getElementById('project-milestone-modal');
 
@@ -744,6 +767,42 @@ const initializeProjectModuleBuilderModal = () => {
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const recalculateAvailableTime = () => {
+        const projectSeconds = Number(config.projectEstimatedTimeSeconds) || 0;
+        const otherSeconds = Number(config.otherMilestonesSeconds) || 0;
+
+        let workspaceSeconds = 0;
+        getCards().forEach((card) => {
+            const totalMinutesInput = card.querySelector('[data-estimated-total-minutes]');
+            if (totalMinutesInput) {
+                const minutes = Number.parseInt(totalMinutesInput.value || '0', 10) || 0;
+                workspaceSeconds += (minutes * 60);
+            }
+        });
+
+        const totalMilestoneSeconds = workspaceSeconds + otherSeconds;
+        const availableSeconds = projectSeconds - totalMilestoneSeconds;
+
+        const formattedEstimate = formatEstimateTime(projectSeconds);
+        const formattedAvailable = formatEstimateTime(availableSeconds);
+
+        const estimateHeaderEl = modal.querySelector('[data-project-milestone-header-estimate]');
+        const estimateWorkareaEl = modal.querySelector('[data-project-milestone-workarea-estimate]');
+        if (estimateHeaderEl) estimateHeaderEl.textContent = formattedEstimate;
+        if (estimateWorkareaEl) estimateWorkareaEl.textContent = formattedEstimate;
+
+        const availableHeaderEl = modal.querySelector('[data-project-milestone-header-available]');
+        const availableWorkareaEl = modal.querySelector('[data-project-milestone-workarea-available]');
+        if (availableHeaderEl) {
+            availableHeaderEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableHeaderEl, availableSeconds);
+        }
+        if (availableWorkareaEl) {
+            availableWorkareaEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableWorkareaEl, availableSeconds);
+        }
+    };
 
     const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-milestone-library-item]'))
         .map((item) => Number(item.dataset.sortOrder) || 0);
@@ -899,6 +958,8 @@ const initializeProjectModuleBuilderModal = () => {
             renderWorkspaceFromModules(latestModules);
         }
 
+        recalculateAvailableTime();
+
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
     };
@@ -912,20 +973,20 @@ const initializeProjectModuleBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-milestone-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-milestone-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-bgray-50 dark:bg-darkblack-500 px-4 py-3 text-success-500 dark:border-success-900/40 dark:text-success-300" data-project-milestone-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-white">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
             </span>
             <div>
-                <p class="text-sm font-semibold">Drag here for more milestones</p>
+                <p class="text-sm font-semibold text-bgray-700 dark:text-bgray-300">Drag here for more milestones</p>
                 <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
             </div>
         </div>
     `;
     const dropzoneMarkup = `
-        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
+        <div class="h-24 rounded-[8px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
     `;
 
     const createWorkspaceGuide = (markup) => {
@@ -978,6 +1039,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         ensureEmptyState();
         getCards().forEach((card) => setCardExpanded(card, false));
+        recalculateAvailableTime();
     };
 
     const appendCardToWorkspace = (card) => {
@@ -1008,8 +1070,8 @@ const initializeProjectModuleBuilderModal = () => {
 
         if (!cards.length && !emptyState) {
             workspace.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
-                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -1025,6 +1087,7 @@ const initializeProjectModuleBuilderModal = () => {
         updateCount();
         syncOrderBadges();
         syncWorkspaceGuides();
+        recalculateAvailableTime();
     };
 
     const setCardStatus = (card, status, classes = '') => {
@@ -1250,6 +1313,7 @@ const initializeProjectModuleBuilderModal = () => {
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
+        recalculateAvailableTime();
     };
 
     const createLibraryModuleCard = async (libraryModule) => {
@@ -1608,6 +1672,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateAvailableTime();
     });
 
     workspace.addEventListener('change', function (event) {
@@ -1627,6 +1692,7 @@ const initializeProjectModuleBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-milestone-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateAvailableTime();
     });
 
     workspace.addEventListener('click', function (event) {
@@ -1694,6 +1760,7 @@ const initializeProjectModuleBuilderModal = () => {
     getCards().forEach((card) => initializeCardTomSelect(card));
     getCards().forEach((card) => initializeCardEstimatedTime(card));
     getCards().forEach((card) => syncDescriptionCount(card));
+    recalculateAvailableTime();
     modal.dataset.projectModuleBuilderInitialized = 'true';
 };
 
@@ -1757,17 +1824,17 @@ const renderSprintBuilderCard = (sprint, config, extraClass = '') => `
             </div>
 
             <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex items-center justify-center rounded-xl border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-500 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-sprint-builder-save>
+                <button type="button" class="inline-flex items-center justify-center rounded-[8px] border border-success-200 bg-success-50 px-3 py-2 text-sm font-semibold text-success-300 transition duration-200 hover:border-success-300 hover:bg-success-100 hover:text-success-600 disabled:cursor-not-allowed disabled:border-success-200 disabled:bg-success-100 disabled:text-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-400 dark:hover:text-success-200 dark:disabled:border-success-900/30 dark:disabled:bg-darkblack-500 dark:disabled:text-success-500" data-project-sprint-builder-save>
                     Save
                 </button>
                 ${config?.canDelete ? `
-                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-500 transition duration-200 hover:border-red-300 hover:bg-red-100 dark:border-red-900/40 dark:bg-darkblack-500 dark:text-red-300 dark:hover:border-red-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
+                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-error-200 bg-error-50 text-error-500 transition duration-200 hover:border-error-300 hover:bg-error-100 dark:border-error-900/40 dark:bg-darkblack-500 dark:text-error-300 dark:hover:border-error-800 dark:hover:bg-darkblack-400" data-project-sprint-builder-delete aria-label="Delete sprint" title="Delete sprint">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                 ` : ''}
-                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-bgray-200 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
+                <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-bgray-200 dark:border-bgray-300 bg-white text-bgray-600 transition duration-200 hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-toggle aria-label="Expand sprint" title="Expand sprint">
                     <svg class="h-4 w-4 rotate-180 transition duration-200" viewBox="0 0 20 20" fill="currentColor" data-project-sprint-builder-toggle-icon>
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                     </svg>
@@ -1862,12 +1929,47 @@ const initializeProjectSprintBuilderModal = () => {
 
     const config = JSON.parse(configNode.textContent || '{}');
     let activeMilestoneId = null;
+    let activeMilestoneEstimateSeconds = 0;
     let activeModuleName = '';
     let draggedLibrarySprint = null;
     let draggedWorkspaceCard = null;
     let handleCard = null;
     const showModalSuccess = (message, title = 'Success') => Alert.success(message, title, { target: modal });
     const showModalError = (message, title = 'Error') => Alert.error(message, title, { target: modal });
+
+    const recalculateSprintAvailableTime = () => {
+        const milestoneSeconds = Number(activeMilestoneEstimateSeconds) || 0;
+
+        let workspaceSeconds = 0;
+        getCards().forEach((card) => {
+            const totalMinutesInput = card.querySelector('[data-estimated-total-minutes]');
+            if (totalMinutesInput) {
+                const minutes = Number.parseInt(totalMinutesInput.value || '0', 10) || 0;
+                workspaceSeconds += (minutes * 60);
+            }
+        });
+
+        const availableSeconds = milestoneSeconds - workspaceSeconds;
+
+        const formattedEstimate = formatEstimateTime(milestoneSeconds);
+        const formattedAvailable = formatEstimateTime(availableSeconds);
+
+        const estimateHeaderEl = modal.querySelector('[data-project-sprint-header-estimate]');
+        const estimateWorkareaEl = modal.querySelector('[data-project-sprint-workarea-estimate]');
+        if (estimateHeaderEl) estimateHeaderEl.textContent = formattedEstimate;
+        if (estimateWorkareaEl) estimateWorkareaEl.textContent = formattedEstimate;
+
+        const availableHeaderEl = modal.querySelector('[data-project-sprint-header-available]');
+        const availableWorkareaEl = modal.querySelector('[data-project-sprint-workarea-available]');
+        if (availableHeaderEl) {
+            availableHeaderEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableHeaderEl, availableSeconds);
+        }
+        if (availableWorkareaEl) {
+            availableWorkareaEl.textContent = formattedAvailable;
+            updateAvailableDisplayStyle(availableWorkareaEl, availableSeconds);
+        }
+    };
 
     const getLibrarySortOrders = () => Array.from(library.querySelectorAll('[data-project-sprint-library-item]'))
         .map((item) => Number(item.dataset.sortOrder) || 0);
@@ -1964,20 +2066,20 @@ const initializeProjectSprintBuilderModal = () => {
     const getHelper = () => workspace.querySelector('[data-project-sprint-builder-helper]');
     const getDropzone = () => workspace.querySelector('[data-project-sprint-builder-dropzone]');
     const helperMarkup = `
-        <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
-            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-bgray-50 dark:bg-darkblack-500 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-sprint-builder-helper>
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-success-50 text-success-300 dark:bg-darkblack-500 dark:text-white">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
                 </svg>
             </span>
             <div>
-                <p class="text-sm font-semibold">Drag here for more sprints</p>
+                <p class="text-sm font-semibold text-bgray-700 dark:text-bgray-300">Drag here for more sprints</p>
                 <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another sprint from the library anywhere in this workspace to add it under the selected milestone.</p>
             </div>
         </div>
     `;
     const dropzoneMarkup = `
-        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-sprint-builder-dropzone></div>
+        <div class="h-24 rounded-[8px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-sprint-builder-dropzone></div>
     `;
 
     const createWorkspaceGuide = (markup) => {
@@ -1992,8 +2094,8 @@ const initializeProjectSprintBuilderModal = () => {
 
     const renderWorkspaceLoadingState = () => {
         workspace.innerHTML = `
-            <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
-                <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+            <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600">
+                <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                     <svg class="h-6 w-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M8 12H4m13.657-5.657l-2.829 2.829M9.172 14.828l-2.829 2.829m0-11.314l2.829 2.829m5.656 5.656l2.829 2.829" />
                     </svg>
@@ -2016,6 +2118,7 @@ const initializeProjectSprintBuilderModal = () => {
         document.body.classList.add('overflow-hidden');
 
         if (!activeMilestoneId) {
+            activeMilestoneEstimateSeconds = 0;
             renderWorkspaceFromSprints([]);
             return;
         }
@@ -2025,9 +2128,11 @@ const initializeProjectSprintBuilderModal = () => {
         try {
             const payload = await fetchProjectModuleSprints(activeMilestoneId, { loadUrl, all: true });
             activeModuleName = milestoneName || payload.milestone?.name || activeModuleName;
+            activeMilestoneEstimateSeconds = Number(payload.milestone?.estimated_time_seconds) || 0;
             updateModuleContext();
             renderWorkspaceFromSprints(payload.sprints || []);
         } catch (error) {
+            activeMilestoneEstimateSeconds = 0;
             renderWorkspaceFromSprints([]);
             showModalError(error.message || 'Unable to load project sprints.');
             return;
@@ -2100,8 +2205,8 @@ const initializeProjectSprintBuilderModal = () => {
 
         if (!cards.length && !emptyState) {
             workspace.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-sprint-builder-empty>
-                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-sprint-builder-empty>
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -2117,6 +2222,7 @@ const initializeProjectSprintBuilderModal = () => {
         updateCount();
         syncOrderBadges();
         syncWorkspaceGuides();
+        recalculateSprintAvailableTime();
     };
 
     const renderWorkspaceFromSprints = (sprints) => {
@@ -2140,6 +2246,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         ensureEmptyState();
         getCards().forEach((card) => setCardExpanded(card, false));
+        recalculateSprintAvailableTime();
     };
 
     const setCardStatus = (card, status, classes = '') => {
@@ -2371,6 +2478,7 @@ const initializeProjectSprintBuilderModal = () => {
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setSprintCardSaveButtonState(card, false);
         setCardStatus(card, 'Saved');
+        recalculateSprintAvailableTime();
     };
 
     const createLibrarySprintCard = async (librarySprint) => {
@@ -2487,6 +2595,7 @@ const initializeProjectSprintBuilderModal = () => {
             ensureEmptyState();
             clearProjectModuleSprintCache(activeMilestoneId);
             replaceRenderedSection(result);
+            recalculateSprintAvailableTime();
         } catch (error) {
             setCardStatus(card, 'Delete failed', 'mt-2 text-xs font-medium text-red-500 dark:text-red-300');
             showModalError(error.message || 'Unable to delete the project sprint.');
@@ -2744,6 +2853,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateSprintAvailableTime();
     });
 
     workspace.addEventListener('change', function (event) {
@@ -2763,6 +2873,7 @@ const initializeProjectSprintBuilderModal = () => {
 
         clearInlineFormErrors(card, 'data-project-sprint-builder-error');
         setCardStatus(card, 'Pending changes...', 'mt-2 text-xs font-medium text-warning-500 dark:text-warning-300');
+        recalculateSprintAvailableTime();
     });
 
     workspace.addEventListener('click', function (event) {
@@ -2826,6 +2937,7 @@ const initializeProjectSprintBuilderModal = () => {
 
     ensureEmptyState();
     updateModuleContext();
+    recalculateSprintAvailableTime();
     modal.dataset.projectSprintBuilderInitialized = 'true';
 };
 

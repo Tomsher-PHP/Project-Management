@@ -17,13 +17,10 @@ class CustomerController extends Controller
 {
     protected string $pageTitle;
 
-    protected string $subTitle;
-
     public function __construct()
     {
         $this->pageTitle = 'Customer Management';
-        $this->subTitle = 'Manage customer information and details';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -48,7 +45,7 @@ class CustomerController extends Controller
         $parentIndustries = Industry::active()->whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $nextIndustrySortOrder = ((int) Industry::max('sort_order')) + 1;
         $emirates = config('constants.emirates');
-        $salesPeople = User::active()->orderBy('name')->get(['id', 'name']);
+        $salesPeople = User::active()->orderBy('name')->get(['id', 'name', 'email']);
 
         // Generate customer code
         $customerCode = Customer::generateCustomerCode();
@@ -112,7 +109,7 @@ class CustomerController extends Controller
                 }
             })
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'email']);
 
         // Generate customer code
         $customerCode = $customer->customer_code;

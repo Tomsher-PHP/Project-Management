@@ -165,7 +165,7 @@
             <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-task-request-reject-close></div>
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-                <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                         <div>
                             <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Reject Task Request</h3>

@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Models\Project;
+use App\Models\ProjectMilestone;
 use App\Services\ProjectServices;
 use Illuminate\Http\Request;
 
@@ -25,17 +26,19 @@ class ProjectReportService
 
             ->with([
                 'customer:id,name',
-                'projectMilestones:id,project_id,estimated_time_seconds,actual_time_seconds,status_id',
+                'projectMilestones:id,project_id,status_id',
                 'salesPerson:id,name',
                 'projectStatus:id,name,color',
                 'projectStage:id,name,color',
             ])
 
+            ->withSum('tasks', 'actual_time_seconds')
+
             ->withCount([
                 'projectMilestones as total_milestones',
 
                 'projectMilestones as completed_milestones' => function ($q) {
-                    $q->where('status_id', 4);
+                    $q->where('status_id', ProjectMilestone::STATUS_COMPLETED);
                 }
             ])
 
@@ -106,22 +109,24 @@ class ProjectReportService
             // Timeline
             $timeline =
                 $this->projectServices
-                    ->getTimelines($project);
+                ->getTimelines($project);
 
             $project->project_timeline =
                 $timeline['projectTimeline'] ?? [];
 
+            $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
+            $actualSeconds = (int) ($project->tasks_sum_actual_time_seconds ?? 0);
+
             // Estimated hours
-            $project->estimated_hours =
-                round(($project->estimated_time_seconds ?? 0) / 3600);
+            $project->estimated_hours = round($estimatedSeconds / 3600);
 
             // Actual hours
-            $project->actual_hours =
-                round(($project->actual_time_seconds ?? 0) / 3600);
+            $project->actual_hours = round($actualSeconds / 3600);
 
             // Progress
-            $project->progress_percentage =
-                $project->progress ?? 0;
+            $project->progress_percentage = $estimatedSeconds > 0
+                ? round(($actualSeconds / $estimatedSeconds) * 100, 2)
+                : 0;
 
             // Status badge class
             $status =

@@ -14,6 +14,7 @@ class TaskExtendTimeRequest extends Model
         'user_id',
         'estimated_time_seconds',
         'new_estimated_time_seconds',
+        'user_requested_time_seconds',
         'status',
         'reason',
         'approved_by',
@@ -81,6 +82,17 @@ class TaskExtendTimeRequest extends Model
     public function getNewEstimatedTimeFormattedAttribute(): string
     {
         return $this->formatSeconds($this->new_estimated_time_seconds);
+    }
+
+    public function getUserRequestedTimeFormattedAttribute(): string
+    {
+        return $this->formatSeconds($this->user_requested_time_seconds ?? $this->new_estimated_time_seconds);
+    }
+
+    public function hasDifference(): bool
+    {
+        return $this->user_requested_time_seconds !== null
+            && (int) $this->user_requested_time_seconds !== (int) $this->new_estimated_time_seconds;
     }
 
     private function formatSeconds(?int $seconds): string

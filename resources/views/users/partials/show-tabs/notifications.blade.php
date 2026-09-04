@@ -3,18 +3,6 @@
         Notification Preferences
     </h3>
     <div class="space-y-5">
-        <div class="!mb-0 grid grid-cols-12 items-center border-b px-4 py-3 font-semibold text-bgray-600 dark:text-white">
-            <div class="col-span-6">
-                Action
-            </div>
-            <div class="col-span-3 text-center">
-                In-App
-            </div>
-            <div class="col-span-3 text-center">
-                Email
-            </div>
-        </div>
-
         @php
             $userSettings = $user->notificationSettings->keyBy('action');
             $notificationGroupOrder = [
@@ -24,7 +12,33 @@
                 'Requests & Approvals',
             ];
             $groupedNotificationSettings = collect($userNotificationSettings)->groupBy('group');
+
+            $allActions = collect($userNotificationSettings)->pluck('action')->filter()->values();
+            $totalActions = $allActions->count();
+
+            $allInAppEnabled = $totalActions > 0 && $allActions->every(function ($act) use ($userSettings) {
+                return isset($userSettings[$act]) && (bool) $userSettings[$act]->in_app;
+            });
+
+            $allMailEnabled = $totalActions > 0 && $allActions->every(function ($act) use ($userSettings) {
+                return isset($userSettings[$act]) && (bool) $userSettings[$act]->mail;
+            });
         @endphp
+
+        <div class="!mb-0 grid grid-cols-12 items-center border-b px-4 py-3 font-semibold text-bgray-600 dark:text-white">
+            <div class="col-span-6">
+                Action
+            </div>
+            <div class="col-span-3 flex items-center justify-center gap-2">
+                <span>In-App</span>
+                <input type="checkbox" class="bulk-notification-toggle h-4 w-4 cursor-pointer rounded border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-field="in_app" data-user="{{ $user->id }}" {{ $allInAppEnabled ? 'checked' : '' }}>
+            </div>
+            <div class="col-span-3 flex items-center justify-center gap-2">
+                <span>Email</span>
+                <input type="checkbox" class="bulk-notification-toggle h-4 w-4 cursor-pointer rounded border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600" data-field="mail" data-user="{{ $user->id }}" {{ $allMailEnabled ? 'checked' : '' }}>
+            </div>
+        </div>
+
         @foreach ($notificationGroupOrder as $notificationGroup)
             @if ($groupedNotificationSettings->has($notificationGroup))
                 <div class="!mt-0 border-b border-bgray-200 px-4 py-3 text-base font-semibold text-bgray-900 dark:border-darkblack-400 dark:text-white" style="background-color: rgba(0, 0, 0, 0.02); text-align: center;">

@@ -9,7 +9,6 @@ const ADVANCED_TASK_FIELDS = new Set([
     'task_type_id',
     'task_mode_id',
     'priority',
-    'due_date_time',
     'tag_ids',
     'is_billable',
 ]);
@@ -204,7 +203,10 @@ const setSelectOptions = (field, options = [], { placeholder = 'Select option', 
         }
 
         if (field.multiple) {
-            field.tomselect.setValue(normalizedValue, true);
+            const multiValues = Array.isArray(normalizedValue)
+                ? normalizedValue
+                : (normalizedValue !== '' ? [normalizedValue] : []);
+            field.tomselect.setValue(multiValues, true);
             return;
         }
 
@@ -232,6 +234,9 @@ const setSelectOptions = (field, options = [], { placeholder = 'Select option', 
         const optionElement = document.createElement('option');
         optionElement.value = option.value;
         optionElement.textContent = option.text;
+        if (option.subtype) {
+            optionElement.dataset.subtype = option.subtype;
+        }
         field.appendChild(optionElement);
     });
 
@@ -302,7 +307,7 @@ const syncSelfAssignee = (form, options = []) => {
         return;
     }
 
-    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const selfAssigneeId = String(form.dataset.selfAssigneeId || '');
 
     if (!assigneeField || !selfAssigneeId) {
@@ -317,11 +322,17 @@ const syncSelfAssignee = (form, options = []) => {
     }
 
     if (assigneeField.tomselect) {
-        assigneeField.tomselect.setValue(selfAssigneeId, true);
+        assigneeField.tomselect.setValue(assigneeField.multiple ? [selfAssigneeId] : selfAssigneeId, true);
         return;
     }
 
-    assigneeField.value = selfAssigneeId;
+    if (assigneeField.multiple) {
+        Array.from(assigneeField.options).forEach((opt) => {
+            opt.selected = String(opt.value) === selfAssigneeId;
+        });
+    } else {
+        assigneeField.value = selfAssigneeId;
+    }
 };
 
 const openTaskCreateModal = (modal) => {
@@ -413,7 +424,7 @@ const setEmptyProjectState = (form) => {
         placeholder: 'Select project first',
         disabled: true,
     });
-    setSelectOptions(form.querySelector('[name="current_assignee_id"]'), [], {
+    setSelectOptions(form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]'), [], {
         placeholder: 'Select project first',
         disabled: true,
     });
@@ -425,15 +436,92 @@ const setEmptyProjectState = (form) => {
     setCheckboxValue(form.querySelector('input[type="checkbox"][name="is_billable"]'), false);
 };
 
+const setProjectLoadingState = (form) => {
+    setTaskCreateRequiredIndicators(form, false);
+    setTaskCreatePlacementHint(form, null);
+
+    setSelectOptions(form.querySelector('[name="project_milestone_id"]'), [], {
+        placeholder: 'Loading milestones...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="project_sprint_id"]'), [], {
+        placeholder: 'Loading sprints...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="parent_task_id"]'), [], {
+        placeholder: 'Loading parent tasks...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]'), [], {
+        placeholder: 'Loading assignees...',
+        disabled: true,
+    });
+    setSelectOptions(form.querySelector('[name="status_id"]'), [], {
+        placeholder: 'Loading statuses...',
+        disabled: true,
+    });
+};
+
+const fetchProjectDependencies = async (dependencies, projectId) => {
+    if (!projectId) {
+        return null;
+    }
+
+    const key = String(projectId);
+
+    if (dependencies.projects && dependencies.projects[key]) {
+        return dependencies.projects[key];
+    }
+
+    if (!dependencies.projects) {
+        dependencies.projects = {};
+    }
+
+    const urlTemplate = dependencies.dependencies_url_template || '/projects/:id/task-create-dependencies';
+    const requestUrl = urlTemplate.replace(':id', encodeURIComponent(key));
+
+    const response = await fetch(requestUrl, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.status || !result.data) {
+        throw new Error(result.message || 'Unable to load project task dependencies.');
+    }
+
+    dependencies.projects[key] = result.data;
+    return result.data;
+};
+
 const applyProjectDefaults = async (form, dependencies) => {
     const projectField = form.querySelector('[name="project_id"]');
     const milestoneField = form.querySelector('[name="project_milestone_id"]');
-    const assigneeField = form.querySelector('[name="current_assignee_id"]');
+    const assigneeField = form.querySelector('[name="current_assignee_ids[]"], [name="current_assignee_id"]');
     const statusField = form.querySelector('[name="status_id"]');
     const priorityField = form.querySelector('[name="priority"]');
     const dueDateField = form.querySelector('[name="due_date_time"]');
     const billableField = form.querySelector('input[type="checkbox"][name="is_billable"]');
-    const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
+
+    const projectId = projectField?.value || '';
+
+    if (!projectId) {
+        setEmptyProjectState(form);
+        return;
+    }
+
+    setProjectLoadingState(form);
+
+    let projectMeta = null;
+    try {
+        projectMeta = await fetchProjectDependencies(dependencies, projectId);
+    } catch (error) {
+        setEmptyProjectState(form);
+        throw error;
+    }
 
     if (!projectMeta) {
         setEmptyProjectState(form);
@@ -481,6 +569,7 @@ const applyProjectDefaults = async (form, dependencies) => {
 const loadParentTaskOptions = async (form, dependencies) => {
     const parentField = form.querySelector('[data-task-create-parent-select]');
     const projectField = form.querySelector('[name="project_id"]');
+    const milestoneField = form.querySelector('[name="project_milestone_id"]');
     const sprintField = form.querySelector('[name="project_sprint_id"]');
     const projectMeta = getProjectMeta(dependencies, projectField?.value || '');
 
@@ -496,7 +585,7 @@ const loadParentTaskOptions = async (form, dependencies) => {
         return;
     }
 
-    if (projectMeta.flow === 'agile' && !sprintField?.value) {
+    if (projectMeta.flow === 'agile' && milestoneField?.value && !sprintField?.value) {
         setSelectOptions(parentField, [], {
             placeholder: 'Select sprint first',
             disabled: true,
@@ -520,11 +609,13 @@ const loadParentTaskOptions = async (form, dependencies) => {
     const requestUrl = new URL(dependencies.parent_options_url, window.location.origin);
     requestUrl.searchParams.set('project_id', String(projectMeta.id));
 
+    if (milestoneField?.value) {
+        requestUrl.searchParams.set('project_milestone_id', String(milestoneField.value));
+    }
+
     if (sprintField?.value) {
         requestUrl.searchParams.set('project_sprint_id', String(sprintField.value));
     }
-    console.log(requestUrl);
-    
 
     const response = await fetch(requestUrl.toString(), {
         headers: {

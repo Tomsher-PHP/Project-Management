@@ -231,7 +231,7 @@ class ProjectRestoreService
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
         $trashedProjectMilestones = ProjectMilestone::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
@@ -350,7 +350,7 @@ class ProjectRestoreService
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $selectedCustomerId = $project->customer_id;
-        $selectedCategoryId = $project->project_category_id;
+        $selectedCategoryIds = $project->project_category_ids ?? [];
         $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
         $selectedParentProjectId = $project->parent_project_id;
 
@@ -358,7 +358,7 @@ class ProjectRestoreService
         $project->load('technologies');
 
         $customers = Customer::forForm($selectedCustomerId)->get();
-        $projectCategories = ProjectCategory::forForm($selectedCategoryId, 'sort_order')->get();
+        $projectCategories = ProjectCategory::forForm($selectedCategoryIds, 'sort_order')->get();
         $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
         $parentProjectOptions = Project::query()->eligibleParentOptions($project->id, $selectedParentProjectId)->get();
 

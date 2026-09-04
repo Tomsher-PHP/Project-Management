@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
+use App\Models\UserSetting;
 use App\Services\ScheduleShiftService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -215,13 +216,15 @@ class UserController extends Controller
             'roles',
             'primaryAttachment',
             'generalSettings',
+            'settings',
         ]);
 
         $userNotificationSettings = config('notification_settings');
+        $userSettings = config('constants.user_settings');
 
         $generalSettings = $user->generalSettings;
 
-        return view('users.show', compact('user', 'userNotificationSettings', 'generalSettings'));
+        return view('users.show', compact('user', 'userNotificationSettings', 'userSettings', 'generalSettings'));
     }
 
     public function updateNotificationSettings(Request $request)
@@ -233,12 +236,34 @@ class UserController extends Controller
             'value' => 'required|boolean',
         ]);
 
+        $boolVal = filter_var($request->value, FILTER_VALIDATE_BOOLEAN);
+
+        if ($request->action === 'all') {
+            $userNotificationSettings = config('notification_settings', []);
+            $actions = collect($userNotificationSettings)->pluck('action')->filter()->unique();
+
+            foreach ($actions as $act) {
+                $setting = UserNotificationSetting::firstOrCreate([
+                    'user_id' => $request->user_id,
+                    'action' => $act,
+                ]);
+
+                $setting->{$request->field} = $boolVal;
+                $setting->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification settings updated successfully'
+            ], Response::HTTP_OK);
+        }
+
         $setting = UserNotificationSetting::firstOrCreate([
             'user_id' => $request->user_id,
             'action' => $request->action,
         ]);
 
-        $setting->{$request->field} = $request->value;
+        $setting->{$request->field} = $boolVal;
         $setting->save();
 
         return response()->json([
@@ -249,17 +274,46 @@ class UserController extends Controller
 
     public function updateGeneralSettings(Request $request)
     {
+        $userSettingKeys = array_keys(config('constants.user_settings', []));
+
         $request->validate([
-            'field' => 'required|in:kanban_view,theme',
-            'value' => 'required|string'
+            'user_id' => 'required|exists:users,id',
+            'field' => 'required|in:kanban_view,theme,' . implode(',', $userSettingKeys),
         ]);
 
-        UserGeneralSetting::updateOrCreate(
-            ['user_id' => $request->user_id],
-            [
-                $request->field => $request->value
-            ]
-        );
+        if (in_array($request->field, $userSettingKeys, true)) {
+            if (!auth()->user()->can('user.edit')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to update user settings.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            $request->validate([
+                'value' => 'required|boolean',
+            ]);
+
+            UserSetting::updateOrCreate(
+                [
+                    'user_id' => $request->user_id,
+                    'key' => $request->field,
+                ],
+                [
+                    'value' => filter_var($request->value, FILTER_VALIDATE_BOOLEAN),
+                ]
+            );
+        } else {
+            $request->validate([
+                'value' => 'required|string',
+            ]);
+
+            UserGeneralSetting::updateOrCreate(
+                ['user_id' => $request->user_id],
+                [
+                    $request->field => $request->value
+                ]
+            );
+        }
 
         return response()->json([
             'success' => true,

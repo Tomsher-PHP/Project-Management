@@ -20,13 +20,11 @@ class ScheduleShiftController extends Controller
     private const TEAM_FILTER_NOT_IN_TEAM = 'not_in_team';
 
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Schedule Shift';
-        $this->subTitle = 'Schedule shift subtitle here...';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, ScheduleShiftService $scheduleService)

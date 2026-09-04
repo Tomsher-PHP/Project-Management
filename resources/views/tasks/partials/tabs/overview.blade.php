@@ -1,10 +1,11 @@
 @php
-    $cardClasses = 'rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600';
+    $cardClasses = 'rounded-[8px] border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600';
     $cardTitleClasses = 'text-base font-semibold text-bgray-900 dark:text-white';
     $cardTextClasses = 'text-sm text-bgray-600 dark:text-bgray-300';
     $emptyTextClasses = 'text-sm italic text-bgray-600 dark:text-bgray-300';
-    $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' : ($timeComparison['is_over_estimate'] ? 'bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
+    $timeStatusClasses = !$timeComparison['has_estimate'] ? 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300' : ($timeComparison['is_over_estimate'] ? 'bg-error-50 text-error-300 dark:bg-red-900/20 dark:text-red-300' : 'bg-success-50 text-success-400 dark:bg-success-900/20 dark:text-success-200');
     $timeBarClasses = $timeComparison['is_over_estimate'] ? 'bg-red-500' : 'bg-success-400';
+    $actualTimeClasses = !$timeComparison['has_estimate'] || $timeComparison['is_over_estimate'] ? 'text-error-300 dark:text-red-300' : 'text-success-400 dark:text-success-300';
     $isCompleted = (bool) $task->status?->is_completed;
     $wasCompletedLate = $isCompleted && $task->completed_at && $task->due_date_time && $task->completed_at->gt($task->due_date_time);
     $completedAtClasses = $wasCompletedLate ? 'text-red-500 dark:text-red-600' : 'text-success-400 dark:text-success-300';
@@ -154,7 +155,7 @@
 
             <section class="{{ $cardClasses }}">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="{{ $cardTitleClasses }}">Estimated / Actual Time</h3>
+                    <h3 class="{{ $cardTitleClasses }}">{{ __('label.project.estimated') }} / {{ __('label.project.spent') }} Time</h3>
                     <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $timeStatusClasses }}">
                         {{ $timeComparison['status_label'] }}
                     </span>
@@ -162,13 +163,13 @@
 
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                     <div class="rounded-xl bg-bgray-50 px-4 py-4 dark:bg-darkblack-500">
-                        <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">Estimated</p>
+                        <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">{{ __('label.project.estimated') }}</p>
                         <p class="mt-2 text-base font-semibold text-bgray-900 dark:text-white">{{ $timeComparison['estimated_formatted'] }}</p>
                     </div>
 
                     <div class="rounded-xl bg-bgray-50 px-4 py-4 dark:bg-darkblack-500">
-                        <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">Actual</p>
-                        <p class="mt-2 text-base font-semibold text-bgray-900 dark:text-white">{{ $timeComparison['actual_formatted'] }}</p>
+                        <p class="text-xs font-medium uppercase tracking-[0.14em] text-bgray-600 dark:text-bgray-300">{{ __('label.project.spent') }}</p>
+                        <p class="mt-2 text-base font-semibold {{ $actualTimeClasses }}">{{ $timeComparison['actual_formatted'] }}</p>
                     </div>
 
                     <div class="rounded-xl bg-bgray-50 px-4 py-4 dark:bg-darkblack-500">
@@ -196,7 +197,7 @@
                         @if (!$timeComparison['has_estimate'])
                             <span class="text-error-200">Add an estimate to start comparing planned and actual effort.</span>
                         @elseif ($timeComparison['is_over_estimate'])
-                            <span class="text-error-200">Actual time is over the estimate by {{ $timeComparison['remaining_or_over_formatted'] }}.</span>
+                            <span class="text-error-200">{{ __('label.project.spent') }} time is over the estimate by {{ $timeComparison['remaining_or_over_formatted'] }}.</span>
                         @else
                             <span class="text-bgray-800 dark:text-bgray-300">{{ $timeComparison['estimated_formatted'] }} / {{ $timeComparison['remaining_or_over_formatted'] }} remaining within the current estimate.</span>
                         @endif

@@ -1,7 +1,5 @@
 @php
-    $editableProjectModules = ($editableProjectModules ?? $projectMilestones)
-        ->reject(fn ($milestone) => (bool) ($milestone->is_backlog || $milestone->is_system))
-        ->values();
+    $editableProjectModules = ($editableProjectModules ?? $projectMilestones)->reject(fn($milestone) => (bool) ($milestone->is_backlog || $milestone->is_system))->values();
     $projectModuleBuilderConfig = [
         'storeUrl' => route('projects.milestones.store', $project),
         'updateUrlTemplate' => route('projects.milestones.update', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
@@ -9,10 +7,21 @@
         'reorderUrl' => route('projects.milestones.reorder', $project),
         'libraryStoreUrl' => route('settings.agile-milestones.store'),
         'nextLibrarySortOrder' => ((int) $agileMilestones->max('sort_order')) + 1,
-        'owners' => $assignableUsers->map(fn ($user) => [
-            'id' => $user->id,
-            'name' => $user->name,
-        ])->values(),
+        'owners' => $assignableUsers
+            ->map(
+                fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ],
+            )
+            ->values(),
+        'projectEstimatedTimeSeconds' => (int) ($project->estimated_time_seconds ?? 0),
+        'otherMilestonesSeconds' => (int) $project
+            ->projectMilestones()
+            ->where(function ($q) {
+                $q->where('is_backlog', true)->orWhere('is_system', true);
+            })
+            ->sum('estimated_time_seconds'),
     ];
     $projectSprintBuilderConfig = [
         'storeUrlTemplate' => route('projects.milestones.sprints.store', ['project' => $project, 'projectMilestone' => '__MILESTONE__']),
@@ -33,7 +42,7 @@
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-7xl">
-                <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">
@@ -41,7 +50,15 @@
                             </h3>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Estimate: <span class="text-bgray-900 dark:text-white" data-project-milestone-header-estimate>0 h : 0 m</span>
+                            </div>
+
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Available: <span data-project-milestone-header-available>0 h : 0 m</span>
+                            </div>
+
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-milestone-builder-count>{{ $editableProjectModules->count() }}</span>
                             </div>
@@ -54,12 +71,14 @@
 
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
-                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
-                                    <p class="mt-1 text-sm text-bgray-600 dark:text-bgray-300">
-                                        Drop needed milestones here, then adjust only the working details your team needs right now.
-                                    </p>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex flex-wrap items-center gap-4 sm:gap-6">
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Estimate: <span data-project-milestone-workarea-estimate>0 h : 0 m</span>
+                                    </div>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Available: <span data-project-milestone-workarea-available>0 h : 0 m</span>
+                                    </div>
                                 </div>
 
                                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-milestone-builder-reset-search>
@@ -70,8 +89,8 @@
                                 </button>
                             </div>
 
-                            <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
-                                    <div class="space-y-4" data-project-milestone-builder-workspace>
+                            <div class="min-h-0 flex-1 overflow-y-auto rounded-[8px] border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
+                                <div class="space-y-4" data-project-milestone-builder-workspace>
                                     @forelse ($editableProjectModules as $milestone)
                                         <article class="select-text rounded-none border bg-white p-4 shadow-sm dark:bg-darkblack-600" style="border-color: {{ $milestone->color ?: '#E5E7EB' }};" data-project-milestone-builder-card data-milestone-id="{{ $milestone->id }}" data-milestone-name="{{ $milestone->name }}" data-expanded="false" draggable="false">
                                             <input type="hidden" name="color" value="{{ $milestone->color ?: '#22C55E' }}">
@@ -114,56 +133,51 @@
 
                                             <div class="mt-4 hidden border-t border-bgray-100 pt-4 dark:border-darkblack-400" data-project-milestone-builder-body>
                                                 <div class="grid gap-4 xl:grid-cols-2">
-                                                <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
-                                                    <input type="text" name="name" value="{{ $milestone->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
-                                                </div>
-
-                                                <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Owner</label>
-                                                    <select name="owner_id" class="tom-select w-full" data-sort="0">
-                                                        <option value="">Select owner</option>
-                                                        @foreach ($assignableUsers as $assignableUser)
-                                                            <option value="{{ $assignableUser->id }}" @selected((int) $milestone->owner_id === (int) $assignableUser->id)>{{ $assignableUser->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="owner_id"></p>
-                                                </div>
-
-                                                <div>
-                                                    <x-forms.estimated-time-input
-                                                        label="Estimated Time"
-                                                        name="estimated_time_minutes"
-                                                        :total-minutes="$milestone->estimated_time_minutes ?? 0"
-                                                        :show-label="false"
-                                                    />
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="estimated_time_minutes"></p>
-                                                </div>
-
-                                                <div>
-                                                    <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Date Range</label>
-                                                    <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-milestone-builder-date-range>
-                                                    <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
-                                                    <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="start_date"></p>
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="end_date"></p>
-                                                </div>
-
-                                                <div class="xl:col-span-2">
-                                                    <div class="mb-2 flex items-center justify-between gap-3">
-                                                        <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
-                                                        <span class="text-[11px] font-medium text-bgray-600 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
+                                                    <div>
+                                                        <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Name <x-red-star /></label>
+                                                        <input type="text" name="name" value="{{ $milestone->name }}" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="name"></p>
                                                     </div>
-                                                    <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
-                                                    <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
-                                                </div>
+
+                                                    <div>
+                                                        <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Owner</label>
+                                                        <select name="owner_id" class="tom-select w-full" data-sort="0">
+                                                            <option value="">Select owner</option>
+                                                            @foreach ($assignableUsers as $assignableUser)
+                                                                <option value="{{ $assignableUser->id }}" @selected((int) $milestone->owner_id === (int) $assignableUser->id)>{{ $assignableUser->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="owner_id"></p>
+                                                    </div>
+
+                                                    <div>
+                                                        <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="$milestone->estimated_time_minutes ?? 0" :show-label="false" />
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="estimated_time_minutes"></p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label class="mb-2 block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Date Range</label>
+                                                        <input type="text" value="{{ $milestone->start_date?->format('Y-m-d') }}{{ $milestone->start_date && $milestone->end_date ? ' to ' : '' }}{{ $milestone->end_date?->format('Y-m-d') }}" class="datepicker project-milestone-date-range w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-mode="range" data-format="Y-m-d" data-min-date="{{ collect([$milestone->start_date?->format('Y-m-d'), $milestone->end_date?->format('Y-m-d'), now(config('constants.timezone'))->toDateString()])->filter()->sort()->first() }}" data-project-milestone-builder-date-range>
+                                                        <input type="hidden" name="start_date" value="{{ $milestone->start_date?->format('Y-m-d') }}">
+                                                        <input type="hidden" name="end_date" value="{{ $milestone->end_date?->format('Y-m-d') }}">
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="start_date"></p>
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="end_date"></p>
+                                                    </div>
+
+                                                    <div class="xl:col-span-2">
+                                                        <div class="mb-2 flex items-center justify-between gap-3">
+                                                            <label class="block text-left text-xs font-semibold uppercase tracking-wide text-bgray-700 dark:text-bgray-300">Description</label>
+                                                            <span class="text-[11px] font-medium text-bgray-600 dark:text-bgray-300"><span data-project-milestone-builder-description-count>{{ strlen($milestone->description ?? '') }}</span>/100</span>
+                                                        </div>
+                                                        <textarea name="description" rows="2" maxlength="100" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">{{ $milestone->description }}</textarea>
+                                                        <p class="mt-1 hidden text-xs text-red-500" data-project-milestone-builder-error="description"></p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </article>
                                     @empty
-                                        <div class="rounded-2xl border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
-                                            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
+                                        <div class="rounded-[8px] border border-dashed border-bgray-300 bg-white px-6 py-12 text-center dark:border-darkblack-400 dark:bg-darkblack-600" data-project-milestone-builder-empty>
+                                            <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[8px] bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300">
                                                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                 </svg>
@@ -174,21 +188,21 @@
                                             </p>
                                         </div>
                                     @endforelse
-                                        @if ($editableProjectModules->isNotEmpty())
-                                            <div class="flex items-center gap-3 rounded-2xl border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
-                                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
-                                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
-                                                    </svg>
-                                                </span>
-                                                <div>
-                                                    <p class="text-sm font-semibold">Drag here for more milestones</p>
-                                                    <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
-                                                </div>
+                                    @if ($editableProjectModules->isNotEmpty())
+                                        <div class="flex items-center gap-3 rounded-[8px] border border-dashed border-success-200/80 bg-white/75 px-4 py-3 text-success-500 dark:border-success-900/40 dark:bg-darkblack-600/60 dark:text-success-300" data-project-milestone-builder-helper>
+                                            <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success-50 text-success-500 dark:bg-darkblack-500 dark:text-success-300">
+                                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                                                </svg>
+                                            </span>
+                                            <div>
+                                                <p class="text-sm font-semibold">Drag here for more milestones</p>
+                                                <p class="text-xs text-bgray-700 dark:text-bgray-300">Drop another library item anywhere in this workspace to add it to the project.</p>
                                             </div>
-                                        @endif
-                                        <div class="h-24 rounded-2xl border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
-                                    </div>
+                                        </div>
+                                    @endif
+                                    <div class="h-24 rounded-[8px] border border-dashed border-bgray-200/70 bg-bgray-50/40 dark:border-darkblack-400/60 dark:bg-darkblack-500/20" data-project-milestone-builder-dropzone></div>
+                                </div>
                             </div>
                         </div>
 
@@ -196,7 +210,7 @@
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Milestone Library</h4>
                                 @can('agile_milestone.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-milestone-library-create-open aria-label="Add milestone library item" title="Add milestone library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
@@ -257,7 +271,7 @@
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
-                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Milestone</h3>
 
@@ -321,7 +335,7 @@
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
             <div class="relative z-10 w-full max-w-7xl">
-                <div class="overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-darkblack-600">
+                <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                     <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400 sm:px-7">
                         <div>
                             <h3 class="text-xl font-semibold text-bgray-900 dark:text-white">Build Project Sprints</h3>
@@ -330,7 +344,15 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Estimate: <span class="text-bgray-900 dark:text-white" data-project-sprint-header-estimate>0 h : 0 m</span>
+                            </div>
+
+                            <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
+                                Available: <span data-project-sprint-header-available>0 h : 0 m</span>
+                            </div>
+
                             <div class="rounded-full border border-bgray-200 bg-bgray-50 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300">
                                 Selected: <span data-project-sprint-builder-count>0</span>
                             </div>
@@ -343,17 +365,17 @@
 
                     <div class="grid h-[82vh] max-h-[82vh] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,1fr)]">
                         <div class="flex min-h-0 flex-col border-b border-bgray-200 p-6 dark:border-darkblack-400 xl:border-b-0 xl:border-r">
-                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Work Area</h4>
-                                        <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-500 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
-                                            Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
-                                        </span>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex flex-wrap items-center gap-4 sm:gap-6">
+                                    <span class="inline-flex rounded-full border border-success-200 bg-success-50 px-3 py-1 text-xs font-semibold text-success-300 dark:border-success-900/30 dark:bg-darkblack-500 dark:text-success-300">
+                                        Milestone: <span class="ml-1" data-project-sprint-builder-milestone-name>Select a milestone</span>
+                                    </span>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Estimate: <span data-project-sprint-workarea-estimate>0 h : 0 m</span>
                                     </div>
-                                    <p class="mt-1 text-sm text-bgray-700 dark:text-bgray-300">
-                                        Drag needed sprints here, then fine-tune each sprint directly inside this milestone workspace.
-                                    </p>
+                                    <div class="text-base font-semibold text-bgray-900 dark:text-white sm:text-lg">
+                                        Available: <span data-project-sprint-workarea-available>0 h : 0 m</span>
+                                    </div>
                                 </div>
 
                                 <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-bgray-200 bg-white px-3 py-2 text-sm font-medium text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" data-project-sprint-builder-reset-search>
@@ -364,7 +386,7 @@
                                 </button>
                             </div>
 
-                            <div class="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
+                            <div class="min-h-0 flex-1 overflow-y-auto rounded-[8px] border border-dashed border-success-200 bg-success-50/30 p-4 pr-3 dark:border-success-900/30 dark:bg-darkblack-500/20">
                                 <div class="space-y-4" data-project-sprint-builder-workspace></div>
                             </div>
                         </div>
@@ -373,7 +395,7 @@
                             <div class="mb-5 flex items-center justify-between gap-3">
                                 <h4 class="text-lg font-semibold text-bgray-900 dark:text-white">Sprint Library</h4>
                                 @can('agile_sprint.create')
-                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
+                                    <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] border border-success-200 bg-white text-success-400 transition duration-200 hover:border-success-300 hover:bg-success-50 hover:text-success-500 dark:border-success-900/30 dark:bg-darkblack-600 dark:text-success-300 dark:hover:border-success-300 dark:hover:bg-darkblack-500" data-project-sprint-library-create-open aria-label="Add sprint library item" title="Add sprint library item">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
@@ -434,7 +456,7 @@
 
             <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
                 <div class="relative z-10 w-full max-w-3xl">
-                    <div class="overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+                    <div class="overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-5 dark:border-darkblack-400 sm:px-7">
                             <h3 class="text-2xl font-semibold text-bgray-900 dark:text-white">Add Sprint</h3>
 

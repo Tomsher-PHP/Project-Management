@@ -27,7 +27,7 @@
                     @include('customers.partials.tabs.profile-grade')
                 </div>
                 <div class="hidden" role="tabpanel" aria-label="Customer address" data-customer-tab-panel="address">
-                    <section class="rounded-2xl border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                    <section class="rounded-[8px] border border-bgray-200 bg-white p-5 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                         <h3 class="text-base font-bold text-bgray-900 dark:text-white">Company Address</h3>
 
                         <div class="mt-4 rounded-xl bg-bgray-50 p-4 text-sm leading-6 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">

@@ -16,7 +16,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher Pmt</title>
+    <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher PMS</title>
 
     <script>
         window.authUserId = {{ auth()->id() }};
@@ -34,12 +34,12 @@
     @stack('styles')
 </head>
 
-<body class="bg-white dark:bg-darkblack-700 min-h-screen">
+<body class="bg-bgray-100 dark:bg-darkblack-700 min-h-screen">
     <!-- Page Loader -->
     <x-page-loader />
 
     <!-- layout start -->
-    <div id="layout-wrapper" class="layout-wrapper active w-full min-h-screen bg-white dark:bg-darkblack-700">
+    <div id="layout-wrapper" class="layout-wrapper active w-full min-h-screen bg-bgray-100 dark:bg-darkblack-700">
         <script>
             (function() {
                 if (localStorage.getItem('sidebar_state') === 'collapsed') {
@@ -47,7 +47,7 @@
                 }
             })();
         </script>
-        <div class="relative flex w-full min-h-screen bg-white dark:bg-darkblack-700">
+        <div class="relative flex w-full min-h-screen bg-bgray-100 dark:bg-darkblack-700">
 
             @include('layouts.sidebar')
 
@@ -55,7 +55,7 @@
 
             @include('layouts.sidebar2')
 
-            <div class="body-wrapper flex-1 overflow-x-clip dark:bg-darkblack-700 min-h-screen">
+            <div class="body-wrapper flex-1 min-w-0 overflow-x-clip bg-bgray-100 dark:bg-darkblack-700 min-h-screen">
 
                 @include('layouts.navbar')
                 @include('layouts.navbar2')
@@ -76,6 +76,10 @@
     <!-- layout end -->
 
     <x-activity-log.details-modal />
+
+    @auth
+        @include('quick-notes.partials.drawer')
+    @endauth
 
     <!--scripts -->
     <script src="{{ asset(config('assets.js.jquery')) }}"></script>

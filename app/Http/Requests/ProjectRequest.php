@@ -16,6 +16,19 @@ class ProjectRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('project_category_id') && ! $this->has('project_category_ids')) {
+            $catId = $this->input('project_category_id');
+            $this->merge([
+                'project_category_ids' => $catId !== null && $catId !== '' ? [$catId] : [],
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -39,10 +52,13 @@ class ProjectRequest extends FormRequest
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'customer_end_date' => 'nullable|date|after_or_equal:end_date',
                 'estimated_time_minutes' => 'nullable|integer|min:0',
+                'customer_estimate_minutes' => 'nullable|integer|min:0',
                 'default_task_estimate_minutes' => 'nullable|integer|min:0',
                 'domain' => 'nullable|string',
                 'sales_person_id' => 'nullable|exists:users,id',
                 'project_category_id' => 'nullable|exists:project_categories,id',
+                'project_category_ids' => 'nullable|array',
+                'project_category_ids.*' => 'nullable|exists:project_categories,id',
                 'default_billable' => 'nullable|boolean',
                 'project_technology_ids' => 'nullable|array',
                 'project_technology_ids.*' => 'nullable|exists:technologies,id',
@@ -113,10 +129,14 @@ class ProjectRequest extends FormRequest
             'customer_end_date.after_or_equal' => 'The customer end date must be the same as or after the end date.',
             'estimated_time_minutes.integer' => 'Estimate time must be a whole number of minutes.',
             'estimated_time_minutes.min' => 'Estimate time cannot be less than 0 minutes.',
+            'customer_estimate_minutes.integer' => 'Customer estimate time must be a whole number of minutes.',
+            'customer_estimate_minutes.min' => 'Customer estimate time cannot be less than 0 minutes.',
             'default_task_estimate_minutes.integer' => 'Default task estimate must be a whole number of minutes.',
             'default_task_estimate_minutes.min' => 'Default task estimate cannot be less than 0 minutes.',
             'sales_person_id.exists' => 'The selected sales person is invalid.',
             'project_category_id.exists' => 'The selected project category is invalid.',
+            'project_category_ids.array' => 'Project categories must be provided as a list.',
+            'project_category_ids.*.exists' => 'One or more selected project categories are invalid.',
             'default_billable.boolean' => 'The default billable value is invalid.',
             'project_technology_ids.array' => 'Project technologies must be provided as a list.',
             'project_technology_ids.*.exists' => 'One or more selected technologies are invalid.',
@@ -136,10 +156,12 @@ class ProjectRequest extends FormRequest
             'end_date' => 'end date',
             'customer_end_date' => 'customer end date',
             'estimated_time_minutes' => 'estimate time',
+            'customer_estimate_minutes' => 'customer estimate time',
             'default_task_estimate_minutes' => 'default task estimate',
             'domain' => 'domain',
             'sales_person_id' => 'sales person',
             'project_category_id' => 'project category',
+            'project_category_ids' => 'project categories',
             'default_billable' => 'default billable',
             'project_technology_ids' => 'project technologies',
         ];

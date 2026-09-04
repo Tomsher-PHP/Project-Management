@@ -3,17 +3,14 @@
 namespace App\Services;
 
 use App\Jobs\SendWelcomeMailJob;
-use App\Mail\WelcomeUserMail;
 use App\Models\Configuration;
 use App\Models\ProjectMember;
 use App\Models\Role;
-use App\Models\Shift;
 use App\Models\User;
 use App\Models\UserDetail;
 use App\Models\UserGeneralSetting;
 use App\Models\UserNotificationSetting;
-use App\Models\UserShiftAssignment;
-use Illuminate\Support\Carbon;
+use App\Models\UserSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\Facades\LogBatch;
@@ -22,10 +19,12 @@ class UserService
 {
 
     protected AttachmentService $attachmentService;
+    protected string $avatarDisk;
 
     public function __construct(AttachmentService $attachmentService)
     {
         $this->attachmentService = $attachmentService;
+        $this->avatarDisk = env('AVATAR_DISK', 'public');
     }
 
     public function createUser(array $data)
@@ -62,7 +61,7 @@ class UserService
 
             // 4. Image upload can be handled here if needed
             if (!empty($data['profile_image'])) {
-                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, 'public', 'public', true);
+                $this->attachmentService->upload($data['profile_image'], 'user_profile', $user, $this->avatarDisk, 'public', true);
             }
 
             // KPI sync
@@ -87,6 +86,20 @@ class UserService
                 'theme' => 'light',
             ]
         );
+
+        // Add user settings for this user
+        $userSettings = config('constants.user_settings', []);
+        foreach ($userSettings as $key => $label) {
+            UserSetting::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'key' => $key,
+                ],
+                [
+                    'value' => false,
+                ]
+            );
+        }
     }
 
     private function createDefaultNotificationSettings(User $user): void
@@ -111,52 +124,6 @@ class UserService
                 ]
             );
         }
-    }
-
-    private function assignDefaultShift(User $user): void
-    {
-        if ($user->shiftAssignments()->exists()) {
-            return;
-        }
-
-        $defaultShift = Shift::query()
-            ->active()
-            ->where('is_default', true)
-            ->with('weekends')
-            ->first();
-
-        if (! $defaultShift) {
-            return;
-        }
-
-        $createdDate = $user->created_at
-            ? $user->created_at->copy()->timezone((string) config('constants.timezone', config('app.timezone')))->toDateString()
-            : Carbon::now((string) config('constants.timezone', config('app.timezone')))->toDateString();
-
-        $assignment = UserShiftAssignment::create([
-            'user_id' => $user->id,
-            'shift_id' => $defaultShift->id,
-            'shift_name' => $defaultShift->name,
-            'time_from' => $defaultShift->time_from,
-            'time_to' => $defaultShift->time_to,
-            'break_duration' => $defaultShift->break_duration,
-            'color_code' => $defaultShift->color_code,
-            'date_from' => $createdDate,
-            'date_to' => null,
-        ]);
-
-        if ($defaultShift->weekends->isEmpty()) {
-            return;
-        }
-
-        $assignment->weekends()->createMany(
-            $defaultShift->weekends
-                ->map(fn($weekend) => [
-                    'weekday' => $weekend->weekday,
-                    'week_number' => $weekend->week_number,
-                ])
-                ->all()
-        );
     }
 
     public function updateUser(User $user, array $data)
@@ -187,7 +154,6 @@ class UserService
                 ->only((new UserDetail())->getFillable())
                 ->toArray();
 
-            // dd($detailsData);
             $user->details()->updateOrCreate([], $detailsData);
 
             // kpis
@@ -217,7 +183,7 @@ class UserService
             $image,
             'user_profile',
             $user,
-            'public',
+            $this->avatarDisk,
             'public',
             true
         );

@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <div class="prose mt-4 max-w-none text-sm text-bgray-700 dark:prose-invert dark:text-bgray-300">
+    <div class="prose mt-4 max-h-68 max-w-none overflow-y-auto pr-2 text-sm text-bgray-700 dark:prose-invert dark:text-bgray-300">
         {!! $note->description !!}
     </div>
 

@@ -12,13 +12,14 @@ class ConfigurationController extends Controller
 {
 
     protected string $pageTitle;
-    protected string $subTitle;
+    protected string $avatarDisk;
 
     public function __construct()
     {
         $this->pageTitle = 'Configuration Management';
-        $this->subTitle = 'Manage configuration settings for the application';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        $this->avatarDisk = env('AVATAR_DISK', 'public');
+
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function edit()
@@ -77,7 +78,7 @@ class ConfigurationController extends Controller
     {
         $this->deleteLogo($config, $attachmentService);
 
-        $attachmentService->upload($file, 'configurations/logo', $config);
+        $attachmentService->upload($file, 'configurations/logo', $config, $this->avatarDisk);
     }
 
     private function deleteLogo(Configuration $config, AttachmentService $attachmentService): void

@@ -154,18 +154,25 @@ class ProjectTaskController extends Controller
     {
         $validated = $request->validated();
         $requestType = ($validated['request_type'] ?? 'assigned') === 'self' ? 'self' : 'assigned';
-        $task = $taskService->createQuickTask($project, $validated);
+        $tasks = $taskService->createQuickTask($project, $validated);
+        $firstTask = $tasks->first();
+        $createdCount = $tasks->count();
 
         $project->refresh();
 
+        $message = $createdCount > 1
+            ? "{$createdCount} tasks added successfully."
+            : ($requestType === 'self'
+                ? 'Task request submitted successfully.'
+                : 'Task added successfully.');
+
         return response()->json([
             'status' => true,
-            'message' => $requestType === 'self'
-                ? 'Task request submitted successfully.'
-                : 'Task added successfully.',
+            'message' => $message,
+            'created_count' => $createdCount,
             'html' => $this->renderTasksTab(
                 $project,
-                $this->resolveTaskGroupKey($project, $task)
+                $firstTask ? $this->resolveTaskGroupKey($project, $firstTask) : null
             ),
         ], Response::HTTP_OK);
     }
@@ -222,8 +229,8 @@ class ProjectTaskController extends Controller
                 'assignmentLog.user.primaryAttachment',
             ])
             ->withExists([
-                'changeRequests as has_pending_change_request' => fn ($query) =>
-                    $query->where('status', 'pending'),
+                'changeRequests as has_pending_change_request' => fn($query) =>
+                $query->where('status', 'pending'),
             ])
             ->reorder('started_at', 'desc')
             ->orderByDesc('id')
@@ -241,6 +248,7 @@ class ProjectTaskController extends Controller
             )->render(),
         ], Response::HTTP_OK);
     }
+
     public function updateTask(TaskProjectUpdateRequest $request, Project $project, Task $task, NotificationService $notificationService, TaskServices $taskService): JsonResponse
     {
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
@@ -268,6 +276,38 @@ class ProjectTaskController extends Controller
         abort_unless((int) $task->project_id === (int) $project->id, Response::HTTP_NOT_FOUND);
         abort_unless(auth()->user()->can('move', $task), Response::HTTP_FORBIDDEN);
         $validated = $request->validated();
+
+        $isCrossProject = ! empty($validated['move_to_another_project']);
+
+        if ($isCrossProject) {
+            $targetProjectId = (int) $validated['target_project_id'];
+            $targetProject = Project::query()->findOrFail($targetProjectId);
+
+            abort_unless(Project::query()->accessibleBy(auth()->user())->where('id', $targetProject->id)->exists(), Response::HTTP_FORBIDDEN);
+
+            $targetMilestoneId = ! empty($validated['target_milestone_id'])
+                ? (int) $validated['target_milestone_id']
+                : (! empty($validated['project_milestone_id']) ? (int) $validated['project_milestone_id'] : null);
+
+            $targetSprintId = ! empty($validated['target_sprint_id'])
+                ? (int) $validated['target_sprint_id']
+                : (! empty($validated['project_sprint_id']) ? (int) $validated['project_sprint_id'] : null);
+
+            $task = $projectService->moveTaskToProject(
+                $project,
+                $targetProject,
+                $task,
+                $targetMilestoneId,
+                $targetSprintId
+            );
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Task moved to another project successfully.',
+                'html' => $this->renderTasksTab($project, $this->resolveTaskGroupKey($project, $task)),
+            ], Response::HTTP_OK);
+        }
+
         $task = $projectService->moveTaskToSprint(
             $project,
             $task,
@@ -324,7 +364,7 @@ class ProjectTaskController extends Controller
             : ['tasks' => collect(), 'pagination' => ['page' => 1, 'next_page' => null, 'has_more_pages' => false]];
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
         $taskTypeOptions = TaskType::query()
             ->active()
             ->orderByDesc('is_default')
@@ -842,13 +882,13 @@ class ProjectTaskController extends Controller
         // Base assignable users on project members with access to the task, ordered by name
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
 
         // Include current assignee if missing
         if ($currentAssigneeId && !$assignableUsers->contains('id', $currentAssigneeId)) {
             $currentAssignee = User::query()
                 ->where('id', $currentAssigneeId)
-                ->first(['id', 'name']);
+                ->first(['id', 'name', 'email']);
 
             if ($currentAssignee) {
                 $assignableUsers->push($currentAssignee);
@@ -1008,6 +1048,4 @@ class ProjectTaskController extends Controller
 
         return (string) (array_key_first($priorities) ?? 'medium');
     }
-
-
 }

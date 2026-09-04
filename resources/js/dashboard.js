@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const progress = Math.min(elapsed / duration, 1);
                     const easedProgress = progress * (2 - progress);
                     const currentValue = Math.floor(start + (change * easedProgress));
-                    
+
                     element.innerText = currentValue.toLocaleString();
 
                     if (progress < 1) {
@@ -101,10 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const escapeHtml = (str) => {
             if (!str) return '';
             return str.replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#039;');
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         const loadWorkedTime = async (dateString) => {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">
+                    <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-300">
                         <span class="inline-block animate-pulse">Loading worked time...</span>
                     </td>
                 </tr>
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.data.length === 0) {
                         tableBody.innerHTML = `
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">No worked time logged for this date.</td>
+                                <td colspan="6" class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-300">No worked time logged for this date.</td>
                             </tr>
                         `;
                     } else {
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const filter = button.getAttribute('data-worked-time-filter');
-                
+
                 if (filter === 'today') {
                     const todayStr = getLocalDateString(0);
                     if (datepickerInput) {
@@ -262,10 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const escapeHtml = (str) => {
             if (!str) return '';
             return str.replace(/&/g, '&amp;')
-                      .replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;')
-                      .replace(/"/g, '&quot;')
-                      .replace(/'/g, '&#039;');
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         const limitStringChar = (str, count, end = '...') => {
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tiles.forEach(tile => {
             tile.addEventListener('click', async () => {
                 const type = tile.getAttribute('data-dashboard-tile');
-                
+
                 // Show modal loading state
                 tileModal.classList.remove('hidden');
                 tileModal.classList.add('flex');

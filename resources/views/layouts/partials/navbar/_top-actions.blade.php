@@ -4,7 +4,7 @@
         <!-- Task Timer Bar -->
         <x-running-task-bar />
 
-        <button type="button" id="theme-toggle" class="relative flex h-5 w-5 items-center justify-center" data-user="{{ auth()->user()->id }}">
+        <button type="button" id="theme-toggle" class="relative flex h-5 w-5 items-center justify-center" data-user="{{ $authUser?->id }}">
             <span class="block dark:hidden">
                 <svg class="stroke-bgray-900" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18.3284 14.8687C13.249 14.8687 9.13135 10.751 9.13135 5.67163C9.13135 4.74246 9.26914 3.84548 9.5254 3C5.74897 4.14461 3 7.65276 3 11.803C3 16.8824 7.11765 21 12.197 21C16.3472 21 19.8554 18.251 21 14.4746C20.1545 14.7309 19.2575 14.8687 18.3284 14.8687Z" stroke-width="1.5" stroke-linejoin="round" />
@@ -35,8 +35,7 @@
                 {{ $unreadCount }}
             </span>
         </button>
-        <a href="{{ route('help-center.index') }}" title="Help Center" aria-label="Open Help Center"
-            class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
+        <a href="{{ route('help-center.index') }}" title="Help Center" aria-label="Open Help Center" class="relative flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-bgray-100 focus:outline-none focus:ring-2 focus:ring-success-300 focus:ring-offset-2 dark:hover:bg-darkblack-500 dark:focus:ring-offset-darkblack-600 {{ request()->routeIs('help-center.*') ? 'bg-success-50 text-success-400 dark:bg-darkblack-500' : '' }}">
             <svg class="stroke-bgray-900 dark:stroke-white" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="9" stroke-width="1.5" />
                 <path d="M9.75 9.25a2.35 2.35 0 0 1 4.5.95c0 1.65-2.25 1.9-2.25 3.3" stroke-width="1.5" stroke-linecap="round" />
@@ -56,6 +55,17 @@
                 </svg>
             </a>
         @endcan
+
+        @php
+            $hasQuickNotes = $authUser ? \App\Models\QuickNote::where('user_id', $authUser->id)->exists() : false;
+        @endphp
+
+        <button type="button" id="quick-notes-toggle-btn" title="Quick Notes" aria-label="Open Quick Notes" class="relative flex h-5 w-5 items-center justify-center focus:outline-none transition hover:opacity-80">
+            <svg id="quick-notes-icon" class="{{ $hasQuickNotes ? 'stroke-warning-500 dark:text-warning-300 dark:stroke-warning-300' : 'text-bgray-900 stroke-bgray-900 dark:text-white dark:stroke-white' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 3H17C18.1046 3 19 3.89543 19 5V19C19 20.1046 18.1046 21 17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3Z" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M9 7H15M9 11H15M9 15H13" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
     </div>
     <!--author-->
     <div onclick="profileAction()" class="flex cursor-pointer space-x-0 lg:space-x-3">

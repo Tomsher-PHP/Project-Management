@@ -4,7 +4,7 @@
     <!-- write your code here-->
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
-            <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+            <div class="w-full rounded-lg border border-bgray-200 bg-white px-[24px] py-[20px] shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                 <div class="flex grid-cols-12 flex-col-reverse gap-12 xl:grid 2xl:flex-row">
                     <div class="col-span-12 w-full">
                         <div class="border-b border-bgray-200 pb-5 flex flex-row items-center gap-3">

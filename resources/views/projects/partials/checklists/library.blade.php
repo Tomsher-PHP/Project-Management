@@ -6,7 +6,7 @@
             $questionsCount = count($template['questions'] ?? []);
             $isExpanded = $template['isExpanded'] ?? false;
         @endphp
-        <article class="rounded-2xl border {{ $isSelected ? 'border-success-300 bg-success-50/60 dark:border-success-900/40 dark:bg-darkblack-600' : 'border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600' }} p-4 shadow-sm transition duration-200" {!! $isSelected ? '' : 'draggable="true"' !!} data-project-checklist-library-item data-template-id="{{ $template['id'] }}">
+        <article class="rounded-[8px] border {{ $isSelected ? 'border-success-300 bg-success-50/60 dark:border-success-900/40 dark:bg-darkblack-600' : 'border-bgray-200 bg-white dark:border-darkblack-400 dark:bg-darkblack-600' }} p-4 shadow-sm transition duration-200" {!! $isSelected ? '' : 'draggable="true"' !!} data-project-checklist-library-item data-template-id="{{ $template['id'] }}">
             <div class="flex items-start justify-between gap-3 cursor-pointer group" data-project-checklist-library-toggle data-template-id="{{ $template['id'] }}">
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2">

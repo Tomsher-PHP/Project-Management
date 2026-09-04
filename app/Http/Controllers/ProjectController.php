@@ -26,6 +26,7 @@ use App\Services\AttachmentService;
 use App\Services\ProjectAnalyticsService;
 use App\Services\ProjectPaymentServices;
 use App\Services\ProjectServices;
+use App\Services\TaskFormService;
 use App\Services\UserService;
 use App\Traits\ProjectHeaderTrait;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -41,7 +42,6 @@ class ProjectController extends Controller
     use BuildsProjectActivityQueries, ProjectHeaderTrait;
 
     protected string $pageTitle;
-    protected string $subTitle;
     protected ProjectPaymentServices $projectPaymentService;
     protected ProjectServices $projectServices;
     protected ProjectAnalyticsService $analyticsService;
@@ -53,8 +53,7 @@ class ProjectController extends Controller
         $this->analyticsService = $analyticsService;
 
         $this->pageTitle = 'Project Management';
-        $this->subTitle = 'Manage your projects';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request, ProjectServices $service)
@@ -71,7 +70,7 @@ class ProjectController extends Controller
             ->orderBy('projects.id', 'desc')
             ->paginate($perPage)
             ->withQueryString();
-            
+
 
         $projects->getCollection()->transform(function ($project) use ($service) {
             $timelines = $service->getTimelines($project);
@@ -115,13 +114,13 @@ class ProjectController extends Controller
         ], Response::HTTP_OK);
     }
 
-    public function edit(Project $project, ProjectServices $service)
+    public function edit(Project $project)
     {
         return view('projects.detail-page', array_merge([
             'project' => $project,
             'projectActivitiesCount' => $this->getProjectActivitiesQuery($project)->count(),
             'projectCommentsCount' => $project->comments()->count(),
-        ], $this->getProjectHeaderData($project, $service)));
+        ], $this->getProjectHeaderData($project)));
     }
 
     public function activityModal(Project $project): JsonResponse
@@ -503,7 +502,7 @@ class ProjectController extends Controller
         $agileMilestoneStatuses = AgileMilestoneStatus::active()->orderBy('sort_order', 'asc')->get();
         $assignableUsers = $project->activeMembers()
             ->orderBy('users.name')
-            ->get(['users.id', 'users.name']);
+            ->get(['users.id', 'users.name', 'users.email']);
         $trashedProjectMilestones = ProjectMilestone::onlyTrashed()
             ->where('project_id', $project->id)
             ->orderByDesc('deleted_at')
@@ -621,7 +620,7 @@ class ProjectController extends Controller
     {
         $salesPersonIds = $project->sales_person_id ? [$project->sales_person_id] : [];
         $selectedCustomerId = $project->customer_id;
-        $selectedCategoryId = $project->project_category_id;
+        $selectedCategoryIds = $project->project_category_ids ?? [];
         $selectedTechnologyIds = $project->technologies()->get()->pluck('id')->map(fn($id) => (int) $id)->all();
         $selectedParentProjectId = $project->parent_project_id;
 
@@ -629,7 +628,7 @@ class ProjectController extends Controller
         $project->load('technologies');
 
         $customers = Customer::forForm($selectedCustomerId)->get();
-        $projectCategories = ProjectCategory::forForm($selectedCategoryId, 'sort_order')->get();
+        $projectCategories = ProjectCategory::forForm($selectedCategoryIds, 'sort_order')->get();
         $projectTechnologies = Technology::forForm($selectedTechnologyIds, 'sort_order')->get();
         $parentProjectOptions = Project::query()
             ->eligibleParentOptions($project->id, $selectedParentProjectId)
@@ -693,5 +692,43 @@ class ProjectController extends Controller
             'message' => 'Project payment status updated successfully.',
             'project_header' => $this->renderProjectHeader($project, $service),
         ], Response::HTTP_OK);
+    }
+
+    public function taskCreateDependencies(Request $request, Project $project, TaskFormService $taskFormService): JsonResponse
+    {
+        $user = $request->user();
+
+        $isAccessible = Project::query()->accessibleBy($user)->where('id', $project->id)->exists();
+        if (! $isAccessible) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to access this project.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $dependencies = $taskFormService->getProjectDependencies($project);
+
+        return response()->json([
+            'status' => true,
+            'data' => $dependencies,
+        ]);
+    }
+
+    public function searchProjects(Request $request, TaskFormService $taskFormService): JsonResponse
+    {
+        $query = $request->input('q', '');
+        $excludeId = $request->input('exclude_id') ?: $request->input('exclude_project_id');
+        $user = $request->user();
+
+        $projects = $taskFormService->searchProjects($user, $query, $excludeId ? (int) $excludeId : null);
+
+        return response()->json($projects->map(fn(Project $p) => [
+            'id' => $p->id,
+            'value' => (string) $p->id,
+            'name' => $p->name,
+            'text' => $p->name,
+            'subtype' => $p->project_code ?: '--',
+            'project_code' => $p->project_code ?: '--',
+        ]));
     }
 }

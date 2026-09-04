@@ -70,7 +70,7 @@
     <div class="2xl:flex 2xl:space-x-[48px]">
         <section class="mb-6 2xl:mb-0 2xl:flex-1">
             <!--list table-->
-            <div class="w-full rounded-lg bg-white px-[24px] py-[20px] dark:bg-darkblack-600">
+            <div class="w-full rounded-lg border border-bgray-200 bg-white px-[24px] py-[20px] shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                 <div class="flex flex-col space-y-5">
                     <div class="table-content w-full overflow-x-auto">
                         <table class="w-full">

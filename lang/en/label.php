@@ -8,5 +8,6 @@ return [
         'spent' => 'Spent',
         'spent_hours' => 'Spent Hours',
         'exceeded' => 'Exceeded',
+        'customer_estimated' => 'Customer Estimated',
     ],
 ];

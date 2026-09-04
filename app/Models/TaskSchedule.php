@@ -127,4 +127,9 @@ class TaskSchedule extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    public function getEstimatedTimeFormattedAttribute(): string
+    {
+        return $this->estimated_time_seconds ? formatSecondsToHMS($this->estimated_time_seconds) : '--';
+    }
 }

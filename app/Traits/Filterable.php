@@ -66,18 +66,31 @@ trait Filterable
         // date range filter 
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $dateColumn = $filters['date_column'] ?? 'start_date';
-            if (Schema::hasColumn($query->getModel()->getTable(), $dateColumn)) {
-                $query->whereBetween($dateColumn, [
-                    $filters['start_date'],
-                    $filters['end_date']
-                ]);
+            $table = $query->getModel()->getTable();
+
+            if (Schema::hasColumn($table, $dateColumn)) {
+                $endDateColumn = match ($dateColumn) {
+                    'start_date' => 'end_date',
+                    default => null,
+                };
+
+                if ($endDateColumn && Schema::hasColumn($table, $endDateColumn)) {
+                    $query->where($dateColumn, '<=', $filters['end_date'])
+                        ->where($endDateColumn, '>=', $filters['start_date']);
+                } else {
+                    $query->whereBetween($dateColumn, [
+                        $filters['start_date'],
+                        $filters['end_date'],
+                    ]);
+                }
             }
         }
 
         // Project category filter
-        if (!empty($filters['project_category_id'])) {
+        $categoryFilter = $filters['project_category_ids'] ?? $filters['project_category_id'] ?? null;
+        if (!empty($categoryFilter)) {
 
-            $categoryIds = $filters['project_category_id'];
+            $categoryIds = $categoryFilter;
 
             // Convert to array if a single value is passed
             if (!is_array($categoryIds)) {
@@ -87,8 +100,7 @@ trait Filterable
             // If only "Others" is selected
             if (in_array('others', $categoryIds, true) && count($categoryIds) === 1) {
 
-                $query->whereNull('project_category_id');
-
+                $query->whereNull('project_category_ids');
             } else {
 
                 // Check whether Others is selected along with categories
@@ -96,19 +108,24 @@ trait Filterable
 
                 // Remove "others"
                 $categoryIds = array_values(
-                    array_filter($categoryIds, fn ($id) => $id !== 'others')
+                    array_filter($categoryIds, fn($id) => $id !== 'others')
                 );
 
                 $query->where(function ($q) use ($categoryIds, $hasOthers) {
 
                     // Selected categories
                     if (!empty($categoryIds)) {
-                        $q->whereIn('project_category_id', $categoryIds);
+                        $q->where(function ($jsonQ) use ($categoryIds) {
+                            foreach ($categoryIds as $catId) {
+                                $jsonQ->orWhereJsonContains('project_category_ids', (int) $catId)
+                                    ->orWhereJsonContains('project_category_ids', (string) $catId);
+                            }
+                        });
                     }
 
                     // Others = NULL category
                     if ($hasOthers) {
-                        $q->orWhereNull('project_category_id');
+                        $q->orWhereNull('project_category_ids');
                     }
                 });
             }
@@ -116,7 +133,7 @@ trait Filterable
 
         // 3. Handle dynamic filters
         $dynamicFilters = collect($filters)
-            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id']);
+            ->except(['search', 'search_condition', 'role_id', 'per_page', 'page', 'department_id', 'designation_id', 'user_id', 'start_date', 'end_date', 'date_column', 'project_category_id', 'project_category_ids']);
 
         foreach ($dynamicFilters as $field => $value) {
             if (!Schema::hasColumn($query->getModel()->getTable(), $field) || $value === null || $value === '') {

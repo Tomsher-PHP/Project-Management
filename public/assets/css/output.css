@@ -3467,6 +3467,18 @@ select {
   stroke: #fff;
 }
 
+.stroke-warning-300 {
+  stroke: #eab308;
+}
+
+.stroke-warning-500 {
+  stroke: #ca8a04;
+}
+
+.stroke-warning-600 {
+  stroke: #a16207;
+}
+
 .object-cover {
   -o-object-fit: cover;
   object-fit: cover;
@@ -4421,6 +4433,16 @@ select {
   color: rgb(234 179 8 / var(--tw-text-opacity));
 }
 
+.text-warning-500 {
+  --tw-text-opacity: 1;
+  color: rgb(202 138 4 / var(--tw-text-opacity));
+}
+
+.text-warning-600 {
+  --tw-text-opacity: 1;
+  color: rgb(161 98 7 / var(--tw-text-opacity));
+}
+
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
@@ -5120,6 +5142,18 @@ select {
   stroke: #16A34A;
 }
 
+:is(.dark .dark\:stroke-warning-300) {
+  stroke: #eab308;
+}
+
+:is(.dark .dark\:stroke-warning-500) {
+  stroke: #eab308;
+}
+
+:is(.dark .dark\:stroke-warning-600) {
+  stroke: #facc15;
+}
+
 :is(.dark .dark\:stroke-white) {
   stroke: #fff;
 }
@@ -5162,6 +5196,16 @@ select {
 :is(.dark .dark\:text-warning-300) {
   --tw-text-opacity: 1;
   color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-warning-500) {
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity));
+}
+
+:is(.dark .dark\:text-warning-600) {
+  --tw-text-opacity: 1;
+  color: rgb(250 204 21 / var(--tw-text-opacity));
 }
 
 :is(.dark .dark\:text-error-300) {
@@ -6438,6 +6482,43 @@ select {
 
 .task-due-date__icon--red {
   color: rgb(221 51 51 / 1);
+}
+
+/* Quick Notes Right-Side Drawer Slide Transitions */
+.translate-x-full {
+  transform: translateX(100%);
+}
+
+.translate-x-0 {
+  transform: translateX(0);
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ease-out {
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.max-w-0 {
+  max-width: 0px !important;
 }
 
 .comparison-arrow-up {

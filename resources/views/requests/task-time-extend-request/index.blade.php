@@ -44,10 +44,10 @@
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Task</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Current Estimate Time</span>
+                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">{{ $selectedStatus === 'approved' ? 'Old Estimate' : 'Current Estimate' }}</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
-                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">New Estimated Time</span>
+                                <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">New Estimated</span>
                             </th>
                             <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                 <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Reason</span>
@@ -104,7 +104,14 @@
                                     <span class="text-sm text-bgray-700 dark:text-bgray-300">{{ $extendRequest->estimated_time_formatted }}</span>
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                    <span class="text-sm text-bgray-700 dark:text-bgray-300 font-semibold">{{ $extendRequest->new_estimated_time_formatted }}</span>
+                                    @if ($extendRequest->hasDifference())
+                                        <div class="text-sm">
+                                            <p class="text-xs text-bgray-700 dark:text-bgray-300">Requested: <span class="font-semibold text-bgray-700 dark:text-bgray-300">{{ $extendRequest->user_requested_time_formatted }}</span></p>
+                                            <p class="text-xs text-bgray-700 dark:text-bgray-300 mt-0.5">Approved: <span class="font-semibold text-success-500 dark:text-success-400">{{ $extendRequest->new_estimated_time_formatted }}</span></p>
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-bgray-700 dark:text-bgray-300 font-semibold">{{ $extendRequest->new_estimated_time_formatted }}</span>
+                                    @endif
                                 </td>
                                 <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                     <div class="min-w-[200px] text-sm text-bgray-700 dark:text-bgray-300">
@@ -160,7 +167,7 @@
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-reject-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Reject Task Time Extend Request</h3>
@@ -200,7 +207,7 @@
         <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-extend-request-approve-close></div>
 
         <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600">
+            <div class="relative z-10 w-full max-w-lg rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">Approve Task Time Extend Request</h3>
@@ -230,6 +237,10 @@
                         <div>
                             <span class="block font-medium text-bgray-600 dark:text-bgray-300">Current Estimate Time</span>
                             <span class="font-semibold text-bgray-900 dark:text-white" data-approve-current-estimate>--</span>
+                        </div>
+                        <div>
+                            <span class="block font-medium text-bgray-600 dark:text-bgray-300">User Requested Time</span>
+                            <span class="font-semibold text-bgray-900 dark:text-white" data-approve-requested-time>--</span>
                         </div>
                     </div>
 

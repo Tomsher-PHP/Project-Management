@@ -62,7 +62,7 @@
                     };
                 @endphp
 
-                <article class="rounded-2xl border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
+                <article class="rounded-[8px] border border-bgray-200 bg-white p-4 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600">
                     <div class="flex items-start gap-3">
                         <x-user-avatar :user="$activity->causer" :name="$actorName" class="h-10 w-10 shrink-0 border border-bgray-200 shadow-sm dark:border-darkblack-400" />
 
@@ -111,7 +111,7 @@
                     </div>
                 </article>
             @empty
-                <div class="rounded-2xl border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
+                <div class="rounded-[8px] border border-dashed border-bgray-300 px-6 py-12 text-center text-sm font-medium text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                     No activity logged for this {{ \Illuminate\Support\Str::lower($moduleLabel) }} or its related records yet.
                 </div>
             @endforelse

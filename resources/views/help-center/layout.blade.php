@@ -8,7 +8,7 @@
         </script>
 
         <div class="w-full">
-            <header class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-bgray-900 via-bgray-800 to-bgray-900 px-5 py-6 shadow-xl dark:from-darkblack-600 dark:via-darkblack-500 dark:to-darkblack-600 sm:px-8 sm:py-7 lg:px-10">
+            <header class="relative overflow-hidden rounded-[8px] bg-gradient-to-r from-bgray-900 via-bgray-800 to-bgray-900 px-5 py-6 shadow-xl dark:from-darkblack-600 dark:via-darkblack-500 dark:to-darkblack-600 sm:px-8 sm:py-7 lg:px-10">
                 <div class="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-success-300/20 blur-3xl"></div>
                 <div class="pointer-events-none absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-success-400/10 blur-3xl"></div>
                 <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -32,7 +32,7 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
 
-                        <div data-help-search-results hidden class="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 overflow-hidden rounded-2xl border border-bgray-200 bg-white shadow-xl dark:border-darkblack-400 dark:bg-darkblack-600">
+                        <div data-help-search-results hidden class="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-xl dark:border-darkblack-400 dark:bg-darkblack-600">
                             <div data-search-results-list class="max-h-80 overflow-y-auto p-2"></div>
                             <div data-search-no-results hidden class="px-4 py-8 text-center">
                                 <p class="text-sm font-semibold text-bgray-900 dark:text-white">No results found</p>

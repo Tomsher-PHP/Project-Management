@@ -17,7 +17,7 @@
     <div class="fixed inset-0 bg-gray-500/70 dark:bg-bgray-900/70" data-schedule-task-close></div>
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
         <div class="relative z-10 w-full max-w-5xl" data-schedule-task-panel>
-            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <h3 class="text-lg font-semibold text-bgray-900 dark:text-white">{{ $isEdit ? 'Edit Scheduled Task' : 'Schedule Task' }}</h3>
                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-bgray-100 text-bgray-700 hover:text-red-500 dark:bg-darkblack-500 dark:text-bgray-300" data-schedule-task-close>✕</button>
@@ -33,10 +33,15 @@
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                                <select name="project_id" class="tom-select w-full" data-sort="0">
+                                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
                                     <option value="">Select project</option>
+                                    @if ($schedule?->project)
+                                        <option value="{{ $schedule->project->id }}" selected data-data='@json(['subtype' => $schedule->project->project_code ?: '--'])'>
+                                            {{ $schedule->project->name }}
+                                        </option>
+                                    @endif
                                     @foreach ($taskCreateProjects as $project)
-                                        <option value="{{ $project->id }}" @selected((string) $schedule?->project_id === (string) $project->id)>{{ $project->name }}</option>
+                                        <option value="{{ $project->id }}" @selected((string) $schedule?->project_id === (string) $project->id) data-data='@json(['subtype' => $project->project_code ?: '--'])'>{{ $project->name }}</option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="project_id"></p>
@@ -75,7 +80,7 @@
                         </div>
                     </section>
 
-                    <section class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-schedule-task-advanced {{ $isEdit ? '' : 'hidden' }}>
+                    <section class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-schedule-task-advanced {{ $isEdit ? '' : 'hidden' }}>
                         <h4 class="mb-3 text-sm font-semibold uppercase tracking-wide text-bgray-900 dark:text-white">Advanced</h4>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
@@ -125,7 +130,7 @@
                         </div>
                     </section>
 
-                    <section class="rounded-2xl border border-success-200 bg-success-50/40 p-4 dark:border-success-900/40 dark:bg-darkblack-500/40">
+                    <section class="rounded-[8px] border border-success-200 bg-success-50/40 p-4 dark:border-success-900/40 dark:bg-darkblack-500/40">
                         <h4 class="mb-3 text-sm font-semibold uppercase tracking-wide text-bgray-900 dark:text-white">Schedule Configuration</h4>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
@@ -138,14 +143,14 @@
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="frequency_type"></p>
                                 <div class="mt-1 rounded-lg dark:border-darkblack-400 dark:bg-darkblack-600/70">
-                                    <p class="break-words text-xs leading-5 text-bgray-500 dark:text-bgray-300" data-schedule-frequency-note>
+                                    <p class="break-words text-xs leading-5 text-bgray-600 dark:text-bgray-300" data-schedule-frequency-note>
                                         A task will be generated every working day based on the assigned user's active shift. No task will be generated on shift week-off days or when no valid shift assignment exists.
                                     </p>
                                 </div>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After</label>
-                                <x-forms.estimated-time-input name="due_after_seconds" :total-minutes="$isEdit ? intdiv((int) $schedule->due_after_seconds, 60) : 0" :show-label="false" help-text="Duration after task generation to set the due date. Leave empty if no due date should be assigned." />
+                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due After <x-red-star /></label>
+                                <x-forms.estimated-time-input name="due_after_seconds" :total-minutes="$isEdit ? intdiv((int) $schedule->due_after_seconds, 60) : 0" :show-label="false" help-text="Set the time from task generation to its due date." />
                                 <p class="mt-1 hidden text-xs text-red-500" data-schedule-task-error="due_after_seconds"></p>
                             </div>
                             <div>

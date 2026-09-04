@@ -12,13 +12,11 @@ use Spatie\Permission\Models\Permission;
 class RolePermissionController extends Controller
 {
     protected string $pageTitle;
-    protected string $subTitle;
 
     public function __construct()
     {
         $this->pageTitle = 'Role Management';
-        $this->subTitle = 'Define user roles and system access';
-        view()->share(['pageTitle' => $this->pageTitle, 'subTitle' => $this->subTitle]);
+        view()->share(['pageTitle' => $this->pageTitle]);
     }
 
     public function index(Request $request)
@@ -60,7 +58,7 @@ class RolePermissionController extends Controller
 
     public function edit($id)
     {
-        $role = Role::findById($id);
+        $role = Role::findOrFail($id);
 
         $permissions = $this->getGroupedPermissions();
 
@@ -80,7 +78,7 @@ class RolePermissionController extends Controller
 
     public function update(RolePermissionRequest $request, $id)
     {
-        $role = Role::findById($id);
+        $role = Role::findOrFail($id);
 
         DB::transaction(function () use ($request, $role) {
             $role->update(['name' => $request->name]);
@@ -95,7 +93,7 @@ class RolePermissionController extends Controller
 
     public function toggleStatus(Request $request)
     {
-        $role = Role::findById($request->id);
+        $role = Role::findOrFail($request->id);
         $role->is_active = !$role->is_active;
         $role->save();
 

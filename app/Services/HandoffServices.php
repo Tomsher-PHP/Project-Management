@@ -181,9 +181,11 @@ class HandoffServices
     public function createHandoffRequest(array $data, int $userId): HandoffRequest
     {
         return DB::transaction(function () use ($data, $userId) {
+            $milestoneId = $this->resolveMilestoneId($data);
+
             $handoffRequest = HandoffRequest::create([
                 'project_id' => $data['project_id'],
-                'project_milestone_id' => $data['project_milestone_id'] ?? null,
+                'project_milestone_id' => $milestoneId,
                 'project_sprint_id' => $data['project_sprint_id'] ?? null,
                 'source_task_id' => $data['source_task_id'] ?? null,
                 'user_id' => $userId,
@@ -223,9 +225,11 @@ class HandoffServices
         }
 
         return DB::transaction(function () use ($handoffRequest, $data) {
+            $milestoneId = $this->resolveMilestoneId($data);
+
             $handoffRequest->update([
                 'project_id' => $data['project_id'],
-                'project_milestone_id' => $data['project_milestone_id'] ?? null,
+                'project_milestone_id' => $milestoneId,
                 'project_sprint_id' => $data['project_sprint_id'] ?? null,
                 'source_task_id' => $data['source_task_id'] ?? null,
                 'target_user_id' => $data['target_user_id'] ?? null,
@@ -239,6 +243,17 @@ class HandoffServices
 
             return $handoffRequest->load('targetUser');
         });
+    }
+
+    private function resolveMilestoneId(array $data): ?int
+    {
+        $milestoneId = $data['project_milestone_id'] ?? null;
+
+        if (empty($milestoneId) && !empty($data['project_sprint_id'])) {
+            $milestoneId = ProjectSprint::where('id', $data['project_sprint_id'])->value('project_milestone_id');
+        }
+
+        return $milestoneId ? (int) $milestoneId : null;
     }
 
     public function markAsNoted(HandoffRequest $handoffRequest, int $userId): HandoffRequest

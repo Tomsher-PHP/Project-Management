@@ -1,13 +1,13 @@
 @php
     $authUser = auth()->user();
-    $notifications = $authUser->unreadNotifications->take(10); // last 10 notifications unread
-    $unreadCount = $authUser->unreadNotifications->count(); // unread badge
-    $userRoleName = $authUser->role_name ?? 'No Role';
+    $notifications = $authUser?->unreadNotifications->take(10) ?? collect([]); // last 10 notifications unread
+    $unreadCount = $authUser?->unreadNotifications->count() ?? 0; // unread badge
+    $userRoleName = $authUser?->role_name ?? 'No Role';
     $workspaceSelectableUsers = collect($workspaceSelectableUsers ?? []);
     $workspaceSelectedUserId = (string) ($workspaceSelectedUserId ?? '');
 @endphp
 <header class="header-wrapper fixed z-30 hidden w-full md:block">
-    <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-100 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
+    <div class="relative flex h-[60px] w-full items-center justify-between border-b border-bgray-200 bg-white px-8 dark:border-darkblack-500 dark:bg-darkblack-600 xl:px-10 2xl:px-12">
         <button title="Ctrl+b" type="button" class="drawer-btn absolute left-0 top-auto rotate-180 transform">
             <span>
                 <svg width="16" height="40" viewBox="0 0 16 40" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -6,6 +6,7 @@
         'task_time' => 0,
         'task_handoff' => 0,
         'break_requests' => 0,
+        'task_time_extend_requests' => 0,
         'has_any_pending' => false,
     ];
 
@@ -26,7 +27,8 @@
     $canViewScheduleShift = $authUser?->can('schedule_shift.view');
 
     $settingsPermissions = config('constants.settings_permissions');
-    $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+    // $canViewSettings = collect($settingsPermissions)->contains(fn($permission) => auth()->user()->can($permission));
+    $canViewSettings = $authUser?->canAny($settingsPermissions) ?? false;
 
     $canViewActivityLog = $authUser?->can('activity_log.view');
 
@@ -95,9 +97,9 @@
     $sidebarSubLinkInactiveClass = 'text-bgray-600 dark:text-bgray-50 hover:text-bgray-800 hover:dark:text-success-300';
 @endphp
 
-<aside class="relative hidden w-[96px] bg-white dark:bg-black sm:block">
+<aside class="relative hidden w-[96px] border-r border-bgray-200 bg-white dark:border-darkblack-500 dark:bg-black sm:block">
     <div class="sidebar-wrapper-collapse relative top-0 z-30 w-full">
-        <div class="sidebar-header sticky top-0 z-20 flex h-[84px] w-full items-center justify-center border-b border-r border-b-[#F7F7F7] border-r-[#F7F7F7] bg-white dark:border-darkblack-500 dark:bg-darkblack-600">
+        <div class="sidebar-header sticky top-0 z-20 flex h-[84px] w-full items-center justify-center border-b border-r border-bgray-200 bg-white dark:border-darkblack-500 dark:bg-darkblack-600">
             <a href="{{ $canViewDashboard ? route('dashboard') : route('user.workspace') }}">
                 <img src="{{ asset(config('assets.icons.logo_short')) }}" class="block dark:hidden" alt="logo" />
                 <img src="{{ asset(config('assets.icons.logo_short')) }}" class="hidden dark:block" alt="logo" />

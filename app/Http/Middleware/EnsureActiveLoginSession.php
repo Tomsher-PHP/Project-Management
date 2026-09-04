@@ -12,6 +12,8 @@ class EnsureActiveLoginSession
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $this->trackValidGetUrl($request);
+
         if (! Auth::check()) {
             return $next($request);
         }
@@ -43,5 +45,51 @@ class EnsureActiveLoginSession
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    protected function trackValidGetUrl(Request $request): void
+    {
+        if (! $request->isMethod('GET') || $request->ajax() || $request->expectsJson() || $request->pjax()) {
+            return;
+        }
+
+        $ignoredPatterns = [
+            'api/*',
+            '*/refresh*',
+            '*/chart/*',
+            '*/summary*',
+            '*/worked-time*',
+            '*/running-tasks*',
+            '*/tile-details*',
+            'livewire/*',
+            '_debugbar/*',
+        ];
+
+        foreach ($ignoredPatterns as $pattern) {
+            if ($request->is($pattern)) {
+                return;
+            }
+        }
+
+        $url = $request->fullUrl();
+
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        $history = $request->session()->get('valid_get_history', []);
+        if (! is_array($history)) {
+            $history = [];
+        }
+
+        if (empty($history) || end($history) !== $url) {
+            $history[] = $url;
+            if (count($history) > 10) {
+                array_shift($history);
+            }
+            $request->session()->put('valid_get_history', array_values($history));
+        }
+
+        $request->session()->put('last_valid_get_url', $url);
     }
 }

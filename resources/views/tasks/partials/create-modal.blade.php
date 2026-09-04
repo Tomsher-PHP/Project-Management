@@ -3,7 +3,7 @@
 
     <div class="relative flex min-h-full w-full items-start justify-center p-4 py-6 sm:p-6 sm:py-10">
         <div class="relative z-10 w-full max-w-lg transition-all duration-200" data-task-create-modal-panel>
-            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
+            <div class="flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[8px] bg-white shadow-2xl dark:bg-darkblack-600 sm:max-h-[calc(100vh-5rem)]">
                 <div class="flex items-center justify-between gap-4 border-b border-bgray-200 px-5 py-4 dark:border-darkblack-400">
                     <div>
                         <h3 class="text-lg font-semibold text-bgray-900 dark:text-white" data-task-create-title data-default-title="Add Task" data-request-title="Request Task">
@@ -23,8 +23,8 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
-                            <select name="project_id" class="tom-select w-full" data-sort="0">
-                                <option value="">Select project</option>
+                            <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                                <option value="">Search your project here..</option>
                                 @foreach ($taskCreateProjects as $projectOption)
                                     <option value="{{ $projectOption->id }}" data-data='@json(['subtype' => $projectOption->project_code ?: '--'])'>
                                         {{ $projectOption->name }}
@@ -72,19 +72,25 @@
 
                         <div data-task-create-assignee-field>
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Assignee</label>
-                            <select name="current_assignee_id" class="tom-select w-full" data-sort="0">
+                            <select name="current_assignee_ids[]" class="tom-select-multiple w-full" multiple data-sort="0">
                                 <option value="">Select project first</option>
                             </select>
-                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="current_assignee_id"></p>
+                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="current_assignee_ids"></p>
                         </div>
 
                         <div class="md:col-span-2">
                             <x-forms.estimated-time-input label="Estimated Time" name="estimated_time_minutes" :total-minutes="0" :show-label="false" />
                             <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="estimated_time_minutes"></p>
                         </div>
+
+                        <div class="md:col-span-2">
+                            <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date <x-red-star /></label>
+                            <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
+                            <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
+                        </div>
                     </div>
 
-                    <div class="rounded-2xl border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
+                    <div class="rounded-[8px] border border-bgray-200 bg-bgray-50/70 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/40" data-task-create-advanced-section hidden>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description</label>
@@ -139,7 +145,7 @@
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="task_mode_id"></p>
                             </div>
 
-                            <div>
+                            <div class="md:col-span-2">
                                 <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Priority</label>
                                 <select name="priority" class="tom-select-no-search w-full">
                                     @foreach ($taskPriorityOptions as $option)
@@ -147,12 +153,6 @@
                                     @endforeach
                                 </select>
                                 <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="priority"></p>
-                            </div>
-
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Due Date</label>
-                                <input type="text" name="due_date_time" value="" class="datepicker w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-enable-time="true" data-time-24hr="true" data-format="Y-m-d H:i" placeholder="Choose a due date and time" autocomplete="off">
-                                <p class="mt-1 hidden text-xs text-red-500" data-task-create-error="due_date_time"></p>
                             </div>
 
                             <div class="md:col-span-2">

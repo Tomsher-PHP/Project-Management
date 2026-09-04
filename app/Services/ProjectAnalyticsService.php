@@ -17,21 +17,25 @@ class ProjectAnalyticsService
     public function getProgressbar(Project $project): Collection
     {
         $estimatedSeconds = (int) ($project->estimated_time_seconds ?? 0);
+        $customerEstimateSeconds = (int) ($project->customer_estimate_seconds ?? 0);
 
-        if ($estimatedSeconds <= 0) {
+        if ($estimatedSeconds <= 0 && $customerEstimateSeconds <= 0) {
             return collect($this->emptyProgressbarPayload());
         }
 
         $workedSeconds = $this->getApprovedWorkedSeconds($project);
-        $maxSeconds = max($estimatedSeconds, $workedSeconds, 1);
+        $maxSeconds = max($estimatedSeconds, $customerEstimateSeconds, $workedSeconds, 1);
         $workedPercent = round(($workedSeconds / $maxSeconds) * 100, 1);
         $estimatedPercent = round(($estimatedSeconds / $maxSeconds) * 100, 1);
+        $customerEstimatePercent = round(($customerEstimateSeconds / $maxSeconds) * 100, 1);
 
-        $isExceeded = $workedSeconds > $estimatedSeconds;
-        $isExact = $workedSeconds === $estimatedSeconds;
-        $isEarly = $workedSeconds < $estimatedSeconds;
-        $differenceSeconds = abs($estimatedSeconds - $workedSeconds);
-        $differencePercentage = (int) round(($differenceSeconds / $estimatedSeconds) * 100);
+        $comparisonBaseSeconds = $estimatedSeconds > 0 ? $estimatedSeconds : $customerEstimateSeconds;
+
+        $isExceeded = $workedSeconds > $comparisonBaseSeconds;
+        $isExact = $workedSeconds === $comparisonBaseSeconds;
+        $isEarly = $workedSeconds < $comparisonBaseSeconds;
+        $differenceSeconds = abs($comparisonBaseSeconds - $workedSeconds);
+        $differencePercentage = $comparisonBaseSeconds > 0 ? (int) round(($differenceSeconds / $comparisonBaseSeconds) * 100) : 0;
 
         $statusLabel = match (true) {
             $isExceeded => 'Exceeded estimate',
@@ -51,8 +55,10 @@ class ProjectAnalyticsService
         return collect([
             'worked_seconds' => $workedSeconds,
             'estimated_seconds' => $estimatedSeconds,
+            'customer_estimate_seconds' => $customerEstimateSeconds,
             'worked_percent' => $workedPercent,
             'estimated_percent' => $estimatedPercent,
+            'customer_estimate_percent' => $customerEstimatePercent,
             'has_estimate' => true,
             'is_exceeded' => $isExceeded,
             'is_exact' => $isExact,
@@ -82,8 +88,10 @@ class ProjectAnalyticsService
         return [
             'worked_seconds' => 0,
             'estimated_seconds' => 0,
+            'customer_estimate_seconds' => 0,
             'worked_percent' => 0,
             'estimated_percent' => 0,
+            'customer_estimate_percent' => 0,
             'has_estimate' => false,
             'is_exceeded' => false,
             'is_exact' => false,

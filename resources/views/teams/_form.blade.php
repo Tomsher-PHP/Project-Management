@@ -187,7 +187,7 @@
 
                     <select id="team_member" class="tom-select-multiple w-full" multiple>
                         @foreach ($availableUsers as $user)
-                            <option value="{{ $user->id }}" data-data='@json(['email' => $user->email, 'profile_image_url' => $user->profile_image_url, 'is_active' => (bool) $user->is_active])'>
+                            <option value="{{ $user->id }}" data-subtype="{{ $user->email }}" data-data="{{ json_encode(['email' => $user->email, 'subtype' => $user->email, 'profile_image_url' => $user->profile_image_url, 'is_active' => (bool) $user->is_active]) }}">
                                 {{ $user->name }}{{ $user->is_active ? '' : ' (Inactive)' }}
                             </option>
                         @endforeach
