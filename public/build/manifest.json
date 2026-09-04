@@ -59,7 +59,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DnyVT_5L.css",
+    "file": "assets/app-Bz2_1R2q.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -255,7 +255,7 @@
     ]
   },
   "resources/js/modules/projects/project-detail.js": {
-    "file": "assets/project-detail-xQI2qHpo.js",
+    "file": "assets/project-detail-Bv1xbudu.js",
     "name": "project-detail",
     "src": "resources/js/modules/projects/project-detail.js",
     "isEntry": true,
@@ -533,7 +533,7 @@
     "isEntry": true
   },
   "resources/js/projects-count-chart.js": {
-    "file": "assets/projects-count-chart-BZAUABcv.js",
+    "file": "assets/projects-count-chart-DmdS0gYL.js",
     "name": "projects-count-chart",
     "src": "resources/js/projects-count-chart.js",
     "isEntry": true

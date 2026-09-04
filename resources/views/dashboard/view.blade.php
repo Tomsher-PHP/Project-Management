@@ -7,11 +7,14 @@
     <!-- Main Outer Wrapper: space-y-6 -->
     <div class="space-y-4" data-dashboard-summary-section data-dashboard-summary-url="{{ route('dashboard.summary') }}" data-dashboard-tile-url="{{ route('dashboard.tile-details') }}">
 
-        <!-- 1. PROJECTS OVERVIEW KPI SECTION -->
-        @include('dashboard.partials.project-counts')
+        <!-- PROJECTS & TASKS OVERVIEW SUMMARY SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 1. PROJECTS OVERVIEW KPI SECTION -->
+            @include('dashboard.partials.project-counts')
 
-        <!-- 2. TASKS OVERVIEW KPI SECTION -->
-        @include('dashboard.partials.task-counts')
+            <!-- 2. TASKS OVERVIEW KPI SECTION -->
+            @include('dashboard.partials.task-counts')
+        </div>
 
         <!-- Columns container: flex flex-col xl:flex-row gap-6 -->
         <div class="flex flex-col xl:flex-row gap-6">
