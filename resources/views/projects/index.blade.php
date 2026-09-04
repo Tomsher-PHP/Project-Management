@@ -102,7 +102,7 @@
                                                     <h4 class="text-lg font-bold text-bgray-900 dark:text-white">
                                                         {{ $project->name }}
                                                     </h4>
-                                                    <p class="text-sm text-bgray-700">
+                                                    <p class="text-sm text-bgray-700 dark:text-bgray-300">
                                                         Code: {{ $project->project_code ?? '--' }}
                                                     </p>
                                                 </a>

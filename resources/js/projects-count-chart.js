@@ -214,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const yMax = Math.ceil(maxValue / yStep) * yStep;
 
+        const isDark = document.documentElement.classList.contains('dark');
+        const labelColor = isDark ? '#E2E8F0' : '#4A5568';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(148, 163, 184, 0.15)';
+
         chartInstance = new window.Chart(canvas, {
             type: 'bar',
             data: {
@@ -252,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             display: false,
                         },
                         ticks: {
-                            color: '#64748B',
+                            color: labelColor,
                             font: {
                                 weight: '600',
                             },
@@ -260,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         title: {
                             display: true,
                             text: 'Year',
-                            color: '#64748B',
+                            color: labelColor,
                             font: {
                                 weight: '600',
                                 size: 12,
@@ -271,17 +275,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         beginAtZero: true,
                         max: yMax,
                         ticks: {
-                            color: '#64748B',
+                            color: labelColor,
                             precision: 0,
                             stepSize: yStep,
                         },
                         grid: {
-                            color: 'rgba(148, 163, 184, 0.15)',
+                            color: gridColor,
                         },
                         title: {
                             display: true,
                             text: 'Count',
-                            color: '#64748B',
+                            color: labelColor,
                             font: {
                                 weight: '600',
                                 size: 12,
@@ -330,4 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial lazy load of chart data
     loadChartData();
+
+    // Re-render chart colors when dark/light theme changes
+    const themeObserver = new MutationObserver(() => {
+        if (chartInstance) {
+            loadChartData();
+        }
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 });
