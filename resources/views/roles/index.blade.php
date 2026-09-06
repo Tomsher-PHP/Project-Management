@@ -3,6 +3,7 @@
 @section('page-content')
     <!-- Page starts -->
     <div class="mb-6 flex flex-wrap items-center gap-3">
+        <x-back-button :url="route('settings.index')" label="Back" />
 
         @can('role.create')
             <x-button.create-button :href="route('roles.create')" label="Role" />

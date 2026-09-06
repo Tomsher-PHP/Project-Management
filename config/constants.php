@@ -62,6 +62,7 @@ return [
 
     // Settings permissions list
     'settings_permissions' => [
+        'role.view',
         'department.view',
         'designation.view',
         'shift.view',
