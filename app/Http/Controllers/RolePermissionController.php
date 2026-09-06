@@ -72,7 +72,7 @@ class RolePermissionController extends Controller
             ->orderBy('name')
             ->get()
             ->groupBy(function ($permission) {
-                return explode('.', $permission->name)[0];
+                return $permission->label ?? explode('.', $permission->name)[0];
             });
     }
 
