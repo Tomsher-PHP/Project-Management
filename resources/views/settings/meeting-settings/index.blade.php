@@ -27,7 +27,7 @@
     <div class="mb-6 flex flex-wrap items-center gap-3">
         <x-back-button :url="route('settings.index')" label="Back" />
         @can($createPermission)
-            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="{{ $entityLabel }}" data-url="{{ $storeRoute }}" data-method="POST" data-sort_order="{{ $nextSortOrder }}" :label="$entityLabel" />
+            <x-button.create-button type="button" class="modal-open" data-target="#multi-step-modal" data-module="{{ $entityLabel }}" data-url="{{ $storeRoute }}" data-method="POST" :label="$entityLabel" />
         @endcan
 
         <x-filters.button />
@@ -62,11 +62,6 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
-                                    <div class="flex w-full items-center space-x-2.5">
-                                        <x-sorting.sortable-column column="sort_order" label="Sort Order" />
-                                    </div>
-                                </td>
-                                <td class="px-6 py-5 whitespace-nowrap">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Is Active</span>
                                 </td>
                                 <td class="pl-6 py-5 whitespace-nowrap text-right">
@@ -96,7 +91,7 @@
                                                             System
                                                         </span>
                                                     @endif
-                                                    @if ($record->is_default)
+                                                    @if ($currentTab !== 'tags' && $record->is_default)
                                                         <span class="inline-flex rounded-full bg-success-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-success-600 dark:bg-success-900/30 dark:text-success-300">
                                                             Default
                                                         </span>
@@ -112,11 +107,6 @@
                                     </td>
 
                                     <td class="px-6 py-5 whitespace-nowrap">
-                                        <div class="flex w-full items-center text-center">
-                                            <span class="block rounded-md bg-success-50 px-4 py-1.5 text-sm font-semibold leading-[22px] text-success-400 dark:bg-darkblack-500 dark:text-bgray-50">{{ $record->sort_order }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-5 whitespace-nowrap">
                                         <div class="flex w-full items-center">
                                             <x-status-toggle :model="$record" :route="$toggleRoute" entity="{{ \Illuminate\Support\Str::snake($entityLabel) }}" :permission="$togglePermission" />
                                         </div>
@@ -126,11 +116,12 @@
                                             @can($editPermission)
                                                 @php
                                                     $editData = [
-                                                        'name' => $record->name,
-                                                        'data-sort_order' => $record->sort_order,
-                                                        'data-is_default' => (int) $record->is_default,
+                                                        'data-name' => $record->name,
                                                         'data-is_system' => (int) $record->is_system,
                                                     ];
+                                                    if ($currentTab !== 'tags') {
+                                                        $editData['data-is_default'] = (int) $record->is_default;
+                                                    }
                                                     if ($currentTab === 'types' || $currentTab === 'tags') {
                                                         $editData['data-color'] = $record->color;
                                                     }
@@ -150,7 +141,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <x-table-no-data :col-span="5" :message="'No ' . strtolower($entityPluralLabel) . ' found.'" />
+                                <x-table-no-data :col-span="4" :message="'No ' . strtolower($entityPluralLabel) . ' found.'" />
                             @endforelse
                         </table>
                     </div>
@@ -184,35 +175,22 @@
             </div>
         @endif
 
-        <div>
-            <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">
-                <span>Sort Order <x-red-star /></span>
-                <span class="group relative inline-flex cursor-help">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                    </svg>
-                    <span class="pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-60 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                        Lower numbers appear earlier in lists and selection menus.
+        @if ($currentTab !== 'tags')
+            <label for="is_default" class="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+                <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
+                    <span>Is Default</span>
+                    <span class="group relative inline-flex cursor-help">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
+                            The default option is preselected when creating a new meeting.
+                        </span>
                     </span>
                 </span>
             </label>
-            <input type="number" name="sort_order" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
-        </div>
-
-        <label for="is_default" class="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" name="is_default" id="is_default" value="1" class="h-5 w-5 cursor-pointer rounded border border-bgray-400 text-success-300 focus:outline-none focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-            <span class="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-bgray-50">
-                <span>Is Default</span>
-                <span class="group relative inline-flex cursor-help">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-bgray-600 transition group-hover:text-success-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                    </svg>
-                    <span class="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-64 rounded-lg bg-bgray-600 px-3 py-2.5 text-sm font-medium leading-6 text-white shadow-lg group-hover:block">
-                        The default option is preselected when creating a new meeting.
-                    </span>
-                </span>
-            </span>
-        </label>
+        @endif
     </x-form-modal>
 
     <x-filters.drawer>

@@ -25,7 +25,7 @@ class MeetingTypeRequest extends FormRequest
             ],
             'color' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'sort_order' => ['required', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
         ];

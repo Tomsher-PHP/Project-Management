@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
             Permission::create([
                 'name' => $permission['name'],
                 'guard_name' => 'web',
+                'label' => $permission['label'] ?? null,
                 'sort_order' => $permission['sort_order'],
             ]);
         }

@@ -87,6 +87,7 @@ class MeetingSettingsController extends Controller
         if ($request->routeIs('settings.meeting-types.store')) {
             $data = app(\App\Http\Requests\MeetingTypeRequest::class)->validated();
             $data['is_default'] = $request->boolean('is_default');
+            $data['sort_order'] = $data['sort_order'] ?? 1;
             $record = DB::transaction(function () use ($data) {
                 if ($data['is_default']) {
                     $this->clearExistingDefaults(MeetingType::class);
@@ -103,6 +104,7 @@ class MeetingSettingsController extends Controller
         } elseif ($request->routeIs('settings.meeting-locations.store')) {
             $data = app(\App\Http\Requests\MeetingLocationRequest::class)->validated();
             $data['is_default'] = $request->boolean('is_default');
+            $data['sort_order'] = $data['sort_order'] ?? 1;
             $record = DB::transaction(function () use ($data) {
                 if ($data['is_default']) {
                     $this->clearExistingDefaults(MeetingLocation::class);
@@ -118,14 +120,9 @@ class MeetingSettingsController extends Controller
             ]);
         } elseif ($request->routeIs('settings.meeting-tags.store')) {
             $data = app(\App\Http\Requests\MeetingTagRequest::class)->validated();
-            $data['is_default'] = $request->boolean('is_default');
-            $record = DB::transaction(function () use ($data) {
-                if ($data['is_default']) {
-                    $this->clearExistingDefaults(MeetingTag::class);
-                }
-
-                return MeetingTag::create($data);
-            });
+            $data['is_default'] = false;
+            $data['sort_order'] = $data['sort_order'] ?? 1;
+            $record = MeetingTag::create($data);
 
             return response()->json([
                 'status' => true,
@@ -181,23 +178,15 @@ class MeetingSettingsController extends Controller
             ]);
         } elseif ($request->routeIs('settings.meeting-tags.update')) {
             $data = app(\App\Http\Requests\MeetingTagRequest::class)->validated();
-            $data['is_default'] = $request->boolean('is_default');
+            $data['is_default'] = false;
 
             $record = MeetingTag::findOrFail($id);
-            $record = DB::transaction(function () use ($record, $data) {
-                if ($data['is_default']) {
-                    $this->clearExistingDefaults(MeetingTag::class, $record->id);
-                }
-
-                $record->update($data);
-
-                return $record->refresh();
-            });
+            $record->update($data);
 
             return response()->json([
                 'status' => true,
                 'message' => 'Meeting tag updated successfully.',
-                'data' => $record,
+                'data' => $record->refresh(),
             ]);
         }
 
