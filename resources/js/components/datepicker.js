@@ -1,6 +1,7 @@
 // Import Flatpickr
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css"; // base styles
+import { getSystemTime24hr } from "./timepicker";
 
 const parseBoolean = (value, defaultValue = false) => {
     if (value === undefined || value === null || value === "") {
@@ -22,10 +23,17 @@ export function initDatepicker(selector = ".datepicker", config = {}, root = doc
         const enableTime = parseBoolean(el.dataset.enableTime, false);
         const enableSeconds = parseBoolean(el.dataset.enableSeconds, false);
         const noCalendar = parseBoolean(el.dataset.noCalendar, false);
-        const time24hr = parseBoolean(el.dataset.time24hr, true);
-        const dateFormat = noCalendar
+        const time24hr = getSystemTime24hr(el);
+
+        const timeFormatToken = time24hr
             ? (enableSeconds ? "H:i:S" : "H:i")
-            : (enableTime ? `Y-m-d H:i${enableSeconds ? ":S" : ""}` : "Y-m-d");
+            : (enableSeconds ? "h:i:S K" : "h:i K");
+
+        const defaultDateFormat = noCalendar
+            ? timeFormatToken
+            : (enableTime ? `Y-m-d ${timeFormatToken}` : "Y-m-d");
+
+        const dateFormat = el.dataset.format || defaultDateFormat;
         const displayFormat = el.dataset.format || null;
         const altFormat = el.dataset.altFormat || displayFormat || null;
         const altInput = parseBoolean(el.dataset.altInput, Boolean(altFormat && altFormat !== dateFormat));

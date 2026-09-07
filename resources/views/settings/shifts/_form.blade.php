@@ -84,9 +84,17 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
+            @php
+                $shiftTimeFormat = $globalTimeFormat ?? config('constants.time_format', 'H:i');
+                $defaultStartTime = \Carbon\Carbon::createFromTime(9, 0)->format($shiftTimeFormat);
+                $defaultEndTime = \Carbon\Carbon::createFromTime(18, 0)->format($shiftTimeFormat);
+                $startTimeValue = old('start_time', isset($shift?->time_from) ? $shift->time_from->format($shiftTimeFormat) : $defaultStartTime);
+                $endTimeValue = old('end_time', isset($shift?->time_to) ? $shift->time_to->format($shiftTimeFormat) : $defaultEndTime);
+            @endphp
+
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">Start Time <x-red-star /></label>
-                <input type="text" name="start_time" data-mode="12" value="{{ old('start_time', $shift?->time_from->format('H:i') ?? '09:00') }}"
+                <input type="text" name="start_time" value="{{ $startTimeValue }}"
                     class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-600 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if ($isDisabled) bg-bgray-200 @else bg-white @endif @error('start_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('start_time')
@@ -99,7 +107,7 @@
 
             <div class="flex flex-col gap-2">
                 <label class="text-base font-medium text-bgray-600 dark:text-bgray-50">End Time <x-red-star /></label>
-                <input type="text" name="end_time" data-mode="12" value="{{ old('end_time', $shift?->time_to->format('H:i') ?? '18:00') }}"
+                <input type="text" name="end_time" value="{{ $endTimeValue }}"
                     class="timepicker w-full rounded-lg border p-2 focus:border focus:border-success-300 focus:ring-0 dark:bg-darkblack-500 dark:text-white dark:disabled:border-darkblack-400 dark:disabled:bg-darkblack-600 dark:disabled:text-bgray-600 disabled:cursor-not-allowed disabled:border-bgray-200 disabled:text-bgray-700 @if ($isDisabled) bg-bgray-200 @else bg-white @endif @error('end_time') border-red-500 @else border-gray-300 dark:border-darkblack-400 @enderror" @disabled($isDisabled)>
 
                 @error('end_time')

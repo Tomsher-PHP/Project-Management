@@ -7,6 +7,41 @@
     @if ($hasSettingsAccess)
         <div class="flex flex-wrap items-center gap-5 dark:bg-darkblack-700">
 
+            @can('role.view')
+                <a href="{{ route('roles.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Roles
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
+            @can('shift.view')
+                <a href="{{ route('settings.shifts.index') }}" class="block group transition duration-300">
+                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center h-full">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
+                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="8" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5l3 2" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
+                                Shifts
+                            </h3>
+                        </div>
+                    </div>
+                </a>
+            @endcan
+
             @can('department.view')
                 <a href="{{ route('settings.departments.index') }}" class="block group transition duration-300">
                     <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
@@ -40,24 +75,6 @@
                             </div>
                             <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
                                 Designations
-                            </h3>
-                        </div>
-                    </div>
-                </a>
-            @endcan
-
-            @can('shift.view')
-                <a href="{{ route('settings.shifts.index') }}" class="block group transition duration-300">
-                    <div class="mx-auto max-w-[200px] min-w-[200px] rounded-lg bg-white dark:bg-darkblack-600 p-3 aspect-square hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
-                        <div class="flex flex-col items-center justify-center text-center h-full">
-                            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900 shrink-0">
-                                <svg class="h-8 w-8 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="8" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v5l3 2" />
-                                </svg>
-                            </div>
-                            <h3 class="mt-2 text-md font-semibold text-bgray-900 dark:text-white">
-                                Shifts
                             </h3>
                         </div>
                     </div>

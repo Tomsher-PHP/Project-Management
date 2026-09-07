@@ -45,7 +45,7 @@
 
     $canViewAppraisal = $authUser?->can('appraisal.view');
 
-    $hasManagementLinks = $canViewRoles || $canViewUsers || $canViewTeams || $canViewCustomers;
+    $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
     $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewAppraisal;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports || $canViewAttendanceReports || $canViewLeaveReports || $canViewShiftScheduleReports || $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports;
@@ -153,19 +153,7 @@
                                 <span class="sidebar-tooltip">Analytics</span>
                             </li>
 
-                            @if ($canViewRoles)
-                                <li class="item px-[43px] py-[11px] {{ $isRolesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
-                                    <a href="{{ route('roles.index') }}">
-                                        <span class="item-ico">
-                                            <svg width="18" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M12 2L4 5V11C4 16.52 7.38 20.62 12 22C16.62 20.62 20 16.52 20 11V5L12 2ZM18 11C18 15.42 15.46 18.72 12 20C8.54 18.72 6 15.42 6 11V6.3L12 4.05L18 6.3V11Z" fill="#1A202C" class="path-1" />
-                                                <path d="M10 15.17L6.7 11.87L8.11 10.45L10 12.34L14.68 7.66L16.1 9.08L10 15.17Z" fill="#22C55E" class="path-2" />
-                                            </svg>
-                                        </span>
-                                    </a>
-                                    <span class="sidebar-tooltip">Roles</span>
-                                </li>
-                            @endif
+
 
                             @if ($canViewUsers)
                                 <li class="item px-[43px] py-[11px] {{ $isUsersActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">

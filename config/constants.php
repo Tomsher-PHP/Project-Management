@@ -62,6 +62,7 @@ return [
 
     // Settings permissions list
     'settings_permissions' => [
+        'role.view',
         'department.view',
         'designation.view',
         'shift.view',
@@ -70,12 +71,13 @@ return [
         'industry.view',
         'project_status.view',
         'project_stage.view',
-        'configuration.view',
         'agile_milestone.view',
         'agile_sprint.view',
         'task_settings.view',
         'kpi.view',
-        'checklist_template.view'
+        'checklist_template.view',
+        'appraisal_settings.view',
+        'configuration.view',
     ],
 
     // Daily work notification grace period in minutes

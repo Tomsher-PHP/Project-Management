@@ -15,11 +15,15 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <meta name="time-format" content="{{ $globalTimeFormat ?? config('constants.time_format', 'H:i') }}" />
+    <meta name="date-format" content="{{ $globalDateFormat ?? config('constants.date_format', 'Y-m-d') }}" />
 
     <title>{{ $pageTitle ?? 'Dashboard' }} | Tomsher PMS</title>
 
     <script>
-        window.authUserId = {{ auth()->id() }};
+        window.authUserId = {{ auth()->id() ?? 'null' }};
+        window.globalTimeFormat = @js($globalTimeFormat ?? config('constants.time_format', 'H:i'));
+        window.globalDateFormat = @js($globalDateFormat ?? config('constants.date_format', 'Y-m-d'));
     </script>
 
     <!-- Vite Assets -->
