@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('meeting_locations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('description')->nullable();
             $table->unsignedInteger('sort_order')->default(1);
 
             $table->boolean('is_default')->default(false);

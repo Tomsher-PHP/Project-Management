@@ -15,6 +15,7 @@ class MeetingType extends Model
 
     protected $fillable = [
         'name',
+        'color',
         'description',
         'sort_order',
         'is_default',
@@ -26,6 +27,7 @@ class MeetingType extends Model
 
     protected $sortable = [
         'name',
+        'color',
         'sort_order',
         'is_active',
     ];

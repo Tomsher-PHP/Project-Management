@@ -15,7 +15,6 @@ class MeetingLocation extends Model
 
     protected $fillable = [
         'name',
-        'description',
         'sort_order',
         'is_default',
         'is_active',
@@ -32,7 +31,6 @@ class MeetingLocation extends Model
 
     protected $searchable = [
         'name',
-        'description',
     ];
 
     protected function casts(): array

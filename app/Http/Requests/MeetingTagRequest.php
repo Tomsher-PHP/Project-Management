@@ -23,7 +23,7 @@ class MeetingTagRequest extends FormRequest
                 'max:255',
                 Rule::unique('meeting_tags', 'name')->whereNull('deleted_at')->ignore($id),
             ],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'color' => ['nullable', 'string', 'max:50'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],

@@ -12,15 +12,15 @@ class MeetingSettingsSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['name' => 'Project Meeting', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Team Meeting', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Client Meeting', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => '1-on-1', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Daily Standup', 'sort_order' => 5, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Sprint Planning', 'sort_order' => 6, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Sprint Review', 'sort_order' => 7, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Retrospective', 'sort_order' => 8, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'General Meeting', 'sort_order' => 9, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Project Meeting', 'color' => '#3B82F6', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Team Meeting', 'color' => '#10B981', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Client Meeting', 'color' => '#F59E0B', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => '1-on-1', 'color' => '#8B5CF6', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Daily Standup', 'color' => '#06B6D4', 'sort_order' => 5, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Sprint Planning', 'color' => '#6366F1', 'sort_order' => 6, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Sprint Review', 'color' => '#EC4899', 'sort_order' => 7, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Retrospective', 'color' => '#14B8A6', 'sort_order' => 8, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'General Meeting', 'color' => '#64748B', 'sort_order' => 9, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
         ];
 
         foreach ($types as $type) {
@@ -46,12 +46,12 @@ class MeetingSettingsSeeder extends Seeder
         }
 
         $tags = [
-            ['name' => 'Client', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Internal', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Planning', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Review', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Management', 'sort_order' => 5, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
-            ['name' => 'Follow-up', 'sort_order' => 6, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Client', 'color' => '#EF4444', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Internal', 'color' => '#3B82F6', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Planning', 'color' => '#F59E0B', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Review', 'color' => '#10B981', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Management', 'color' => '#8B5CF6', 'sort_order' => 5, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Follow-up', 'color' => '#6366F1', 'sort_order' => 6, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
         ];
 
         foreach ($tags as $tag) {

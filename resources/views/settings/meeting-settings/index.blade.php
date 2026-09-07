@@ -83,6 +83,9 @@
                                     </td>
                                     <td class="px-6 py-5 whitespace-nowrap">
                                         <div class="flex items-start space-x-2.5">
+                                            @if ($currentTab === 'types' || $currentTab === 'tags')
+                                                <span class="mt-1.5 inline-flex h-3 w-3 shrink-0 rounded-full border border-bgray-200 dark:border-darkblack-400" style="background-color: {{ $record->color ?: '#E5E7EB' }}"></span>
+                                            @endif
                                             <div>
                                                 <div class="flex flex-wrap items-center gap-2">
                                                     <p class="text-base font-semibold text-bgray-900 dark:text-white">
@@ -99,7 +102,7 @@
                                                         </span>
                                                     @endif
                                                 </div>
-                                                @if ($record->description)
+                                                @if ($currentTab === 'types' && $record->description)
                                                     <p class="mt-1 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                                         {{ \Illuminate\Support\Str::limit($record->description, 60, '...') }}
                                                     </p>
@@ -123,14 +126,24 @@
                                             @can($editPermission)
                                                 @php
                                                     $editData = [
-                                                        'data-name' => $record->name,
-                                                        'data-description' => $record->description,
-                                                        'data-sort_order' => $record->sort_order,
-                                                        'data-is_default' => (int) $record->is_default,
-                                                        'data-is_system' => (int) $record->is_system,
+                                                        'name' => $record->name,
+                                                        'sort_order' => $record->sort_order,
+                                                        'is_default' => (int) $record->is_default,
+                                                        'is_system' => (int) $record->is_system,
                                                     ];
+                                                    if ($currentTab === 'types' || $currentTab === 'tags') {
+                                                        $editData['color'] = $record->color;
+                                                    }
+                                                    if ($currentTab === 'types') {
+                                                        $editData['description'] = $record->description;
+                                                    }
+
+                                                    $dataAttributes = '';
+                                                    foreach ($editData as $k => $v) {
+                                                        $dataAttributes .= ' data-' . $k . '="' . htmlspecialchars((string) $v) . '"';
+                                                    }
                                                 @endphp
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" :attributes="new \Illuminate\View\ComponentAttributeBag($editData)" data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" {!! $dataAttributes !!} data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
                                             @endcan
 
                                             @can($deletePermission)
@@ -159,13 +172,22 @@
             <input type="text" name="name" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" required>
         </div>
 
-        <div>
-            <div class="mb-2.5 flex items-center justify-between gap-3">
-                <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
-                <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
+        @if ($currentTab === 'types')
+            <div>
+                <div class="mb-2.5 flex items-center justify-between gap-3">
+                    <label class="block text-left text-sm text-bgray-700 dark:text-bgray-50">Description</label>
+                    <span class="text-xs font-medium text-bgray-600 dark:text-bgray-300"><span data-modal-description-count>0</span>/250</span>
+                </div>
+                <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
             </div>
-            <textarea name="description" rows="3" maxlength="250" class="w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></textarea>
-        </div>
+        @endif
+
+        @if ($currentTab === 'types' || $currentTab === 'tags')
+            <div>
+                <label class="mb-2.5 block text-left text-sm text-bgray-700 dark:text-bgray-50">Color</label>
+                <input type="color" name="color" class="h-12 w-full rounded-lg border border-gray-300 p-2 focus:border focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500">
+            </div>
+        @endif
 
         <div>
             <label class="mb-2.5 flex items-center gap-1.5 text-left text-sm text-bgray-700 dark:text-bgray-50">

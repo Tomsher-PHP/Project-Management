@@ -15,7 +15,7 @@ class MeetingTag extends Model
 
     protected $fillable = [
         'name',
-        'description',
+        'color',
         'sort_order',
         'is_default',
         'is_active',
@@ -26,13 +26,13 @@ class MeetingTag extends Model
 
     protected $sortable = [
         'name',
+        'color',
         'sort_order',
         'is_active',
     ];
 
     protected $searchable = [
         'name',
-        'description',
     ];
 
     protected function casts(): array

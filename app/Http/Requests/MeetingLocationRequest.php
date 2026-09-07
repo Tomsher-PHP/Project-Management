@@ -23,7 +23,6 @@ class MeetingLocationRequest extends FormRequest
                 'max:255',
                 Rule::unique('meeting_locations', 'name')->whereNull('deleted_at')->ignore($id),
             ],
-            'description' => ['nullable', 'string', 'max:1000'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_default' => ['boolean'],
             'is_active' => ['boolean'],
