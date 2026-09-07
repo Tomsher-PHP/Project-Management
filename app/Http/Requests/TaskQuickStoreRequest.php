@@ -111,27 +111,7 @@ class TaskQuickStoreRequest extends FormRequest
                         ->where('is_active', true)
                 ),
             ],
-            'due_date_time' => [
-                'required',
-                'date',
-                function ($attribute, $value, $fail) {
-                    if (! filled($value)) {
-                        return;
-                    }
-
-                    try {
-                        $tz = (string) config('constants.timezone', config('app.timezone'));
-                        $dueDate = \Illuminate\Support\Carbon::parse($value, $tz);
-                        $today = now($tz)->startOfDay();
-
-                        if ($dueDate->copy()->startOfDay()->lt($today)) {
-                            $fail('The due date cannot be a past date.');
-                        }
-                    } catch (\Throwable $e) {
-                        $fail('The selected due date is invalid.');
-                    }
-                },
-            ],
+            'due_date_time' => ['required', 'date'],
             'completed_at' => ['nullable', 'date'],
             'estimated_time_minutes' => ['nullable', 'integer', 'min:0'],
             'is_billable' => ['nullable', 'boolean'],

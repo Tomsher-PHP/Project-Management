@@ -88,7 +88,7 @@ class TaskFormService
         $tz = (string) config('constants.timezone', config('app.timezone'));
         $now = now($tz);
 
-        if ((int) $now->format('H') < 19) {
+        if ((int) $now->format('H') < 18) {
             $due = $now->copy()->setTime(19, 0, 0);
         } else {
             $due = $now->copy()->addDay()->setTime(19, 0, 0);
