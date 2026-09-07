@@ -26,8 +26,8 @@ class ShiftService
             // Create shift
             $shift = Shift::create([
                 'name' => $data['name'],
-                'time_from' => Carbon::createFromFormat('g:i A', $data['start_time'])->format('H:i:s'),
-                'time_to' => Carbon::createFromFormat('g:i A', $data['end_time'])->format('H:i:s'),
+                'time_from' => Carbon::parse($data['start_time'])->format('H:i:s'),
+                'time_to' => Carbon::parse($data['end_time'])->format('H:i:s'),
                 'break_duration' => $data['break_duration'],
                 'color_code' => $data['color_code'] ?? '#6b7280',
             ]);
