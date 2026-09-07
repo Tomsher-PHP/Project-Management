@@ -411,7 +411,7 @@ const updateSprintOptions = (form, dependencies, { selectedSprintId = '', select
 const getDefaultTaskDueDateTime = () => {
     const now = new Date();
     const target = new Date(now);
-    if (now.getHours() >= 19) {
+    if (now.getHours() >= 18) {
         target.setDate(target.getDate() + 1);
     }
     target.setHours(19, 0, 0, 0);
