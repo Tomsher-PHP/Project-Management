@@ -408,7 +408,21 @@ const updateSprintOptions = (form, dependencies, { selectedSprintId = '', select
     });
 };
 
-const setEmptyProjectState = (form) => {
+const getDefaultTaskDueDateTime = () => {
+    const now = new Date();
+    const target = new Date(now);
+    if (now.getHours() >= 19) {
+        target.setDate(target.getDate() + 1);
+    }
+    target.setHours(19, 0, 0, 0);
+
+    const year = target.getFullYear();
+    const month = String(target.getMonth() + 1).padStart(2, '0');
+    const day = String(target.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day} 19:00`;
+};
+
+const setEmptyProjectState = (form, dependencies = null) => {
     setTaskCreateRequiredIndicators(form, false);
     setTaskCreatePlacementHint(form, null);
 
@@ -434,6 +448,10 @@ const setEmptyProjectState = (form) => {
     });
     setEstimatedTimeValue(form, 0);
     setCheckboxValue(form.querySelector('input[type="checkbox"][name="is_billable"]'), false);
+
+    const dueDateField = form.querySelector('[name="due_date_time"]');
+    const defaultDue = dependencies?.defaults?.due_date_time || getDefaultTaskDueDateTime();
+    setFieldValue(dueDateField, defaultDue);
 };
 
 const setProjectLoadingState = (form) => {
@@ -509,7 +527,7 @@ const applyProjectDefaults = async (form, dependencies) => {
     const projectId = projectField?.value || '';
 
     if (!projectId) {
-        setEmptyProjectState(form);
+        setEmptyProjectState(form, dependencies);
         return;
     }
 
@@ -519,12 +537,12 @@ const applyProjectDefaults = async (form, dependencies) => {
     try {
         projectMeta = await fetchProjectDependencies(dependencies, projectId);
     } catch (error) {
-        setEmptyProjectState(form);
+        setEmptyProjectState(form, dependencies);
         throw error;
     }
 
     if (!projectMeta) {
-        setEmptyProjectState(form);
+        setEmptyProjectState(form, dependencies);
         return;
     }
 
@@ -559,7 +577,8 @@ const applyProjectDefaults = async (form, dependencies) => {
         }
     }
 
-    setFieldValue(dueDateField, '');
+    const defaultDue = dependencies.defaults?.due_date_time || getDefaultTaskDueDateTime();
+    setFieldValue(dueDateField, defaultDue);
     setEstimatedTimeValue(form, projectMeta.default_task_estimate_minutes ?? 0);
     setCheckboxValue(billableField, projectMeta.default_billable);
 
@@ -658,7 +677,7 @@ const prepareTaskCreateModal = async (root, dependencies) => {
     setTaskCreateAdvancedState(root, false);
     setTaskCreateMode(root, getTaskCreateMode(root));
     syncTaskCreateSelectState(form);
-    setEmptyProjectState(form);
+    setEmptyProjectState(form, dependencies);
 
     const projectField = form.querySelector('[name="project_id"]');
 
