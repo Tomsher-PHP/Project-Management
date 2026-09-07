@@ -3,40 +3,26 @@
 @section('page-content')
 
     <div class="w-full">
-
         {{-- Header --}}
-        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div class="mb-6 flex flex-wrap items-center gap-3">
 
             {{-- Apply Leave --}}
             @if (!$isPendingPage)
-
                 @can('leave_request.create')
-
-                    <a href="{{ route('leave-requests.create') }}"
-                        class="inline-flex items-center gap-1 rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300">
-
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2">
-
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 4v16m8-8H4" />
-
-                        </svg>
-
-                        Apply Leave
-
-                    </a>
-
+                    <x-button.create-button
+                        type="button"
+                        onclick="window.location.href='{{ route('leave-requests.create') }}'"
+                        title="Apply for leave"
+                        label="Apply Leave"
+                    />
                 @endcan
-
             @endif
 
+            {{-- Filters --}}
+            <x-filters.button />
+
+            {{-- Search --}}
+            <x-filters.list-search />
         </div>
 
 
