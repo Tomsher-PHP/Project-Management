@@ -242,7 +242,7 @@ return [
 
 
 
-    // LEAVE REQUEST (2140)
+    // LEAVE REQUEST (66000)
     ['name' => 'leave_request.view','label' => 'Leave Request', 'sort_order' => 66000, 'default_checked' => true],
     ['name' => 'leave_request.create','label' => 'Leave Request', 'sort_order' => 66020, 'default_checked' => true],
     ['name' => 'leave_request.edit','label' => 'Leave Request', 'sort_order' => 66030, 'default_checked' => true],
@@ -251,12 +251,16 @@ return [
     ['name' => 'leave_request.reject','label' => 'Leave Request', 'sort_order' => 66070, 'default_checked' => true],
     ['name' => 'leave_request.cancel','label' => 'Leave Request', 'sort_order' => 66090, 'default_checked' => true],
 
-    // ATTENDANCE (2150)
+    // ATTENDANCE (67000)
     ['name' => 'attendance.view','label' => 'Attendance', 'sort_order' => 67000, 'default_checked' => true],
     ['name' => 'attendance.create','label' => 'Attendance', 'sort_order' => 67020, 'default_checked' => true],
     ['name' => 'attendance.edit','label' => 'Attendance', 'sort_order' => 67040, 'default_checked' => true],
     ['name' => 'attendance.delete','label' => 'Attendance', 'sort_order' => 67060, 'default_checked' => false],
 
-
+    // LEAVE TYPES (68000)
+    ['name' => 'leave_types.view',   'label' => 'Settings - Leave Types', 'sort_order' => 68000, 'default_checked' => false],
+    ['name' => 'leave_types.create', 'label' => 'Settings - Leave Types', 'sort_order' => 68020, 'default_checked' => false],
+    ['name' => 'leave_types.edit',   'label' => 'Settings - Leave Types', 'sort_order' => 68040, 'default_checked' => false],
+    ['name' => 'leave_types.delete', 'label' => 'Settings - Leave Types', 'sort_order' => 68060, 'default_checked' => false],
 
 ];
