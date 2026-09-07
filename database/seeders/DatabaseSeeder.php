@@ -51,6 +51,9 @@ class DatabaseSeeder extends Seeder
             // Appraisal related seeders
             AppraisalQuestionUnitSeeder::class,
 
+            // Meeting related seeders
+            MeetingSettingsSeeder::class,
+
             // Country related seeders
             CountrySeeder::class,
         ]);

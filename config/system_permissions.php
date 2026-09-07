@@ -95,7 +95,7 @@ return [
 
     // HANDOFF 
     ['name' => 'handoff_request.view_all',     'label' => 'Requests - Handoff', 'sort_order' => 21000, 'default_checked' => false],
-    ['name' => 'handoff_request.view',         'label' => 'Requests - Handoff', 'sort_order' => 21020, 'default_checked' => false],
+    ['name' => 'handoff_request.view',         'label' => 'Requests - Handoff', 'sort_order' => 21020, 'default_checked' => true],
     ['name' => 'handoff_request.create',       'label' => 'Requests - Handoff', 'sort_order' => 21040, 'default_checked' => false],
     ['name' => 'handoff_request.note',         'label' => 'Requests - Handoff', 'sort_order' => 21060, 'default_checked' => false],
 
@@ -232,8 +232,14 @@ return [
     ['name' => 'appraisal_settings.edit',   'label' => 'Settings - Appraisal', 'sort_order' => 64040, 'default_checked' => false],
     ['name' => 'appraisal_settings.delete', 'label' => 'Settings - Appraisal', 'sort_order' => 64060, 'default_checked' => false],
 
+    // MEETING SETTINGS 
+    ['name' => 'meeting_settings.view',   'label' => 'Settings - Meeting', 'sort_order' => 65000, 'default_checked' => false],
+    ['name' => 'meeting_settings.create', 'label' => 'Settings - Meeting', 'sort_order' => 65020, 'default_checked' => false],
+    ['name' => 'meeting_settings.edit',   'label' => 'Settings - Meeting', 'sort_order' => 65040, 'default_checked' => false],
+    ['name' => 'meeting_settings.delete', 'label' => 'Settings - Meeting', 'sort_order' => 65060, 'default_checked' => false],
+
     // CONFIGURATION
-    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 65000, 'default_checked' => false],
-    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 65020, 'default_checked' => false],
+    ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 100000, 'default_checked' => false],
+    ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 100020, 'default_checked' => false],
 
 ];
