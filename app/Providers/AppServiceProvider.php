@@ -169,7 +169,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return $date->format(
-            trim((string) config('constants.date_format') . ' ' . (string) config('constants.time_format'))
+            trim((string) config('constants.date_format') . '  •  ' . (string) config('constants.time_format'))
         );
     }
 
