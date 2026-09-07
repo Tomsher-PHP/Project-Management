@@ -46,7 +46,7 @@ class MeetingSettingsSeeder extends Seeder
         }
 
         $tags = [
-            ['name' => 'Client', 'color' => '#EF4444', 'sort_order' => 1, 'is_default' => 1, 'is_active' => 1, 'is_system' => 1],
+            ['name' => 'Client', 'color' => '#EF4444', 'sort_order' => 1, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
             ['name' => 'Internal', 'color' => '#3B82F6', 'sort_order' => 2, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
             ['name' => 'Planning', 'color' => '#F59E0B', 'sort_order' => 3, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],
             ['name' => 'Review', 'color' => '#10B981', 'sort_order' => 4, 'is_default' => 0, 'is_active' => 1, 'is_system' => 1],

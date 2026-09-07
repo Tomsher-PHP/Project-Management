@@ -127,23 +127,18 @@
                                                 @php
                                                     $editData = [
                                                         'name' => $record->name,
-                                                        'sort_order' => $record->sort_order,
-                                                        'is_default' => (int) $record->is_default,
-                                                        'is_system' => (int) $record->is_system,
+                                                        'data-sort_order' => $record->sort_order,
+                                                        'data-is_default' => (int) $record->is_default,
+                                                        'data-is_system' => (int) $record->is_system,
                                                     ];
                                                     if ($currentTab === 'types' || $currentTab === 'tags') {
-                                                        $editData['color'] = $record->color;
+                                                        $editData['data-color'] = $record->color;
                                                     }
                                                     if ($currentTab === 'types') {
-                                                        $editData['description'] = $record->description;
-                                                    }
-
-                                                    $dataAttributes = '';
-                                                    foreach ($editData as $k => $v) {
-                                                        $dataAttributes .= ' data-' . $k . '="' . htmlspecialchars((string) $v) . '"';
+                                                        $editData['data-description'] = $record->description;
                                                     }
                                                 @endphp
-                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" {!! $dataAttributes !!} data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
+                                                <x-edit-button action="javascript:void(0)" class="edit-record" data-modal="multi-step-modal" data-url="{{ route($updateRouteName, $record->id) }}" :attributes="new \Illuminate\View\ComponentAttributeBag($editData)" data-method="PUT" data-module="{{ $entityLabel }}" title="Edit {{ $entityLabel }}" />
                                             @endcan
 
                                             @can($deletePermission)
