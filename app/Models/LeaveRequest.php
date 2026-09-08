@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class LeaveRequest extends Model
 {
@@ -32,7 +33,6 @@ class LeaveRequest extends Model
         'duration',
 
         'reason',
-        'attachment',
 
         /*
          * Status.
@@ -271,5 +271,21 @@ class LeaveRequest extends Model
             LeaveRequestHistory::class,
             'leave_request_id'
         )->latest();
+    }
+
+    /**
+     * Attachments associated with this leave request.
+     *
+     * AttachmentService will store:
+     *
+     * link_id   = leave_requests.id
+     * link_type = LeaveRequest::class
+     */
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(
+            Attachment::class,
+            'link'
+        );
     }
 }

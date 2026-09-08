@@ -320,19 +320,37 @@
             </div>
 
             {{-- Attachment --}}
-            @if ($leaveRequest->attachment)
+            @if ($leaveRequest->attachments->count())
                 <div class="rounded-xl bg-white p-6 shadow-sm dark:bg-darkblack-600 lg:col-span-2">
 
                     <h3 class="mb-4 text-lg font-semibold text-bgray-900 dark:text-white">
                         Attachment
                     </h3>
 
-                    <a href="{{ asset('storage/' . $leaveRequest->attachment) }}" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center rounded-lg bg-bgray-100 px-4 py-2.5 text-sm font-medium text-bgray-700 hover:bg-bgray-200 dark:bg-darkblack-500 dark:text-white dark:hover:bg-darkblack-400">
+                    <div class="flex flex-col gap-2">
 
-                        View Attachment
+                        @foreach ($leaveRequest->attachments as $attachment)
+                            <div class="flex items-center justify-between rounded-lg bg-bgray-50 p-3 dark:bg-darkblack-500">
 
-                    </a>
+                                <div>
+                                    <p class="text-sm font-medium text-bgray-900 dark:text-white">
+                                        {{ $attachment->file_name ?? 'Attachment' }}
+                                    </p>
+                                </div>
+
+                                <a
+                                    href="{{ asset('storage/' . $attachment->file_path) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center rounded-lg bg-bgray-100 px-4 py-2.5 text-sm font-medium text-bgray-700 hover:bg-bgray-200 dark:bg-darkblack-400 dark:text-white"
+                                >
+                                    View Attachment
+                                </a>
+
+                            </div>
+                        @endforeach
+
+                    </div>
 
                 </div>
             @endif
