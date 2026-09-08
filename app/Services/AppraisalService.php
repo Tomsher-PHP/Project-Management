@@ -2112,4 +2112,310 @@ class AppraisalService
             'assignee_average_rating' => $assigneeAvg,
         ]);
     }
+
+    public function hasReviewerStarted(AppraisalReviewer $reviewer): bool
+    {
+        if (filled($reviewer->submitted_at) || filled($reviewer->acknowledged_at) || $reviewer->average_rating !== null) {
+            return true;
+        }
+
+        $hasAnswerReviews = \App\Models\AppraisalAnswerReview::query()
+            ->where('appraisal_reviewer_id', $reviewer->id)
+            ->where(function ($q) {
+                $q->whereNotNull('rating')
+                    ->orWhereNotNull('remark')
+                    ->orWhereNotNull('submitted_at');
+            })
+            ->exists();
+
+        if ($hasAnswerReviews) {
+            return true;
+        }
+
+        $hasComments = \App\Models\AppraisalComment::query()
+            ->where('appraisal_reviewer_id', $reviewer->id)
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->exists();
+
+        return $hasComments;
+    }
+
+    public function getManageReviewersData(Appraisal $appraisal): array
+    {
+        $this->ensureAppraisalUserIsAccessible($appraisal, 'managing reviewers');
+
+        $appraisal->load([
+            'user:id,name,email',
+            'user.details.department',
+            'user.details.designation',
+            'reviewers' => fn($q) => $q->orderBy('level'),
+            'reviewers.reviewer:id,name,email',
+            'answers',
+        ]);
+
+        $chainIds = $this->getReviewerChainUserIds((int) $appraisal->user_id);
+        $assignedReviewerUserIds = $appraisal->reviewers->pluck('reviewer_user_id')->map(fn($id) => (int) $id)->all();
+        $eligibleUserIds = $chainIds->reject(fn(int $id) => in_array($id, $assignedReviewerUserIds, true) || $id === (int) $appraisal->user_id)->values();
+
+        $eligibleUsers = User::query()
+            ->whereIn('id', $eligibleUserIds)
+            ->get(['id', 'name', 'email'])
+            ->map(fn(User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ])
+            ->values()
+            ->all();
+
+        $assigneeSubmitted = $this->isAssigneeSubmitted($appraisal);
+
+        $reviewersData = $appraisal->reviewers->map(function (AppraisalReviewer $reviewer) use ($appraisal, $assigneeSubmitted) {
+            $hasStarted = $this->hasReviewerStarted($reviewer);
+
+            $status = 'Not Started';
+            if (filled($reviewer->submitted_at) || in_array($appraisal->status, ['completed', 'closed'], true)) {
+                $status = 'Completed';
+            } elseif ($hasStarted) {
+                $status = 'In Progress';
+            } else {
+                if (! $assigneeSubmitted) {
+                    $status = 'Waiting';
+                } else {
+                    $previousReviewers = $appraisal->reviewers->where('level', '<', $reviewer->level);
+                    $allPreviousAcknowledged = $previousReviewers->isEmpty() || $previousReviewers->every(fn($prev) => filled($prev->acknowledged_at));
+                    if (! $allPreviousAcknowledged) {
+                        $status = 'Waiting';
+                    }
+                }
+            }
+
+            $isRestricted = in_array($status, ['Completed', 'In Progress'], true);
+
+            return [
+                'id' => $reviewer->id,
+                'reviewer_user_id' => $reviewer->reviewer_user_id,
+                'name' => $reviewer->reviewer?->name ?: "Reviewer Level {$reviewer->level}",
+                'email' => $reviewer->reviewer?->email,
+                'level' => $reviewer->level,
+                'status' => $status,
+                'has_started' => $hasStarted,
+                'can_change' => ! $isRestricted,
+                'can_remove' => ! $isRestricted,
+                'submitted_at' => $this->formatDateTime($reviewer->submitted_at),
+                'acknowledged_at' => $this->formatDateTime($reviewer->acknowledged_at),
+            ];
+        })->values()->all();
+
+        return [
+            'appraisal' => [
+                'id' => $appraisal->id,
+                'user_id' => $appraisal->user_id,
+                'user_name' => $appraisal->user?->name,
+                'user_email' => $appraisal->user?->email,
+                'department' => $appraisal->user?->details?->department?->name,
+                'designation' => $appraisal->user?->details?->designation?->name,
+                'period' => Carbon::createFromDate($appraisal->year, $appraisal->month, 1)->format('F Y'),
+                'status' => $appraisal->status,
+                'status_label' => str($appraisal->status)->headline()->toString(),
+                'current_stage' => $appraisal->current_stage,
+            ],
+            'reviewers' => $reviewersData,
+            'eligible_reviewers' => $eligibleUsers,
+        ];
+    }
+
+    public function addReviewer(Appraisal $appraisal, int $reviewerUserId): array
+    {
+        $this->ensureAppraisalUserIsAccessible($appraisal, 'managing reviewers');
+
+        $chainIds = $this->getReviewerChainUserIds((int) $appraisal->user_id);
+        if (! $chainIds->contains($reviewerUserId)) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'The selected reviewer is not eligible for this employee.',
+            ]);
+        }
+
+        if ((int) $reviewerUserId === (int) $appraisal->user_id) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'The employee cannot be assigned as their own reviewer.',
+            ]);
+        }
+
+        if ($appraisal->reviewers()->where('reviewer_user_id', $reviewerUserId)->exists()) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'This user is already assigned as a reviewer for this appraisal.',
+            ]);
+        }
+
+        DB::transaction(function () use ($appraisal, $reviewerUserId) {
+            $maxLevel = (int) ($appraisal->reviewers()->max('level') ?? 0);
+            $newLevel = $maxLevel + 1;
+
+            $appraisal->reviewers()->create([
+                'reviewer_user_id' => $reviewerUserId,
+                'role' => 'reporter',
+                'level' => $newLevel,
+            ]);
+
+            $this->recalculateAppraisalStage($appraisal);
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+            'users' => $this->getUsersWithAssignments($appraisal->month, $appraisal->year),
+            'manage_data' => $this->getManageReviewersData($appraisal->fresh()),
+        ];
+    }
+
+    public function changeReviewer(Appraisal $appraisal, AppraisalReviewer $reviewer, int $newReviewerUserId): array
+    {
+        $this->ensureAppraisalUserIsAccessible($appraisal, 'managing reviewers');
+
+        if ((int) $reviewer->appraisal_id !== (int) $appraisal->id) {
+            throw ValidationException::withMessages([
+                'reviewer' => 'Reviewer does not belong to this appraisal.',
+            ]);
+        }
+
+        $hasStarted = $this->hasReviewerStarted($reviewer);
+        $isCompleted = filled($reviewer->submitted_at) || in_array($appraisal->status, ['completed', 'closed'], true);
+
+        if ($hasStarted || $isCompleted) {
+            throw ValidationException::withMessages([
+                'reviewer' => 'Reviewers with status Completed or In Progress cannot be changed.',
+            ]);
+        }
+
+        $chainIds = $this->getReviewerChainUserIds((int) $appraisal->user_id);
+        if (! $chainIds->contains($newReviewerUserId)) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'The selected reviewer is not eligible for this employee.',
+            ]);
+        }
+
+        if ((int) $newReviewerUserId === (int) $appraisal->user_id) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'The employee cannot be assigned as their own reviewer.',
+            ]);
+        }
+
+        $isAlreadyAssignedOtherLevel = $appraisal->reviewers()
+            ->where('reviewer_user_id', $newReviewerUserId)
+            ->where('id', '!=', $reviewer->id)
+            ->exists();
+
+        if ($isAlreadyAssignedOtherLevel) {
+            throw ValidationException::withMessages([
+                'reviewer_user_id' => 'This user is already assigned to another reviewer level on this appraisal.',
+            ]);
+        }
+
+        DB::transaction(function () use ($reviewer, $newReviewerUserId) {
+            $reviewer->update([
+                'reviewer_user_id' => $newReviewerUserId,
+            ]);
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+            'users' => $this->getUsersWithAssignments($appraisal->month, $appraisal->year),
+            'manage_data' => $this->getManageReviewersData($appraisal->fresh()),
+        ];
+    }
+
+    public function removeReviewer(Appraisal $appraisal, AppraisalReviewer $reviewer): array
+    {
+        $this->ensureAppraisalUserIsAccessible($appraisal, 'managing reviewers');
+
+        if ((int) $reviewer->appraisal_id !== (int) $appraisal->id) {
+            throw ValidationException::withMessages([
+                'reviewer' => 'Reviewer does not belong to this appraisal.',
+            ]);
+        }
+
+        $hasStarted = $this->hasReviewerStarted($reviewer);
+        $isCompleted = filled($reviewer->submitted_at) || in_array($appraisal->status, ['completed', 'closed'], true);
+
+        if ($hasStarted || $isCompleted) {
+            throw ValidationException::withMessages([
+                'reviewer' => 'Reviewers with status Completed or In Progress cannot be removed.',
+            ]);
+        }
+
+        DB::transaction(function () use ($appraisal, $reviewer) {
+            $reviewer->forceDelete();
+
+            $remaining = $appraisal->reviewers()->orderBy('level')->get();
+            $index = 1;
+            foreach ($remaining as $rem) {
+                if ($rem->level !== $index) {
+                    $rem->update(['level' => $index]);
+                }
+                $index++;
+            }
+
+            $this->recalculateAppraisalStage($appraisal);
+        });
+
+        return [
+            'my_appraisals' => $this->getMyAppraisals($appraisal->month, $appraisal->year),
+            'users' => $this->getUsersWithAssignments($appraisal->month, $appraisal->year),
+            'manage_data' => $this->getManageReviewersData($appraisal->fresh()),
+        ];
+    }
+
+    public function recalculateAppraisalStage(Appraisal $appraisal): void
+    {
+        $appraisal->load(['reviewers' => fn($q) => $q->orderBy('level')]);
+        $reviewers = $appraisal->reviewers;
+
+        if ($reviewers->isEmpty()) {
+            if ($appraisal->status === Appraisal::STATUS_COMPLETED) {
+                $appraisal->status = Appraisal::STATUS_PUBLISHED;
+                $appraisal->completed_at = null;
+                $appraisal->final_rating = null;
+            }
+            $appraisal->current_stage = filled($appraisal->kpi_agreed_at) ? 'Assignee' : null;
+            $appraisal->save();
+
+            return;
+        }
+
+        $uncompletedReviewer = $reviewers->first(fn(AppraisalReviewer $r) => blank($r->acknowledged_at));
+
+        if ($uncompletedReviewer) {
+            if ($appraisal->status === Appraisal::STATUS_COMPLETED) {
+                $appraisal->status = Appraisal::STATUS_PUBLISHED;
+                $appraisal->completed_at = null;
+                $appraisal->final_rating = null;
+            }
+
+            $assigneeSubmitted = $this->isAssigneeSubmitted($appraisal);
+            if ($assigneeSubmitted) {
+                $previousReviewers = $reviewers->where('level', '<', $uncompletedReviewer->level);
+                $allPrevAck = $previousReviewers->isEmpty() || $previousReviewers->every(fn($prev) => filled($prev->acknowledged_at));
+
+                if ($allPrevAck) {
+                    $appraisal->current_stage = $this->reviewerStage($uncompletedReviewer);
+                } else {
+                    $appraisal->current_stage = 'Assignee';
+                }
+            } else {
+                $appraisal->current_stage = filled($appraisal->kpi_agreed_at) ? 'Assignee' : null;
+            }
+        } else {
+            $assigneeSubmitted = $this->isAssigneeSubmitted($appraisal);
+            if ($assigneeSubmitted && filled($appraisal->kpi_agreed_at)) {
+                $appraisal->status = Appraisal::STATUS_COMPLETED;
+                $appraisal->completed_at = $appraisal->completed_at ?: now();
+                $appraisal->current_stage = $this->reviewerStage(null);
+                $lastReviewer = $reviewers->last();
+                $appraisal->final_rating = $lastReviewer?->average_rating;
+            }
+        }
+
+        $appraisal->save();
+    }
 }

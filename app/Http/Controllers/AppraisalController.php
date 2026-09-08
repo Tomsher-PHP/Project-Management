@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AppraisalAddReviewerRequest;
 use App\Http\Requests\AppraisalAssignmentRequest;
+use App\Http\Requests\AppraisalChangeReviewerRequest;
 use App\Http\Requests\AppraisalReviewerAssignmentRequest;
 use App\Models\Appraisal;
 use App\Models\AppraisalQuestion;
+use App\Models\AppraisalReviewer;
 use App\Services\AppraisalService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -351,6 +354,49 @@ class AppraisalController extends Controller
                 'commentator_name' => $comment->reviewer?->reviewer?->name,
                 'created_at' => $comment->created_at?->format('M d, Y h:i A'),
             ],
+        ]);
+    }
+
+    public function manageReviewersData(Appraisal $appraisal): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $this->appraisalService->getManageReviewersData($appraisal),
+        ]);
+    }
+
+    public function addReviewer(AppraisalAddReviewerRequest $request, Appraisal $appraisal): JsonResponse
+    {
+        $validated = $request->validated();
+        $result = $this->appraisalService->addReviewer($appraisal, (int) $validated['reviewer_user_id']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reviewer added successfully.',
+            'data' => $result,
+        ]);
+    }
+
+    public function changeReviewer(AppraisalChangeReviewerRequest $request, Appraisal $appraisal, AppraisalReviewer $reviewer): JsonResponse
+    {
+        $validated = $request->validated();
+        $result = $this->appraisalService->changeReviewer($appraisal, $reviewer, (int) $validated['reviewer_user_id']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reviewer changed successfully.',
+            'data' => $result,
+        ]);
+    }
+
+    public function removeReviewer(Request $request, Appraisal $appraisal, AppraisalReviewer $reviewer): JsonResponse
+    {
+        $result = $this->appraisalService->removeReviewer($appraisal, $reviewer);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reviewer removed successfully.',
+            'data' => $result,
         ]);
     }
 }

@@ -43,6 +43,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const initialDataNode = root.querySelector('[data-appraisal-initial-data]');
     const authUserId = Number(root.dataset.authUserId || 0);
+    const canAssignAppraisals = root.dataset.canAssign === 'true';
+
+    const manageReviewersUrlTemplate = root.dataset.manageReviewersUrlTemplate || '';
+    const addReviewerUrlTemplate = root.dataset.addReviewerUrlTemplate || '';
+    const changeReviewerUrlTemplate = root.dataset.changeReviewerUrlTemplate || '';
+    const removeReviewerUrlTemplate = root.dataset.removeReviewerUrlTemplate || '';
+
+    const manageReviewersModal = root.querySelector('[data-appraisal-manage-reviewers-modal]');
+    const manageReviewersSubtitle = root.querySelector('[data-appraisal-manage-reviewers-subtitle]');
+    const manageReviewersList = root.querySelector('[data-appraisal-manage-reviewers-list]');
+    const manageAddSelect = root.querySelector('[data-appraisal-manage-add-select]');
+    const manageAddSubmit = root.querySelector('[data-appraisal-manage-add-submit]');
 
     let assignmentData = { my_appraisals: [], users: [], kpis: [], categories: [] };
     let activeTab = 'my';
@@ -54,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeAssignmentStep = 1;
     let reviewerAssignmentData = [];
     let kpiAgreementAppraisalId = null;
+    let currentManageAppraisalId = null;
+    let currentManageData = null;
 
     const escapeHtml = (value = '') => String(value)
         .replace(/&/g, '&amp;')
@@ -333,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const label = record.status_label || status.replace(/^\w/, (letter) => letter.toUpperCase());
         const classes = {
             draft: 'bg-success-100 text-success-400 dark:bg-success-900/30 dark:text-success-300',
-            published: 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-300',
+            published: 'bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-400',
             completed: 'bg-primary-new text-bgray-900 dark:bg-primary-new dark:text-bgray-900',
             closed: 'bg-bgray-100 text-bgray-900 dark:bg-darkblack-500 dark:text-bgray-300',
         }[status] || 'bg-bgray-100 text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300';
@@ -408,12 +422,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const actionButton = (user) => {
         const action = !user.is_assigned ? 'assign' : (user.status === 'draft' ? 'edit' : 'view');
+        const manageReviewersBtn = canAssignAppraisals && user.appraisal_id ? `
+            <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="manage-reviewers" data-appraisal-id="${escapeHtml(user.appraisal_id)}">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Reviewers
+            </button>
+        ` : '';
 
         if (action === 'edit') {
             return `
                 <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
                     <button type="button" class="rounded-lg bg-success-300 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-row-action="edit" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">Edit</button>
                     <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-400 transition hover:border-success-300 dark:border-success-900/40 dark:bg-darkblack-500 dark:text-success-300" data-appraisal-row-action="publish" data-user-id="${escapeHtml(user.id)}">Publish</button>
+                    ${manageReviewersBtn}
                 </div>
             `;
         }
@@ -423,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
                     <button type="button" class="rounded-lg border border-success-200 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-300 transition hover:border-success-300 hover:text-success-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="view" data-appraisal-id="${escapeHtml(user.appraisal_id)}">View</button>
                     <button type="button" class="rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-1.5 text-xs font-semibold text-warning-300 transition hover:border-success-300 dark:border-warning-900/40 dark:bg-darkblack-500 dark:text-warning-300" data-appraisal-row-action="unpublish" data-appraisal-id="${escapeHtml(user.appraisal_id)}">Unpublish</button>
+                    ${manageReviewersBtn}
                 </div>
             `;
         }
@@ -435,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">
                 <button type="button" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${classes}" data-appraisal-row-action="${action}" data-user-id="${escapeHtml(user.id)}" data-appraisal-id="${escapeHtml(user.appraisal_id || '')}">${label}</button>
+                ${manageReviewersBtn}
             </div>
         `;
     };
@@ -497,6 +520,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (canAnswer) {
                 const actionLabel = row.can_edit_answer ? 'Answer' : 'View Answer';
                 action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-link data-appraisal-id="${escapeHtml(row.appraisal_id)}">${actionLabel}</button>`;
+            }
+
+            if (canAssignAppraisals && row.appraisal_id) {
+                const manageReviewersBtn = `
+                    <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="manage-reviewers" data-appraisal-id="${escapeHtml(row.appraisal_id)}">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Reviewers
+                    </button>
+                `;
+                const existingAction = action === '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>' ? '' : action;
+                action = `<div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">${existingAction}${manageReviewersBtn}</div>`;
             }
 
             return `
@@ -1863,6 +1897,289 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const openManageReviewersModal = async (appraisalId) => {
+        if (!manageReviewersModal || !manageReviewersUrlTemplate) {
+            return;
+        }
+
+        currentManageAppraisalId = appraisalId;
+        const url = manageReviewersUrlTemplate.replace('__ID__', appraisalId);
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                alertError(result.message || 'Failed to fetch reviewer management data.');
+                return;
+            }
+
+            currentManageData = result.data;
+            renderManageReviewersModal();
+            manageReviewersModal.classList.remove('hidden');
+            manageReviewersModal.classList.add('flex');
+        } catch (error) {
+            console.error('Failed to open manage reviewers modal:', error);
+            alertError('An unexpected error occurred while loading reviewer data.');
+        }
+    };
+
+    const closeManageReviewersModal = () => {
+        if (!manageReviewersModal) {
+            return;
+        }
+        manageReviewersModal.classList.add('hidden');
+        manageReviewersModal.classList.remove('flex');
+        currentManageAppraisalId = null;
+        currentManageData = null;
+    };
+
+    const renderManageReviewersModal = () => {
+        if (!currentManageData || !manageReviewersList) {
+            return;
+        }
+
+        const appraisal = currentManageData.appraisal || {};
+        const reviewers = currentManageData.reviewers || [];
+        const eligibleReviewers = currentManageData.eligible_reviewers || [];
+
+        if (manageReviewersSubtitle) {
+            manageReviewersSubtitle.textContent = `${appraisal.user_name || 'Employee'} (${appraisal.period || ''}) — Status: ${appraisal.status_label || ''}`;
+        }
+
+        if (!reviewers.length) {
+            manageReviewersList.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-sm font-medium text-bgray-600 dark:text-bgray-300">No reviewers currently assigned.</td></tr>';
+        } else {
+            manageReviewersList.innerHTML = reviewers.map((r) => {
+                let badgeClass = 'bg-bgray-100 text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300';
+                if (r.status === 'Completed') {
+                    badgeClass = 'bg-success-50 text-success-400 dark:bg-darkblack-500 dark:text-success-300';
+                } else if (r.status === 'In Progress') {
+                    badgeClass = 'bg-warning-50 text-warning-300 dark:bg-darkblack-500 dark:text-warning-300';
+                }
+
+                const actionCell = r.can_change && r.can_remove ? `
+                    <div class="flex items-center justify-end gap-2" data-manage-action-cell="${escapeHtml(r.id)}">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-2.5 py-1 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-manage-action="change" data-reviewer-id="${escapeHtml(r.id)}">Change</button>
+                        <button type="button" class="rounded-lg border border-red-200 bg-error-50 px-2.5 py-1 text-xs font-semibold text-error-300 transition hover:text-red-500 dark:border-darkblack-400" data-manage-action="remove" data-reviewer-id="${escapeHtml(r.id)}">Remove</button>
+                    </div>
+                ` : `
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-bgray-100 px-2.5 py-1 text-xs font-semibold text-bgray-400 cursor-not-allowed dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-500" disabled title="Reviewers with status Completed or In Progress cannot be changed.">Change ❌</button>
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-bgray-100 px-2.5 py-1 text-xs font-semibold text-bgray-400 cursor-not-allowed dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-500" disabled title="Reviewers with status Completed or In Progress cannot be removed.">Remove ❌</button>
+                    </div>
+                `;
+
+                return `
+                    <tr class="border-b border-bgray-200 dark:border-darkblack-400" data-manage-reviewer-row="${escapeHtml(r.id)}">
+                        <td class="px-4 py-3 text-sm font-semibold text-bgray-900 dark:text-white">Level ${escapeHtml(r.level)}</td>
+                        <td class="px-4 py-3">
+                            <p class="text-sm font-semibold text-bgray-900 dark:text-white">${escapeHtml(r.name)}</p>
+                            <p class="text-xs text-bgray-600 dark:text-bgray-300">${escapeHtml(r.email || '')}</p>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClass}">${escapeHtml(r.status)}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right">${actionCell}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        if (manageAddSelect) {
+            manageAddSelect.tomselect?.destroy();
+            manageAddSelect.innerHTML = '<option value="">Select eligible reviewer</option>' +
+                eligibleReviewers.map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(user.name)}${user.email ? ` (${escapeHtml(user.email)})` : ''}</option>`).join('');
+            manageAddSelect.value = '';
+            initTomSelect(manageAddSelect.parentElement);
+            if (manageAddSelect.tomselect) {
+                manageAddSelect.tomselect.on('change', (val) => {
+                    if (manageAddSubmit) {
+                        manageAddSubmit.disabled = !val;
+                    }
+                });
+            }
+        }
+
+        if (manageAddSubmit) {
+            manageAddSubmit.disabled = true;
+        }
+    };
+
+    const handleAddReviewer = async () => {
+        const selectedUserId = Number(manageAddSelect?.tomselect?.getValue() ?? manageAddSelect?.value ?? 0);
+
+        if (!selectedUserId || !currentManageAppraisalId || !addReviewerUrlTemplate) {
+            return;
+        }
+
+        const url = addReviewerUrlTemplate.replace('__ID__', currentManageAppraisalId);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ reviewer_user_id: selectedUserId }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                alertError(result.message || 'Failed to add reviewer.');
+                return;
+            }
+
+            alertSuccess(result.message || 'Reviewer added successfully.');
+            if (result.data?.manage_data) {
+                currentManageData = result.data.manage_data;
+                renderManageReviewersModal();
+            }
+            if (result.data?.my_appraisals || result.data?.users) {
+                assignmentData = { ...assignmentData, ...result.data };
+                renderMyAppraisals();
+                renderUsers();
+            }
+        } catch (error) {
+            console.error('Failed to add reviewer:', error);
+            alertError('An error occurred while adding the reviewer.');
+        }
+    };
+
+    const handleChangeReviewerInline = (reviewerId) => {
+        const actionCell = manageReviewersList?.querySelector(`[data-manage-action-cell="${reviewerId}"]`);
+
+        if (!actionCell || !currentManageData) {
+            return;
+        }
+
+        const eligibleReviewers = currentManageData.eligible_reviewers || [];
+        const optionsHtml = eligibleReviewers.map((u) => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}${u.email ? ` (${escapeHtml(u.email)})` : ''}</option>`).join('');
+
+        actionCell.innerHTML = `
+            <div class="flex items-center gap-2 justify-end">
+                <select class="tom-select-no-search rounded-lg border border-bgray-300 px-2 py-1 text-xs dark:border-darkblack-400 dark:bg-darkblack-500 text-bgray-900 dark:text-white min-w-[180px]" data-manage-change-select="${reviewerId}">
+                    <option value="">Select replacement</option>
+                    ${optionsHtml}
+                </select>
+                <button type="button" class="rounded-lg bg-success-300 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-success-400" data-manage-change-save="${reviewerId}">Save</button>
+                <button type="button" class="rounded-lg border border-bgray-200 bg-white px-2 py-1 text-xs font-semibold text-bgray-700 transition dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-manage-change-cancel="${reviewerId}">Cancel</button>
+            </div>
+        `;
+        initTomSelect(actionCell);
+    };
+
+    const submitChangeReviewer = async (reviewerId) => {
+        const select = manageReviewersList?.querySelector(`[data-manage-change-select="${reviewerId}"]`);
+        const newReviewerUserId = Number(select?.tomselect?.getValue() ?? select?.value ?? 0);
+
+        if (!newReviewerUserId || !currentManageAppraisalId || !changeReviewerUrlTemplate) {
+            alertError('Please select a replacement reviewer.');
+            return;
+        }
+
+        const url = changeReviewerUrlTemplate
+            .replace('__APPRAISAL_ID__', currentManageAppraisalId)
+            .replace('__REVIEWER_ID__', reviewerId);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ reviewer_user_id: newReviewerUserId }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                alertError(result.message || 'Failed to change reviewer.');
+                return;
+            }
+
+            alertSuccess(result.message || 'Reviewer changed successfully.');
+            if (result.data?.manage_data) {
+                currentManageData = result.data.manage_data;
+                renderManageReviewersModal();
+            }
+            if (result.data?.my_appraisals || result.data?.users) {
+                assignmentData = { ...assignmentData, ...result.data };
+                renderMyAppraisals();
+                renderUsers();
+            }
+        } catch (error) {
+            console.error('Failed to change reviewer:', error);
+            alertError('An error occurred while changing the reviewer.');
+        }
+    };
+
+    const handleRemoveReviewer = async (reviewerId) => {
+        if (!currentManageAppraisalId || !removeReviewerUrlTemplate) {
+            return;
+        }
+
+        const confirmed = await confirmAction({
+            title: 'Remove Reviewer',
+            text: 'Remove this reviewer? This reviewer has not started their review and can be removed.',
+            confirmButtonText: 'Remove',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#EF4444',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        const url = removeReviewerUrlTemplate
+            .replace('__APPRAISAL_ID__', currentManageAppraisalId)
+            .replace('__REVIEWER_ID__', reviewerId);
+
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                alertError(result.message || 'Failed to remove reviewer.');
+                return;
+            }
+
+            alertSuccess(result.message || 'Reviewer removed successfully.');
+            if (result.data?.manage_data) {
+                currentManageData = result.data.manage_data;
+                renderManageReviewersModal();
+            }
+            if (result.data?.my_appraisals || result.data?.users) {
+                assignmentData = { ...assignmentData, ...result.data };
+                renderMyAppraisals();
+                renderUsers();
+            }
+        } catch (error) {
+            console.error('Failed to remove reviewer:', error);
+            alertError('An error occurred while removing the reviewer.');
+        }
+    };
+
     root.addEventListener('input', (event) => {
         if (event.target.matches('[data-appraisal-user-search]')) {
             renderUsers();
@@ -1950,6 +2267,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (rowAction.dataset.appraisalRowAction === 'edit') {
                 openEditModal(appraisalId || user?.appraisal_id);
+                return;
+            }
+
+            if (rowAction.dataset.appraisalRowAction === 'manage-reviewers') {
+                openManageReviewersModal(appraisalId);
                 return;
             }
 
@@ -2207,6 +2529,48 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (event.target.closest('[data-appraisal-manage-reviewers-close]')) {
+            closeManageReviewersModal();
+            return;
+        }
+
+        const manageChangeBtn = event.target.closest('[data-manage-action="change"]');
+        if (manageChangeBtn) {
+            handleChangeReviewerInline(Number(manageChangeBtn.dataset.reviewerId));
+            return;
+        }
+
+        const manageSaveBtn = event.target.closest('[data-manage-change-save]');
+        if (manageSaveBtn) {
+            submitChangeReviewer(Number(manageSaveBtn.dataset.manageChangeSave));
+            return;
+        }
+
+        const manageCancelBtn = event.target.closest('[data-manage-change-cancel]');
+        if (manageCancelBtn) {
+            renderManageReviewersModal();
+            return;
+        }
+
+        const manageRemoveBtn = event.target.closest('[data-manage-action="remove"]');
+        if (manageRemoveBtn) {
+            handleRemoveReviewer(Number(manageRemoveBtn.dataset.reviewerId));
+            return;
+        }
+
+        if (event.target.closest('[data-appraisal-manage-add-submit]')) {
+            handleAddReviewer();
+            return;
+        }
+    });
+
+    root.addEventListener('change', (event) => {
+        if (event.target.closest('[data-appraisal-manage-add-select]')) {
+            if (manageAddSubmit) {
+                manageAddSubmit.disabled = !event.target.value;
+            }
+            return;
+        }
     });
 
     root.addEventListener('mousedown', (event) => {
