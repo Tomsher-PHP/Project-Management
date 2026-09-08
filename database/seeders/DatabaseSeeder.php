@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
 
             // Meeting related seeders
             MeetingSettingsSeeder::class,
+            MeetingStatusSeeder::class,
 
             // Country related seeders
             CountrySeeder::class,
