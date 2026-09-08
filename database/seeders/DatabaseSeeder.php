@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
 
             // Country related seeders
             CountrySeeder::class,
+            LeaveTypeSeeder::class,
         ]);
     }
 }
