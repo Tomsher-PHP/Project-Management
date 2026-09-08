@@ -273,7 +273,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.view')->only(['index']);
         Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.create')->only(['store']);
         Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.edit')->only(['update']);
-        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);    });
+        Route::resource('meeting-tags', MeetingSettingsController::class)->middleware('permission.type:meeting_settings.delete')->only(['destroy']);
 
         // Leave types routes
         Route::resource('leave-types', LeaveTypeController::class)->except(['show'])->names('leave-types');
