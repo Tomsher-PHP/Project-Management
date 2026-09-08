@@ -76,11 +76,25 @@ class TaskFormService
             'defaults' => [
                 'project_id' => null,
                 'priority' => $this->getDefaultPriority(),
-                'due_date_time' => now(config('constants.timezone'))->addDay()->format('Y-m-d H:i'),
+                'due_date_time' => self::getDefaultTaskDueDateTime(),
             ],
             'parent_options_url' => route('tasks.quick-create-parent-options'),
             'dependencies_url_template' => route('projects.task-create-dependencies', ['project' => ':id']),
         ];
+    }
+
+    public static function getDefaultTaskDueDateTime(): string
+    {
+        $tz = (string) config('constants.timezone', config('app.timezone'));
+        $now = now($tz);
+
+        if ((int) $now->format('H') < 18) {
+            $due = $now->copy()->setTime(19, 0, 0);
+        } else {
+            $due = $now->copy()->addDay()->setTime(19, 0, 0);
+        }
+
+        return $due->format('Y-m-d H:i');
     }
 
     public function getProjectDependencies(Project $project): array
