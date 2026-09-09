@@ -105,6 +105,12 @@ return [
     ['name' => 'attendance.edit', 'label' => 'Attendance', 'sort_order' => 12040, 'default_checked' => true],
     ['name' => 'attendance.delete', 'label' => 'Attendance', 'sort_order' => 12060, 'default_checked' => false],
 
+    // MEETING
+    ['name' => 'meeting.view',   'label' => 'Meeting', 'sort_order' => 13000, 'default_checked' => true],
+    ['name' => 'meeting.create', 'label' => 'Meeting', 'sort_order' => 13020, 'default_checked' => true],
+    ['name' => 'meeting.edit',   'label' => 'Meeting', 'sort_order' => 13040, 'default_checked' => true],
+    ['name' => 'meeting.delete', 'label' => 'Meeting', 'sort_order' => 13060, 'default_checked' => false],
+
     //======================================================================
     // Requests Actions Start
     //======================================================================

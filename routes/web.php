@@ -21,6 +21,7 @@ use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\MeetingSettingsController;
+use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\NotificationController;
@@ -741,6 +742,13 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{quickNote}/pin', [QuickNoteController::class, 'togglePin'])->name('pin');
         Route::patch('/{quickNote}/archive', [QuickNoteController::class, 'toggleArchive'])->name('archive');
     });
+
+    // Meeting Management routes
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['show']);
+    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
 });
 
 Route::get('api-test', function () {

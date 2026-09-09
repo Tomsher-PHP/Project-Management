@@ -44,9 +44,10 @@
     $canViewAppraisal = $authUser?->can('appraisal.view');
     $canViewLeaveRequests = $authUser?->can('leave_request.view');
     $canViewAttendance = $authUser?->can('attendance.view');
+    $canViewMeetings = $authUser?->canAny(['meeting.view', 'meeting.view_all', 'meeting.create']);
 
     $hasManagementLinks = $canViewUsers || $canViewTeams || $canViewCustomers;
-    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal;
+    $hasWorkspaceLinks = $canViewProjects || $canViewTasks || $canViewMeetings || $canViewTaskRequests || $canViewTaskTimeLogChangeRequests || $canViewBreakRequests || $canViewLeaveRequests || $canViewAppraisal;
     $hasConfigurationLinks = $canViewScheduleShift || $canViewSettings || $canViewActivityLog;
     $canViewReports = $canViewProjectReports || $canViewMilestoneReports || $canViewSprintReports || $canViewTaskReports || $canViewProductivityReports || $canViewTimeTrackingReports || $canViewDailyReports;
 
@@ -58,6 +59,7 @@
     $isTeamsActive = request()->routeIs('teams.*');
     $isCustomersActive = request()->routeIs('customers.*');
     $isProjectsActive = request()->routeIs('projects.*');
+    $isMeetingsActive = request()->routeIs('meetings.*');
     $isKanbanActive = request()->routeIs('tasks.kanban.view', 'tasks.kanbanMode');
     $isScheduleTasksActive = request()->routeIs('schedule-tasks.*');
 
@@ -70,9 +72,7 @@
     $isLeaveApprovalRequestsActive = request()->routeIs('leave-requests.approval*');
     $isLeavesActive = request()->routeIs('leaves.*');
 
-
-    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive  ||
-    $isLeaveApprovalRequestsActive;
+    $isRequestsMenuActive = $isTaskRequestsActive || $isTaskTimeChangeRequestsActive || $isHandoffsActive || $isBreakRequestsActive || $isTaskTimeExtendRequestsActive || $isLeaveApprovalRequestsActive;
     $isTasksActive = request()->routeIs('tasks.*') && !$isKanbanActive && !$isTaskRequestsActive && !$isTaskTimeChangeRequestsActive && !$isTaskTimeExtendRequestsActive;
 
     $isProjectReportActive = request()->routeIs('reports.projects', 'reports.project.export', 'reports.projects.by-flow');
@@ -91,8 +91,6 @@
     $isActivityLogActive = request()->routeIs('activity.log*');
 
     $isAppraisalActive = request()->routeIs('appraisal.*');
-
-
 
     $sidebarItemActiveClass = 'text-success-400 dark:text-success-300';
     $sidebarItemInactiveClass = 'text-bgray-900 dark:text-white';
@@ -424,10 +422,7 @@
                                     @if ($canViewLeaveRequests)
                                         <!-- Leave Requests -->
                                         <li>
-                                            <a
-                                                href="{{ route('leave-requests.pending') }}"
-                                                class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveApprovalRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}"
-                                            >
+                                            <a href="{{ route('leave-requests.pending') }}" class="text-sm inline-flex items-center justify-between gap-2 py-1.5 font-medium transition-all {{ $isLeaveApprovalRequestsActive ? $sidebarSubLinkActiveClass : $sidebarSubLinkInactiveClass }}">
                                                 <span>Leave Requests</span>
 
                                                 @if (($requestMenuBadges['leave_requests'] ?? 0) > 0)
@@ -468,40 +463,17 @@
                             <li class="item py-[8px] {{ $isLeavesActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
                                 <a href="{{ route('leave-requests.index') }}">
                                     <div class="flex items-center justify-between">
-
                                         <div class="flex items-center">
-
                                             <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                                <svg
-                                                    width="16"
-                                                    height="18"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                >
-                                                    <path
-                                                        d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
-                                                        stroke="#1A202C"
-                                                        stroke-width="1.8"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-
-                                                    <path
-                                                        d="M8 13H10M14 13H16M8 17H10M14 17H16"
-                                                        stroke="#22C55E"
-                                                        stroke-width="1.8"
-                                                        stroke-linecap="round"
-                                                    />
+                                                <svg width="16" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z" stroke="#1A202C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M8 13H10M14 13H16M8 17H10M14 17H16" stroke="#22C55E" stroke-width="1.8" stroke-linecap="round" />
                                                 </svg>
                                             </span>
-
                                             <span class="item-text text-base font-medium leading-none {{ $isLeavesActive ? $sidebarItemActiveClass : '' }}">
                                                 Leaves
                                             </span>
-
                                         </div>
-
                                     </div>
                                 </a>
                             </li>
@@ -513,26 +485,9 @@
                                 <a href="{{ route('attendance.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
-                                            <svg
-                                                width="18"
-                                                height="18"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="M8 13L10 15L14 11"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M7 3V5M17 3V5M4 9H20M5 5H19C20.1 5 21 5.9 21 7V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M8 13L10 15L14 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
                                         </span>
                                         <span class="item-text text-base font-medium leading-none">
@@ -542,9 +497,31 @@
                                 </a>
                             </li>
                         @endif
+
+                        @if ($canViewMeetings)
+                            <!-- Meetings -->
+                            <li class="item py-[8px] {{ $isMeetingsActive ? $sidebarItemActiveClass : $sidebarItemInactiveClass }}">
+                                <a href="{{ route('meetings.index') }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
+                                                <svg width="16" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" fill="#1A202C" class="path-1"></rect>
+                                                    <line x1="16" y1="2" x2="16" y2="6" stroke="#22C55E" class="path-2"></line>
+                                                    <line x1="8" y1="2" x2="8" y2="6" stroke="#22C55E" class="path-2"></line>
+                                                    <line x1="3" y1="10" x2="21" y2="10" stroke="#22C55E" class="path-2"></line>
+                                                </svg>
+                                            </span>
+                                            <span class="item-text text-base font-medium leading-none {{ $isMeetingsActive ? $sidebarItemActiveClass : '' }}">Meetings</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        @endif
+
                         {{-- @if ($canViewAttendance) --}}
-                            <!-- Holidays -->
-                            {{-- <li class="item py-[8px]">
+                        <!-- Holidays -->
+                        {{-- <li class="item py-[8px]">
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">

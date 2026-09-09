@@ -157,8 +157,8 @@ class MeetingService
         $meeting->participants()->delete();
 
         foreach ($participantsData as $participant) {
-            $userId = ! empty($participant['user_id']) ? (int) $participant['user_id'] : null;
-            $isExternal = (bool) ($participant['is_external'] ?? ($userId === null));
+            $isExternal = filter_var($participant['is_external'] ?? false, FILTER_VALIDATE_BOOLEAN) || empty($participant['user_id']);
+            $userId = ! $isExternal && ! empty($participant['user_id']) ? (int) $participant['user_id'] : null;
 
             $name = $participant['name'] ?? null;
             $email = $participant['email'] ?? null;
@@ -179,7 +179,7 @@ class MeetingService
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
-                'send_email' => (bool) ($participant['send_email'] ?? false),
+                'send_email' => filter_var($participant['send_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
     }
