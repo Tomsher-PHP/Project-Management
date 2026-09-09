@@ -44,7 +44,7 @@
                 <div class="flex flex-wrap items-center gap-4 mt-2">
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-semibold text-bgray-900 dark:text-white">Achieved</span>
-                        <div class="flex items-center gap-1.5 w-[140px]">
+                        <div class="flex items-center gap-1.5 w-[240px]">
                             <input type="number" step="any" value="{{ $answer['achieved_value'] ?? '' }}" placeholder="Achieved" class="w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" data-appraisal-answer-input data-question-id="{{ $question['id'] }}" data-answer-field="achieved_value" data-answer-scope="answer" data-target-value="{{ $question['target_value'] }}">
                             <span class="text-sm font-medium text-bgray-900 dark:text-bgray-300">{{ $unit }}</span>
                         </div>

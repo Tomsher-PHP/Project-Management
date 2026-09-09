@@ -798,41 +798,39 @@ class AppraisalService
 
         $submittedAnswers = collect($answersData)->keyBy('question_id');
 
-        $index = 0;
-        foreach ($snapshotQuestions as $qId => $questionModel) {
-            if (! $submittedAnswers->has($qId)) {
-                throw ValidationException::withMessages([
-                    'answers' => 'All questions must be answered before submitting.',
-                ]);
-            }
-
-            $ans = $submittedAnswers->get($qId);
-            $questionType = $questionModel->question_type ?? 'rating';
-
-            if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
-                $rating = $ans['rating'] ?? null;
-
-                if ($rating === null || ! is_numeric($rating) || $rating < 0 || $rating > 5.0) {
+        if ($role === 'assignee') {
+            $index = 0;
+            foreach ($snapshotQuestions as $qId => $questionModel) {
+                if (! $submittedAnswers->has($qId)) {
                     throw ValidationException::withMessages([
-                        "answers.{$index}.rating" => 'All ratings must be numeric between 0 and 5.',
+                        'answers' => 'All questions must be answered before submitting.',
                     ]);
                 }
-                if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
-                    throw ValidationException::withMessages([
-                        "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
-                    ]);
-                }
-            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
-                if ($role === 'assignee') {
+
+                $ans = $submittedAnswers->get($qId);
+                $questionType = $questionModel->question_type ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+
+                if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
+                    $rating = $ans['rating'] ?? null;
+
+                    if ($rating === null || ! is_numeric($rating) || $rating < 0 || $rating > 5.0) {
+                        throw ValidationException::withMessages([
+                            "answers.{$index}.rating" => 'All ratings must be numeric between 0 and 5.',
+                        ]);
+                    }
+                    if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
+                        throw ValidationException::withMessages([
+                            "answers.{$index}.rating" => 'All ratings must have at most one decimal place.',
+                        ]);
+                    }
+                } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_ANSWER) {
                     $assigneeAnswer = $ans['assignee_answer'] ?? null;
                     if ($assigneeAnswer === null || blank(trim((string) $assigneeAnswer))) {
                         throw ValidationException::withMessages([
                             "answers.{$index}.assignee_answer" => 'Answers cannot be empty.',
                         ]);
                     }
-                }
-            } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_TARGET) {
-                if ($role === 'assignee') {
+                } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_TARGET) {
                     $achievedValue = $ans['achieved_value'] ?? null;
 
                     if ($achievedValue === null || $achievedValue === '' || ! is_numeric($achievedValue)) {
@@ -840,13 +838,53 @@ class AppraisalService
                             "answers.{$index}.achieved_value" => 'Achieved value is required.',
                         ]);
                     }
-                } elseif ($role === 'reviewer' && blank(trim((string) ($ans['remark'] ?? '')))) {
-                    throw ValidationException::withMessages([
-                        "answers.{$index}.remark" => 'Remarks cannot be empty.',
-                    ]);
                 }
+                $index++;
             }
-            $index++;
+        } elseif ($role === 'reviewer') {
+            $validReviewCount = 0;
+            $index = 0;
+
+            foreach ($snapshotQuestions as $qId => $questionModel) {
+                if (! $submittedAnswers->has($qId)) {
+                    $index++;
+                    continue;
+                }
+
+                $ans = $submittedAnswers->get($qId);
+                $questionType = $questionModel->question_type ?? AppraisalQuestion::QUESTION_TYPE_RATING;
+
+                if ($questionType === AppraisalQuestion::QUESTION_TYPE_RATING) {
+                    $rating = $ans['rating'] ?? null;
+                    if ($rating !== null && $rating !== '') {
+                        if (! is_numeric($rating) || $rating < 0 || $rating > 5.0) {
+                            throw ValidationException::withMessages([
+                                "answers.{$index}.rating" => 'Ratings must be numeric between 0 and 5.',
+                            ]);
+                        }
+                        if (strlen(substr(strrchr((string) $rating, '.'), 1)) > 1) {
+                            throw ValidationException::withMessages([
+                                "answers.{$index}.rating" => 'Ratings must have at most one decimal place.',
+                            ]);
+                        }
+                        $validReviewCount++;
+                    }
+                } elseif ($questionType === AppraisalQuestion::QUESTION_TYPE_TARGET) {
+                    $remark = $ans['remark'] ?? null;
+                    if (filled(trim((string) $remark))) {
+                        $validReviewCount++;
+                    }
+                }
+                $index++;
+            }
+
+            $hasOverallComment = filled(trim((string) $overallComment));
+
+            if ($validReviewCount === 0 && ! $hasOverallComment) {
+                throw ValidationException::withMessages([
+                    'answers' => 'Please provide at least one answer or an overall comment before submitting your review.',
+                ]);
+            }
         }
 
         $notificationRecipientId = null;
@@ -1269,6 +1307,14 @@ class AppraisalService
 
         if ($submittedAt) {
             $reviewData['submitted_at'] = $submittedAt;
+        }
+
+        $hasContent = $reviewData['rating'] !== null || $reviewData['remark'] !== null;
+        if (! $hasContent) {
+            $existingReview = $answer->reviews()->where('appraisal_reviewer_id', $reviewer->id)->first();
+            if (! $existingReview) {
+                return;
+            }
         }
 
         $answer->reviews()->updateOrCreate(

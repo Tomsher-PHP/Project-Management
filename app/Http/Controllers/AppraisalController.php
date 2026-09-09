@@ -174,6 +174,16 @@ class AppraisalController extends Controller
         $totalQuestions = $categories->sum('total_questions');
         $completedQuestions = $categories->sum('answered_count');
 
+        $canSubmit = false;
+        if ($role === 'assignee') {
+            $canSubmit = $totalQuestions > 0 && $completedQuestions === $totalQuestions;
+        } elseif ($role === 'reviewer') {
+            $currentReviewerId = $answerData['current_reviewer_id'] ?? null;
+            $hasOverallComment = filled(trim((string) (collect($answerData['comments'] ?? [])
+                ->firstWhere('appraisal_reviewer_id', $currentReviewerId)['comment'] ?? '')));
+            $canSubmit = $completedQuestions > 0 || $hasOverallComment;
+        }
+
         return view('appraisal.answer', [
             'answerData' => $answerData,
             'categories' => $categories,
@@ -184,7 +194,7 @@ class AppraisalController extends Controller
                 'percentage' => $totalQuestions > 0
                     ? (int) round(($completedQuestions / $totalQuestions) * 100)
                     : 0,
-                'can_submit' => $totalQuestions > 0 && $completedQuestions === $totalQuestions,
+                'can_submit' => $canSubmit,
             ],
         ]);
     }

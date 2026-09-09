@@ -43,14 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
             && numericRating <= 5
             && Number(numericRating.toFixed(1)) === numericRating;
     };
-    const validateRatingInput = (input, required = false) => {
+    const validateRatingInput = (input) => {
         const error = input.closest('div')?.querySelector('[data-appraisal-rating-error]');
         const value = input.value.trim();
         const isEmpty = value === '' && !input.validity.badInput;
-        const isValid = isEmpty ? !required : isRatingCompleted(value) && !input.validity.badInput;
-        const message = isEmpty
-            ? 'Please enter a valid rating between 0 and 5.'
-            : 'Value must be between 0 and 5 with at most one decimal place.';
+        const isValid = isEmpty || (isRatingCompleted(value) && !input.validity.badInput);
+        const message = 'Value must be between 0 and 5 with at most one decimal place.';
 
         input.classList.toggle('border-red-500', !isValid);
         input.classList.toggle('focus:border-red-500', !isValid);
@@ -64,11 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return isValid;
     };
-    const validateRatingInputs = (required = false, focusInvalid = false) => {
+    const validateRatingInputs = (focusInvalid = false) => {
         const inputs = [...(answerQuestions?.querySelectorAll(
             '[data-appraisal-answer-input][data-answer-field="rating"]:not([readonly]):not(:disabled)'
         ) || [])];
-        const invalidInputs = inputs.filter((input) => !validateRatingInput(input, required));
+        const invalidInputs = inputs.filter((input) => !validateRatingInput(input));
 
         if (focusInvalid) {
             invalidInputs[0]?.focus();
@@ -227,14 +225,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        let canSubmit = false;
+        if (answerFormData.role === 'assignee') {
+            canSubmit = allCompleted;
+        } else if (answerFormData.role === 'reviewer') {
+            const hasReviewerComment = hasValue(reviewerCommentTextarea?.value);
+            const hasAnyAnswer = completedQuestions > 0;
+            canSubmit = hasAnyAnswer || hasReviewerComment;
+        }
+
         answerSaveDraft?.classList.remove('hidden');
         answerSubmit?.classList.remove('hidden');
         if (answerSubmit) {
-            answerSubmit.disabled = !allCompleted;
-            answerSubmit.classList.toggle('opacity-50', !allCompleted);
-            answerSubmit.classList.toggle('cursor-not-allowed', !allCompleted);
+            answerSubmit.disabled = !canSubmit;
+            answerSubmit.classList.toggle('opacity-50', !canSubmit);
+            answerSubmit.classList.toggle('cursor-not-allowed', !canSubmit);
         }
-        answerHelperMessage?.classList.toggle('hidden', allCompleted);
+        answerHelperMessage?.classList.toggle('hidden', canSubmit);
     };
 
     const buildAnswersPayload = () => allQuestions().map((question) => {
@@ -279,14 +286,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         persistVisibleAnswerValues();
-        if (!validateRatingInputs(submitting, true)) {
+        if (!validateRatingInputs(true)) {
             updateAnswerProgress();
             return;
         }
 
-        if (submitting && !allQuestions().every(isQuestionCompleted)) {
-            alertError('Please complete all questions before submitting.');
-            return;
+        if (submitting) {
+            if (answerFormData.role === 'assignee') {
+                if (!allQuestions().every(isQuestionCompleted)) {
+                    alertError('Please complete all questions before submitting.');
+                    return;
+                }
+            } else if (answerFormData.role === 'reviewer') {
+                const hasReviewerComment = hasValue(reviewerCommentTextarea?.value);
+                const hasAnyAnswer = allQuestions().some(isQuestionCompleted);
+                if (!hasAnyAnswer && !hasReviewerComment) {
+                    alertError('Please provide at least one answer or an overall comment before submitting your review.');
+                    return;
+                }
+            }
         }
 
         const overallComment = answerFormData.role === 'reviewer' ? reviewerCommentTextarea?.value ?? '' : null;
@@ -402,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     root.addEventListener('input', (event) => {
         if (event.target.matches('[data-appraisal-answer-input]')) syncAnswerInput(event.target);
+        if (event.target.matches('[data-appraisal-reviewer-comment-textarea]')) updateAnswerProgress();
     });
     root.addEventListener('change', (event) => {
         if (event.target.matches('[data-appraisal-answer-input]')) syncAnswerInput(event.target);

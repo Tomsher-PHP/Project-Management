@@ -522,16 +522,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 action = `<button type="button" class="rounded-lg bg-success-300 px-3 py-2 text-xs font-semibold text-white transition hover:bg-success-400" data-appraisal-answer-link data-appraisal-id="${escapeHtml(row.appraisal_id)}">${actionLabel}</button>`;
             }
 
-            if (canAssignAppraisals && row.appraisal_id) {
-                const manageReviewersBtn = `
-                    <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="manage-reviewers" data-appraisal-id="${escapeHtml(row.appraisal_id)}">
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        Reviewers
-                    </button>
-                `;
-                const existingAction = action === '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>' ? '' : action;
-                action = `<div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">${existingAction}${manageReviewersBtn}</div>`;
-            }
+            // if (canAssignAppraisals && row.appraisal_id) {
+            //     const manageReviewersBtn = `
+            //         <button type="button" class="inline-flex items-center gap-1 rounded-lg border border-bgray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-row-action="manage-reviewers" data-appraisal-id="${escapeHtml(row.appraisal_id)}">
+            //             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            //             Reviewers
+            //         </button>
+            //     `;
+            //     const existingAction = action === '<span class="text-sm font-medium text-bgray-600 dark:text-bgray-300">--</span>' ? '' : action;
+            //     action = `<div class="flex items-center gap-1.5 flex-wrap md:flex-nowrap whitespace-nowrap">${existingAction}${manageReviewersBtn}</div>`;
+            // }
 
             return `
                 <tr class="border-b border-bgray-300 hover:bg-bgray-100 dark:border-darkblack-400 dark:hover:bg-darkblack-500">
