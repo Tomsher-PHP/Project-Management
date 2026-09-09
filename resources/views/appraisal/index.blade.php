@@ -5,7 +5,7 @@
         $canAssignAppraisals = auth()->user()?->can('appraisal.create');
     @endphp
 
-    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-page-url-template="{{ route('appraisal.answer', ['appraisal' => '__ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
+    <div class="space-y-1" data-appraisal-root data-auth-user-id="{{ auth()->id() }}" data-assignment-url="{{ route('appraisal.assignment-data') }}" data-submit-url="{{ route('appraisal.assign') }}" data-reviewer-submit-url="{{ route('appraisal.assign-reviewers') }}" data-publish-url="{{ route('appraisal.publish') }}" data-show-url-template="{{ route('appraisal.show', ['appraisal' => '__ID__']) }}" data-unpublish-url-template="{{ route('appraisal.unpublish', ['appraisal' => '__ID__']) }}" data-agree-kpi-url-template="{{ route('appraisal.agree-kpi', ['appraisal' => '__ID__']) }}" data-answer-page-url-template="{{ route('appraisal.answer', ['appraisal' => '__ID__']) }}" data-manage-reviewers-url-template="{{ route('appraisal.manage-reviewers.data', ['appraisal' => '__ID__']) }}" data-add-reviewer-url-template="{{ route('appraisal.manage-reviewers.add', ['appraisal' => '__ID__']) }}" data-change-reviewer-url-template="{{ route('appraisal.manage-reviewers.change', ['appraisal' => '__APPRAISAL_ID__', 'reviewer' => '__REVIEWER_ID__']) }}" data-remove-reviewer-url-template="{{ route('appraisal.manage-reviewers.remove', ['appraisal' => '__APPRAISAL_ID__', 'reviewer' => '__REVIEWER_ID__']) }}" data-can-assign="{{ $canAssignAppraisals ? 'true' : 'false' }}">
         <script type="application/json" data-appraisal-initial-data>
             @json($assignmentData)
         </script>
@@ -254,12 +254,12 @@
 
                         <div class="mt-4 rounded-lg border border-bgray-200 bg-white p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
                             <p class="text-xs font-bold uppercase tracking-[0.08em] text-bgray-600 dark:text-bgray-300">KPI Description</p>
-                            <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-100" data-appraisal-kpi-agreement-description></div>
+                            <div class="prose prose-sm mt-3 max-w-none text-bgray-700 dark:prose-invert dark:text-bgray-300" data-appraisal-kpi-agreement-description></div>
                         </div>
 
                         <label class="mt-5 flex items-start gap-3 rounded-lg border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
-                            <input type="checkbox" class="mt-1 h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-darkblack-600" data-appraisal-kpi-agreement-checkbox>
-                            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-100">I have read, understood and agree to the KPI and expectations for this appraisal.</span>
+                            <input type="checkbox" class="mt-1 h-4 w-4 rounded border-bgray-300 text-success-300 focus:ring-success-300 dark:border-darkblack-400 dark:bg-bgray-500" data-appraisal-kpi-agreement-checkbox>
+                            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">I have read, understood and agree to the KPI and expectations for this appraisal.</span>
                         </label>
                     </div>
 
@@ -270,6 +270,58 @@
                 </div>
             </div>
         </div>
+
+        @if ($canAssignAppraisals)
+            <div class="modal fixed inset-0 z-[90] hidden items-center justify-center overflow-y-auto" data-appraisal-manage-reviewers-modal>
+                <div class="fixed inset-0 bg-black/40 dark:bg-black/60" data-appraisal-manage-reviewers-close></div>
+
+                <div class="relative z-10 max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-darkblack-600">
+                    <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <div>
+                            <h3 class="text-xl font-bold text-bgray-900 dark:text-white">Manage Reviewers</h3>
+                            <p class="mt-1 text-sm font-medium text-bgray-600 dark:text-bgray-300" data-appraisal-manage-reviewers-subtitle></p>
+                        </div>
+                        <button type="button" class="text-2xl leading-none text-bgray-600 hover:text-bgray-900 dark:text-bgray-300 dark:hover:text-white" data-appraisal-manage-reviewers-close aria-label="Close">×</button>
+                    </div>
+
+                    <div class="max-h-[calc(92vh-145px)] overflow-y-auto px-6 py-5 space-y-6">
+                        <div>
+                            <h4 class="mb-3 text-base font-bold text-bgray-900 dark:text-white">Assigned Reviewers</h4>
+                            <div class="table-content w-full overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b border-bgray-300 dark:border-darkblack-400">
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Level</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Reviewer</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Status</th>
+                                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-bgray-600 dark:text-bgray-300">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-appraisal-manage-reviewers-list></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-bgray-200 bg-bgray-50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500">
+                            <h4 class="text-sm font-bold uppercase tracking-wider text-bgray-700 dark:text-white">Add New Reviewer</h4>
+                            <p class="mt-1 text-xs text-bgray-600 dark:text-bgray-300">New reviewers will be appended as the next sequential level.</p>
+                            <div class="mt-3 flex flex-wrap items-center gap-3">
+                                <select class="tom-select w-full flex-1 min-w-[200px]" data-appraisal-manage-add-select>
+                                    <option value="">Select eligible reviewer</option>
+                                </select>
+                                <button type="button" class="rounded-lg bg-success-300 px-4 py-2 text-sm font-semibold text-white transition hover:bg-success-400 disabled:cursor-not-allowed disabled:opacity-50" data-appraisal-manage-add-submit disabled>
+                                    + Add Reviewer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
+                        <button type="button" class="rounded-lg border border-bgray-200 bg-white px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:border-success-300 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-50" data-appraisal-manage-reviewers-close>Close</button>
+                    </div>
+                </div>
+            </div>
+        @endif
 
     </div>
     @php

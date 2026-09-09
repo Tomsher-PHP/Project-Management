@@ -48,7 +48,7 @@
                                     {{ $step['title'] }}
                                 </p>
                                 @if (!empty($step['subtitle']))
-                                    <p class="mt-0.5 text-[11px] font-medium truncate max-w-[130px] mx-auto {{ $isActive ? 'text-success-500 dark:text-success-400 font-semibold' : 'text-bgray-600 dark:text-bgray-300' }}" title="{{ $step['subtitle'] }}">
+                                    <p class="mt-0.5 text-[11px] font-medium truncate max-w-[130px] mx-auto {{ $isActive ? 'text-success-400 dark:text-success-400 font-semibold' : 'text-bgray-600 dark:text-bgray-300' }}" title="{{ $step['subtitle'] }}">
                                         {{ $step['subtitle'] }}
                                     </p>
                                 @endif
@@ -86,7 +86,7 @@
                                 {{ $step['title'] }}
                             </p>
                             @if (!empty($step['subtitle']))
-                                <p class="mt-0.5 text-[11px] font-medium truncate max-w-[130px] mx-auto {{ $isActive ? 'text-success-500 dark:text-success-400 font-semibold' : 'text-bgray-600 dark:text-bgray-300' }}" title="{{ $step['subtitle'] }}">
+                                <p class="mt-0.5 text-[11px] font-medium truncate max-w-[130px] mx-auto {{ $isActive ? 'text-success-400 dark:text-success-400 font-semibold' : 'text-bgray-600 dark:text-bgray-300' }}" title="{{ $step['subtitle'] }}">
                                     {{ $step['subtitle'] }}
                                 </p>
                             @endif

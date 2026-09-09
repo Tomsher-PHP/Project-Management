@@ -61,6 +61,9 @@ class LeaveRequestController extends Controller
                 'addedBy',
             ]);
 
+        /*
+        * Search by employee name
+        */
         if ($request->filled('search')) {
             $search = trim($request->search);
 
@@ -73,36 +76,149 @@ class LeaveRequestController extends Controller
             });
         }
 
+        /*
+        * Employee filter
+        *
+        * Supports:
+        * user_id=1
+        * user_id[]=1&user_id[]=2
+        */
+        if ($request->filled('user_id')) {
+            $userIds = $request->input('user_id');
+
+            $userIds = is_array($userIds)
+                ? $userIds
+                : [$userIds];
+
+            $userIds = array_filter($userIds);
+
+            if (!empty($userIds)) {
+                $query->whereIn(
+                    'user_id',
+                    $userIds
+                );
+            }
+        }
+
+        /*
+        * Leave Type filter
+        *
+        * Supports multiple selected leave types.
+        */
         if ($request->filled('leave_type_id')) {
-            $query->where(
-                'leave_type_id',
-                $request->leave_type_id
-            );
+            $leaveTypeIds = $request->input('leave_type_id');
+
+            $leaveTypeIds = is_array($leaveTypeIds)
+                ? $leaveTypeIds
+                : [$leaveTypeIds];
+
+            $leaveTypeIds = array_filter($leaveTypeIds);
+
+            if (!empty($leaveTypeIds)) {
+                $query->whereIn(
+                    'leave_type_id',
+                    $leaveTypeIds
+                );
+            }
         }
 
+        /*
+        * Added By filter
+        *
+        * Supports multiple selected users.
+        */
+        if ($request->filled('added_by')) {
+            $addedByIds = $request->input('added_by');
+
+            $addedByIds = is_array($addedByIds)
+                ? $addedByIds
+                : [$addedByIds];
+
+            $addedByIds = array_filter($addedByIds);
+
+            if (!empty($addedByIds)) {
+                $query->whereIn(
+                    'added_by',
+                    $addedByIds
+                );
+            }
+        }
+
+        /*
+        * Day Type filter
+        *
+        * full_day / half_day
+        */
+        if ($request->filled('type')) {
+            $types = $request->input('type');
+
+            $types = is_array($types)
+                ? $types
+                : [$types];
+
+            $types = array_filter($types);
+
+            if (!empty($types)) {
+                $query->whereIn(
+                    'type',
+                    $types
+                );
+            }
+        }
+
+        /*
+        * Status filter
+        *
+        * Supports multiple statuses.
+        */
         if ($request->filled('status')) {
-            $query->where(
-                'status',
-                $request->status
-            );
+            $statuses = $request->input('status');
+
+            $statuses = is_array($statuses)
+                ? $statuses
+                : [$statuses];
+
+            $statuses = array_filter($statuses);
+
+            if (!empty($statuses)) {
+                $query->whereIn(
+                    'status',
+                    $statuses
+                );
+            }
         }
 
-        if ($request->filled('from_date')) {
+        /*
+        * From Date filter
+        *
+        * Show requests whose requested_from_date
+        * is on or after the selected date.
+        */
+        if ($request->filled('requested_from_date')) {
             $query->whereDate(
                 'requested_from_date',
                 '>=',
-                $request->from_date
+                $request->requested_from_date
             );
         }
 
-        if ($request->filled('to_date')) {
+        /*
+        * To Date filter
+        *
+        * Show requests whose requested_to_date
+        * is on or before the selected date.
+        */
+        if ($request->filled('requested_to_date')) {
             $query->whereDate(
                 'requested_to_date',
                 '<=',
-                $request->to_date
+                $request->requested_to_date
             );
         }
 
+        /*
+        * Sorting
+        */
         $sortColumn = $request->input(
             'sort_by',
             'created_at'
@@ -129,7 +245,11 @@ class LeaveRequestController extends Controller
             'created_at',
         ];
 
+        /*
+        * Sort by Employee
+        */
         if ($sortColumn === 'user.name') {
+
             $query
                 ->join(
                     'users',
@@ -142,7 +262,12 @@ class LeaveRequestController extends Controller
                     'users.name',
                     $sortDirection
                 );
+
+        /*
+        * Sort by Leave Type
+        */
         } elseif ($sortColumn === 'leaveType.name') {
+
             $query
                 ->join(
                     'leave_types',
@@ -155,21 +280,52 @@ class LeaveRequestController extends Controller
                     'leave_types.name',
                     $sortDirection
                 );
+
+        /*
+        * Sort by Added By
+        */
+        } elseif ($sortColumn === 'addedBy.name') {
+
+            $query
+                ->join(
+                    'users as added_by_users',
+                    'leave_requests.added_by',
+                    '=',
+                    'added_by_users.id'
+                )
+                ->select('leave_requests.*')
+                ->orderBy(
+                    'added_by_users.name',
+                    $sortDirection
+                );
+
+        /*
+        * Sort by normal LeaveRequest columns
+        */
         } elseif (in_array(
             $sortColumn,
             $allowedSortColumns,
             true
         )) {
+
             $query->orderBy(
                 'leave_requests.' . $sortColumn,
                 $sortDirection
             );
+
         } else {
+
             $query->latest(
                 'leave_requests.created_at'
             );
         }
 
+        /*
+        * Calendar Events
+        *
+        * Clone the filtered/sorted query before pagination
+        * so calendar events respect the selected filters.
+        */
         $calendarLeaveRequests = (clone $query)->get();
 
         $calendarEvents = $calendarLeaveRequests
@@ -234,21 +390,56 @@ class LeaveRequestController extends Controller
             })
             ->values();
 
+        /*
+        * Paginated Leave Requests
+        *
+        * withQueryString() keeps all active filters
+        * when moving between pagination pages.
+        */
         $leaveRequests = $query
             ->paginate(15)
             ->withQueryString();
 
+        /*
+        * Active Leave Types
+        */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        /*
+        * Employees
+        *
+        * Used by the Employee filter.
+        */
+        $employees = User::query()
+            ->orderBy('name')
+            ->get();
+
+        /*
+        * Users
+        *
+        * Used by the Added By filter.
+        */
+        $users = User::query()
             ->orderBy('name')
             ->get();
 
         return view('leave_requests.index', [
             'pageTitle' => $this->pageTitle,
             'subTitle' => $this->subTitle,
+
             'leaveRequests' => $leaveRequests,
+
             'calendarEvents' => $calendarEvents,
+
             'leaveTypes' => $leaveTypes,
+
+            'employees' => $employees,
+
+            'users' => $users,
+
             'isPendingPage' => false,
         ]);
     }

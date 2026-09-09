@@ -3,7 +3,11 @@
         'text-sm font-medium text-red-500',
         'hidden' => $answerData['is_submitted'] || $progress['can_submit'],
     ]) data-appraisal-answer-helper-message>
-        All questions must be answered before submitting. You can save your progress as a draft anytime.
+        @if(($answerData['role'] ?? '') === 'reviewer')
+            Please provide at least one answer or an overall comment before submitting your review.
+        @else
+            All questions must be answered before submitting. You can save your progress as a draft anytime.
+        @endif
     </p>
     <div class="ml-auto flex items-center gap-3">
         <button type="button" @class([

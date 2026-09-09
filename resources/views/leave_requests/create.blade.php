@@ -219,7 +219,7 @@
                                 id="requested_from_date"
                                 value="{{ old('requested_from_date') }}"
                                 required
-                                class="w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                class="datepicker w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                             @error('requested_from_date')
                                 <p class="mt-1 text-xs text-red-500">
@@ -248,7 +248,7 @@
                                 id="requested_to_date"
                                 value="{{ old('requested_to_date') }}"
                                 required
-                                class="w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                                class="datepicker w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                             @error('requested_to_date')
                                 <p class="mt-1 text-xs text-red-500">
