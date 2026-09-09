@@ -1,7 +1,7 @@
 <div id="meeting_modal" class="fixed inset-0 z-50 {{ $errors->any() ? '' : 'hidden' }} overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6 md:p-10 flex items-center justify-center">
-    <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-xl dark:bg-darkblack-600 my-8">
-        
-        {{-- Modal Header --}}
+    <div class="relative w-full max-w-4xl rounded-[8px] bg-white shadow-xl dark:bg-darkblack-600 my-8">
+
+        <!-- Modal Header -->
         <div class="flex items-center justify-between border-b border-bgray-200 px-6 py-4 dark:border-darkblack-400">
             <h3 id="meeting_modal_title" class="text-lg font-bold text-bgray-900 dark:text-white">
                 Add New Meeting
@@ -13,7 +13,7 @@
             </button>
         </div>
 
-        {{-- Modal Body / Form --}}
+        <!-- Modal Body / Form -->
         <form id="meeting_form" method="POST" action="{{ route('meetings.store') }}" data-create-url="{{ route('meetings.store') }}">
             @csrf
             <input type="hidden" name="_method" id="meeting_form_method" value="POST">
@@ -32,7 +32,7 @@
                     </div>
                 @endif
 
-                {{-- Title --}}
+                <!-- Title -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Meeting Title <x-red-star />
@@ -40,7 +40,7 @@
                     <input type="text" name="title" id="meeting_title" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. Weekly Sprint Planning">
                 </div>
 
-                {{-- Grid Row 1: Project & Meeting Type --}}
+                <!-- Grid Row 1: Project & Meeting Type -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                {{-- Grid Row 2: Location, Status & Organizer --}}
+                <!-- Grid Row 2: Location, Status & Organizer -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -104,7 +104,7 @@
                     </div>
                 </div>
 
-                {{-- Grid Row 3: Start & End Date Time --}}
+                <!-- Grid Row 3: Start & End Date Time -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -121,7 +121,7 @@
                     </div>
                 </div>
 
-                {{-- Grid Row 4: URL & Location Details --}}
+                <!-- Grid Row 4: URL & Location Details -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -138,7 +138,7 @@
                     </div>
                 </div>
 
-                {{-- Tags --}}
+                <!-- Tags -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Tags
@@ -150,7 +150,7 @@
                     </select>
                 </div>
 
-                {{-- Participants Section --}}
+                <!-- Participants Section -->
                 <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
                     <div class="mb-3 flex items-center justify-between">
                         <h4 class="text-sm font-bold text-bgray-900 dark:text-white">
@@ -165,11 +165,11 @@
                     </div>
 
                     <div id="meeting_participants_container" class="space-y-3">
-                        {{-- Dynamic Participant Rows Inserted Here via JS --}}
+                        <!-- Dynamic Participant Rows Inserted Here via JS -->
                     </div>
                 </div>
 
-                {{-- Description (Quill Editor) --}}
+                <!-- Description (Quill Editor) -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Description
@@ -179,7 +179,7 @@
 
             </div>
 
-            {{-- Modal Footer --}}
+            <!-- Modal Footer -->
             <div class="flex items-center justify-end gap-3 border-t border-bgray-200 px-6 py-4 dark:border-darkblack-400">
                 <button type="button" data-meeting-modal-close class="rounded-lg border border-bgray-300 px-4 py-2 text-sm font-semibold text-bgray-700 transition hover:bg-bgray-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400">
                     Cancel
@@ -193,7 +193,7 @@
     </div>
 </div>
 
-{{-- Participant Row Template (Hidden) --}}
+<!-- Participant Row Template (Hidden) -->
 <template id="participant_row_template">
     <div class="participant-row rounded-lg border border-bgray-200 bg-white p-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 space-y-3" data-index="{INDEX}">
         <div class="flex items-center justify-between">
@@ -215,7 +215,7 @@
             </button>
         </div>
 
-        {{-- Internal User Selection --}}
+        <!-- Internal User Selection -->
         <div class="internal-user-fields" data-index="{INDEX}">
             <select name="participants[{INDEX}][user_id]" class="tom-select-participant w-full">
                 <option value="">Select Internal User</option>
@@ -225,7 +225,7 @@
             </select>
         </div>
 
-        {{-- External Participant Fields --}}
+        <!-- External Participant Fields -->
         <div class="external-user-fields hidden grid-cols-1 gap-2 sm:grid-cols-3" data-index="{INDEX}">
             <div>
                 <input type="text" name="participants[{INDEX}][name]" class="w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Full Name">
@@ -238,7 +238,7 @@
             </div>
         </div>
 
-        {{-- Send Email Option --}}
+        <!-- Send Email Option -->
         <div class="flex items-center gap-2">
             <input type="checkbox" name="participants[{INDEX}][send_email]" value="1" id="send_email_{INDEX}" class="rounded border-bgray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
             <label for="send_email_{INDEX}" class="text-xs text-bgray-600 dark:text-bgray-300">

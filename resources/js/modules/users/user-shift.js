@@ -85,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             calendarInstance = window.initCalendar(calendarEl, {
                 events: [],
                 initialView: 'dayGridMonth',
+                firstDay: 1,
+                dayMaxEvents: 3,
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
