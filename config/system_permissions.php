@@ -14,7 +14,7 @@ return [
     ['name' => 'user.restore',        'label' => 'User', 'sort_order' => 1100, 'default_checked' => false],
     ['name' => 'user.tree_view',      'label' => 'User', 'sort_order' => 1120, 'default_checked' => true],
     ['name' => 'user.leave_details.view',  'label' => 'Leave Details',    'sort_order' => 1130, 'default_checked' => true],
-    ['name' => 'user.leave_details.create','label' => 'Leave Details', 'sort_order' => 1140, 'default_checked' => true],
+    ['name' => 'user.leave_details.create', 'label' => 'Leave Details', 'sort_order' => 1140, 'default_checked' => true],
     ['name' => 'user.leave_details.edit', 'label' => 'Leave Details', 'sort_order' => 1150, 'default_checked' => true],
     ['name' => 'user_leave_balance.import',  'label' => 'Leave Details', 'sort_order' => 1160, 'default_checked' => true,],
 
@@ -89,6 +89,21 @@ return [
     ['name' => 'appraisal.create', 'label' => 'Appraisal', 'sort_order' => 10020, 'default_checked' => false],
     ['name' => 'appraisal.edit',   'label' => 'Appraisal', 'sort_order' => 10040, 'default_checked' => false],
     ['name' => 'appraisal.delete', 'label' => 'Appraisal', 'sort_order' => 10060, 'default_checked' => false],
+
+    // LEAVE REQUEST
+    ['name' => 'leave_request.view', 'label' => 'Leave Request', 'sort_order' => 11000, 'default_checked' => true],
+    ['name' => 'leave_request.create', 'label' => 'Leave Request', 'sort_order' => 11020, 'default_checked' => true],
+    ['name' => 'leave_request.edit', 'label' => 'Leave Request', 'sort_order' => 11030, 'default_checked' => true],
+    ['name' => 'leave_request.delete', 'label' => 'Leave Request', 'sort_order' => 11040, 'default_checked' => false],
+    ['name' => 'leave_request.approve', 'label' => 'Leave Request', 'sort_order' => 11050, 'default_checked' => true],
+    ['name' => 'leave_request.reject', 'label' => 'Leave Request', 'sort_order' => 11070, 'default_checked' => true],
+    ['name' => 'leave_request.cancel', 'label' => 'Leave Request', 'sort_order' => 11090, 'default_checked' => true],
+
+    // ATTENDANCE
+    ['name' => 'attendance.view', 'label' => 'Attendance', 'sort_order' => 12000, 'default_checked' => true],
+    ['name' => 'attendance.create', 'label' => 'Attendance', 'sort_order' => 12020, 'default_checked' => true],
+    ['name' => 'attendance.edit', 'label' => 'Attendance', 'sort_order' => 12040, 'default_checked' => true],
+    ['name' => 'attendance.delete', 'label' => 'Attendance', 'sort_order' => 12060, 'default_checked' => false],
 
     //======================================================================
     // Requests Actions Start
@@ -240,24 +255,7 @@ return [
     ['name' => 'configuration.view', 'label' => 'Settings - Configuration', 'sort_order' => 65000, 'default_checked' => false],
     ['name' => 'configuration.edit', 'label' => 'Settings - Configuration', 'sort_order' => 65020, 'default_checked' => false],
 
-
-
-    // LEAVE REQUEST (66000)
-    ['name' => 'leave_request.view','label' => 'Leave Request', 'sort_order' => 66000, 'default_checked' => true],
-    ['name' => 'leave_request.create','label' => 'Leave Request', 'sort_order' => 66020, 'default_checked' => true],
-    ['name' => 'leave_request.edit','label' => 'Leave Request', 'sort_order' => 66030, 'default_checked' => true],
-    ['name' => 'leave_request.delete','label' => 'Leave Request', 'sort_order' => 66040, 'default_checked' => false],
-    ['name' => 'leave_request.approve','label' => 'Leave Request', 'sort_order' => 66050, 'default_checked' => true],
-    ['name' => 'leave_request.reject','label' => 'Leave Request', 'sort_order' => 66070, 'default_checked' => true],
-    ['name' => 'leave_request.cancel','label' => 'Leave Request', 'sort_order' => 66090, 'default_checked' => true],
-
-    // ATTENDANCE (67000)
-    ['name' => 'attendance.view','label' => 'Attendance', 'sort_order' => 67000, 'default_checked' => true],
-    ['name' => 'attendance.create','label' => 'Attendance', 'sort_order' => 67020, 'default_checked' => true],
-    ['name' => 'attendance.edit','label' => 'Attendance', 'sort_order' => 67040, 'default_checked' => true],
-    ['name' => 'attendance.delete','label' => 'Attendance', 'sort_order' => 67060, 'default_checked' => false],
-
-    // LEAVE TYPES (68000)
+    // LEAVE TYPES
     ['name' => 'leave_types.view',   'label' => 'Settings - Leave Types', 'sort_order' => 68000, 'default_checked' => false],
     ['name' => 'leave_types.create', 'label' => 'Settings - Leave Types', 'sort_order' => 68020, 'default_checked' => false],
     ['name' => 'leave_types.edit',   'label' => 'Settings - Leave Types', 'sort_order' => 68040, 'default_checked' => false],
