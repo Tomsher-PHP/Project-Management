@@ -74,4 +74,9 @@ class MeetingLocation extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class, 'meeting_location_id');
+    }
 }

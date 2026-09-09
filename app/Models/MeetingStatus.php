@@ -70,4 +70,9 @@ class MeetingStatus extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class, 'meeting_status_id');
+    }
 }

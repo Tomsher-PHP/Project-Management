@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Meeting;
+use App\Models\MeetingParticipant;
+use App\Models\MeetingStatus;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+
+class MeetingService
+{
+    /**
+     * Retrieve paginated or query list of meetings.
+     */
+    public function list(array $filters = [], ?User $user = null, int $perPage = 20): LengthAwarePaginator
+    {
+        $query = Meeting::query()
+            ->with([
+                'project:id,name,project_code',
+                'meetingType:id,name,color',
+                'meetingLocation:id,name',
+                'meetingStatus:id,name,code,color,type',
+                'organizer:id,name,email',
+                'tags:id,name,color',
+            ])
+            ->when($user, fn(Builder $q) => $q->accessibleBy($user))
+            ->when(! empty($filters['project_id']), fn(Builder $q) => $q->where('project_id', $filters['project_id']))
+            ->when(! empty($filters['meeting_type_id']), fn(Builder $q) => $q->where('meeting_type_id', $filters['meeting_type_id']))
+            ->when(! empty($filters['meeting_location_id']), fn(Builder $q) => $q->where('meeting_location_id', $filters['meeting_location_id']))
+            ->when(! empty($filters['meeting_status_id']), fn(Builder $q) => $q->where('meeting_status_id', $filters['meeting_status_id']))
+            ->when(! empty($filters['organizer_id']), fn(Builder $q) => $q->where('organizer_id', $filters['organizer_id']))
+            ->when(! empty($filters['start_date']), fn(Builder $q) => $q->whereDate('start_at', '>=', $filters['start_date']))
+            ->when(! empty($filters['end_date']), fn(Builder $q) => $q->whereDate('end_at', '<=', $filters['end_date']))
+            ->when(! empty($filters['search']), function (Builder $q) use ($filters) {
+                $search = $filters['search'];
+                $q->where(function (Builder $sub) use ($search) {
+                    $sub->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('location_details', 'like', "%{$search}%");
+                });
+            });
+
+        $sortField = $filters['sort_by'] ?? 'start_at';
+        $sortDirection = $filters['sort_dir'] ?? 'desc';
+
+        return $query->orderBy($sortField, $sortDirection)->paginate($perPage);
+    }
+
+    /**
+     * Find a single meeting by ID.
+     */
+    public function getMeeting(int $id, array $relations = []): ?Meeting
+    {
+        $defaultRelations = [
+            'project',
+            'meetingType',
+            'meetingLocation',
+            'meetingStatus',
+            'organizer',
+            'participants.user',
+            'tags',
+        ];
+
+        return Meeting::with(array_merge($defaultRelations, $relations))->find($id);
+    }
+
+    /**
+     * Create a new Meeting along with participants and tags.
+     */
+    public function create(array $data, ?User $user = null): Meeting
+    {
+        return DB::transaction(function () use ($data, $user) {
+            if (empty($data['organizer_id']) && $user) {
+                $data['organizer_id'] = $user->id;
+            }
+
+            if (empty($data['meeting_status_id'])) {
+                $data['meeting_status_id'] = MeetingStatus::where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
+                    ?? MeetingStatus::query()->first()?->id;
+            }
+
+            $meeting = Meeting::create([
+                'project_id' => $data['project_id'] ?? null,
+                'meeting_type_id' => $data['meeting_type_id'],
+                'meeting_location_id' => $data['meeting_location_id'] ?? null,
+                'meeting_status_id' => $data['meeting_status_id'],
+                'organizer_id' => $data['organizer_id'],
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'start_at' => $data['start_at'],
+                'end_at' => $data['end_at'],
+                'url' => $data['url'] ?? null,
+                'location_details' => $data['location_details'] ?? null,
+            ]);
+
+            $this->syncParticipants($meeting, $data['participants'] ?? []);
+
+            if (isset($data['tag_ids']) && is_array($data['tag_ids'])) {
+                $meeting->tags()->sync($data['tag_ids']);
+            }
+
+            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags']);
+        });
+    }
+
+    /**
+     * Update an existing Meeting along with participants and tags.
+     */
+    public function update(Meeting $meeting, array $data, ?User $user = null): Meeting
+    {
+        return DB::transaction(function () use ($meeting, $data) {
+            $meeting->update(array_intersect_key($data, array_flip([
+                'project_id',
+                'meeting_type_id',
+                'meeting_location_id',
+                'meeting_status_id',
+                'organizer_id',
+                'title',
+                'description',
+                'start_at',
+                'end_at',
+                'url',
+                'location_details',
+            ])));
+
+            if (array_key_exists('participants', $data)) {
+                $this->syncParticipants($meeting, $data['participants']);
+            }
+
+            if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {
+                $meeting->tags()->sync($data['tag_ids']);
+            }
+
+            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags']);
+        });
+    }
+
+    /**
+     * Delete a Meeting and its participants.
+     */
+    public function delete(Meeting $meeting): bool
+    {
+        return DB::transaction(function () use ($meeting) {
+            $meeting->participants()->delete();
+            return (bool) $meeting->delete();
+        });
+    }
+
+    /**
+     * Synchronize meeting participants.
+     */
+    protected function syncParticipants(Meeting $meeting, array $participantsData): void
+    {
+        $meeting->participants()->delete();
+
+        foreach ($participantsData as $participant) {
+            $userId = ! empty($participant['user_id']) ? (int) $participant['user_id'] : null;
+            $isExternal = (bool) ($participant['is_external'] ?? ($userId === null));
+
+            $name = $participant['name'] ?? null;
+            $email = $participant['email'] ?? null;
+            $phone = $participant['phone'] ?? null;
+
+            if ($userId && (! $name || ! $email)) {
+                $pUser = User::find($userId);
+                if ($pUser) {
+                    $name = $name ?: $pUser->name;
+                    $email = $email ?: $pUser->email;
+                }
+            }
+
+            MeetingParticipant::create([
+                'meeting_id' => $meeting->id,
+                'user_id' => $userId,
+                'is_external' => $isExternal,
+                'name' => $name,
+                'email' => $email,
+                'phone' => $phone,
+                'send_email' => (bool) ($participant['send_email'] ?? false),
+            ]);
+        }
+    }
+}

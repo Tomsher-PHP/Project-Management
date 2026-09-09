@@ -76,4 +76,10 @@ class MeetingTag extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function meetings()
+    {
+        return $this->belongsToMany(Meeting::class, 'meeting_meeting_tag', 'meeting_tag_id', 'meeting_id')
+            ->withTimestamps();
+    }
 }

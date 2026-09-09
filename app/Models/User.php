@@ -428,4 +428,21 @@ class User extends Authenticatable
             'approver_id'
         );
     }
+
+    public function organizedMeetings()
+    {
+        return $this->hasMany(Meeting::class, 'organizer_id');
+    }
+
+    public function meetingParticipations()
+    {
+        return $this->hasMany(MeetingParticipant::class, 'user_id');
+    }
+
+    public function meetings()
+    {
+        return $this->belongsToMany(Meeting::class, 'meeting_participants', 'user_id', 'meeting_id')
+            ->withPivot(['is_external', 'name', 'email', 'phone', 'send_email'])
+            ->withTimestamps();
+    }
 }
