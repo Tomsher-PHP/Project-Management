@@ -544,7 +544,7 @@
                         @endif
                         {{-- @if ($canViewAttendance) --}}
                             <!-- Holidays -->
-                            <li class="item py-[8px]">
+                            {{-- <li class="item py-[8px]">
                                 <a href="{{ route('holidays.index') }}">
                                     <div class="flex items-center">
                                         <span class="item-ico mr-3 scale-90 inline-flex items-center justify-center">
@@ -575,7 +575,7 @@
                                         </span>
                                     </div>
                                 </a>
-                            </li>
+                            </li> --}}
                         {{-- @endif --}}
                     </ul>
                 </div>

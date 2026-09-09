@@ -9,6 +9,7 @@ use App\Models\LeaveRequestHistory;
 use App\Models\LeaveType;
 use App\Models\User;
 use App\Models\UserLeaveBalance;
+use App\Services\AttachmentService;
 use App\Services\LeaveBalanceService;
 use App\Services\NotificationService;
 use App\Services\UserService;
@@ -60,6 +61,9 @@ class LeaveRequestController extends Controller
                 'addedBy',
             ]);
 
+        /*
+        * Search by employee name
+        */
         if ($request->filled('search')) {
             $search = trim($request->search);
 
@@ -72,36 +76,149 @@ class LeaveRequestController extends Controller
             });
         }
 
+        /*
+        * Employee filter
+        *
+        * Supports:
+        * user_id=1
+        * user_id[]=1&user_id[]=2
+        */
+        if ($request->filled('user_id')) {
+            $userIds = $request->input('user_id');
+
+            $userIds = is_array($userIds)
+                ? $userIds
+                : [$userIds];
+
+            $userIds = array_filter($userIds);
+
+            if (!empty($userIds)) {
+                $query->whereIn(
+                    'user_id',
+                    $userIds
+                );
+            }
+        }
+
+        /*
+        * Leave Type filter
+        *
+        * Supports multiple selected leave types.
+        */
         if ($request->filled('leave_type_id')) {
-            $query->where(
-                'leave_type_id',
-                $request->leave_type_id
-            );
+            $leaveTypeIds = $request->input('leave_type_id');
+
+            $leaveTypeIds = is_array($leaveTypeIds)
+                ? $leaveTypeIds
+                : [$leaveTypeIds];
+
+            $leaveTypeIds = array_filter($leaveTypeIds);
+
+            if (!empty($leaveTypeIds)) {
+                $query->whereIn(
+                    'leave_type_id',
+                    $leaveTypeIds
+                );
+            }
         }
 
+        /*
+        * Added By filter
+        *
+        * Supports multiple selected users.
+        */
+        if ($request->filled('added_by')) {
+            $addedByIds = $request->input('added_by');
+
+            $addedByIds = is_array($addedByIds)
+                ? $addedByIds
+                : [$addedByIds];
+
+            $addedByIds = array_filter($addedByIds);
+
+            if (!empty($addedByIds)) {
+                $query->whereIn(
+                    'added_by',
+                    $addedByIds
+                );
+            }
+        }
+
+        /*
+        * Day Type filter
+        *
+        * full_day / half_day
+        */
+        if ($request->filled('type')) {
+            $types = $request->input('type');
+
+            $types = is_array($types)
+                ? $types
+                : [$types];
+
+            $types = array_filter($types);
+
+            if (!empty($types)) {
+                $query->whereIn(
+                    'type',
+                    $types
+                );
+            }
+        }
+
+        /*
+        * Status filter
+        *
+        * Supports multiple statuses.
+        */
         if ($request->filled('status')) {
-            $query->where(
-                'status',
-                $request->status
-            );
+            $statuses = $request->input('status');
+
+            $statuses = is_array($statuses)
+                ? $statuses
+                : [$statuses];
+
+            $statuses = array_filter($statuses);
+
+            if (!empty($statuses)) {
+                $query->whereIn(
+                    'status',
+                    $statuses
+                );
+            }
         }
 
-        if ($request->filled('from_date')) {
+        /*
+        * From Date filter
+        *
+        * Show requests whose requested_from_date
+        * is on or after the selected date.
+        */
+        if ($request->filled('requested_from_date')) {
             $query->whereDate(
                 'requested_from_date',
                 '>=',
-                $request->from_date
+                $request->requested_from_date
             );
         }
 
-        if ($request->filled('to_date')) {
+        /*
+        * To Date filter
+        *
+        * Show requests whose requested_to_date
+        * is on or before the selected date.
+        */
+        if ($request->filled('requested_to_date')) {
             $query->whereDate(
                 'requested_to_date',
                 '<=',
-                $request->to_date
+                $request->requested_to_date
             );
         }
 
+        /*
+        * Sorting
+        */
         $sortColumn = $request->input(
             'sort_by',
             'created_at'
@@ -128,7 +245,11 @@ class LeaveRequestController extends Controller
             'created_at',
         ];
 
+        /*
+        * Sort by Employee
+        */
         if ($sortColumn === 'user.name') {
+
             $query
                 ->join(
                     'users',
@@ -141,7 +262,12 @@ class LeaveRequestController extends Controller
                     'users.name',
                     $sortDirection
                 );
+
+        /*
+        * Sort by Leave Type
+        */
         } elseif ($sortColumn === 'leaveType.name') {
+
             $query
                 ->join(
                     'leave_types',
@@ -154,21 +280,52 @@ class LeaveRequestController extends Controller
                     'leave_types.name',
                     $sortDirection
                 );
+
+        /*
+        * Sort by Added By
+        */
+        } elseif ($sortColumn === 'addedBy.name') {
+
+            $query
+                ->join(
+                    'users as added_by_users',
+                    'leave_requests.added_by',
+                    '=',
+                    'added_by_users.id'
+                )
+                ->select('leave_requests.*')
+                ->orderBy(
+                    'added_by_users.name',
+                    $sortDirection
+                );
+
+        /*
+        * Sort by normal LeaveRequest columns
+        */
         } elseif (in_array(
             $sortColumn,
             $allowedSortColumns,
             true
         )) {
+
             $query->orderBy(
                 'leave_requests.' . $sortColumn,
                 $sortDirection
             );
+
         } else {
+
             $query->latest(
                 'leave_requests.created_at'
             );
         }
 
+        /*
+        * Calendar Events
+        *
+        * Clone the filtered/sorted query before pagination
+        * so calendar events respect the selected filters.
+        */
         $calendarLeaveRequests = (clone $query)->get();
 
         $calendarEvents = $calendarLeaveRequests
@@ -233,21 +390,56 @@ class LeaveRequestController extends Controller
             })
             ->values();
 
+        /*
+        * Paginated Leave Requests
+        *
+        * withQueryString() keeps all active filters
+        * when moving between pagination pages.
+        */
         $leaveRequests = $query
             ->paginate(15)
             ->withQueryString();
 
+        /*
+        * Active Leave Types
+        */
         $leaveTypes = LeaveType::query()
             ->where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        /*
+        * Employees
+        *
+        * Used by the Employee filter.
+        */
+        $employees = User::query()
+            ->orderBy('name')
+            ->get();
+
+        /*
+        * Users
+        *
+        * Used by the Added By filter.
+        */
+        $users = User::query()
             ->orderBy('name')
             ->get();
 
         return view('leave_requests.index', [
             'pageTitle' => $this->pageTitle,
             'subTitle' => $this->subTitle,
+
             'leaveRequests' => $leaveRequests,
+
             'calendarEvents' => $calendarEvents,
+
             'leaveTypes' => $leaveTypes,
+
+            'employees' => $employees,
+
+            'users' => $users,
+
             'isPendingPage' => false,
         ]);
     }
@@ -309,12 +501,6 @@ class LeaveRequestController extends Controller
 
             $selectedUserId = (int) $request->user_id;
 
-            /*
-             * Super Admin can select any active employee.
-             *
-             * Other users can only select users returned by
-             * UserService::getAccessibleUsers().
-             */
             if (!$loggedInUser->isSuperAdmin()) {
 
                 $accessibleUserIds = $this->userService
@@ -335,9 +521,6 @@ class LeaveRequestController extends Controller
                 }
             }
 
-            /*
-             * Always validate the selected employee on the backend.
-             */
             $leaveUser = User::query()
                 ->where('id', $selectedUserId)
                 ->where('is_active', true)
@@ -356,9 +539,6 @@ class LeaveRequestController extends Controller
 
         } else {
 
-            /*
-             * Normal leave always belongs to the logged-in user.
-             */
             $leaveUser = $loggedInUser;
         }
 
@@ -510,23 +690,30 @@ class LeaveRequestController extends Controller
 
         /*
          * ---------------------------------------------------------
-         * Attachment.
+         * Save attachment using AttachmentService.
+         *
+         * AttachmentService will create the attachment record
+         * and automatically link it to this LeaveRequest:
+         *
+         * link_id   = $leaveRequest->id
+         * link_type = LeaveRequest::class
          * ---------------------------------------------------------
          */
         if (
             $request->hasFile('attachment')
             && $request->file('attachment')->isValid()
         ) {
-            $path = $request
-                ->file('attachment')
-                ->store(
-                    'leave_requests',
-                    'public'
-                );
+            $attachmentService = app(AttachmentService::class);
 
-            $leaveRequest->update([
-                'attachment' => $path,
-            ]);
+            $attachmentService->upload(
+                $request->file('attachment'),
+                'leave_requests',
+                $leaveRequest,
+                'public',
+                'public',
+                false,
+                'leave_request'
+            );
         }
 
         /*
@@ -842,12 +1029,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * FULL EDIT
-         *
-         * Only pending requests created by the employee
-         * themselves can be fully edited.
-         *
-         * added_by NULL is also treated as employee-created for
-         * backward compatibility with older leave records.
          * ---------------------------------------------------------
          */
         $fullEdit =
@@ -863,10 +1044,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * RESTRICTED EDIT
-         *
-         * Pending requests added by somebody else OR
-         * approved requests can be opened by the employee,
-         * but only reason + attachment can be changed.
          * ---------------------------------------------------------
          */
         $restrictedEdit =
@@ -889,38 +1066,19 @@ class LeaveRequestController extends Controller
          */
         if ($approvalMode) {
 
-            /*
-             * Approval/rejection is only available to an
-             * authorized approver for a pending request.
-             */
             if (!$isApprover) {
                 abort(403);
             }
 
         } else {
 
-            /*
-             * Employee can edit own pending/approved request.
-             *
-             * Full or restricted mode is determined above.
-             */
             if (!$canEditOwnRequest) {
 
-                /*
-                 * An approver can still open a pending request
-                 * for review.
-                 */
                 if (!$isApprover) {
                     abort(403);
                 }
             }
 
-            /*
-             * Only rejected/cancelled requests are blocked here.
-             *
-             * Approved requests are intentionally allowed because
-             * they use restricted edit mode.
-             */
             if (
                 !in_array(
                     $leaveRequest->status,
@@ -1016,9 +1174,6 @@ class LeaveRequestController extends Controller
             'isApprover' =>
                 $isApprover,
 
-            /*
-             * These two variables control the Blade fields.
-             */
             'fullEdit' =>
                 $fullEdit,
 
@@ -1038,20 +1193,6 @@ class LeaveRequestController extends Controller
 
     /**
      * Update / approve / reject a leave request.
-     *
-     * Employee rules:
-     *
-     * - Pending + own request created by employee:
-     *   all editable fields can be changed.
-     *
-     * - Pending + request added by manager/reporter/Super Admin:
-     *   only reason and attachment can be changed.
-     *
-     * - Approved:
-     *   only reason and attachment can be changed.
-     *
-     * - Rejected/cancelled:
-     *   cannot be edited.
      */
     public function update(
         LeaveRequestUpdateRequest $request,
@@ -1062,10 +1203,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * Determine approval mode first.
-         *
-         * IMPORTANT:
-         * Do not reject approved requests before this point because
-         * approved requests are allowed restricted employee edits.
          * ---------------------------------------------------------
          */
         $approvalMode =
@@ -1086,8 +1223,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * Determine approver.
-         *
-         * Approval actions are only valid for pending requests.
          * ---------------------------------------------------------
          */
         $isApprover =
@@ -1123,8 +1258,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * FULL EMPLOYEE EDIT
-         *
-         * Only pending requests created by the employee themselves.
          * ---------------------------------------------------------
          */
         $fullEdit =
@@ -1140,11 +1273,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * RESTRICTED EMPLOYEE EDIT
-         *
-         * Pending manager/reporter/Super Admin-created request
-         * OR any approved request.
-         *
-         * Only reason and attachment can be changed.
          * ---------------------------------------------------------
          */
         $restrictedEdit =
@@ -1167,9 +1295,6 @@ class LeaveRequestController extends Controller
          */
         if ($approvalMode) {
 
-            /*
-             * Approval actions are only allowed on pending requests.
-             */
             if (!$isApprover) {
                 abort(403);
             }
@@ -1178,9 +1303,6 @@ class LeaveRequestController extends Controller
              * -----------------------------------------------------
              * UPDATE ONLY
              * -----------------------------------------------------
-             *
-             * Approver can change non-date fields here.
-             * Request remains pending.
              */
             if ($request->action === 'update') {
 
@@ -1244,22 +1366,25 @@ class LeaveRequestController extends Controller
                         $request->approver_comment,
                 ]);
 
+                /*
+                 * Save attachment through AttachmentService.
+                 */
                 if (
                     $request->hasFile('attachment')
-                    && $request
-                        ->file('attachment')
-                        ->isValid()
+                    && $request->file('attachment')->isValid()
                 ) {
-                    $path = $request
-                        ->file('attachment')
-                        ->store(
-                            'leave_requests',
-                            'public'
-                        );
+                    $attachmentService =
+                        app(AttachmentService::class);
 
-                    $leaveRequest->update([
-                        'attachment' => $path,
-                    ]);
+                    $attachmentService->upload(
+                        $request->file('attachment'),
+                        'leave_requests',
+                        $leaveRequest,
+                        'public',
+                        'public',
+                        false,
+                        'leave_request'
+                    );
                 }
 
                 $this->logLeaveHistory(
@@ -1460,20 +1585,25 @@ class LeaveRequestController extends Controller
 
                         $leaveRequest->save();
 
+                        /*
+                         * Save attachment through AttachmentService.
+                         */
                         if (
                             $request->hasFile('attachment')
                             && $request->file('attachment')->isValid()
                         ) {
-                            $path = $request
-                                ->file('attachment')
-                                ->store(
-                                    'leave_requests',
-                                    'public'
-                                );
+                            $attachmentService =
+                                app(AttachmentService::class);
 
-                            $leaveRequest->update([
-                                'attachment' => $path,
-                            ]);
+                            $attachmentService->upload(
+                                $request->file('attachment'),
+                                'leave_requests',
+                                $leaveRequest,
+                                'public',
+                                'public',
+                                false,
+                                'leave_request'
+                            );
                         }
 
                         if (
@@ -1628,22 +1758,25 @@ class LeaveRequestController extends Controller
                         $request->approver_comment,
                 ]);
 
+                /*
+                 * Save attachment through AttachmentService.
+                 */
                 if (
                     $request->hasFile('attachment')
-                    && $request
-                        ->file('attachment')
-                        ->isValid()
+                    && $request->file('attachment')->isValid()
                 ) {
-                    $path = $request
-                        ->file('attachment')
-                        ->store(
-                            'leave_requests',
-                            'public'
-                        );
+                    $attachmentService =
+                        app(AttachmentService::class);
 
-                    $leaveRequest->update([
-                        'attachment' => $path,
-                    ]);
+                    $attachmentService->upload(
+                        $request->file('attachment'),
+                        'leave_requests',
+                        $leaveRequest,
+                        'public',
+                        'public',
+                        false,
+                        'leave_request'
+                    );
                 }
 
                 $this->logLeaveHistory(
@@ -1697,57 +1830,17 @@ class LeaveRequestController extends Controller
          * =========================================================
          */
 
-        /*
-         * Employee must own the leave request.
-         *
-         * The leave_request.edit permission is also required.
-         */
-        if (
-            !$canEditOwnRequest
-        ) {
+        if (!$canEditOwnRequest) {
             abort(403);
         }
 
         /*
          * ---------------------------------------------------------
          * RESTRICTED EMPLOYEE EDIT
-         *
-         * Applies to:
-         *
-         * - Pending request added by another user
-         * - Approved request
-         *
-         * ONLY:
-         * - reason
-         * - attachment
-         *
-         * can be changed.
-         *
-         * IMPORTANT:
-         * Do not update leave type, dates, duration, type,
-         * half-day type, approved dates, paid days or unpaid days.
          * ---------------------------------------------------------
          */
         if ($restrictedEdit) {
 
-            /*
-             * Only update the fields that are allowed.
-             *
-             * This deliberately does NOT touch:
-             * leave_type_id
-             * type
-             * half_day_type
-             * requested_from_date
-             * requested_to_date
-             * duration
-             * approved_from_date
-             * approved_to_date
-             * approved_duration
-             * paid_days
-             * unpaid_days
-             * status
-             * approver_comment
-             */
             $oldStatus =
                 $leaveRequest->status;
 
@@ -1772,34 +1865,29 @@ class LeaveRequestController extends Controller
             $leaveRequest->save();
 
             /*
-             * Update attachment only when a new attachment
-             * has actually been uploaded.
+             * Update attachment through AttachmentService.
              *
-             * Existing attachment remains unchanged when no
-             * new file is supplied.
+             * Existing attachments remain unchanged when
+             * no new file is supplied.
              */
             if (
                 $request->hasFile('attachment')
-                && $request
-                    ->file('attachment')
-                    ->isValid()
+                && $request->file('attachment')->isValid()
             ) {
-                $path = $request
-                    ->file('attachment')
-                    ->store(
-                        'leave_requests',
-                        'public'
-                    );
+                $attachmentService =
+                    app(AttachmentService::class);
 
-                $leaveRequest->attachment =
-                    $path;
-
-                $leaveRequest->save();
+                $attachmentService->upload(
+                    $request->file('attachment'),
+                    'leave_requests',
+                    $leaveRequest,
+                    'public',
+                    'public',
+                    false,
+                    'leave_request'
+                );
             }
 
-            /*
-             * History for restricted employee edit.
-             */
             $this->logLeaveHistory(
                 $leaveRequest,
                 'updated',
@@ -1853,8 +1941,6 @@ class LeaveRequestController extends Controller
         /*
          * ---------------------------------------------------------
          * FULL EMPLOYEE EDIT
-         *
-         * Only pending employee-created requests reach this block.
          * ---------------------------------------------------------
          */
         if (!$fullEdit) {
@@ -1869,9 +1955,6 @@ class LeaveRequestController extends Controller
                 );
         }
 
-        /*
-         * Full edit is only allowed for pending requests.
-         */
         if ($leaveRequest->status !== 'pending') {
             return redirect()
                 ->route(
@@ -1918,10 +2001,6 @@ class LeaveRequestController extends Controller
                     ]);
             }
 
-            /*
-             * Check overlapping pending/approved leaves while
-             * excluding the current leave request.
-             */
             $existingLeave = $this->findOverlappingLeave(
                 $leaveRequest->user_id,
                 $fromDate,
@@ -1999,22 +2078,25 @@ class LeaveRequestController extends Controller
                     $request->approver_comment,
             ]);
 
+            /*
+             * Save attachment through AttachmentService.
+             */
             if (
                 $request->hasFile('attachment')
-                && $request
-                    ->file('attachment')
-                    ->isValid()
+                && $request->file('attachment')->isValid()
             ) {
-                $path = $request
-                    ->file('attachment')
-                    ->store(
-                        'leave_requests',
-                        'public'
-                    );
+                $attachmentService =
+                    app(AttachmentService::class);
 
-                $leaveRequest->update([
-                    'attachment' => $path,
-                ]);
+                $attachmentService->upload(
+                    $request->file('attachment'),
+                    'leave_requests',
+                    $leaveRequest,
+                    'public',
+                    'public',
+                    false,
+                    'leave_request'
+                );
             }
 
             if (
@@ -2085,8 +2167,7 @@ class LeaveRequestController extends Controller
             }
 
             /*
-             * notifyLeaveRequestUpdated() expects user ID,
-             * not the User model.
+             * notifyLeaveRequestUpdated() expects user ID.
              */
             $this->notificationService
                 ->notifyLeaveRequestUpdated(
@@ -2628,8 +2709,7 @@ class LeaveRequestController extends Controller
             ) {
 
                 /*
-                 * Re-check the status inside the transaction
-                 * to avoid processing an already-cancelled request.
+                 * Re-check the status inside the transaction.
                  */
                 $leaveRequest->refresh();
 
@@ -2648,9 +2728,6 @@ class LeaveRequestController extends Controller
                 /*
                  * -------------------------------------------------
                  * APPROVED LEAVE
-                 *
-                 * Restore the exact balance values that were
-                 * consumed when this leave was approved.
                  * -------------------------------------------------
                  */
                 if ($leaveRequest->status === 'approved') {
@@ -2711,10 +2788,7 @@ class LeaveRequestController extends Controller
                     );
 
                     /*
-                     * Restore only paid days to current_balance.
-                     *
-                     * Unpaid days never consumed the yearly paid
-                     * balance, so they are not added back.
+                     * Restore paid balance.
                      */
                     $balance->current_balance = round(
                         (float) $balance->current_balance
@@ -2747,8 +2821,7 @@ class LeaveRequestController extends Controller
                     );
 
                     /*
-                     * Track how many paid days have been restored
-                     * through cancellation.
+                     * Track restored paid days.
                      */
                     $balance->cancelled_days_restored = round(
                         (float) (
@@ -2759,9 +2832,7 @@ class LeaveRequestController extends Controller
                     );
 
                     /*
-                     * Reverse the complete approved duration.
-                     *
-                     * This includes both paid and unpaid days.
+                     * Reverse complete approved duration.
                      */
                     $balance->used_balance = round(
                         max(
@@ -2865,7 +2936,7 @@ class LeaveRequestController extends Controller
         }
 
         /*
-         * Notify assigned approvers when the employee cancels
+         * Notify assigned approvers when employee cancels
          * their own request.
          */
         if ($leaveRequest->user_id === $authUser->id) {
