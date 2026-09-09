@@ -833,16 +833,28 @@ const initializeTaskCreateRoot = (root, dependencies) => {
         return;
     }
 
+
+    let isTaskCreateSubmitting = false;
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        // Stop duplicate submissions
+        if (isTaskCreateSubmitting) {
+            return;
+        }
 
         clearTaskCreateErrors(form);
 
         const editor = taskCreateEditors.get(root);
         const descInput = form.querySelector('#task_create_description_input');
+
         if (editor && descInput) {
             const content = editor.root.innerHTML.trim();
-            descInput.value = (content === '<p><br></p>') ? '' : content;
+
+            descInput.value = content === '<p><br></p>'
+                ? ''
+                : content;
         }
 
         const submitButton = form.querySelector('[data-task-create-submit]');
@@ -853,9 +865,11 @@ const initializeTaskCreateRoot = (root, dependencies) => {
             return;
         }
 
-        submitButton?.setAttribute('disabled', 'disabled');
+        // Lock immediately when the first submit happens
+        isTaskCreateSubmitting = true;
 
         if (submitButton) {
+            submitButton.disabled = true;
             submitButton.textContent = 'Saving...';
         }
 
@@ -865,7 +879,9 @@ const initializeTaskCreateRoot = (root, dependencies) => {
                 headers: {
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN':
+                        document.querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') || '',
                 },
                 body: new FormData(form),
             });
@@ -874,23 +890,41 @@ const initializeTaskCreateRoot = (root, dependencies) => {
 
             if (response.status === 422 && result.errors) {
                 applyTaskCreateErrors(root, form, result.errors);
-                throw new Error(result.message || 'Please correct the highlighted fields.');
+
+                throw new Error(
+                    result.message || 'Please correct the highlighted fields.'
+                );
             }
 
             if (!response.ok || !result.status) {
-                throw new Error(result.message || 'Unable to save the task.');
+                throw new Error(
+                    result.message || 'Unable to save the task.'
+                );
             }
 
+            // Successful request.
+            // Keep the button disabled because the page is reloading.
             window.location.reload();
+
         } catch (error) {
+
+            // If validation/server/network error occurred,
+            // allow the user to submit again.
+            isTaskCreateSubmitting = false;
+
             if (!(error.message || '').includes('highlighted fields')) {
-                Alert.errorModal(error.message || 'Unable to save the task.');
+                Alert.errorModal(
+                    error.message || 'Unable to save the task.'
+                );
             }
-        } finally {
-            submitButton?.removeAttribute('disabled');
 
             if (submitButton) {
-                submitButton.textContent = getTaskCreateMode(root) === 'request' ? 'Request Task' : 'Save Task';
+                submitButton.disabled = false;
+
+                submitButton.textContent =
+                    getTaskCreateMode(root) === 'request'
+                        ? 'Request Task'
+                        : 'Save Task';
             }
         }
     });
