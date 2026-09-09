@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HandoffRequestFilterable;
 use App\Traits\Sortable;
+use App\Models\Attachment;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class HandoffRequest extends Model
 {
@@ -116,5 +118,13 @@ class HandoffRequest extends Model
     public function scopeAssigned($query)
     {
         return $query->where('status', 2);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(
+            Attachment::class,
+            'link'
+        )->where('is_active', 1);
     }
 }

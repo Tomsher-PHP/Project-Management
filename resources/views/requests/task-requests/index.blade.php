@@ -61,6 +61,11 @@
                                     <x-sorting.sortable-column column="currentAssignee.name" label="Requested By" />
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
+                                    <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">
+                                        Current Status
+                                    </span>
+                                </th>
+                                <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
                                     <span class="text-base font-medium text-bgray-600 dark:text-bgray-50">Estimated Time</span>
                                 </th>
                                 <th class="border-b border-bgray-200 px-4 py-4 text-left dark:border-b-darkblack-400">
@@ -107,11 +112,56 @@
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <div class="flex min-w-[180px] items-center gap-3">
                                             <x-user-avatar :user="$task->currentAssignee" :image="$task->currentAssignee?->profile_image_url" :name="$task->currentAssignee?->name ?? '--'" size="md" />
-                                            <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $task->currentAssignee?->name ?? '--' }}</span>
+                                            <div>
+                                                <span class="text-sm font-medium text-bgray-700 dark:text-bgray-300">{{ $task->currentAssignee?->name ?? '--' }}</span>
+                                                <p class="mt-1 text-xs text-bgray-700 dark:text-bgray-300">Requested At: @appDateTime($task->created_at)</p>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
-                                        <span class="text-sm text-bgray-900 dark:text-bgray-300 font-semibold">{{ $task->estimated_time_seconds ? formatSecondsToHoursMinutes($task->estimated_time_seconds) : '--' }}</span>
+                                        @if ($task->is_currently_running)
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700"
+                                                title="This task is currently running"
+                                            >
+                                                <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                                Running
+                                            </span>
+
+                                        @elseif ($task->has_started)
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium text-yellow-700"
+                                                title="This task has already been started but is not currently running"
+                                            >
+                                                <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+                                                Already Started
+                                            </span>
+
+                                        @else
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-bgray-600 dark:bg-darkblack-500 dark:text-bgray-300"
+                                                title="This task has not been started yet"
+                                            >
+                                                <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+                                                Not Yet Started
+                                            </span>
+
+                                        @endif
+                                    </td>
+                                    <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
+                                        <div class="min-w-[150px] space-y-1">
+                                            <div>
+                                                <span class="text-xs text-bgray-500 dark:text-bgray-400">
+                                                    Estimated
+                                                </span>
+                                                <p class="text-sm font-semibold text-bgray-900 dark:text-bgray-300">
+                                                    {{ $task->estimated_time_seconds ? formatSecondsToHoursMinutes($task->estimated_time_seconds) : '--' }}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="border-b border-bgray-100 px-4 py-4 dark:border-darkblack-400">
                                         <span class="text-sm text-bgray-900 dark:text-bgray-300 font-semibold">@appDateTime($task->due_date_time)</span>

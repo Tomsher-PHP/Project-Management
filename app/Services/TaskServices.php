@@ -466,11 +466,28 @@ class TaskServices
             }
 
             if (!empty($validated['handoff_request_id']) && $createdTasks->isNotEmpty()) {
+                $task = $createdTasks->first();
+
+                // Existing logic — unchanged
                 $this->handoffServices->markAsAssigned(
                     (int) $validated['handoff_request_id'],
-                    $createdTasks->first(),
+                    $task,
                     auth()->user()
                 );
+
+                // Create TaskNote from handoff description
+                $taskNote = $this->handoffServices->saveHandoffDescriptionAsTaskNote(
+                    (int) $validated['handoff_request_id'],
+                    $task
+                );
+
+                if ($taskNote) {
+                    $this->handoffServices->attachHandoffFilesToTask(
+                        (int) $validated['handoff_request_id'],
+                        $taskNote,
+                        $task
+                    );
+                }
             }
 
             return $createdTasks;

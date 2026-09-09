@@ -20,7 +20,7 @@
                     </button>
                 </div>
 
-                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}" data-update-url-template="{{ route('handoff_requests.update', '__ID__') }}" data-current-user-id="{{ auth()->id() }}">
+                <form class="space-y-4 overflow-y-auto px-5 py-5" data-handoff-create-form data-store-url="{{ route('handoff_requests.store') }}" data-update-url-template="{{ route('handoff_requests.update', '__ID__') }}" data-current-user-id="{{ auth()->id() }}" enctype="multipart/form-data">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Project <x-red-star /></label>
@@ -72,6 +72,42 @@
                             </select>
                             <p class="mt-1 hidden text-xs text-red-500" data-handoff-create-error="purpose"></p>
                         </div>
+
+                        <div class="md:col-span-2">
+                            <label
+                                for="attachments"
+                                class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-50"
+                            >
+                                Files
+                            </label>
+
+                            <input
+                                type="file"
+                                id="attachments"
+                                name="attachments[]"
+                                multiple
+                                data-max-files="5"
+                                class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-3 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-2 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
+                                accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png"
+                            >
+
+                            <p class="mt-2 text-sm text-bgray-700 dark:text-bgray-300">
+                                You can attach up to 5 files. Allowed types:
+                                pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png.
+                                Max file size: 15MB per file.
+                            </p>
+
+                            <p
+                                id="handoff-attachments-error"
+                                class="mt-1 hidden text-xs text-red-500"
+                            ></p>
+
+                            <div
+                                id="selected-handoff-files"
+                                class="mt-3 flex flex-wrap gap-2"
+                            ></div>
+                        </div>
+
 
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-medium text-bgray-700 dark:text-bgray-300">Description <x-red-star /></label>

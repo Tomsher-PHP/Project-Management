@@ -17,14 +17,9 @@
     @endphp
 
     <div class="w-full">
-
-
-        {{-- ========================================================= --}}
         {{-- Header --}}
-        {{-- ========================================================= --}}
 
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
             <div>
 
                 <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
@@ -213,7 +208,7 @@
                                     text-sm
                                     font-semibold
 
-                                    {{ $isToday ? 'bg-success-500 text-white' : ($isCurrentMonth ? 'text-bgray-700 hover:bg-bgray-100 dark:text-white dark:hover:bg-darkblack-400' : 'text-bgray-400 dark:text-bgray-500') }}
+                                    {{ $isToday ? 'bg-success-300 text-white' : ($isCurrentMonth ? 'text-bgray-700 hover:bg-bgray-100 dark:text-white dark:hover:bg-darkblack-400' : 'text-bgray-400 dark:text-bgray-500') }}
                                 ">
                                         {{ $date->day }}
                                     </button>
@@ -425,31 +420,21 @@
 
                             <div>
 
-                                <label
-                                    for="attendance_user_id"
-                                    class="mb-2 block text-sm font-medium"
-                                >
+                                <label for="attendance_user_id" class="mb-2 block text-sm font-medium">
                                     User
                                     <span class="text-red-500">*</span>
                                 </label>
 
-                                <select
-                                    name="user_id"
-                                    id="attendance_user_id"
-                                    required
-                                    class="w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"
-                                >
+                                <select name="user_id" id="attendance_user_id" required class="w-full rounded-lg border border-bgray-200 px-4 py-3 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
 
                                     <option value="">
                                         Select User
                                     </option>
 
                                     @foreach ($attendanceUsers ?? [] as $attendanceUser)
-
                                         <option value="{{ $attendanceUser->id }}">
                                             {{ $attendanceUser->name }}
                                         </option>
-
                                     @endforeach
 
                                 </select>
@@ -871,8 +856,7 @@
          *
          * This keeps the selected date in the URL.
          */
-        function openDateAttendance(date)
-        {
+        function openDateAttendance(date) {
             const modal =
                 document.getElementById('markAttendanceModal');
 
@@ -884,8 +868,8 @@
 
 
             /*
-            * Set the selected calendar date.
-            */
+             * Set the selected calendar date.
+             */
             if (fromDate) {
                 fromDate.value = date;
             }
@@ -896,8 +880,8 @@
 
 
             /*
-            * Open modal.
-            */
+             * Open modal.
+             */
             if (modal) {
                 modal.classList.remove('hidden');
 
@@ -906,8 +890,8 @@
 
 
             /*
-            * Calculate initial duration.
-            */
+             * Calculate initial duration.
+             */
             calculateAttendanceDuration();
         }
 
@@ -925,8 +909,7 @@
 
         });
 
-        function closeMarkAttendance()
-        {
+        function closeMarkAttendance() {
             const modal =
                 document.getElementById('markAttendanceModal');
 
@@ -937,14 +920,13 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeMarkAttendance();
             }
         });
 
-        function calculateAttendanceDuration()
-        {
+        function calculateAttendanceDuration() {
             const type =
                 document.getElementById('attendance_type');
 
@@ -1019,7 +1001,7 @@
         }
 
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
 
             const attendanceType =
                 document.getElementById('attendance_type');
@@ -1035,7 +1017,7 @@
 
                 attendanceType.addEventListener(
                     'change',
-                    function () {
+                    function() {
 
                         calculateAttendanceDuration();
 
@@ -1068,8 +1050,7 @@
 
         });
 
-        function toggleAttendanceLeavePeriod()
-        {
+        function toggleAttendanceLeavePeriod() {
             const type =
                 document.getElementById('attendance_type');
 
@@ -1114,7 +1095,6 @@
 
             }
         }
-
     </script>
 
 @endsection

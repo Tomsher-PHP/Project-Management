@@ -57,6 +57,20 @@ class HandoffFormRequest extends FormRequest
             ],
             'purpose' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string'],
+            /*
+             * Handoff attachments
+             */
+            'attachments' => [
+                'nullable',
+                'array',
+                'max:10',
+            ],
+
+            'attachments.*' => [
+                'file',
+                'max:15360',
+                'mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png',
+            ],
         ];
     }
 

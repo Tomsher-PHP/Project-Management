@@ -53,7 +53,10 @@ class HandoffController extends Controller
         $filters = array_merge($request->all(), ['status' => $statusValue]);
 
         $handoffRequests = $this->handoffServices->getHandoffRequestsForList($request->user(), $perPage, $filters);
-        $handoffRequests->getCollection()->load('targetUser.primaryAttachment');
+        $handoffRequests->getCollection()->load([
+            'targetUser.primaryAttachment',
+            'attachments',
+        ]);
         $filterOptions = $this->handoffServices->getFilterOptions($request->user());
 
         $taskFormData = [];
