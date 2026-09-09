@@ -744,6 +744,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Meeting Management routes
+    Route::get('/meetings/calendar-data', [MeetingController::class, 'calendarData'])->middleware('permission.type:meeting.view')->name('meetings.calendar-data');
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);

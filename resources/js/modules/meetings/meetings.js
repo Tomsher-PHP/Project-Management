@@ -291,4 +291,51 @@ document.addEventListener("DOMContentLoaded", () => {
             targetBtn.click();
         }
     }
+
+    window.openCreateMeetingForDate = function(dateKey) {
+        if (!dateKey) return;
+
+        const now = new Date();
+        const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const dateParts = dateKey.split("-").map(Number);
+        const clickedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+        if (clickedDate < todayMidnight) {
+            return;
+        }
+
+        const startDateObj = new Date(
+            clickedDate.getFullYear(),
+            clickedDate.getMonth(),
+            clickedDate.getDate(),
+            now.getHours(),
+            now.getMinutes()
+        );
+
+        const endDateObj = new Date(startDateObj.getTime() + 60 * 60 * 1000);
+
+        const pad = (n) => String(n).padStart(2, "0");
+        const formattedStart = `${startDateObj.getFullYear()}-${pad(startDateObj.getMonth() + 1)}-${pad(startDateObj.getDate())} ${pad(startDateObj.getHours())}:${pad(startDateObj.getMinutes())}`;
+        const formattedEnd = `${endDateObj.getFullYear()}-${pad(endDateObj.getMonth() + 1)}-${pad(endDateObj.getDate())} ${pad(endDateObj.getHours())}:${pad(endDateObj.getMinutes())}`;
+
+        openCreateModal();
+
+        const startInput = document.getElementById("meeting_start_at");
+        const endInput = document.getElementById("meeting_end_at");
+
+        if (startInput) {
+            startInput.value = formattedStart;
+            if (startInput._flatpickr) {
+                startInput._flatpickr.setDate(formattedStart, true);
+            }
+        }
+
+        if (endInput) {
+            endInput.value = formattedEnd;
+            if (endInput._flatpickr) {
+                endInput._flatpickr.setDate(formattedEnd, true);
+            }
+        }
+    };
 });

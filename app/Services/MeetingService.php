@@ -50,6 +50,73 @@ class MeetingService
     }
 
     /**
+     * Retrieve calendar events within a date range for FullCalendar.
+     */
+    public function getCalendarEvents(array $filters = [], ?User $user = null, ?string $start = null, ?string $end = null): array
+    {
+        $query = Meeting::query()
+            ->with([
+                'project:id,name,project_code',
+                'meetingType:id,name,color',
+                'meetingLocation:id,name',
+                'meetingStatus:id,name,code,color,type',
+                'organizer:id,name,email',
+                'tags:id,name,color',
+            ])
+            ->when($user, fn(Builder $q) => $q->accessibleBy($user))
+            ->when(! empty($filters['project_id']), fn(Builder $q) => $q->where('project_id', $filters['project_id']))
+            ->when(! empty($filters['meeting_type_id']), fn(Builder $q) => $q->where('meeting_type_id', $filters['meeting_type_id']))
+            ->when(! empty($filters['meeting_location_id']), fn(Builder $q) => $q->where('meeting_location_id', $filters['meeting_location_id']))
+            ->when(! empty($filters['meeting_status_id']), fn(Builder $q) => $q->where('meeting_status_id', $filters['meeting_status_id']))
+            ->when(! empty($filters['organizer_id']), fn(Builder $q) => $q->where('organizer_id', $filters['organizer_id']))
+            ->when(! empty($filters['search']), function (Builder $q) use ($filters) {
+                $search = $filters['search'];
+                $q->where(function (Builder $sub) use ($search) {
+                    $sub->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('location_details', 'like', "%{$search}%");
+                });
+            });
+
+        if ($start) {
+            $query->whereDate('end_at', '>=', substr($start, 0, 10));
+        }
+
+        if ($end) {
+            $query->whereDate('start_at', '<=', substr($end, 0, 10));
+        }
+
+        $meetings = $query->get();
+
+        return $meetings->map(function (Meeting $meeting) {
+            $color = $meeting->meetingStatus?->color 
+                ?: ($meeting->meetingType?->color ?: '#3B82F6');
+
+            return [
+                'id' => $meeting->id,
+                'title' => $meeting->title,
+                'start' => $meeting->start_at->toIso8601String(),
+                'end' => $meeting->end_at->toIso8601String(),
+                'backgroundColor' => $color,
+                'borderColor' => $color,
+                'textColor' => '#FFFFFF',
+                'extendedProps' => [
+                    'type' => 'meeting',
+                    'meeting_id' => $meeting->id,
+                    'show_url' => route('meetings.show', $meeting->id),
+                    'edit_url' => route('meetings.edit', $meeting->id),
+                    'update_url' => route('meetings.update', $meeting->id),
+                    'status_name' => $meeting->meetingStatus?->name,
+                    'type_name' => $meeting->meetingType?->name,
+                    'location_name' => $meeting->meetingLocation?->name,
+                    'project_name' => $meeting->project?->name,
+                    'organizer_name' => $meeting->organizer?->name,
+                ],
+            ];
+        })->toArray();
+    }
+
+    /**
      * Find a single meeting by ID.
      */
     public function getMeeting(int $id, array $relations = []): ?Meeting
