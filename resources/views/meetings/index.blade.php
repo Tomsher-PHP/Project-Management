@@ -32,67 +32,6 @@
             </div>
         </div>
 
-        <!-- Filter Drawer -->
-        <x-filters.drawer>
-            <input type="hidden" name="date" value="{{ $selectedDate->toDateString() }}">
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search title or location..." class="w-full rounded-lg border border-bgray-300 p-2.5 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Project</label>
-                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
-                    <option value="">All Projects</option>
-                    @if (request('project_id') && ($filterProj = \App\Models\Project::find(request('project_id'))))
-                        <option value="{{ $filterProj->id }}" selected>{{ $filterProj->name }}</option>
-                    @endif
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Meeting Type</label>
-                <select name="meeting_type_id" class="tom-select w-full">
-                    <option value="">All Types</option>
-                    @foreach ($meetingTypes as $type)
-                        <option value="{{ $type->id }}" {{ request('meeting_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Location</label>
-                <select name="meeting_location_id" class="tom-select w-full">
-                    <option value="">All Locations</option>
-                    @foreach ($meetingLocations as $loc)
-                        <option value="{{ $loc->id }}" {{ request('meeting_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Status</label>
-                <select name="meeting_status_id" class="tom-select w-full">
-                    <option value="">All Statuses</option>
-                    @foreach ($meetingStatuses as $status)
-                        <option value="{{ $status->id }}" {{ request('meeting_status_id') == $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Organizer</label>
-                <select name="organizer_id" class="tom-select w-full">
-                    <option value="">All Organizers</option>
-                    @foreach ($users as $u)
-                        <option value="{{ $u->id }}" {{ request('organizer_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </x-filters.drawer>
-
-
         <!-- Legend Card -->
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
             <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -165,7 +104,7 @@
                                     @foreach ($visibleMeetings as $m)
                                         @php
                                             $mColor = $m->meetingType?->color ?: '#3B82F6';
-                                            $isFutureMeeting = $m->start_at && ! $m->start_at->isPast();
+                                            $isFutureMeeting = $m->start_at && !$m->start_at->isPast();
                                         @endphp
                                         <div class="group relative flex items-center justify-between rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
                                             <button type="button" class="edit-meeting-btn min-w-0 flex-1 text-left block cursor-pointer" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}">
@@ -183,8 +122,8 @@
                                             </button>
                                             @if ($isFutureMeeting)
                                                 @can('meeting.delete')
-                                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 ml-1 flex-shrink-0" onclick="event.stopPropagation();">
-                                                        <x-delete-form :action="route('meetings.destroy', $m->id)" ajax confirm-title="Delete Meeting" confirm-message="Are you sure you want to delete this meeting?" class="!h-6 !w-6 !p-0 border-none bg-transparent hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500" title="Delete Meeting" />
+                                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 ml-1 flex-shrink-0">
+                                                        <x-delete-form :action="route('meetings.destroy', $m->id)" ajax confirm-title="Delete Meeting" confirm-message="Are you sure you want to delete this meeting?" class="!h-5 !w-5 !p-0 border-none bg-transparent hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500" icon-class="h-3.5 w-3.5" title="Delete Meeting" />
                                                     </div>
                                                 @endcan
                                             @endif
@@ -245,6 +184,27 @@
 
     <!-- Include Reusable Form Modal -->
     @include('meetings.form-modal')
+
+    <!-- Filter Drawer -->
+    <x-filters.drawer>
+        <input type="hidden" name="calendar_date" value="{{ $selectedDate->toDateString() }}">
+        <x-filters.input-search name="search" label="Search" />
+
+        <div>
+            <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Project</label>
+            <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                <option value="">All Projects</option>
+                @if (request('project_id') && ($filterProj = \App\Models\Project::find(request('project_id'))))
+                    <option value="{{ $filterProj->id }}" selected>{{ $filterProj->name }}</option>
+                @endif
+            </select>
+        </div>
+
+        <x-filters.multi-select name="meeting_type_id" label="Meeting Type" :options="$meetingTypes" />
+        <x-filters.multi-select name="meeting_location_id" label="Location" :options="$meetingLocations" />
+        <x-filters.multi-select name="meeting_status_id" label="Status" :options="$meetingStatuses" />
+        <x-filters.multi-select name="organizer_id" label="Organizer" :options="$users" />
+    </x-filters.drawer>
 @endsection
 
 @push('scripts')

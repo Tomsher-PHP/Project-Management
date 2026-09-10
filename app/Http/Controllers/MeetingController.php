@@ -73,11 +73,26 @@ class MeetingController extends Controller
                 'tags:id,name,color',
             ])
             ->when($authUser, fn(Builder $q) => $q->accessibleBy($authUser))
-            ->when(! empty($request->input('project_id')), fn(Builder $q) => $q->where('project_id', $request->input('project_id')))
-            ->when(! empty($request->input('meeting_type_id')), fn(Builder $q) => $q->where('meeting_type_id', $request->input('meeting_type_id')))
-            ->when(! empty($request->input('meeting_location_id')), fn(Builder $q) => $q->where('meeting_location_id', $request->input('meeting_location_id')))
-            ->when(! empty($request->input('meeting_status_id')), fn(Builder $q) => $q->where('meeting_status_id', $request->input('meeting_status_id')))
-            ->when(! empty($request->input('organizer_id')), fn(Builder $q) => $q->where('organizer_id', $request->input('organizer_id')))
+            ->when(! empty($request->input('project_id')), function (Builder $q) use ($request) {
+                $val = $request->input('project_id');
+                is_array($val) ? $q->whereIn('project_id', array_filter($val)) : $q->where('project_id', $val);
+            })
+            ->when(! empty($request->input('meeting_type_id')), function (Builder $q) use ($request) {
+                $val = $request->input('meeting_type_id');
+                is_array($val) ? $q->whereIn('meeting_type_id', array_filter($val)) : $q->where('meeting_type_id', $val);
+            })
+            ->when(! empty($request->input('meeting_location_id')), function (Builder $q) use ($request) {
+                $val = $request->input('meeting_location_id');
+                is_array($val) ? $q->whereIn('meeting_location_id', array_filter($val)) : $q->where('meeting_location_id', $val);
+            })
+            ->when(! empty($request->input('meeting_status_id')), function (Builder $q) use ($request) {
+                $val = $request->input('meeting_status_id');
+                is_array($val) ? $q->whereIn('meeting_status_id', array_filter($val)) : $q->where('meeting_status_id', $val);
+            })
+            ->when(! empty($request->input('organizer_id')), function (Builder $q) use ($request) {
+                $val = $request->input('organizer_id');
+                is_array($val) ? $q->whereIn('organizer_id', array_filter($val)) : $q->where('organizer_id', $val);
+            })
             ->when(! empty($request->input('search')), function (Builder $q) use ($request) {
                 $search = $request->input('search');
                 $q->where(function (Builder $sub) use ($search) {
