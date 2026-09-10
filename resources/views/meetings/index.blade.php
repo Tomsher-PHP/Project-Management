@@ -108,19 +108,19 @@
         <!-- Legend Card -->
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
             <div class="mb-3 text-sm font-semibold text-bgray-900 dark:text-white">
-                Meeting Statuses
+                Meeting Types
             </div>
             <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
-                @forelse($meetingStatuses as $st)
+                @forelse($meetingTypes as $mt)
                     @php
-                        $color = $st->color ?: '#3B82F6';
+                        $color = $mt->color ?: '#3B82F6';
                     @endphp
                     <div class="flex items-center gap-2">
                         <span class="h-3 w-3 rounded-full" style="background-color: {{ $color }};"></span>
-                        <span class="text-xs text-bgray-600 dark:text-bgray-300">{{ $st->name }}</span>
+                        <span class="text-xs text-bgray-600 dark:text-bgray-300">{{ $mt->name }}</span>
                     </div>
                 @empty
-                    <span class="text-xs text-bgray-600 dark:text-bgray-400">No active meeting statuses found.</span>
+                    <span class="text-xs text-bgray-600 dark:text-bgray-400">No active meeting types found.</span>
                 @endforelse
             </div>
         </div>
@@ -166,7 +166,7 @@
                                     @if ($dayMeetings->count() > 0)
                                         @php
                                             $firstMeeting = $dayMeetings->first();
-                                            $countColor = $firstMeeting?->meetingStatus?->color ?: ($firstMeeting?->meetingType?->color ?: '#3B82F6');
+                                            $countColor = $firstMeeting?->meetingType?->color ?: '#3B82F6';
                                         @endphp
                                         <span class="rounded-full px-2 py-1 text-[10px] font-semibold" style="background-color: {{ $countColor }}20; color: {{ $countColor }};">
                                             {{ $dayMeetings->count() }}
@@ -179,14 +179,11 @@
                                 <div class="space-y-1">
                                     @foreach ($visibleMeetings as $m)
                                         @php
-                                            $mColor = $m->meetingStatus?->color ?: ($m->meetingType?->color ?: '#3B82F6');
-                                            $organizerName = $m->organizer?->name ?? 'User';
+                                            $mColor = $m->meetingType?->color ?: '#3B82F6';
                                         @endphp
                                         <a href="{{ route('meetings.show', $m->id) }}" class="block rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
                                             <div class="flex items-center gap-1.5">
-                                                <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style="background-color: {{ $mColor }}30; color: {{ $mColor }};">
-                                                    {{ strtoupper(substr($organizerName, 0, 1)) }}
-                                                </div>
+                                                <x-user-avatar :user="$m->organizer" size="xs" />
                                                 <div class="min-w-0 flex-1">
                                                     <div class="truncate text-xs font-medium" style="color: {{ $mColor }};">
                                                         {{ $m->title }}

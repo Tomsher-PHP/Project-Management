@@ -20,9 +20,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_leave_balances', function (Blueprint $table) {
-            $table->dropIndex([
-                'user_leave_balances_is_carry_forward_index',
-            ]);
+            $table->dropIndex('user_leave_balances_is_carry_forward_index');
 
             $table->dropColumn('is_carry_forward');
         });

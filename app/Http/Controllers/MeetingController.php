@@ -112,7 +112,7 @@ class MeetingController extends Controller
             $meetingsByDate->put($dateKey, $sortedCollection);
 
             $calendarMeetingsForJs[$dateKey] = $sortedCollection->map(function ($m) {
-                $color = $m->meetingStatus?->color ?: ($m->meetingType?->color ?: '#3B82F6');
+                $color = $m->meetingType?->color ?: ($m->meetingStatus?->color ?: '#3B82F6');
                 return [
                     'id' => $m->id,
                     'title' => $m->title,

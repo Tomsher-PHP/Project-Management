@@ -89,8 +89,8 @@ class MeetingService
         $meetings = $query->get();
 
         return $meetings->map(function (Meeting $meeting) {
-            $color = $meeting->meetingStatus?->color 
-                ?: ($meeting->meetingType?->color ?: '#3B82F6');
+            $color = $meeting->meetingType?->color 
+                ?: ($meeting->meetingStatus?->color ?: '#3B82F6');
 
             return [
                 'id' => $meeting->id,
