@@ -188,8 +188,8 @@
                                                     <div class="truncate text-xs font-medium" style="color: {{ $mColor }};">
                                                         {{ $m->title }}
                                                     </div>
-                                                    <div class="text-[10px] text-bgray-700 dark:text-bgray-400">
-                                                        {{ $m->start_at->format('H:i') }} - {{ $m->end_at->format('H:i') }}
+                                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-300">
+                                                        {{ $m->start_at->format($globalTimeFormat) }} to {{ $m->end_at->format($globalTimeFormat) }} ({{ $m->start_at->diffForHumans($m->end_at, true) }})
                                                     </div>
                                                 </div>
                                             </div>
