@@ -1,3 +1,4 @@
+import Alert from "../../alert";
 import { initDatepicker } from "../../components/datepicker";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -238,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const result = await response.json();
             if (!response.ok || !result.status) {
-                alert(result.message || "Failed to load meeting details.");
+                Alert.error(result.message || "Failed to load meeting details.");
                 return;
             }
 
@@ -351,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.classList.remove("hidden");
         } catch (err) {
             console.error("Error loading meeting details:", err);
-            alert("An error occurred while fetching meeting details.");
+            Alert.error("An error occurred while fetching meeting details.");
         }
     }
 
@@ -368,8 +369,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 8. Form Submit Handler (Sync Participants, Quill and Client Validation)
-    form.addEventListener("submit", (e) => {
+    // 8. Form Submit Handler (Sync Participants, Quill, Client Validation & AJAX Submit)
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
         calculateEndAt();
 
         if (quillEditor) {
@@ -460,16 +463,77 @@ document.addEventListener("DOMContentLoaded", () => {
         const endVal = endInputEl ? endInputEl.value : "";
 
         if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
-            e.preventDefault();
-            alert("The end date and time must be equal to or after the start date and time.");
+            Alert.error("The end date and time must be equal to or after the start date and time.");
+            return;
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+        }
+
+        try {
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json",
+                    ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.status) {
+                if (response.status === 422 && result.errors) {
+                    const firstErrorKey = Object.keys(result.errors)[0];
+                    const firstErrorMsg = result.errors[firstErrorKey]?.[0] || "Validation failed.";
+                    Alert.error(firstErrorMsg);
+                } else {
+                    Alert.error(result.message || "Failed to save meeting.");
+                }
+                return;
+            }
+
+            Alert.success(result.message || "Meeting saved successfully.");
+            closeModal();
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 400);
+
+        } catch (error) {
+            console.error("Error saving meeting:", error);
+            Alert.error("An unexpected error occurred while saving the meeting.");
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
         }
     });
 
     // 9. Delete Confirmation Handler
     document.querySelectorAll(".delete-meeting-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            if (confirm("Are you sure you want to delete this meeting?")) {
-                btn.closest("form").submit();
+        btn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const targetForm = btn.closest("form");
+            if (!targetForm) return;
+
+            const result = await Alert.confirm({
+                title: "Delete Meeting",
+                text: "Are you sure you want to delete this meeting?",
+                confirmText: "Yes, delete it",
+                cancelText: "Cancel",
+                confirmColor: "#ef4444",
+            });
+
+            if (result.isConfirmed) {
+                targetForm.submit();
             }
         });
     });

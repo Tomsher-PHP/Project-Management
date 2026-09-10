@@ -92,18 +92,6 @@
             </div>
         </x-filters.drawer>
 
-        <!-- Flash Alerts -->
-        @if (session('success'))
-            <div class="mb-5 rounded-lg bg-green-100 px-4 py-3 text-sm text-green-700">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="mb-5 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-700">
-                {{ session('error') }}
-            </div>
-        @endif
 
         <!-- Legend Card -->
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
