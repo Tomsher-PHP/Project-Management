@@ -103,7 +103,6 @@ class MeetingService
                 'extendedProps' => [
                     'type' => 'meeting',
                     'meeting_id' => $meeting->id,
-                    'show_url' => route('meetings.show', $meeting->id),
                     'edit_url' => route('meetings.edit', $meeting->id),
                     'update_url' => route('meetings.update', $meeting->id),
                     'status_name' => $meeting->meetingStatus?->name,

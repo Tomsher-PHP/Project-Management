@@ -225,137 +225,147 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 7. Edit Meeting Modal Handler
-    document.querySelectorAll(".edit-meeting-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-            const editUrl = btn.dataset.url;
-            const updateUrl = btn.dataset.updateUrl;
+    async function openEditMeetingModal(editUrl, updateUrl) {
+        if (!editUrl || !updateUrl) return;
 
-            try {
-                const response = await fetch(editUrl, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        Accept: "application/json",
-                    },
+        try {
+            const response = await fetch(editUrl, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
+                },
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.status) {
+                alert(result.message || "Failed to load meeting details.");
+                return;
+            }
+
+            const data = result.data;
+
+            // Populate Form Basics
+            form.action = updateUrl;
+            formMethodInput.value = "PUT";
+            modalTitle.textContent = "Edit Meeting";
+            submitBtn.textContent = "Update Meeting";
+
+            document.getElementById("meeting_title").value = data.title || "";
+            document.getElementById("meeting_url").value = data.url || "";
+            document.getElementById("meeting_location_details").value = data.location_details || "";
+
+            // Start & Duration
+            const startAtStr = data.start_at ? data.start_at.replace("T", " ").substring(0, 16) : "";
+            const endAtStr = data.end_at ? data.end_at.replace("T", " ").substring(0, 16) : "";
+
+            if (startInputEl) startInputEl.value = startAtStr;
+            if (endInputEl) endInputEl.value = endAtStr;
+
+            if (startAtStr && endAtStr) {
+                const startDate = new Date(startAtStr.replace(/-/g, "/"));
+                const endDate = new Date(endAtStr.replace(/-/g, "/"));
+                const diffMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (60 * 1000));
+                if (durationInputEl) durationInputEl.value = diffMinutes > 0 ? diffMinutes : 60;
+            } else if (durationInputEl) {
+                durationInputEl.value = 60;
+            }
+            calculateEndAt();
+
+            // TomSelect Fields
+            const projectSelect = document.getElementById("meeting_project_id");
+            if (projectSelect && projectSelect.tomselect) {
+                if (data.project_id && data.project) {
+                    projectSelect.tomselect.addOption({
+                        value: String(data.project.id),
+                        text: data.project.name,
+                        subtype: data.project.project_code || "",
+                    });
+                    projectSelect.tomselect.setValue(String(data.project_id));
+                } else if (data.project_id) {
+                    projectSelect.tomselect.setValue(String(data.project_id));
+                } else {
+                    projectSelect.tomselect.clear();
+                }
+            }
+
+            const typeSelect = document.getElementById("meeting_type_id");
+            if (typeSelect && typeSelect.tomselect) {
+                if (data.meeting_type_id) typeSelect.tomselect.setValue(String(data.meeting_type_id));
+                else typeSelect.tomselect.clear();
+            }
+
+            const locationSelect = document.getElementById("meeting_location_id");
+            if (locationSelect && locationSelect.tomselect) {
+                if (data.meeting_location_id) locationSelect.tomselect.setValue(String(data.meeting_location_id));
+                else locationSelect.tomselect.clear();
+            }
+
+            const statusSelect = document.getElementById("meeting_status_id");
+            if (statusSelect && statusSelect.tomselect) {
+                if (data.meeting_status_id) statusSelect.tomselect.setValue(String(data.meeting_status_id));
+                else statusSelect.tomselect.clear();
+            }
+
+            const organizerSelect = document.getElementById("meeting_organizer_id");
+            if (organizerSelect && organizerSelect.tomselect) {
+                if (data.organizer_id) organizerSelect.tomselect.setValue(String(data.organizer_id));
+                else organizerSelect.tomselect.clear();
+            }
+
+            const tagsSelect = document.getElementById("meeting_tag_ids");
+            if (tagsSelect && tagsSelect.tomselect) {
+                const tagIds = (data.tags || []).map((t) => t.id);
+                tagsSelect.tomselect.setValue(tagIds);
+            }
+
+            // Quill Description
+            if (quillEditor) {
+                quillEditor.clipboard.dangerouslyPasteHTML(data.description || "");
+            }
+
+            // Populate Participants
+            if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+                internalParticipantsSelect.tomselect.clear();
+            }
+            if (externalParticipantsContainer) {
+                externalParticipantsContainer.innerHTML = "";
+                externalIndex = 0;
+            }
+
+            if (data.participants && data.participants.length > 0) {
+                const internalUserIds = [];
+                data.participants.forEach((p) => {
+                    const isExt = isBool(p.is_external) || !p.user_id;
+                    if (!isExt && p.user_id) {
+                        internalUserIds.push(String(p.user_id));
+                    } else {
+                        addExternalParticipantRow(p);
+                    }
                 });
 
-                const result = await response.json();
-                if (!response.ok || !result.status) {
-                    alert(result.message || "Failed to load meeting details.");
-                    return;
-                }
-
-                const data = result.data;
-
-                // Populate Form Basics
-                form.action = updateUrl;
-                formMethodInput.value = "PUT";
-                modalTitle.textContent = "Edit Meeting";
-                submitBtn.textContent = "Update Meeting";
-
-                document.getElementById("meeting_title").value = data.title || "";
-                document.getElementById("meeting_url").value = data.url || "";
-                document.getElementById("meeting_location_details").value = data.location_details || "";
-
-                // Start & Duration
-                const startAtStr = data.start_at ? data.start_at.replace("T", " ").substring(0, 16) : "";
-                const endAtStr = data.end_at ? data.end_at.replace("T", " ").substring(0, 16) : "";
-
-                if (startInputEl) startInputEl.value = startAtStr;
-                if (endInputEl) endInputEl.value = endAtStr;
-
-                if (startAtStr && endAtStr) {
-                    const startDate = new Date(startAtStr.replace(/-/g, "/"));
-                    const endDate = new Date(endAtStr.replace(/-/g, "/"));
-                    const diffMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (60 * 1000));
-                    if (durationInputEl) durationInputEl.value = diffMinutes > 0 ? diffMinutes : 60;
-                } else if (durationInputEl) {
-                    durationInputEl.value = 60;
-                }
-                calculateEndAt();
-
-                // TomSelect Fields
-                const projectSelect = document.getElementById("meeting_project_id");
-                if (projectSelect && projectSelect.tomselect) {
-                    if (data.project_id && data.project) {
-                        projectSelect.tomselect.addOption({
-                            value: String(data.project.id),
-                            text: data.project.name,
-                            subtype: data.project.project_code || "",
-                        });
-                        projectSelect.tomselect.setValue(String(data.project_id));
-                    } else if (data.project_id) {
-                        projectSelect.tomselect.setValue(String(data.project_id));
-                    } else {
-                        projectSelect.tomselect.clear();
-                    }
-                }
-
-                const typeSelect = document.getElementById("meeting_type_id");
-                if (typeSelect && typeSelect.tomselect) {
-                    if (data.meeting_type_id) typeSelect.tomselect.setValue(String(data.meeting_type_id));
-                    else typeSelect.tomselect.clear();
-                }
-
-                const locationSelect = document.getElementById("meeting_location_id");
-                if (locationSelect && locationSelect.tomselect) {
-                    if (data.meeting_location_id) locationSelect.tomselect.setValue(String(data.meeting_location_id));
-                    else locationSelect.tomselect.clear();
-                }
-
-                const statusSelect = document.getElementById("meeting_status_id");
-                if (statusSelect && statusSelect.tomselect) {
-                    if (data.meeting_status_id) statusSelect.tomselect.setValue(String(data.meeting_status_id));
-                    else statusSelect.tomselect.clear();
-                }
-
-                const organizerSelect = document.getElementById("meeting_organizer_id");
-                if (organizerSelect && organizerSelect.tomselect) {
-                    if (data.organizer_id) organizerSelect.tomselect.setValue(String(data.organizer_id));
-                    else organizerSelect.tomselect.clear();
-                }
-
-                const tagsSelect = document.getElementById("meeting_tag_ids");
-                if (tagsSelect && tagsSelect.tomselect) {
-                    const tagIds = (data.tags || []).map((t) => t.id);
-                    tagsSelect.tomselect.setValue(tagIds);
-                }
-
-                // Quill Description
-                if (quillEditor) {
-                    quillEditor.clipboard.dangerouslyPasteHTML(data.description || "");
-                }
-
-                // Populate Participants
                 if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
-                    internalParticipantsSelect.tomselect.clear();
+                    internalParticipantsSelect.tomselect.setValue(internalUserIds);
                 }
-                if (externalParticipantsContainer) {
-                    externalParticipantsContainer.innerHTML = "";
-                    externalIndex = 0;
-                }
-
-                if (data.participants && data.participants.length > 0) {
-                    const internalUserIds = [];
-                    data.participants.forEach((p) => {
-                        const isExt = isBool(p.is_external) || !p.user_id;
-                        if (!isExt && p.user_id) {
-                            internalUserIds.push(String(p.user_id));
-                        } else {
-                            addExternalParticipantRow(p);
-                        }
-                    });
-
-                    if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
-                        internalParticipantsSelect.tomselect.setValue(internalUserIds);
-                    }
-                }
-
-                modal.classList.remove("hidden");
-            } catch (err) {
-                console.error("Error loading meeting details:", err);
-                alert("An error occurred while fetching meeting details.");
             }
-        });
+
+            modal.classList.remove("hidden");
+        } catch (err) {
+            console.error("Error loading meeting details:", err);
+            alert("An error occurred while fetching meeting details.");
+        }
+    }
+
+    // Delegation handler for any click on .edit-meeting-btn
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".edit-meeting-btn");
+        if (btn) {
+            e.preventDefault();
+            const editUrl = btn.dataset.url;
+            const updateUrl = btn.dataset.updateUrl;
+            if (editUrl && updateUrl) {
+                openEditMeetingModal(editUrl, updateUrl);
+            }
+        }
     });
 
     // 8. Form Submit Handler (Sync Participants, Quill and Client Validation)
@@ -515,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Expose helpers globally
     window.openCreateModal = openCreateModal;
+    window.openEditMeetingModal = openEditMeetingModal;
     window.closeMeetingModal = closeModal;
     window.openCreateMeetingForDate = openCreateMeetingForDate;
 });

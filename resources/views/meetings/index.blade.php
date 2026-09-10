@@ -181,7 +181,7 @@
                                         @php
                                             $mColor = $m->meetingType?->color ?: '#3B82F6';
                                         @endphp
-                                        <a href="{{ route('meetings.show', $m->id) }}" class="block rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
+                                        <button type="button" class="edit-meeting-btn w-full text-left block rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
                                             <div class="flex items-center gap-1.5">
                                                 <x-user-avatar :user="$m->organizer" size="xs" />
                                                 <div class="min-w-0 flex-1">
@@ -193,7 +193,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </a>
+                                        </button>
                                     @endforeach
 
                                     <!-- More Button -->

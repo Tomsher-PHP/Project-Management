@@ -27,15 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     (m) => `
                 <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid ${m.color}">
                     <div>
-                        <a href="${m.url}" class="text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300">${m.title}</a>
+                        <button type="button" class="edit-meeting-btn text-left text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300" data-url="${m.edit_url}" data-update-url="${m.update_url}" data-id="${m.id}">${m.title}</button>
                         <div class="text-xs text-bgray-500 mt-0.5">
                             ${m.time_range} • ${m.type} • Status: ${m.status}
                         </div>
                         <div class="text-xs text-bgray-400 mt-0.5">Organizer: ${m.organizer}</div>
                     </div>
-                    <a href="${m.url}" class="rounded-md bg-bgray-100 dark:bg-darkblack-500 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-200 hover:bg-bgray-200">
-                        View
-                    </a>
+                    <button type="button" class="edit-meeting-btn rounded-md bg-bgray-100 dark:bg-darkblack-500 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-200 hover:bg-bgray-200" data-url="${m.edit_url}" data-update-url="${m.update_url}" data-id="${m.id}">
+                        Edit
+                    </button>
                 </div>
             `
                 )
@@ -134,11 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             eventClick: function (info) {
                 info.jsEvent.preventDefault();
-                const showUrl = info.event.extendedProps?.show_url;
-                if (showUrl) {
-                    window.location.href = showUrl;
-                } else if (info.event.id) {
-                    window.location.href = `/meetings/${info.event.id}`;
+                const editUrl = info.event.extendedProps?.edit_url || `/meetings/${info.event.id}/edit`;
+                const updateUrl = info.event.extendedProps?.update_url || `/meetings/${info.event.id}`;
+                if (window.openEditMeetingModal) {
+                    window.openEditMeetingModal(editUrl, updateUrl);
                 }
             },
             dateClick: function (info) {

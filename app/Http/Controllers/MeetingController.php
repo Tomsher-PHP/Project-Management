@@ -123,7 +123,6 @@ class MeetingController extends Controller
                     'start' => $m->start_at->format('Y-m-d H:i'),
                     'end' => $m->end_at->format('Y-m-d H:i'),
                     'time_range' => $m->start_at->format('H:i') . ' - ' . $m->end_at->format('H:i'),
-                    'url' => route('meetings.show', $m->id),
                     'edit_url' => route('meetings.edit', $m->id),
                     'update_url' => route('meetings.update', $m->id),
                 ];
@@ -178,31 +177,6 @@ class MeetingController extends Controller
         }
 
         return redirect()->route('meetings.index')->with('success', 'Meeting created successfully.');
-    }
-
-    /**
-     * Display the specified meeting.
-     */
-    public function show(Request $request, Meeting $meeting): View|JsonResponse
-    {
-        $meeting->load([
-            'project',
-            'meetingType',
-            'meetingLocation',
-            'meetingStatus',
-            'organizer',
-            'participants.user',
-            'tags',
-        ]);
-
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json([
-                'status' => true,
-                'data' => $meeting,
-            ]);
-        }
-
-        return view('meetings.show', compact('meeting'));
     }
 
     /**

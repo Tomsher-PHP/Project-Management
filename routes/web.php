@@ -748,7 +748,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
-    Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['show']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
 });
 
