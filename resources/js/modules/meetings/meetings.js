@@ -4,11 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const dayModalContent = document.getElementById("dayMeetingsContent");
     const dayModalTitle = document.getElementById("dayMeetingsTitle");
 
-    function showDayMeetings(dateKey) {
+    async function showDayMeetings(dateKey) {
         if (!dayModal || !dayModalContent || !dayModalTitle) return;
-
-        const calendarMeetings = window.calendarMeetings || {};
-        const meetings = calendarMeetings[dateKey] || [];
 
         const dateParts = dateKey.split("-").map(Number);
         const formattedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]).toLocaleDateString("en-GB", {
@@ -18,31 +15,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         dayModalTitle.innerText = "Meetings - " + formattedDate;
-
-        if (!meetings.length) {
-            dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500">No meetings scheduled for this date.</div>`;
-        } else {
-            dayModalContent.innerHTML = meetings
-                .map(
-                    (m) => `
-                <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid ${m.color}">
-                    <div>
-                        <button type="button" class="edit-meeting-btn text-left text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300" data-url="${m.edit_url}" data-update-url="${m.update_url}" data-id="${m.id}">${m.title}</button>
-                        <div class="text-xs text-bgray-500 mt-0.5">
-                            ${m.time_range} • ${m.type} • Status: ${m.status}
-                        </div>
-                        <div class="text-xs text-bgray-400 mt-0.5">Organizer: ${m.organizer}</div>
-                    </div>
-                    <button type="button" class="edit-meeting-btn rounded-md bg-bgray-100 dark:bg-darkblack-500 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-200 hover:bg-bgray-200" data-url="${m.edit_url}" data-update-url="${m.update_url}" data-id="${m.id}">
-                        Edit
-                    </button>
-                </div>
-            `
-                )
-                .join("");
-        }
-
+        dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">Loading meetings...</div>`;
         dayModal.classList.remove("hidden");
+
+        const fetchUrl = dayModal.dataset.dayMeetingsUrl || "/meetings/day-meetings";
+
+        try {
+            const response = await fetch(`${fetchUrl}?date=${encodeURIComponent(dateKey)}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
+                },
+            });
+
+            const result = await response.json();
+            if (result.status) {
+                if (result.title) {
+                    dayModalTitle.innerText = result.title;
+                }
+                dayModalContent.innerHTML = result.html;
+            } else {
+                dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">Failed to load meetings.</div>`;
+            }
+        } catch (err) {
+            console.error("Error loading day meetings content:", err);
+            dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">An error occurred while loading meetings.</div>`;
+        }
     }
 
     function closeDayMeetings() {
@@ -55,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
     window.showDayMeetings = showDayMeetings;
     window.closeDayMeetings = closeDayMeetings;
 
-    // Close day modal on background click
+    // Close day modal on background or outside click
     if (dayModal) {
         dayModal.addEventListener("click", (e) => {
-            if (e.target === dayModal) {
+            if (!e.target.closest(".relative.z-10") || e.target.classList.contains("bg-gray-900/60")) {
                 closeDayMeetings();
             }
         });

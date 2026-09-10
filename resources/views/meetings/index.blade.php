@@ -212,7 +212,7 @@
     </div>
 
     <!-- Day Meetings Modal -->
-    <div id="dayMeetingsModal" class="fixed inset-0 z-[90] hidden overflow-y-auto">
+    <div id="dayMeetingsModal" class="fixed inset-0 z-[90] hidden overflow-y-auto" data-day-meetings-url="{{ route('meetings.day-meetings') }}">
         <div class="fixed inset-0 bg-gray-900/60" onclick="closeDayMeetings()"></div>
         <div class="relative flex min-h-full items-center justify-center p-4">
             <div class="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-xl dark:bg-darkblack-600">
@@ -221,9 +221,6 @@
                         <h3 id="dayMeetingsTitle" class="text-lg font-semibold text-bgray-900 dark:text-white">
                             Meeting Details
                         </h3>
-                        <p class="text-xs text-bgray-500 dark:text-bgray-300">
-                            Meetings scheduled for date
-                        </p>
                     </div>
                     <button type="button" onclick="closeDayMeetings()" class="text-2xl leading-none text-bgray-500 transition hover:text-bgray-900 dark:hover:text-white">
                         &times;

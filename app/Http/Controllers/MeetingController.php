@@ -162,6 +162,57 @@ class MeetingController extends Controller
     }
 
     /**
+     * Get rendered day meetings content for modal.
+     */
+    public function dayMeetings(Request $request): JsonResponse
+    {
+        $dateStr = $request->input('date');
+        if (! $dateStr) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Date parameter is required.',
+            ], 400);
+        }
+
+        try {
+            $date = Carbon::parse($dateStr);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid date format.',
+            ], 400);
+        }
+
+        $formattedDate = $date->format('d M Y');
+        $authUser = auth()->user();
+
+        $meetings = Meeting::query()
+            ->with([
+                'project:id,name,project_code',
+                'meetingType:id,name,color',
+                'meetingLocation:id,name',
+                'meetingStatus:id,name,code,color,type',
+                'organizer:id,name,email',
+            ])
+            ->when($authUser, fn(Builder $q) => $q->accessibleBy($authUser))
+            ->whereDate('start_at', '<=', $date->toDateString())
+            ->whereDate('end_at', '>=', $date->toDateString())
+            ->orderBy('start_at', 'asc')
+            ->get();
+
+        $html = view('meetings.partials.day-meetings-modal-content', [
+            'meetings' => $meetings,
+            'dateKey' => $date->format('Y-m-d'),
+        ])->render();
+
+        return response()->json([
+            'status' => true,
+            'title' => 'Meetings - ' . $formattedDate,
+            'html' => $html,
+        ]);
+    }
+
+    /**
      * Store a newly created meeting.
      */
     public function store(MeetingRequest $request): JsonResponse|RedirectResponse

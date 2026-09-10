@@ -458,6 +458,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            if (window.closeDayMeetings && typeof window.closeDayMeetings === "function") {
+                window.closeDayMeetings();
+            }
             modal.classList.remove("hidden");
         } catch (err) {
             console.error("Error loading meeting details:", err);
