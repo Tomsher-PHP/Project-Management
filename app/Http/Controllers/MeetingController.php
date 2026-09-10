@@ -88,6 +88,7 @@ class MeetingController extends Controller
             })
             ->whereDate('end_at', '>=', $calendarStart->toDateString())
             ->whereDate('start_at', '<=', $calendarEnd->toDateString())
+            ->orderBy('start_at', 'asc')
             ->get();
 
         $meetingsByDate = collect();
@@ -107,7 +108,10 @@ class MeetingController extends Controller
 
         $calendarMeetingsForJs = [];
         foreach ($meetingsByDate as $dateKey => $mCollection) {
-            $calendarMeetingsForJs[$dateKey] = $mCollection->map(function ($m) {
+            $sortedCollection = $mCollection->sortBy('start_at')->values();
+            $meetingsByDate->put($dateKey, $sortedCollection);
+
+            $calendarMeetingsForJs[$dateKey] = $sortedCollection->map(function ($m) {
                 $color = $m->meetingStatus?->color ?: ($m->meetingType?->color ?: '#3B82F6');
                 return [
                     'id' => $m->id,

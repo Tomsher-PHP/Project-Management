@@ -153,7 +153,7 @@
                                 $date = $calendarStart->copy()->addDays($i);
                                 $dateKey = $date->format('Y-m-d');
                                 $isToday = $date->isToday();
-                                $dayMeetings = $meetingsByDate->get($dateKey, collect());
+                                $dayMeetings = $meetingsByDate->get($dateKey, collect())->sortBy('start_at');
                                 $visibleMeetings = $dayMeetings->take(3);
                                 $remainingMeetings = max($dayMeetings->count() - 3, 0);
                                 $isCurrentMonth = $date->month === $selectedDate->month && $date->year === $selectedDate->year;
@@ -198,7 +198,7 @@
                                                     <div class="truncate text-xs font-medium" style="color: {{ $mColor }};">
                                                         {{ $m->title }}
                                                     </div>
-                                                    <div class="text-[10px] text-bgray-500 dark:text-bgray-400">
+                                                    <div class="text-[10px] text-bgray-700 dark:text-bgray-400">
                                                         {{ $m->start_at->format('H:i') }} - {{ $m->end_at->format('H:i') }}
                                                     </div>
                                                 </div>
