@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MeetingRequest;
+use App\Models\Attachment;
 use App\Models\Meeting;
 use App\Models\MeetingLocation;
 use Carbon\Carbon;
 use App\Models\MeetingStatus;
 use App\Models\MeetingTag;
 use App\Models\MeetingType;
-use App\Models\Project;
 use App\Services\MeetingService;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\Builder;
@@ -166,7 +166,7 @@ class MeetingController extends Controller
      */
     public function store(MeetingRequest $request): JsonResponse|RedirectResponse
     {
-        $meeting = $this->meetingService->create($request->validated(), $request->user());
+        $meeting = $this->meetingService->create($request->validated(), $request->user(), $request->allFiles());
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -192,11 +192,24 @@ class MeetingController extends Controller
             'organizer',
             'participants.user',
             'tags',
+            'attachments',
         ]);
+
+        $data = $meeting->toArray();
+        $data['attachments'] = $meeting->attachments->map(function ($att) use ($meeting) {
+            return [
+                'id' => $att->id,
+                'original_name' => $att->original_name,
+                'file_size' => $att->file_size,
+                'file_type' => $att->file_type,
+                'url' => $att->url,
+                'delete_url' => route('meetings.attachments.delete', ['meeting' => $meeting->id, 'attachment' => $att->id]),
+            ];
+        })->values()->all();
 
         return response()->json([
             'status' => true,
-            'data' => $meeting,
+            'data' => $data,
         ]);
     }
 
@@ -205,7 +218,7 @@ class MeetingController extends Controller
      */
     public function update(MeetingRequest $request, Meeting $meeting): JsonResponse|RedirectResponse
     {
-        $updatedMeeting = $this->meetingService->update($meeting, $request->validated(), $request->user());
+        $updatedMeeting = $this->meetingService->update($meeting, $request->validated(), $request->user(), $request->allFiles());
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -233,5 +246,25 @@ class MeetingController extends Controller
         }
 
         return redirect()->route('meetings.index')->with('success', 'Meeting deleted successfully.');
+    }
+
+    /**
+     * Remove an attachment from a meeting.
+     */
+    public function deleteAttachment(Meeting $meeting, Attachment $attachment): JsonResponse
+    {
+        $deleted = $this->meetingService->deleteAttachment($meeting, $attachment);
+
+        if ($deleted) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Attachment removed successfully.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to remove attachment.',
+        ], 400);
     }
 }

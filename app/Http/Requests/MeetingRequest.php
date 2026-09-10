@@ -57,6 +57,9 @@ class MeetingRequest extends FormRequest
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:meeting_tags,id',
 
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png|max:15360',
+
             'participants' => 'nullable|array',
             'participants.*.user_id' => 'nullable|exists:users,id',
             'participants.*.is_external' => 'nullable|boolean',
@@ -117,6 +120,7 @@ class MeetingRequest extends FormRequest
             'end_at.after_or_equal' => 'The end date and time must be equal to or after the start date and time.',
             'meeting_type_id.required' => 'Please select a meeting type.',
             'organizer_id.required' => 'Please select an organizer.',
+            'attachments.max' => 'You can upload a maximum of 5 files at a time.',
         ];
     }
 }

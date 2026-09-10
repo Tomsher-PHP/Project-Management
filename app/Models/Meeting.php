@@ -18,6 +18,8 @@ class Meeting extends Model
 {
     use HasFactory, SoftDeletes, Filterable, Sortable, LogsModelActivity, HasFormOptions;
 
+    public const MEETING_FILE_CATEGORY = "meeting";
+
     protected $fillable = [
         'project_id',
         'meeting_type_id',
@@ -128,6 +130,11 @@ class Meeting extends Model
     {
         return $this->belongsToMany(MeetingTag::class, 'meeting_meeting_tag', 'meeting_id', 'meeting_tag_id')
             ->withTimestamps();
+    }
+
+    public function attachments(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'link');
     }
 
     public function scopeAccessibleBy($query, $user)

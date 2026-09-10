@@ -748,6 +748,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);
+    Route::delete('/meetings/{meeting}/attachments/{attachment}', [MeetingController::class, 'deleteAttachment'])->middleware('permission.type:meeting.edit')->name('meetings.attachments.delete');
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.delete')->only(['destroy']);
 });
 

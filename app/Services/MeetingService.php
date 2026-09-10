@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Attachment;
 use App\Models\Meeting;
 use App\Models\MeetingParticipant;
 use App\Models\MeetingStatus;
@@ -12,6 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class MeetingService
 {
+    protected AttachmentService $attachmentService;
+
+    public function __construct(AttachmentService $attachmentService)
+    {
+        $this->attachmentService = $attachmentService;
+    }
     /**
      * Retrieve paginated or query list of meetings.
      */
@@ -128,6 +135,7 @@ class MeetingService
             'organizer',
             'participants.user',
             'tags',
+            'attachments',
         ];
 
         return Meeting::with(array_merge($defaultRelations, $relations))->find($id);
@@ -168,16 +176,31 @@ class MeetingService
                 $meeting->tags()->sync($data['tag_ids']);
             }
 
-            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags']);
+            if (! empty($files['attachments'])) {
+                $disk = env('FILESYSTEM_DISK', config('filesystems.default'));
+                foreach ($files['attachments'] as $file) {
+                    $this->attachmentService->upload(
+                        $file,
+                        'meetings',
+                        $meeting,
+                        $disk,
+                        'public',
+                        false,
+                        Meeting::MEETING_FILE_CATEGORY
+                    );
+                }
+            }
+
+            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
         });
     }
 
     /**
      * Update an existing Meeting along with participants and tags.
      */
-    public function update(Meeting $meeting, array $data, ?User $user = null): Meeting
+    public function update(Meeting $meeting, array $data, ?User $user = null, array $files = []): Meeting
     {
-        return DB::transaction(function () use ($meeting, $data) {
+        return DB::transaction(function () use ($meeting, $data, $files) {
             $meeting->update(array_intersect_key($data, array_flip([
                 'project_id',
                 'meeting_type_id',
@@ -200,19 +223,46 @@ class MeetingService
                 $meeting->tags()->sync($data['tag_ids']);
             }
 
-            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags']);
+            if (! empty($files['attachments'])) {
+                $disk = env('FILESYSTEM_DISK', config('filesystems.default'));
+                foreach ($files['attachments'] as $file) {
+                    $this->attachmentService->upload(
+                        $file,
+                        'meetings',
+                        $meeting,
+                        $disk,
+                        'public',
+                        false,
+                        Meeting::MEETING_FILE_CATEGORY
+                    );
+                }
+            }
+
+            return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
         });
     }
 
     /**
-     * Delete a Meeting and its participants.
+     * Delete a Meeting and its participants and attachments.
      */
     public function delete(Meeting $meeting): bool
     {
         return DB::transaction(function () use ($meeting) {
+            $this->attachmentService->delete($meeting->attachments);
             $meeting->participants()->delete();
             return (bool) $meeting->delete();
         });
+    }
+
+    /**
+     * Delete a single attachment from a meeting.
+     */
+    public function deleteAttachment(Meeting $meeting, Attachment $attachment): bool
+    {
+        if ($attachment->link_id === $meeting->id && $attachment->link_type === Meeting::class) {
+            return (bool) $this->attachmentService->delete([$attachment]);
+        }
+        return false;
     }
 
     /**

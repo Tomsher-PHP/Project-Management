@@ -14,7 +14,7 @@
         </div>
 
         <!-- Modal Body / Form -->
-        <form id="meeting_form" method="POST" action="{{ route('meetings.store') }}" data-create-url="{{ route('meetings.store') }}">
+        <form id="meeting_form" method="POST" action="{{ route('meetings.store') }}" data-create-url="{{ route('meetings.store') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_method" id="meeting_form_method" value="POST">
             <input type="hidden" name="description" id="meeting_description_input">
@@ -216,6 +216,29 @@
                             overflow-y: auto;
                         }
                     </style>
+                </div>
+
+                <!-- 10. Attachments -->
+                <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30 space-y-3">
+                    <label for="meeting_attachments_input" class="block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Files / Attachments
+                    </label>
+
+                    <input type="file" name="attachments[]" id="meeting_attachments_input" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
+                    <p class="text-xs text-bgray-700 dark:text-bgray-400">
+                        You can attach up to 5 files at a time. Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB.
+                    </p>
+
+                    <!-- Selected files list -->
+                    <div id="selected_meeting_files" class="flex flex-wrap gap-2 pt-1"></div>
+
+                    <!-- Existing attachments section (for Edit mode) -->
+                    <div id="existing_meeting_attachments_section" class="hidden pt-3 border-t border-bgray-200 dark:border-darkblack-400">
+                        <label class="mb-2 block text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                            Existing Attachments
+                        </label>
+                        <div id="existing_meeting_attachments_list" class="grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+                    </div>
                 </div>
 
             </div>
