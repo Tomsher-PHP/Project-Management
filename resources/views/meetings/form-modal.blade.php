@@ -208,7 +208,14 @@
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Description
                     </label>
-                    <div id="meeting_description_editor" class="min-h-[120px] rounded-lg border border-bgray-300 bg-white text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white"></div>
+                    <div id="meeting_description_editor" class="rounded-lg border border-bgray-300 bg-white text-sm text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white [&_.ql-editor]:min-h-[120px] [&_.ql-editor]:max-h-[180px] [&_.ql-editor]:overflow-y-auto"></div>
+                    <style>
+                        #meeting_description_editor .ql-editor {
+                            min-height: 120px;
+                            max-height: 180px;
+                            overflow-y: auto;
+                        }
+                    </style>
                 </div>
 
             </div>

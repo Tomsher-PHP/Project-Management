@@ -55,8 +55,8 @@ class MeetingController extends Controller
 
         $defaultStatusId = $meetingStatuses->firstWhere('is_default', true)?->id;
 
-        $selectedDate = $request->filled('date')
-            ? Carbon::parse($request->date)
+        $selectedDate = $request->filled('calendar_date')
+            ? Carbon::parse($request->calendar_date)
             : today();
 
         $calendarStart = $selectedDate->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);

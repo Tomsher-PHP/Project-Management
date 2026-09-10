@@ -16,7 +16,7 @@
             <!-- Month Navigation (Right Aligned) -->
             <div class="flex items-center gap-2 sm:ml-auto">
                 <!-- Previous Month -->
-                <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Previous Month">
+                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Previous Month">
                     &larr;
                 </a>
 
@@ -26,7 +26,7 @@
                 </div>
 
                 <!-- Next Month -->
-                <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Next Month">
+                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Next Month">
                     &rarr;
                 </a>
             </div>
