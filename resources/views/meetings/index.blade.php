@@ -3,48 +3,94 @@
 @section('page-content')
     <div class="w-full">
 
-        <!-- Page Header -->
-        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
-                    Meetings
-                </h2>
-                <p class="text-sm text-bgray-500 dark:text-bgray-300">
-                    Manage and track project and team meetings.
-                </p>
-            </div>
+        <!-- Top Action & Filter Bar -->
+        <div class="mb-6 flex flex-wrap items-center gap-3">
+            @can('meeting.create')
+                <x-button.create-button type="button" id="open_create_meeting_modal_btn" label="Meeting" />
+            @endcan
 
-            <div class="flex items-center gap-3">
-                <!-- Month Navigation -->
-                <div class="flex items-center gap-2">
-                    <!-- Previous Month -->
-                    <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        &larr;
-                    </a>
+            <x-filters.button />
 
-                    <!-- Current Month -->
-                    <div class="min-w-[180px] rounded-lg border border-bgray-300 bg-white px-4 py-2 text-center text-sm font-semibold text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        {{ $selectedDate->format('F Y') }}
-                    </div>
+            <x-filters.list-search placeholder="Search meetings..." />
 
-                    <!-- Next Month -->
-                    <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        &rarr;
-                    </a>
+            <!-- Month Navigation (Right Aligned) -->
+            <div class="flex items-center gap-2 sm:ml-auto">
+                <!-- Previous Month -->
+                <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Previous Month">
+                    &larr;
+                </a>
+
+                <!-- Current Month -->
+                <div class="min-w-[150px] rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-center text-sm font-semibold text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+                    {{ $selectedDate->format('F Y') }}
                 </div>
 
-                @can('meeting.create')
-                    <div>
-                        <button type="button" id="open_create_meeting_modal_btn" class="flex items-center gap-2 rounded-lg bg-success-300 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-success-400">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Meeting
-                        </button>
-                    </div>
-                @endcan
+                <!-- Next Month -->
+                <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Next Month">
+                    &rarr;
+                </a>
             </div>
         </div>
+
+        <!-- Filter Drawer -->
+        <x-filters.drawer>
+            <input type="hidden" name="date" value="{{ $selectedDate->toDateString() }}">
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Search</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search title or location..." class="w-full rounded-lg border border-bgray-300 p-2.5 text-sm dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Project</label>
+                <select name="project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                    <option value="">All Projects</option>
+                    @if (request('project_id') && ($filterProj = \App\Models\Project::find(request('project_id'))))
+                        <option value="{{ $filterProj->id }}" selected>{{ $filterProj->name }}</option>
+                    @endif
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Meeting Type</label>
+                <select name="meeting_type_id" class="tom-select w-full">
+                    <option value="">All Types</option>
+                    @foreach ($meetingTypes as $type)
+                        <option value="{{ $type->id }}" {{ request('meeting_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Location</label>
+                <select name="meeting_location_id" class="tom-select w-full">
+                    <option value="">All Locations</option>
+                    @foreach ($meetingLocations as $loc)
+                        <option value="{{ $loc->id }}" {{ request('meeting_location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Status</label>
+                <select name="meeting_status_id" class="tom-select w-full">
+                    <option value="">All Statuses</option>
+                    @foreach ($meetingStatuses as $status)
+                        <option value="{{ $status->id }}" {{ request('meeting_status_id') == $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-medium text-bgray-900 dark:text-white">Organizer</label>
+                <select name="organizer_id" class="tom-select w-full">
+                    <option value="">All Organizers</option>
+                    @foreach ($users as $u)
+                        <option value="{{ $u->id }}" {{ request('organizer_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </x-filters.drawer>
 
         <!-- Flash Alerts -->
         @if (session('success'))
@@ -58,59 +104,6 @@
                 {{ session('error') }}
             </div>
         @endif
-
-        <!-- Filters Card -->
-        <div class="mb-6 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
-            <form method="GET" action="{{ route('meetings.index') }}" class="flex flex-wrap items-center gap-3">
-                <input type="hidden" name="date" value="{{ $selectedDate->toDateString() }}">
-
-                <!-- Search -->
-                <div class="min-w-[200px] flex-1">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search title or location..." class="w-full rounded-lg border border-bgray-300 px-3.5 py-2 text-xs font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                </div>
-
-                <!-- Project Filter -->
-                <div class="min-w-[160px]">
-                    <select name="project_id" class="w-full rounded-lg border border-bgray-300 px-3 py-2 text-xs font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        <option value="">All Projects</option>
-                        @foreach ($projects as $project)
-                            <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Meeting Type Filter -->
-                <div class="min-w-[140px]">
-                    <select name="meeting_type_id" class="w-full rounded-lg border border-bgray-300 px-3 py-2 text-xs font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        <option value="">All Types</option>
-                        @foreach ($meetingTypes as $type)
-                            <option value="{{ $type->id }}" {{ request('meeting_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Status Filter -->
-                <div class="min-w-[140px]">
-                    <select name="meeting_status_id" class="w-full rounded-lg border border-bgray-300 px-3 py-2 text-xs font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                        <option value="">All Statuses</option>
-                        @foreach ($meetingStatuses as $status)
-                            <option value="{{ $status->id }}" {{ request('meeting_status_id') == $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button type="submit" class="rounded-lg bg-bgray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-bgray-800 dark:bg-darkblack-500 dark:hover:bg-darkblack-400 transition">
-                        Filter
-                    </button>
-                    @if (request()->hasAny(['search', 'project_id', 'meeting_type_id', 'meeting_status_id']))
-                        <a href="{{ route('meetings.index', ['date' => $selectedDate->toDateString()]) }}" class="rounded-lg border border-bgray-300 px-3 py-2 text-xs font-semibold text-bgray-700 hover:bg-bgray-100 dark:border-darkblack-400 dark:text-bgray-300 dark:hover:bg-darkblack-500">
-                            Clear
-                        </a>
-                    @endif
-                </div>
-            </form>
-        </div>
 
         <!-- Legend Card -->
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
