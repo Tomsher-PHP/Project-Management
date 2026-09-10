@@ -19,8 +19,8 @@ return new class extends Migration
 
             $table->foreignId('added_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->softDeletes();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('is_active');
             $table->index('is_system');
