@@ -127,7 +127,7 @@
                         <span class="text-xs text-bgray-600 dark:text-bgray-300">{{ $st->name }}</span>
                     </div>
                 @empty
-                    <span class="text-xs text-bgray-500 dark:text-bgray-400">No active meeting statuses found.</span>
+                    <span class="text-xs text-bgray-600 dark:text-bgray-400">No active meeting statuses found.</span>
                 @endforelse
             </div>
         </div>
@@ -140,7 +140,7 @@
                     <!-- Week Days Header -->
                     <div class="grid grid-cols-7 border-b border-bgray-200 dark:border-darkblack-400">
                         @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
-                            <div class="border-r border-bgray-200 px-3 py-3 text-center text-xs font-semibold uppercase text-bgray-500 last:border-r-0 dark:border-darkblack-400 dark:text-bgray-300">
+                            <div class="border-r border-bgray-200 px-3 py-3 text-center text-xs font-semibold uppercase text-bgray-700 last:border-r-0 dark:border-darkblack-400 dark:text-bgray-300">
                                 {{ $day }}
                             </div>
                         @endforeach
@@ -218,7 +218,7 @@
                                 @if ($date->isToday() || $date->isFuture())
                                     @can('meeting.create')
                                         <button type="button" onclick="openCreateMeetingForDate('{{ $dateKey }}')" class="mt-3 w-full rounded-md border border-dashed border-bgray-300 px-2 py-1.5 text-[11px] font-medium text-bgray-500 transition hover:border-success-500 hover:text-success-500 dark:border-darkblack-400">
-                                            + Add Meeting
+                                            + Add
                                         </button>
                                     @endcan
                                 @endif
