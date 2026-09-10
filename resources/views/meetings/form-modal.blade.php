@@ -221,7 +221,7 @@
                 <!-- 10. Attachments -->
                 <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30 space-y-3">
                     <label for="meeting_attachments_input" class="block text-sm font-semibold text-bgray-900 dark:text-white">
-                        Files / Attachments
+                        Attachments
                     </label>
 
                     <input type="file" name="attachments[]" id="meeting_attachments_input" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">

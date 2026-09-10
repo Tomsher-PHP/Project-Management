@@ -95,9 +95,6 @@
 
         <!-- Legend Card -->
         <div class="mb-4 rounded-xl bg-white p-4 shadow-sm dark:bg-darkblack-600">
-            <div class="mb-3 text-sm font-semibold text-bgray-900 dark:text-white">
-                Meeting Types
-            </div>
             <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
                 @forelse($meetingTypes as $mt)
                     @php
@@ -105,7 +102,7 @@
                     @endphp
                     <div class="flex items-center gap-2">
                         <span class="h-3 w-3 rounded-full" style="background-color: {{ $color }};"></span>
-                        <span class="text-xs text-bgray-600 dark:text-bgray-300">{{ $mt->name }}</span>
+                        <span class="text-xs text-bgray-900 dark:text-bgray-300">{{ $mt->name }}</span>
                     </div>
                 @empty
                     <span class="text-xs text-bgray-600 dark:text-bgray-400">No active meeting types found.</span>
@@ -168,20 +165,30 @@
                                     @foreach ($visibleMeetings as $m)
                                         @php
                                             $mColor = $m->meetingType?->color ?: '#3B82F6';
+                                            $isFutureMeeting = $m->start_at && ! $m->start_at->isPast();
                                         @endphp
-                                        <button type="button" class="edit-meeting-btn w-full text-left block rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
-                                            <div class="flex items-center gap-1.5">
-                                                <x-user-avatar :user="$m->organizer" size="xs" />
-                                                <div class="min-w-0 flex-1">
-                                                    <div class="truncate text-xs font-medium" style="color: {{ $mColor }};">
-                                                        {{ $m->title }}
-                                                    </div>
-                                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-300">
-                                                        {{ $m->start_at->format($globalTimeFormat) }} to {{ $m->end_at->format($globalTimeFormat) }} ({{ $m->start_at->diffForHumans($m->end_at, true) }})
+                                        <div class="group relative flex items-center justify-between rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
+                                            <button type="button" class="edit-meeting-btn min-w-0 flex-1 text-left block cursor-pointer" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}">
+                                                <div class="flex items-center gap-1.5">
+                                                    <x-user-avatar :user="$m->organizer" size="xs" />
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="truncate text-xs font-medium" style="color: {{ $mColor }};">
+                                                            {{ $m->title }}
+                                                        </div>
+                                                        <div class="text-[11px] text-bgray-700 dark:text-bgray-300">
+                                                            {{ $m->start_at->format($globalTimeFormat) }} to {{ $m->end_at->format($globalTimeFormat) }} ({{ $m->start_at->diffForHumans($m->end_at, true) }})
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </button>
+                                            </button>
+                                            @if ($isFutureMeeting)
+                                                @can('meeting.delete')
+                                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 ml-1 flex-shrink-0" onclick="event.stopPropagation();">
+                                                        <x-delete-form :action="route('meetings.destroy', $m->id)" ajax confirm-title="Delete Meeting" confirm-message="Are you sure you want to delete this meeting?" class="!h-6 !w-6 !p-0 border-none bg-transparent hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500" title="Delete Meeting" />
+                                                    </div>
+                                                @endcan
+                                            @endif
+                                        </div>
                                     @endforeach
 
                                     <!-- More Button -->

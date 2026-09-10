@@ -287,6 +287,17 @@ class MeetingController extends Controller
      */
     public function destroy(Request $request, Meeting $meeting): JsonResponse|RedirectResponse
     {
+        if ($meeting->start_at && $meeting->start_at->isPast()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Only future meetings can be deleted.',
+                ], 422);
+            }
+
+            return redirect()->route('meetings.index')->with('error', 'Only future meetings can be deleted.');
+        }
+
         $this->meetingService->delete($meeting);
 
         if ($request->wantsJson() || $request->ajax()) {
