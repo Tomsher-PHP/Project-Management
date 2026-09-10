@@ -12,12 +12,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = document.getElementById("meeting_submit_btn");
     const descriptionInput = document.getElementById("meeting_description_input");
     const descriptionEditorEl = document.getElementById("meeting_description_editor");
-    const participantsContainer = document.getElementById("meeting_participants_container");
-    const addParticipantBtn = document.getElementById("add_participant_btn");
-    const participantTemplate = document.getElementById("participant_row_template");
 
-    let participantIndex = 0;
+    const startInputEl = document.getElementById("meeting_start_at");
+    const durationInputEl = document.getElementById("meeting_duration_minutes");
+    const endInputEl = document.getElementById("meeting_end_at");
+
+    const internalParticipantsSelect = document.getElementById("meeting_internal_participants");
+    const externalParticipantsContainer = document.getElementById("external_participants_container");
+    const addExternalParticipantBtn = document.getElementById("add_external_participant_btn");
+    const externalTemplate = document.getElementById("external_participant_row_template");
+
+    let externalIndex = 0;
     let quillEditor = null;
+
+    // Helper: boolean filter check
+    const isBool = (val) => val === true || val === 1 || val === "1" || val === "true";
 
     // 1. Initialize Quill Rich Text Editor
     if (descriptionEditorEl && window.Quill && !quillEditor) {
@@ -42,7 +51,91 @@ document.addEventListener("DOMContentLoaded", () => {
         altFormat: "Y-m-d H:i",
     });
 
-    // 3. Open Create Modal
+    // 3. Duration & End Date Calculation
+    function calculateEndAt() {
+        if (!startInputEl || !endInputEl) return;
+
+        const startVal = startInputEl.value ? startInputEl.value.trim() : "";
+        const durationMinutes = parseInt(durationInputEl ? durationInputEl.value : "60", 10) || 60;
+
+        if (!startVal) {
+            endInputEl.value = "";
+            return;
+        }
+
+        const dateParts = startVal.split(" ");
+        if (dateParts.length < 2) return;
+
+        const [ymd, hm] = dateParts;
+        const [year, month, day] = ymd.split("-").map(Number);
+        const [hours, minutes] = hm.split(":").map(Number);
+
+        const startDate = new Date(year, month - 1, day, hours, minutes);
+        if (isNaN(startDate.getTime())) return;
+
+        const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+
+        const pad = (n) => String(n).padStart(2, "0");
+        const formattedEnd = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())} ${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;
+        endInputEl.value = formattedEnd;
+    }
+
+    if (startInputEl) {
+        startInputEl.addEventListener("change", calculateEndAt);
+        startInputEl.addEventListener("input", calculateEndAt);
+    }
+    if (durationInputEl) {
+        durationInputEl.addEventListener("change", calculateEndAt);
+        durationInputEl.addEventListener("input", calculateEndAt);
+    }
+
+    // 4. External Participant Helpers
+    function addExternalParticipantRow(data = null) {
+        if (!externalTemplate || !externalParticipantsContainer) return;
+
+        const index = externalIndex++;
+        const displayIndex = externalParticipantsContainer.querySelectorAll(".external-participant-row").length + 1;
+
+        let html = externalTemplate.innerHTML
+            .replace(/{INDEX}/g, index)
+            .replace(/{DISPLAY_INDEX}/g, displayIndex);
+
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html.trim();
+        const row = tempDiv.firstElementChild;
+
+        externalParticipantsContainer.appendChild(row);
+
+        const removeBtn = row.querySelector(".remove-external-participant-btn");
+        if (removeBtn) {
+            removeBtn.addEventListener("click", () => {
+                row.remove();
+                const remaining = externalParticipantsContainer.querySelectorAll(".external-participant-row");
+                remaining.forEach((r, i) => {
+                    const label = r.querySelector("span");
+                    if (label) label.textContent = `Guest #${i + 1}`;
+                });
+            });
+        }
+
+        if (data) {
+            const nameInput = row.querySelector(".external-name-input");
+            const emailInput = row.querySelector(".external-email-input");
+            const phoneInput = row.querySelector(".external-phone-input");
+            const sendEmailCheck = row.querySelector(".external-send-email-check");
+
+            if (nameInput && data.name) nameInput.value = data.name;
+            if (emailInput && data.email) emailInput.value = data.email;
+            if (phoneInput && data.phone) phoneInput.value = data.phone;
+            if (sendEmailCheck && isBool(data.send_email)) sendEmailCheck.checked = true;
+        }
+    }
+
+    if (addExternalParticipantBtn) {
+        addExternalParticipantBtn.addEventListener("click", () => addExternalParticipantRow());
+    }
+
+    // 5. Open Create Modal
     function openCreateModal() {
         form.reset();
         form.action = form.dataset.createUrl;
@@ -50,29 +143,69 @@ document.addEventListener("DOMContentLoaded", () => {
         modalTitle.textContent = "Add New Meeting";
         submitBtn.textContent = "Save Meeting";
 
-        // Reset TomSelects
-        form.querySelectorAll("select.tom-select").forEach((select) => {
-            if (select.tomselect) {
-                select.tomselect.clear();
-            }
-        });
+        // Reset TomSelects & prefill default values
+        const projectSelect = document.getElementById("meeting_project_id");
+        if (projectSelect && projectSelect.tomselect) {
+            projectSelect.tomselect.clear();
+        }
+
+        const typeSelect = document.getElementById("meeting_type_id");
+        if (typeSelect && typeSelect.tomselect) {
+            const defId = typeSelect.dataset.defaultId;
+            if (defId) typeSelect.tomselect.setValue(defId);
+            else typeSelect.tomselect.clear();
+        }
+
+        const locationSelect = document.getElementById("meeting_location_id");
+        if (locationSelect && locationSelect.tomselect) {
+            const defId = locationSelect.dataset.defaultId;
+            if (defId) locationSelect.tomselect.setValue(defId);
+            else locationSelect.tomselect.clear();
+        }
+
+        const statusSelect = document.getElementById("meeting_status_id");
+        if (statusSelect && statusSelect.tomselect) {
+            const defId = statusSelect.dataset.defaultId;
+            if (defId) statusSelect.tomselect.setValue(defId);
+            else statusSelect.tomselect.clear();
+        }
+
+        const organizerSelect = document.getElementById("meeting_organizer_id");
+        if (organizerSelect && organizerSelect.tomselect) {
+            const defId = organizerSelect.dataset.defaultId;
+            if (defId) organizerSelect.tomselect.setValue(defId);
+            else organizerSelect.tomselect.clear();
+        }
+
+        const tagsSelect = document.getElementById("meeting_tag_ids");
+        if (tagsSelect && tagsSelect.tomselect) {
+            tagsSelect.tomselect.clear();
+        }
+
+        // Reset Participants
+        if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+            internalParticipantsSelect.tomselect.clear();
+        }
+        if (externalParticipantsContainer) {
+            externalParticipantsContainer.innerHTML = "";
+            externalIndex = 0;
+        }
+
+        // Default Duration
+        if (durationInputEl) {
+            durationInputEl.value = "60";
+        }
+        calculateEndAt();
 
         // Reset Quill
         if (quillEditor) {
             quillEditor.setContents([]);
         }
 
-        // Reset Participants (Add 1 default internal user row)
-        if (participantsContainer) {
-            participantsContainer.innerHTML = "";
-            participantIndex = 0;
-            addParticipantRow();
-        }
-
         modal.classList.remove("hidden");
     }
 
-    // 4. Close Modal
+    // 6. Close Modal
     function closeModal() {
         modal.classList.add("hidden");
     }
@@ -85,102 +218,13 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", closeModal);
     });
 
-    // Close on background click
     modal.addEventListener("click", (e) => {
         if (e.target === modal) {
             closeModal();
         }
     });
 
-    // 5. Add Participant Row
-    function addParticipantRow(data = null) {
-        if (!participantTemplate || !participantsContainer) return;
-
-        const index = participantIndex++;
-        let html = participantTemplate.innerHTML.replace(/{INDEX}/g, index);
-
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = html.trim();
-        const row = tempDiv.firstElementChild;
-
-        participantsContainer.appendChild(row);
-
-        // Bind Radio Toggle (Internal vs External)
-        const radios = row.querySelectorAll(".participant-type-toggle");
-        const internalFields = row.querySelector(".internal-user-fields");
-        const externalFields = row.querySelector(".external-user-fields");
-        const userSelect = row.querySelector(".tom-select-participant");
-
-        radios.forEach((radio) => {
-            radio.addEventListener("change", (e) => {
-                if (e.target.value === "1") {
-                    internalFields.classList.add("hidden");
-                    externalFields.classList.remove("hidden");
-                    externalFields.classList.add("grid");
-                } else {
-                    externalFields.classList.add("hidden");
-                    externalFields.classList.remove("grid");
-                    internalFields.classList.remove("hidden");
-                }
-            });
-        });
-
-        // Remove Row Button
-        const removeBtn = row.querySelector(".remove-participant-btn");
-        if (removeBtn) {
-            removeBtn.addEventListener("click", () => {
-                row.remove();
-            });
-        }
-
-        // Initialize TomSelect on user select
-        if (userSelect && window.TomSelect && !userSelect.tomselect) {
-            new window.TomSelect(userSelect, {
-                create: false,
-                placeholder: "Select Internal User",
-            });
-        }
-
-        // Populate data if editing
-        if (data) {
-            const isExternal = data.is_external || !data.user_id;
-            const isExtRadio = row.querySelector(`.participant-type-toggle[value="${isExternal ? 1 : 0}"]`);
-            if (isExtRadio) {
-                isExtRadio.checked = true;
-                isExtRadio.dispatchEvent(new Event("change"));
-            }
-
-            if (!isExternal && data.user_id && userSelect && userSelect.tomselect) {
-                userSelect.tomselect.setValue(data.user_id);
-            }
-
-            if (data.name) {
-                const nameInput = row.querySelector(`input[name="participants[${index}][name]"]`);
-                if (nameInput) nameInput.value = data.name;
-            }
-
-            if (data.email) {
-                const emailInput = row.querySelector(`input[name="participants[${index}][email]"]`);
-                if (emailInput) emailInput.value = data.email;
-            }
-
-            if (data.phone) {
-                const phoneInput = row.querySelector(`input[name="participants[${index}][phone]"]`);
-                if (phoneInput) phoneInput.value = data.phone;
-            }
-
-            if (data.send_email) {
-                const sendEmailCheck = row.querySelector(`input[name="participants[${index}][send_email]"]`);
-                if (sendEmailCheck) sendEmailCheck.checked = true;
-            }
-        }
-    }
-
-    if (addParticipantBtn) {
-        addParticipantBtn.addEventListener("click", () => addParticipantRow());
-    }
-
-    // 6. Edit Meeting Modal Handler
+    // 7. Edit Meeting Modal Handler
     document.querySelectorAll(".edit-meeting-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
             const editUrl = btn.dataset.url;
@@ -202,33 +246,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const data = result.data;
 
-                // Populate Form
+                // Populate Form Basics
                 form.action = updateUrl;
                 formMethodInput.value = "PUT";
                 modalTitle.textContent = "Edit Meeting";
                 submitBtn.textContent = "Update Meeting";
 
                 document.getElementById("meeting_title").value = data.title || "";
-                document.getElementById("meeting_start_at").value = data.start_at ? data.start_at.replace("T", " ").substring(0, 16) : "";
-                document.getElementById("meeting_end_at").value = data.end_at ? data.end_at.replace("T", " ").substring(0, 16) : "";
                 document.getElementById("meeting_url").value = data.url || "";
                 document.getElementById("meeting_location_details").value = data.location_details || "";
 
+                // Start & Duration
+                const startAtStr = data.start_at ? data.start_at.replace("T", " ").substring(0, 16) : "";
+                const endAtStr = data.end_at ? data.end_at.replace("T", " ").substring(0, 16) : "";
+
+                if (startInputEl) startInputEl.value = startAtStr;
+                if (endInputEl) endInputEl.value = endAtStr;
+
+                if (startAtStr && endAtStr) {
+                    const startDate = new Date(startAtStr.replace(/-/g, "/"));
+                    const endDate = new Date(endAtStr.replace(/-/g, "/"));
+                    const diffMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (60 * 1000));
+                    if (durationInputEl) durationInputEl.value = diffMinutes > 0 ? diffMinutes : 60;
+                } else if (durationInputEl) {
+                    durationInputEl.value = 60;
+                }
+                calculateEndAt();
+
                 // TomSelect Fields
                 const projectSelect = document.getElementById("meeting_project_id");
-                if (projectSelect && projectSelect.tomselect) projectSelect.tomselect.setValue(data.project_id || "");
+                if (projectSelect && projectSelect.tomselect) {
+                    if (data.project_id && data.project) {
+                        projectSelect.tomselect.addOption({
+                            value: String(data.project.id),
+                            text: data.project.name,
+                            subtype: data.project.project_code || "",
+                        });
+                        projectSelect.tomselect.setValue(String(data.project_id));
+                    } else if (data.project_id) {
+                        projectSelect.tomselect.setValue(String(data.project_id));
+                    } else {
+                        projectSelect.tomselect.clear();
+                    }
+                }
 
                 const typeSelect = document.getElementById("meeting_type_id");
-                if (typeSelect && typeSelect.tomselect) typeSelect.tomselect.setValue(data.meeting_type_id || "");
+                if (typeSelect && typeSelect.tomselect) {
+                    if (data.meeting_type_id) typeSelect.tomselect.setValue(String(data.meeting_type_id));
+                    else typeSelect.tomselect.clear();
+                }
 
                 const locationSelect = document.getElementById("meeting_location_id");
-                if (locationSelect && locationSelect.tomselect) locationSelect.tomselect.setValue(data.meeting_location_id || "");
+                if (locationSelect && locationSelect.tomselect) {
+                    if (data.meeting_location_id) locationSelect.tomselect.setValue(String(data.meeting_location_id));
+                    else locationSelect.tomselect.clear();
+                }
 
                 const statusSelect = document.getElementById("meeting_status_id");
-                if (statusSelect && statusSelect.tomselect) statusSelect.tomselect.setValue(data.meeting_status_id || "");
+                if (statusSelect && statusSelect.tomselect) {
+                    if (data.meeting_status_id) statusSelect.tomselect.setValue(String(data.meeting_status_id));
+                    else statusSelect.tomselect.clear();
+                }
 
                 const organizerSelect = document.getElementById("meeting_organizer_id");
-                if (organizerSelect && organizerSelect.tomselect) organizerSelect.tomselect.setValue(data.organizer_id || "");
+                if (organizerSelect && organizerSelect.tomselect) {
+                    if (data.organizer_id) organizerSelect.tomselect.setValue(String(data.organizer_id));
+                    else organizerSelect.tomselect.clear();
+                }
 
                 const tagsSelect = document.getElementById("meeting_tag_ids");
                 if (tagsSelect && tagsSelect.tomselect) {
@@ -242,14 +326,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 // Populate Participants
-                if (participantsContainer) {
-                    participantsContainer.innerHTML = "";
-                    participantIndex = 0;
+                if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+                    internalParticipantsSelect.tomselect.clear();
+                }
+                if (externalParticipantsContainer) {
+                    externalParticipantsContainer.innerHTML = "";
+                    externalIndex = 0;
+                }
 
-                    if (data.participants && data.participants.length > 0) {
-                        data.participants.forEach((p) => addParticipantRow(p));
-                    } else {
-                        addParticipantRow();
+                if (data.participants && data.participants.length > 0) {
+                    const internalUserIds = [];
+                    data.participants.forEach((p) => {
+                        const isExt = isBool(p.is_external) || !p.user_id;
+                        if (!isExt && p.user_id) {
+                            internalUserIds.push(String(p.user_id));
+                        } else {
+                            addExternalParticipantRow(p);
+                        }
+                    });
+
+                    if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+                        internalParticipantsSelect.tomselect.setValue(internalUserIds);
                     }
                 }
 
@@ -261,14 +358,96 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 7. Form Submit Handler (Sync Quill and Client Validation)
+    // 8. Form Submit Handler (Sync Participants, Quill and Client Validation)
     form.addEventListener("submit", (e) => {
+        calculateEndAt();
+
         if (quillEditor) {
             descriptionInput.value = quillEditor.root.innerHTML === "<p><br></p>" ? "" : quillEditor.root.innerHTML;
         }
 
-        const startVal = document.getElementById("meeting_start_at").value;
-        const endVal = document.getElementById("meeting_end_at").value;
+        // Clean existing dynamic participant hidden inputs
+        form.querySelectorAll(".dynamic-participant-input").forEach((el) => el.remove());
+
+        let pIndex = 0;
+
+        // Internal Participants
+        if (internalParticipantsSelect && internalParticipantsSelect.tomselect) {
+            const val = internalParticipantsSelect.tomselect.getValue();
+            const userIds = Array.isArray(val) ? val : (val ? [val] : []);
+            userIds.forEach((uId) => {
+                if (!uId) return;
+
+                const uInput = document.createElement("input");
+                uInput.type = "hidden";
+                uInput.name = `participants[${pIndex}][user_id]`;
+                uInput.value = uId;
+                uInput.className = "dynamic-participant-input";
+
+                const extInput = document.createElement("input");
+                extInput.type = "hidden";
+                extInput.name = `participants[${pIndex}][is_external]`;
+                extInput.value = "0";
+                extInput.className = "dynamic-participant-input";
+
+                form.appendChild(uInput);
+                form.appendChild(extInput);
+                pIndex++;
+            });
+        }
+
+        // External Participants
+        if (externalParticipantsContainer) {
+            const rows = externalParticipantsContainer.querySelectorAll(".external-participant-row");
+            rows.forEach((row) => {
+                const name = row.querySelector(".external-name-input")?.value?.trim();
+                const email = row.querySelector(".external-email-input")?.value?.trim();
+                const phone = row.querySelector(".external-phone-input")?.value?.trim();
+                const sendEmail = row.querySelector(".external-send-email-check")?.checked ? "1" : "0";
+
+                if (name || email) {
+                    const extInput = document.createElement("input");
+                    extInput.type = "hidden";
+                    extInput.name = `participants[${pIndex}][is_external]`;
+                    extInput.value = "1";
+                    extInput.className = "dynamic-participant-input";
+
+                    const nameInput = document.createElement("input");
+                    nameInput.type = "hidden";
+                    nameInput.name = `participants[${pIndex}][name]`;
+                    nameInput.value = name || "";
+                    nameInput.className = "dynamic-participant-input";
+
+                    const emailInput = document.createElement("input");
+                    emailInput.type = "hidden";
+                    emailInput.name = `participants[${pIndex}][email]`;
+                    emailInput.value = email || "";
+                    emailInput.className = "dynamic-participant-input";
+
+                    const phoneInput = document.createElement("input");
+                    phoneInput.type = "hidden";
+                    phoneInput.name = `participants[${pIndex}][phone]`;
+                    phoneInput.value = phone || "";
+                    phoneInput.className = "dynamic-participant-input";
+
+                    const sendInput = document.createElement("input");
+                    sendInput.type = "hidden";
+                    sendInput.name = `participants[${pIndex}][send_email]`;
+                    sendInput.value = sendEmail;
+                    sendInput.className = "dynamic-participant-input";
+
+                    form.appendChild(extInput);
+                    form.appendChild(nameInput);
+                    form.appendChild(emailInput);
+                    form.appendChild(phoneInput);
+                    form.appendChild(sendInput);
+                    pIndex++;
+                }
+            });
+        }
+
+        const startVal = startInputEl ? startInputEl.value : "";
+        const endVal = endInputEl ? endInputEl.value : "";
 
         if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
             e.preventDefault();
@@ -276,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 8. Delete Confirmation Handler
+    // 9. Delete Confirmation Handler
     document.querySelectorAll(".delete-meeting-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
             if (confirm("Are you sure you want to delete this meeting?")) {
@@ -285,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 9. Auto Edit Trigger from URL Query Param ?edit=ID
+    // 10. Auto Edit Trigger from URL Query Param ?edit=ID
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get("edit");
     if (editId) {
@@ -295,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 10. Function to open create meeting for a specific date (prefilling Start & End)
+    // 11. Function to open create meeting for a specific date (prefilling Start & End)
     function openCreateMeetingForDate(dateKey) {
         if (!dateKey) return;
 
@@ -317,30 +496,21 @@ document.addEventListener("DOMContentLoaded", () => {
             now.getMinutes()
         );
 
-        const endDateObj = new Date(startDateObj.getTime() + 60 * 60 * 1000);
-
         const pad = (n) => String(n).padStart(2, "0");
         const formattedStart = `${startDateObj.getFullYear()}-${pad(startDateObj.getMonth() + 1)}-${pad(startDateObj.getDate())} ${pad(startDateObj.getHours())}:${pad(startDateObj.getMinutes())}`;
-        const formattedEnd = `${endDateObj.getFullYear()}-${pad(endDateObj.getMonth() + 1)}-${pad(endDateObj.getDate())} ${pad(endDateObj.getHours())}:${pad(endDateObj.getMinutes())}`;
 
         openCreateModal();
 
-        const startInput = document.getElementById("meeting_start_at");
-        const endInput = document.getElementById("meeting_end_at");
-
-        if (startInput) {
-            startInput.value = formattedStart;
-            if (startInput._flatpickr) {
-                startInput._flatpickr.setDate(formattedStart, true);
+        if (startInputEl) {
+            startInputEl.value = formattedStart;
+            if (startInputEl._flatpickr) {
+                startInputEl._flatpickr.setDate(formattedStart, true);
             }
         }
-
-        if (endInput) {
-            endInput.value = formattedEnd;
-            if (endInput._flatpickr) {
-                endInput._flatpickr.setDate(formattedEnd, true);
-            }
+        if (durationInputEl) {
+            durationInputEl.value = "60";
         }
+        calculateEndAt();
     }
 
     // Expose helpers globally

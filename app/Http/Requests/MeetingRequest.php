@@ -15,6 +15,26 @@ class MeetingRequest extends FormRequest
     }
 
     /**
+     * Prepare data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('start_at') && (! $this->has('end_at') || empty($this->input('end_at')))) {
+            $durationMinutes = (int) $this->input('duration_minutes', 60);
+            if ($durationMinutes > 0) {
+                try {
+                    $start = \Carbon\Carbon::parse($this->input('start_at'));
+                    $this->merge([
+                        'end_at' => $start->copy()->addMinutes($durationMinutes)->format('Y-m-d H:i:s'),
+                    ]);
+                } catch (\Throwable $e) {
+                    // ignore invalid date error to be caught by rules
+                }
+            }
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -29,6 +49,7 @@ class MeetingRequest extends FormRequest
             'meeting_status_id' => 'nullable|exists:meeting_statuses,id',
             'organizer_id' => 'required|exists:users,id',
             'start_at' => 'required|date',
+            'duration_minutes' => 'nullable|integer|min:1|max:1440',
             'end_at' => 'required|date|after_or_equal:start_at',
             'url' => 'nullable|string|max:2048',
             'location_details' => 'nullable|string|max:2048',

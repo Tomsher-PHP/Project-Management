@@ -18,6 +18,7 @@
             @csrf
             <input type="hidden" name="_method" id="meeting_form_method" value="POST">
             <input type="hidden" name="description" id="meeting_description_input">
+            <input type="hidden" name="end_at" id="meeting_end_at">
 
             <div class="max-h-[75vh] overflow-y-auto p-6 space-y-6">
 
@@ -32,7 +33,7 @@
                     </div>
                 @endif
 
-                <!-- Title -->
+                <!-- 1. Title -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Meeting Title <x-red-star />
@@ -40,71 +41,90 @@
                     <input type="text" name="title" id="meeting_title" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. Weekly Sprint Planning">
                 </div>
 
-                <!-- Grid Row 1: Project & Meeting Type -->
+                <!-- 2. Project & Meeting Type -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Project (Optional)
                         </label>
-                        <select name="project_id" id="meeting_project_id" class="tom-select w-full">
-                            <option value="">Select Project</option>
+                        <select name="project_id" id="meeting_project_id" class="tom-select-lazy w-full" data-route="{{ route('projects.search') }}" data-sort="0">
+                            <option value="">Search your project here..</option>
                             @foreach ($projects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }} ({{ $project->project_code }})</option>
+                                <option value="{{ $project->id }}" data-data='@json(['subtype' => $project->project_code ?: '--'])'>{{ $project->name }}</option>
                             @endforeach
                         </select>
                     </div>
 
+                    @php
+                        $defaultTypeId = $meetingTypes->firstWhere('is_default', true)?->id;
+                    @endphp
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                             Meeting Type <x-red-star />
                         </label>
-                        <select name="meeting_type_id" id="meeting_type_id" required class="tom-select w-full">
+                        <select name="meeting_type_id" id="meeting_type_id" required class="tom-select w-full" data-default-id="{{ $defaultTypeId ?? '' }}">
                             <option value="">Select Type</option>
                             @foreach ($meetingTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" {{ $defaultTypeId && $type->id == $defaultTypeId ? 'selected' : '' }}>{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
 
-                <!-- Grid Row 2: Location, Status & Organizer -->
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <!-- 3. Organizer -->
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                        Organizer <x-red-star />
+                    </label>
+                    <select name="organizer_id" id="meeting_organizer_id" required class="tom-select w-full" data-default-id="{{ auth()->id() }}">
+                        <option value="">Select Organizer</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->id }}" {{ $user->id == auth()->id() ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- 4. Participants Section -->
+                <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30 space-y-4">
+                    <h4 class="text-sm font-bold text-bgray-900 dark:text-white">
+                        Participants
+                    </h4>
+
+                    <!-- Internal Participants Dropdown -->
                     <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Location
+                        <label class="mb-1.5 block text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                            Internal Participants
                         </label>
-                        <select name="meeting_location_id" id="meeting_location_id" class="tom-select w-full">
-                            <option value="">Select Location</option>
-                            @foreach ($meetingLocations as $location)
-                                <option value="{{ $location->id }}">{{ $location->name }}</option>
+                        <select id="meeting_internal_participants" multiple class="tom-select-multiple w-full" data-placeholder="Select internal participants...">
+                            @foreach ($users as $u)
+                                <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Status
-                        </label>
-                        <select name="meeting_status_id" id="meeting_status_id" class="tom-select w-full">
-                            @foreach ($meetingStatuses as $status)
-                                <option value="{{ $status->id }}" {{ $status->id == $defaultStatusId ? 'selected' : '' }}>{{ $status->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <!-- External Participants Section -->
+                    <div class="pt-2 border-t border-bgray-200 dark:border-darkblack-400">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <label class="text-xs font-semibold text-bgray-700 dark:text-bgray-300">
+                                    External Participants
+                                </label>
+                            </div>
+                            <button type="button" id="add_external_participant_btn" class="inline-flex items-center gap-1 rounded-md border border-bgray-500 bg-white px-2 py-1.5 text-sm font-semibold text-bgray-700 transition duration-200 hover:border-success-300 hover:text-success-400 dark:border-bgray-300 dark:bg-darkblack-600 dark:text-bgray-50 dark:hover:border-success-300 dark:hover:text-success-300">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add External
+                            </button>
+                        </div>
 
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            Organizer <x-red-star />
-                        </label>
-                        <select name="organizer_id" id="meeting_organizer_id" required class="tom-select w-full">
-                            @foreach ($users as $user)
-                                <option value="{{ $user->id }}" {{ $user->id == auth()->id() ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
-                            @endforeach
-                        </select>
+                        <div id="external_participants_container" class="space-y-3">
+                            <!-- Dynamic External Participant Rows Inserted Here -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- Grid Row 3: Start & End Date Time -->
+                <!-- 5. Start Date & Time + Duration -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -115,13 +135,46 @@
 
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
-                            End Date & Time <x-red-star />
+                            Duration (Minutes) <x-red-star />
                         </label>
-                        <input type="text" name="end_at" id="meeting_end_at" required data-enable-time="true" class="datepicker w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="YYYY-MM-DD HH:MM">
+                        <input type="number" name="duration_minutes" id="meeting_duration_minutes" required min="1" max="1440" value="60" class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="60">
                     </div>
                 </div>
 
-                <!-- Grid Row 4: URL & Location Details -->
+                <!-- 6. Location & Status -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @php
+                        $defaultLocationId = $meetingLocations->firstWhere('is_default', true)?->id;
+                    @endphp
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Location
+                        </label>
+                        <select name="meeting_location_id" id="meeting_location_id" class="tom-select w-full" data-default-id="{{ $defaultLocationId ?? '' }}">
+                            <option value="">Select Location</option>
+                            @foreach ($meetingLocations as $location)
+                                <option value="{{ $location->id }}" {{ $defaultLocationId && $location->id == $defaultLocationId ? 'selected' : '' }}>{{ $location->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @php
+                        $defaultStatusId = $meetingStatuses->firstWhere('is_default', true)?->id;
+                    @endphp
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
+                            Status
+                        </label>
+                        <select name="meeting_status_id" id="meeting_status_id" class="tom-select w-full" data-default-id="{{ $defaultStatusId ?? '' }}">
+                            <option value="">Select Status</option>
+                            @foreach ($meetingStatuses as $status)
+                                <option value="{{ $status->id }}" {{ $defaultStatusId && $status->id == $defaultStatusId ? 'selected' : '' }}>{{ $status->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 7. Meeting URL & Location Details -->
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
@@ -138,38 +191,19 @@
                     </div>
                 </div>
 
-                <!-- Tags -->
+                <!-- 8. Tags -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Tags
                     </label>
-                    <select name="tag_ids[]" id="meeting_tag_ids" multiple class="tom-select w-full">
+                    <select name="tag_ids[]" id="meeting_tag_ids" multiple class="tom-select-multiple w-full">
                         @foreach ($meetingTags as $tag)
                             <option value="{{ $tag->id }}">{{ $tag->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Participants Section -->
-                <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/30">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h4 class="text-sm font-bold text-bgray-900 dark:text-white">
-                            Participants
-                        </h4>
-                        <button type="button" id="add_participant_btn" class="inline-flex items-center gap-1 rounded-lg bg-success-300 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-success-400">
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add Participant
-                        </button>
-                    </div>
-
-                    <div id="meeting_participants_container" class="space-y-3">
-                        <!-- Dynamic Participant Rows Inserted Here via JS -->
-                    </div>
-                </div>
-
-                <!-- Description (Quill Editor) -->
+                <!-- 9. Description (Quill Editor) -->
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Description
@@ -193,55 +227,33 @@
     </div>
 </div>
 
-<!-- Participant Row Template (Hidden) -->
-<template id="participant_row_template">
-    <div class="participant-row rounded-lg border border-bgray-200 bg-white p-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 space-y-3" data-index="{INDEX}">
+<!-- External Participant Row Template (Hidden) -->
+<template id="external_participant_row_template">
+    <div class="external-participant-row rounded-lg border border-bgray-200 bg-white p-3 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 space-y-2" data-index="{INDEX}">
         <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-300 cursor-pointer">
-                    <input type="radio" name="participants[{INDEX}][is_external]" value="0" class="participant-type-toggle text-success-300 focus:ring-0" checked data-index="{INDEX}">
-                    Internal User
-                </label>
-                <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-300 cursor-pointer">
-                    <input type="radio" name="participants[{INDEX}][is_external]" value="1" class="participant-type-toggle text-success-300 focus:ring-0" data-index="{INDEX}">
-                    External Participant
-                </label>
-            </div>
-
-            <button type="button" class="remove-participant-btn rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-darkblack-400 transition" title="Remove Participant">
+            <span class="text-xs font-semibold text-bgray-700 dark:text-bgray-300">Guest #{DISPLAY_INDEX}</span>
+            <button type="button" class="remove-external-participant-btn rounded p-1 text-red-500 hover:bg-red-50 dark:hover:bg-darkblack-400 transition" title="Remove Guest">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
-        <!-- Internal User Selection -->
-        <div class="internal-user-fields" data-index="{INDEX}">
-            <select name="participants[{INDEX}][user_id]" class="tom-select-participant w-full">
-                <option value="">Select Internal User</option>
-                @foreach ($users as $u)
-                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- External Participant Fields -->
-        <div class="external-user-fields hidden grid-cols-1 gap-2 sm:grid-cols-3" data-index="{INDEX}">
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div>
-                <input type="text" name="participants[{INDEX}][name]" class="w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Full Name">
+                <input type="text" class="external-name-input w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Full Name *" required>
             </div>
             <div>
-                <input type="email" name="participants[{INDEX}][email]" class="w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Email Address">
+                <input type="email" class="external-email-input w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Email Address *" required>
             </div>
             <div>
-                <input type="text" name="participants[{INDEX}][phone]" class="w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Phone (Optional)">
+                <input type="text" class="external-phone-input w-full rounded-md border border-bgray-300 px-3 py-1.5 text-xs text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-600 dark:text-white" placeholder="Phone (Optional)">
             </div>
         </div>
 
-        <!-- Send Email Option -->
-        <div class="flex items-center gap-2">
-            <input type="checkbox" name="participants[{INDEX}][send_email]" value="1" id="send_email_{INDEX}" class="rounded border-bgray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
-            <label for="send_email_{INDEX}" class="text-xs text-bgray-600 dark:text-bgray-300">
+        <div class="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="ext_send_email_{INDEX}" class="external-send-email-check rounded border-bgray-300 text-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-600">
+            <label for="ext_send_email_{INDEX}" class="text-xs text-bgray-600 dark:text-bgray-300 cursor-pointer">
                 Send Email Notification
             </label>
         </div>

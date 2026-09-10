@@ -46,15 +46,14 @@ class MeetingController extends Controller
             ]);
         }
 
-        $projects = Project::accessibleBy($authUser)->orderBy('name')->get();
+        $projects = [];
         $meetingTypes = MeetingType::active()->orderBy('sort_order')->get();
         $meetingLocations = MeetingLocation::active()->orderBy('sort_order')->get();
         $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
         $users = $this->userService->getAccessibleUsers($authUser)->values();
         $meetingTags = MeetingTag::active()->orderBy('sort_order')->get();
 
-        $defaultStatusId = MeetingStatus::where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
-            ?? $meetingStatuses->first()?->id;
+        $defaultStatusId = $meetingStatuses->firstWhere('is_default', true)?->id;
 
         $selectedDate = $request->filled('date')
             ? Carbon::parse($request->date)
@@ -126,16 +125,6 @@ class MeetingController extends Controller
                 ];
             })->values()->all();
         }
-
-        $projects = Project::accessibleBy($authUser)->orderBy('name')->get();
-        $meetingTypes = MeetingType::active()->orderBy('sort_order')->get();
-        $meetingLocations = MeetingLocation::active()->orderBy('sort_order')->get();
-        $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
-        $users = $this->userService->getAccessibleUsers($authUser)->values();
-        $meetingTags = MeetingTag::active()->orderBy('sort_order')->get();
-
-        $defaultStatusId = MeetingStatus::where('code', MeetingStatus::STATUS_SCHEDULED)->value('id')
-            ?? $meetingStatuses->first()?->id;
 
         return view('meetings.index', compact(
             'meetings',
