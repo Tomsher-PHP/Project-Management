@@ -3,7 +3,7 @@
 @section('page-content')
     <div class="w-full">
 
-        {{-- Page Header --}}
+        <!-- Page Header -->
         <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="text-xl font-semibold text-bgray-900 dark:text-white">
@@ -15,19 +15,19 @@
             </div>
 
             <div class="flex items-center gap-3">
-                {{-- Month Navigation --}}
+                <!-- Month Navigation -->
                 <div class="flex items-center gap-2">
-                    {{-- Previous Month --}}
+                    <!-- Previous Month -->
                     <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                         &larr;
                     </a>
 
-                    {{-- Current Month --}}
+                    <!-- Current Month -->
                     <div class="min-w-[180px] rounded-lg border border-bgray-300 bg-white px-4 py-2 text-center text-sm font-semibold text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                         {{ $selectedDate->format('F Y') }}
                     </div>
 
-                    {{-- Next Month --}}
+                    <!-- Next Month -->
                     <a href="{{ route('meetings.index', array_merge(request()->except('date'), ['date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-10 w-10 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
                         &rarr;
                     </a>
@@ -137,7 +137,7 @@
             <div class="overflow-x-auto">
                 <div class="min-w-[1000px]">
 
-                    {{-- Week Days Header --}}
+                    <!-- Week Days Header -->
                     <div class="grid grid-cols-7 border-b border-bgray-200 dark:border-darkblack-400">
                         @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $day)
                             <div class="border-r border-bgray-200 px-3 py-3 text-center text-xs font-semibold uppercase text-bgray-500 last:border-r-0 dark:border-darkblack-400 dark:text-bgray-300">
@@ -146,7 +146,7 @@
                         @endforeach
                     </div>
 
-                    {{-- Calendar Days Grid --}}
+                    <!-- Calendar Days Grid -->
                     <div class="grid grid-cols-7">
                         @for ($i = 0; $i < $totalDays; $i++)
                             @php
@@ -159,17 +159,17 @@
                                 $isCurrentMonth = $date->month === $selectedDate->month && $date->year === $selectedDate->year;
                             @endphp
 
-                            {{-- Day Cell --}}
+                            <!-- Day Cell -->
                             <div class="relative min-h-[160px] border-b border-r border-bgray-200 p-2 transition dark:border-darkblack-400 {{ !$isCurrentMonth ? 'bg-bgray-50/60 dark:bg-darkblack-500/40' : 'hover:bg-bgray-50 dark:hover:bg-darkblack-500' }}">
 
-                                {{-- Date Header --}}
+                                <!-- Date Header -->
                                 <div class="mb-2 flex items-center justify-between">
-                                    {{-- Date Number --}}
-                                    <button type="button" onclick="openCreateMeetingForDate('{{ $dateKey }}')" class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold {{ $isToday ? 'bg-success-500 text-white' : ($isCurrentMonth ? 'text-bgray-700 hover:bg-bgray-100 dark:text-white dark:hover:bg-darkblack-400' : 'text-bgray-400 dark:text-bgray-500') }}">
+                                    <!-- Date Number -->
+                                    <button type="button" onclick="openCreateMeetingForDate('{{ $dateKey }}')" class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold {{ $isToday ? 'bg-success-300 text-white' : ($isCurrentMonth ? 'text-bgray-700 hover:bg-bgray-100 dark:text-white dark:hover:bg-darkblack-400' : 'text-bgray-400 dark:text-bgray-500') }}">
                                         {{ $date->day }}
                                     </button>
 
-                                    {{-- Meeting Count Badge --}}
+                                    <!-- Meeting Count Badge -->
                                     @if ($dayMeetings->count() > 0)
                                         @php
                                             $firstMeeting = $dayMeetings->first();
@@ -182,7 +182,7 @@
                                     @endif
                                 </div>
 
-                                {{-- Meetings List --}}
+                                <!-- Meetings List -->
                                 <div class="space-y-1">
                                     @foreach ($visibleMeetings as $m)
                                         @php
@@ -206,7 +206,7 @@
                                         </a>
                                     @endforeach
 
-                                    {{-- More Button --}}
+                                    <!-- More Button -->
                                     @if ($remainingMeetings > 0)
                                         <button type="button" onclick="showDayMeetings('{{ $dateKey }}')" class="w-full rounded-md bg-bgray-100 px-2 py-1.5 text-left text-xs font-semibold text-bgray-600 transition hover:bg-bgray-200 dark:bg-darkblack-400 dark:text-bgray-300">
                                             +{{ $remainingMeetings }} more
@@ -214,7 +214,7 @@
                                     @endif
                                 </div>
 
-                                {{-- Action Button on Today / Future Dates --}}
+                                <!-- Action Button on Today / Future Dates -->
                                 @if ($date->isToday() || $date->isFuture())
                                     @can('meeting.create')
                                         <button type="button" onclick="openCreateMeetingForDate('{{ $dateKey }}')" class="mt-3 w-full rounded-md border border-dashed border-bgray-300 px-2 py-1.5 text-[11px] font-medium text-bgray-500 transition hover:border-success-500 hover:text-success-500 dark:border-darkblack-400">
@@ -266,47 +266,8 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/modules/meetings/meetings.js')
     <script>
-        const calendarMeetings = @json($calendarMeetingsForJs);
-
-        function showDayMeetings(dateKey) {
-            const meetings = calendarMeetings[dateKey] || [];
-            const modal = document.getElementById('dayMeetingsModal');
-            const content = document.getElementById('dayMeetingsContent');
-            const title = document.getElementById('dayMeetingsTitle');
-
-            const dateParts = dateKey.split('-');
-            const formattedDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2])
-                .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-            title.innerText = 'Meetings - ' + formattedDate;
-
-            if (!meetings.length) {
-                content.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500">No meetings scheduled for this date.</div>`;
-            } else {
-                content.innerHTML = meetings.map(m => `
-                    <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid ${m.color}">
-                        <div>
-                            <a href="${m.url}" class="text-sm font-bold text-bgray-900 dark:text-white hover:text-success-400">${m.title}</a>
-                            <div class="text-xs text-bgray-500 mt-0.5">
-                                ${m.time_range} • ${m.type} • Status: ${m.status}
-                            </div>
-                            <div class="text-xs text-bgray-400 mt-0.5">Organizer: ${m.organizer}</div>
-                        </div>
-                        <a href="${m.url}" class="rounded-md bg-bgray-100 dark:bg-darkblack-500 px-3 py-1.5 text-xs font-semibold text-bgray-700 dark:text-bgray-200 hover:bg-bgray-200">
-                            View
-                        </a>
-                    </div>
-                `).join('');
-            }
-
-            modal.classList.remove('hidden');
-        }
-
-        function closeDayMeetings() {
-            const modal = document.getElementById('dayMeetingsModal');
-            if (modal) modal.classList.add('hidden');
-        }
+        window.calendarMeetings = @json($calendarMeetingsForJs);
     </script>
+    @vite(['resources/js/modules/meetings/meetings.js', 'resources/js/modules/meetings/meeting-form.js'])
 @endpush

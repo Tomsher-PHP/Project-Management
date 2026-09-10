@@ -27,6 +27,7 @@ class MeetingController extends Controller
     {
         $this->meetingService = $meetingService;
         $this->userService = $userService;
+        view()->share(['pageTitle' => "Meetings"]);
     }
 
     /**
