@@ -96,7 +96,7 @@ class MeetingService
         $meetings = $query->get();
 
         return $meetings->map(function (Meeting $meeting) {
-            $color = $meeting->meetingType?->color 
+            $color = $meeting->meetingType?->color
                 ?: ($meeting->meetingStatus?->color ?: '#3B82F6');
 
             return [
@@ -144,9 +144,9 @@ class MeetingService
     /**
      * Create a new Meeting along with participants and tags.
      */
-    public function create(array $data, ?User $user = null): Meeting
+    public function create(array $data, ?User $user = null, array $files = []): Meeting
     {
-        return DB::transaction(function () use ($data, $user) {
+        return DB::transaction(function () use ($data, $user, $files) {
             if (empty($data['organizer_id']) && $user) {
                 $data['organizer_id'] = $user->id;
             }
