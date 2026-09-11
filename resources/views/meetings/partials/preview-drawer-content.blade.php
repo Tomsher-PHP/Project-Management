@@ -132,25 +132,15 @@
             </div>
         </div>
 
-        <!-- Description -->
-        @if ($meeting->description)
-            <div class="space-y-1.5">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Description</h4>
-                <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-200 leading-relaxed prose dark:prose-invert max-w-none">
-                    {!! $meeting->description !!}
-                </div>
-            </div>
-        @endif
-
         <!-- Participants -->
         <div class="space-y-2">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">
                 Participants ({{ $meeting->participants->count() }})
             </h4>
 
-            <div class="max-h-48 overflow-y-auto space-y-2 pr-1">
+            <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
                 @forelse ($meeting->participants as $participant)
-                    <div class="flex items-center justify-between rounded-lg border border-bgray-200 p-2.5 dark:border-darkblack-400">
+                    <div class="flex items-center justify-between min-w-0">
                         <div class="flex items-center gap-2.5 min-w-0 flex-1">
                             @if ($participant->is_external)
                                 <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xs font-bold dark:bg-amber-900/30 dark:text-amber-300 shrink-0">
@@ -179,10 +169,20 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-xs text-bgray-700 dark:text-bgray-400 py-2">No participants added.</div>
+                    <div class="col-span-2 text-xs text-bgray-700 dark:text-bgray-400 py-2">No participants added.</div>
                 @endforelse
             </div>
         </div>
+
+        <!-- Description -->
+        @if ($meeting->description)
+            <div class="space-y-1.5">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Description</h4>
+                <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-200 leading-relaxed prose dark:prose-invert max-w-none">
+                    {!! $meeting->description !!}
+                </div>
+            </div>
+        @endif
 
         <!-- Attachments -->
         @if ($meeting->attachments && $meeting->attachments->count() > 0)
