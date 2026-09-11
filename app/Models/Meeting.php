@@ -81,6 +81,28 @@ class Meeting extends Model
         });
     }
 
+    public function scopeAccessibleBy($query, $user)
+    {
+        if (! $user) {
+            return $query;
+        }
+
+        if ($user->is_super_admin || $user->can('meeting.view_all_meetings') || $user->can('meeting.view_all')) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($user) {
+            $q->where('meetings.organizer_id', $user->id)
+                ->orWhere('meetings.added_by', $user->id)
+                ->orWhereHas('participants', function ($pq) use ($user) {
+                    $pq->where('user_id', $user->id);
+                })
+                ->orWhereHas('project', function ($pq) use ($user) {
+                    $pq->accessibleBy($user);
+                });
+        });
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id')->withTrashed();
@@ -137,27 +159,5 @@ class Meeting extends Model
     public function attachments(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Attachment::class, 'link');
-    }
-
-    public function scopeAccessibleBy($query, $user)
-    {
-        if (! $user) {
-            return $query;
-        }
-
-        if ($user->is_super_admin || $user->can('meeting.view_all_meetings') || $user->can('meeting.view_all')) {
-            return $query;
-        }
-
-        return $query->where(function ($q) use ($user) {
-            $q->where('meetings.organizer_id', $user->id)
-                ->orWhere('meetings.added_by', $user->id)
-                ->orWhereHas('participants', function ($pq) use ($user) {
-                    $pq->where('user_id', $user->id);
-                })
-                ->orWhereHas('project', function ($pq) use ($user) {
-                    $pq->accessibleBy($user);
-                });
-        });
     }
 }

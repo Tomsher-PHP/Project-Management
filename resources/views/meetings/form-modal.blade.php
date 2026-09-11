@@ -38,7 +38,7 @@
                     <label class="mb-2 block text-sm font-semibold text-bgray-900 dark:text-white">
                         Meeting Title <x-red-star />
                     </label>
-                    <input type="text" name="title" id="meeting_title" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="e.g. Weekly Sprint Planning">
+                    <input type="text" name="title" id="meeting_title" required class="w-full rounded-lg border border-bgray-300 px-4 py-2.5 text-sm font-medium text-bgray-900 focus:border-success-300 focus:ring-0 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" placeholder="Meeting title type here..">
                 </div>
 
                 <!-- 2. Project & Meeting Type -->
