@@ -1866,226 +1866,219 @@ class NotificationService
     }
 
     /**
- * Notify assigned approvers that a leave request was submitted.
- */
-public function notifyLeaveRequestCreated(
-    LeaveRequest $leaveRequest
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
+     * Notify assigned approvers that a leave request was submitted.
+     */
+    public function notifyLeaveRequestCreated(LeaveRequest $leaveRequest): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
 
-    $userIds = collect($leaveRequest->assigned_to ?? [])
-        ->filter()
-        ->map(fn ($userId) => (int) $userId)
-        ->unique()
-        ->values()
-        ->all();
+        $userIds = collect($leaveRequest->assigned_to ?? [])
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
 
-    if ($userIds === []) {
-        return;
-    }
+        if ($userIds === []) {
+            return;
+        }
 
-    $requesterName =
-        $leaveRequest->user?->name ?? 'A team member';
+        $requesterName =
+            $leaveRequest->user?->name ?? 'A team member';
 
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
 
-    $fromDate =
-        $leaveRequest->requested_from_date?->format('d M Y');
+        $fromDate =
+            $leaveRequest->requested_from_date?->format('d M Y');
 
-    $toDate =
-        $leaveRequest->requested_to_date?->format('d M Y');
+        $toDate =
+            $leaveRequest->requested_to_date?->format('d M Y');
 
-    $message =
-        "{$requesterName} submitted a {$leaveTypeName} request from {$fromDate} to {$toDate}.";
+        $message =
+            "{$requesterName} submitted a {$leaveTypeName} request from {$fromDate} to {$toDate}.";
 
-    $emailSubjectContext = [
-        'type' => 'leave_request_submitted',
-        'actor_id' => $leaveRequest->user_id
-            ? (int) $leaveRequest->user_id
-            : null,
-        'actor_name' => $requesterName,
-    ];
-
-    $this->sendToMany(
-        $userIds,
-        'Leave Request Submitted',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        $leaveRequest->user_id
-            ? (int) $leaveRequest->user_id
-            : null,
-        null,
-        $this->leaveEmailDetails($leaveRequest),
-        $emailSubjectContext
-    );
-}
-
-/**
- * Notify assigned approvers when an employee updates
- * their pending leave request.
- */
-public function notifyLeaveRequestUpdated(
-    LeaveRequest $leaveRequest,
-    ?int $actorUserId = null
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
-
-    $userIds = collect($leaveRequest->assigned_to ?? [])
-        ->filter()
-        ->map(fn ($userId) => (int) $userId)
-        ->unique()
-        ->values()
-        ->all();
-
-    if ($userIds === []) {
-        return;
-    }
-
-    $requesterName =
-        $leaveRequest->user?->name ?? 'A team member';
-
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
-
-    $fromDate =
-        $leaveRequest->requested_from_date?->format('d M Y');
-
-    $toDate =
-        $leaveRequest->requested_to_date?->format('d M Y');
-
-    $message =
-        "{$requesterName} updated their {$leaveTypeName} request from {$fromDate} to {$toDate}.";
-
-    $emailSubjectContext = [
-        'type' => 'leave_request_updated',
-        'actor_id' => $actorUserId
-            ?? ($leaveRequest->user_id
+        $emailSubjectContext = [
+            'type' => 'leave_request_submitted',
+            'actor_id' => $leaveRequest->user_id
                 ? (int) $leaveRequest->user_id
-                : null),
-        'actor_name' => $requesterName,
-    ];
+                : null,
+            'actor_name' => $requesterName,
+        ];
 
-    $this->sendToMany(
-        $userIds,
-        'Leave Request Updated',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        $actorUserId
-            ?? ($leaveRequest->user_id
+        $this->sendToMany(
+            $userIds,
+            'Leave Request Submitted',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            $leaveRequest->user_id
                 ? (int) $leaveRequest->user_id
-                : null),
-        null,
-        $this->leaveEmailDetails($leaveRequest),
-        $emailSubjectContext
-    );
-}
-
-/**
- * Notify the employee when an approver updates
- * their leave request but keeps it pending.
- */
-public function notifyLeaveRequestReviewUpdated(
-    LeaveRequest $leaveRequest,
-    User $reviewer
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
-
-    if (!$leaveRequest->user_id) {
-        return;
+                : null,
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
     }
 
-    $employeeName =
-        $leaveRequest->user?->name ?? 'A team member';
+    /**
+     * Notify assigned approvers when an employee updates
+     * their pending leave request.
+     */
+    public function notifyLeaveRequestUpdated(LeaveRequest $leaveRequest, ?int $actorUserId = null): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
 
-    $reviewerName =
-        $reviewer->name ?? 'The approver';
+        $userIds = collect($leaveRequest->assigned_to ?? [])
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->unique()
+            ->values()
+            ->all();
 
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
+        if ($userIds === []) {
+            return;
+        }
 
-    $fromDate =
-        $leaveRequest->requested_from_date?->format('d M Y');
+        $requesterName =
+            $leaveRequest->user?->name ?? 'A team member';
 
-    $toDate =
-        $leaveRequest->requested_to_date?->format('d M Y');
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
 
-    $message =
-        "{$reviewerName} updated your {$leaveTypeName} leave request from {$fromDate} to {$toDate}. The request is still pending approval.";
+        $fromDate =
+            $leaveRequest->requested_from_date?->format('d M Y');
 
-    $emailSubjectContext = [
-        'type' => 'leave_request_review_updated',
-        'actor_id' => (int) $reviewer->id,
-        'actor_name' => $reviewerName,
-    ];
+        $toDate =
+            $leaveRequest->requested_to_date?->format('d M Y');
 
-    $this->sendToMany(
-        [(int) $leaveRequest->user_id],
-        'Leave Request Updated',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        (int) $reviewer->id,
-        null,
-        $this->leaveEmailDetails($leaveRequest),
-        $emailSubjectContext
-    );
-}
+        $message =
+            "{$requesterName} updated their {$leaveTypeName} request from {$fromDate} to {$toDate}.";
 
-/**
- * Notify the employee when their leave request is approved.
- */
-public function notifyLeaveRequestApproved(
-    LeaveRequest $leaveRequest,
-    User $reviewer
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
+        $emailSubjectContext = [
+            'type' => 'leave_request_updated',
+            'actor_id' => $actorUserId
+                ?? ($leaveRequest->user_id
+                    ? (int) $leaveRequest->user_id
+                    : null),
+            'actor_name' => $requesterName,
+        ];
 
-    if (!$leaveRequest->user_id) {
-        return;
+        $this->sendToMany(
+            $userIds,
+            'Leave Request Updated',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            $actorUserId
+                ?? ($leaveRequest->user_id
+                    ? (int) $leaveRequest->user_id
+                    : null),
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
     }
 
-    $reviewerName =
-        $reviewer->name ?? 'The approver';
+    /**
+     * Notify the employee when an approver updates
+     * their leave request but keeps it pending.
+     */
+    public function notifyLeaveRequestReviewUpdated(LeaveRequest $leaveRequest, User $reviewer): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
 
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
+        if (!$leaveRequest->user_id) {
+            return;
+        }
 
-    $fromDate =
-        $leaveRequest->approved_from_date
+        $employeeName =
+            $leaveRequest->user?->name ?? 'A team member';
+
+        $reviewerName =
+            $reviewer->name ?? 'The approver';
+
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
+
+        $fromDate =
+            $leaveRequest->requested_from_date?->format('d M Y');
+
+        $toDate =
+            $leaveRequest->requested_to_date?->format('d M Y');
+
+        $message =
+            "{$reviewerName} updated your {$leaveTypeName} leave request from {$fromDate} to {$toDate}. The request is still pending approval.";
+
+        $emailSubjectContext = [
+            'type' => 'leave_request_review_updated',
+            'actor_id' => (int) $reviewer->id,
+            'actor_name' => $reviewerName,
+        ];
+
+        $this->sendToMany(
+            [(int) $leaveRequest->user_id],
+            'Leave Request Updated',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            (int) $reviewer->id,
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
+    }
+
+    /**
+     * Notify the employee when their leave request is approved.
+     */
+    public function notifyLeaveRequestApproved(LeaveRequest $leaveRequest, User $reviewer): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
+
+        if (!$leaveRequest->user_id) {
+            return;
+        }
+
+        $reviewerName =
+            $reviewer->name ?? 'The approver';
+
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
+
+        $fromDate =
+            $leaveRequest->approved_from_date
             ? $leaveRequest->approved_from_date->format('d M Y')
             : $leaveRequest->requested_from_date?->format('d M Y');
 
-    $toDate =
-        $leaveRequest->approved_to_date
+        $toDate =
+            $leaveRequest->approved_to_date
             ? $leaveRequest->approved_to_date->format('d M Y')
             : $leaveRequest->requested_to_date?->format('d M Y');
 
-    $approvedDuration =
-        $leaveRequest->approved_duration !== null
+        $approvedDuration =
+            $leaveRequest->approved_duration !== null
             ? number_format(
                 (float) $leaveRequest->approved_duration,
                 2
@@ -2095,250 +2088,244 @@ public function notifyLeaveRequestApproved(
                 2
             );
 
-    $paidDays =
-        $leaveRequest->paid_days !== null
+        $paidDays =
+            $leaveRequest->paid_days !== null
             ? number_format(
                 (float) $leaveRequest->paid_days,
                 2
             )
             : '0.00';
 
-    $unpaidDays =
-        $leaveRequest->unpaid_days !== null
+        $unpaidDays =
+            $leaveRequest->unpaid_days !== null
             ? number_format(
                 (float) $leaveRequest->unpaid_days,
                 2
             )
             : '0.00';
 
-    $message =
-        "{$reviewerName} approved your {$leaveTypeName} leave request from {$fromDate} to {$toDate}. "
-        . "Approved duration: {$approvedDuration} days. "
-        . "Paid: {$paidDays} days. "
-        . "Unpaid: {$unpaidDays} days.";
+        $message =
+            "{$reviewerName} approved your {$leaveTypeName} leave request from {$fromDate} to {$toDate}. "
+            . "Approved duration: {$approvedDuration} days. "
+            . "Paid: {$paidDays} days. "
+            . "Unpaid: {$unpaidDays} days.";
 
-    $emailSubjectContext = [
-        'type' => 'leave_request_approved',
-        'actor_id' => (int) $reviewer->id,
-        'actor_name' => $reviewerName,
-    ];
+        $emailSubjectContext = [
+            'type' => 'leave_request_approved',
+            'actor_id' => (int) $reviewer->id,
+            'actor_name' => $reviewerName,
+        ];
 
-    $this->sendToMany(
-        [(int) $leaveRequest->user_id],
-        'Leave Request Approved',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        (int) $reviewer->id,
-        null,
-        $this->leaveEmailDetails(
-            $leaveRequest,
-            true
-        ),
-        $emailSubjectContext
-    );
-}
-
-/**
- * Notify the employee when their leave request is rejected.
- */
-public function notifyLeaveRequestRejected(
-    LeaveRequest $leaveRequest,
-    User $reviewer
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
-
-    if (!$leaveRequest->user_id) {
-        return;
+        $this->sendToMany(
+            [(int) $leaveRequest->user_id],
+            'Leave Request Approved',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            (int) $reviewer->id,
+            null,
+            $this->leaveEmailDetails(
+                $leaveRequest,
+                true
+            ),
+            $emailSubjectContext
+        );
     }
 
-    $reviewerName =
-        $reviewer->name ?? 'The approver';
+    /**
+     * Notify the employee when their leave request is rejected.
+     */
+    public function notifyLeaveRequestRejected(LeaveRequest $leaveRequest, User $reviewer): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
 
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
+        if (!$leaveRequest->user_id) {
+            return;
+        }
 
-    $fromDate =
-        $leaveRequest->requested_from_date?->format('d M Y');
+        $reviewerName =
+            $reviewer->name ?? 'The approver';
 
-    $toDate =
-        $leaveRequest->requested_to_date?->format('d M Y');
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
 
-    $comment =
-        $leaveRequest->approver_comment
-        ?? '-';
+        $fromDate =
+            $leaveRequest->requested_from_date?->format('d M Y');
 
-    $message =
-        "{$reviewerName} rejected your {$leaveTypeName} leave request from {$fromDate} to {$toDate}.";
+        $toDate =
+            $leaveRequest->requested_to_date?->format('d M Y');
 
-    if ($comment !== '-') {
-        $message .= " Comment: {$comment}";
+        $comment =
+            $leaveRequest->approver_comment
+            ?? '-';
+
+        $message =
+            "{$reviewerName} rejected your {$leaveTypeName} leave request from {$fromDate} to {$toDate}.";
+
+        if ($comment !== '-') {
+            $message .= " Comment: {$comment}";
+        }
+
+        $emailSubjectContext = [
+            'type' => 'leave_request_rejected',
+            'actor_id' => (int) $reviewer->id,
+            'actor_name' => $reviewerName,
+        ];
+
+        $this->sendToMany(
+            [(int) $leaveRequest->user_id],
+            'Leave Request Rejected',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            (int) $reviewer->id,
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
     }
 
-    $emailSubjectContext = [
-        'type' => 'leave_request_rejected',
-        'actor_id' => (int) $reviewer->id,
-        'actor_name' => $reviewerName,
-    ];
+    /**
+     * Notify relevant users when a leave request is cancelled.
+     */
+    public function notifyLeaveRequestCancelled(LeaveRequest $leaveRequest, ?int $actorUserId = null): void
+    {
+        $leaveRequest->loadMissing([
+            'user:id,name',
+            'leaveType:id,name',
+        ]);
 
-    $this->sendToMany(
-        [(int) $leaveRequest->user_id],
-        'Leave Request Rejected',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        (int) $reviewer->id,
-        null,
-        $this->leaveEmailDetails($leaveRequest),
-        $emailSubjectContext
-    );
-}
-
-/**
- * Notify relevant users when a leave request is cancelled.
- */
-public function notifyLeaveRequestCancelled(
-    LeaveRequest $leaveRequest,
-    ?int $actorUserId = null
-): void {
-    $leaveRequest->loadMissing([
-        'user:id,name',
-        'leaveType:id,name',
-    ]);
-
-    $recipientIds = collect(
-        $leaveRequest->assigned_to ?? []
-    )
-        ->filter()
-        ->map(fn ($userId) => (int) $userId)
-        ->push(
-            $leaveRequest->user_id
-                ? (int) $leaveRequest->user_id
-                : null
+        $recipientIds = collect(
+            $leaveRequest->assigned_to ?? []
         )
-        ->filter()
-        ->unique()
-        ->values()
-        ->all();
+            ->filter()
+            ->map(fn($userId) => (int) $userId)
+            ->push(
+                $leaveRequest->user_id
+                    ? (int) $leaveRequest->user_id
+                    : null
+            )
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-    if ($recipientIds === []) {
-        return;
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $requesterName =
+            $leaveRequest->user?->name ?? 'A team member';
+
+        $leaveTypeName =
+            $leaveRequest->leaveType?->name ?? 'Leave';
+
+        $message =
+            "{$requesterName} cancelled their {$leaveTypeName} leave request.";
+
+        $emailSubjectContext = [
+            'type' => 'leave_request_cancelled',
+            'actor_id' => $actorUserId,
+            'actor_name' => $requesterName,
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            'Leave Request Cancelled',
+            $message,
+            route(
+                'leave-requests.show',
+                $leaveRequest
+            ),
+            UserNotificationSetting::LEAVE_REQUEST,
+            $actorUserId,
+            null,
+            $this->leaveEmailDetails($leaveRequest),
+            $emailSubjectContext
+        );
     }
 
-    $requesterName =
-        $leaveRequest->user?->name ?? 'A team member';
+    /**
+     * Build email details for a leave request.
+     *
+     * When the request has been approved, use the final approved
+     * dates/duration and include paid/unpaid days.
+     */
+    protected function leaveEmailDetails(LeaveRequest $leaveRequest, bool $approved = false): array
+    {
+        $fromDate = $approved && $leaveRequest->approved_from_date
+            ? $leaveRequest->approved_from_date
+            : $leaveRequest->requested_from_date;
 
-    $leaveTypeName =
-        $leaveRequest->leaveType?->name ?? 'Leave';
+        $toDate = $approved && $leaveRequest->approved_to_date
+            ? $leaveRequest->approved_to_date
+            : $leaveRequest->requested_to_date;
 
-    $message =
-        "{$requesterName} cancelled their {$leaveTypeName} leave request.";
+        $duration = $approved
+            && $leaveRequest->approved_duration !== null
+            ? $leaveRequest->approved_duration
+            : $leaveRequest->duration;
 
-    $emailSubjectContext = [
-        'type' => 'leave_request_cancelled',
-        'actor_id' => $actorUserId,
-        'actor_name' => $requesterName,
-    ];
-
-    $this->sendToMany(
-        $recipientIds,
-        'Leave Request Cancelled',
-        $message,
-        route(
-            'leave-requests.show',
-            $leaveRequest
-        ),
-        UserNotificationSetting::LEAVE_REQUEST,
-        $actorUserId,
-        null,
-        $this->leaveEmailDetails($leaveRequest),
-        $emailSubjectContext
-    );
-}
-
-/**
- * Build email details for a leave request.
- *
- * When the request has been approved, use the final approved
- * dates/duration and include paid/unpaid days.
- */
-protected function leaveEmailDetails(
-    LeaveRequest $leaveRequest,
-    bool $approved = false
-): array {
-    $fromDate = $approved && $leaveRequest->approved_from_date
-        ? $leaveRequest->approved_from_date
-        : $leaveRequest->requested_from_date;
-
-    $toDate = $approved && $leaveRequest->approved_to_date
-        ? $leaveRequest->approved_to_date
-        : $leaveRequest->requested_to_date;
-
-    $duration = $approved
-        && $leaveRequest->approved_duration !== null
-        ? $leaveRequest->approved_duration
-        : $leaveRequest->duration;
-
-    $details = [
-        'Employee' =>
+        $details = [
+            'Employee' =>
             $leaveRequest->user?->name ?? '-',
 
-        'Leave Type' =>
+            'Leave Type' =>
             $leaveRequest->leaveType?->name ?? '-',
 
-        'Type' =>
+            'Type' =>
             $leaveRequest->type === 'half_day'
                 ? 'Half Day'
                 : 'Full Day',
 
-        'From Date' =>
+            'From Date' =>
             $fromDate?->format('d M Y') ?? '-',
 
-        'To Date' =>
+            'To Date' =>
             $toDate?->format('d M Y') ?? '-',
 
-        'Duration' =>
+            'Duration' =>
             number_format(
                 (float) $duration,
                 2
             ) . ' days',
 
-        'Reason' =>
+            'Reason' =>
             $leaveRequest->reason ?? '-',
-    ];
+        ];
 
-    /*
+        /*
      * Paid/unpaid values are relevant after approval.
      */
-    if ($approved) {
-        $details['Paid Days'] =
-            $leaveRequest->paid_days !== null
+        if ($approved) {
+            $details['Paid Days'] =
+                $leaveRequest->paid_days !== null
                 ? number_format(
                     (float) $leaveRequest->paid_days,
                     2
                 ) . ' days'
                 : '0.00 days';
 
-        $details['Unpaid Days'] =
-            $leaveRequest->unpaid_days !== null
+            $details['Unpaid Days'] =
+                $leaveRequest->unpaid_days !== null
                 ? number_format(
                     (float) $leaveRequest->unpaid_days,
                     2
                 ) . ' days'
                 : '0.00 days';
-    }
+        }
 
-    return $details;
-}
+        return $details;
+    }
 
     public function getMeetingInvolvedRecipientIds(Meeting $meeting): array
     {
@@ -2392,17 +2379,15 @@ protected function leaveEmailDetails(
         return "{$hours}h {$minutes}m";
     }
 
-    private function getMeetingStartTimeString(Meeting $meeting, string $timezone): string
+    private function getMeetingStartTimeString(Meeting $meeting): string
     {
         if (! $meeting->start_at) {
             return 'N/A';
         }
 
-        $formatted = AppServiceProvider::formatAppDateTime($meeting->start_at);
-
-        return (! empty($formatted) && $formatted !== '--')
-            ? $formatted
-            : $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i');
+        $dateFormat = config('constants.date_format');
+        $timeFormat = config('constants.time_format');
+        return $meeting->start_at->format($dateFormat . ' ' . $timeFormat);
     }
 
     public function notifyMeetingAssigned(Meeting $meeting, ?User $actor = null): void
@@ -2412,10 +2397,11 @@ protected function leaveEmailDetails(
         if ($recipientIds === []) {
             return;
         }
+        $dateFormat = config('constants.date_format');
+        $timeFormat = config('constants.time_format');
 
-        $timezone = AppServiceProvider::getTimezone();
         $actorName = $actor?->name ?? 'A team member';
-        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $startTimeStr = $this->getMeetingStartTimeString($meeting);
         $durationStr = $this->getMeetingDurationString($meeting);
 
         $title = 'Meeting Assigned';
@@ -2434,7 +2420,7 @@ protected function leaveEmailDetails(
             'Organizer' => $meeting->organizer?->name ?? 'N/A',
             'Start Time' => $startTimeStr,
             'Duration' => $durationStr,
-            'End Time' => $meeting->end_at ? $meeting->end_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'End Time' => $meeting->end_at ? $meeting->end_at->format($dateFormat . ' ' . $timeFormat) : 'N/A',
             'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
         ];
 
@@ -2459,9 +2445,8 @@ protected function leaveEmailDetails(
             return;
         }
 
-        $timezone = AppServiceProvider::getTimezone();
         $actorName = $actor?->name ?? 'A team member';
-        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $startTimeStr = $this->getMeetingStartTimeString($meeting);
         $durationStr = $this->getMeetingDurationString($meeting);
 
         $title = 'Meeting Status Changed';
@@ -2504,9 +2489,8 @@ protected function leaveEmailDetails(
             return false;
         }
 
-        $timezone = AppServiceProvider::getTimezone();
         $minutesBefore = (int) config('constants.meeting_reminder_notification_min', 10);
-        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $startTimeStr = $this->getMeetingStartTimeString($meeting);
         $durationStr = $this->getMeetingDurationString($meeting);
 
         $title = 'Upcoming Meeting Reminder';
