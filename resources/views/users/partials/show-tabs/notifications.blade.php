@@ -5,7 +5,7 @@
     <div class="space-y-5">
         @php
             $userSettings = $user->notificationSettings->keyBy('action');
-            $notificationGroupOrder = ['Project Management', 'Task Management', 'Team & Shift', 'Requests & Approvals'];
+            $notificationGroupOrder = ['Project Management', 'Task Management', 'Team & Shift', 'Requests & Approvals', 'Meeting & Leaves'];
             $groupedNotificationSettings = collect($userNotificationSettings)->groupBy('group');
 
             $allActions = collect($userNotificationSettings)->pluck('action')->filter()->values();

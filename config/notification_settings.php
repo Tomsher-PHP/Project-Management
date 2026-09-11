@@ -357,11 +357,11 @@ return [
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="30" cy="30" r="30" fill="#2DD4BF"/>
-                <rect x="20" y="17" width="18" height="24" rx="3" fill="white"/>
-                <rect x="25" y="14" width="8" height="5" rx="2" fill="white"/>
-                <path d="M24 25h10M24 30h8M24 35h6" stroke="#099f38" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="40" cy="36" r="6" fill="#06752A"/>
-                <path d="M37.5 36h5M40 33.5v5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <rect x="18" y="20" width="24" height="22" rx="3" fill="white"/>
+                <path d="M18 26h24" stroke="#2DD4BF" stroke-width="2"/>
+                <path d="M24 17v5M36 17v5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="30" cy="31" r="3" fill="#2DD4BF"/>
+                <path d="M24 38c0-2.2 2.7-3.5 6-3.5s6 1.3 6 3.5" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round"/>
             </svg>
             ',
         'in_app' => true,
@@ -378,11 +378,11 @@ return [
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="30" cy="30" r="30" fill="#22C55E"/>
-                <rect x="20" y="17" width="18" height="24" rx="3" fill="white"/>
-                <rect x="25" y="14" width="8" height="5" rx="2" fill="white"/>
-                <path d="M24 25h10M24 30h8M24 35h6" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="40" cy="36" r="6" fill="#22C55E"/>
-                <path d="M37.5 36h5M40 33.5v5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <rect x="18" y="20" width="24" height="22" rx="3" fill="white"/>
+                <path d="M18 26h24" stroke="#22C55E" stroke-width="2"/>
+                <path d="M24 17v5M36 17v5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M26 34.5a5.5 5.5 0 1 1 9.5-3" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/>
+                <path d="M36 29v3h-3" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             ',
         'in_app' => true,
@@ -399,11 +399,12 @@ return [
         'icon' => '
             <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="30" cy="30" r="30" fill="#FFC837"/>
-                <rect x="20" y="17" width="18" height="24" rx="3" fill="white"/>
-                <rect x="25" y="14" width="8" height="5" rx="2" fill="white"/>
-                <path d="M24 25h10M24 30h8M24 35h6" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="40" cy="36" r="6" fill="#FFC837"/>
-                <path d="M37.5 36h5M40 33.5v5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <rect x="18" y="20" width="24" height="22" rx="3" fill="white"/>
+                <path d="M18 26h24" stroke="#FFC837" stroke-width="2"/>
+                <path d="M24 17v5M36 17v5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M30 29.5c-2 0-3.5 1.5-3.5 3.5v2h7v-2c0-2-1.5-3.5-3.5-3.5z" stroke="#FFC837" stroke-width="1.8" fill="#FFC837"/>
+                <path d="M25 35h10" stroke="#FFC837" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="30" cy="37.5" r="1.2" fill="#FFC837"/>
             </svg>
             ',
         'in_app' => true,
