@@ -110,6 +110,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 3. Duration & End Date Calculation
+    function parseDateTimeStr(str) {
+        if (!str) return null;
+        const parts = str.trim().split(" ");
+        if (parts.length < 2) return null;
+        const [ymd, hm] = parts;
+        if (!ymd || !hm) return null;
+        const [year, month, day] = ymd.split("-").map(Number);
+        const [hours, minutes] = hm.split(":").map(Number);
+        if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) return null;
+        const dt = new Date(year, month - 1, day, hours, minutes);
+        return isNaN(dt.getTime()) ? null : dt;
+    }
+
     function calculateEndAt() {
         if (!startInputEl || !endInputEl) return;
 
@@ -121,15 +134,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const dateParts = startVal.split(" ");
-        if (dateParts.length < 2) return;
-
-        const [ymd, hm] = dateParts;
-        const [year, month, day] = ymd.split("-").map(Number);
-        const [hours, minutes] = hm.split(":").map(Number);
-
-        const startDate = new Date(year, month - 1, day, hours, minutes);
-        if (isNaN(startDate.getTime())) return;
+        const startDate = parseDateTimeStr(startVal);
+        if (!startDate) return;
 
         const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
 
@@ -638,8 +644,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const startVal = startInputEl ? startInputEl.value : "";
         const endVal = endInputEl ? endInputEl.value : "";
+        const startDateObj = parseDateTimeStr(startVal);
+        const endDateObj = parseDateTimeStr(endVal);
 
-        if (startVal && endVal && new Date(endVal) < new Date(startVal)) {
+        if (startDateObj && endDateObj && endDateObj < startDateObj) {
             Alert.error("The end date and time must be equal to or after the start date and time.");
             return;
         }
