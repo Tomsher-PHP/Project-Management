@@ -14,7 +14,7 @@
 
     <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid {{ $color }}">
         <div>
-            <button type="button" class="edit-meeting-btn text-left text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300" data-url="{{ $editUrl }}" data-update-url="{{ $updateUrl }}" data-id="{{ $m->id }}">
+            <button type="button" class="preview-meeting-btn text-left text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300" data-id="{{ $m->id }}">
                 {{ $m->title }}
             </button>
             <div class="text-xs text-bgray-700 mt-0.5 dark:text-bgray-400">

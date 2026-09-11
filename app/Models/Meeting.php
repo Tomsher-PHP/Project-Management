@@ -28,6 +28,7 @@ class Meeting extends Model
         'organizer_id',
         'title',
         'description',
+        'minutes',
         'start_at',
         'end_at',
         'url',
@@ -101,6 +102,26 @@ class Meeting extends Model
                     $pq->accessibleBy($user);
                 });
         });
+    }
+
+    /**
+     * Check if meeting minutes can be added or edited.
+     */
+    public function canAddMinutes(): bool
+    {
+        if (! $this->start_at || ! $this->start_at->isPast()) {
+            return false;
+        }
+
+        $statusCode = strtolower($this->meetingStatus?->code ?? '');
+        $statusName = strtolower($this->meetingStatus?->name ?? '');
+
+        if (in_array($statusCode, [MeetingStatus::STATUS_RESCHEDULED, MeetingStatus::STATUS_CANCELLED], true) ||
+            in_array($statusName, ['rescheduled', 'cancelled'], true)) {
+            return false;
+        }
+
+        return true;
     }
 
     public function project(): BelongsTo

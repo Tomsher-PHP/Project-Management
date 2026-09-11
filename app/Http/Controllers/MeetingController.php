@@ -344,4 +344,92 @@ class MeetingController extends Controller
             'message' => 'Failed to remove attachment.',
         ], 400);
     }
+
+    /**
+     * Get rendered preview drawer content for a meeting.
+     */
+    public function preview(Meeting $meeting): JsonResponse
+    {
+        $authUser = auth()->user();
+
+        if (! Meeting::query()->where('id', $meeting->id)->accessibleBy($authUser)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to view this meeting.',
+            ], 403);
+        }
+
+        $meeting->load([
+            'project',
+            'meetingType',
+            'meetingLocation',
+            'meetingStatus',
+            'organizer',
+            'participants.user',
+            'tags',
+            'attachments',
+        ]);
+
+        $html = view('meetings.partials.preview-drawer-content', [
+            'meeting' => $meeting,
+            'canAddMinutes' => $meeting->canAddMinutes(),
+        ])->render();
+
+        return response()->json([
+            'status' => true,
+            'html' => $html,
+        ]);
+    }
+
+    /**
+     * Update meeting minutes for a meeting.
+     */
+    public function updateMinutes(Request $request, Meeting $meeting): JsonResponse
+    {
+        $authUser = auth()->user();
+
+        if (! Meeting::query()->where('id', $meeting->id)->accessibleBy($authUser)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to edit this meeting.',
+            ], 403);
+        }
+
+        if (! $meeting->canAddMinutes()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Meeting minutes cannot be added or edited for this meeting.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'minutes' => ['nullable', 'string'],
+        ]);
+
+        $meeting->minutes = $validated['minutes'] ?? null;
+        $meeting->save();
+
+        $meeting->load([
+            'project',
+            'meetingType',
+            'meetingLocation',
+            'meetingStatus',
+            'organizer',
+            'participants.user',
+            'tags',
+            'attachments',
+        ]);
+
+        $html = view('meetings.partials.preview-drawer-content', [
+            'meeting' => $meeting,
+            'canAddMinutes' => $meeting->canAddMinutes(),
+        ])->render();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Meeting minutes updated successfully.',
+            'minutes' => $meeting->minutes,
+            'html' => $html,
+        ]);
+    }
 }

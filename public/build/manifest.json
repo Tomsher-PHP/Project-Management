@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-C1pcjRCD.css",
+    "file": "assets/app-D5lrOKmC.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -96,7 +96,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DaFpjMVE.js",
+    "file": "assets/app-GFjE7wEC.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -235,6 +235,29 @@
     "name": "list-notifications",
     "src": "resources/js/modules/list-notifications.js",
     "isEntry": true
+  },
+  "resources/js/modules/meetings/meeting-form.js": {
+    "file": "assets/meeting-form-nXNTFhSM.js",
+    "name": "meeting-form",
+    "src": "resources/js/modules/meetings/meeting-form.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_datepicker-DWdH-Ouy.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "_timepicker-BgMmsOv3.js"
+    ]
+  },
+  "resources/js/modules/meetings/meetings.js": {
+    "file": "assets/meetings-CD9TegAo.js",
+    "name": "meetings",
+    "src": "resources/js/modules/meetings/meetings.js",
+    "isEntry": true,
+    "imports": [
+      "_alert-DZ9rIzyM.js",
+      "_sweetalert2.esm.all-YZDMVk0e.js"
+    ]
   },
   "resources/js/modules/project-stage-form.js": {
     "file": "assets/project-stage-form-DaUeFapW.js",
@@ -479,7 +502,7 @@
     "isEntry": true
   },
   "resources/js/modules/users/user-shift.js": {
-    "file": "assets/user-shift-tEhc6GBY.js",
+    "file": "assets/user-shift-BzYx1tpp.js",
     "name": "user-shift",
     "src": "resources/js/modules/users/user-shift.js",
     "isEntry": true

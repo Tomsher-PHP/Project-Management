@@ -104,10 +104,9 @@
                                     @foreach ($visibleMeetings as $m)
                                         @php
                                             $mColor = $m->meetingType?->color ?: '#3B82F6';
-                                            $isFutureMeeting = $m->start_at && !$m->start_at->isPast();
                                         @endphp
                                         <div class="group relative flex items-center justify-between rounded-md px-2 py-1.5 transition hover:opacity-90 cursor-pointer" style="background-color: {{ $mColor }}15; border-left: 3px solid {{ $mColor }};">
-                                            <button type="button" class="edit-meeting-btn min-w-0 flex-1 text-left block cursor-pointer" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}">
+                                            <button type="button" class="preview-meeting-btn min-w-0 flex-1 text-left block cursor-pointer" data-id="{{ $m->id }}">
                                                 <div class="flex items-center gap-1.5">
                                                     <x-user-avatar :user="$m->organizer" size="xs" />
                                                     <div class="min-w-0 flex-1">
@@ -120,13 +119,11 @@
                                                     </div>
                                                 </div>
                                             </button>
-                                            @if ($isFutureMeeting)
-                                                @can('meeting.delete')
-                                                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 ml-1 flex-shrink-0">
-                                                        <x-delete-form :action="route('meetings.destroy', $m->id)" ajax confirm-title="Delete Meeting" confirm-message="Are you sure you want to delete this meeting?" class="!h-5 !w-5 !p-0 border-none bg-transparent hover:bg-red-100 dark:hover:bg-red-900/40 text-red-500" icon-class="h-3.5 w-3.5" title="Delete Meeting" />
-                                                    </div>
-                                                @endcan
-                                            @endif
+                                            @can('meeting.edit')
+                                                <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-150 ml-1 flex-shrink-0">
+                                                    <x-edit-button action="javascript:void(0)" class="edit-meeting-btn !h-5 !w-5 !p-0 border-none bg-transparent hover:bg-bgray-200 dark:hover:bg-darkblack-400" icon-class="h-3.5 w-3.5" data-url="{{ route('meetings.edit', $m->id) }}" data-update-url="{{ route('meetings.update', $m->id) }}" data-id="{{ $m->id }}" title="Edit Meeting" />
+                                                </div>
+                                            @endcan
                                         </div>
                                     @endforeach
 
@@ -184,6 +181,9 @@
 
     <!-- Include Reusable Form Modal -->
     @include('meetings.form-modal')
+
+    <!-- Meeting Preview Drawer -->
+    @include('meetings.partials.preview-drawer')
 
     <!-- Filter Drawer -->
     <x-filters.drawer>
