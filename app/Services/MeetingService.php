@@ -9,8 +9,11 @@ use App\Models\MeetingStatus;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use App\Mail\MeetingExternalParticipantAssignedMail;
+use App\Mail\MeetingExternalParticipantRemovedMail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class MeetingService
 {
@@ -201,6 +204,9 @@ class MeetingService
         $actor = $user ?? auth()->user();
         $this->notificationService->notifyMeetingAssigned($createdMeeting, $actor);
 
+        // Send email notifications to external participants
+        $this->sendExternalParticipantEmailsOnCreate($createdMeeting);
+
         return $createdMeeting;
     }
 
@@ -210,6 +216,26 @@ class MeetingService
     public function update(Meeting $meeting, array $data, ?User $user = null, array $files = []): Meeting
     {
         $oldStatusId = $meeting->meeting_status_id;
+
+        // Capture original external participants BEFORE update
+        $originalExternalMap = [];
+        $originalExternal = $meeting->participants()
+            ->where(function ($query) {
+                $query->where('is_external', true)->orWhereNull('user_id');
+            })
+            ->whereNotNull('email')
+            ->get();
+
+        foreach ($originalExternal as $p) {
+            $email = strtolower(trim((string) $p->email));
+            if ($email !== '') {
+                $originalExternalMap[$email] = [
+                    'name' => $p->name,
+                    'send_email' => (bool) $p->send_email,
+                ];
+            }
+        }
+
         $participantChanges = [
             'added_user_ids' => [],
             'removed_user_ids' => [],
@@ -259,12 +285,12 @@ class MeetingService
 
         $actor = $user ?? auth()->user();
 
-        // 1. Notify newly added participants
+        // 1. Notify newly added internal participants
         if (! empty($participantChanges['added_user_ids'])) {
             $this->notificationService->notifyMeetingAssigned($updatedMeeting, $actor, $participantChanges['added_user_ids']);
         }
 
-        // 2. Notify removed participants
+        // 2. Notify removed internal participants
         if (! empty($participantChanges['removed_user_ids'])) {
             $this->notificationService->notifyMeetingParticipantRemoved($updatedMeeting, $participantChanges['removed_user_ids'], $actor);
         }
@@ -275,6 +301,9 @@ class MeetingService
             $newStatus = $updatedMeeting->meetingStatus?->name ?? 'Unknown';
             $this->notificationService->notifyMeetingStatusChanged($updatedMeeting, $actor, $oldStatus, $newStatus);
         }
+
+        // 4. Send email notifications to external participants on update
+        $this->sendExternalParticipantEmailsOnUpdate($updatedMeeting, $originalExternalMap);
 
         return $updatedMeeting;
     }
@@ -424,5 +453,89 @@ class MeetingService
             'removed_user_ids' => $removedInternalUserIds,
             'kept_user_ids' => $keptInternalUserIds,
         ];
+    }
+
+    /**
+     * Send email notifications to eligible external participants upon meeting creation.
+     */
+    protected function sendExternalParticipantEmailsOnCreate(Meeting $meeting): void
+    {
+        $meeting->loadMissing(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+
+        $sentEmails = [];
+
+        foreach ($meeting->participants as $participant) {
+            $isExternal = (bool) $participant->is_external || empty($participant->user_id);
+            if (! $isExternal) {
+                continue;
+            }
+
+            if (! (bool) $participant->send_email) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $participant->email));
+            if (empty($email) || in_array($email, $sentEmails, true)) {
+                continue;
+            }
+
+            $sentEmails[] = $email;
+
+            try {
+                Mail::to($email)->send(new MeetingExternalParticipantAssignedMail($meeting, $participant->name));
+            } catch (\Throwable $e) {
+                logger()->error("Failed to send external participant assigned email to {$email}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Send email notifications to external participants upon meeting update.
+     */
+    protected function sendExternalParticipantEmailsOnUpdate(Meeting $meeting, array $originalExternalMap): void
+    {
+        $meeting->loadMissing(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+
+        $newExternalMap = [];
+        foreach ($meeting->participants as $p) {
+            $isExternal = (bool) $p->is_external || empty($p->user_id);
+            if (! $isExternal) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $p->email));
+            if ($email !== '') {
+                $newExternalMap[$email] = [
+                    'name' => $p->name,
+                    'send_email' => (bool) $p->send_email,
+                ];
+            }
+        }
+
+        // 1. Removed external participants: in $originalExternalMap but not in $newExternalMap
+        $removedEmails = array_diff_key($originalExternalMap, $newExternalMap);
+        foreach ($removedEmails as $email => $info) {
+            if ($info['send_email'] === true) {
+                try {
+                    Mail::to($email)->send(new MeetingExternalParticipantRemovedMail($meeting, $info['name']));
+                } catch (\Throwable $e) {
+                    logger()->error("Failed to send external participant removed email to {$email}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // 2. Newly added external participants: in $newExternalMap but not in $originalExternalMap
+        $addedEmails = array_diff_key($newExternalMap, $originalExternalMap);
+        foreach ($addedEmails as $email => $info) {
+            if ($info['send_email'] === true) {
+                try {
+                    Mail::to($email)->send(new MeetingExternalParticipantAssignedMail($meeting, $info['name']));
+                } catch (\Throwable $e) {
+                    logger()->error("Failed to send external participant assigned email to {$email}: " . $e->getMessage());
+                }
+            }
+        }
+
+        // Unchanged external participants (in both maps): no email sent!
     }
 }
