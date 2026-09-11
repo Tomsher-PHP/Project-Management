@@ -42,7 +42,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Overview
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Summary of user profile and organizational details
                             </p>
                         </div>
@@ -58,7 +58,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Notification manager
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Manage user notifications and project-related alerts
                             </p>
                         </div>
@@ -74,7 +74,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 General Settings
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Configure user preferences and account settings
                             </p>
                         </div>
@@ -90,7 +90,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Change Password
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Update your account password
                             </p>
                         </div>
@@ -107,7 +107,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 Shift Calendar
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 View monthly shift schedule and assignments
                             </p>
                         </div>
@@ -124,7 +124,7 @@
                             <h4 class="text-base font-bold text-bgray-900 dark:text-white">
                                 KPI
                             </h4>
-                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-darkblack-300">
+                            <p class="mt-0.5 text-sm font-medium text-bgray-700 dark:text-bgray-300">
                                 Track performance and KPI metrics
                             </p>
                         </div>
