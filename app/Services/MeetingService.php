@@ -258,7 +258,7 @@ class MeetingService
             ])));
 
             if (array_key_exists('participants', $data)) {
-                $participantChanges = $this->syncParticipants($meeting, $data['participants']);
+                $participantChanges = $this->syncParticipants($meeting, is_array($data['participants']) ? $data['participants'] : []);
             }
 
             if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {

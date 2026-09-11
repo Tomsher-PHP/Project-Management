@@ -178,7 +178,7 @@
         @if ($meeting->description)
             <div class="space-y-1.5">
                 <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Description</h4>
-                <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-200 leading-relaxed prose dark:prose-invert max-w-none">
+                <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-300 [&_*]:dark:text-bgray-300 leading-relaxed prose dark:prose-invert max-w-none">
                     {!! $meeting->description !!}
                 </div>
             </div>

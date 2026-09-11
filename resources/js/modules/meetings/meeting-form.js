@@ -568,6 +568,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Clean existing dynamic participant hidden inputs
         form.querySelectorAll(".dynamic-participant-input").forEach((el) => el.remove());
 
+        // Add marker so participants field payload is tracked on submit
+        const dummyParticipantInput = document.createElement("input");
+        dummyParticipantInput.type = "hidden";
+        dummyParticipantInput.name = "participants_submitted";
+        dummyParticipantInput.value = "1";
+        dummyParticipantInput.className = "dynamic-participant-input";
+        form.appendChild(dummyParticipantInput);
+
         let pIndex = 0;
 
         // Internal Participants

@@ -60,7 +60,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-D5lrOKmC.css",
+    "file": "assets/app-DPRsy4Tu.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -237,7 +237,7 @@
     "isEntry": true
   },
   "resources/js/modules/meetings/meeting-form.js": {
-    "file": "assets/meeting-form-nXNTFhSM.js",
+    "file": "assets/meeting-form-C-fvYL4D.js",
     "name": "meeting-form",
     "src": "resources/js/modules/meetings/meeting-form.js",
     "isEntry": true,
@@ -250,7 +250,7 @@
     ]
   },
   "resources/js/modules/meetings/meetings.js": {
-    "file": "assets/meetings-CD9TegAo.js",
+    "file": "assets/meetings-DKEMupV8.js",
     "name": "meetings",
     "src": "resources/js/modules/meetings/meetings.js",
     "isEntry": true,

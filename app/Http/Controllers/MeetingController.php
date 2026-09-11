@@ -284,7 +284,10 @@ class MeetingController extends Controller
      */
     public function update(MeetingRequest $request, Meeting $meeting): JsonResponse|RedirectResponse
     {
-        $updatedMeeting = $this->meetingService->update($meeting, $request->validated(), $request->user(), $request->allFiles());
+        $validated = $request->validated();
+        $validated['participants'] = $request->input('participants', []);
+
+        $updatedMeeting = $this->meetingService->update($meeting, $validated, $request->user(), $request->allFiles());
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
