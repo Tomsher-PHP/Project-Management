@@ -35,7 +35,7 @@
             @endif
 
             <!-- Close Drawer -->
-            <button type="button" id="close-meeting-preview-btn" class="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-400 dark:hover:bg-darkblack-500 dark:hover:text-white" title="Close Preview">
+            <button type="button" id="close-meeting-preview-btn" class="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-500 dark:hover:text-white" title="Close Preview">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -73,17 +73,17 @@
         <div class="rounded-xl border border-bgray-200 bg-bgray-50/50 p-4 dark:border-darkblack-400 dark:bg-darkblack-500/50 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                    <span class="text-bgray-700 dark:text-bgray-400 block mb-0.5">Date</span>
+                    <span class="text-bgray-700 dark:text-bgray-300 block mb-0.5">Date</span>
                     <span class="font-semibold text-bgray-900 dark:text-white">
                         {{ $meeting->start_at ? $meeting->start_at->format('d M Y (l)') : 'N/A' }}
                     </span>
                 </div>
                 <div>
-                    <span class="text-bgray-700 dark:text-bgray-400 block mb-0.5">Time & Duration</span>
+                    <span class="text-bgray-700 dark:text-bgray-300 block mb-0.5">Time & Duration</span>
                     <span class="font-semibold text-bgray-900 dark:text-white">
                         {{ $startTimeStr }} - {{ $endTimeStr }}
                         @if ($durationStr)
-                            <span class="text-bgray-700 dark:text-bgray-400 font-normal">({{ $durationStr }})</span>
+                            <span class="text-bgray-700 dark:text-bgray-300 font-normal">({{ $durationStr }})</span>
                         @endif
                     </span>
                 </div>
@@ -93,7 +93,7 @@
                 <div class="pt-2 border-t border-bgray-200 dark:border-darkblack-400 space-y-2 text-xs">
                     @if ($meeting->meetingLocation)
                         <div>
-                            <span class="text-bgray-700 dark:text-bgray-400">Location: </span>
+                            <span class="text-bgray-700 dark:text-bgray-300">Location: </span>
                             <span class="font-medium text-bgray-900 dark:text-white">{{ $meeting->meetingLocation->name }}</span>
                             @if ($meeting->location_details)
                                 <span class="text-bgray-600 dark:text-bgray-300"> - {{ $meeting->location_details }}</span>
@@ -103,7 +103,7 @@
 
                     @if ($meeting->url)
                         <div class="truncate">
-                            <span class="text-bgray-700 dark:text-bgray-400">Meeting URL: </span>
+                            <span class="text-bgray-700 dark:text-bgray-300">Meeting URL: </span>
                             <a href="{{ $meeting->url }}" target="_blank" rel="noopener noreferrer" class="font-medium text-success-400 hover:underline inline-flex items-center gap-1">
                                 {{ $meeting->url }}
                                 <svg class="h-3 w-3 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,14 +118,14 @@
 
         <!-- Organizer -->
         <div class="space-y-1.5">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Organizer</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Organizer</h4>
             <div class="flex items-center gap-3 rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400">
                 <x-user-avatar :user="$meeting->organizer" size="sm" />
                 <div class="min-w-0 flex-1">
                     <div class="text-xs font-semibold text-bgray-900 dark:text-white truncate">
                         {{ $meeting->organizer?->name ?? 'N/A' }}
                     </div>
-                    <div class="text-[11px] text-bgray-700 dark:text-bgray-400 truncate">
+                    <div class="text-[11px] text-bgray-700 dark:text-bgray-300 truncate">
                         {{ $meeting->organizer?->email ?? '' }}
                     </div>
                 </div>
@@ -134,7 +134,7 @@
 
         <!-- Participants -->
         <div class="space-y-2">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                 Participants ({{ $meeting->participants->count() }})
             </h4>
 
@@ -151,7 +151,7 @@
                                         {{ $participant->name ?? 'External Guest' }}
                                         <span class="ml-1 text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded-full">External</span>
                                     </div>
-                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-400 truncate">
+                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-300 truncate">
                                         {{ $participant->email }}
                                     </div>
                                 </div>
@@ -161,7 +161,7 @@
                                     <div class="text-xs font-medium text-bgray-900 dark:text-white truncate">
                                         {{ $participant->user?->name ?? 'User' }}
                                     </div>
-                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-400 truncate">
+                                    <div class="text-[11px] text-bgray-700 dark:text-bgray-300 truncate">
                                         {{ $participant->user?->email }}
                                     </div>
                                 </div>
@@ -169,7 +169,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="col-span-2 text-xs text-bgray-700 dark:text-bgray-400 py-2">No participants added.</div>
+                    <div class="col-span-2 text-xs text-bgray-700 dark:text-bgray-300 py-2">No participants added.</div>
                 @endforelse
             </div>
         </div>
@@ -177,7 +177,7 @@
         <!-- Description -->
         @if ($meeting->description)
             <div class="space-y-1.5">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">Description</h4>
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Description</h4>
                 <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-200 leading-relaxed prose dark:prose-invert max-w-none">
                     {!! $meeting->description !!}
                 </div>
@@ -187,7 +187,7 @@
         <!-- Attachments -->
         @if ($meeting->attachments && $meeting->attachments->count() > 0)
             <div class="space-y-2">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-400">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
                     Attachments ({{ $meeting->attachments->count() }})
                 </h4>
                 <div class="max-h-44 overflow-y-auto space-y-2 pr-1">
@@ -245,7 +245,7 @@
                         {!! $meeting->minutes !!}
                     </div>
                 @else
-                    <div class="rounded-lg border border-dashed border-bgray-300 p-4 text-center text-xs text-bgray-700 dark:border-darkblack-400 dark:text-bgray-400">
+                    <div class="rounded-lg border border-dashed border-bgray-300 p-4 text-center text-xs text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
                         @if ($canAddMinutes)
                             No meeting minutes added yet. Click "+ Add Minutes" to record key takeaways and decisions.
                         @else

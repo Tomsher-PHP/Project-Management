@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         dayModalTitle.innerText = "Meetings - " + formattedDate;
-        dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">Loading meetings...</div>`;
+        dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-700 dark:text-bgray-300">Loading meetings...</div>`;
         dayModal.classList.remove("hidden");
 
         const fetchUrl = dayModal.dataset.dayMeetingsUrl || "/meetings/day-meetings";
@@ -240,11 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 dayModalContent.innerHTML = result.html;
             } else {
-                dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">Failed to load meetings.</div>`;
+                dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-700 dark:text-bgray-300">Failed to load meetings.</div>`;
             }
         } catch (err) {
             console.error("Error loading day meetings content:", err);
-            dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-500 dark:text-bgray-400">An error occurred while loading meetings.</div>`;
+            dayModalContent.innerHTML = `<div class="py-8 text-center text-sm text-bgray-700 dark:text-bgray-300">An error occurred while loading meetings.</div>`;
         }
     }
 

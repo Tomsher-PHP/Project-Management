@@ -9,7 +9,7 @@
         $organizer = $m->organizer?->name ?? 'N/A';
         $editUrl = route('meetings.edit', $m->id);
         $updateUrl = route('meetings.update', $m->id);
-        $isFutureMeeting = $m->start_at && ! $m->start_at->isPast();
+        $isFutureMeeting = $m->start_at && !$m->start_at->isPast();
     @endphp
 
     <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid {{ $color }}">
@@ -17,10 +17,10 @@
             <button type="button" class="preview-meeting-btn text-left text-sm font-bold text-bgray-900 dark:text-white hover:text-success-300" data-id="{{ $m->id }}">
                 {{ $m->title }}
             </button>
-            <div class="text-xs text-bgray-700 mt-0.5 dark:text-bgray-400">
+            <div class="text-xs text-bgray-700 mt-0.5 dark:text-bgray-300">
                 {{ $timeRange }} • {{ $type }} • Status: {{ $status }}
             </div>
-            <div class="text-xs text-bgray-700 mt-0.5 dark:text-bgray-400">Organizer: {{ $organizer }}</div>
+            <div class="text-xs text-bgray-700 mt-0.5 dark:text-bgray-300">Organizer: {{ $organizer }}</div>
         </div>
         <div class="flex items-center gap-2">
             <x-edit-button action="javascript:void(0)" class="edit-meeting-btn" data-url="{{ $editUrl }}" data-update-url="{{ $updateUrl }}" data-id="{{ $m->id }}" title="Edit Meeting" />
