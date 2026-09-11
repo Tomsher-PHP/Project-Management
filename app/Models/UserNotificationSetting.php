@@ -27,6 +27,10 @@ class UserNotificationSetting extends Model
     public const TASK_TIME_EXTEND_REQUEST = 'task_time_extension_request';
     public const LEAVE_REQUEST = 'leave_request';
 
+    public const MEETING_ASSIGNED = 'meeting_assigned';
+    public const MEETING_STATUS_CHANGE = 'meeting_status_change';
+    public const MEETING_REMINDER = 'meeting_reminder';
+
     protected $fillable = [
         'user_id',
         'action',

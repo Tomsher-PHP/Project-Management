@@ -32,6 +32,7 @@ class Meeting extends Model
         'end_at',
         'url',
         'location_details',
+        'reminder_sent_at',
         'added_by',
         'updated_by',
     ];
@@ -59,6 +60,7 @@ class Meeting extends Model
             'organizer_id' => 'integer',
             'start_at' => 'datetime',
             'end_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'added_by' => 'integer',
             'updated_by' => 'integer',
         ];

@@ -96,6 +96,9 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             'sprint_timeline_changed' => "Sprint Timeline Changed by {$actor}",
             'task_timeline_changed' => "Task Timeline Changed by {$actor}",
             'task_status_changed' => "Task Status Changed by {$actor} ({$assignee})",
+            'meeting_assigned' => "Meeting Assigned by {$actor}",
+            'meeting_status_change' => "Meeting Status Changed by {$actor}",
+            'meeting_reminder' => "Upcoming Meeting Reminder: {$task}",
             default => null,
         };
     }

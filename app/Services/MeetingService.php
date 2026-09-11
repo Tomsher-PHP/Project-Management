@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\DB;
 class MeetingService
 {
     protected AttachmentService $attachmentService;
+    protected NotificationService $notificationService;
 
-    public function __construct(AttachmentService $attachmentService)
+    public function __construct(AttachmentService $attachmentService, NotificationService $notificationService)
     {
         $this->attachmentService = $attachmentService;
+        $this->notificationService = $notificationService;
     }
     /**
      * Retrieve paginated or query list of meetings.
@@ -193,6 +195,11 @@ class MeetingService
 
             return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
         });
+
+        $actor = $user ?? auth()->user();
+        $this->notificationService->notifyMeetingAssigned($meeting, $actor);
+
+        return $meeting;
     }
 
     /**
@@ -200,7 +207,9 @@ class MeetingService
      */
     public function update(Meeting $meeting, array $data, ?User $user = null, array $files = []): Meeting
     {
-        return DB::transaction(function () use ($meeting, $data, $files) {
+        $oldStatusId = $meeting->meeting_status_id;
+
+        $updatedMeeting = DB::transaction(function () use ($meeting, $data, $files) {
             $meeting->update(array_intersect_key($data, array_flip([
                 'project_id',
                 'meeting_type_id',
@@ -240,6 +249,15 @@ class MeetingService
 
             return $meeting->fresh(['project', 'meetingType', 'meetingLocation', 'meetingStatus', 'organizer', 'participants.user', 'tags', 'attachments']);
         });
+
+        $actor = $user ?? auth()->user();
+        if ((int) $oldStatusId !== (int) $updatedMeeting->meeting_status_id) {
+            $oldStatus = MeetingStatus::find($oldStatusId)?->name ?? 'Unknown';
+            $newStatus = $updatedMeeting->meetingStatus?->name ?? 'Unknown';
+            $this->notificationService->notifyMeetingStatusChanged($updatedMeeting, $actor, $oldStatus, $newStatus);
+        }
+
+        return $updatedMeeting;
     }
 
     /**

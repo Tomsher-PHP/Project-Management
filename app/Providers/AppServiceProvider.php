@@ -173,10 +173,15 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
+    public static function getTimezone(): string
+    {
+        return (string) config('constants.timezone', config('app.timezone'));
+    }
+
     private static function normalizeForAppTimezone($value): ?CarbonInterface
     {
         try {
-            $timezone = (string) config('constants.timezone', config('app.timezone'));
+            $timezone = self::getTimezone();
 
             if ($value instanceof CarbonInterface) {
                 return $value->copy()->timezone($timezone);

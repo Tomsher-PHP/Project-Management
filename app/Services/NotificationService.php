@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use App\Models\LeaveRequest;
+use App\Models\Meeting;
 
 class NotificationService
 {
@@ -2318,4 +2319,156 @@ protected function leaveEmailDetails(
 
     return $details;
 }
+
+    public function getMeetingInvolvedRecipientIds(Meeting $meeting): array
+    {
+        $meeting->loadMissing(['participants', 'organizer', 'addedBy']);
+
+        $userIds = [];
+
+        if ($meeting->organizer_id) {
+            $userIds[] = (int) $meeting->organizer_id;
+        }
+
+        if ($meeting->added_by) {
+            $userIds[] = (int) $meeting->added_by;
+        }
+
+        foreach ($meeting->participants as $participant) {
+            if (! $participant->is_external && $participant->user_id) {
+                $userIds[] = (int) $participant->user_id;
+            }
+        }
+
+        return collect($userIds)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function notifyMeetingAssigned(Meeting $meeting, ?User $actor = null): void
+    {
+        $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $timezone = AppServiceProvider::getTimezone();
+        $actorName = $actor?->name ?? 'A team member';
+        $title = 'Meeting Assigned';
+        $message = "{$actorName} scheduled meeting '{$meeting->title}'.";
+        $url = route('meetings.index');
+
+        $emailSubjectContext = [
+            'type' => 'meeting_assigned',
+            'actor_id' => $actor?->id ? (int) $actor->id : null,
+            'actor_name' => $actorName,
+            'task_name' => $meeting->title,
+        ];
+
+        $emailDetails = [
+            'Meeting' => $meeting->title,
+            'Organizer' => $meeting->organizer?->name ?? 'N/A',
+            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'End Time' => $meeting->end_at ? $meeting->end_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::MEETING_ASSIGNED,
+            $actor?->id ? (int) $actor->id : null,
+            $meeting->project_id ? (int) $meeting->project_id : null,
+            $emailDetails,
+            $emailSubjectContext
+        );
+    }
+
+    public function notifyMeetingStatusChanged(Meeting $meeting, ?User $actor = null, string $oldStatus = '', string $newStatus = ''): void
+    {
+        $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $timezone = AppServiceProvider::getTimezone();
+        $actorName = $actor?->name ?? 'A team member';
+        $title = 'Meeting Status Changed';
+        $message = "{$actorName} changed meeting '{$meeting->title}' status from {$oldStatus} to {$newStatus}.";
+        $url = route('meetings.index');
+
+        $emailSubjectContext = [
+            'type' => 'meeting_status_change',
+            'actor_id' => $actor?->id ? (int) $actor->id : null,
+            'actor_name' => $actorName,
+            'task_name' => $meeting->title,
+        ];
+
+        $emailDetails = [
+            'Meeting' => $meeting->title,
+            'Status' => "{$oldStatus} to {$newStatus}",
+            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Organizer' => $meeting->organizer?->name ?? 'N/A',
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::MEETING_STATUS_CHANGE,
+            $actor?->id ? (int) $actor->id : null,
+            $meeting->project_id ? (int) $meeting->project_id : null,
+            $emailDetails,
+            $emailSubjectContext
+        );
+    }
+
+    public function notifyMeetingReminder(Meeting $meeting): bool
+    {
+        $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
+
+        if ($recipientIds === []) {
+            return false;
+        }
+
+        $timezone = AppServiceProvider::getTimezone();
+        $minutesBefore = (int) config('constants.meeting_reminder_notification_min', 10);
+        $title = 'Upcoming Meeting Reminder';
+        $startTimeStr = $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('H:i') : 'soon';
+        $message = "Reminder: Meeting '{$meeting->title}' starts in {$minutesBefore} minutes ({$startTimeStr}).";
+        $url = route('meetings.index');
+
+        $emailSubjectContext = [
+            'type' => 'meeting_reminder',
+            'task_name' => $meeting->title,
+        ];
+
+        $emailDetails = [
+            'Meeting' => $meeting->title,
+            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
+            'Organizer' => $meeting->organizer?->name ?? 'N/A',
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::MEETING_REMINDER,
+            null,
+            $meeting->project_id ? (int) $meeting->project_id : null,
+            $emailDetails,
+            $emailSubjectContext
+        );
+
+        return true;
+    }
 }
