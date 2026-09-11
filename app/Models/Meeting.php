@@ -109,15 +109,17 @@ class Meeting extends Model
      */
     public function canAddMinutes(): bool
     {
-        if (! $this->start_at || ! $this->start_at->isPast()) {
+        if (! $this->start_at || ! $this->start_at->copy()->shiftTimezone(config('constants.timezone'))->isPast()) {
             return false;
         }
 
         $statusCode = strtolower($this->meetingStatus?->code ?? '');
         $statusName = strtolower($this->meetingStatus?->name ?? '');
 
-        if (in_array($statusCode, [MeetingStatus::STATUS_RESCHEDULED, MeetingStatus::STATUS_CANCELLED], true) ||
-            in_array($statusName, ['rescheduled', 'cancelled'], true)) {
+        if (
+            in_array($statusCode, [MeetingStatus::STATUS_RESCHEDULED, MeetingStatus::STATUS_CANCELLED], true) ||
+            in_array($statusName, ['rescheduled', 'cancelled'], true)
+        ) {
             return false;
         }
 

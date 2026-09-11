@@ -1,5 +1,6 @@
 @forelse($meetings as $m)
     @php
+        $tz = $globalTimezone ?? (config('constants.timezone') ?? config('app.timezone'));
         $color = $m->meetingType?->color ?: ($m->meetingStatus?->color ?: '#3B82F6');
         $startTime = $m->start_at ? $m->start_at->format('H:i') : '';
         $endTime = $m->end_at ? $m->end_at->format('H:i') : '';
@@ -9,7 +10,7 @@
         $organizer = $m->organizer?->name ?? 'N/A';
         $editUrl = route('meetings.edit', $m->id);
         $updateUrl = route('meetings.update', $m->id);
-        $isFutureMeeting = $m->start_at && !$m->start_at->isPast();
+        $isFutureMeeting = $m->start_at && !$m->start_at->copy()->shiftTimezone($tz)->isPast();
     @endphp
 
     <div class="rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400 flex items-center justify-between" style="border-left: 4px solid {{ $color }}">

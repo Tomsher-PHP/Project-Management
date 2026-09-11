@@ -1,7 +1,8 @@
 @php
+    $tz = $globalTimezone ?? (config('constants.timezone') ?? config('app.timezone'));
     $typeColor = $meeting->meetingType?->color ?: '#3B82F6';
     $statusColor = $meeting->meetingStatus?->color ?: '#6B7280';
-    $isFutureMeeting = $meeting->start_at && !$meeting->start_at->isPast();
+    $isFutureMeeting = $meeting->start_at && !$meeting->start_at->copy()->shiftTimezone($tz)->isPast();
     $timeFormat = $globalTimeFormat ?? 'H:i';
     $startTimeStr = $meeting->start_at ? $meeting->start_at->format($timeFormat) : '';
     $endTimeStr = $meeting->end_at ? $meeting->end_at->format($timeFormat) : '';
