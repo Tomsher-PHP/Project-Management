@@ -56,6 +56,26 @@ class NotificationService
             ->first();
 
         if (! $setting) {
+            $userIsActive = User::where('id', $userId)->active()->exists();
+
+            if (! $userIsActive) {
+                return [];
+            }
+
+            $configSetting = config("notification_settings.{$notificationType}");
+
+            if ($configSetting) {
+                $channels = [];
+                if (! empty($configSetting['email'])) {
+                    $channels[] = 'mail';
+                }
+                if (! empty($configSetting['in_app'])) {
+                    $channels[] = 'database';
+                    $channels[] = 'broadcast';
+                }
+                return $channels;
+            }
+
             return [];
         }
 
@@ -2347,6 +2367,44 @@ protected function leaveEmailDetails(
             ->all();
     }
 
+    private function getMeetingDurationString(Meeting $meeting): string
+    {
+        if (! $meeting->start_at || ! $meeting->end_at) {
+            return 'N/A';
+        }
+
+        $totalMinutes = (int) $meeting->start_at->diffInMinutes($meeting->end_at);
+        if ($totalMinutes <= 0) {
+            return 'N/A';
+        }
+
+        if ($totalMinutes < 60) {
+            return "{$totalMinutes} mins";
+        }
+
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
+
+        if ($minutes === 0) {
+            return $hours . ' ' . ($hours > 1 ? 'hours' : 'hour');
+        }
+
+        return "{$hours}h {$minutes}m";
+    }
+
+    private function getMeetingStartTimeString(Meeting $meeting, string $timezone): string
+    {
+        if (! $meeting->start_at) {
+            return 'N/A';
+        }
+
+        $formatted = AppServiceProvider::formatAppDateTime($meeting->start_at);
+
+        return (! empty($formatted) && $formatted !== '--')
+            ? $formatted
+            : $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i');
+    }
+
     public function notifyMeetingAssigned(Meeting $meeting, ?User $actor = null): void
     {
         $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
@@ -2357,8 +2415,11 @@ protected function leaveEmailDetails(
 
         $timezone = AppServiceProvider::getTimezone();
         $actorName = $actor?->name ?? 'A team member';
+        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $durationStr = $this->getMeetingDurationString($meeting);
+
         $title = 'Meeting Assigned';
-        $message = "{$actorName} scheduled meeting '{$meeting->title}'.";
+        $message = "{$actorName} scheduled meeting '{$meeting->title}' starting at {$startTimeStr} (Duration: {$durationStr}).";
         $url = route('meetings.index');
 
         $emailSubjectContext = [
@@ -2371,7 +2432,8 @@ protected function leaveEmailDetails(
         $emailDetails = [
             'Meeting' => $meeting->title,
             'Organizer' => $meeting->organizer?->name ?? 'N/A',
-            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Start Time' => $startTimeStr,
+            'Duration' => $durationStr,
             'End Time' => $meeting->end_at ? $meeting->end_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
             'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
         ];
@@ -2399,8 +2461,11 @@ protected function leaveEmailDetails(
 
         $timezone = AppServiceProvider::getTimezone();
         $actorName = $actor?->name ?? 'A team member';
+        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $durationStr = $this->getMeetingDurationString($meeting);
+
         $title = 'Meeting Status Changed';
-        $message = "{$actorName} changed meeting '{$meeting->title}' status from {$oldStatus} to {$newStatus}.";
+        $message = "{$actorName} changed meeting '{$meeting->title}' status from {$oldStatus} to {$newStatus} (Starts: {$startTimeStr}, Duration: {$durationStr}).";
         $url = route('meetings.index');
 
         $emailSubjectContext = [
@@ -2413,7 +2478,8 @@ protected function leaveEmailDetails(
         $emailDetails = [
             'Meeting' => $meeting->title,
             'Status' => "{$oldStatus} to {$newStatus}",
-            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Start Time' => $startTimeStr,
+            'Duration' => $durationStr,
             'Organizer' => $meeting->organizer?->name ?? 'N/A',
         ];
 
@@ -2440,9 +2506,11 @@ protected function leaveEmailDetails(
 
         $timezone = AppServiceProvider::getTimezone();
         $minutesBefore = (int) config('constants.meeting_reminder_notification_min', 10);
+        $startTimeStr = $this->getMeetingStartTimeString($meeting, $timezone);
+        $durationStr = $this->getMeetingDurationString($meeting);
+
         $title = 'Upcoming Meeting Reminder';
-        $startTimeStr = $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('H:i') : 'soon';
-        $message = "Reminder: Meeting '{$meeting->title}' starts in {$minutesBefore} minutes ({$startTimeStr}).";
+        $message = "Reminder: Meeting '{$meeting->title}' starts in {$minutesBefore} minutes at {$startTimeStr} (Duration: {$durationStr}).";
         $url = route('meetings.index');
 
         $emailSubjectContext = [
@@ -2452,7 +2520,8 @@ protected function leaveEmailDetails(
 
         $emailDetails = [
             'Meeting' => $meeting->title,
-            'Start Time' => $meeting->start_at ? $meeting->start_at->copy()->timezone($timezone)->format('Y-m-d H:i') : 'N/A',
+            'Start Time' => $startTimeStr,
+            'Duration' => $durationStr,
             'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
             'Organizer' => $meeting->organizer?->name ?? 'N/A',
         ];

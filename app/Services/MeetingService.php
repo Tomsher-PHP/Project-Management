@@ -9,6 +9,7 @@ use App\Models\MeetingStatus;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MeetingService
@@ -148,7 +149,7 @@ class MeetingService
      */
     public function create(array $data, ?User $user = null, array $files = []): Meeting
     {
-        return DB::transaction(function () use ($data, $user, $files) {
+        $createdMeeting = DB::transaction(function () use ($data, $user, $files) {
             if (empty($data['organizer_id']) && $user) {
                 $data['organizer_id'] = $user->id;
             }
@@ -170,6 +171,7 @@ class MeetingService
                 'end_at' => $data['end_at'],
                 'url' => $data['url'] ?? null,
                 'location_details' => $data['location_details'] ?? null,
+                'added_by' => $data['added_by'] ?? ($user?->id ?? Auth::id()),
             ]);
 
             $this->syncParticipants($meeting, $data['participants'] ?? []);
@@ -197,9 +199,9 @@ class MeetingService
         });
 
         $actor = $user ?? auth()->user();
-        $this->notificationService->notifyMeetingAssigned($meeting, $actor);
+        $this->notificationService->notifyMeetingAssigned($createdMeeting, $actor);
 
-        return $meeting;
+        return $createdMeeting;
     }
 
     /**
