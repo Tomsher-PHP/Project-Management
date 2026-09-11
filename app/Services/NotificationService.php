@@ -2390,9 +2390,11 @@ class NotificationService
         return $meeting->start_at->format($dateFormat . ' ' . $timeFormat);
     }
 
-    public function notifyMeetingAssigned(Meeting $meeting, ?User $actor = null): void
+    public function notifyMeetingAssigned(Meeting $meeting, ?User $actor = null, ?array $specificUserIds = null): void
     {
-        $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
+        $recipientIds = $specificUserIds !== null
+            ? $this->normalizeUserIds($specificUserIds)
+            : $this->getMeetingInvolvedRecipientIds($meeting);
 
         if ($recipientIds === []) {
             return;
@@ -2410,6 +2412,54 @@ class NotificationService
 
         $emailSubjectContext = [
             'type' => 'meeting_assigned',
+            'actor_id' => $actor?->id ? (int) $actor->id : null,
+            'actor_name' => $actorName,
+            'task_name' => $meeting->title,
+        ];
+
+        $emailDetails = [
+            'Meeting' => $meeting->title,
+            'Organizer' => $meeting->organizer?->name ?? 'N/A',
+            'Start Time' => $startTimeStr,
+            'Duration' => $durationStr,
+            'End Time' => $meeting->end_at ? $meeting->end_at->format($dateFormat . ' ' . $timeFormat) : 'N/A',
+            'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::MEETING_ASSIGNED,
+            $actor?->id ? (int) $actor->id : null,
+            $meeting->project_id ? (int) $meeting->project_id : null,
+            $emailDetails,
+            $emailSubjectContext
+        );
+    }
+
+    public function notifyMeetingParticipantRemoved(Meeting $meeting, int|array $userIds, ?User $actor = null): void
+    {
+        $recipientIds = $this->normalizeUserIds($userIds);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $dateFormat = config('constants.date_format');
+        $timeFormat = config('constants.time_format');
+
+        $actorName = $actor?->name ?? 'A team member';
+        $startTimeStr = $this->getMeetingStartTimeString($meeting);
+        $durationStr = $this->getMeetingDurationString($meeting);
+
+        $title = 'Removed from Meeting';
+        $message = "{$actorName} removed you from meeting '{$meeting->title}'.";
+        $url = route('meetings.index');
+
+        $emailSubjectContext = [
+            'type' => 'meeting_removed',
             'actor_id' => $actor?->id ? (int) $actor->id : null,
             'actor_name' => $actorName,
             'task_name' => $meeting->title,

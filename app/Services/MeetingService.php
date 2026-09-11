@@ -210,8 +210,13 @@ class MeetingService
     public function update(Meeting $meeting, array $data, ?User $user = null, array $files = []): Meeting
     {
         $oldStatusId = $meeting->meeting_status_id;
+        $participantChanges = [
+            'added_user_ids' => [],
+            'removed_user_ids' => [],
+            'kept_user_ids' => [],
+        ];
 
-        $updatedMeeting = DB::transaction(function () use ($meeting, $data, $files) {
+        $updatedMeeting = DB::transaction(function () use ($meeting, $data, $files, &$participantChanges) {
             $meeting->update(array_intersect_key($data, array_flip([
                 'project_id',
                 'meeting_type_id',
@@ -227,7 +232,7 @@ class MeetingService
             ])));
 
             if (array_key_exists('participants', $data)) {
-                $this->syncParticipants($meeting, $data['participants']);
+                $participantChanges = $this->syncParticipants($meeting, $data['participants']);
             }
 
             if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {
@@ -253,6 +258,18 @@ class MeetingService
         });
 
         $actor = $user ?? auth()->user();
+
+        // 1. Notify newly added participants
+        if (! empty($participantChanges['added_user_ids'])) {
+            $this->notificationService->notifyMeetingAssigned($updatedMeeting, $actor, $participantChanges['added_user_ids']);
+        }
+
+        // 2. Notify removed participants
+        if (! empty($participantChanges['removed_user_ids'])) {
+            $this->notificationService->notifyMeetingParticipantRemoved($updatedMeeting, $participantChanges['removed_user_ids'], $actor);
+        }
+
+        // 3. Notify status change if status updated
         if ((int) $oldStatusId !== (int) $updatedMeeting->meeting_status_id) {
             $oldStatus = MeetingStatus::find($oldStatusId)?->name ?? 'Unknown';
             $newStatus = $updatedMeeting->meetingStatus?->name ?? 'Unknown';
@@ -286,37 +303,126 @@ class MeetingService
     }
 
     /**
-     * Synchronize meeting participants.
+     * Synchronize meeting participants selectively without deleting unchanged participants.
+     *
+     * @return array{added_user_ids: array, removed_user_ids: array, kept_user_ids: array}
      */
-    protected function syncParticipants(Meeting $meeting, array $participantsData): void
+    protected function syncParticipants(Meeting $meeting, array $participantsData): array
     {
-        $meeting->participants()->delete();
+        // 1. Get existing internal participants
+        $existingInternal = $meeting->participants()
+            ->where('is_external', false)
+            ->whereNotNull('user_id')
+            ->get();
+        $existingInternalUserIds = $existingInternal->pluck('user_id')->map(fn($id) => (int) $id)->unique()->toArray();
+
+        // 2. Parse incoming participants
+        $incomingInternalUserIds = [];
+        $incomingExternal = [];
 
         foreach ($participantsData as $participant) {
             $isExternal = filter_var($participant['is_external'] ?? false, FILTER_VALIDATE_BOOLEAN) || empty($participant['user_id']);
-            $userId = ! $isExternal && ! empty($participant['user_id']) ? (int) $participant['user_id'] : null;
+            if (! $isExternal && ! empty($participant['user_id'])) {
+                $incomingInternalUserIds[] = (int) $participant['user_id'];
+            } else {
+                $incomingExternal[] = $participant;
+            }
+        }
+        $incomingInternalUserIds = array_values(array_unique($incomingInternalUserIds));
 
-            $name = $participant['name'] ?? null;
-            $email = $participant['email'] ?? null;
-            $phone = $participant['phone'] ?? null;
+        // Calculate diffs for internal participants
+        $removedInternalUserIds = array_values(array_diff($existingInternalUserIds, $incomingInternalUserIds));
+        $addedInternalUserIds = array_values(array_diff($incomingInternalUserIds, $existingInternalUserIds));
+        $keptInternalUserIds = array_values(array_intersect($existingInternalUserIds, $incomingInternalUserIds));
 
-            if ($userId && (! $name || ! $email)) {
-                $pUser = User::find($userId);
-                if ($pUser) {
-                    $name = $name ?: $pUser->name;
-                    $email = $email ?: $pUser->email;
+        // A. Delete only removed internal participants
+        if (! empty($removedInternalUserIds)) {
+            $meeting->participants()
+                ->where('is_external', false)
+                ->whereIn('user_id', $removedInternalUserIds)
+                ->delete();
+        }
+
+        // B. Add new internal participants & update kept participants settings
+        foreach ($participantsData as $participant) {
+            $isExternal = filter_var($participant['is_external'] ?? false, FILTER_VALIDATE_BOOLEAN) || empty($participant['user_id']);
+            if (! $isExternal && ! empty($participant['user_id'])) {
+                $uId = (int) $participant['user_id'];
+                if (in_array($uId, $addedInternalUserIds, true)) {
+                    $name = $participant['name'] ?? null;
+                    $email = $participant['email'] ?? null;
+                    $phone = $participant['phone'] ?? null;
+
+                    if (! $name || ! $email) {
+                        $pUser = User::find($uId);
+                        if ($pUser) {
+                            $name = $name ?: $pUser->name;
+                            $email = $email ?: $pUser->email;
+                        }
+                    }
+
+                    MeetingParticipant::create([
+                        'meeting_id' => $meeting->id,
+                        'user_id' => $uId,
+                        'is_external' => false,
+                        'name' => $name,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'send_email' => filter_var($participant['send_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    ]);
+                } else if (in_array($uId, $keptInternalUserIds, true)) {
+                    $meeting->participants()
+                        ->where('is_external', false)
+                        ->where('user_id', $uId)
+                        ->update([
+                            'send_email' => filter_var($participant['send_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                        ]);
                 }
             }
-
-            MeetingParticipant::create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $userId,
-                'is_external' => $isExternal,
-                'name' => $name,
-                'email' => $email,
-                'phone' => $phone,
-                'send_email' => filter_var($participant['send_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            ]);
         }
+
+        // C. Sync External participants
+        $existingExternalEmails = $meeting->participants()
+            ->where('is_external', true)
+            ->pluck('email')
+            ->filter()
+            ->map(fn($e) => strtolower(trim($e)))
+            ->toArray();
+
+        $incomingExternalEmails = array_values(array_unique(array_filter(array_map(fn($p) => strtolower(trim($p['email'] ?? '')), $incomingExternal))));
+        $removedExternalEmails = array_values(array_diff($existingExternalEmails, $incomingExternalEmails));
+
+        if (! empty($removedExternalEmails)) {
+            $meeting->participants()
+                ->where('is_external', true)
+                ->whereIn('email', $removedExternalEmails)
+                ->delete();
+        }
+
+        foreach ($incomingExternal as $extP) {
+            $extEmail = strtolower(trim($extP['email'] ?? ''));
+            if (! $extEmail) {
+                continue;
+            }
+
+            MeetingParticipant::updateOrCreate(
+                [
+                    'meeting_id' => $meeting->id,
+                    'is_external' => true,
+                    'email' => $extEmail,
+                ],
+                [
+                    'name' => $extP['name'] ?? null,
+                    'phone' => $extP['phone'] ?? null,
+                    'send_email' => filter_var($extP['send_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                ]
+            );
+        }
+
+        return [
+            'added_user_ids' => $addedInternalUserIds,
+            'removed_user_ids' => $removedInternalUserIds,
+            'kept_user_ids' => $keptInternalUserIds,
+        ];
     }
 }
