@@ -144,6 +144,8 @@
     @include('tasks.partials.extend-time-modal')
     <!-- Meeting Preview Drawer -->
     @include('meetings.partials.preview-drawer')
+    <!-- Meeting Form Modal -->
+    @include('meetings.form-modal')
 @endsection
 
 @push('scripts')
@@ -169,4 +171,5 @@
     @vite('resources/js/modules/projects/project-payment.js')
     @vite('resources/js/modules/tasks/extend-task.js')
     @vite('resources/js/modules/meetings/meetings.js')
+    @vite('resources/js/modules/meetings/meeting-form.js')
 @endpush

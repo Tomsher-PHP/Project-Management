@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delegated click handler for preview meeting buttons / rows inside project meetings tab
     document.addEventListener('click', (e) => {
+        if (e.target.closest('.edit-meeting-btn')) {
+            return;
+        }
         const btn = e.target.closest('[data-project-tab-panel="meetings"] .preview-meeting-btn');
         if (btn) {
             e.preventDefault();

@@ -304,6 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Delegated click handler for preview meeting buttons
     document.addEventListener("click", (e) => {
+        if (e.target.closest(".edit-meeting-btn")) return;
         const btn = e.target.closest(".preview-meeting-btn");
         if (btn) {
             e.preventDefault();

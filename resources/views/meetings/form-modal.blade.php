@@ -1,3 +1,12 @@
+@php
+    $projects = $projects ?? [];
+    $meetingTypes = $meetingTypes ?? \App\Models\MeetingType::active()->orderBy('sort_order')->get();
+    $meetingLocations = $meetingLocations ?? \App\Models\MeetingLocation::active()->orderBy('sort_order')->get();
+    $meetingStatuses = $meetingStatuses ?? \App\Models\MeetingStatus::active()->orderBy('sort_order')->get();
+    $users = $users ?? app(\App\Services\UserService::class)->getAccessibleUsers(auth()->user())->values();
+    $meetingTags = $meetingTags ?? \App\Models\MeetingTag::active()->orderBy('sort_order')->get();
+@endphp
+
 <div id="meeting_modal" class="fixed inset-0 z-50 {{ $errors->any() ? '' : 'hidden' }} overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-6 md:p-10 flex items-center justify-center">
     <div class="relative w-full max-w-4xl rounded-[8px] bg-white shadow-xl dark:bg-darkblack-600 my-8">
 
