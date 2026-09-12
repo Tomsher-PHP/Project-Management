@@ -119,7 +119,7 @@
 
         <!-- Organizer -->
         <div class="space-y-1.5">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Organizer</h4>
+            <h4 class="text-xs font-semibold uppercase tracking-wider pb-1 text-bgray-700 dark:text-bgray-300">Organizer</h4>
             <div class="flex items-center gap-3 rounded-lg border border-bgray-200 p-3 dark:border-darkblack-400">
                 <x-user-avatar :user="$meeting->organizer" size="sm" />
                 <div class="min-w-0 flex-1">
@@ -135,7 +135,7 @@
 
         <!-- Participants -->
         <div class="space-y-2">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
+            <h4 class="text-xs font-semibold uppercase tracking-wider pb-1 text-bgray-700 dark:text-bgray-300">
                 Participants ({{ $meeting->participants->count() }})
             </h4>
 
@@ -178,7 +178,7 @@
         <!-- Description -->
         @if ($meeting->description)
             <div class="space-y-1.5">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">Description</h4>
+                <h4 class="text-xs font-semibold uppercase tracking-wider pb-1 text-bgray-700 dark:text-bgray-300">Description</h4>
                 <div class="max-h-48 overflow-y-auto rounded-lg border border-bgray-200 p-3.5 text-xs text-bgray-800 dark:border-darkblack-400 dark:text-bgray-300 [&_*]:dark:text-bgray-300 leading-relaxed prose dark:prose-invert max-w-none">
                     {!! $meeting->description !!}
                 </div>
@@ -188,22 +188,24 @@
         <!-- Attachments -->
         @if ($meeting->attachments && $meeting->attachments->count() > 0)
             <div class="space-y-2">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300">
+                <h4 class="text-xs font-semibold uppercase tracking-wider pb-1 text-bgray-700 dark:text-bgray-300">
                     Attachments ({{ $meeting->attachments->count() }})
                 </h4>
                 <div class="max-h-44 overflow-y-auto space-y-2 pr-1">
                     @foreach ($meeting->attachments as $attachment)
                         <div class="flex items-center justify-between rounded-lg border border-bgray-200 p-2.5 text-xs dark:border-darkblack-400">
                             <div class="flex items-center gap-2 truncate min-w-0 flex-1">
-                                <svg class="h-4 w-4 text-bgray-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg class="h-4 w-4 text-bgray-700 dark:text-bgray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                 </svg>
                                 <span class="truncate text-bgray-900 dark:text-white font-medium" title="{{ $attachment->original_name }}">
                                     {{ $attachment->original_name }}
                                 </span>
                             </div>
-                            <a href="{{ $attachment->url }}" target="_blank" class="ml-2 font-medium text-success-400 hover:underline shrink-0">
-                                Download
+                            <a href="{{ $attachment->url }}" target="_blank" download class="ml-2 inline-flex h-7 w-7 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300 shrink-0 transition" title="Download {{ $attachment->original_name }}">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
                             </a>
                         </div>
                     @endforeach
@@ -242,7 +244,7 @@
             <!-- Static Minutes View Display -->
             <div id="minutes_static_view">
                 @if ($meeting->minutes)
-                    <div class="max-h-60 overflow-y-auto rounded-xl border border-bgray-200 bg-white p-4 text-xs text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-200 leading-relaxed prose dark:prose-invert max-w-none shadow-sm">
+                    <div class="max-h-60 overflow-y-auto rounded-xl border border-bgray-200 bg-white p-4 text-xs text-bgray-800 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 leading-relaxed prose dark:prose-invert max-w-none shadow-sm">
                         {!! $meeting->minutes !!}
                     </div>
                 @else
