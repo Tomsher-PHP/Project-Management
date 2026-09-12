@@ -64,7 +64,7 @@
                 <x-edit-button action="javascript:void(0)" class="edit-meeting-btn !h-8 !w-8" icon-class="h-4 w-4" data-url="{{ route('meetings.edit', $meeting->id) }}" data-update-url="{{ route('meetings.update', $meeting->id) }}" data-id="{{ $meeting->id }}" title="Edit Meeting" />
             @endcan
 
-            <button type="button" class="preview-meeting-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-200 bg-bgray-50 text-bgray-700 transition hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-id="{{ $meeting->id }}" title="View Meeting Details">
+            <button type="button" class="preview-meeting-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-400 bg-bgray-50 bg-white text-bgray-700 shadow-sm transition hover:bg-bgray-100 hover:text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:bg-darkblack-400 dark:hover:text-white" data-id="{{ $meeting->id }}" title="View Meeting Details">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
