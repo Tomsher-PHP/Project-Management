@@ -9,6 +9,7 @@ use App\Http\Requests\ProjectNoteRequest;
 use App\Http\Requests\ProjectPaymentStatusRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Models\Attachment;
+use App\Models\Meeting;
 use App\Models\AgileMilestone;
 use App\Models\AgileMilestoneStatus;
 use App\Models\AgileSprint;
@@ -195,6 +196,7 @@ class ProjectController extends Controller
             'scope',
             'notes',
             'checklists',
+            'meetings',
             'history',
             'settings',
             'payments'
@@ -448,6 +450,7 @@ class ProjectController extends Controller
             'team' => $this->renderTeamTab($project),
             'scope' => $this->renderScopeTab($project),
             'notes' => $this->renderNotesTab($project, $request),
+            'meetings' => $this->renderMeetingsTab($project),
             'history' => $this->renderHistoryTab($project),
             'settings' => $this->renderSettingsTab($project),
             'payments' => app(ProjectPaymentController::class)->renderPaymentsTab($project),
@@ -560,6 +563,119 @@ class ProjectController extends Controller
         $projectNotes = $this->getPaginatedProjectNotes($project, (int) $request->input('notes_page', 1));
 
         return view('projects.partials.tabs.notes', compact('project', 'projectNotes'))->render();
+    }
+
+    private function renderMeetingsTab(Project $project): string
+    {
+        $authUser = auth()->user();
+        $perPage = 4;
+
+        $upcomingPaginator = Meeting::query()
+            ->where('project_id', $project->id)
+            ->when($authUser, fn($q) => $q->accessibleBy($authUser))
+            ->with([
+                'meetingType',
+                'meetingLocation',
+                'meetingStatus',
+                'organizer',
+                'participants.user',
+                'attachments',
+            ])
+            ->where('start_at', '>=', now())
+            ->orderBy('start_at', 'asc')
+            ->paginate($perPage, ['*'], 'upcoming_page', 1);
+
+        $pastPaginator = Meeting::query()
+            ->where('project_id', $project->id)
+            ->when($authUser, fn($q) => $q->accessibleBy($authUser))
+            ->with([
+                'meetingType',
+                'meetingLocation',
+                'meetingStatus',
+                'organizer',
+                'participants.user',
+                'attachments',
+            ])
+            ->where('start_at', '<', now())
+            ->orderBy('start_at', 'desc')
+            ->paginate($perPage, ['*'], 'past_page', 1);
+
+        $upcomingPagination = [
+            'page' => $upcomingPaginator->currentPage(),
+            'next_page' => $upcomingPaginator->hasMorePages() ? 2 : null,
+            'has_more_pages' => $upcomingPaginator->hasMorePages(),
+            'total' => $upcomingPaginator->total(),
+        ];
+
+        $pastPagination = [
+            'page' => $pastPaginator->currentPage(),
+            'next_page' => $pastPaginator->hasMorePages() ? 2 : null,
+            'has_more_pages' => $pastPaginator->hasMorePages(),
+            'total' => $pastPaginator->total(),
+        ];
+
+        return view('projects.partials.tabs.meetings', [
+            'project' => $project,
+            'upcomingMeetings' => $upcomingPaginator->items(),
+            'upcomingPagination' => $upcomingPagination,
+            'pastMeetings' => $pastPaginator->items(),
+            'pastPagination' => $pastPagination,
+        ])->render();
+    }
+
+    public function meetingGroup(Request $request, Project $project, string $group): JsonResponse
+    {
+        $authUser = auth()->user();
+        if (! $authUser || (! $authUser->is_super_admin && ! $authUser->can('view', $project))) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to access this project.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        abort_unless(in_array($group, ['upcoming', 'past'], true), Response::HTTP_NOT_FOUND);
+
+        $page = max((int) $request->integer('page', 1), 1);
+        $perPage = 4;
+
+        $query = Meeting::query()
+            ->where('project_id', $project->id)
+            ->when($authUser, fn($q) => $q->accessibleBy($authUser))
+            ->with([
+                'meetingType',
+                'meetingLocation',
+                'meetingStatus',
+                'organizer',
+                'participants.user',
+                'attachments',
+            ]);
+
+        if ($group === 'upcoming') {
+            $query->where('start_at', '>=', now())->orderBy('start_at', 'asc');
+        } else {
+            $query->where('start_at', '<', now())->orderBy('start_at', 'desc');
+        }
+
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $pagination = [
+            'page' => $paginator->currentPage(),
+            'next_page' => $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+            'has_more_pages' => $paginator->hasMorePages(),
+            'total' => $paginator->total(),
+        ];
+
+        return response()->json([
+            'status' => true,
+            'group' => $group,
+            'items_html' => view('projects.partials.meetings.meeting-rows', [
+                'project' => $project,
+                'groupKey' => $group,
+                'meetings' => $paginator->items(),
+                'showEmptyState' => false,
+            ])->render(),
+            'pagination' => $pagination,
+        ], Response::HTTP_OK);
     }
 
     private function renderHistoryTab(Project $project): string

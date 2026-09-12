@@ -69,6 +69,10 @@
                             </button>
                         @endif
 
+                        <button type="button" data-project-tab-trigger="meetings" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
+                            Meetings
+                        </button>
+
                         <button type="button" data-project-tab-trigger="history" class="border-b-2 border-transparent pb-2.5 text-[15px] font-semibold text-bgray-700 dark:text-bgray-300 transition">
                             History
                         </button>
@@ -126,6 +130,7 @@
                 @if ($project->is_linear && auth()->user()->can('project.view_payment_status'))
                     <div class="hidden" data-project-tab-panel="payments" data-loaded="false"></div>
                 @endif
+                <div class="hidden" data-project-tab-panel="meetings" data-loaded="false"></div>
                 <div class="hidden" data-project-tab-panel="history" data-loaded="false"></div>
                 <div class="hidden" data-project-tab-panel="settings" data-loaded="false"></div>
             </div>
@@ -137,6 +142,8 @@
     @include('projects.partials.modals.project-payment-status-modal')
     <!-- Request Estimate Change Modal -->
     @include('tasks.partials.extend-time-modal')
+    <!-- Meeting Preview Drawer -->
+    @include('meetings.partials.preview-drawer')
 @endsection
 
 @push('scripts')
@@ -161,4 +168,5 @@
     @vite('resources/js/modules/projects/project-detail.js')
     @vite('resources/js/modules/projects/project-payment.js')
     @vite('resources/js/modules/tasks/extend-task.js')
+    @vite('resources/js/modules/meetings/meetings.js')
 @endpush

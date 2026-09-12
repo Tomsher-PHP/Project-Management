@@ -375,6 +375,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('projects/{project}')->group(function () {
         Route::get('tasks/groups', [ProjectTaskController::class, 'taskGroupsPage'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectTaskController::class, 'taskGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.tasks.groups.show');
+        Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->middleware(['permission.type:project.view', 'can:view,project'])->name('projects.meetings.groups.show');
         Route::get('tasks/parent-options', [ProjectTaskController::class, 'taskParentOptions'])->name('projects.tasks.parent-options');
         Route::get('tasks/{task}/modal', [ProjectTaskController::class, 'taskModal'])->name('projects.tasks.modal');
         Route::post('tasks', [ProjectTaskController::class, 'storeTask'])->middleware(['permission.type:task.create'])->name('projects.tasks.store');
@@ -397,6 +398,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('milestones/{projectMilestone}/sprints', [ProjectRestoreController::class, 'milestoneSprints'])->name('projects.restore.milestones.sprints.index');
         Route::get('tasks/groups', [ProjectRestoreController::class, 'taskGroupsPage'])->name('projects.restore.tasks.groups.index');
         Route::get('tasks/groups/{group}', [ProjectRestoreController::class, 'taskGroup'])->name('projects.restore.tasks.groups.show');
+        Route::get('meetings/groups/{group}', [ProjectController::class, 'meetingGroup'])->name('projects.restore.meetings.groups.show');
     });
 
     Route::get('projects/search', [ProjectController::class, 'searchProjects'])->name('projects.search');
