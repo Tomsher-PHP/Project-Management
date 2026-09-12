@@ -14,20 +14,45 @@
             <x-filters.list-search placeholder="Search meetings..." />
 
             <!-- Month Navigation (Right Aligned) -->
-            <div class="flex items-center gap-2 sm:ml-auto">
+            <div class="flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-bgray-300 bg-white p-1 shadow-sm dark:border-darkblack-400 dark:bg-darkblack-500 sm:ml-auto">
                 <!-- Previous Month -->
-                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->subMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Previous Month">
-                    &larr;
+                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->subMonth()->startOfMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" title="Previous Month" aria-label="Previous Month">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
                 </a>
 
-                <!-- Current Month -->
-                <div class="min-w-[150px] rounded-lg border border-bgray-300 bg-white px-3 py-1.5 text-center text-sm font-semibold text-bgray-900 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white">
-                    {{ $selectedDate->format('F Y') }}
+                <!-- Month Picker Section -->
+                <div class="relative flex items-center gap-1 cursor-pointer" id="meeting_month_picker_wrapper">
+                    <button type="button" id="meeting_month_picker_btn" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" title="Select Month" aria-label="Select Month">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+                        </svg>
+                    </button>
+
+                    <span class="min-w-[130px] px-1 text-center text-sm font-bold text-bgray-800 dark:text-bgray-50" id="meeting_month_label">
+                        {{ $selectedDate->format('F Y') }}
+                    </span>
+
+                    <input type="text" id="meeting_month_picker" value="{{ $selectedDate->format('Y-m') }}" class="monthpicker absolute left-0 top-0 h-0 w-0 opacity-0 pointer-events-none" data-open-to-date="{{ $selectedDate->format('Y-m-d') }}" aria-label="Select meeting month" readonly>
                 </div>
 
                 <!-- Next Month -->
-                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->addMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:bg-bgray-50 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" title="Next Month">
-                    &rarr;
+                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $selectedDate->copy()->addMonth()->startOfMonth()->toDateString()])) }}" class="flex h-9 w-9 items-center justify-center rounded-md text-bgray-600 transition hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400" title="Next Month" aria-label="Next Month">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+
+                <div class="mx-1 h-5 w-px bg-bgray-300 dark:bg-darkblack-400"></div>
+
+                <!-- Today Button -->
+                @php
+                    $todayDateStr = today()->toDateString();
+                    $isCurrentSelectedTodayMonth = $selectedDate->isSameMonth(today());
+                @endphp
+                <a href="{{ route('meetings.index', array_merge(request()->except('calendar_date'), ['calendar_date' => $todayDateStr])) }}" class="rounded-md px-3 py-1.5 text-sm font-semibold transition {{ $isCurrentSelectedTodayMonth ? 'bg-success-50 text-success-600 hover:bg-success-100 dark:bg-success-300 dark:text-bgray-900' : 'text-bgray-600 hover:bg-bgray-100 hover:text-bgray-900 dark:text-bgray-300 dark:hover:bg-darkblack-400' }}" title="Today">
+                    Today
                 </a>
             </div>
         </div>

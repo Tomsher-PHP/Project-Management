@@ -1,4 +1,8 @@
 {
+  "__commonjsHelpers-Cpj98o6Y.js": {
+    "file": "assets/_commonjsHelpers-Cpj98o6Y.js",
+    "name": "_commonjsHelpers"
+  },
   "_alert-DZ9rIzyM.js": {
     "file": "assets/alert-DZ9rIzyM.js",
     "name": "alert",
@@ -96,13 +100,14 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-GFjE7wEC.js",
+    "file": "assets/app-DolxHXsn.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
       "_sweetalert2.esm.all-YZDMVk0e.js",
       "_alert-DZ9rIzyM.js",
+      "__commonjsHelpers-Cpj98o6Y.js",
       "_estimated-time-input-CIuy8ceU.js",
       "_tom-select-C3hcVLUh.js",
       "_datepicker-DWdH-Ouy.js",
@@ -250,13 +255,18 @@
     ]
   },
   "resources/js/modules/meetings/meetings.js": {
-    "file": "assets/meetings-DKEMupV8.js",
+    "file": "assets/meetings-I9OhNL57.js",
     "name": "meetings",
     "src": "resources/js/modules/meetings/meetings.js",
     "isEntry": true,
     "imports": [
       "_alert-DZ9rIzyM.js",
+      "_flatpickr.min-Cc3t1Oke.js",
+      "__commonjsHelpers-Cpj98o6Y.js",
       "_sweetalert2.esm.all-YZDMVk0e.js"
+    ],
+    "css": [
+      "assets/meetings-BB8ezBci.css"
     ]
   },
   "resources/js/modules/project-stage-form.js": {

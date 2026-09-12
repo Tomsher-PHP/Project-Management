@@ -1,6 +1,42 @@
 import Alert from "../../alert";
+import { initMonthpicker } from "../../components/monthpicker";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Month picker setup for Meetings calendar
+    const monthPickerInput = document.getElementById("meeting_month_picker");
+    const monthPickerWrapper = document.getElementById("meeting_month_picker_wrapper");
+    const monthPickerBtn = document.getElementById("meeting_month_picker_btn");
+
+    if (monthPickerInput) {
+        initMonthpicker("#meeting_month_picker", {
+            onChange: (selectedDates, dateStr) => {
+                if (dateStr) {
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set("calendar_date", `${dateStr}-01`);
+                    window.location.href = currentUrl.toString();
+                }
+            },
+        });
+
+        const openPicker = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (monthPickerInput._flatpickr) {
+                monthPickerInput._flatpickr.open();
+            }
+        };
+
+        if (monthPickerBtn) {
+            monthPickerBtn.addEventListener("click", openPicker);
+        }
+        if (monthPickerWrapper) {
+            monthPickerWrapper.addEventListener("click", (e) => {
+                if (e.target !== monthPickerBtn && !monthPickerBtn?.contains(e.target)) {
+                    openPicker(e);
+                }
+            });
+        }
+    }
     // 1. Meeting Quick Preview Drawer Handlers
     const previewDrawer = document.getElementById("meeting-preview-drawer");
     const previewBackdrop = document.getElementById("meeting-preview-backdrop");
