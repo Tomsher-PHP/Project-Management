@@ -54,12 +54,7 @@
                 $canEditMeeting = auth()->user()->can('meeting.edit');
             @endphp
 
-            <x-meeting-status-dropdown
-                :meeting="$meeting"
-                :statuses="$meetingStatuses ?? []"
-                :can-change="$canEditMeeting"
-                :update-url="$updateStatusUrl"
-            />
+            <x-meeting-status-dropdown :meeting="$meeting" :statuses="$meetingStatuses ?? []" :can-change="$canEditMeeting" :update-url="$updateStatusUrl" />
 
             @if ($meeting->meetingType)
                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" style="background-color: {{ $typeColor }}20; color: {{ $typeColor }}; border: 1px solid {{ $typeColor }}40;">
@@ -150,13 +145,13 @@
                     <div class="flex items-center justify-between min-w-0">
                         <div class="flex items-center gap-2.5 min-w-0 flex-1">
                             @if ($participant->is_external)
-                                <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xs font-bold dark:bg-amber-900/30 dark:text-amber-300 shrink-0">
+                                <div class="flex h-7 w-7 items-center justify-center rounded-full bg-bgray-300 dark:bg-darkblack-400 text-warning-500 text-xs font-bold shrink-0">
                                     {{ strtoupper(substr($participant->name ?? 'E', 0, 1)) }}
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="text-xs font-medium text-bgray-900 dark:text-white truncate">
                                         {{ $participant->name ?? 'External Guest' }}
-                                        <span class="ml-1 text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded-full">External</span>
+                                        <span class="ml-1 text-[10px] text-warning-800 dark:text-amber-600 px-1.5 py-0.5">External</span>
                                     </div>
                                     <div class="text-[11px] text-bgray-700 dark:text-bgray-300 truncate">
                                         {{ $participant->email }}
@@ -286,6 +281,16 @@
                     </div>
                 </div>
             @endif
+        <!-- Created Info -->
+        <div class="pt-4 border-t border-bgray-200 dark:border-darkblack-400 flex items-center justify-between text-xs text-bgray-700 dark:text-bgray-300">
+            <div class="flex items-center gap-2">
+                <span class="font-medium text-bgray-700 dark:text-bgray-300">Created :</span>
+                <x-user-avatar :user="$meeting->addedBy" size="xs" />
+                <span class="font-semibold text-bgray-900 dark:text-white">{{ $meeting->addedBy?->name ?? 'System' }}</span>
+            </div>
+            <div class="text-bgray-700 dark:text-bgray-300 font-medium">
+                @appDateTime($meeting->created_at)
+            </div>
         </div>
 
     </div>
