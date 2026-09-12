@@ -2439,6 +2439,53 @@ class NotificationService
         );
     }
 
+    public function notifyMeetingDeleted(Meeting $meeting, ?User $actor = null): void
+    {
+        $recipientIds = $this->getMeetingInvolvedRecipientIds($meeting);
+
+        if ($recipientIds === []) {
+            return;
+        }
+
+        $dateFormat = config('constants.date_format');
+        $timeFormat = config('constants.time_format');
+
+        $actorName = $actor?->name ?? 'A team member';
+        $startTimeStr = $this->getMeetingStartTimeString($meeting);
+        $durationStr = $this->getMeetingDurationString($meeting);
+
+        $title = 'Meeting Deleted';
+        $message = "{$actorName} deleted meeting '{$meeting->title}' (was scheduled for {$startTimeStr}).";
+        $url = route('meetings.index');
+
+        $emailSubjectContext = [
+            'type' => 'meeting_deleted',
+            'actor_id' => $actor?->id ? (int) $actor->id : null,
+            'actor_name' => $actorName,
+            'task_name' => $meeting->title,
+        ];
+
+        $emailDetails = [
+            'Meeting' => $meeting->title,
+            'Organizer' => $meeting->organizer?->name ?? 'N/A',
+            'Scheduled Time' => $startTimeStr,
+            'Duration' => $durationStr,
+            'Location' => $meeting->meetingLocation?->name ?? ($meeting->location_details ?: 'N/A'),
+        ];
+
+        $this->sendToMany(
+            $recipientIds,
+            $title,
+            $message,
+            $url,
+            UserNotificationSetting::MEETING_ASSIGNED,
+            $actor?->id ? (int) $actor->id : null,
+            $meeting->project_id ? (int) $meeting->project_id : null,
+            $emailDetails,
+            $emailSubjectContext
+        );
+    }
+
     public function notifyMeetingParticipantRemoved(Meeting $meeting, int|array $userIds, ?User $actor = null): void
     {
         $recipientIds = $this->normalizeUserIds($userIds);

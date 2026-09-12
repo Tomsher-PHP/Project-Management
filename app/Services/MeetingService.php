@@ -311,8 +311,26 @@ class MeetingService
     /**
      * Delete a Meeting and its participants and attachments.
      */
-    public function delete(Meeting $meeting): bool
+    public function delete(Meeting $meeting, ?User $user = null): bool
     {
+        $actor = $user ?? auth()->user();
+
+        $meeting->loadMissing([
+            'project',
+            'meetingType',
+            'meetingLocation',
+            'meetingStatus',
+            'organizer',
+            'participants.user',
+            'attachments',
+        ]);
+
+        // 1. Notify internal participants, organizer, and creator
+        $this->notificationService->notifyMeetingDeleted($meeting, $actor);
+
+        // 2. Send removal email to external participants if any
+        $this->sendExternalParticipantEmailsOnDelete($meeting);
+
         return DB::transaction(function () use ($meeting) {
             $this->attachmentService->delete($meeting->attachments);
             $meeting->participants()->delete();
@@ -537,5 +555,41 @@ class MeetingService
         }
 
         // Unchanged external participants (in both maps): no email sent!
+    }
+
+    /**
+     * Send removal email to external participants when a meeting is deleted.
+     */
+    protected function sendExternalParticipantEmailsOnDelete(Meeting $meeting): void
+    {
+        $meeting->loadMissing(['organizer', 'meetingLocation', 'meetingType', 'participants']);
+
+        $sentEmails = [];
+
+        foreach ($meeting->participants as $participant) {
+            $isExternal = (bool) $participant->is_external || empty($participant->user_id);
+            if (! $isExternal) {
+                continue;
+            }
+
+            // Only deliver email to external participant if meeting_participants.send_email = 1
+            $shouldSendEmail = (int) $participant->send_email === 1 || (bool) $participant->send_email === true;
+            if (! $shouldSendEmail) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $participant->email));
+            if (empty($email) || in_array($email, $sentEmails, true)) {
+                continue;
+            }
+
+            $sentEmails[] = $email;
+
+            try {
+                Mail::to($email)->send(new MeetingExternalParticipantRemovedMail($meeting, $participant->name));
+            } catch (\Throwable $e) {
+                logger()->error("Failed to send external participant removal email on delete to {$email}: " . $e->getMessage());
+            }
+        }
     }
 }

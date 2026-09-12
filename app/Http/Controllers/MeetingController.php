@@ -316,7 +316,7 @@ class MeetingController extends Controller
             return redirect()->route('meetings.index')->with('error', 'Only future meetings can be deleted.');
         }
 
-        $this->meetingService->delete($meeting);
+        $this->meetingService->delete($meeting, $request->user());
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
