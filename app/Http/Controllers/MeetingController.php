@@ -373,9 +373,12 @@ class MeetingController extends Controller
             'attachments',
         ]);
 
+        $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
+
         $html = view('meetings.partials.preview-drawer-content', [
             'meeting' => $meeting,
             'canAddMinutes' => $meeting->canAddMinutes(),
+            'meetingStatuses' => $meetingStatuses,
         ])->render();
 
         return response()->json([
@@ -423,15 +426,69 @@ class MeetingController extends Controller
             'attachments',
         ]);
 
+        $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
+
         $html = view('meetings.partials.preview-drawer-content', [
             'meeting' => $meeting,
             'canAddMinutes' => $meeting->canAddMinutes(),
+            'meetingStatuses' => $meetingStatuses,
         ])->render();
 
         return response()->json([
             'status' => true,
             'message' => 'Meeting minutes updated successfully.',
             'minutes' => $meeting->minutes,
+            'html' => $html,
+        ]);
+    }
+
+    /**
+     * Update status for a meeting via AJAX.
+     */
+    public function updateStatus(Request $request, Meeting $meeting): JsonResponse
+    {
+        $authUser = auth()->user();
+
+        if (! Meeting::query()->where('id', $meeting->id)->accessibleBy($authUser)->exists()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You are not authorized to edit this meeting.',
+            ], 403);
+        }
+
+        $request->validate([
+            'meeting_status_id' => ['required', 'integer', 'exists:meeting_statuses,id'],
+        ]);
+
+        $updatedMeeting = $this->meetingService->update($meeting, [
+            'meeting_status_id' => (int) $request->input('meeting_status_id'),
+        ], $authUser);
+
+        $updatedMeeting->load([
+            'project',
+            'meetingType',
+            'meetingLocation',
+            'meetingStatus',
+            'organizer',
+            'participants.user',
+            'tags',
+            'attachments',
+        ]);
+
+        $meetingStatuses = MeetingStatus::active()->orderBy('sort_order')->get();
+
+        $html = view('meetings.partials.preview-drawer-content', [
+            'meeting' => $updatedMeeting,
+            'canAddMinutes' => $updatedMeeting->canAddMinutes(),
+            'meetingStatuses' => $meetingStatuses,
+        ])->render();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Meeting status updated successfully.',
+            'meeting_status_id' => $updatedMeeting->meeting_status_id,
+            'status_name' => $updatedMeeting->meetingStatus?->name,
+            'status_color' => $updatedMeeting->meetingStatus?->color ?: '#6B7280',
             'html' => $html,
         ]);
     }

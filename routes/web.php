@@ -748,6 +748,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/meetings/day-meetings', [MeetingController::class, 'dayMeetings'])->middleware('permission.type:meeting.view')->name('meetings.day-meetings');
     Route::get('/meetings/{meeting}/preview', [MeetingController::class, 'preview'])->middleware('permission.type:meeting.view')->name('meetings.preview');
     Route::post('/meetings/{meeting}/minutes', [MeetingController::class, 'updateMinutes'])->middleware('permission.type:meeting.edit')->name('meetings.minutes');
+    Route::patch('/meetings/{meeting}/status', [MeetingController::class, 'updateStatus'])->middleware('permission.type:meeting.edit')->name('meetings.status');
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.view')->only(['index']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.create')->only(['store']);
     Route::resource('meetings', MeetingController::class)->middleware('permission.type:meeting.edit')->only(['edit', 'update']);

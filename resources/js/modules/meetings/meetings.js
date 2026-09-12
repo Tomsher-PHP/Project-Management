@@ -219,6 +219,83 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
+
+        bindStatusDropdownEvents();
+    }
+
+    function bindStatusDropdownEvents() {
+        const dropdown = previewBody.querySelector("[data-meeting-status-dropdown]");
+        if (!dropdown) return;
+
+        const trigger = dropdown.querySelector("[data-meeting-status-trigger]");
+        const menu = dropdown.querySelector("[data-meeting-status-menu]");
+        const options = dropdown.querySelectorAll("[data-meeting-status-option]");
+
+        if (trigger && menu) {
+            trigger.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                menu.classList.toggle("hidden");
+            });
+        }
+
+        options.forEach((option) => {
+            option.addEventListener("click", async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const statusId = option.dataset.statusId;
+                const currentStatusId = option.dataset.currentStatusId;
+                const updateUrl = option.dataset.updateUrl;
+
+                if (menu) menu.classList.add("hidden");
+
+                if (!statusId || !updateUrl || statusId === currentStatusId) return;
+
+                options.forEach((opt) => (opt.disabled = true));
+
+                try {
+                    const response = await fetch(updateUrl, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-TOKEN": getCsrfToken(),
+                        },
+                        body: JSON.stringify({ meeting_status_id: statusId }),
+                    });
+
+                    const result = await response.json();
+                    if (response.ok && result.status) {
+                        if (result.html) {
+                            previewBody.innerHTML = result.html;
+                            bindPreviewDrawerEvents();
+                        }
+                        Alert.success(result.message || "Meeting status updated successfully.");
+
+                        if (typeof window.refreshMeetingCalendar === "function") {
+                            window.refreshMeetingCalendar();
+                        }
+                    } else {
+                        Alert.error(result.message || "Failed to update meeting status.");
+                    }
+                } catch (err) {
+                    console.error("Error updating meeting status:", err);
+                    Alert.error("An error occurred while updating meeting status.");
+                } finally {
+                    options.forEach((opt) => (opt.disabled = false));
+                }
+            });
+        });
+
+        const handleOutsideClick = (e) => {
+            if (menu && !menu.classList.contains("hidden") && !dropdown.contains(e.target)) {
+                menu.classList.add("hidden");
+            }
+        };
+
+        document.addEventListener("click", handleOutsideClick);
     }
 
     if (previewBackdrop) {
@@ -367,6 +444,7 @@ document.addEventListener("DOMContentLoaded", () => {
             editable: false,
             selectable: true,
             datesSet: function (info) {
+                window.currentCalendarRange = { startStr: info.startStr, endStr: info.endStr };
                 fetchMeetingsForRange(info.startStr, info.endStr);
             },
             eventClick: function (info) {
@@ -386,5 +464,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             },
         });
+
+        window.refreshMeetingCalendar = function () {
+            if (window.currentCalendarRange) {
+                fetchMeetingsForRange(window.currentCalendarRange.startStr, window.currentCalendarRange.endStr);
+            }
+        };
     }
 });

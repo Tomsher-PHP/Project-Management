@@ -9,6 +9,7 @@
     $durationStr = $meeting->start_at && $meeting->end_at ? $meeting->start_at->diffForHumans($meeting->end_at, true) : '';
     $editUrl = route('meetings.edit', $meeting->id);
     $updateUrl = route('meetings.update', $meeting->id);
+    $updateStatusUrl = route('meetings.status', $meeting->id);
 @endphp
 
 <div class="flex flex-col h-full bg-white dark:bg-darkblack-600">
@@ -49,11 +50,16 @@
 
         <!-- Status & Type Header Badges -->
         <div class="flex flex-wrap items-center gap-2">
-            @if ($meeting->meetingStatus)
-                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
-                    Status: {{ $meeting->meetingStatus->name }}
-                </span>
-            @endif
+            @php
+                $canEditMeeting = auth()->user()->can('meeting.edit');
+            @endphp
+
+            <x-meeting-status-dropdown
+                :meeting="$meeting"
+                :statuses="$meetingStatuses ?? []"
+                :can-change="$canEditMeeting"
+                :update-url="$updateStatusUrl"
+            />
 
             @if ($meeting->meetingType)
                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold" style="background-color: {{ $typeColor }}20; color: {{ $typeColor }}; border: 1px solid {{ $typeColor }}40;">
