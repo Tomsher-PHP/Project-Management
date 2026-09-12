@@ -569,6 +569,8 @@ class ProjectController extends Controller
     {
         $authUser = auth()->user();
         $perPage = 4;
+        $timezone = config('constants.timezone');
+        $now = now()->setTimezone($timezone);
 
         $upcomingPaginator = Meeting::query()
             ->where('project_id', $project->id)
@@ -581,7 +583,7 @@ class ProjectController extends Controller
                 'participants.user',
                 'attachments',
             ])
-            ->where('start_at', '>=', now())
+            ->where('start_at', '>=', $now)
             ->orderBy('start_at', 'asc')
             ->paginate($perPage, ['*'], 'upcoming_page', 1);
 
@@ -596,7 +598,7 @@ class ProjectController extends Controller
                 'participants.user',
                 'attachments',
             ])
-            ->where('start_at', '<', now())
+            ->where('start_at', '<', $now)
             ->orderBy('start_at', 'desc')
             ->paginate($perPage, ['*'], 'past_page', 1);
 

@@ -1,11 +1,7 @@
 @php
     $isDeletedProjectView = $project->trashed();
-    $upcomingLoadUrl = $isDeletedProjectView
-        ? route('projects.restore.meetings.groups.show', ['id' => $project->id, 'group' => 'upcoming'])
-        : route('projects.meetings.groups.show', ['project' => $project, 'group' => 'upcoming']);
-    $pastLoadUrl = $isDeletedProjectView
-        ? route('projects.restore.meetings.groups.show', ['id' => $project->id, 'group' => 'past'])
-        : route('projects.meetings.groups.show', ['project' => $project, 'group' => 'past']);
+    $upcomingLoadUrl = $isDeletedProjectView ? route('projects.restore.meetings.groups.show', ['id' => $project->id, 'group' => 'upcoming']) : route('projects.meetings.groups.show', ['project' => $project, 'group' => 'upcoming']);
+    $pastLoadUrl = $isDeletedProjectView ? route('projects.restore.meetings.groups.show', ['id' => $project->id, 'group' => 'past']) : route('projects.meetings.groups.show', ['project' => $project, 'group' => 'past']);
 @endphp
 
 <div class="overflow-hidden rounded-[8px] border border-bgray-200 bg-white shadow-sm dark:border-darkblack-400 dark:bg-darkblack-600" data-project-meetings-root>
@@ -22,10 +18,13 @@
                     </tr>
                 </thead>
 
+                @php
+                    $rowClass = 'bg-bgray-200 dark:bg-darkblack-400 select-text';
+                @endphp
                 <!-- UPCOMING MEETINGS SECTION -->
                 <tbody class="bg-white dark:bg-darkblack-600" data-project-meeting-group data-group-key="upcoming" data-load-url="{{ $upcomingLoadUrl }}" data-current-page="{{ $upcomingPagination['page'] }}" data-next-page="{{ $upcomingPagination['next_page'] ?? '' }}" data-has-more-pages="{{ $upcomingPagination['has_more_pages'] ? 'true' : 'false' }}">
                     <!-- Section Header Row -->
-                    <tr class="bg-bgray-100/80 dark:bg-darkblack-500/80 select-text">
+                    <tr class="{{ $rowClass }}">
                         <td colspan="4" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
@@ -62,7 +61,7 @@
                 <!-- PAST MEETINGS SECTION -->
                 <tbody class="bg-white dark:bg-darkblack-600" data-project-meeting-group data-group-key="past" data-load-url="{{ $pastLoadUrl }}" data-current-page="{{ $pastPagination['page'] }}" data-next-page="{{ $pastPagination['next_page'] ?? '' }}" data-has-more-pages="{{ $pastPagination['has_more_pages'] ? 'true' : 'false' }}">
                     <!-- Section Header Row -->
-                    <tr class="bg-bgray-100/80 dark:bg-darkblack-500/80 select-text">
+                    <tr class="{{ $rowClass }}">
                         <td colspan="4" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
