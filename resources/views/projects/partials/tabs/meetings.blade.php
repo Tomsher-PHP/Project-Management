@@ -17,7 +17,6 @@
                     <tr>
                         <th class="border-b border-r border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Meeting</th>
                         <th class="border-b border-r border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Date & Time</th>
-                        <th class="border-b border-r border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Location</th>
                         <th class="border-b border-r border-bgray-200 px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Organizer</th>
                         <th class="border-b border-bgray-200 px-4 py-3 text-right text-xs font-bold uppercase tracking-[0.16em] text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">Actions</th>
                     </tr>
@@ -27,7 +26,7 @@
                 <tbody class="bg-white dark:bg-darkblack-600" data-project-meeting-group data-group-key="upcoming" data-load-url="{{ $upcomingLoadUrl }}" data-current-page="{{ $upcomingPagination['page'] }}" data-next-page="{{ $upcomingPagination['next_page'] ?? '' }}" data-has-more-pages="{{ $upcomingPagination['has_more_pages'] ? 'true' : 'false' }}">
                     <!-- Section Header Row -->
                     <tr class="bg-bgray-100/80 dark:bg-darkblack-500/80 select-text">
-                        <td colspan="5" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
+                        <td colspan="4" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
                                     <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
@@ -50,7 +49,7 @@
 
                     @if ($upcomingPagination['has_more_pages'])
                         <tr data-project-meeting-group-sentinel-row>
-                            <td colspan="5" class="p-0 border-b border-bgray-200 dark:border-darkblack-400">
+                            <td colspan="4" class="p-0 border-b border-bgray-200 dark:border-darkblack-400">
                                 <div class="flex justify-center px-4 py-3" data-project-meeting-group-loading hidden>
                                     <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Loading more upcoming meetings...</span>
                                 </div>
@@ -64,7 +63,7 @@
                 <tbody class="bg-white dark:bg-darkblack-600" data-project-meeting-group data-group-key="past" data-load-url="{{ $pastLoadUrl }}" data-current-page="{{ $pastPagination['page'] }}" data-next-page="{{ $pastPagination['next_page'] ?? '' }}" data-has-more-pages="{{ $pastPagination['has_more_pages'] ? 'true' : 'false' }}">
                     <!-- Section Header Row -->
                     <tr class="bg-bgray-100/80 dark:bg-darkblack-500/80 select-text">
-                        <td colspan="5" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
+                        <td colspan="4" class="border-y border-bgray-200 px-4 py-2.5 dark:border-darkblack-400">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-2">
                                     <span class="inline-flex h-2.5 w-2.5 rounded-full bg-slate-400"></span>
@@ -87,7 +86,7 @@
 
                     @if ($pastPagination['has_more_pages'])
                         <tr data-project-meeting-group-sentinel-row>
-                            <td colspan="5" class="p-0 border-b border-bgray-200 dark:border-darkblack-400">
+                            <td colspan="4" class="p-0 border-b border-bgray-200 dark:border-darkblack-400">
                                 <div class="flex justify-center px-4 py-3" data-project-meeting-group-loading hidden>
                                     <span class="inline-flex rounded-full bg-bgray-100 px-3 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-50">Loading more past meetings...</span>
                                 </div>

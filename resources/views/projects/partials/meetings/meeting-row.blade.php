@@ -3,7 +3,7 @@
     $timeFormat = config('constants.time_format', 'H:i');
     $typeColor = $meeting->meetingType?->color ?: '#3B82F6';
     $statusColor = $meeting->meetingStatus?->color ?: '#6B7280';
-    $startTimeStr = $meeting->start_at ? $meeting->start_at->format($dateFormat . ' ' . $timeFormat) : 'N/A';
+    $startTimeStr = $meeting->start_at ? $meeting->start_at->format($dateFormat . ' • ' . $timeFormat) : 'N/A';
     $endTimeStr = $meeting->end_at ? $meeting->end_at->format($timeFormat) : '';
     $durationStr = $meeting->start_at && $meeting->end_at ? $meeting->start_at->diffForHumans($meeting->end_at, true) : '';
 @endphp
@@ -25,7 +25,7 @@
                 @endif
             </div>
             <h4 class="text-sm font-bold text-bgray-900 dark:text-white truncate" title="{{ $meeting->title }}">
-                {{ $meeting->title }}
+                {{ limitStringChar($meeting->title, 50, '..') }}
             </h4>
         </div>
     </td>
@@ -45,25 +45,11 @@
         @endif
     </td>
 
-    <!-- Location -->
-    <td class="border-b border-r border-bgray-200 px-4 py-3 align-top text-xs text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
-        @if ($meeting->meetingLocation || $meeting->location_details)
-            <span class="truncate block max-w-xs text-bgray-700 dark:text-bgray-300">
-                {{ $meeting->meetingLocation?->name ?? '' }}
-                @if ($meeting->location_details)
-                    ({{ $meeting->location_details }})
-                @endif
-            </span>
-        @else
-            <span class="text-bgray-700 dark:text-bgray-300">--</span>
-        @endif
-    </td>
-
     <!-- Organizer -->
     <td class="whitespace-nowrap border-b border-r border-bgray-200 px-4 py-3 align-top text-xs text-bgray-700 dark:border-darkblack-400 dark:text-bgray-300">
         @if ($meeting->organizer)
             <div class="flex items-center gap-2">
-                <x-user-avatar :name="$meeting->organizer->name" :image="$meeting->organizer->profile_image_url ?: null" class="h-6 w-6 border border-bgray-200 dark:border-darkblack-400" />
+                <x-user-avatar :name="$meeting->organizer->name" :image="$meeting->organizer->profile_image_url ?: null" size="sm" />
                 <span class="font-semibold text-bgray-700 dark:text-bgray-300">{{ $meeting->organizer->name }}</span>
             </div>
         @else
