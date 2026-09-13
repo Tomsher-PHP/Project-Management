@@ -125,6 +125,11 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.addEventListener("click", closeMeetingPreview);
         });
 
+        const rescheduleBtns = previewBody.querySelectorAll(".reschedule-meeting-btn");
+        rescheduleBtns.forEach((btn) => {
+            btn.addEventListener("click", closeMeetingPreview);
+        });
+
         const addMinutesBtn = document.getElementById("add_minutes_btn");
         const editMinutesBtn = document.getElementById("edit_minutes_btn");
         const cancelMinutesBtn = document.getElementById("cancel_minutes_btn");

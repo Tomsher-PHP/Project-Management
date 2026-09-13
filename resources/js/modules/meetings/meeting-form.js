@@ -595,6 +595,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function openSmallRescheduleModal(btnData) {
         if (!rescheduleModal) return;
 
+        if (window.closeMeetingPreview && typeof window.closeMeetingPreview === "function") {
+            window.closeMeetingPreview();
+        }
+
         rescheduleOriginalMeetingId = btnData.id;
         rescheduleUrl = btnData.rescheduleUrl;
 
