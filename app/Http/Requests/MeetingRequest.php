@@ -88,7 +88,7 @@ class MeetingRequest extends FormRequest
             'tag_ids.*' => 'exists:meeting_tags,id',
 
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'file|mimes:pdf,xls,xlsx,doc,docx,ppt,pptx,jpg,jpeg,png|max:15360',
+            'attachments.*' => 'file|mimes:pdf,ppt,pptx,jpg,jpeg,png|max:15360',
 
             'participants' => 'nullable|array',
             'participants.*.user_id' => 'nullable|exists:users,id',

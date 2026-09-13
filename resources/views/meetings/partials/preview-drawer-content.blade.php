@@ -1,9 +1,11 @@
 @php
     $tz = $globalTimezone ?? (config('constants.timezone') ?? config('app.timezone'));
+    $dateFormat = $globalDateFormat ?? 'd M Y';
+    $timeFormat = $globalTimeFormat ?? 'H:i';
+
     $typeColor = $meeting->meetingType?->color ?: '#3B82F6';
     $statusColor = $meeting->meetingStatus?->color ?: '#6B7280';
     $isFutureMeeting = $meeting->start_at && !$meeting->start_at->copy()->shiftTimezone($tz)->isPast();
-    $timeFormat = $globalTimeFormat ?? 'H:i';
     $startTimeStr = $meeting->start_at ? $meeting->start_at->format($timeFormat) : '';
     $endTimeStr = $meeting->end_at ? $meeting->end_at->format($timeFormat) : '';
     $durationStr = $meeting->start_at && $meeting->end_at ? $meeting->start_at->diffForHumans($meeting->end_at, true) : '';
@@ -33,14 +35,7 @@
 
             <!-- Reschedule Action -->
             @if ($canReschedule)
-                <button type="button" class="reschedule-meeting-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" title="Reschedule Meeting"
-                    data-id="{{ $meeting->id }}"
-                    data-title="{{ $meeting->title }}"
-                    data-edit-url="{{ $editUrl }}"
-                    data-reschedule-url="{{ route('meetings.reschedule', $meeting->id) }}"
-                    data-display-time="{{ $meeting->start_at ? $meeting->start_at->format('d M Y') : '' }} {{ $startTimeStr }} – {{ $endTimeStr }}"
-                    data-start-at="{{ $meeting->start_at ? $meeting->start_at->format('Y-m-d H:i') : '' }}"
-                    data-end-at="{{ $meeting->end_at ? $meeting->end_at->format('Y-m-d H:i') : '' }}">
+                <button type="button" class="reschedule-meeting-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-bgray-300 bg-white text-bgray-700 transition hover:border-success-300 hover:bg-success-50 hover:text-success-400 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-bgray-300 dark:hover:border-success-300 dark:hover:text-success-300" title="Reschedule Meeting" data-id="{{ $meeting->id }}" data-title="{{ $meeting->title }}" data-edit-url="{{ $editUrl }}" data-reschedule-url="{{ route('meetings.reschedule', $meeting->id) }}" data-display-time="{{ $meeting->start_at ? $meeting->start_at->format('d M Y') : '' }} {{ $startTimeStr }} – {{ $endTimeStr }}" data-start-at="{{ $meeting->start_at ? $meeting->start_at->format('Y-m-d H:i') : '' }}" data-end-at="{{ $meeting->end_at ? $meeting->end_at->format('Y-m-d H:i') : '' }}">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -82,7 +77,9 @@
 
             @if ($meeting->project)
                 @php
-                    $canViewProject = auth()->user()?->canAny(['project.view', 'project.view_all_projects']);
+                    $canViewProject = auth()
+                        ->user()
+                        ?->canAny(['project.view', 'project.view_all_projects']);
                     $projectUrl = $canViewProject ? ($meeting->project->trashed() ? route('projects.restore.show', $meeting->project->id) : route('projects.edit', $meeting->project)) : null;
                 @endphp
                 <span class="inline-flex items-center gap-1 rounded-full bg-bgray-100 px-2.5 py-1 text-xs font-medium text-bgray-700 dark:bg-darkblack-500 dark:text-bgray-300">
@@ -112,7 +109,7 @@
                 <div>
                     <span class="text-bgray-700 dark:text-bgray-300 block mb-0.5">Date</span>
                     <span class="font-semibold text-bgray-900 dark:text-white">
-                        {{ $meeting->start_at ? $meeting->start_at->format('d M Y (l)') : 'N/A' }}
+                        {{ $meeting->start_at ? $meeting->start_at->format($dateFormat . ' (l)') : 'N/A' }}
                     </span>
                 </div>
                 <div>
@@ -251,13 +248,6 @@
         <!-- Reschedule Relationships Section -->
         @if ($meeting->rescheduledFrom || $meeting->rescheduledTo)
             <div class="space-y-3 pt-4 border-t border-bgray-200 dark:border-darkblack-400">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-bgray-700 dark:text-bgray-300 flex items-center gap-1.5">
-                    <svg class="h-4 w-4 text-warning-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Reschedule Relationship
-                </h4>
-
                 <!-- Rescheduled From (Previous Meeting) -->
                 @if ($meeting->rescheduledFrom)
                     <div class="rounded-xl border border-bgray-200 bg-amber-50/40 p-3.5 dark:border-darkblack-400 dark:bg-darkblack-500/50 space-y-2">
@@ -270,10 +260,10 @@
                                 <div class="text-xs font-bold text-bgray-900 dark:text-white truncate">
                                     {{ $meeting->rescheduledFrom->title }}
                                 </div>
-                                <div class="text-[11px] text-bgray-600 dark:text-bgray-400 mt-0.5">
-                                    {{ $meeting->rescheduledFrom->start_at ? $meeting->rescheduledFrom->start_at->format('d M Y') : '' }}
+                                <div class="text-[11px] text-bgray-700 dark:text-bgray-300 mt-0.5">
+                                    {{ $meeting->rescheduledFrom->start_at ? $meeting->rescheduledFrom->start_at->format($dateFormat) : '' }}
                                     ·
-                                    {{ $meeting->rescheduledFrom->start_at ? $meeting->rescheduledFrom->start_at->format('H:i') : '' }} - {{ $meeting->rescheduledFrom->end_at ? $meeting->rescheduledFrom->end_at->format('H:i') : '' }}
+                                    {{ $meeting->rescheduledFrom->start_at ? $meeting->rescheduledFrom->start_at->format($timeFormat) : '' }} - {{ $meeting->rescheduledFrom->end_at ? $meeting->rescheduledFrom->end_at->format($timeFormat) : '' }}
                                 </div>
                             </div>
 
@@ -306,10 +296,10 @@
                                 <div class="text-xs font-bold text-bgray-900 dark:text-white truncate">
                                     {{ $meeting->rescheduledTo->title }}
                                 </div>
-                                <div class="text-[11px] text-bgray-600 dark:text-bgray-400 mt-0.5">
-                                    {{ $meeting->rescheduledTo->start_at ? $meeting->rescheduledTo->start_at->format('d M Y') : '' }}
+                                <div class="text-[11px] text-bgray-700 dark:text-bgray-300 mt-0.5">
+                                    {{ $meeting->rescheduledTo->start_at ? $meeting->rescheduledTo->start_at->format($dateFormat) : '' }}
                                     ·
-                                    {{ $meeting->rescheduledTo->start_at ? $meeting->rescheduledTo->start_at->format('H:i') : '' }} - {{ $meeting->rescheduledTo->end_at ? $meeting->rescheduledTo->end_at->format('H:i') : '' }}
+                                    {{ $meeting->rescheduledTo->start_at ? $meeting->rescheduledTo->start_at->format($timeFormat) : '' }} - {{ $meeting->rescheduledTo->end_at ? $meeting->rescheduledTo->end_at->format($timeFormat) : '' }}
                                 </div>
                             </div>
 

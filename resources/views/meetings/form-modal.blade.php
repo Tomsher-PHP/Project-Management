@@ -214,9 +214,9 @@
                         Attachments
                     </label>
 
-                    <input type="file" name="attachments[]" id="meeting_attachments_input" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.xls,.xlsx,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png">
+                    <input type="file" name="attachments[]" id="meeting_attachments_input" multiple class="block w-full rounded-lg border border-bgray-300 bg-white px-4 py-2.5 text-sm text-bgray-700 file:mr-4 file:rounded-md file:border-0 file:bg-success-50 file:px-4 file:py-1.5 file:font-medium file:text-success-400 hover:file:bg-success-100 dark:border-darkblack-400 dark:bg-darkblack-500 dark:text-white" accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png">
                     <p class="text-xs text-bgray-700 dark:text-bgray-400">
-                        You can attach up to 5 files at a time. Allowed types: pdf, xls, xlsx, doc, docx, ppt, pptx, jpg, jpeg, png. Max file size: 15MB.
+                        You can attach up to 5 files at a time. Allowed types: pdf, ppt, pptx, jpg, jpeg, png. Max file size: 15MB.
                     </p>
 
                     <!-- Selected files list -->
