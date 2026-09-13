@@ -27,13 +27,25 @@ class MeetingRequest extends FormRequest
                 if (! empty($endAtInput)) {
                     try {
                         $parsedEnd = \Carbon\Carbon::parse($endAtInput);
+                        if ($parsedEnd->lessThan($start)) {
+                            $durationMinutes = (int) $this->input('duration_minutes', 60);
+                            if ($durationMinutes < 1) {
+                                $durationMinutes = 60;
+                            }
+                            $parsedEnd = $start->copy()->addMinutes($durationMinutes);
+                        }
                         $this->merge([
                             'start_at' => $start->format('Y-m-d H:i:s'),
                             'end_at' => $parsedEnd->format('Y-m-d H:i:s'),
                         ]);
                     } catch (\Throwable $e) {
+                        $durationMinutes = (int) $this->input('duration_minutes', 60);
+                        if ($durationMinutes < 1) {
+                            $durationMinutes = 60;
+                        }
                         $this->merge([
                             'start_at' => $start->format('Y-m-d H:i:s'),
+                            'end_at' => $start->copy()->addMinutes($durationMinutes)->format('Y-m-d H:i:s'),
                         ]);
                     }
                 } else {

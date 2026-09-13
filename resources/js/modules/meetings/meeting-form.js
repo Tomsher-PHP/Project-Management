@@ -163,15 +163,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 3. Duration & End Date Calculation
-    function parseDateTimeStr(str) {
+    function parseDateTimeStr(str, inputEl = null) {
+        if (inputEl && inputEl._flatpickr && inputEl._flatpickr.selectedDates && inputEl._flatpickr.selectedDates.length > 0) {
+            const fpDate = inputEl._flatpickr.selectedDates[0];
+            if (fpDate && !isNaN(fpDate.getTime())) {
+                return new Date(fpDate.getTime());
+            }
+        }
+
         if (!str) return null;
-        const parts = str.trim().split(" ");
+        if (str instanceof Date) return isNaN(str.getTime()) ? null : str;
+
+        const trimmed = String(str).trim();
+        const parts = trimmed.split(/\s+/);
         if (parts.length < 2) return null;
-        const [ymd, hm] = parts;
-        if (!ymd || !hm) return null;
-        const [year, month, day] = ymd.split("-").map(Number);
-        const [hours, minutes] = hm.split(":").map(Number);
-        if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) return null;
+
+        const ymd = parts[0];
+        const hm = parts[1];
+        const ampm = parts[2] ? parts[2].toUpperCase() : null;
+
+        const ymdParts = ymd.split("-").map(Number);
+        if (ymdParts.length < 3) return null;
+        const [year, month, day] = ymdParts;
+
+        const hmParts = hm.split(":").map(Number);
+        if (hmParts.length < 2) return null;
+        let hours = hmParts[0];
+        const minutes = hmParts[1];
+
+        if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hours) || isNaN(minutes)) {
+            return null;
+        }
+
+        if (ampm === "PM" || ampm === "P.M.") {
+            if (hours < 12) hours += 12;
+        } else if (ampm === "AM" || ampm === "A.M.") {
+            if (hours === 12) hours = 0;
+        }
+
         const dt = new Date(year, month - 1, day, hours, minutes);
         return isNaN(dt.getTime()) ? null : dt;
     }
@@ -187,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const startDate = parseDateTimeStr(startVal);
+        const startDate = parseDateTimeStr(startVal, startInputEl);
         if (!startDate) return;
 
         const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
@@ -1029,8 +1058,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const startVal = startInputEl ? startInputEl.value : "";
         const endVal = endInputEl ? endInputEl.value : "";
-        const startDateObj = parseDateTimeStr(startVal);
-        const endDateObj = parseDateTimeStr(endVal);
+        const startDateObj = parseDateTimeStr(startVal, startInputEl);
+        const endDateObj = parseDateTimeStr(endVal, endInputEl);
 
         if (startDateObj && endDateObj && endDateObj < startDateObj) {
             Alert.error("The end date and time must be equal to or after the start date and time.");
